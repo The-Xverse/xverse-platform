@@ -36,6 +36,14 @@ namespace {
     case DiagnosticCode::invalid_version:
     case DiagnosticCode::incompatible_direction:
     case DiagnosticCode::contract_mismatch:
+    case DiagnosticCode::invalid_digest:
+    case DiagnosticCode::capacity_exhausted:
+    case DiagnosticCode::duplicate_identity:
+    case DiagnosticCode::invalid_handle:
+    case DiagnosticCode::invalid_transition:
+    case DiagnosticCode::endpoint_in_use:
+    case DiagnosticCode::route_incompatible:
+    case DiagnosticCode::generation_exhausted:
       return true;
   }
   return false;
@@ -57,53 +65,78 @@ namespace {
   switch (phase) {
     case ValidationPhase::contract:
     case ValidationPhase::item:
+    case ValidationPhase::lifecycle_configuration:
+    case ValidationPhase::endpoint_declaration:
+    case ValidationPhase::route_declaration:
+    case ValidationPhase::ownership:
+    case ValidationPhase::lifecycle:
+    case ValidationPhase::route_compatibility:
       return true;
   }
   return false;
 }
 
 /**
- * @brief Append escaped text to a fixed ordering-key buffer.
+ * @brief Append escaped text to a fixed ordering-key buffer without exceeding its capacity.
  * @param output Destination storage.
  * @param used Initialized destination length on entry and exit.
  * @param value Text to escape and append.
+ * @return true when the complete value was appended; false before an out-of-bounds write.
  */
-void append_escaped(std::array<char, Diagnostic::kMaximumOrderingKeyBytes>& output,
-                    std::size_t& used, const std::string_view value) noexcept {
+[[nodiscard]] bool append_escaped(
+    std::array<char, Diagnostic::kMaximumOrderingKeyBytes>& output, std::size_t& used,
+    const std::string_view value) noexcept {
   for (const char character : value) {
     if (character == '\\' || character == '|') {
+      if (used == output.size()) {
+        return false;
+      }
       output[used++] = '\\';
+    }
+    if (used == output.size()) {
+      return false;
     }
     output[used++] = character;
   }
+  return true;
+}
+
+/** Append one unescaped canonical field separator with a capacity guard. */
+[[nodiscard]] bool append_separator(
+    std::array<char, Diagnostic::kMaximumOrderingKeyBytes>& output,
+    std::size_t& used) noexcept {
+  if (used == output.size()) {
+    return false;
+  }
+  output[used++] = '|';
+  return true;
 }
 
 /**
  * @brief Build the canonical escaped ordering key in caller-owned storage.
  * @param input Valid diagnostic fields.
- * @return Fixed-capacity key storage.
+ * @return Fixed-capacity key storage, or empty when a declared enum string exceeds its bound.
  */
-[[nodiscard]] detail::FixedText<Diagnostic::kMaximumOrderingKeyBytes> make_ordering_key(
+[[nodiscard]] std::optional<detail::FixedText<Diagnostic::kMaximumOrderingKeyBytes>> make_ordering_key(
     const DiagnosticInput& input) noexcept {
   std::array<char, Diagnostic::kMaximumOrderingKeyBytes> bytes{};
   std::size_t used = 0U;
   const auto append = [&bytes, &used](const std::string_view value) noexcept {
-    append_escaped(bytes, used, value);
+    return append_escaped(bytes, used, value);
   };
-  append(to_string(input.phase));
-  bytes[used++] = '|';
-  append(to_string(input.severity));
-  bytes[used++] = '|';
-  append(to_string(input.code));
-  bytes[used++] = '|';
-  append(input.affected_identity);
-  bytes[used++] = '|';
-  append(input.reason);
-  bytes[used++] = '|';
-  append(input.correction);
+  if (!append(to_string(input.phase)) || !append_separator(bytes, used) ||
+      !append(to_string(input.severity)) || !append_separator(bytes, used) ||
+      !append(to_string(input.code)) || !append_separator(bytes, used) ||
+      !append(input.affected_identity) || !append_separator(bytes, used) ||
+      !append(input.reason) || !append_separator(bytes, used) ||
+      !append(input.correction)) {
+    return std::nullopt;
+  }
   detail::FixedText<Diagnostic::kMaximumOrderingKeyBytes> key;
-  static_cast<void>(key.assign({bytes.data(), used}));
-  return key;
+  if (!key.assign({bytes.data(), used})) {
+    return std::nullopt;
+  }
+  return std::optional{key};
 }
 
 }  // namespace
@@ -120,6 +153,22 @@ std::string_view to_string(const DiagnosticCode code) noexcept {
       return "XCOM-TYPE-E004";
     case DiagnosticCode::contract_mismatch:
       return "XCOM-TYPE-E005";
+    case DiagnosticCode::invalid_digest:
+      return "XCOM-LIFE-E006";
+    case DiagnosticCode::capacity_exhausted:
+      return "XCOM-LIFE-E007";
+    case DiagnosticCode::duplicate_identity:
+      return "XCOM-LIFE-E008";
+    case DiagnosticCode::invalid_handle:
+      return "XCOM-LIFE-E009";
+    case DiagnosticCode::invalid_transition:
+      return "XCOM-LIFE-E010";
+    case DiagnosticCode::endpoint_in_use:
+      return "XCOM-LIFE-E011";
+    case DiagnosticCode::route_incompatible:
+      return "XCOM-LIFE-E012";
+    case DiagnosticCode::generation_exhausted:
+      return "XCOM-LIFE-E013";
   }
   return "XCOM-TYPE-E000";
 }
@@ -142,6 +191,18 @@ std::string_view to_string(const ValidationPhase phase) noexcept {
       return "contract";
     case ValidationPhase::item:
       return "item";
+    case ValidationPhase::lifecycle_configuration:
+      return "lifecycle_configuration";
+    case ValidationPhase::endpoint_declaration:
+      return "endpoint_declaration";
+    case ValidationPhase::route_declaration:
+      return "route_declaration";
+    case ValidationPhase::ownership:
+      return "ownership";
+    case ValidationPhase::lifecycle:
+      return "lifecycle";
+    case ValidationPhase::route_compatibility:
+      return "route_compatibility";
   }
   return "unknown";
 }
@@ -151,7 +212,10 @@ Diagnostic::Diagnostic(const DiagnosticInput& input) noexcept
   static_cast<void>(affected_identity_.assign(input.affected_identity));
   static_cast<void>(reason_.assign(input.reason));
   static_cast<void>(correction_.assign(input.correction));
-  ordering_key_ = make_ordering_key(input);
+  const auto ordering_key = make_ordering_key(input);
+  if (ordering_key.has_value()) {
+    ordering_key_ = *ordering_key;
+  }
 }
 
 Diagnostic::Diagnostic() noexcept
@@ -173,7 +237,8 @@ std::optional<Diagnostic> Diagnostic::create(const DiagnosticInput& input) noexc
   if (!known_code(input.code) || !known_severity(input.severity) || !known_phase(input.phase) ||
       !valid_text(input.affected_identity, kMaximumIdentityBytes) ||
       !valid_text(input.reason, kMaximumTextBytes) ||
-      !valid_text(input.correction, kMaximumTextBytes)) {
+      !valid_text(input.correction, kMaximumTextBytes) ||
+      !make_ordering_key(input).has_value()) {
     return std::nullopt;
   }
   return Diagnostic(input);

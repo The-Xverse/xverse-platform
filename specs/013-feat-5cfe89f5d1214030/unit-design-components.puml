@@ -1,0 +1,16 @@
+@startuml
+component EndpointSpec
+component RouteSpec
+component EndpointHandle
+component RouteHandle
+component LifecycleController
+component LifecycleSnapshot
+component DiagnosticSet
+RouteSpec --> EndpointSpec
+LifecycleController --> EndpointSpec
+LifecycleController --> RouteSpec
+LifecycleController --> EndpointHandle
+LifecycleController --> RouteHandle
+LifecycleController --> LifecycleSnapshot
+LifecycleController --> DiagnosticSet
+@enduml

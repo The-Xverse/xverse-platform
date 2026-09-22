@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "feature_id": "FEAT-5cfe89f5d1214030",
+  "task_id": "XCOM-ENDPOINT-ROUTE-LIFECYCLE",
+  "baseline_id": "BASE-39bb479b857541a99bab",
+  "candidate_revision_binding": {
+    "environment_variable": "SESN_CANDIDATE_REVISION",
+    "format": "full-lowercase-git-sha",
+    "workspace_comparison": "git rev-parse HEAD"
+  },
+  "state": "READY_FOR_REVIEW",
+  "requirements": [
+    {
+      "id": "XCOM-LIFE-001",
+      "design": ["XCOM-LIFE-UNIT-001"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-LIFE-LINT", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-002",
+      "design": ["XCOM-LIFE-UNIT-001", "XCOM-LIFE-UNIT-002"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-003",
+      "design": ["XCOM-LIFE-UNIT-003"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-STATIC", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-004",
+      "design": ["XCOM-LIFE-UNIT-004"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-005",
+      "design": ["XCOM-LIFE-UNIT-004"],
+      "code": ["src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-006",
+      "design": ["XCOM-LIFE-UNIT-003", "XCOM-LIFE-UNIT-004", "XCOM-LIFE-UNIT-007"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/src/diagnostic.cpp", "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-LINT", "VM-XCOM-LIFE-STATIC", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-007",
+      "design": ["XCOM-LIFE-UNIT-005"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-STATIC", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-008",
+      "design": ["XCOM-LIFE-UNIT-002", "XCOM-LIFE-UNIT-007"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-009",
+      "design": ["XCOM-LIFE-UNIT-001", "XCOM-LIFE-UNIT-005"],
+      "code": ["src/xverse/xcom/CMakeLists.txt", "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-LIFE-LINT", "VM-XCOM-LIFE-STATIC", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-010",
+      "design": ["XCOM-LIFE-UNIT-006"],
+      "code": ["docs/xcom/endpoint-route-lifecycle.md", "docs/xcom/endpoint-route-lifecycle-traceability.json", "scripts/validate_xcom_endpoint_route_lifecycle.py", "src/xverse/xcom/CMakeLists.txt"],
+      "tests": ["scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-LIFE-LINT", "VM-XCOM-LIFE-STATIC", "VM-XCOM-LIFE-VALIDATION"]
+    },
+    {
+      "id": "XCOM-LIFE-011",
+      "design": ["XCOM-LIFE-UNIT-004", "XCOM-LIFE-UNIT-007"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"],
+      "checks": ["VM-XCOM-LIFE-UNIT", "VM-XCOM-LIFE-INTEGRATION", "VM-XCOM-LIFE-VALIDATION"]
+    }
+  ],
+  "designs": {
+    "XCOM-LIFE-UNIT-001": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-001", "XCOM-LIFE-002", "XCOM-LIFE-009"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "scripts/validate_xcom_endpoint_route_lifecycle.py"]
+    },
+    "XCOM-LIFE-UNIT-002": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-002", "XCOM-LIFE-008"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp"]
+    },
+    "XCOM-LIFE-UNIT-003": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-003", "XCOM-LIFE-006"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp", "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/src/diagnostic.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"]
+    },
+    "XCOM-LIFE-UNIT-004": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-004", "XCOM-LIFE-005", "XCOM-LIFE-006", "XCOM-LIFE-011"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"]
+    },
+    "XCOM-LIFE-UNIT-005": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-007", "XCOM-LIFE-009"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp", "src/xverse/xcom/CMakeLists.txt"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "scripts/validate_xcom_endpoint_route_lifecycle.py"]
+    },
+    "XCOM-LIFE-UNIT-006": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-010"],
+      "code": ["docs/xcom/endpoint-route-lifecycle.md", "docs/xcom/endpoint-route-lifecycle-traceability.json", "scripts/validate_xcom_endpoint_route_lifecycle.py", "src/xverse/xcom/CMakeLists.txt"],
+      "tests": ["scripts/validate_xcom_endpoint_route_lifecycle.py"]
+    },
+    "XCOM-LIFE-UNIT-007": {
+      "source": "specs/013-feat-5cfe89f5d1214030/unit-specifications.md",
+      "requirements": ["XCOM-LIFE-006", "XCOM-LIFE-008", "XCOM-LIFE-011"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp"],
+      "tests": ["tests/xcom/endpoint_route_lifecycle/unit_tests.cpp", "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp", "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp"]
+    }
+  },
+  "artifacts": {
+    "docs/xcom/endpoint-route-lifecycle.md": ["XCOM-LIFE-010"],
+    "docs/xcom/endpoint-route-lifecycle-traceability.json": ["XCOM-LIFE-010"],
+    "scripts/validate_xcom_endpoint_route_lifecycle.py": ["XCOM-LIFE-001", "XCOM-LIFE-007", "XCOM-LIFE-009", "XCOM-LIFE-010"],
+    "src/xverse/xcom/CMakeLists.txt": ["XCOM-LIFE-009", "XCOM-LIFE-010"],
+    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp": ["XCOM-LIFE-006"],
+    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp": ["XCOM-LIFE-001", "XCOM-LIFE-002", "XCOM-LIFE-003", "XCOM-LIFE-004", "XCOM-LIFE-006", "XCOM-LIFE-007", "XCOM-LIFE-008", "XCOM-LIFE-009", "XCOM-LIFE-011"],
+    "src/xverse/xcom/src/diagnostic.cpp": ["XCOM-LIFE-006"],
+    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp": ["XCOM-LIFE-001", "XCOM-LIFE-002", "XCOM-LIFE-003", "XCOM-LIFE-004", "XCOM-LIFE-005", "XCOM-LIFE-006", "XCOM-LIFE-007", "XCOM-LIFE-008", "XCOM-LIFE-009", "XCOM-LIFE-011"],
+    "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp": ["XCOM-LIFE-003", "XCOM-LIFE-004", "XCOM-LIFE-005", "XCOM-LIFE-006", "XCOM-LIFE-008", "XCOM-LIFE-011"],
+    "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp": ["XCOM-LIFE-002", "XCOM-LIFE-004", "XCOM-LIFE-005", "XCOM-LIFE-006", "XCOM-LIFE-008", "XCOM-LIFE-011"],
+    "tests/xcom/endpoint_route_lifecycle/unit_tests.cpp": ["XCOM-LIFE-001", "XCOM-LIFE-002", "XCOM-LIFE-003", "XCOM-LIFE-004", "XCOM-LIFE-005", "XCOM-LIFE-006", "XCOM-LIFE-007", "XCOM-LIFE-008", "XCOM-LIFE-011"]
+  }
+}

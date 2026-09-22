@@ -1,0 +1,3 @@
+# SWE.5 Integration sequence and checks
+
+Use the rejected SESN candidate only as a local staging baseline and repair it through one new isolated SESN task. Run the full five-measure host suite against the new immutable candidate. Unit and validation tests cover maximum escaped diagnostics and every exact-handle/no-mutation boundary; static validation compares requirements-to-measures allocations reciprocally; the separate public consumer performs valid lifecycle, safe repeat, invalid transition, complete closure, and recreation of both endpoints and the route. The complete accepted core-types validator remains mandatory. No network or external dependency is introduced.

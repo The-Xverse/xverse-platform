@@ -1,0 +1,204 @@
+[
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "EndpointSpec",
+      "RouteSpec",
+      "OwnershipHandle",
+      "LifecycleController"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--unit"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-LIFE-UNIT",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "unit_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-LIFE-002",
+      "XCOM-LIFE-003",
+      "XCOM-LIFE-004",
+      "XCOM-LIFE-005",
+      "XCOM-LIFE-006",
+      "XCOM-LIFE-007",
+      "XCOM-LIFE-008",
+      "XCOM-LIFE-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Builds the lifecycle units and runs table-driven state, ownership, capacity, compatibility, and negative tests.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "EndpointRouteLifecycle"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--lint"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-LIFE-LINT",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "lint"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-LIFE-001",
+      "XCOM-LIFE-006",
+      "XCOM-LIFE-009",
+      "XCOM-LIFE-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Enforces formatting, owned paths, forbidden APIs and dependencies, no CommunicationItem storage, and warning-clean compilation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "OwnershipHandle",
+      "LifecycleController",
+      "Traceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--static"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-LIFE-STATIC",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "static_analysis"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-LIFE-003",
+      "XCOM-LIFE-006",
+      "XCOM-LIFE-007",
+      "XCOM-LIFE-009",
+      "XCOM-LIFE-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs admitted clang-tidy, strict warning-free Doxygen, fixed-capacity/layout checks, and reciprocal traceability validation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ExternalLifecycleConsumer",
+      "LifecycleController",
+      "XComCoreTypes"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--integration"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-LIFE-INTEGRATION",
+    "levels": [
+      "integration"
+    ],
+    "methods": [
+      "integration_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-LIFE-002",
+      "XCOM-LIFE-003",
+      "XCOM-LIFE-004",
+      "XCOM-LIFE-005",
+      "XCOM-LIFE-006",
+      "XCOM-LIFE-008",
+      "XCOM-LIFE-009",
+      "XCOM-LIFE-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Compiles a separate public-API consumer and exercises an endpoint pair and route through valid lifecycle, invalid-transition, and stale-handle scenarios without transporting data.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "EndpointRouteLifecycle",
+      "XComCoreTypes",
+      "Traceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-LIFE-VALIDATION",
+    "levels": [
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-LIFE-001",
+      "XCOM-LIFE-002",
+      "XCOM-LIFE-003",
+      "XCOM-LIFE-004",
+      "XCOM-LIFE-005",
+      "XCOM-LIFE-006",
+      "XCOM-LIFE-007",
+      "XCOM-LIFE-008",
+      "XCOM-LIFE-009",
+      "XCOM-LIFE-010",
+      "XCOM-LIFE-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete lifecycle acceptance suite, the accepted core-types regression suite, and public-safe bidirectional traceability checks.",
+    "timeout_seconds": 900
+  }
+]

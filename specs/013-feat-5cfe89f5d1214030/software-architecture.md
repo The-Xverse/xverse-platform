@@ -1,1 +1,3 @@
+# SWE.2 Software architectural design
+
 Reworks the SESN-generated endpoint and route lifecycle candidate rejected by REVIEW-5062aa21bd884561. The architecture remains an in-process provider-neutral fixed-capacity control plane with exact generation-bound handles and no CommunicationItem or transport behavior. The repair derives diagnostic serialization capacity from every supported escaped field and guards writes; separates RouteSpec declaration compatibility from LifecycleController handle authentication; makes traceability reciprocal; and expands public-consumer and negative evidence. No provider, data-plane, or external integration scope is added.

@@ -1,0 +1,14 @@
+@startuml
+component "External lifecycle consumer" as Consumer
+component "EndpointSpec / RouteSpec" as Specs
+component "LifecycleController" as Controller
+component "Opaque generation handles" as Handles
+component "X-COM core types" as Core
+component "Stable diagnostics" as Diagnostics
+Consumer --> Specs
+Specs --> Core
+Consumer --> Controller
+Controller --> Specs
+Controller --> Handles
+Controller --> Diagnostics
+@enduml

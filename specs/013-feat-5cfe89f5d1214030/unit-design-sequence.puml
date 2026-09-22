@@ -1,0 +1,22 @@
+@startuml
+participant Caller
+participant LifecycleController as Controller
+participant HandleValidator as Validator
+participant FixedRecords as Records
+participant DiagnosticSet as Diagnostics
+Caller -> Controller: transition(handle, requested state)
+Controller -> Validator: authenticate controller, kind, identity, digest, generation
+alt exact current handle
+Validator -> Records: find record and inspect state
+alt allowed or safe repeat
+Records -> Records: transition once or preserve state
+Records --> Caller: immutable snapshot
+else unsafe transition
+Records -> Diagnostics: stable transition rejection
+Diagnostics --> Caller: error, records unchanged
+end
+else invalid handle
+Validator -> Diagnostics: stable ownership rejection
+Diagnostics --> Caller: error, records unchanged
+end
+@enduml

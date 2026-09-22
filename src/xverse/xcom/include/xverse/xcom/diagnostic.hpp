@@ -27,13 +27,30 @@ enum class DiagnosticCode {
   invalid_version,
   incompatible_direction,
   contract_mismatch,
+  invalid_digest,
+  capacity_exhausted,
+  duplicate_identity,
+  invalid_handle,
+  invalid_transition,
+  endpoint_in_use,
+  route_incompatible,
+  generation_exhausted,
 };
 
 /** Diagnostic severity ordered from informational to error. */
 enum class DiagnosticSeverity { information, warning, error };
 
 /** Validation phase that produced a diagnostic. */
-enum class ValidationPhase { contract, item };
+enum class ValidationPhase {
+  contract,
+  item,
+  lifecycle_configuration,
+  endpoint_declaration,
+  route_declaration,
+  ownership,
+  lifecycle,
+  route_compatibility,
+};
 
 /**
  * @brief Return the stable external code string.
@@ -87,8 +104,22 @@ class Diagnostic final {
  public:
   /** Maximum reason or correction byte count. */
   static constexpr std::size_t kMaximumTextBytes = 256U;
-  /** Maximum escaped ordering-key byte count. */
-  static constexpr std::size_t kMaximumOrderingKeyBytes = 1'320U;
+  /** Maximum stable diagnostic-code byte count. */
+  static constexpr std::size_t kMaximumCodeBytes = 14U;
+  /** Maximum stable diagnostic-severity byte count. */
+  static constexpr std::size_t kMaximumSeverityBytes = 11U;
+  /** Maximum stable validation-phase byte count. */
+  static constexpr std::size_t kMaximumPhaseBytes = 23U;
+  /** Number of separators between the six serialized ordering fields. */
+  static constexpr std::size_t kOrderingKeySeparators = 5U;
+  /**
+   * Maximum escaped ordering-key byte count, derived by allowing every field byte to require
+   * escaping and adding each canonical field separator.
+   */
+  static constexpr std::size_t kMaximumOrderingKeyBytes =
+      2U * (kMaximumPhaseBytes + kMaximumSeverityBytes + kMaximumCodeBytes +
+            kMaximumIdentityBytes + 2U * kMaximumTextBytes) +
+      kOrderingKeySeparators;
 
   /**
    * @brief Validate and copy a diagnostic.

@@ -1,0 +1,23 @@
+@startuml
+actor Caller
+participant "LifecycleController" as Controller
+participant "Endpoint records" as Endpoints
+participant "Route records" as Routes
+participant "Diagnostics" as Diagnostics
+Caller -> Controller: declare endpoints with exact plan digest
+Controller -> Endpoints: allocate bounded records and generations
+Endpoints --> Caller: opaque endpoint handles
+Caller -> Controller: validate and activate endpoint handles
+Controller -> Endpoints: verify owner, identity, digest, generation, state
+Caller -> Controller: declare and validate route with endpoint handles
+Controller -> Routes: verify contracts, directions, digest, and capacity
+Routes --> Caller: opaque route handle
+Caller -> Controller: activate route with current endpoint handles
+alt compatible and endpoints active
+Controller -> Routes: transition validated to active
+Routes --> Caller: active snapshot
+else invalid or stale
+Controller -> Diagnostics: create stable rejection
+Diagnostics --> Caller: error with no mutation
+end
+@enduml
