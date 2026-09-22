@@ -2,7 +2,8 @@
  * @file observation.hpp
  * @brief Bounded provider-neutral X-COM observation values and pull-based taps.
  * @ownership Records, filters, policies, handles, and snapshots own their values. ObservationHub
- * exclusively owns fixed tap and record slots; SyntheticObservationSink retains no record storage.
+ * exclusively owns fixed tap and record slots; reservations own bounded item and tap claims;
+ * SyntheticObservationSink retains no record storage.
  * @lifetime Returned records and snapshots are value copies. A tap handle is valid only for its
  * issuing hub, tap identifier, and current generation; it grants no provider or route authority.
  * @thread_safety Hub mutation and pull operations are serialized. No consumer callback exists or is
@@ -53,7 +54,10 @@ enum class ObservationPayloadMode : std::uint8_t {
 enum class ObservationOverflowPolicy : std::uint8_t {
   /** Retain earlier records and drop the new matching record. */
   drop_newest,
-  /** Replace the newest retained record with the new matching record. */
+  /**
+   * Replace the newest retained record having the same contract/version, interface, endpoint,
+   * schema/version, interaction, origin, route, and provider key; otherwise drop the new record.
+   */
   coalesce_latest,
   /** Reject matching normal submission before provider mutation when capacity is unavailable. */
   lossless_validation,
@@ -99,8 +103,12 @@ enum class ObservationOutcome : std::uint8_t {
   record_capacity_exhausted,
   /** A handle names a different hub, tap, generation, or a closed slot. */
   invalid_tap_handle,
+  /** A reservation names another hub, has already completed, or no longer owns its exact claims. */
+  invalid_reservation,
   /** The operation is a duplicate close against an already closed exact handle. */
   tap_closed,
+  /** The exact tap has an in-flight publication claim and cannot yet be detached. */
+  tap_busy,
   /** Lossless-validation capacity is unavailable; normal submission must not mutate a provider. */
   observation_backpressure,
   /** A valid pull found no retained record. */
@@ -165,6 +173,8 @@ struct ObservationFilterInput final {
   std::string_view provider_id;
   /** Optional interaction-family constraint. */
   std::optional<InteractionKind> interaction_kind;
+  /** Optional explicit origin constraint. */
+  std::optional<OriginKind> origin{std::nullopt};
 };
 
 /**
@@ -193,13 +203,15 @@ class ObservationFilter final {
   ObservationFilter(std::optional<Identity> contract_id, std::optional<Identity> interface_id,
                     std::optional<Identity> endpoint_id, std::optional<Identity> route_id,
                     std::optional<Identity> provider_id,
-                    std::optional<InteractionKind> interaction_kind) noexcept;
+                    std::optional<InteractionKind> interaction_kind,
+                    std::optional<OriginKind> origin) noexcept;
   std::optional<Identity> contract_id_;
   std::optional<Identity> interface_id_;
   std::optional<Identity> endpoint_id_;
   std::optional<Identity> route_id_;
   std::optional<Identity> provider_id_;
   std::optional<InteractionKind> interaction_kind_;
+  std::optional<OriginKind> origin_;
 };
 
 /** Call-scoped policy used to attach one fixed-capacity observation tap. */
@@ -366,9 +378,9 @@ struct ObservationSnapshot final {
   std::uint64_t accepted{0U};
   /** New matching records dropped by drop-newest. */
   std::uint64_t dropped{0U};
-  /** New matching records that replaced a latest retained record. */
+  /** New records that replaced the newest retained record with the same logical key. */
   std::uint64_t coalesced{0U};
-  /** Number of lossless preflight rejections since acknowledgement. */
+  /** Number of lossless reservation rejections since acknowledgement. */
   std::uint64_t backpressure_rejections{0U};
   /** True after lossless capacity loss until an exact acknowledgement. */
   bool experiment_validity_degraded{false};
@@ -390,13 +402,64 @@ struct ObservationPollResult final {
   std::optional<ObservationRecord> record;
 };
 
+class ObservationHub;
+
+/**
+ * @brief Move-only exact authority for one in-flight provider publication.
+ * @ownership Owns a bounded item copy and the exact tap generations claimed by reserve().
+ * @lifetime The issuing hub must outlive the reservation. Destruction safely cancels an active claim.
+ * @thread_safety A reservation is single-owner state and must not be accessed concurrently. Distinct
+ * reservations may be committed or cancelled concurrently through their issuing hub.
+ * @failure A moved-from or already completed reservation grants no authority.
+ */
+class ObservationReservation final {
+ public:
+  /** @brief Transfer exact reservation authority. @param other Active or inactive source. */
+  ObservationReservation(ObservationReservation&& other) noexcept;
+  /** Copying is prohibited because a reservation is single-use authority. */
+  ObservationReservation(const ObservationReservation&) = delete;
+  /** Assignment is prohibited so an outstanding claim cannot be overwritten. */
+  ObservationReservation& operator=(ObservationReservation&&) = delete;
+  /** Assignment from a copy is prohibited. */
+  ObservationReservation& operator=(const ObservationReservation&) = delete;
+  /** Cancel an active claim; the issuing hub must still be alive. */
+  ~ObservationReservation();
+  /** @return Opaque issuing hub identity. */
+  [[nodiscard]] std::uint64_t hub_instance_id() const noexcept { return hub_instance_id_; }
+  /** @return Opaque single-use reservation identity. */
+  [[nodiscard]] std::uint64_t reservation_id() const noexcept { return reservation_id_; }
+  /** @return true while this value still owns an unconsumed exact claim. */
+  [[nodiscard]] bool active() const noexcept { return active_; }
+
+ private:
+  friend class ObservationHub;
+  ObservationReservation(ObservationHub& hub, std::uint64_t hub_instance_id,
+                         std::uint64_t reservation_id, const CommunicationItem& item,
+                         const std::array<std::uint64_t, kMaximumObservationTaps>& tap_generations)
+      noexcept;
+  ObservationHub* hub_;
+  std::uint64_t hub_instance_id_;
+  std::uint64_t reservation_id_;
+  CommunicationItem item_;
+  std::array<std::uint64_t, kMaximumObservationTaps> tap_generations_;
+  bool active_{true};
+};
+
+/** Result of an atomic pre-provider reservation attempt. */
+struct ObservationReserveResult final {
+  /** Stable reservation outcome. */
+  ObservationStatus status;
+  /** Exact single-use authority, present only when reserve() succeeded. */
+  std::optional<ObservationReservation> reservation;
+};
+
 /**
  * @brief Fixed-capacity, pull-only observation owner for a local X-COM composition.
  * @ownership Exclusively owns fixed tap slots and fixed optional record slots; no allocation occurs.
- * @lifetime The hub must outlive all handles and synthetic sinks constructed from it.
+ * @lifetime The hub must outlive all handles, reservations, and synthetic sinks constructed from it.
  * @thread_safety Every operation serializes shared slot mutation. Callers receive copies after unlock.
- * @failure Best-effort loss is counted without blocking. Lossless preflight returns backpressure before
- * provider mutation; composition must call preflight immediately before its provider submission.
+ * @failure Best-effort loss is counted without blocking. reserve() atomically claims lossless capacity
+ * before provider mutation; provider code executes after reserve() returns and before commit()/cancel().
  */
 class ObservationHub final {
  public:
@@ -414,17 +477,26 @@ class ObservationHub final {
    */
   [[nodiscard]] ObservationAttachResult attach(const ObservationTapSpec& spec) noexcept;
   /**
-   * @brief Check every matching lossless tap before normal provider mutation.
-   * @param item Candidate normal-route item.
-   * @return observation_backpressure and degraded validity if capacity is unavailable.
+   * @brief Atomically claim every currently matching tap before normal provider mutation.
+   * @param item Candidate normal-route item copied into the returned bounded reservation.
+   * @return Exact single-use authority, or observation_backpressure without a provider-visible change.
+   * @note The caller must commit or cancel the returned reservation. Destruction cancels it safely.
    */
-  [[nodiscard]] ObservationStatus preflight(const CommunicationItem& item) noexcept;
+  [[nodiscard]] ObservationReserveResult reserve(const CommunicationItem& item) noexcept;
   /**
-   * @brief Normalize and retain an already-attempted event for every matching tap.
-   * @param event Complete provider-outcome event.
-   * @return observation_backpressure if a lossless tap cannot retain it; callers must preflight first.
+   * @brief Commit one exact reservation after provider dispatch and retain its normalized event.
+   * @param reservation Exact active authority returned by this hub for event.item.
+   * @param event Complete provider-outcome event for the exactly reserved item.
+   * @return accepted after consuming the claim, or a stable error without consuming a valid claim.
    */
-  [[nodiscard]] ObservationStatus publish(const ObservationEvent& event) noexcept;
+  [[nodiscard]] ObservationStatus commit(ObservationReservation&& reservation,
+                                         const ObservationEvent& event) noexcept;
+  /**
+   * @brief Cancel one exact reservation when provider dispatch did not occur.
+   * @param reservation Exact active authority returned by this hub.
+   * @return accepted after releasing the claim, or invalid_reservation without unrelated mutation.
+   */
+  [[nodiscard]] ObservationStatus cancel(ObservationReservation&& reservation) noexcept;
   /**
    * @brief Pull one owned record using exact authority.
    * @param handle Exact current handle.
@@ -452,6 +524,7 @@ class ObservationHub final {
   [[nodiscard]] ObservationStatus detach(const ObservationTapHandle& handle) noexcept;
 
  private:
+  friend class ObservationReservation;
   struct TapSlot final {
     std::optional<ObservationTapSpec> spec;
     std::uint64_t generation{0U};
@@ -462,6 +535,8 @@ class ObservationHub final {
     std::uint64_t dropped{0U};
     std::uint64_t coalesced{0U};
     std::uint64_t backpressure_rejections{0U};
+    std::size_t reserved_lossless{0U};
+    std::size_t active_claims{0U};
     bool experiment_validity_degraded{false};
   };
   /**
@@ -474,11 +549,10 @@ class ObservationHub final {
    * @param handle Candidate authority.
    */
   [[nodiscard]] const TapSlot* authenticate(const ObservationTapHandle& handle) const noexcept;
-  /**
-   * @brief Check capacity for every matching lossless tap before provider mutation.
-   * @param item Candidate item.
-   */
-  [[nodiscard]] bool has_lossless_capacity(const CommunicationItem& item) const noexcept;
+  /** @brief Release claims owned by an active reservation while mutex_ is held. */
+  void release_claims(ObservationReservation& reservation) noexcept;
+  /** @brief Cancel from a reservation destructor; the hub lifetime precondition still applies. */
+  void cancel_from_destructor(ObservationReservation& reservation) noexcept;
   /**
    * @brief Retain one normalized event in a validated tap slot.
    * @param slot Destination slot.
@@ -493,6 +567,7 @@ class ObservationHub final {
   [[nodiscard]] ObservationTapHandle make_handle(std::size_t index, std::uint64_t generation) const noexcept;
   static std::atomic<std::uint64_t> next_hub_instance_id_;
   const std::uint64_t hub_instance_id_;
+  std::uint64_t next_reservation_id_{1U};
   mutable std::mutex mutex_;
   std::array<TapSlot, kMaximumObservationTaps> taps_{};
 };

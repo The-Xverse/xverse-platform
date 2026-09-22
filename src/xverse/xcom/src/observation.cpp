@@ -50,6 +50,16 @@ namespace {
   return !constraint.has_value() || *constraint == value;
 }
 
+[[nodiscard]] bool has_coalescing_key(const ObservationRecord& record,
+                                      const CommunicationItem& item) noexcept {
+  return record.contract_id() == item.contract_id() &&
+         record.contract_version() == item.contract_version() &&
+         record.interface_id() == item.interface_id() && record.endpoint_id() == item.endpoint_id() &&
+         record.schema_id() == item.schema_id() && record.schema_version() == item.schema_version() &&
+         record.interaction_kind() == item.interaction_kind() && record.origin() == item.origin() &&
+         record.route_id() == item.route_id() && record.provider_id() == item.provider_id();
+}
+
 }  // namespace
 
 std::atomic<std::uint64_t> ObservationHub::next_hub_instance_id_{1U};
@@ -66,8 +76,12 @@ std::string_view to_string(const ObservationOutcome outcome) noexcept {
       return "record_capacity_exhausted";
     case ObservationOutcome::invalid_tap_handle:
       return "invalid_tap_handle";
+    case ObservationOutcome::invalid_reservation:
+      return "invalid_reservation";
     case ObservationOutcome::tap_closed:
       return "tap_closed";
+    case ObservationOutcome::tap_busy:
+      return "tap_busy";
     case ObservationOutcome::observation_backpressure:
       return "observation_backpressure";
     case ObservationOutcome::no_record:
@@ -83,13 +97,15 @@ ObservationFilter::ObservationFilter(std::optional<Identity> contract_id,
                                      std::optional<Identity> endpoint_id,
                                      std::optional<Identity> route_id,
                                      std::optional<Identity> provider_id,
-                                     std::optional<InteractionKind> interaction_kind) noexcept
+                                     std::optional<InteractionKind> interaction_kind,
+                                     std::optional<OriginKind> origin) noexcept
     : contract_id_(contract_id),
       interface_id_(interface_id),
       endpoint_id_(endpoint_id),
       route_id_(route_id),
       provider_id_(provider_id),
-      interaction_kind_(interaction_kind) {}
+      interaction_kind_(interaction_kind),
+      origin_(origin) {}
 
 std::optional<ObservationFilter> ObservationFilter::create(
     const ObservationFilterInput& input) noexcept {
@@ -106,7 +122,7 @@ std::optional<ObservationFilter> ObservationFilter::create(
     return std::nullopt;
   }
   return ObservationFilter(contract_id, interface_id, endpoint_id, route_id, provider_id,
-                           input.interaction_kind);
+                           input.interaction_kind, input.origin);
 }
 
 bool ObservationFilter::matches(const CommunicationItem& item) const noexcept {
@@ -115,7 +131,8 @@ bool ObservationFilter::matches(const CommunicationItem& item) const noexcept {
          xverse::xcom::matches(endpoint_id_, item.endpoint_id()) &&
          xverse::xcom::matches(route_id_, item.route_id()) &&
          xverse::xcom::matches(provider_id_, item.provider_id()) &&
-         (!interaction_kind_.has_value() || *interaction_kind_ == item.interaction_kind());
+         (!interaction_kind_.has_value() || *interaction_kind_ == item.interaction_kind()) &&
+         (!origin_.has_value() || *origin_ == item.origin());
 }
 
 ObservationTapSpec::ObservationTapSpec(const SemanticVersion& contract_version,
@@ -189,6 +206,33 @@ ObservationRecord::ObservationRecord(const ObservationEvent& event,
                                                                  : PayloadViewState::truncated;
 }
 
+ObservationReservation::ObservationReservation(
+    ObservationHub& hub, const std::uint64_t hub_instance_id, const std::uint64_t reservation_id,
+    const CommunicationItem& item,
+    const std::array<std::uint64_t, kMaximumObservationTaps>& tap_generations) noexcept
+    : hub_(&hub),
+      hub_instance_id_(hub_instance_id),
+      reservation_id_(reservation_id),
+      item_(item),
+      tap_generations_(tap_generations) {}
+
+ObservationReservation::ObservationReservation(ObservationReservation&& other) noexcept
+    : hub_(other.hub_),
+      hub_instance_id_(other.hub_instance_id_),
+      reservation_id_(other.reservation_id_),
+      item_(other.item_),
+      tap_generations_(other.tap_generations_),
+      active_(other.active_) {
+  other.hub_ = nullptr;
+  other.active_ = false;
+}
+
+ObservationReservation::~ObservationReservation() {
+  if (active_ && hub_ != nullptr) {
+    hub_->cancel_from_destructor(*this);
+  }
+}
+
 ObservationHub::ObservationHub() noexcept
     : hub_instance_id_(next_hub_instance_id_.fetch_add(1U, std::memory_order_relaxed)) {}
 
@@ -234,37 +278,47 @@ ObservationAttachResult ObservationHub::attach(const ObservationTapSpec& spec) n
     slot.dropped = 0U;
     slot.coalesced = 0U;
     slot.backpressure_rejections = 0U;
+    slot.reserved_lossless = 0U;
+    slot.active_claims = 0U;
     slot.experiment_validity_degraded = false;
     return {{ObservationOutcome::accepted}, make_handle(index, slot.generation)};
   }
   return {{ObservationOutcome::tap_capacity_exhausted}, std::nullopt};
 }
 
-bool ObservationHub::has_lossless_capacity(const CommunicationItem& item) const noexcept {
-  for (const TapSlot& slot : taps_) {
-    if (slot.spec.has_value() &&
-        slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation &&
-        slot.spec->filter().matches(item) && slot.size == slot.spec->record_capacity()) {
-      return false;
-    }
-  }
-  return true;
-}
-
-ObservationStatus ObservationHub::preflight(const CommunicationItem& item) noexcept {
+ObservationReserveResult ObservationHub::reserve(const CommunicationItem& item) noexcept {
   std::lock_guard lock(mutex_);
-  if (has_lossless_capacity(item)) {
-    return {ObservationOutcome::accepted};
-  }
+  bool unavailable = false;
   for (TapSlot& slot : taps_) {
     if (slot.spec.has_value() &&
         slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation &&
-        slot.spec->filter().matches(item) && slot.size == slot.spec->record_capacity()) {
+        slot.spec->filter().matches(item) &&
+        slot.size + slot.reserved_lossless >= slot.spec->record_capacity()) {
       ++slot.backpressure_rejections;
       slot.experiment_validity_degraded = true;
+      unavailable = true;
     }
   }
-  return {ObservationOutcome::observation_backpressure};
+  if (unavailable) {
+    return {{ObservationOutcome::observation_backpressure}, std::nullopt};
+  }
+
+  std::array<std::uint64_t, kMaximumObservationTaps> tap_generations{};
+  for (std::size_t index = 0U; index < taps_.size(); ++index) {
+    TapSlot& slot = taps_[index];
+    if (!slot.spec.has_value() || !slot.spec->filter().matches(item)) {
+      continue;
+    }
+    tap_generations[index] = slot.generation;
+    ++slot.active_claims;
+    if (slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation) {
+      ++slot.reserved_lossless;
+    }
+  }
+  const std::uint64_t reservation_id = next_reservation_id_++;
+  ObservationReservation reservation(*this, hub_instance_id_, reservation_id, item, tap_generations);
+  return {{ObservationOutcome::accepted},
+          std::optional<ObservationReservation>(std::move(reservation))};
 }
 
 ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& event) noexcept {
@@ -279,11 +333,18 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
       return {ObservationOutcome::accepted};
     }
     if (spec.overflow_policy() == ObservationOverflowPolicy::coalesce_latest) {
-      const std::size_t latest = (slot.head + slot.size - 1U) % spec.record_capacity();
-      const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
-                                     spec.maximum_payload_bytes());
-      slot.records[latest].emplace(record);
-      ++slot.coalesced;
+      for (std::size_t offset = 0U; offset < slot.size; ++offset) {
+        const std::size_t candidate =
+            (slot.head + slot.size - 1U - offset) % spec.record_capacity();
+        if (has_coalescing_key(*slot.records[candidate], event.item)) {
+          const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
+                                         spec.maximum_payload_bytes());
+          slot.records[candidate].emplace(record);
+          ++slot.coalesced;
+          return {ObservationOutcome::accepted};
+        }
+      }
+      ++slot.dropped;
       return {ObservationOutcome::accepted};
     }
     ++slot.backpressure_rejections;
@@ -299,30 +360,77 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
   return {ObservationOutcome::accepted};
 }
 
-ObservationStatus ObservationHub::publish(const ObservationEvent& event) noexcept {
-  if (!Identity::create(event.observation_clock_domain).has_value()) {
+void ObservationHub::release_claims(ObservationReservation& reservation) noexcept {
+  for (std::size_t index = 0U; index < taps_.size(); ++index) {
+    if (reservation.tap_generations_[index] == 0U) {
+      continue;
+    }
+    TapSlot& slot = taps_[index];
+    if (slot.spec.has_value() && slot.generation == reservation.tap_generations_[index]) {
+      --slot.active_claims;
+      if (slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation) {
+        --slot.reserved_lossless;
+      }
+    }
+  }
+  reservation.active_ = false;
+  reservation.hub_ = nullptr;
+}
+
+void ObservationHub::cancel_from_destructor(ObservationReservation& reservation) noexcept {
+  std::lock_guard lock(mutex_);
+  if (reservation.active_ && reservation.hub_ == this &&
+      reservation.hub_instance_id_ == hub_instance_id_) {
+    release_claims(reservation);
+  }
+}
+
+ObservationStatus ObservationHub::cancel(ObservationReservation&& reservation) noexcept {
+  std::lock_guard lock(mutex_);
+  if (!reservation.active_ || reservation.hub_ != this ||
+      reservation.hub_instance_id_ != hub_instance_id_ || reservation.reservation_id_ == 0U) {
+    return {ObservationOutcome::invalid_reservation};
+  }
+  release_claims(reservation);
+  return {ObservationOutcome::accepted};
+}
+
+ObservationStatus ObservationHub::commit(ObservationReservation&& reservation,
+                                         const ObservationEvent& event) noexcept {
+  if (!reservation.active_ || reservation.hub_ != this ||
+      reservation.hub_instance_id_ != hub_instance_id_ || reservation.reservation_id_ == 0U) {
+    return {ObservationOutcome::invalid_reservation};
+  }
+  if (!(reservation.item_ == event.item) ||
+      !Identity::create(event.observation_clock_domain).has_value()) {
     return {ObservationOutcome::invalid_argument};
   }
   std::lock_guard lock(mutex_);
-  if (!has_lossless_capacity(event.item)) {
-    for (TapSlot& slot : taps_) {
-      if (slot.spec.has_value() &&
-          slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation &&
-          slot.spec->filter().matches(event.item) && slot.size == slot.spec->record_capacity()) {
-        ++slot.backpressure_rejections;
-        slot.experiment_validity_degraded = true;
-      }
+  for (std::size_t index = 0U; index < taps_.size(); ++index) {
+    if (reservation.tap_generations_[index] == 0U) {
+      continue;
     }
-    return {ObservationOutcome::observation_backpressure};
-  }
-  for (TapSlot& slot : taps_) {
-    if (slot.spec.has_value() && slot.spec->filter().matches(event.item)) {
-      const ObservationStatus status = retain(slot, event);
-      if (!status.succeeded()) {
-        return status;
-      }
+    const TapSlot& slot = taps_[index];
+    if (!slot.spec.has_value() || slot.generation != reservation.tap_generations_[index] ||
+        slot.active_claims == 0U ||
+        (slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation &&
+         slot.reserved_lossless == 0U)) {
+      return {ObservationOutcome::invalid_reservation};
     }
   }
+  for (std::size_t index = 0U; index < taps_.size(); ++index) {
+    if (reservation.tap_generations_[index] == 0U) {
+      continue;
+    }
+    TapSlot& slot = taps_[index];
+    --slot.active_claims;
+    if (slot.spec->overflow_policy() == ObservationOverflowPolicy::lossless_validation) {
+      --slot.reserved_lossless;
+    }
+    static_cast<void>(retain(slot, event));
+  }
+  reservation.active_ = false;
+  reservation.hub_ = nullptr;
   return {ObservationOutcome::accepted};
 }
 
@@ -360,6 +468,7 @@ ObservationStatus ObservationHub::acknowledge(const ObservationTapHandle& handle
   if (slot == nullptr) {
     return {ObservationOutcome::invalid_tap_handle};
   }
+  slot->backpressure_rejections = 0U;
   slot->experiment_validity_degraded = false;
   return {ObservationOutcome::accepted};
 }
@@ -376,6 +485,9 @@ ObservationStatus ObservationHub::detach(const ObservationTapHandle& handle) noe
   }
   if (!slot.spec.has_value() || slot.generation != handle.generation()) {
     return {ObservationOutcome::invalid_tap_handle};
+  }
+  if (slot.active_claims != 0U) {
+    return {ObservationOutcome::tap_busy};
   }
   for (std::optional<ObservationRecord>& record : slot.records) {
     record.reset();
