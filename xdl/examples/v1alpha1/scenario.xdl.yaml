@@ -1,0 +1,63 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Scenario
+metadata:
+  namespace: org.xverse.examples
+  name: observe-sample-loop
+  version: 0.1.0
+  description: Illustrative observation of a logical sample stream.
+  provenance:
+    source: xverse-public-example
+    revision: m2-draft
+    maturity: architectural-target
+    limitations:
+      - Acceptance expressions have no executable language in v1alpha1.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: org.xverse.examples
+    name: sample-loop
+  deploymentRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: Deployment
+    namespace: org.xverse.examples
+    name: local-simulated-sample-loop
+  initialConditions:
+    sample-count: 0
+  steps:
+    - id: request-sample
+      actionKind: set-parameter
+      targetRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: org.xverse.examples
+        name: sample-loop
+        element: source-instance
+      timeDomainId: experiment-time
+      schedule:
+        at: 0
+        unit: s
+      action:
+        parameter: nominal-rate
+        value: 10
+  observers:
+    - id: sample-observer
+      targetRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: org.xverse.examples
+        name: sample-loop
+        element: sample-flow
+      timeDomainId: experiment-time
+      samplingIntent: observe every delivered sample
+      payloadSchema: https://example.invalid/schemas/sample-v1.json
+      unitSemantics: dimensionless
+      evidenceSinkRef: urn:xverse:example:evidence:sample-observer
+  metrics:
+    - id: sample-count
+      observerIds:
+        - sample-observer
+      calculationRef: urn:xverse:metric:count
+      unitSemantics: count
+      acceptance: observed count is greater than zero
+  acceptanceIntent: Demonstrate document semantics only; no runtime result is claimed.

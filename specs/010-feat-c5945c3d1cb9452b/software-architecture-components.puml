@@ -1,0 +1,19 @@
+@startuml
+component "External package manifest
+(file, size, SHA-256)" as Manifest
+component "Compiled policy lock
+(version, source, license)" as Lock
+component "Retained .deb archives" as Archives
+component "Extracted reference tree" as Reference
+component "Offline toolchain prefix" as Prefix
+component "Dependency preflight" as Preflight
+component "CMake build envelope" as Build
+Manifest --> Preflight
+Lock --> Preflight
+Archives --> Preflight
+Preflight --> Reference
+Reference --> Preflight
+Prefix --> Preflight
+Preflight --> Build
+Build --> Preflight
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+participant Caller
+participant DependencyManifest as Manifest
+participant ArchiveVerifier as Archives
+participant PayloadBinding as Payload
+participant ToolchainProbe as Probe
+participant BuildEnvelope as Build
+Caller -> Manifest: load explicit manifest and compiled lock
+Manifest -> Archives: verified identities
+Archives -> Payload: extracted complete reference tree
+alt prerequisite failure
+  Payload --> Caller: classified failure
+else bound payload
+  Payload -> Probe: admitted prefix
+  Probe -> Build: configure/build with selected compiler
+  Build --> Caller: policy evidence or classified failure
+end
+@enduml

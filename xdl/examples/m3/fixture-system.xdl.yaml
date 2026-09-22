@@ -1,0 +1,33 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: System
+metadata:
+  namespace: io.xverse.examples
+  name: lifecycle-fixture-system
+  version: 0.1.0
+  description: Logical system containing the lifecycle fixture.
+  provenance:
+    source: xverse-public-example
+    revision: m3-fixture-v1
+    maturity: prototype
+    limitations:
+      - Contains no production or legacy component.
+spec:
+  nodes:
+    - id: fixture-node
+      roles:
+        - isolated-test
+  componentInstances:
+    - id: fixture-instance
+      componentRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: Component
+        namespace: io.xverse.examples
+        name: lifecycle-fixture
+      nodeId: fixture-node
+  timeDomains:
+    - id: fixture-time
+      clockClass: monotonic
+      epoch: fixture-start
+      rate: wall-rate
+      monotonic: true
+  defaultTimeDomainId: fixture-time

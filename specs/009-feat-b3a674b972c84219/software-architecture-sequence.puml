@@ -1,0 +1,12 @@
+@startuml
+actor Maintainer
+participant "Dependency preflight" as Preflight
+participant "Package manifest" as Manifest
+participant "Offline prefix" as Prefix
+participant "CMake envelope" as Build
+Maintainer -> Preflight: verify-toolchain
+Preflight -> Manifest: parse expected versions and hashes
+Preflight -> Prefix: probe tools headers libraries metadata
+Preflight -> Build: emit readiness result
+Build --> Maintainer: admitted or classified failure
+@enduml

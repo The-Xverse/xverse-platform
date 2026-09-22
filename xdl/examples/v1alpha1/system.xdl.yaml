@@ -1,0 +1,91 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: System
+metadata:
+  namespace: org.xverse.examples
+  name: sample-loop
+  version: 0.1.0
+  description: Domain-neutral logical sample production and observation loop.
+  provenance:
+    source: xverse-public-example
+    revision: m2-draft
+    maturity: architectural-target
+    limitations:
+      - Structural example only; no runtime behavior has been verified.
+spec:
+  nodes:
+    - id: producer-node
+      roles:
+        - compute
+    - id: observer-node
+      roles:
+        - compute
+  componentInstances:
+    - id: source-instance
+      componentRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: Component
+        namespace: org.xverse.examples
+        name: signal-source
+      nodeId: producer-node
+      parameterValues:
+        nominal-rate: 10
+  devices:
+    - id: sample-device
+      capabilities:
+        - produce-samples
+      supportedRealizationClasses:
+        - simulated
+        - physical
+      nodeId: producer-node
+  interfaces:
+    - id: sample-stream
+      direction: bidirectional
+      payloadSchema: https://example.invalid/schemas/sample-v1.json
+      unitSemantics: dimensionless
+      compatibility: exact
+      versionRange: 1.x
+  endpoints:
+    - id: samples-out
+      ownerId: source-instance
+      interfaceId: sample-stream
+      direction: output
+    - id: samples-in
+      ownerId: observer-node
+      interfaceId: sample-stream
+      direction: input
+  sensors:
+    - id: sample-sensor
+      deviceId: sample-device
+      observedQuantity: normalized-sample
+      outputEndpointId: samples-out
+      unitSemantics: dimensionless
+      samplingIntent: nominal 10 Hz
+      maturity: architectural-target
+  flows:
+    - id: sample-flow
+      sourceEndpointId: samples-out
+      destinationEndpointIds:
+        - samples-in
+      interfaceId: sample-stream
+      deliveryIntent: ordered
+      networkId: logical-network
+      timeDomainId: experiment-time
+  networks:
+    - id: logical-network
+      scope: sample-loop
+      capabilities:
+        - ordered-transfer
+  links:
+    - id: sample-link
+      networkId: logical-network
+      participantEndpointIds:
+        - samples-out
+        - samples-in
+      connectivity: directed
+  timeDomains:
+    - id: experiment-time
+      clockClass: logical
+      epoch: scenario-start
+      rate: one-unit-per-second
+      monotonic: true
+  defaultTimeDomainId: experiment-time

@@ -1,0 +1,76 @@
+# Doxygen configuration for the X-Verse platform Python implementation.
+# Generated output belongs under build/ and is intentionally not versioned.
+
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = "X-Verse Platform"
+PROJECT_NUMBER         = 0.3.0
+PROJECT_BRIEF          = "Domain-neutral XDL validation and prototype compatibility lifecycle"
+OUTPUT_DIRECTORY       = build/doxygen
+CREATE_SUBDIRS         = NO
+OUTPUT_LANGUAGE        = English
+
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = .
+STRIP_FROM_INC_PATH    = .
+SHORT_NAMES            = NO
+JAVADOC_AUTOBRIEF      = YES
+PYTHON_DOCSTRING       = YES
+INHERIT_DOCS           = YES
+TAB_SIZE               = 4
+OPTIMIZE_OUTPUT_JAVA   = NO
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+# Doxygen extracts every source symbol for complete repository navigation.
+# scripts/check_doxygen.py separately enforces meaningful docstrings for the
+# production package and reusable scripts.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_NO_PARAMDOC       = NO
+WARN_AS_ERROR          = NO
+WARN_FORMAT            = "$file:$line: $text"
+WARN_LOGFILE           = build/doxygen-warnings.log
+
+INPUT                  = docs/doxygen/mainpage.md \
+                         src/xverse_xdl \
+                         scripts \
+                         tests
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.py *.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */__pycache__/* */.venv/* */build/*
+USE_MDFILE_AS_MAINPAGE = docs/doxygen/mainpage.md
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+REFERENCES_LINK_SOURCE = YES
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_TIMESTAMP         = NO
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = NO
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_DOCBOOK       = NO
+
+QUIET                  = YES

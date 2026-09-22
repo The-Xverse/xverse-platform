@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xverse-xdl"
+version = "0.4.0"
+description = "Offline XDL validation, derived compatibility catalog, and isolated fixture lifecycle"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "jsonschema[format]>=4.26,<5",
+  "referencing>=0.37,<1",
+  "ruamel.yaml>=0.19.1,<0.20",
+]
+
+[project.scripts]
+xdl = "xverse_xdl.cli:main"
+
+[project.urls]
+Repository = "https://github.com/The-Xverse/xverse-platform"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xverse_xdl"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"xdl/schemas/v1alpha1" = "xverse_xdl/schemas/v1alpha1"
+"xdl/profiles" = "xverse_xdl/profiles"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/xdl/schemas/v1alpha1",
+  "/xdl/profiles",
+  "/tests",
+  "/README.md",
+  "/LICENSE",
+]

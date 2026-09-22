@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/profile.schema.json",
+  "title": "XDL v1alpha1 Profile",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "kind": {"const": "Profile"},
+    "metadata": {"$ref": "common.schema.json#/$defs/metadata"},
+    "extensions": {"$ref": "common.schema.json#/$defs/extensions"},
+    "spec": {
+      "type": "object",
+      "required": ["extensionNamespace", "compatibleApiVersions", "schemaRef", "documentationRef", "conflictPolicy"],
+      "properties": {
+        "extensionNamespace": {"$ref": "common.schema.json#/$defs/namespace"},
+        "compatibleApiVersions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"const": "xverse.io/xdl/v1alpha1"}},
+        "schemaRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "documentationRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "standardRefs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "format": "uri-reference"}},
+        "conflictPolicy": {"const": "reject"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

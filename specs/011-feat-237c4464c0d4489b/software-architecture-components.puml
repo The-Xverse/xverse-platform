@@ -1,0 +1,10 @@
+@startuml
+component "SESN host verifier" as Verifier
+component "bubblewrap network namespace" as Sandbox
+component "X-COM preflight" as Preflight
+component "Evidence manifest" as Evidence
+Verifier --> Sandbox
+Sandbox --> Preflight
+Verifier --> Evidence
+Evidence --> Sandbox : records allow_network=false
+@enduml

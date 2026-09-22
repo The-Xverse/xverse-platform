@@ -1,0 +1,15 @@
+@startuml
+component DependencyManifest
+component PolicyLock
+component ArchiveVerifier
+component PayloadBinding
+component ToolchainProbe
+component BuildEnvelope
+component DocumentValidation
+DependencyManifest --> PolicyLock
+PolicyLock --> ArchiveVerifier
+ArchiveVerifier --> PayloadBinding
+PayloadBinding --> ToolchainProbe
+ToolchainProbe --> BuildEnvelope
+DocumentValidation --> PolicyLock
+@enduml

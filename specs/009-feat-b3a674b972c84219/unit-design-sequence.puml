@@ -1,0 +1,11 @@
+@startuml
+participant Caller
+participant DependencyManifest as Manifest
+participant ToolchainProbe as Probe
+participant DiagnosticSet as Diagnostics
+Caller -> Manifest: load(explicit path)
+Manifest --> Caller: immutable lock or error
+Caller -> Probe: verify(lock, explicit prefix)
+Probe -> Diagnostics: append stable results
+Diagnostics --> Caller: admitted or classified failure
+@enduml

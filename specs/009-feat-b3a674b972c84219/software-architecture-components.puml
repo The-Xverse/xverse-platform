@@ -1,0 +1,9 @@
+@startuml
+component "Package manifest" as Manifest
+component "Offline toolchain prefix" as Prefix
+component "Dependency preflight" as Preflight
+component "CMake build envelope" as Build
+Manifest --> Preflight
+Prefix --> Preflight
+Preflight --> Build
+@enduml

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/component.schema.json",
+  "title": "XDL v1alpha1 Component",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "kind": {"const": "Component"},
+    "metadata": {"$ref": "common.schema.json#/$defs/metadata"},
+    "extensions": {"$ref": "common.schema.json#/$defs/extensions"},
+    "spec": {
+      "type": "object",
+      "required": ["capabilities", "interfaces", "endpoints"],
+      "properties": {
+        "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "interfaces": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/interface"}},
+        "endpoints": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/endpoint"}},
+        "parameters": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/parameter"}},
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "modelKind", "externalRef", "inputs", "outputs", "maturity"],
+            "properties": {
+              "id": {"$ref": "common.schema.json#/$defs/identifier"},
+              "modelKind": {"type": "string", "minLength": 1},
+              "externalRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+              "inputs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/identifier"}, "uniqueItems": true},
+              "outputs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/identifier"}, "uniqueItems": true},
+              "maturity": {"$ref": "common.schema.json#/$defs/maturity"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "artifactRequirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "artifactKind", "versionConstraint"],
+            "properties": {
+              "id": {"$ref": "common.schema.json#/$defs/identifier"},
+              "artifactKind": {"type": "string", "minLength": 1},
+              "versionConstraint": {"type": "string", "minLength": 1},
+              "standardRef": {"type": "string", "format": "uri-reference"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "resourceRequirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "resourceClass", "minimum"],
+            "properties": {
+              "id": {"$ref": "common.schema.json#/$defs/identifier"},
+              "resourceClass": {"type": "string", "minLength": 1},
+              "minimum": {"$ref": "common.schema.json#/$defs/quantity"},
+              "hardLimit": {"$ref": "common.schema.json#/$defs/quantity"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

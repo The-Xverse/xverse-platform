@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/profiles/runtime-compatibility/v0.2/schema.json",
+  "title": "X-Verse runtime compatibility Profile v0.2",
+  "type": "object",
+  "required": ["schemaVersion", "environmentId", "provider", "actions", "evidence"],
+  "properties": {
+    "schemaVersion": {"const": "0.2.0"},
+    "environmentId": {"$ref": "#/$defs/identifier"},
+    "provider": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "kind": {"enum": ["fixture", "process"]}
+      },
+      "additionalProperties": false
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {"$ref": "#/$defs/action"}
+    },
+    "process": {"$ref": "#/$defs/process"},
+    "planningBlockers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^XVERSE-PLAN-[A-Z0-9]+(?:-[A-Z0-9]+)*$"
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["maturity", "limitations"],
+      "properties": {
+        "maturity": {"enum": ["architectural-target", "prototype"]},
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"provider": {"properties": {"kind": {"const": "process"}}}}},
+      "then": {"required": ["process"]},
+      "else": {"not": {"required": ["process"]}}
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 63
+    },
+    "action": {
+      "type": "object",
+      "required": ["id", "phase", "operation", "timeoutSeconds"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "phase": {"enum": ["prepare", "start", "observe", "stop", "cleanup"]},
+        "operation": {"enum": ["validate", "start", "observe", "stop", "cleanup"]},
+        "condition": {"type": "string", "minLength": 1},
+        "timeoutSeconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 300}
+      },
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "required": ["executable", "arguments", "workingDirectory", "environmentNames", "inheritedHandles", "implicitShell"],
+      "properties": {
+        "executable": {"type": "string", "pattern": "^/", "minLength": 2},
+        "arguments": {"type": "array", "items": {"type": "string"}},
+        "workingDirectory": {"type": "string", "pattern": "^/", "minLength": 1},
+        "environmentNames": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}
+        },
+        "inheritedHandles": {"const": "closed"},
+        "implicitShell": {"const": false}
+      },
+      "additionalProperties": false
+    }
+  }
+}

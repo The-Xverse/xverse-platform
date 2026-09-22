@@ -1,0 +1,73 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Deployment
+metadata:
+  namespace: org.xverse.examples
+  name: local-simulated-sample-loop
+  version: 0.1.0
+  description: Illustrative simulated realization of the sample-loop System.
+  provenance:
+    source: xverse-public-example
+    revision: m2-draft
+    maturity: architectural-target
+    limitations:
+      - Targets and artifact references are illustrative and have not been executed.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: org.xverse.examples
+    name: sample-loop
+  targets:
+    - id: simulated-target
+      targetClass: model-unit
+      capabilities:
+        - deterministic-step
+      offeredResourceIds:
+        - local-compute
+      lifecycle: &lifecycle
+        prepare: artifact and resource references resolve
+        ready: target reports prepared state
+        start: begin only after scenario authorization
+        stop: request quiescence before release
+        failure: mark binding failed and retain diagnostics
+        ownership: deployment-controller
+  artifacts:
+    - id: sample-model
+      artifactKind: fmi-model-unit
+      version: 0.1.0-example
+      digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+      sourceRef: https://example.invalid/artifacts/sample-model-0.1.0.fmu
+      maturity: architectural-target
+      limitations:
+        - The URI and digest are illustrative placeholders.
+  resources:
+    - id: local-compute
+      resourceClass: compute-capacity
+      capacity:
+        value: 2
+        unit: abstract-compute-unit
+      hardLimit:
+        value: 2
+        unit: abstract-compute-unit
+      allocationPolicy: exclusive
+  bindings:
+    - id: source-binding
+      logicalRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: org.xverse.examples
+        name: sample-loop
+        element: source-instance
+      realizationClass: simulated
+      targetId: simulated-target
+      artifactIds:
+        - sample-model
+      resourceIds:
+        - local-compute
+      lifecycle: *lifecycle
+  readiness:
+    requiredConditions:
+      - all resource references resolve
+      - artifact digest is verified by a future implementation
+      - lifecycle ready condition succeeds
+    failurePolicy: collect-all

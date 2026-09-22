@@ -1,0 +1,119 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Deployment
+metadata:
+  namespace: io.xverse.compat.legacy
+  name: sd0001-gateway-candidate
+  version: 0.1.0
+  description: Fail-closed candidate deployment for the reproducible gateway artifact.
+  provenance:
+    source: urn:xverse:decision:sd0001
+    revision: sd0001-xdl-v1
+    maturity: architectural-target
+    evidenceRefs:
+      - urn:xverse:evidence:sd0001:build
+    limitations:
+      - The artifact is build-verified but has not been executed.
+      - Environment ownership, resource limits, readiness, and interface compatibility remain unresolved.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: io.xverse.compat.legacy
+    name: zenoh-someip-gateway-system
+  targets:
+    - id: gateway-process-target
+      targetClass: process
+      capabilities:
+        - isolated-process
+        - closed-environment
+      profileRefs:
+        - apiVersion: xverse.io/xdl/v1alpha1
+          kind: Profile
+          namespace: io.xverse.runtime
+          name: compatibility-runtime
+      lifecycle: &gateway-lifecycle
+        prepare: verify the exact artifact and isolation attestation before staging
+        ready: require the approved external readiness probe within its timeout
+        start: start only the declared gateway process after permit activation
+        stop: stop only the exact process group in the provider-issued ownership handle
+        failure: fail closed, retain evidence, and perform only handle-authorized containment
+        ownership: provider-issued opaque handle; host and containment owners remain unassigned
+  artifacts:
+    - id: candidate-gateway-bundle
+      artifactKind: legacy-process-bundle
+      version: v1.0.0+sd0001.repro1
+      digest: sha256:6ce98220d1c4997a20d2b85464e7e1550e8347d68c572bfb63586c150f41f946
+      sourceRef: urn:sha256:6ce98220d1c4997a20d2b85464e7e1550e8347d68c572bfb63586c150f41f946
+      maturity: prototype
+      limitations:
+        - Restricted durable retention is unassigned.
+        - System runtime libraries are outside the bundle.
+        - Vendor binaries contain withheld historical build-path strings.
+  bindings:
+    - id: gateway-process-binding
+      logicalRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: io.xverse.compat.legacy
+        name: zenoh-someip-gateway-system
+        element: gateway-instance
+      realizationClass: virtual
+      targetId: gateway-process-target
+      artifactIds:
+        - candidate-gateway-bundle
+      lifecycle: *gateway-lifecycle
+      extensions:
+        io.xverse.runtime.compatibility:
+          schemaVersion: 0.2.0
+          environmentId: sd0001-gateway-review
+          provider:
+            id: zenoh-someip-gateway-provider
+            kind: process
+          actions:
+            - id: prepare
+              phase: prepare
+              operation: validate
+              timeoutSeconds: 30
+            - id: start
+              phase: start
+              operation: start
+              timeoutSeconds: 10
+            - id: observe
+              phase: observe
+              operation: observe
+              condition: approved external probe reports both protocol boundaries ready
+              timeoutSeconds: 30
+            - id: stop
+              phase: stop
+              operation: stop
+              timeoutSeconds: 10
+            - id: cleanup
+              phase: cleanup
+              operation: cleanup
+              timeoutSeconds: 10
+          process:
+            executable: /opt/xverse/artifacts/6ce98220d1c4997a20d2b85464e7e1550e8347d68c572bfb63586c150f41f946/build/gateway
+            arguments: []
+            workingDirectory: /opt/xverse/artifacts/6ce98220d1c4997a20d2b85464e7e1550e8347d68c572bfb63586c150f41f946/build
+            environmentNames: []
+            inheritedHandles: closed
+            implicitShell: false
+          planningBlockers:
+            - XVERSE-PLAN-ARTIFACT-RETENTION-UNAPPROVED
+            - XVERSE-PLAN-ENVIRONMENT-UNPINNED
+            - XVERSE-PLAN-INTERFACE-CONTRACT-UNVERIFIED
+            - XVERSE-PLAN-OWNER-UNASSIGNED
+            - XVERSE-PLAN-READINESS-UNVERIFIED
+            - XVERSE-PLAN-RESOURCE-LIMITS-UNAPPROVED
+            - XVERSE-PLAN-VENDOR-BINARY-DISPOSITION
+          evidence:
+            maturity: architectural-target
+            limitations:
+              - Timeouts are proposed safety ceilings and have not been measured.
+              - Valid catalog derivation does not authorize or establish runtime compatibility.
+  readiness:
+    requiredConditions:
+      - every declared planning blocker is resolved through reviewed evidence
+      - artifact and environment identities match the approved isolation attestation
+      - external readiness probe and stop policy are owner-approved
+    failurePolicy: fail-fast

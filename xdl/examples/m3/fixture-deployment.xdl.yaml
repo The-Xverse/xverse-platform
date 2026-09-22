@@ -1,0 +1,92 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Deployment
+metadata:
+  namespace: io.xverse.examples
+  name: isolated-lifecycle-fixture
+  version: 0.1.0
+  description: Isolated in-memory lifecycle fixture deployment.
+  provenance:
+    source: xverse-public-example
+    revision: m3-fixture-v1
+    maturity: prototype
+    limitations:
+      - No external process, legacy workload, or production resource is used.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: io.xverse.examples
+    name: lifecycle-fixture-system
+  targets:
+    - id: fixture-target
+      targetClass: process
+      capabilities:
+        - isolated-fixture
+      lifecycle: &fixture-lifecycle
+        prepare: validate the closed fixture graph
+        ready: fixture provider reports running
+        start: create one in-memory owned fixture resource
+        stop: stop only the resource selected by its opaque handle
+        failure: fail closed and retain public-safe evidence
+        ownership: opaque provider-issued handle
+  artifacts:
+    - id: fixture-artifact
+      artifactKind: in-memory-fixture
+      version: 0.1.0
+      digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      sourceRef: urn:xverse:fixture:lifecycle:v1
+      maturity: prototype
+      limitations:
+        - Identity marker only; no executable artifact is loaded.
+  bindings:
+    - id: fixture-binding
+      logicalRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: io.xverse.examples
+        name: lifecycle-fixture-system
+        element: fixture-instance
+      realizationClass: simulated
+      targetId: fixture-target
+      artifactIds:
+        - fixture-artifact
+      lifecycle: *fixture-lifecycle
+      extensions:
+        io.xverse.runtime.compatibility:
+          schemaVersion: 0.1.0
+          environmentId: isolated-fixture
+          provider:
+            id: fixture-provider
+            kind: fixture
+          actions:
+            - id: prepare
+              phase: prepare
+              operation: validate
+              timeoutSeconds: 1
+            - id: start
+              phase: start
+              operation: start
+              timeoutSeconds: 2
+            - id: observe
+              phase: observe
+              operation: observe
+              condition: running
+              timeoutSeconds: 1
+            - id: stop
+              phase: stop
+              operation: stop
+              timeoutSeconds: 2
+            - id: cleanup
+              phase: cleanup
+              operation: cleanup
+              timeoutSeconds: 1
+          evidence:
+            maturity: prototype
+            limitations:
+              - Fixture lifecycle success is not legacy compatibility or application parity.
+  readiness:
+    requiredConditions:
+      - closed fixture graph validates
+      - fixture artifact identity has an immutable digest
+      - fixture provider reports running
+    failurePolicy: fail-fast

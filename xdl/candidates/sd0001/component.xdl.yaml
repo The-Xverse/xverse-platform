@@ -1,0 +1,62 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Component
+metadata:
+  namespace: io.xverse.compat.legacy
+  name: zenoh-someip-gateway
+  version: 0.1.0
+  description: Logical boundary for the unchanged legacy Zenoh and SOME/IP gateway.
+  provenance:
+    source: urn:github:The-Xverse:zenoh2someip_bridge
+    revision: 7c393c9f5a49239c76122486c49cb1993164475c
+    maturity: observed
+    evidenceRefs:
+      - urn:xverse:evidence:sd0001:build
+    limitations:
+      - Interface identities summarize configured directions; payload schemas and protocol versions remain unverified.
+      - This logical resource does not claim runtime compatibility or application parity.
+spec:
+  capabilities:
+    - protocol-translation
+    - bidirectional-routing
+  interfaces:
+    - id: zenoh-ingress
+      direction: input
+      payloadSchema: urn:xverse:unavailable:sd0001:zenoh-ingress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: someip-egress
+      direction: output
+      payloadSchema: urn:xverse:unavailable:sd0001:someip-egress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: someip-ingress
+      direction: input
+      payloadSchema: urn:xverse:unavailable:sd0001:someip-ingress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: zenoh-egress
+      direction: output
+      payloadSchema: urn:xverse:unavailable:sd0001:zenoh-egress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+  endpoints:
+    - id: zenoh-in
+      ownerId: zenoh-someip-gateway
+      interfaceId: zenoh-ingress
+      direction: input
+    - id: someip-out
+      ownerId: zenoh-someip-gateway
+      interfaceId: someip-egress
+      direction: output
+    - id: someip-in
+      ownerId: zenoh-someip-gateway
+      interfaceId: someip-ingress
+      direction: input
+    - id: zenoh-out
+      ownerId: zenoh-someip-gateway
+      interfaceId: zenoh-egress
+      direction: output
+  artifactRequirements:
+    - id: gateway-process-bundle
+      artifactKind: legacy-process-bundle
+      versionConstraint: v1.0.0+sd0001.repro1

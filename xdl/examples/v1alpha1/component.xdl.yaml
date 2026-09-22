@@ -1,0 +1,49 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Component
+metadata:
+  namespace: org.xverse.examples
+  name: signal-source
+  version: 0.1.0
+  description: Logical source of a dimensionless sample stream.
+  provenance:
+    source: xverse-public-example
+    revision: m2-draft
+    maturity: architectural-target
+    limitations:
+      - No implementation artifact is supplied by this logical component.
+extensions:
+  org.xverse.examples.measurement:
+    quantitySystem: illustrative-dimensionless
+spec:
+  capabilities:
+    - produce-samples
+  interfaces:
+    - id: sample-stream
+      direction: output
+      payloadSchema: https://example.invalid/schemas/sample-v1.json
+      unitSemantics: dimensionless
+      compatibility: exact
+      versionRange: 1.x
+  endpoints:
+    - id: samples-out
+      ownerId: signal-source
+      interfaceId: sample-stream
+      direction: output
+  parameters:
+    - id: nominal-rate
+      valueType: number
+      unitSemantics: Hz
+      default: 10
+      constraints:
+        minimum: 0.1
+      mutability: configuration
+  artifactRequirements:
+    - id: source-implementation
+      artifactKind: executable-component
+      versionConstraint: ">=0.1.0 <1.0.0"
+  resourceRequirements:
+    - id: source-compute
+      resourceClass: compute-capacity
+      minimum:
+        value: 1
+        unit: abstract-compute-unit

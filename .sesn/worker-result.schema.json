@@ -1,0 +1,135 @@
+{
+  "$defs": {
+    "PhaseReview": {
+      "additionalProperties": false,
+      "properties": {
+        "approved": {
+          "default": false,
+          "title": "Approved",
+          "type": "boolean"
+        },
+        "checklist_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Checklist Ids",
+          "type": "array"
+        },
+        "findings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Findings",
+          "type": "array"
+        },
+        "rationale": {
+          "default": "",
+          "title": "Rationale",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "title": "PhaseReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_effort": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Effort"
+    },
+    "actual_model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actual Model"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "changed_paths": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Changed Paths",
+      "type": "array"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "findings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "outputs": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Outputs",
+      "type": "object"
+    },
+    "phase_reviews": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PhaseReview"
+      },
+      "title": "Phase Reviews",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "default": "completed",
+      "enum": [
+        "completed",
+        "failed",
+        "limit-reached"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "unresolved_issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unresolved Issues",
+      "type": "array"
+    }
+  },
+  "title": "WorkerResult",
+  "type": "object"
+}

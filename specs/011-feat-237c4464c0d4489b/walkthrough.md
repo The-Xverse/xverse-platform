@@ -1,0 +1,1 @@
+Confirm the capability-007 authorization records agree, run all five verification measures, inspect their candidate revisions, logs, environment-manifest hashes, and network policies, then inspect the independent review before presenting the artifact bundle for human validation.

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/common.schema.json",
+  "title": "XDL v1alpha1 common definitions",
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 63
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)+$",
+      "maxLength": 253
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "maturity": {
+      "enum": ["observed", "inferred", "architectural-target", "prototype", "verified"]
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source", "revision", "maturity"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1},
+        "maturity": {"$ref": "#/$defs/maturity"},
+        "evidenceRefs": {"type": "array", "items": {"type": "string", "format": "uri-reference"}, "uniqueItems": true},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["namespace", "name", "version", "provenance"],
+      "properties": {
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "version": {"$ref": "#/$defs/semver"},
+        "description": {"type": "string", "minLength": 1},
+        "labels": {"type": "object", "additionalProperties": {"type": "string"}},
+        "annotations": {"type": "object", "additionalProperties": {"type": "string"}},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "traceability": {"type": "array", "items": {"$ref": "#/$defs/traceability"}}
+      },
+      "additionalProperties": false
+    },
+    "resourceRef": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"enum": ["System", "Component", "Deployment", "Scenario", "Profile"]},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "elementRef": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name", "element"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"enum": ["System", "Component", "Deployment", "Scenario", "Profile"]},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "element": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "traceability": {
+      "type": "object",
+      "required": ["relation", "ref", "revision", "maturity"],
+      "properties": {
+        "relation": {"enum": ["derived-from", "satisfies", "verifies", "evidenced-by", "supersedes"]},
+        "ref": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1},
+        "maturity": {"$ref": "#/$defs/maturity"},
+        "elementId": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/namespace"},
+      "additionalProperties": {"type": ["object", "array", "string", "number", "integer", "boolean", "null"]}
+    },
+    "quantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "valueType", "unitSemantics", "mutability"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "description": {"type": "string"},
+        "valueType": {"enum": ["boolean", "integer", "number", "string", "object", "array"]},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "default": {},
+        "constraints": {"type": "object"},
+        "mutability": {"enum": ["constant", "configuration", "scenario"]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "interface": {
+      "type": "object",
+      "required": ["id", "direction", "payloadSchema", "compatibility"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "direction": {"enum": ["input", "output", "bidirectional"]},
+        "payloadSchema": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "compatibility": {"enum": ["exact", "backward", "explicit-converter"]},
+        "versionRange": {"type": "string", "minLength": 1},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["id", "ownerId", "interfaceId", "direction"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "ownerId": {"$ref": "#/$defs/identifier"},
+        "interfaceId": {"$ref": "#/$defs/identifier"},
+        "direction": {"enum": ["input", "output", "bidirectional"]},
+        "multiplicity": {"type": "string", "minLength": 1},
+        "readinessCondition": {"type": "string", "minLength": 1},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": ["prepare", "ready", "start", "stop", "failure"],
+      "properties": {
+        "prepare": {"type": "string", "minLength": 1},
+        "ready": {"type": "string", "minLength": 1},
+        "start": {"type": "string", "minLength": 1},
+        "stop": {"type": "string", "minLength": 1},
+        "failure": {"type": "string", "minLength": 1},
+        "ownership": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["id", "artifactKind", "version", "sourceRef", "maturity"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "artifactKind": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9+._-]*:[A-Fa-f0-9]+$"},
+        "sourceRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "maturity": {"$ref": "#/$defs/maturity"},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

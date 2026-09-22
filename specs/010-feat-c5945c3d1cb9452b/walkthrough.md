@@ -1,0 +1,1 @@
+Review the five derived build requirements, compare dependency-lock.md with the supplied twelve-entry package manifest, run all five verification measures with network unavailable, inspect the root CMake policy, confirm no X-COM runtime source was added, then inspect the independent review and SESN report before promoting this candidate to the next slice baseline.

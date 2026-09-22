@@ -1,0 +1,20 @@
+@startuml
+actor Maintainer
+participant "Dependency preflight" as Preflight
+participant "Manifest + compiled lock" as Lock
+participant "Retained archives" as Archives
+participant "Reference/prefix" as Payload
+participant "CMake envelope" as Build
+Maintainer -> Preflight: verify-toolchain
+Preflight -> Lock: validate file identities and policy metadata
+Preflight -> Archives: verify hashes and Debian metadata
+Preflight -> Payload: extract and compare complete locked payload
+alt identity or payload rejected
+  Preflight --> Maintainer: classified JSON failure (no executable probe)
+else payload admitted
+  Preflight -> Payload: probe admitted executables and metadata
+  Preflight -> Build: configure/build policy probe with selected compiler
+  Build -> Preflight: compiler and effective-policy evidence
+  Preflight --> Maintainer: admitted or classified JSON failure
+end
+@enduml

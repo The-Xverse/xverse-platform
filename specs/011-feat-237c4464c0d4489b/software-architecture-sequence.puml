@@ -1,0 +1,14 @@
+@startuml
+actor Maintainer
+participant "SESN host verifier" as Verifier
+participant "offline sandbox" as Sandbox
+participant "X-COM preflight" as Preflight
+participant "evidence store" as Evidence
+Maintainer -> Verifier: run five verification measures
+Verifier -> Sandbox: start with network namespace unshared
+Sandbox -> Preflight: execute revision-bound measure
+Preflight --> Sandbox: classified result
+Sandbox --> Verifier: exit status and bounded log
+Verifier -> Evidence: retain log, environment manifest, hashes, network policy
+Verifier --> Maintainer: reviewable evidence IDs
+@enduml

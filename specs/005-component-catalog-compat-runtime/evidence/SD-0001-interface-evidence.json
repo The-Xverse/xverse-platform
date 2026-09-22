@@ -1,0 +1,66 @@
+{
+  "audit": {
+    "gatewayExecuted": false,
+    "mode": "static-read-only",
+    "privateValuesRetained": false,
+    "sourceExcerptsRetained": false
+  },
+  "candidate": "SD-0001",
+  "files": {
+    "gateway": "1fcf49058ff358dc7e81b11f18f4f288c709409b1ac0d9d7f3258b6e12b4b7c2",
+    "mapping": "198529ddb125a7eb069c69b6dc1b7de5267f192b162e28ac97dd4099462c7232",
+    "someipSource": "3d043b05226087bfaa35601da02c20d13fba8ba487504412a22e3bb04c2e1434",
+    "vsomeipConfiguration": "332db003c2f2038ceb10dc67b353fd99539eca001c8305b6c58f1ba36a34f144",
+    "zenohSource": "173168b42fc55b3ad1fca40857193c06bcb6b9afb7fc044ed46f677dd3ebf661"
+  },
+  "interface": {
+    "someipToZenoh": {
+      "payloadBehavior": "raw-bytes",
+      "routeCount": 2
+    },
+    "zenohToSomeip": {
+      "routeCount": 4,
+      "transformations": {
+        "float32Native": 1,
+        "float32NativeWithDelayedReset": 1,
+        "float32NativeWithUnitScaling": 1,
+        "oneByteBoolean": 1
+      }
+    }
+  },
+  "lifecycle": {
+    "detachedWorkObserved": true,
+    "externalReadinessProbe": false,
+    "gracefulStopApi": false,
+    "payloadBearingLogsObserved": true,
+    "signalHandlerObserved": false,
+    "sourceTestToolTargets": true,
+    "testToolsInCandidateBundle": false
+  },
+  "protocols": {
+    "someip": {
+      "eventReliability": "unreliable",
+      "serviceDiscoveryEnabled": true,
+      "serviceDiscoveryTransport": "udp",
+      "vsomeipFileVersion": "3.6.1",
+      "vsomeipSonameMajor": "3"
+    },
+    "zenoh": {
+      "binarySha256": "49bfc1572a8b35b77050a91334fbc73024e798865a834e364e6544ff3f870187",
+      "compiledPrivateEndpointObserved": true,
+      "endpointExternallyConfigured": false,
+      "semanticVersion": "unavailable"
+    }
+  },
+  "schemaVersion": 1,
+  "serialization": {
+    "floatByteOrder": "unspecified",
+    "floatRepresentation": "host-native-memory",
+    "portableWireSchemaVerified": false
+  },
+  "source": {
+    "commit": "7c393c9f5a49239c76122486c49cb1993164475c",
+    "tree": "4aab3e623a293626b44a9d8e33c05a307bf51956"
+  },
+  "status": "static-contract-evidence-runtime-unverified"
+}

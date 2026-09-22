@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/deployment.schema.json",
+  "title": "XDL v1alpha1 Deployment",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "kind": {"const": "Deployment"},
+    "metadata": {"$ref": "common.schema.json#/$defs/metadata"},
+    "extensions": {"$ref": "common.schema.json#/$defs/extensions"},
+    "spec": {
+      "type": "object",
+      "required": ["systemRef", "targets", "bindings", "readiness"],
+      "properties": {
+        "systemRef": {"$ref": "common.schema.json#/$defs/resourceRef"},
+        "targets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/target"}},
+        "artifacts": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/artifact"}},
+        "resources": {"type": "array", "items": {"$ref": "#/$defs/resource"}},
+        "simulators": {"type": "array", "items": {"$ref": "#/$defs/simulator"}},
+        "bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/binding"}},
+        "networkBindings": {"type": "array", "items": {"$ref": "#/$defs/networkBinding"}},
+        "timeMappings": {"type": "array", "items": {"$ref": "#/$defs/timeMapping"}},
+        "readiness": {"$ref": "#/$defs/readiness"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": ["id", "targetClass", "capabilities", "lifecycle"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "targetClass": {"enum": ["process", "container", "virtual-machine", "emulator", "model-unit", "remote", "physical"]},
+        "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "offeredResourceIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "externalAssetRef": {"type": "string", "format": "uri-reference"},
+        "profileRefs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/resourceRef"}},
+        "lifecycle": {"$ref": "common.schema.json#/$defs/lifecycle"},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "resource": {
+      "type": "object",
+      "required": ["id", "resourceClass", "capacity", "allocationPolicy"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "resourceClass": {"type": "string", "minLength": 1},
+        "capacity": {"$ref": "common.schema.json#/$defs/quantity"},
+        "hardLimit": {"$ref": "common.schema.json#/$defs/quantity"},
+        "allocationPolicy": {"enum": ["exclusive", "shared", "quota"]}
+      },
+      "additionalProperties": false
+    },
+    "simulator": {
+      "type": "object",
+      "required": ["id", "standardRef", "artifactId", "timeDomainId"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "standardRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "artifactId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "timeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "required": ["id", "logicalRef", "realizationClass", "targetId", "lifecycle"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "logicalRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "realizationClass": {"enum": ["simulated", "virtual", "physical", "hybrid"]},
+        "targetId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "artifactIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "resourceIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "lifecycle": {"$ref": "common.schema.json#/$defs/lifecycle"},
+        "parameterValues": {"type": "object"},
+        "secretRefs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "format": "uri-reference"}},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "networkBinding": {
+      "type": "object",
+      "required": ["id", "logicalNetworkRef", "profileRef", "limitations"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "logicalNetworkRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "profileRef": {"$ref": "common.schema.json#/$defs/resourceRef"},
+        "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "timeMapping": {
+      "type": "object",
+      "required": ["id", "sourceTimeDomainRef", "targetTimeDomainRef", "mapping", "tolerance"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "sourceTimeDomainRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "targetTimeDomainRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "mapping": {"type": "string", "minLength": 1},
+        "tolerance": {"$ref": "common.schema.json#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["requiredConditions", "failurePolicy"],
+      "properties": {
+        "requiredConditions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "failurePolicy": {"enum": ["fail-fast", "collect-all"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

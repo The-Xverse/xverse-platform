@@ -1,0 +1,20 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Profile
+metadata:
+  namespace: io.xverse.runtime
+  name: compatibility-runtime
+  version: 0.1.0
+  description: Domain-neutral lifecycle vocabulary for isolated compatibility providers.
+  provenance:
+    source: xverse-public-example
+    revision: m3-fixture-v1
+    maturity: prototype
+    limitations:
+      - Fixture lifecycle only; no legacy compatibility or application parity is established.
+spec:
+  extensionNamespace: io.xverse.runtime.compatibility
+  compatibleApiVersions:
+    - xverse.io/xdl/v1alpha1
+  schemaRef: https://xverse.io/profiles/runtime-compatibility/v0.1/schema.json
+  documentationRef: https://xverse.io/docs/profiles/runtime-compatibility/v0.1/
+  conflictPolicy: reject

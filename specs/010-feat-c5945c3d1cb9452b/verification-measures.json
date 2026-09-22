@@ -1,0 +1,172 @@
+[
+  {
+    "architecture_refs": [],
+    "argv": [
+      "python3",
+      "scripts/xcom_dependency_preflight.py",
+      "--self-test"
+    ],
+    "cwd": ".",
+    "id": "VM-BLD-UNIT",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "unit_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [],
+    "requirement_ids": [
+      "XCOM-BLD-001",
+      "XCOM-BLD-002",
+      "XCOM-BLD-003",
+      "XCOM-BLD-004",
+      "XCOM-BLD-005"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Exercises deterministic dependency-manifest parsing and positive/negative toolchain probes without network or host mutation.",
+    "timeout_seconds": 300
+  },
+  {
+    "architecture_refs": [
+      "DependencyManifest",
+      "ToolchainProbe"
+    ],
+    "argv": [
+      "ruff",
+      "check",
+      "--no-cache",
+      "scripts/xcom_dependency_preflight.py"
+    ],
+    "cwd": ".",
+    "id": "VM-BLD-LINT",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "lint"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [],
+    "requirement_ids": [
+      "XCOM-BLD-001",
+      "XCOM-BLD-002",
+      "XCOM-BLD-003",
+      "XCOM-BLD-004",
+      "XCOM-BLD-005"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs an independent Python lint engine over the dependency-admission implementation.",
+    "timeout_seconds": 300
+  },
+  {
+    "architecture_refs": [
+      "DependencyManifest",
+      "ToolchainProbe",
+      "DiagnosticSet"
+    ],
+    "argv": [
+      "mypy",
+      "--strict",
+      "--cache-dir=/tmp/xcom-mypy",
+      "scripts/xcom_dependency_preflight.py"
+    ],
+    "cwd": ".",
+    "id": "VM-BLD-STATIC",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "static_analysis"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [],
+    "requirement_ids": [
+      "XCOM-BLD-001",
+      "XCOM-BLD-002",
+      "XCOM-BLD-003",
+      "XCOM-BLD-004",
+      "XCOM-BLD-005"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs independent strict Python type analysis over the dependency-admission implementation.",
+    "timeout_seconds": 300
+  },
+  {
+    "architecture_refs": [
+      "DependencyManifest",
+      "BuildEnvelope",
+      "OfflineToolchainPrefix"
+    ],
+    "argv": [
+      "python3",
+      "scripts/xcom_dependency_preflight.py",
+      "--verify-toolchain"
+    ],
+    "cwd": ".",
+    "id": "VM-BLD-INTEGRATION",
+    "levels": [
+      "integration"
+    ],
+    "methods": [
+      "integration_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-BLD-001",
+      "XCOM-BLD-002",
+      "XCOM-BLD-003",
+      "XCOM-BLD-004",
+      "XCOM-BLD-005"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Verifies the exact isolated prefix as an integrated compiler, generator, header, library, static-analysis, and documentation toolchain.",
+    "timeout_seconds": 300
+  },
+  {
+    "architecture_refs": [
+      "DependencyManifest",
+      "BuildEnvelope"
+    ],
+    "argv": [
+      "python3",
+      "scripts/xcom_dependency_preflight.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-BLD-VALIDATION",
+    "levels": [
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-BLD-001",
+      "XCOM-BLD-002",
+      "XCOM-BLD-003",
+      "XCOM-BLD-004",
+      "XCOM-BLD-005"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Validates the accepted dependency-admission and public documentation outcomes against every slice requirement.",
+    "timeout_seconds": 300
+  }
+]

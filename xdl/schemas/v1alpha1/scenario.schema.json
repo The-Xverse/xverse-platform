@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/scenario.schema.json",
+  "title": "XDL v1alpha1 Scenario",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "kind": {"const": "Scenario"},
+    "metadata": {"$ref": "common.schema.json#/$defs/metadata"},
+    "extensions": {"$ref": "common.schema.json#/$defs/extensions"},
+    "spec": {
+      "type": "object",
+      "required": ["systemRef", "initialConditions", "steps", "observers", "metrics"],
+      "properties": {
+        "systemRef": {"$ref": "common.schema.json#/$defs/resourceRef"},
+        "deploymentRef": {"$ref": "common.schema.json#/$defs/resourceRef"},
+        "initialConditions": {"type": "object", "minProperties": 1},
+        "steps": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/step"}},
+        "faults": {"type": "array", "items": {"$ref": "#/$defs/fault"}},
+        "observers": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/observer"}},
+        "metrics": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/metric"}},
+        "timeMappings": {"type": "array", "items": {"$ref": "#/$defs/timeMapping"}},
+        "acceptanceIntent": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "schedule": {
+      "type": "object",
+      "required": ["at", "unit"],
+      "properties": {
+        "at": {"type": "number", "minimum": 0},
+        "unit": {"type": "string", "minLength": 1},
+        "tolerance": {"$ref": "common.schema.json#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "actionKind", "targetRef", "timeDomainId", "schedule", "action"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "actionKind": {"type": "string", "minLength": 1},
+        "targetRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "timeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "schedule": {"$ref": "#/$defs/schedule"},
+        "action": {"type": "object", "minProperties": 1},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "fault": {
+      "type": "object",
+      "required": ["id", "targetRef", "faultKind", "activation", "recovery", "maturity"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "targetRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "faultKind": {"type": "string", "minLength": 1},
+        "activation": {"type": "string", "minLength": 1},
+        "recovery": {"type": "string", "minLength": 1},
+        "maturity": {"$ref": "common.schema.json#/$defs/maturity"},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "observer": {
+      "type": "object",
+      "required": ["id", "targetRef", "timeDomainId", "samplingIntent", "payloadSchema", "unitSemantics", "evidenceSinkRef"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "targetRef": {"$ref": "common.schema.json#/$defs/elementRef"},
+        "timeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "samplingIntent": {"type": "string", "minLength": 1},
+        "payloadSchema": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "evidenceSinkRef": {"type": "string", "format": "uri-reference", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "required": ["id", "observerIds", "calculationRef", "unitSemantics", "acceptance"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "observerIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "calculationRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "acceptance": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "timeMapping": {
+      "type": "object",
+      "required": ["sourceTimeDomainId", "targetTimeDomainId", "mapping", "tolerance"],
+      "properties": {
+        "sourceTimeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "targetTimeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "mapping": {"type": "string", "minLength": 1},
+        "tolerance": {"$ref": "common.schema.json#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

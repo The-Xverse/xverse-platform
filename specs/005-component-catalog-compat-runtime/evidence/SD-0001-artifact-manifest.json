@@ -1,0 +1,177 @@
+{
+  "build": {
+    "build_id_disabled": true,
+    "byte_identical_outputs": true,
+    "cmake_options": [
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_PROJECT_INCLUDE=<reproducible-gateway.cmake>"
+    ],
+    "configuration": "Release",
+    "distinct_source_paths_tested": true,
+    "environment": {
+      "LC_ALL": "C",
+      "SOURCE_DATE_EPOCH": "1782746096",
+      "TZ": "UTC"
+    },
+    "gateway_sha256": "1fcf49058ff358dc7e81b11f18f4f288c709409b1ac0d9d7f3258b6e12b4b7c2",
+    "gateway_size": 271832,
+    "generator": "Ninja",
+    "reproducibility_overlay_sha256": "28899e0a7e74858a69b0574dc4ca71f768979010c02f29b0537966bd7ede5bef",
+    "source_date_epoch": 1782746096
+  },
+  "created_date": "2026-09-20",
+  "limitations": [
+    "Build reproducibility was demonstrated on one host/toolchain across two distinct absolute source paths.",
+    "The host environment is not an immutable execution environment.",
+    "Bundled vendor libraries contain absolute historical build-path strings whose values are withheld.",
+    "System runtime libraries and their environment identity remain outside this artifact bundle.",
+    "No binary in this bundle was executed."
+  ],
+  "members": [
+    {
+      "path": "build/gateway",
+      "sha256": "1fcf49058ff358dc7e81b11f18f4f288c709409b1ac0d9d7f3258b6e12b4b7c2",
+      "size": 271832,
+      "type": "file"
+    },
+    {
+      "path": "config/mapping.json",
+      "sha256": "198529ddb125a7eb069c69b6dc1b7de5267f192b162e28ac97dd4099462c7232",
+      "size": 1033,
+      "type": "file"
+    },
+    {
+      "path": "config/vsomeip.gateway.json",
+      "sha256": "332db003c2f2038ceb10dc67b353fd99539eca001c8305b6c58f1ba36a34f144",
+      "size": 470,
+      "type": "file"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-cfg.so",
+      "target": "libvsomeip3-cfg.so.3",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-cfg.so.3",
+      "target": "libvsomeip3-cfg.so.3.6.1",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-cfg.so.3.6.1",
+      "sha256": "6aa75995ddd072a88f105fe87a50bf9e2a27045fdec7842528bcf79f78604b35",
+      "size": 11801608,
+      "type": "file"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-e2e.so",
+      "target": "libvsomeip3-e2e.so.3",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-e2e.so.3",
+      "target": "libvsomeip3-e2e.so.3.6.1",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-e2e.so.3.6.1",
+      "sha256": "5f559bfb8b102f05b27805bb2f7fbdd89d337201f3d379d291534b422beb36b9",
+      "size": 2163704,
+      "type": "file"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-sd.so",
+      "target": "libvsomeip3-sd.so.3",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-sd.so.3",
+      "target": "libvsomeip3-sd.so.3.6.1",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3-sd.so.3.6.1",
+      "sha256": "5e443e3c071329aa1c80dc44e543aed5397a49b9ea8e5f19f554da68d6457dc7",
+      "size": 10663120,
+      "type": "file"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3.so",
+      "target": "libvsomeip3.so.3",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3.so.3",
+      "target": "libvsomeip3.so.3.6.1",
+      "type": "symlink"
+    },
+    {
+      "path": "third_party/vsomeip/lib/libvsomeip3.so.3.6.1",
+      "sha256": "16a22f16de614ec9adf786a0595ea5bd7c1227d7b7f43d7d02799610c66f174c",
+      "size": 85206272,
+      "type": "file"
+    },
+    {
+      "path": "third_party/zenoh/lib/libzenohc.so",
+      "sha256": "49bfc1572a8b35b77050a91334fbc73024e798865a834e364e6544ff3f870187",
+      "size": 13436312,
+      "type": "file"
+    }
+  ],
+  "runtime_contract_evidence": {
+    "arguments": [],
+    "entrypoint": "build/gateway",
+    "gateway_executed": false,
+    "needed": [
+      "libzenohc.so",
+      "libvsomeip3.so.3",
+      "libvsomeip3-sd.so.3",
+      "libvsomeip3-cfg.so.3",
+      "libc.so.6",
+      "libstdc++.so.6",
+      "libm.so.6",
+      "libgcc_s.so.1"
+    ],
+    "protocol_compatibility_verified": false,
+    "readiness_verified": false,
+    "required_working_directory": "build",
+    "rpath": [
+      "$ORIGIN/../third_party/zenoh/lib",
+      "$ORIGIN/../third_party/vsomeip/lib"
+    ],
+    "system_libraries_bundled": false,
+    "vendor_binaries_contain_withheld_absolute_build_paths": true
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "7c393c9f5a49239c76122486c49cb1993164475c",
+    "legacy_source_modified": false,
+    "lfs_objects": {
+      "zenoh-someip-bridge/third_party/zenoh/lib/libzenohc.so": "49bfc1572a8b35b77050a91334fbc73024e798865a834e364e6544ff3f870187"
+    },
+    "release_label": "v1.0.0",
+    "repository": "The-Xverse/zenoh2someip_bridge",
+    "tree": "4aab3e623a293626b44a9d8e33c05a307bf51956"
+  },
+  "status": "candidate-artifact-unexecuted",
+  "toolchain": {
+    "architecture": "x86_64",
+    "kernel_abi_floor": "Linux 3.2.0",
+    "os": "Ubuntu 22.04.5 LTS",
+    "packages": {
+      "binutils": "2.38-4ubuntu2.12",
+      "cmake": "3.22.1-1ubuntu1.22.04.2",
+      "g++-11": "11.4.0-1ubuntu1~22.04.3",
+      "gcc-11": "11.4.0-1ubuntu1~22.04.3",
+      "libboost-filesystem1.74.0": "1.74.0-14ubuntu3",
+      "libboost-thread1.74.0": "1.74.0-14ubuntu3",
+      "libc6-dev": "2.35-0ubuntu3.15",
+      "ninja-build": "1.10.1-1"
+    },
+    "tool_sha256": {
+      "cmake": "fd22547781b64bb2db04370970b93db1f3fada1e41e60873b015ee0747009fc0",
+      "g++-11": "2360901d864cf10bfd6296e261cb2c14053552a80377761ab07146ec9ec9a2c0",
+      "ld.bfd": "58937fc20c21e147883b4fdaa0fc7438a8e8f2bb886cfcaa4896100ca91139e7",
+      "ninja": "a9ddfbf7e365a2e5026ed44f9173e498e37d8b71ec5e259b2c2a684f16cfa862"
+    }
+  }
+}

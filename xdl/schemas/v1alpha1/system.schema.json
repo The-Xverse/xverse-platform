@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/schemas/xdl/v1alpha1/system.schema.json",
+  "title": "XDL v1alpha1 System",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "kind": {"const": "System"},
+    "metadata": {"$ref": "common.schema.json#/$defs/metadata"},
+    "extensions": {"$ref": "common.schema.json#/$defs/extensions"},
+    "spec": {
+      "type": "object",
+      "required": ["timeDomains"],
+      "anyOf": [
+        {"required": ["nodes"]},
+        {"required": ["devices"]}
+      ],
+      "properties": {
+        "nodes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/node"}},
+        "componentInstances": {"type": "array", "items": {"$ref": "#/$defs/componentInstance"}},
+        "devices": {"type": "array", "items": {"$ref": "#/$defs/device"}},
+        "sensors": {"type": "array", "items": {"$ref": "#/$defs/sensor"}},
+        "actuators": {"type": "array", "items": {"$ref": "#/$defs/actuator"}},
+        "interfaces": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/interface"}},
+        "endpoints": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/endpoint"}},
+        "flows": {"type": "array", "items": {"$ref": "#/$defs/flow"}},
+        "networks": {"type": "array", "items": {"$ref": "#/$defs/network"}},
+        "links": {"type": "array", "items": {"$ref": "#/$defs/link"}},
+        "protocols": {"type": "array", "items": {"$ref": "#/$defs/protocol"}},
+        "models": {"type": "array", "items": {"$ref": "#/$defs/model"}},
+        "parameters": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/parameter"}},
+        "timeDomains": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/timeDomain"}},
+        "defaultTimeDomainId": {"$ref": "common.schema.json#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "roles"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "memberIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "componentInstance": {
+      "type": "object",
+      "required": ["id", "componentRef"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "componentRef": {"$ref": "common.schema.json#/$defs/resourceRef"},
+        "nodeId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "parameterValues": {"type": "object"},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "device": {
+      "type": "object",
+      "required": ["id", "capabilities", "supportedRealizationClasses"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "supportedRealizationClasses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["simulated", "virtual", "physical", "hybrid"]}},
+        "nodeId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "sensor": {
+      "type": "object",
+      "required": ["id", "observedQuantity", "outputEndpointId", "unitSemantics", "maturity"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "deviceId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "observedQuantity": {"type": "string", "minLength": 1},
+        "outputEndpointId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "samplingIntent": {"type": "string", "minLength": 1},
+        "maturity": {"$ref": "common.schema.json#/$defs/maturity"}
+      },
+      "additionalProperties": false
+    },
+    "actuator": {
+      "type": "object",
+      "required": ["id", "controlledQuantity", "inputEndpointId", "unitSemantics"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "deviceId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "controlledQuantity": {"type": "string", "minLength": 1},
+        "inputEndpointId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "unitSemantics": {"type": "string", "minLength": 1},
+        "limits": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "flow": {
+      "type": "object",
+      "required": ["id", "sourceEndpointId", "destinationEndpointIds", "interfaceId", "deliveryIntent"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "sourceEndpointId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "destinationEndpointIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "interfaceId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "deliveryIntent": {"enum": ["best-effort", "reliable", "latest-value", "ordered"]},
+        "networkId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "timeDomainId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "quality": {"type": "object"},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "type": "object",
+      "required": ["id", "scope", "capabilities"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "scope": {"type": "string", "minLength": 1},
+        "capabilities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "extensions": {"$ref": "common.schema.json#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "link": {
+      "type": "object",
+      "required": ["id", "networkId", "participantEndpointIds", "connectivity"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "networkId": {"$ref": "common.schema.json#/$defs/identifier"},
+        "participantEndpointIds": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/identifier"}},
+        "connectivity": {"enum": ["directed", "bidirectional", "shared"]},
+        "quality": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "required": ["id", "standardRef", "capabilities", "compatibility", "limitations"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "standardRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "capabilities": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "compatibility": {"type": "string", "minLength": 1},
+        "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "required": ["id", "modelKind", "externalRef", "inputs", "outputs", "maturity"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "modelKind": {"type": "string", "minLength": 1},
+        "externalRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "inputs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/identifier"}, "uniqueItems": true},
+        "outputs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/identifier"}, "uniqueItems": true},
+        "maturity": {"$ref": "common.schema.json#/$defs/maturity"},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "timeDomain": {
+      "type": "object",
+      "required": ["id", "clockClass", "epoch", "rate", "monotonic"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "clockClass": {"enum": ["wall", "monotonic", "simulation", "logical", "external"]},
+        "epoch": {"type": "string", "minLength": 1},
+        "rate": {"type": "string", "minLength": 1},
+        "monotonic": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

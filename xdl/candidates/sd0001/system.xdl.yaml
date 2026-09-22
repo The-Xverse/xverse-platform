@@ -1,0 +1,99 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: System
+metadata:
+  namespace: io.xverse.compat.legacy
+  name: zenoh-someip-gateway-system
+  version: 0.1.0
+  description: Review system containing only the selected legacy gateway boundary.
+  provenance:
+    source: urn:xverse:decision:sd0001
+    revision: sd0001-xdl-v1
+    maturity: architectural-target
+    evidenceRefs:
+      - urn:xverse:evidence:sd0001:build
+    limitations:
+      - External Zenoh and SOME/IP peers are prerequisites and are outside this system ownership boundary.
+      - Message timing and payload compatibility remain unverified.
+spec:
+  nodes:
+    - id: isolated-process-node
+      roles:
+        - compatibility-boundary
+  componentInstances:
+    - id: gateway-instance
+      componentRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: Component
+        namespace: io.xverse.compat.legacy
+        name: zenoh-someip-gateway
+      nodeId: isolated-process-node
+  interfaces:
+    - id: system-zenoh-ingress
+      direction: input
+      payloadSchema: urn:xverse:unavailable:sd0001:zenoh-ingress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: system-someip-egress
+      direction: output
+      payloadSchema: urn:xverse:unavailable:sd0001:someip-egress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: system-someip-ingress
+      direction: input
+      payloadSchema: urn:xverse:unavailable:sd0001:someip-ingress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+    - id: system-zenoh-egress
+      direction: output
+      payloadSchema: urn:xverse:unavailable:sd0001:zenoh-egress-payload
+      compatibility: explicit-converter
+      versionRange: unverified
+  endpoints:
+    - id: gateway-zenoh-in
+      ownerId: gateway-instance
+      interfaceId: system-zenoh-ingress
+      direction: input
+    - id: gateway-someip-out
+      ownerId: gateway-instance
+      interfaceId: system-someip-egress
+      direction: output
+    - id: gateway-someip-in
+      ownerId: gateway-instance
+      interfaceId: system-someip-ingress
+      direction: input
+    - id: gateway-zenoh-out
+      ownerId: gateway-instance
+      interfaceId: system-zenoh-egress
+      direction: output
+  networks:
+    - id: zenoh-boundary
+      scope: external-prerequisite
+      capabilities:
+        - publish-subscribe
+    - id: someip-boundary
+      scope: external-prerequisite
+      capabilities:
+        - service-event-transport
+  protocols:
+    - id: zenoh-protocol
+      standardRef: urn:xverse:protocol:zenoh:version-unverified
+      capabilities:
+        - publish-subscribe
+      compatibility: selected version is unresolved
+      limitations:
+        - Session, discovery, encoding, and delivery behavior are unverified.
+    - id: someip-protocol
+      standardRef: urn:xverse:protocol:someip:version-unverified
+      capabilities:
+        - service-discovery
+        - event-transport
+      compatibility: selected version is unresolved
+      limitations:
+        - Wire subset, discovery, serialization, and timing behavior are unverified.
+  timeDomains:
+    - id: lifecycle-time
+      clockClass: monotonic
+      epoch: process-start
+      rate: wall-rate
+      monotonic: true
+  defaultTimeDomainId: lifecycle-time
