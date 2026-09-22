@@ -26,6 +26,31 @@ set_target_properties(
 )
 
 add_library(
+  xverse_xcom_observation
+  STATIC
+    src/observation.cpp
+)
+add_library(xverse::xcom_observation ALIAS xverse_xcom_observation)
+target_include_directories(
+  xverse_xcom_observation
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(
+  xverse_xcom_observation
+  PUBLIC xverse::xcom_core_types
+)
+target_compile_features(xverse_xcom_observation PUBLIC cxx_std_20)
+xverse_xcom_apply_warnings(xverse_xcom_observation)
+set_target_properties(
+  xverse_xcom_observation
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+add_library(
   xverse_xcom_endpoint_route_lifecycle
   STATIC
     src/endpoint_route_lifecycle.cpp
@@ -48,7 +73,9 @@ target_include_directories(
 )
 target_link_libraries(
   xverse_xcom_provider_loopback
-  PUBLIC xverse::xcom_endpoint_route_lifecycle
+  PUBLIC
+    xverse::xcom_endpoint_route_lifecycle
+    xverse::xcom_observation
 )
 target_compile_features(xverse_xcom_provider_loopback PUBLIC cxx_std_20)
 xverse_xcom_apply_warnings(xverse_xcom_provider_loopback)
@@ -154,6 +181,21 @@ if(BUILD_TESTING)
   add_test(NAME xcom_lifecycle_external_consumer COMMAND xverse_xcom_lifecycle_consumer)
 
   add_executable(
+    xverse_xcom_observation_unit_tests
+    "${PROJECT_SOURCE_DIR}/tests/xcom/observation/core/unit_tests.cpp"
+  )
+  target_link_libraries(
+    xverse_xcom_observation_unit_tests
+    PRIVATE xverse::xcom_observation Threads::Threads
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_observation_unit_tests)
+
+  add_test(
+    NAME xcom_observation_unit
+    COMMAND xverse_xcom_observation_unit_tests
+  )
+
+  add_executable(
     xverse_xcom_provider_loopback_unit_tests
     "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback/unit_tests.cpp"
   )
@@ -202,5 +244,46 @@ if(BUILD_TESTING)
   add_test(
     NAME xcom_provider_loopback_external_consumer
     COMMAND xverse_xcom_provider_loopback_consumer
+  )
+
+  add_executable(
+    xverse_xcom_observation_integration_tests
+    "${PROJECT_SOURCE_DIR}/tests/xcom/observation/integration/integration_tests.cpp"
+  )
+  target_include_directories(
+    xverse_xcom_observation_integration_tests
+    PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/observation/integration"
+  )
+  target_link_libraries(
+    xverse_xcom_observation_integration_tests
+    PRIVATE xverse::xcom_provider_loopback Threads::Threads
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_observation_integration_tests)
+
+  add_executable(
+    xverse_xcom_observation_disabled_benchmark
+    "${PROJECT_SOURCE_DIR}/tests/xcom/observation/integration/disabled_tap_benchmark.cpp"
+  )
+  target_include_directories(
+    xverse_xcom_observation_disabled_benchmark
+    PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/observation/integration"
+  )
+  target_link_libraries(
+    xverse_xcom_observation_disabled_benchmark
+    PRIVATE xverse::xcom_provider_loopback Threads::Threads
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_observation_disabled_benchmark)
+
+  add_test(
+    NAME xcom_observation_integration
+    COMMAND xverse_xcom_observation_integration_tests
+  )
+  add_test(
+    NAME xcom_observation_disabled_benchmark
+    COMMAND xverse_xcom_observation_disabled_benchmark
+  )
+  set_tests_properties(
+    xcom_observation_disabled_benchmark
+    PROPERTIES LABELS "performance;observation"
   )
 endif()

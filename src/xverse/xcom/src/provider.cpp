@@ -4,7 +4,12 @@
  * @ownership Accepted descriptors, registrations, bindings, and results are copied by value.
  * @lifetime The registry retains caller-owned provider addresses until registry destruction.
  * @thread_safety Registry access is serialized; virtual provider calls occur after mutex release.
- * @failure Compatibility and lifecycle rejection occurs before provider preparation.
+ * Observed submissions are sequenced without overlapping provider and observation-hub locks.
+ * @failure Compatibility and lifecycle rejection occurs before provider preparation. Lossless
+ * observation backpressure rejects immediately before provider submission.
+ * @par Traceability
+ * Implements the ProviderComposition integration allocated to XCOM-OBS-001, XCOM-OBS-004,
+ * XCOM-OBS-005, XCOM-OBS-007, and XCOM-OBS-008.
  */
 
 #include "xverse/xcom/provider.hpp"
@@ -67,6 +72,7 @@ std::string_view to_string(const ProviderOutcome outcome) noexcept {
     case ProviderOutcome::reconciled: return "reconciled";
     case ProviderOutcome::queue_empty: return "queue-empty";
     case ProviderOutcome::queue_saturated: return "queue-saturated";
+    case ProviderOutcome::observation_backpressure: return "observation-backpressure";
     case ProviderOutcome::invalid_descriptor: return "invalid-descriptor";
     case ProviderOutcome::duplicate_provider: return "duplicate-provider";
     case ProviderOutcome::provider_capacity_exhausted: return "provider-capacity-exhausted";
@@ -101,6 +107,7 @@ std::string_view provider_diagnostic_code(const ProviderOutcome outcome) noexcep
     case ProviderOutcome::reconciled: return "XCOM-PROV-S008";
     case ProviderOutcome::queue_empty: return "XCOM-PROV-I009";
     case ProviderOutcome::queue_saturated: return "XCOM-PROV-E010";
+    case ProviderOutcome::observation_backpressure: return "XCOM-PROV-E029";
     case ProviderOutcome::invalid_descriptor: return "XCOM-PROV-E011";
     case ProviderOutcome::duplicate_provider: return "XCOM-PROV-E012";
     case ProviderOutcome::provider_capacity_exhausted: return "XCOM-PROV-E013";
@@ -135,6 +142,8 @@ std::string_view provider_diagnostic_message(const ProviderOutcome outcome) noex
     case ProviderOutcome::reconciled: return "provider and lifecycle state match exactly";
     case ProviderOutcome::queue_empty: return "route queue contains no accepted item";
     case ProviderOutcome::queue_saturated: return "route queue is full; new item rejected";
+    case ProviderOutcome::observation_backpressure:
+      return "lossless observation capacity unavailable; provider not invoked";
     case ProviderOutcome::invalid_descriptor: return "provider descriptor is invalid";
     case ProviderOutcome::duplicate_provider: return "provider identity is already registered";
     case ProviderOutcome::provider_capacity_exhausted: return "provider registry is full";
@@ -323,6 +332,13 @@ ProviderComposition::ProviderComposition(
   if (instance_id_ == 0U) {
     instance_id_ = next_composition_instance.fetch_add(1U);
   }
+}
+
+ProviderComposition::ProviderComposition(
+    const ProviderRegistryConfiguration& configuration,
+    ObservationHub& observation_hub) noexcept
+    : ProviderComposition(configuration) {
+  observation_hub_ = &observation_hub;
 }
 
 ProviderResult<ProviderRegistration> ProviderComposition::register_provider(
@@ -592,7 +608,24 @@ ProviderStatus ProviderComposition::submit(const ProviderRouteHandle& handle,
   if (item.payload().size() > handle.maximum_payload_bytes_) {
     return ProviderStatus(ProviderOutcome::payload_limit_exceeded);
   }
-  return provider->submit(*token, item, lifecycle);
+  if (observation_hub_ == nullptr) {
+    return provider->submit(*token, item, lifecycle);
+  }
+
+  const std::lock_guard observation_sequence(observation_dispatch_mutex_);
+  const ObservationStatus preflight = observation_hub_->preflight(item);
+  if (preflight.outcome == ObservationOutcome::observation_backpressure) {
+    return ProviderStatus(ProviderOutcome::observation_backpressure);
+  }
+
+  const ProviderStatus provider_status = provider->submit(*token, item, lifecycle);
+  const ObservationProviderOutcome observed_outcome =
+      provider_status.outcome() == ProviderOutcome::accepted
+          ? ObservationProviderOutcome::accepted
+          : ObservationProviderOutcome::rejected;
+  static_cast<void>(observation_hub_->publish(
+      {item, item.timestamp(), item.clock_domain().value(), std::nullopt, observed_outcome}));
+  return provider_status;
 }
 
 ProviderResult<CommunicationItem> ProviderComposition::receive(

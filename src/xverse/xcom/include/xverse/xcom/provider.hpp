@@ -15,6 +15,7 @@
 
 #include "xverse/xcom/endpoint_route_lifecycle.hpp"
 #include "xverse/xcom/item.hpp"
+#include "xverse/xcom/observation.hpp"
 
 #include <array>
 #include <cstddef>
@@ -63,6 +64,8 @@ enum class ProviderOutcome {
   queue_empty,
   /** The configured queue is full; all earlier items remain unchanged. */
   queue_saturated,
+  /** Lossless observation capacity is unavailable; the provider was not invoked. */
+  observation_backpressure,
   /** A descriptor field or capability mask is malformed. */
   invalid_descriptor,
   /** The provider identity is already registered. */
@@ -654,10 +657,19 @@ class ProviderRegistryConfiguration final {
 
 /**
  * @brief Fixed-capacity registry and explicit provider operation dispatcher.
- * @ownership Retains non-owning pointers to caller-owned source-linked providers.
- * @lifetime A provider and lifecycle controller must outlive their issued route handles.
- * @thread_safety Registration and lookup are serialized; provider calls occur after unlock.
+ * @ownership Retains non-owning pointers to caller-owned source-linked providers and, when enabled,
+ * one caller-owned ObservationHub.
+ * @lifetime A provider and lifecycle controller must outlive their issued route handles. An enabled
+ * ObservationHub must outlive this composition.
+ * @thread_safety Registration and lookup are serialized; provider and hub calls occur without the
+ * registry lock and never while holding each other's locks. Observed submissions are sequenced so a
+ * successful lossless preflight remains reserved through provider dispatch and publication.
  * @failure Rejected registration/preparation leaves registry, provider, lifecycle, and queues intact.
+ * Lossless observation backpressure rejects before provider mutation. Best-effort observation loss
+ * never changes the provider outcome.
+ * @par Traceability
+ * Implements XCOM-OBS-001, XCOM-OBS-004, XCOM-OBS-005, XCOM-OBS-007, and XCOM-OBS-008. Integration
+ * fixtures reside in tests/xcom/observation/integration.
  */
 class ProviderComposition final {
  public:
@@ -665,6 +677,13 @@ class ProviderComposition final {
   static constexpr std::size_t kMaximumProviders = 8U;
   /** @brief Construct an empty registry. @param configuration Validated finite capacity. */
   explicit ProviderComposition(const ProviderRegistryConfiguration& configuration) noexcept;
+  /**
+   * @brief Construct a registry with provider-neutral observation enabled.
+   * @param configuration Validated finite capacity.
+   * @param observation_hub Caller-owned hub retained by non-owning reference.
+   */
+  ProviderComposition(const ProviderRegistryConfiguration& configuration,
+                      ObservationHub& observation_hub) noexcept;
   ProviderComposition(const ProviderComposition&) = delete;
   ProviderComposition& operator=(const ProviderComposition&) = delete;
 
@@ -692,8 +711,16 @@ class ProviderComposition final {
   /** @param handle Exact prepared handle. @param lifecycle Bound lifecycle owner. @return Status. */
   [[nodiscard]] ProviderStatus activate_route(const ProviderRouteHandle& handle,
                                               LifecycleController& lifecycle) noexcept;
-  /** @param handle Exact active handle. @param item Item copied on acceptance.
-   * @param lifecycle Bound lifecycle owner. @return Status. */
+  /**
+   * @brief Submit after exact lossless preflight and publish the normalized provider outcome.
+   * @param handle Exact active handle.
+   * @param item Item copied on provider acceptance and policy-bounded for observation.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Provider status, or observation_backpressure before provider mutation.
+   *
+   * The source timestamp and clock-domain are reused as the observation point because this slice has
+   * no time-authority dependency. No cross-clock comparison or current-time claim is made.
+   */
   [[nodiscard]] ProviderStatus submit(const ProviderRouteHandle& handle,
                                       const CommunicationItem& item,
                                       const LifecycleController& lifecycle) noexcept;
@@ -755,6 +782,8 @@ class ProviderComposition final {
   std::uint64_t next_generation_{1U}; /**< Next registry generation. */
   mutable std::mutex mutex_; /**< Serializes registry inspection/mutation. */
   std::array<std::optional<ProviderSlot>, kMaximumProviders> providers_{}; /**< Fixed slots. */
+  ObservationHub* observation_hub_{nullptr}; /**< Optional non-owning observation boundary. */
+  std::mutex observation_dispatch_mutex_; /**< Reserves lossless capacity through publication. */
 };
 
 }  // namespace xverse::xcom
