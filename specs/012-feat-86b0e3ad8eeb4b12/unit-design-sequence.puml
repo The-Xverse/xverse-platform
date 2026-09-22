@@ -1,0 +1,16 @@
+@startuml
+participant Test
+participant CommunicationItem as Item
+participant CommunicationContract as Contract
+participant DiagnosticSet as Diagnostics
+Test -> Contract: create(contract candidate)
+Contract --> Test: valid contract or diagnostics
+Test -> Item: create(item candidate, contract)
+Item -> Contract: verify interaction/schema identity
+alt accepted
+Item --> Test: immutable owned item
+else rejected
+Item -> Diagnostics: stable findings
+Diagnostics --> Test: sorted non-empty errors
+end
+@enduml

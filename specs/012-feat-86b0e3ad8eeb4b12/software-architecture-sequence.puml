@@ -1,0 +1,17 @@
+@startuml
+actor Caller
+participant "Validated factory" as Factory
+participant "Invariant checks" as Checks
+participant "Diagnostic set" as Diagnostics
+participant "Immutable value" as Value
+Caller -> Factory: create(candidate fields)
+Factory -> Checks: validate bounds and semantic consistency
+alt valid
+Checks --> Factory: accepted
+Factory -> Value: construct complete value
+Value --> Caller: owned immutable result
+else invalid
+Checks -> Diagnostics: append stable classified findings
+Diagnostics --> Caller: deterministically ordered rejection
+end
+@enduml

@@ -1,0 +1,197 @@
+[
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "Contract",
+      "CommunicationItem",
+      "Diagnostic",
+      "CoreValueResult"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--unit"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-TYPES-UNIT",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "unit_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-TYPE-001",
+      "XCOM-TYPE-002",
+      "XCOM-TYPE-003",
+      "XCOM-TYPE-004",
+      "XCOM-TYPE-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Builds the bounded C++20 library and runs table-driven unit and negative tests.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "Contract",
+      "CommunicationItem",
+      "Diagnostic"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--lint"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-TYPES-LINT",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "lint"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-TYPE-001",
+      "XCOM-TYPE-004",
+      "XCOM-TYPE-005",
+      "XCOM-TYPE-006",
+      "XCOM-TYPE-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Enforces repository layout, forbidden dependency/API scans, formatting policy, and warning-clean compilation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "Contract",
+      "CommunicationItem",
+      "Diagnostic",
+      "CoreValueResult"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--static"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-TYPES-STATIC",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "static_analysis"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-TYPE-003",
+      "XCOM-TYPE-004",
+      "XCOM-TYPE-005",
+      "XCOM-TYPE-006",
+      "XCOM-TYPE-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the admitted clang-tidy and warning-free Doxygen gates against every changed C++ unit.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "XComCoreTypes",
+      "ExternalConsumer"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--integration"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-TYPES-INTEGRATION",
+    "levels": [
+      "integration"
+    ],
+    "methods": [
+      "integration_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-TYPE-001",
+      "XCOM-TYPE-002",
+      "XCOM-TYPE-003",
+      "XCOM-TYPE-004",
+      "XCOM-TYPE-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Compiles and runs a separate external-consumer fixture using only the exported public CMake target.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "XComCoreTypes",
+      "Traceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-TYPES-VALIDATION",
+    "levels": [
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-TYPE-001",
+      "XCOM-TYPE-002",
+      "XCOM-TYPE-003",
+      "XCOM-TYPE-004",
+      "XCOM-TYPE-005",
+      "XCOM-TYPE-006",
+      "XCOM-TYPE-007",
+      "XCOM-TYPE-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete slice acceptance suite and validates public-safe bidirectional traceability.",
+    "timeout_seconds": 900
+  }
+]

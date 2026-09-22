@@ -1,10 +1,10 @@
-# Doxygen configuration for the X-Verse platform Python implementation.
+# Doxygen configuration for the X-Verse platform Python and X-COM C++ units.
 # Generated output belongs under build/ and is intentionally not versioned.
 
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "X-Verse Platform"
 PROJECT_NUMBER         = 0.3.0
-PROJECT_BRIEF          = "Domain-neutral XDL validation and prototype compatibility lifecycle"
+PROJECT_BRIEF          = "Domain-neutral XDL validation and immutable X-COM core values"
 OUTPUT_DIRECTORY       = build/doxygen
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
@@ -21,9 +21,8 @@ OPTIMIZE_OUTPUT_JAVA   = NO
 MARKDOWN_SUPPORT       = YES
 AUTOLINK_SUPPORT       = YES
 
-# Doxygen extracts every source symbol for complete repository navigation.
-# scripts/check_doxygen.py separately enforces meaningful docstrings for the
-# production package and reusable scripts.
+# Preserve repository-wide Python source navigation. The X-COM validator runs
+# a second strict configuration for the owned C++ declarations and parameters.
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = YES
 EXTRACT_STATIC         = YES
@@ -34,18 +33,24 @@ HIDE_UNDOC_CLASSES     = NO
 WARNINGS               = YES
 WARN_IF_UNDOCUMENTED   = NO
 WARN_IF_DOC_ERROR      = YES
-WARN_IF_INCOMPLETE_DOC = YES
 WARN_NO_PARAMDOC       = NO
-WARN_AS_ERROR          = NO
+WARN_AS_ERROR          = YES
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LOGFILE           = build/doxygen-warnings.log
 
+ALIASES               += ownership="\par Ownership:"
+ALIASES               += lifetime="\par Lifetime:"
+ALIASES               += thread_safety="\par Thread safety:"
+ALIASES               += failure="\par Failure behavior:"
+
 INPUT                  = docs/doxygen/mainpage.md \
+                         docs/xcom/core-types.md \
+                         src/xverse/xcom \
                          src/xverse_xdl \
                          scripts \
                          tests
 INPUT_ENCODING         = UTF-8
-FILE_PATTERNS          = *.py *.md
+FILE_PATTERNS          = *.hpp *.cpp *.py *.md
 RECURSIVE              = YES
 EXCLUDE_PATTERNS       = */__pycache__/* */.venv/* */build/*
 USE_MDFILE_AS_MAINPAGE = docs/doxygen/mainpage.md

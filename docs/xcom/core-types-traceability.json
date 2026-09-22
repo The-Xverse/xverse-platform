@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "feature_id": "FEAT-86b0e3ad8eeb4b12",
+  "task_id": "XCOM-CORE-TYPES",
+  "baseline_id": "BASE-fbdb289a1d9423976d6e",
+  "candidate_revision_binding": {
+    "environment_variable": "SESN_CANDIDATE_REVISION",
+    "format": "full-lowercase-git-sha",
+    "workspace_comparison": "git rev-parse HEAD"
+  },
+  "state": "READY_FOR_REVIEW",
+  "requirements": [
+    {
+      "id": "XCOM-TYPE-001",
+      "design": ["XCOM-TYPE-UNIT-001"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/contract.hpp", "src/xverse/xcom/src/contract.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-UNIT", "VM-XCOM-TYPES-LINT", "VM-XCOM-TYPES-INTEGRATION", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-002",
+      "design": ["XCOM-TYPE-UNIT-001", "XCOM-TYPE-UNIT-002"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/contract.hpp", "src/xverse/xcom/include/xverse/xcom/item.hpp", "src/xverse/xcom/src/contract.cpp", "src/xverse/xcom/src/item.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-UNIT", "VM-XCOM-TYPES-INTEGRATION", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-003",
+      "design": ["XCOM-TYPE-UNIT-001", "XCOM-TYPE-UNIT-002", "XCOM-TYPE-UNIT-004"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/item.hpp", "src/xverse/xcom/include/xverse/xcom/value.hpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-UNIT", "VM-XCOM-TYPES-STATIC", "VM-XCOM-TYPES-INTEGRATION", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-004",
+      "design": ["XCOM-TYPE-UNIT-003", "XCOM-TYPE-UNIT-004"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/include/xverse/xcom/result.hpp", "src/xverse/xcom/src/diagnostic.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-UNIT", "VM-XCOM-TYPES-LINT", "VM-XCOM-TYPES-STATIC", "VM-XCOM-TYPES-INTEGRATION", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-005",
+      "design": ["XCOM-TYPE-UNIT-004"],
+      "code": ["src/xverse/xcom/src/contract.cpp", "src/xverse/xcom/src/diagnostic.cpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["scripts/validate_xcom_core_types.py", "tests/xcom/core_types/negative_tests.cpp"],
+      "checks": ["VM-XCOM-TYPES-LINT", "VM-XCOM-TYPES-STATIC", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-006",
+      "design": ["XCOM-CORE-TYPES"],
+      "code": ["Doxyfile", "docs/xcom/core-types.md", "src/xverse/xcom/include/xverse/xcom/core_types.hpp", "src/xverse/xcom/include/xverse/xcom/contract.hpp", "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/include/xverse/xcom/item.hpp", "src/xverse/xcom/include/xverse/xcom/result.hpp", "src/xverse/xcom/include/xverse/xcom/value.hpp", "src/xverse/xcom/src/contract.cpp", "src/xverse/xcom/src/diagnostic.cpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["scripts/validate_xcom_core_types.py", "tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-LINT", "VM-XCOM-TYPES-STATIC", "VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-007",
+      "design": ["XCOM-CORE-TYPES"],
+      "code": ["docs/xcom/core-types-traceability.json", "scripts/validate_xcom_core_types.py"],
+      "tests": ["scripts/validate_xcom_core_types.py"],
+      "checks": ["VM-XCOM-TYPES-VALIDATION"]
+    },
+    {
+      "id": "XCOM-TYPE-008",
+      "design": ["XCOM-CORE-TYPES"],
+      "code": ["src/xverse/xcom/CMakeLists.txt"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"],
+      "checks": ["VM-XCOM-TYPES-UNIT", "VM-XCOM-TYPES-LINT", "VM-XCOM-TYPES-STATIC", "VM-XCOM-TYPES-INTEGRATION", "VM-XCOM-TYPES-VALIDATION"]
+    }
+  ],
+  "designs": {
+    "XCOM-TYPE-UNIT-001": {
+      "source": "specs/012-feat-86b0e3ad8eeb4b12/unit-specifications.md",
+      "requirements": ["XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-003"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/contract.hpp", "src/xverse/xcom/src/contract.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"]
+    },
+    "XCOM-TYPE-UNIT-002": {
+      "source": "specs/012-feat-86b0e3ad8eeb4b12/unit-specifications.md",
+      "requirements": ["XCOM-TYPE-002", "XCOM-TYPE-003"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/item.hpp", "src/xverse/xcom/include/xverse/xcom/value.hpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"]
+    },
+    "XCOM-TYPE-UNIT-003": {
+      "source": "specs/012-feat-86b0e3ad8eeb4b12/unit-specifications.md",
+      "requirements": ["XCOM-TYPE-004"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/src/diagnostic.cpp"],
+      "tests": ["tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"]
+    },
+    "XCOM-TYPE-UNIT-004": {
+      "source": "specs/012-feat-86b0e3ad8eeb4b12/unit-specifications.md",
+      "requirements": ["XCOM-TYPE-003", "XCOM-TYPE-004", "XCOM-TYPE-005"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/result.hpp", "src/xverse/xcom/src/contract.cpp", "src/xverse/xcom/src/diagnostic.cpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["scripts/validate_xcom_core_types.py", "tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp"]
+    },
+    "XCOM-CORE-TYPES": {
+      "source": "specs/012-feat-86b0e3ad8eeb4b12/detailed-design.md",
+      "requirements": ["XCOM-TYPE-006", "XCOM-TYPE-007", "XCOM-TYPE-008"],
+      "code": ["Doxyfile", "docs/xcom/core-types.md", "docs/xcom/core-types-traceability.json", "scripts/validate_xcom_core_types.py", "src/xverse/xcom/CMakeLists.txt", "src/xverse/xcom/include/xverse/xcom/contract.hpp", "src/xverse/xcom/include/xverse/xcom/core_types.hpp", "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp", "src/xverse/xcom/include/xverse/xcom/item.hpp", "src/xverse/xcom/include/xverse/xcom/result.hpp", "src/xverse/xcom/include/xverse/xcom/value.hpp", "src/xverse/xcom/src/contract.cpp", "src/xverse/xcom/src/diagnostic.cpp", "src/xverse/xcom/src/item.cpp", "src/xverse/xcom/src/value.cpp"],
+      "tests": ["scripts/validate_xcom_core_types.py", "tests/xcom/core_types/unit_tests.cpp", "tests/xcom/core_types/negative_tests.cpp", "tests/xcom/core_types/consumer/main.cpp"]
+    }
+  },
+  "artifacts": {
+    "Doxyfile": ["XCOM-TYPE-006"],
+    "docs/xcom/core-types.md": ["XCOM-TYPE-006"],
+    "docs/xcom/core-types-traceability.json": ["XCOM-TYPE-007"],
+    "scripts/validate_xcom_core_types.py": ["XCOM-TYPE-005", "XCOM-TYPE-006", "XCOM-TYPE-007"],
+    "src/xverse/xcom/CMakeLists.txt": ["XCOM-TYPE-008"],
+    "src/xverse/xcom/include/xverse/xcom/contract.hpp": ["XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-006"],
+    "src/xverse/xcom/include/xverse/xcom/core_types.hpp": ["XCOM-TYPE-006"],
+    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp": ["XCOM-TYPE-004", "XCOM-TYPE-006"],
+    "src/xverse/xcom/include/xverse/xcom/item.hpp": ["XCOM-TYPE-002", "XCOM-TYPE-003", "XCOM-TYPE-006"],
+    "src/xverse/xcom/include/xverse/xcom/result.hpp": ["XCOM-TYPE-004", "XCOM-TYPE-006"],
+    "src/xverse/xcom/include/xverse/xcom/value.hpp": ["XCOM-TYPE-003", "XCOM-TYPE-006"],
+    "src/xverse/xcom/src/contract.cpp": ["XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-005", "XCOM-TYPE-006"],
+    "src/xverse/xcom/src/diagnostic.cpp": ["XCOM-TYPE-004", "XCOM-TYPE-005", "XCOM-TYPE-006"],
+    "src/xverse/xcom/src/item.cpp": ["XCOM-TYPE-002", "XCOM-TYPE-003", "XCOM-TYPE-005", "XCOM-TYPE-006"],
+    "src/xverse/xcom/src/value.cpp": ["XCOM-TYPE-003", "XCOM-TYPE-005", "XCOM-TYPE-006"],
+    "tests/xcom/core_types/consumer/main.cpp": ["XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-003", "XCOM-TYPE-004", "XCOM-TYPE-006", "XCOM-TYPE-008"],
+    "tests/xcom/core_types/negative_tests.cpp": ["XCOM-TYPE-002", "XCOM-TYPE-003", "XCOM-TYPE-004", "XCOM-TYPE-005", "XCOM-TYPE-006", "XCOM-TYPE-008"],
+    "tests/xcom/core_types/unit_tests.cpp": ["XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-003", "XCOM-TYPE-004", "XCOM-TYPE-006", "XCOM-TYPE-008"]
+  }
+}
