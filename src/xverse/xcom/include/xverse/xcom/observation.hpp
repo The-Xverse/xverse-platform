@@ -183,7 +183,10 @@ class ObservationFilter final {
   ObservationFilter(const ObservationFilter& other) noexcept = default;
   /** Assignment is disabled to keep owned accessor views stable. */
   ObservationFilter& operator=(const ObservationFilter&) = delete;
-  /** @brief Test an item against every declared constraint. @param item Candidate item. */
+  /** @brief Test an item against every declared constraint.
+   * @param item Candidate item.
+   * @return true when the item satisfies every declared constraint.
+   */
   [[nodiscard]] bool matches(const CommunicationItem& item) const noexcept;
 
  private:
