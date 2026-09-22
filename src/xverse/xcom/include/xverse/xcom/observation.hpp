@@ -437,10 +437,32 @@ class ObservationHub final {
     std::uint64_t backpressure_rejections{0U};
     bool experiment_validity_degraded{false};
   };
+  /**
+   * @brief Resolve an exact current handle to its mutable tap slot.
+   * @param handle Candidate authority.
+   */
   [[nodiscard]] TapSlot* authenticate(const ObservationTapHandle& handle) noexcept;
+  /**
+   * @brief Resolve an exact current handle to its immutable tap slot.
+   * @param handle Candidate authority.
+   */
   [[nodiscard]] const TapSlot* authenticate(const ObservationTapHandle& handle) const noexcept;
+  /**
+   * @brief Check capacity for every matching lossless tap before provider mutation.
+   * @param item Candidate item.
+   */
   [[nodiscard]] bool has_lossless_capacity(const CommunicationItem& item) const noexcept;
+  /**
+   * @brief Retain one normalized event in a validated tap slot.
+   * @param slot Destination slot.
+   * @param event Event.
+   */
   [[nodiscard]] ObservationStatus retain(TapSlot& slot, const ObservationEvent& event) noexcept;
+  /**
+   * @brief Create an authority-bearing handle for one tap slot.
+   * @param index Slot index.
+   * @param generation Current generation.
+   */
   [[nodiscard]] ObservationTapHandle make_handle(std::size_t index, std::uint64_t generation) const noexcept;
   static std::atomic<std::uint64_t> next_hub_instance_id_;
   const std::uint64_t hub_instance_id_;
