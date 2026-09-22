@@ -1,0 +1,17 @@
+@startuml
+participant Caller
+participant ProviderComposition as Composition
+participant LifecycleController as Lifecycle
+participant CommunicationProvider as Provider
+Caller -> Composition: submit(public provider-route handle, item)
+Composition -> Lifecycle: authenticate exact route and endpoint generations
+Lifecycle --> Composition: active snapshots and retained declarations
+Composition -> Composition: validate handle and every item binding
+alt exact and active
+Composition -> Provider: submit(internal token, validated item)
+Provider --> Composition: internal bounded outcome
+Composition --> Caller: public bounded outcome
+else stale, inactive, or mismatched
+Composition --> Caller: deterministic rejection, no provider call
+end
+@enduml

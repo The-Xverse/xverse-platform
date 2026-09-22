@@ -1,0 +1,23 @@
+@startuml
+participant Caller
+participant ProviderComposition as Composition
+participant LifecycleController as Lifecycle
+participant LoopbackProvider as Provider
+participant FixedRouteQueue as Queue
+Caller -> Composition: submit(provider route handle, item)
+Composition -> Lifecycle: snapshot exact route/source/destination handles
+alt all exact and active
+Lifecycle --> Composition: active snapshots
+Composition -> Composition: validate item identities, kind, payload, provider
+Composition -> Provider: submit exact provider generation and item
+alt queue has capacity
+Provider -> Queue: copy at tail
+Provider --> Caller: accepted with depth
+else queue full
+Provider --> Caller: saturated with unchanged depth
+end
+else stale or inactive
+Lifecycle --> Composition: diagnostic
+Composition --> Caller: rejected, no provider call
+end
+@enduml

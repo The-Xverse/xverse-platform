@@ -1,0 +1,15 @@
+@startuml
+component ProviderDescriptor
+component ProviderComposition
+interface CommunicationProvider
+component ProviderRouteHandle
+component LoopbackProvider
+component FixedRouteQueue
+component ProviderOutcome
+ProviderComposition --> ProviderDescriptor
+ProviderComposition --> CommunicationProvider
+ProviderComposition --> ProviderRouteHandle
+LoopbackProvider ..|> CommunicationProvider
+LoopbackProvider --> FixedRouteQueue
+CommunicationProvider --> ProviderOutcome
+@enduml

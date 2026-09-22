@@ -39,6 +39,32 @@ OWNED_FILES = {
     "docs/xcom/core-types.md",
     "docs/xcom/core-types-traceability.json",
 }
+CORE_PRODUCTION = tuple(
+    CPP_ROOT / relative
+    for relative in (
+        "include/xverse/xcom/contract.hpp",
+        "include/xverse/xcom/core_types.hpp",
+        "include/xverse/xcom/diagnostic.hpp",
+        "include/xverse/xcom/item.hpp",
+        "include/xverse/xcom/result.hpp",
+        "include/xverse/xcom/value.hpp",
+        "src/contract.cpp",
+        "src/diagnostic.cpp",
+        "src/item.cpp",
+        "src/value.cpp",
+    )
+)
+ACCEPTED_EXTENSION_PRODUCTION = tuple(
+    CPP_ROOT / relative
+    for relative in (
+        "include/xverse/xcom/endpoint_route_lifecycle.hpp",
+        "include/xverse/xcom/loopback_provider.hpp",
+        "include/xverse/xcom/provider.hpp",
+        "src/endpoint_route_lifecycle.cpp",
+        "src/loopback_provider.cpp",
+        "src/provider.cpp",
+    )
+)
 DOCUMENTATION_CLAUSES = ("@file", "@ownership", "@lifetime", "@thread_safety", "@failure")
 DESIGN_REQUIREMENTS = {
     "XCOM-TYPE-UNIT-001": {"XCOM-TYPE-001", "XCOM-TYPE-002", "XCOM-TYPE-003"},
@@ -69,6 +95,8 @@ REPOSITORY_DOXYGEN_SETTINGS = {
 }
 STRICT_CPP_DOXYGEN_SETTINGS = {
     "EXTRACT_ALL": "NO",
+    "EXTRACT_PRIVATE": "NO",
+    "EXTRACT_PRIV_VIRTUAL": "YES",
     "WARN_IF_UNDOCUMENTED": "YES",
     "WARN_NO_PARAMDOC": "YES",
 }
@@ -232,10 +260,49 @@ def _cpp_files() -> tuple[Path, ...]:
     @return Repository C++ paths across production and fixtures.
     """
 
-    return tuple(sorted((*CPP_ROOT.rglob("*.hpp"), *CPP_ROOT.rglob("*.cpp"), *TEST_ROOT.rglob("*.cpp"))))
+    return tuple(
+        sorted(
+            (*CPP_ROOT.rglob("*.hpp"), *CPP_ROOT.rglob("*.cpp"), *TEST_ROOT.rglob("*.cpp"))
+        )
+    )
 
 
-def _check_owned_paths() -> None:
+def _normalize_additive_owned_paths(values: list[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Validate explicit later-slice paths admitted only by the ownership gate.
+
+    @param values Repository-relative files or directories supplied by an integrating validator.
+    @return Exact file names and normalized directory prefixes.
+    @raises ValidationFailure If a path is absolute, missing, broad, or escapes the repository.
+    """
+
+    files: list[str] = []
+    prefixes: list[str] = []
+    for value in values:
+        candidate = Path(value)
+        if candidate.is_absolute() or value in {"", "."} or ".." in candidate.parts:
+            _fail(f"invalid additive owned path: {value!r}")
+        resolved = (ROOT / candidate).resolve()
+        try:
+            relative = resolved.relative_to(ROOT).as_posix()
+        except ValueError:
+            _fail(f"additive owned path escapes repository: {value!r}")
+        if not resolved.exists():
+            _fail(f"additive owned path does not exist: {relative}")
+        if resolved.is_dir():
+            if relative == "src/xverse/xcom" or relative.startswith("src/xverse/xcom/"):
+                _fail(
+                    "additive production ownership must name exact files, not a directory: "
+                    + relative
+                )
+            prefixes.append(relative.rstrip("/") + "/")
+        elif resolved.is_file():
+            files.append(relative)
+        else:
+            _fail(f"additive owned path is not a file or directory: {relative}")
+    return tuple(sorted(set(files))), tuple(sorted(set(prefixes)))
+
+
+def _check_owned_paths(additive_owned_paths: list[str]) -> None:
     """Reject candidate changes outside the task's explicit ownership boundary.
 
     @raises ValidationFailure If tracked or untracked changed paths are outside ownership.
@@ -245,10 +312,13 @@ def _check_owned_paths() -> None:
     untracked = _run(
         [_tool("git"), "ls-files", "--others", "--exclude-standard"]
     ).stdout.splitlines()
+    additive_files, additive_prefixes = _normalize_additive_owned_paths(additive_owned_paths)
     unexpected = sorted(
         path
         for path in set((*tracked, *untracked))
-        if path not in OWNED_FILES and not path.startswith(OWNED_PREFIXES)
+        if path not in OWNED_FILES
+        and path not in additive_files
+        and not path.startswith((*OWNED_PREFIXES, *additive_prefixes))
     )
     if unexpected:
         _fail("changed paths exceed task ownership: " + ", ".join(unexpected))
@@ -305,7 +375,14 @@ def _check_forbidden_cpp_apis() -> None:
         r"#\s*include\s*[<\"](?:grpc|google/protobuf|nlohmann)": "excluded external dependency",
         r"#\s*include\s*<cctype>|\bstd::is(?:alnum|alpha|blank|cntrl|digit|graph|lower|print|punct|space|upper|xdigit)\s*\(": "locale-sensitive character classification",
     }
-    production = sorted((*CPP_ROOT.rglob("*.hpp"), *CPP_ROOT.rglob("*.cpp")))
+    production = tuple(sorted((*CPP_ROOT.rglob("*.hpp"), *CPP_ROOT.rglob("*.cpp"))))
+    unaccounted = sorted(
+        path.relative_to(ROOT).as_posix()
+        for path in production
+        if path not in CORE_PRODUCTION and path not in ACCEPTED_EXTENSION_PRODUCTION
+    )
+    if unaccounted:
+        _fail("unadmitted production unit present: " + ", ".join(unaccounted))
     for path in production:
         text = path.read_text(encoding="utf-8")
         for pattern, label in patterns.items():
@@ -322,7 +399,11 @@ def _check_forbidden_cpp_apis() -> None:
         "gateway",
         "time_authority",
     }
-    present = sorted(path.name for path in production if path.stem in excluded_stems)
+    present = sorted(
+        path.name
+        for path in production
+        if path not in ACCEPTED_EXTENSION_PRODUCTION and path.stem in excluded_stems
+    )
     if present:
         _fail("excluded subsystem unit present: " + ", ".join(present))
     allocation_containers = {
@@ -355,8 +436,13 @@ def _check_cpp_documentation() -> None:
             for index, line in enumerate(lines):
                 if "[[nodiscard]]" not in line:
                     continue
-                preceding = "\n".join(lines[max(0, index - 8):index])
-                if "/**" not in preceding or "*/" not in preceding:
+                end = index - 1
+                while end >= 0 and not lines[end].strip():
+                    end -= 1
+                start = end
+                while start >= 0 and "/**" not in lines[start]:
+                    start -= 1
+                if end < 0 or "*/" not in lines[end] or start < 0:
                     _fail(
                         "public result declaration lacks Doxygen documentation: "
                         f"{path.relative_to(ROOT)}:{index + 1}"
@@ -400,7 +486,15 @@ def _run_repository_documentation_gate() -> None:
             + "".join(f"{key} = {value}\n" for key, value in overrides.items()),
             encoding="utf-8",
         )
-        _run([_tool("doxygen"), str(configuration)])
+        try:
+            _run([_tool("doxygen"), str(configuration)])
+        except ValidationFailure as error:
+            warnings = (
+                warning_log.read_text(encoding="utf-8")
+                if warning_log.is_file()
+                else ""
+            )
+            _fail(f"strict C++ Doxygen generation failed: {error}\n{warnings}")
         if warning_log.is_file() and warning_log.read_text(encoding="utf-8").strip():
             _fail(
                 "strict C++ Doxygen warning log is not empty:\n"
@@ -568,14 +662,14 @@ def _unit(build: Path) -> None:
     _ctest(build, "^xcom_core_types_(unit|negative)$")
 
 
-def _lint(build: Path) -> None:
+def _lint(build: Path, additive_owned_paths: list[str]) -> None:
     """Run ownership, layout, formatting, forbidden-API, and warning compilation gates.
 
     @param build Configured disposable build directory.
     @raises ValidationFailure If any lint policy or compilation fails.
     """
 
-    _check_owned_paths()
+    _check_owned_paths(additive_owned_paths)
     _check_layout_and_format()
     _check_forbidden_cpp_apis()
     _check_cpp_documentation()
@@ -629,6 +723,13 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--static", action="store_true")
     selection.add_argument("--integration", action="store_true")
     selection.add_argument("--all", action="store_true")
+    parser.add_argument(
+        "--additive-owned-path",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="admit one exact later-slice file or directory in the ownership check",
+    )
     args = parser.parse_args(arguments)
 
     try:
@@ -639,7 +740,7 @@ def main(arguments: list[str] | None = None) -> int:
             if args.unit or args.all:
                 _unit(build)
             if args.lint or args.all:
-                _lint(build)
+                _lint(build, args.additive_owned_path)
             if args.static or args.all:
                 _static(build)
             if args.integration or args.all:

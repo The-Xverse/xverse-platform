@@ -1,0 +1,209 @@
+[
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderDescriptor",
+      "ProviderRegistry",
+      "ProviderRouteHandle",
+      "LoopbackProvider"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--unit"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-PROV-UNIT",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "unit_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-PROV-002",
+      "XCOM-PROV-003",
+      "XCOM-PROV-004",
+      "XCOM-PROV-005",
+      "XCOM-PROV-006",
+      "XCOM-PROV-007",
+      "XCOM-PROV-008",
+      "XCOM-PROV-009"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Builds provider units and runs table-driven capability, ownership, queue, lifecycle, delivery, and negative tests.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderComposition",
+      "LoopbackProvider"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--lint"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-PROV-LINT",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "lint"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-PROV-001",
+      "XCOM-PROV-009",
+      "XCOM-PROV-010",
+      "XCOM-PROV-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Enforces formatting, warning-clean compilation, owned paths, forbidden APIs, and dependency isolation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderRouteHandle",
+      "FixedProviderStorage",
+      "Traceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--static"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-PROV-STATIC",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "static_analysis"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-PROV-001",
+      "XCOM-PROV-004",
+      "XCOM-PROV-006",
+      "XCOM-PROV-008",
+      "XCOM-PROV-009",
+      "XCOM-PROV-010",
+      "XCOM-PROV-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs admitted clang-tidy, strict Doxygen, fixed-storage and forbidden-dependency checks, and reciprocal traceability validation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ExternalProviderConsumer",
+      "ProviderComposition",
+      "LoopbackProvider",
+      "LifecycleController"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--integration"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-PROV-INTEGRATION",
+    "levels": [
+      "integration"
+    ],
+    "methods": [
+      "integration_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-PROV-003",
+      "XCOM-PROV-004",
+      "XCOM-PROV-005",
+      "XCOM-PROV-006",
+      "XCOM-PROV-007",
+      "XCOM-PROV-008",
+      "XCOM-PROV-009"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Compiles a separate public consumer and proves all interaction families, saturation, drain, close, and recreation through exact lifecycle handles.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderComposition",
+      "LoopbackProvider",
+      "XComCoreTypes",
+      "EndpointRouteLifecycle",
+      "Traceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-PROV-VALIDATION",
+    "levels": [
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-PROV-001",
+      "XCOM-PROV-002",
+      "XCOM-PROV-003",
+      "XCOM-PROV-004",
+      "XCOM-PROV-005",
+      "XCOM-PROV-006",
+      "XCOM-PROV-007",
+      "XCOM-PROV-008",
+      "XCOM-PROV-009",
+      "XCOM-PROV-010",
+      "XCOM-PROV-011"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete provider acceptance suite, all accepted prior X-COM regressions, isolation checks, and public-safe traceability checks.",
+    "timeout_seconds": 900
+  }
+]

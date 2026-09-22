@@ -435,6 +435,26 @@ class LifecycleController final {
   [[nodiscard]] Result<LifecycleSnapshot> route_snapshot(const RouteHandle& handle) const noexcept;
 
   /**
+   * @brief Copy the retained declaration after exact endpoint-handle authentication.
+   * @param handle Exact current endpoint handle.
+   * @return Independent owned endpoint declaration or stable ownership diagnostics.
+   *
+   * The returned value exposes no controller storage and remains valid after later lifecycle
+   * transitions. A stale, foreign, recreated, or otherwise inauthentic handle returns failure.
+   */
+  [[nodiscard]] Result<EndpointSpec> endpoint_declaration(
+      const EndpointHandle& handle) const noexcept;
+  /**
+   * @brief Copy the retained declaration after exact route-handle authentication.
+   * @param handle Exact current route handle.
+   * @return Independent owned route declaration or stable ownership diagnostics.
+   *
+   * The returned value exposes no controller storage and remains valid after later lifecycle
+   * transitions. A stale, foreign, recreated, or otherwise inauthentic handle returns failure.
+   */
+  [[nodiscard]] Result<RouteSpec> route_declaration(const RouteHandle& handle) const noexcept;
+
+  /**
    * @brief Transition an endpoint from declared to validated; validated repeats are safe.
    * @param handle Exact current endpoint handle.
    * @return Resulting snapshot or stable diagnostics without mutation.

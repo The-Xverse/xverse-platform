@@ -1,0 +1,26 @@
+@startuml
+actor Caller
+participant LifecycleController as Lifecycle
+participant ProviderComposition as Composition
+participant CommunicationProvider as Provider
+Caller -> Lifecycle: declare and validate endpoints and route
+Caller -> Composition: prepare(route spec, exact handles)
+Composition -> Lifecycle: authenticate snapshots and retained declarations
+Composition -> Composition: compare complete declarations and capabilities
+Composition -> Provider: private prepare operation
+Provider --> Composition: internal prepared result
+Composition --> Caller: composition-issued provider-route handle
+Caller -> Composition: activate(exact provider-route handle)
+Composition -> Lifecycle: require validated route and active endpoints
+Composition -> Provider: private activate operation
+Provider --> Composition: bounded status
+Composition -> Lifecycle: activate exact route
+Lifecycle --> Composition: active route snapshot
+Composition --> Caller: ProviderStatus
+Caller -> Composition: submit(exact handle, immutable item)
+Composition -> Lifecycle: authenticate active route and endpoints
+Composition -> Composition: validate complete item binding
+Composition -> Provider: private submit operation
+Provider --> Composition: bounded outcome
+Composition --> Caller: bounded outcome
+@enduml

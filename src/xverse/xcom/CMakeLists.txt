@@ -30,6 +30,35 @@ add_library(
   STATIC
     src/endpoint_route_lifecycle.cpp
 )
+
+add_library(
+  xverse_xcom_provider_loopback
+  STATIC
+    src/provider.cpp
+    src/loopback_provider.cpp
+)
+add_library(
+  xverse::xcom_provider_loopback
+  ALIAS xverse_xcom_provider_loopback
+)
+target_include_directories(
+  xverse_xcom_provider_loopback
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(
+  xverse_xcom_provider_loopback
+  PUBLIC xverse::xcom_endpoint_route_lifecycle
+)
+target_compile_features(xverse_xcom_provider_loopback PUBLIC cxx_std_20)
+xverse_xcom_apply_warnings(xverse_xcom_provider_loopback)
+set_target_properties(
+  xverse_xcom_provider_loopback
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 add_library(
   xverse::xcom_endpoint_route_lifecycle
   ALIAS xverse_xcom_endpoint_route_lifecycle
@@ -123,4 +152,55 @@ if(BUILD_TESTING)
   add_test(NAME xcom_lifecycle_unit COMMAND xverse_xcom_lifecycle_unit_tests)
   add_test(NAME xcom_lifecycle_negative COMMAND xverse_xcom_lifecycle_negative_tests)
   add_test(NAME xcom_lifecycle_external_consumer COMMAND xverse_xcom_lifecycle_consumer)
+
+  add_executable(
+    xverse_xcom_provider_loopback_unit_tests
+    "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback/unit_tests.cpp"
+  )
+  target_include_directories(
+    xverse_xcom_provider_loopback_unit_tests
+    PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback"
+  )
+  target_link_libraries(
+    xverse_xcom_provider_loopback_unit_tests
+    PRIVATE xverse::xcom_provider_loopback Threads::Threads
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_provider_loopback_unit_tests)
+
+  add_executable(
+    xverse_xcom_provider_loopback_negative_tests
+    "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback/negative_tests.cpp"
+  )
+  target_include_directories(
+    xverse_xcom_provider_loopback_negative_tests
+    PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback"
+  )
+  target_link_libraries(
+    xverse_xcom_provider_loopback_negative_tests
+    PRIVATE xverse::xcom_provider_loopback Threads::Threads
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_provider_loopback_negative_tests)
+
+  add_executable(
+    xverse_xcom_provider_loopback_consumer
+    "${PROJECT_SOURCE_DIR}/tests/xcom/provider_loopback/consumer/main.cpp"
+  )
+  target_link_libraries(
+    xverse_xcom_provider_loopback_consumer
+    PRIVATE xverse::xcom_provider_loopback
+  )
+  xverse_xcom_apply_warnings(xverse_xcom_provider_loopback_consumer)
+
+  add_test(
+    NAME xcom_provider_loopback_unit
+    COMMAND xverse_xcom_provider_loopback_unit_tests
+  )
+  add_test(
+    NAME xcom_provider_loopback_negative
+    COMMAND xverse_xcom_provider_loopback_negative_tests
+  )
+  add_test(
+    NAME xcom_provider_loopback_external_consumer
+    COMMAND xverse_xcom_provider_loopback_consumer
+  )
 endif()

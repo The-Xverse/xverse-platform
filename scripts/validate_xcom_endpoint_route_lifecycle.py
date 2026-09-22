@@ -157,17 +157,50 @@ def _ctest(build: Path, expression: str) -> None:
     )
 
 
-def _check_owned_paths() -> None:
+def _normalize_additive_owned_paths(values: list[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Validate explicit later-slice paths admitted only by the ownership gate."""
+
+    files: list[str] = []
+    prefixes: list[str] = []
+    for value in values:
+        candidate = Path(value)
+        if candidate.is_absolute() or value in {"", "."} or ".." in candidate.parts:
+            _fail(f"invalid additive owned path: {value!r}")
+        resolved = (ROOT / candidate).resolve()
+        try:
+            relative = resolved.relative_to(ROOT).as_posix()
+        except ValueError:
+            _fail(f"additive owned path escapes repository: {value!r}")
+        if not resolved.exists():
+            _fail(f"additive owned path does not exist: {relative}")
+        if resolved.is_dir():
+            if relative == "src/xverse/xcom" or relative.startswith("src/xverse/xcom/"):
+                _fail(
+                    "additive production ownership must name exact files, not a directory: "
+                    + relative
+                )
+            prefixes.append(relative.rstrip("/") + "/")
+        elif resolved.is_file():
+            files.append(relative)
+        else:
+            _fail(f"additive owned path is not a file or directory: {relative}")
+    return tuple(sorted(set(files))), tuple(sorted(set(prefixes)))
+
+
+def _check_owned_paths(additive_owned_paths: list[str]) -> None:
     """Reject changed paths outside this SESN task's ownership boundary."""
 
     changed = _run([_tool("git"), "diff", "--name-only", "--", "."]).stdout.splitlines()
     untracked = _run(
         [_tool("git"), "ls-files", "--others", "--exclude-standard"]
     ).stdout.splitlines()
+    additive_files, additive_prefixes = _normalize_additive_owned_paths(additive_owned_paths)
     unexpected = sorted(
         path
         for path in set((*changed, *untracked))
-        if path not in OWNED_FILES and not path.startswith(OWNED_PREFIXES)
+        if path not in OWNED_FILES
+        and path not in additive_files
+        and not path.startswith((*OWNED_PREFIXES, *additive_prefixes))
     )
     if unexpected:
         _fail("changed paths exceed task ownership: " + ", ".join(unexpected))
@@ -438,7 +471,7 @@ def _validate_traceability(candidate_revision: str) -> None:
                 _fail(f"missing forward artifact edge: {requirement} -> {path}")
 
 
-def _run_core_types_regression() -> None:
+def _run_core_types_regression(additive_owned_paths: list[str]) -> None:
     """Run the complete accepted core-types validator on the integrated candidate."""
 
     validator = ROOT / "scripts" / "validate_xcom_core_types.py"
@@ -447,14 +480,19 @@ def _run_core_types_regression() -> None:
         _fail("accepted core-types validator cannot be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    module.OWNED_PREFIXES = (*module.OWNED_PREFIXES, "tests/xcom/endpoint_route_lifecycle/")
-    module.OWNED_FILES = {
-        *module.OWNED_FILES,
+    admitted = [
         "scripts/validate_xcom_endpoint_route_lifecycle.py",
         "docs/xcom/endpoint-route-lifecycle.md",
         "docs/xcom/endpoint-route-lifecycle-traceability.json",
-    }
-    result = module.main(["--all"])
+        "tests/xcom/endpoint_route_lifecycle",
+        "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+        "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+        *additive_owned_paths,
+    ]
+    arguments = ["--all"]
+    for path in admitted:
+        arguments.extend(("--additive-owned-path", path))
+    result = module.main(arguments)
     if result != 0:
         _fail("accepted core-types validator rejected the integrated candidate")
 
@@ -466,10 +504,10 @@ def _unit(build: Path) -> None:
     _ctest(build, "^xcom_lifecycle_(unit|negative)$")
 
 
-def _lint(build: Path) -> None:
+def _lint(build: Path, additive_owned_paths: list[str]) -> None:
     """Run ownership, formatting, forbidden-boundary, diagnostic, and warning gates."""
 
-    _check_owned_paths()
+    _check_owned_paths(additive_owned_paths)
     _check_layout_and_text()
     _check_bounded_control_plane()
     _check_diagnostic_compatibility()
@@ -511,6 +549,13 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--static", action="store_true")
     selection.add_argument("--integration", action="store_true")
     selection.add_argument("--all", action="store_true")
+    parser.add_argument(
+        "--additive-owned-path",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="admit one exact later-slice file or directory in the ownership check",
+    )
     args = parser.parse_args(arguments)
     try:
         candidate_revision = _candidate_revision()
@@ -520,13 +565,13 @@ def main(arguments: list[str] | None = None) -> int:
             if args.unit or args.all:
                 _unit(build)
             if args.lint or args.all:
-                _lint(build)
+                _lint(build, args.additive_owned_path)
             if args.static or args.all:
                 _static(build, candidate_revision)
             if args.integration or args.all:
                 _integration(build)
             if args.all:
-                _run_core_types_regression()
+                _run_core_types_regression(args.additive_owned_path)
                 _validate_traceability(candidate_revision)
     except ValidationFailure as error:
         print(f"X-COM endpoint/route lifecycle validation failed: {error}", file=sys.stderr)

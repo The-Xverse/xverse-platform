@@ -1,0 +1,3 @@
+# SWE.5 Integration sequence and checks
+
+Run three dependency-ordered SESN workers against the rejected immutable candidate. The first repairs only C++ contract, lifecycle binding, locking, and independent-provider extension mechanics. The second owns tests and validators, adds the F1-F6 counterexamples, and preserves all substantive prior gates through explicit additive owned-path inputs. The third reconciles provider documentation and traceability with the implemented sequence and evidence. Integrate only clean task commits, then run all five host measures and both prior complete validators against one immutable revision before a new Astra review.

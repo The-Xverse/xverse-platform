@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "feature_id": "FEAT-e17d4ee9f29848f5",
+  "task_id": "XCOM-PROVIDER-LOOPBACK",
+  "baseline_id": "BASE-bef10959e1488206a1cc",
+  "candidate_revision_binding": {
+    "environment_variable": "SESN_CANDIDATE_REVISION",
+    "format": "full-lowercase-git-sha",
+    "workspace_comparison": "git rev-parse HEAD"
+  },
+  "state": "READY_FOR_REVIEW",
+  "repair": {
+        "feature_id": "FEAT-7795845feff2492c",
+        "task_id": "XCOM-PROVIDER-EVIDENCE-REPAIR",
+        "baseline_id": "BASE-d84842bcd394994eed06",
+        "source": "specs/016-feat-7795845feff2492c/spec.md",
+        "rejected_review_id": "REVIEW-c07845b2416645ef",
+        "historical_rejected_revision": "0c0c82457d111a33828d9d6c168875e8caf17611",
+        "delivery_candidate_binding": {
+            "selection": "SESN host feature/evidence records",
+            "revision_source": "SESN_CANDIDATE_REVISION",
+            "required_match": "git rev-parse HEAD"
+        },
+        "tasks": [
+            "XCOM-PROVIDER-AUTHORITY-REPAIR",
+            "XCOM-PROVIDER-VERIFICATION-GATE-REPAIR",
+            "XCOM-PROVIDER-EVIDENCE-REPAIR"
+        ],
+        "evidence": [
+            {
+                "id": "VM-XCOM-PROV-STATIC",
+                "result": "passed",
+                "executed_on": "2026-09-22",
+                "candidate_revision_source": "SESN_CANDIDATE_REVISION",
+                "candidate_revision_match": "git rev-parse HEAD",
+                "owned_paths": [
+                    "docs/xcom/provider-composition-loopback.md",
+                    "docs/xcom/provider-composition-loopback-traceability.json"
+                ]
+            }
+        ],
+        "finding_dispositions": {
+            "R4": {
+                "status": "repaired",
+                "evidence": [
+                    "src/xverse/xcom/src/provider.cpp",
+                    "docs/xcom/provider-composition-loopback-traceability.json"
+                ]
+            },
+            "R5": {
+                "status": "repaired",
+                "evidence": [
+                    "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+                    "src/xverse/xcom/src/provider.cpp",
+                    "docs/xcom/provider-composition-loopback.md"
+                ]
+            },
+            "R6": {
+                "status": "repaired",
+                "evidence": [
+                    "scripts/validate_xcom_provider_loopback.py",
+                    "docs/xcom/provider-composition-loopback.md",
+                    "docs/xcom/provider-composition-loopback-traceability.json"
+                ]
+            }
+        }
+    },
+  "requirements": [
+    {
+      "id": "XCOM-PROV-001",
+      "design": ["XCOM-PROV-UNIT-001", "XCOM-PROV-UNIT-002"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/independent_provider.hpp", "scripts/validate_xcom_provider_loopback.py"],
+      "checks": ["VM-XCOM-PROV-LINT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-002",
+      "design": ["XCOM-PROV-UNIT-001", "XCOM-PROV-UNIT-002"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/independent_provider.hpp", "tests/xcom/provider_loopback/negative_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-003",
+      "design": ["XCOM-PROV-UNIT-003"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp", "src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/negative_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-004",
+      "design": ["XCOM-PROV-UNIT-003", "XCOM-PROV-UNIT-004", "XCOM-PROV-UNIT-006"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp", "src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-005",
+      "design": ["XCOM-PROV-UNIT-004", "XCOM-PROV-UNIT-005"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp", "tests/xcom/provider_loopback/consumer/main.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-006",
+      "design": ["XCOM-PROV-UNIT-004", "XCOM-PROV-UNIT-005"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-007",
+      "design": ["XCOM-PROV-UNIT-001", "XCOM-PROV-UNIT-005"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-008",
+      "design": ["XCOM-PROV-UNIT-006"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-009",
+      "design": ["XCOM-PROV-UNIT-002", "XCOM-PROV-UNIT-005", "XCOM-PROV-UNIT-006"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/independent_provider.hpp", "scripts/validate_xcom_provider_loopback.py"],
+      "checks": ["VM-XCOM-PROV-UNIT", "VM-XCOM-PROV-LINT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-INTEGRATION", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-010",
+      "design": ["XCOM-PROV-UNIT-002", "XCOM-PROV-UNIT-007"],
+      "code": ["src/xverse/xcom/CMakeLists.txt", "scripts/validate_xcom_provider_loopback.py", "docs/xcom/provider-composition-loopback.md"],
+      "tests": ["scripts/validate_xcom_provider_loopback.py", "scripts/validate_xcom_core_types.py", "scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-PROV-LINT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-VALIDATION"]
+    },
+    {
+      "id": "XCOM-PROV-011",
+      "design": ["XCOM-PROV-UNIT-007"],
+      "code": ["src/xverse/xcom/CMakeLists.txt", "docs/xcom/provider-composition-loopback.md", "docs/xcom/provider-composition-loopback-traceability.json", "scripts/validate_xcom_provider_loopback.py"],
+      "tests": ["tests/xcom/provider_loopback/consumer/main.cpp", "scripts/validate_xcom_provider_loopback.py", "scripts/validate_xcom_core_types.py", "scripts/validate_xcom_endpoint_route_lifecycle.py"],
+      "checks": ["VM-XCOM-PROV-LINT", "VM-XCOM-PROV-STATIC", "VM-XCOM-PROV-VALIDATION"]
+    }
+  ],
+  "designs": {
+    "XCOM-PROV-UNIT-001": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-007"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"]
+    },
+    "XCOM-PROV-UNIT-002": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-009", "XCOM-PROV-010"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp", "tests/xcom/provider_loopback/independent_provider.hpp", "tests/xcom/provider_loopback/consumer/main.cpp", "scripts/validate_xcom_provider_loopback.py"]
+    },
+    "XCOM-PROV-UNIT-003": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-003", "XCOM-PROV-004"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp", "src/xverse/xcom/src/endpoint_route_lifecycle.cpp", "src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/negative_tests.cpp"]
+    },
+    "XCOM-PROV-UNIT-004": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-006"],
+      "code": ["src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"]
+    },
+    "XCOM-PROV-UNIT-005": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-005", "XCOM-PROV-006", "XCOM-PROV-007", "XCOM-PROV-009"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/consumer/main.cpp"]
+    },
+    "XCOM-PROV-UNIT-006": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-004", "XCOM-PROV-008", "XCOM-PROV-009"],
+      "code": ["src/xverse/xcom/include/xverse/xcom/provider.hpp", "src/xverse/xcom/src/provider.cpp", "src/xverse/xcom/src/loopback_provider.cpp"],
+      "tests": ["tests/xcom/provider_loopback/unit_tests.cpp", "tests/xcom/provider_loopback/negative_tests.cpp"]
+    },
+    "XCOM-PROV-UNIT-007": {
+      "source": "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md",
+      "requirements": ["XCOM-PROV-010", "XCOM-PROV-011"],
+      "code": ["src/xverse/xcom/CMakeLists.txt", "docs/xcom/provider-composition-loopback.md", "docs/xcom/provider-composition-loopback-traceability.json", "scripts/validate_xcom_provider_loopback.py"],
+      "tests": ["tests/xcom/provider_loopback/consumer/main.cpp", "scripts/validate_xcom_provider_loopback.py", "scripts/validate_xcom_core_types.py", "scripts/validate_xcom_endpoint_route_lifecycle.py"]
+    }
+  },
+  "artifacts": {
+    "docs/xcom/provider-composition-loopback.md": ["XCOM-PROV-010", "XCOM-PROV-011"],
+    "docs/xcom/provider-composition-loopback-traceability.json": ["XCOM-PROV-011"],
+    "scripts/validate_xcom_core_types.py": ["XCOM-PROV-010", "XCOM-PROV-011"],
+    "scripts/validate_xcom_endpoint_route_lifecycle.py": ["XCOM-PROV-010", "XCOM-PROV-011"],
+    "scripts/validate_xcom_provider_loopback.py": ["XCOM-PROV-001", "XCOM-PROV-009", "XCOM-PROV-010", "XCOM-PROV-011"],
+    "src/xverse/xcom/CMakeLists.txt": ["XCOM-PROV-010", "XCOM-PROV-011"],
+    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp": ["XCOM-PROV-003", "XCOM-PROV-004"],
+    "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp": ["XCOM-PROV-005", "XCOM-PROV-006", "XCOM-PROV-007", "XCOM-PROV-009"],
+    "src/xverse/xcom/include/xverse/xcom/provider.hpp": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-003", "XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-008", "XCOM-PROV-009"],
+    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp": ["XCOM-PROV-003", "XCOM-PROV-004"],
+    "src/xverse/xcom/src/loopback_provider.cpp": ["XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-006", "XCOM-PROV-007", "XCOM-PROV-008", "XCOM-PROV-009"],
+    "src/xverse/xcom/src/provider.cpp": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-003", "XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-008", "XCOM-PROV-009"],
+    "tests/xcom/provider_loopback/consumer/main.cpp": ["XCOM-PROV-005", "XCOM-PROV-011"],
+    "tests/xcom/provider_loopback/independent_provider.hpp": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-009"],
+    "tests/xcom/provider_loopback/negative_tests.cpp": ["XCOM-PROV-002", "XCOM-PROV-003", "XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-006", "XCOM-PROV-008"],
+    "tests/xcom/provider_loopback/unit_tests.cpp": ["XCOM-PROV-001", "XCOM-PROV-002", "XCOM-PROV-004", "XCOM-PROV-005", "XCOM-PROV-006", "XCOM-PROV-007", "XCOM-PROV-008", "XCOM-PROV-009"]
+  }
+}

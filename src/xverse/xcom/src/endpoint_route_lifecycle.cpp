@@ -435,6 +435,26 @@ Result<LifecycleSnapshot> LifecycleController::route_snapshot(
                         record->generation, record->state));
 }
 
+Result<EndpointSpec> LifecycleController::endpoint_declaration(
+    const EndpointHandle& handle) const noexcept {
+  const std::lock_guard lock(mutex_);
+  const EndpointRecord* record = authenticate_endpoint(handle);
+  if (record == nullptr) {
+    return invalid_handle<EndpointSpec>(handle);
+  }
+  return Result<EndpointSpec>::success(record->spec);
+}
+
+Result<RouteSpec> LifecycleController::route_declaration(
+    const RouteHandle& handle) const noexcept {
+  const std::lock_guard lock(mutex_);
+  const RouteRecord* record = authenticate_route(handle);
+  if (record == nullptr) {
+    return invalid_handle<RouteSpec>(handle);
+  }
+  return Result<RouteSpec>::success(record->spec);
+}
+
 Result<LifecycleSnapshot> LifecycleController::validate_endpoint(
     const EndpointHandle& handle) noexcept {
   const std::lock_guard lock(mutex_);

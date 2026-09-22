@@ -1,0 +1,18 @@
+@startuml
+component "External C++ consumer" as Consumer
+component "LifecycleController" as Lifecycle
+component "Authoritative declarations" as Declarations
+component "ProviderComposition" as Composition
+interface "CommunicationProvider" as Provider
+component "Independent synthetic provider" as Independent
+component "Owned LoopbackProvider" as Loopback
+component "Fixed per-route FIFO" as Queue
+Consumer --> Lifecycle
+Lifecycle --> Declarations
+Consumer --> Composition
+Composition --> Lifecycle : exact snapshots and declarations
+Composition --> Provider : validated internal operations
+Independent ..|> Provider
+Loopback ..|> Provider
+Loopback --> Queue
+@enduml

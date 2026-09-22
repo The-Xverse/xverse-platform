@@ -1,0 +1,16 @@
+@startuml
+component "External C++ consumer" as Consumer
+component "LifecycleController" as Lifecycle
+component "ProviderComposition" as Composition
+interface "CommunicationProvider" as Provider
+component "Owned LoopbackProvider" as Loopback
+component "Fixed per-route FIFO" as Queue
+component "X-COM core types" as Core
+Consumer --> Lifecycle
+Consumer --> Composition
+Composition --> Lifecycle : exact snapshots
+Composition --> Provider : explicit registration and dispatch
+Loopback ..|> Provider
+Loopback --> Queue
+Provider --> Core
+@enduml

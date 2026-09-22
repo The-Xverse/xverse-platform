@@ -1,0 +1,31 @@
+@startuml
+actor Caller
+participant LifecycleController as Lifecycle
+participant ProviderComposition as Composition
+participant LoopbackProvider as Loopback
+participant FixedRouteQueue as Queue
+Caller -> Lifecycle: declare, validate, activate endpoints
+Caller -> Lifecycle: declare and validate route
+Caller -> Composition: register explicit loopback provider
+Composition -> Loopback: describe capabilities and limits
+Caller -> Composition: prepare(route spec, exact handles)
+Composition -> Lifecycle: authenticate snapshots and compatibility
+Composition -> Loopback: prepare without traffic
+Caller -> Lifecycle: activate route with exact endpoints
+Caller -> Composition: activate prepared provider route
+Composition -> Lifecycle: require exact active generations
+Composition -> Loopback: activate bounded route slot
+Loopback --> Caller: opaque provider-route handle
+Caller -> Composition: submit(handle, immutable item)
+Composition -> Lifecycle: recheck active exact route and endpoints
+Composition -> Loopback: validate and enqueue
+alt capacity available
+Loopback -> Queue: copy item at FIFO tail
+Loopback --> Caller: accepted outcome
+else queue full
+Loopback --> Caller: saturation outcome, queue unchanged
+end
+Caller -> Composition: receive(handle)
+Composition -> Loopback: pull next item
+Queue --> Caller: exact accepted item or empty outcome
+@enduml
