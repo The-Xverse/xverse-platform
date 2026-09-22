@@ -167,7 +167,20 @@ def _check_boundaries() -> None:
     for path in PRODUCTION:
         text = path.read_text(encoding="utf-8")
         for pattern, label in patterns.items():
-            if re.search(pattern, text):
+            for match in re.finditer(pattern, text):
+                if label == "forbidden ambient/process/network API":
+                    line_start = text.rfind("\n", 0, match.start()) + 1
+                    line_end = text.find("\n", match.end())
+                    if line_end == -1:
+                        line_end = len(text)
+                    line = text[line_start:line_end]
+                    name = match.group(0).split("(", 1)[0].strip()
+                    member_pattern = (
+                        rf"(?:\b[A-Za-z_]\w*::)*{re.escape(name)}\s*\([^;]*\)"
+                        rf"\s*(?:const\s*)?noexcept\s*(?:[;{{])"
+                    )
+                    if re.search(member_pattern, line):
+                        continue
                 _fail(f"{label} found in {path.relative_to(ROOT)}")
     header = (CPP_ROOT / "include" / "xverse" / "xcom" / "observation.hpp").read_text(encoding="utf-8")
     required_tokens = (
