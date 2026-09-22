@@ -23,6 +23,31 @@
 #include <thread>
 #include <vector>
 
+#if !defined(XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK)
+#error "The disabled-observation benchmark requires its BUILD_TESTING-only comparison seam"
+#endif
+
+namespace xverse::xcom {
+
+/** BUILD_TESTING-only friend that invokes the pinned pre-observation submit implementation. */
+class ObservationDisabledBenchmarkAccess final {
+ public:
+  /**
+   * @param composition Composition under measurement.
+   * @param handle Exact active provider-route authority.
+   * @param item Route-bound item.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Provider result from the admitted baseline path.
+   */
+  [[nodiscard]] static ProviderStatus submit(
+      ProviderComposition& composition, const ProviderRouteHandle& handle,
+      const CommunicationItem& item, const LifecycleController& lifecycle) noexcept {
+    return composition.submit_disabled_observation_baseline(handle, item, lifecycle);
+  }
+};
+
+}  // namespace xverse::xcom
+
 namespace {
 
 using namespace xverse::xcom;
@@ -31,6 +56,16 @@ using xverse::xcom::observation_test::Scenario;
 constexpr std::size_t kPairedSamples = 21U;
 constexpr std::size_t kIterationsPerSample = 5000U;
 constexpr double kMaximumMedianRegressionPercent = 2.0;
+constexpr std::string_view kAdmittedBaselineRevision =
+    "39977ba9e724524dfc42a51e53fa3d61a8964a85";
+
+/** Submit implementation selected for one side of a paired sample. */
+enum class SubmitPath : std::uint8_t {
+  /** Exact submit code admitted before observation integration. */
+  admitted_baseline,
+  /** Current public submit with the optional observation pointer disabled. */
+  disabled_candidate,
+};
 
 /** @return Compile-time target description without ambient environment access. */
 [[nodiscard]] constexpr std::string_view target_name() noexcept {
@@ -55,14 +90,20 @@ constexpr double kMaximumMedianRegressionPercent = 2.0;
  * @brief Time balanced submit/receive operations on one empty-at-end loopback route.
  * @param scenario Ready disabled-observation scenario.
  * @param item Reused immutable item.
+ * @param path Admitted baseline or current disabled-observation submit path.
  * @return Elapsed nanoseconds, or infinity if a normal-route operation fails.
  */
-[[nodiscard]] double run_sample(Scenario& scenario, const CommunicationItem& item) {
+[[nodiscard]] double run_sample(Scenario& scenario, const CommunicationItem& item,
+                                const SubmitPath path) {
   const auto start = std::chrono::steady_clock::now();
   std::uint64_t checksum = 0U;
   for (std::size_t iteration = 0U; iteration < kIterationsPerSample; ++iteration) {
-    const ProviderStatus submitted = scenario.composition().submit(
-        scenario.provider_handle(), item, scenario.lifecycle());
+    const ProviderStatus submitted =
+        path == SubmitPath::admitted_baseline
+            ? ObservationDisabledBenchmarkAccess::submit(
+                  scenario.composition(), scenario.provider_handle(), item, scenario.lifecycle())
+            : scenario.composition().submit(scenario.provider_handle(), item,
+                                            scenario.lifecycle());
     const auto received =
         scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
     if (submitted.outcome() != ProviderOutcome::accepted || !received.has_value()) {
@@ -101,27 +142,36 @@ int main() {
     return 1;
   }
 
-  static_cast<void>(run_sample(baseline, *baseline_item.value()));
-  static_cast<void>(run_sample(disabled, *disabled_item.value()));
+  static_cast<void>(run_sample(baseline, *baseline_item.value(), SubmitPath::admitted_baseline));
+  static_cast<void>(
+      run_sample(disabled, *disabled_item.value(), SubmitPath::disabled_candidate));
 
   std::vector<double> baseline_latency;
   std::vector<double> disabled_latency;
   std::vector<double> baseline_throughput;
   std::vector<double> disabled_throughput;
+  std::vector<double> paired_latency_regression;
+  std::vector<double> paired_throughput_regression;
   baseline_latency.reserve(kPairedSamples);
   disabled_latency.reserve(kPairedSamples);
   baseline_throughput.reserve(kPairedSamples);
   disabled_throughput.reserve(kPairedSamples);
+  paired_latency_regression.reserve(kPairedSamples);
+  paired_throughput_regression.reserve(kPairedSamples);
 
   for (std::size_t sample = 0U; sample < kPairedSamples; ++sample) {
     double baseline_elapsed = 0.0;
     double disabled_elapsed = 0.0;
     if (sample % 2U == 0U) {
-      baseline_elapsed = run_sample(baseline, *baseline_item.value());
-      disabled_elapsed = run_sample(disabled, *disabled_item.value());
+      baseline_elapsed =
+          run_sample(baseline, *baseline_item.value(), SubmitPath::admitted_baseline);
+      disabled_elapsed =
+          run_sample(disabled, *disabled_item.value(), SubmitPath::disabled_candidate);
     } else {
-      disabled_elapsed = run_sample(disabled, *disabled_item.value());
-      baseline_elapsed = run_sample(baseline, *baseline_item.value());
+      disabled_elapsed =
+          run_sample(disabled, *disabled_item.value(), SubmitPath::disabled_candidate);
+      baseline_elapsed =
+          run_sample(baseline, *baseline_item.value(), SubmitPath::admitted_baseline);
     }
     if (!std::isfinite(baseline_elapsed) || !std::isfinite(disabled_elapsed)) {
       std::cerr << "benchmark route operation failed\n";
@@ -131,20 +181,27 @@ int main() {
     const double disabled_sample_latency = latency_per_iteration(disabled_elapsed);
     baseline_latency.push_back(baseline_sample_latency);
     disabled_latency.push_back(disabled_sample_latency);
-    baseline_throughput.push_back(throughput(baseline_sample_latency));
-    disabled_throughput.push_back(throughput(disabled_sample_latency));
+    const double baseline_sample_throughput = throughput(baseline_sample_latency);
+    const double disabled_sample_throughput = throughput(disabled_sample_latency);
+    baseline_throughput.push_back(baseline_sample_throughput);
+    disabled_throughput.push_back(disabled_sample_throughput);
+    paired_latency_regression.push_back(
+        ((disabled_sample_latency / baseline_sample_latency) - 1.0) * 100.0);
+    paired_throughput_regression.push_back(
+        (1.0 - (disabled_sample_throughput / baseline_sample_throughput)) * 100.0);
   }
 
   const double baseline_latency_median = median(baseline_latency);
   const double disabled_latency_median = median(disabled_latency);
   const double baseline_throughput_median = median(baseline_throughput);
   const double disabled_throughput_median = median(disabled_throughput);
-  const double latency_regression =
-      ((disabled_latency_median / baseline_latency_median) - 1.0) * 100.0;
-  const double throughput_regression =
-      (1.0 - (disabled_throughput_median / baseline_throughput_median)) * 100.0;
+  const double latency_regression = median(paired_latency_regression);
+  const double throughput_regression = median(paired_throughput_regression);
 
   std::cout << "fixture=owned-loopback-disabled-observation\n"
+            << "baseline_revision=" << kAdmittedBaselineRevision << '\n'
+            << "baseline_path=private-test-seam-exact-pre-observation-submit\n"
+            << "candidate_path=public-submit-null-observation-hub\n"
             << "target=" << target_name() << '\n'
             << "compiler=" << __VERSION__ << '\n'
             << "steady_clock=" << (std::chrono::steady_clock::is_steady ? "true" : "false")
@@ -155,16 +212,31 @@ int main() {
             << "pair_order=alternating\n"
             << "baseline_median_latency_ns=" << baseline_latency_median << '\n'
             << "disabled_median_latency_ns=" << disabled_latency_median << '\n'
-            << "latency_regression_percent=" << latency_regression << '\n'
+            << "paired_median_latency_regression_percent=" << latency_regression << '\n'
             << "baseline_median_throughput_pairs_per_second="
             << baseline_throughput_median << '\n'
             << "disabled_median_throughput_pairs_per_second="
             << disabled_throughput_median << '\n'
-            << "throughput_regression_percent=" << throughput_regression << '\n'
+            << "paired_median_throughput_regression_percent=" << throughput_regression << '\n'
             << "accepted_threshold_percent=" << kMaximumMedianRegressionPercent << '\n'
             << "uncertainty=single-process steady-clock; CPU affinity, scheduler load, DVFS, "
                "thermal state, and cache state are uncontrolled\n"
             << "claim=prototype fixture only; not a production performance claim\n";
+
+  for (std::size_t sample = 0U; sample < kPairedSamples; ++sample) {
+    std::cout << "sample[" << sample << "].baseline_latency_ns=" << baseline_latency[sample]
+              << '\n'
+              << "sample[" << sample << "].disabled_latency_ns=" << disabled_latency[sample]
+              << '\n'
+              << "sample[" << sample << "].latency_regression_percent="
+              << paired_latency_regression[sample] << '\n'
+              << "sample[" << sample << "].baseline_throughput_pairs_per_second="
+              << baseline_throughput[sample] << '\n'
+              << "sample[" << sample << "].disabled_throughput_pairs_per_second="
+              << disabled_throughput[sample] << '\n'
+              << "sample[" << sample << "].throughput_regression_percent="
+              << paired_throughput_regression[sample] << '\n';
+  }
 
   const bool latency_pass = latency_regression <= kMaximumMedianRegressionPercent;
   const bool throughput_pass = throughput_regression <= kMaximumMedianRegressionPercent;

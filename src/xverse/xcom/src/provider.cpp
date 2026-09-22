@@ -4,7 +4,7 @@
  * @ownership Accepted descriptors, registrations, bindings, and results are copied by value.
  * @lifetime The registry retains caller-owned provider addresses until registry destruction.
  * @thread_safety Registry access is serialized; virtual provider calls occur after mutex release.
- * Observed submissions are sequenced without overlapping provider and observation-hub locks.
+ * Hub reservations span provider dispatch without retaining an X-COM mutex or hub mutex.
  * @failure Compatibility and lifecycle rejection occurs before provider preparation. Lossless
  * observation backpressure rejects immediately before provider submission.
  * @par Traceability
@@ -18,6 +18,7 @@
 #include <atomic>
 #include <limits>
 #include <span>
+#include <utility>
 
 namespace xverse::xcom {
 namespace {
@@ -612,9 +613,8 @@ ProviderStatus ProviderComposition::submit(const ProviderRouteHandle& handle,
     return provider->submit(*token, item, lifecycle);
   }
 
-  const std::lock_guard observation_sequence(observation_dispatch_mutex_);
-  const ObservationStatus preflight = observation_hub_->preflight(item);
-  if (preflight.outcome == ObservationOutcome::observation_backpressure) {
+  ObservationReserveResult reserved = observation_hub_->reserve(item);
+  if (!reserved.status.succeeded() || !reserved.reservation.has_value()) {
     return ProviderStatus(ProviderOutcome::observation_backpressure);
   }
 
@@ -623,10 +623,56 @@ ProviderStatus ProviderComposition::submit(const ProviderRouteHandle& handle,
       provider_status.outcome() == ProviderOutcome::accepted
           ? ObservationProviderOutcome::accepted
           : ObservationProviderOutcome::rejected;
-  static_cast<void>(observation_hub_->publish(
+  static_cast<void>(observation_hub_->commit(
+      std::move(*reserved.reservation),
       {item, item.timestamp(), item.clock_domain().value(), std::nullopt, observed_outcome}));
   return provider_status;
 }
+
+#if defined(XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK)
+ProviderStatus ProviderComposition::submit_disabled_observation_baseline(
+    const ProviderRouteHandle& handle, const CommunicationItem& item,
+    const LifecycleController& lifecycle) noexcept {
+  CommunicationProvider* provider = provider_for(handle);
+  const auto token = ProviderRouteToken::create(handle.provider_route_generation());
+  if (provider == nullptr || !token.has_value()) {
+    return ProviderStatus(ProviderOutcome::invalid_provider_route_handle);
+  }
+  const auto lifecycle_route = lifecycle.route_snapshot(handle.route_handle_);
+  if (!lifecycle_route.has_value()) {
+    return ProviderStatus(ProviderOutcome::lifecycle_mismatch);
+  }
+  if (lifecycle_route.value()->state() == LifecycleState::validated ||
+      lifecycle_route.value()->state() == LifecycleState::draining ||
+      lifecycle_route.value()->state() == LifecycleState::closed) {
+    return ProviderStatus(ProviderOutcome::inactive_route);
+  }
+  if (!lifecycle_matches(handle, lifecycle, LifecycleState::active, true)) {
+    return ProviderStatus(ProviderOutcome::lifecycle_mismatch);
+  }
+  const auto route = lifecycle.route_declaration(handle.route_handle_);
+  if (!route.has_value()) {
+    return ProviderStatus(ProviderOutcome::lifecycle_mismatch);
+  }
+  const CommunicationContract& contract = route.value()->contract();
+  if (route.value()->provider_id() != handle.provider_id() ||
+      item.contract_id() != contract.contract_id() ||
+      item.contract_version() != contract.contract_version() ||
+      item.interface_id() != contract.interface_id() ||
+      item.schema_id() != contract.schema_id() ||
+      item.schema_version() != contract.schema_version() ||
+      item.interaction_kind() != contract.interaction_kind() ||
+      item.endpoint_id() != route.value()->source_endpoint_id() ||
+      item.route_id() != route.value()->route_id() ||
+      item.provider_id() != route.value()->provider_id()) {
+    return ProviderStatus(ProviderOutcome::item_mismatch);
+  }
+  if (item.payload().size() > handle.maximum_payload_bytes_) {
+    return ProviderStatus(ProviderOutcome::payload_limit_exceeded);
+  }
+  return provider->submit(*token, item, lifecycle);
+}
+#endif
 
 ProviderResult<CommunicationItem> ProviderComposition::receive(
     const ProviderRouteHandle& handle, const LifecycleController& lifecycle) noexcept {

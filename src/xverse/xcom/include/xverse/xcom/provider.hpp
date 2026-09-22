@@ -662,8 +662,8 @@ class ProviderRegistryConfiguration final {
  * @lifetime A provider and lifecycle controller must outlive their issued route handles. An enabled
  * ObservationHub must outlive this composition.
  * @thread_safety Registration and lookup are serialized; provider and hub calls occur without the
- * registry lock and never while holding each other's locks. Observed submissions are sequenced so a
- * successful lossless preflight remains reserved through provider dispatch and publication.
+ * registry lock and never while holding each other's locks. Each observed submission owns an exact
+ * hub reservation across provider dispatch and consumes it during outcome publication.
  * @failure Rejected registration/preparation leaves registry, provider, lifecycle, and queues intact.
  * Lossless observation backpressure rejects before provider mutation. Best-effort observation loss
  * never changes the provider outcome.
@@ -712,7 +712,7 @@ class ProviderComposition final {
   [[nodiscard]] ProviderStatus activate_route(const ProviderRouteHandle& handle,
                                               LifecycleController& lifecycle) noexcept;
   /**
-   * @brief Submit after exact lossless preflight and publish the normalized provider outcome.
+   * @brief Submit after exact hub reservation and publish the normalized provider outcome.
    * @param handle Exact active handle.
    * @param item Item copied on provider acceptance and policy-bounded for observation.
    * @param lifecycle Bound lifecycle owner.
@@ -777,13 +777,30 @@ class ProviderComposition final {
       const ProviderRouteHandle& handle, const LifecycleController& lifecycle,
       LifecycleState route_state, bool endpoints_must_be_active) noexcept;
 
+#if defined(XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK)
+  friend class ObservationDisabledBenchmarkAccess;
+  /**
+   * @brief Execute the admitted pre-observation submit path for the disabled-tap benchmark only.
+   * @param handle Exact active handle.
+   * @param item Route-bound immutable item.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Provider status from the pre-observation validation and dispatch path.
+   *
+   * This private test seam is compiled only in BUILD_TESTING configurations. It reproduces the
+   * submit implementation at baseline 39977ba9e724524dfc42a51e53fa3d61a8964a85 and grants no
+   * observation, provider, route, or lifecycle authority to production consumers.
+   */
+  [[nodiscard]] ProviderStatus submit_disabled_observation_baseline(
+      const ProviderRouteHandle& handle, const CommunicationItem& item,
+      const LifecycleController& lifecycle) noexcept;
+#endif
+
   std::uint64_t instance_id_; /**< Opaque composition identity. */
   std::size_t capacity_; /**< Configured provider slot prefix. */
   std::uint64_t next_generation_{1U}; /**< Next registry generation. */
   mutable std::mutex mutex_; /**< Serializes registry inspection/mutation. */
   std::array<std::optional<ProviderSlot>, kMaximumProviders> providers_{}; /**< Fixed slots. */
   ObservationHub* observation_hub_{nullptr}; /**< Optional non-owning observation boundary. */
-  std::mutex observation_dispatch_mutex_; /**< Reserves lossless capacity through publication. */
 };
 
 }  // namespace xverse::xcom

@@ -3,8 +3,8 @@
  * @brief ProviderComposition, loopback, and ObservationHub integration fixtures.
  * @ownership Fixtures own every normal-route resource, hub, tap, sink, item, record, and snapshot.
  * @lifetime No returned view outlives its owning fixture value.
- * @thread_safety The concurrency fixture submits through one composition and relies only on its
- * documented serialization; no test callback executes under an X-COM lock.
+ * @thread_safety Concurrency fixtures submit through independent compositions sharing one hub;
+ * exact reservations serialize only hub claims and no test callback executes under an X-COM lock.
  * @failure Failed expectations are printed and produce a nonzero process result.
  * @par Traceability
  * Verifies XCOM-OBS-001 through XCOM-OBS-008 at the provider integration boundary. Core-only policy,
@@ -21,6 +21,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 
 namespace {
 
@@ -46,6 +47,9 @@ using xverse::xcom::observation_test::make_tap_spec;
   const auto prefix = hub.attach(make_tap_spec(
       filter, ObservationPayloadMode::bounded_prefix, 2U, 4U,
       ObservationOverflowPolicy::drop_newest));
+  const auto complete = hub.attach(make_tap_spec(
+      filter, ObservationPayloadMode::bounded_prefix, 4U, 4U,
+      ObservationOverflowPolicy::drop_newest));
   const auto redacted = hub.attach(make_tap_spec(
       filter, ObservationPayloadMode::redacted, 0U, 4U,
       ObservationOverflowPolicy::drop_newest));
@@ -53,8 +57,8 @@ using xverse::xcom::observation_test::make_tap_spec;
   const auto first = scenario.item(1U);
   const auto second = scenario.item(2U);
   if (!expect(metadata.handle.has_value() && prefix.handle.has_value() &&
-                  redacted.handle.has_value() && scenario.ready() && first.has_value() &&
-                  second.has_value(),
+                  complete.handle.has_value() && redacted.handle.has_value() && scenario.ready() &&
+                  first.has_value() && second.has_value(),
               "payload fixture setup")) {
     return false;
   }
@@ -65,12 +69,14 @@ using xverse::xcom::observation_test::make_tap_spec;
   const auto metadata_first = hub.poll(*metadata.handle);
   const auto metadata_second = hub.poll(*metadata.handle);
   const auto prefix_first = hub.poll(*prefix.handle);
+  const auto complete_first = hub.poll(*complete.handle);
   const auto redacted_first = hub.poll(*redacted.handle);
   if (!expect(accepted.outcome() == ProviderOutcome::accepted &&
                   rejected.outcome() == ProviderOutcome::queue_saturated,
               "provider outcomes") ||
       !expect(metadata_first.record.has_value() && metadata_second.record.has_value() &&
-                  prefix_first.record.has_value() && redacted_first.record.has_value(),
+                  prefix_first.record.has_value() && complete_first.record.has_value() &&
+                  redacted_first.record.has_value(),
               "normalized records")) {
     return false;
   }
@@ -103,9 +109,56 @@ using xverse::xcom::observation_test::make_tap_spec;
                     prefix_first.record->payload_schema_state() ==
                         PayloadSchemaState::undecoded,
                 "bounded undecoded prefix") &&
+         expect(complete_first.record->payload_bytes().size() ==
+                        first.value()->payload().size() &&
+                    complete_first.record->payload_view_state() == PayloadViewState::complete &&
+                    complete_first.record->payload_schema_state() ==
+                        PayloadSchemaState::undecoded,
+                "complete bounded undecoded payload") &&
          expect(redacted_first.record->payload_bytes().empty() &&
                     redacted_first.record->payload_view_state() == PayloadViewState::redacted,
                 "explicit redaction");
+}
+
+/** Verify exact route/provider/interaction/origin filters and observation-contract rejection. */
+[[nodiscard]] bool test_versioned_exact_filters() {
+  ObservationHub hub;
+  ObservationFilterInput matching_filter{};
+  matching_filter.route_id = "route.filtered";
+  matching_filter.provider_id = "provider.filtered";
+  matching_filter.interaction_kind = InteractionKind::message_event;
+  matching_filter.origin = OriginKind::component;
+  ObservationFilterInput wrong_origin_filter = matching_filter;
+  wrong_origin_filter.origin = OriginKind::replay;
+  const auto matching = hub.attach(make_tap_spec(
+      matching_filter, ObservationPayloadMode::metadata_only, 0U, 1U,
+      ObservationOverflowPolicy::drop_newest));
+  const auto wrong_origin = hub.attach(make_tap_spec(
+      wrong_origin_filter, ObservationPayloadMode::metadata_only, 0U, 1U,
+      ObservationOverflowPolicy::drop_newest));
+  const auto unsupported = ObservationTapSpec::create(
+      {"2.0.0", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+       ObservationOverflowPolicy::drop_newest});
+  Scenario scenario("filtered", InteractionKind::message_event, 1U, &hub);
+  const auto item = scenario.item(1U);
+  if (!expect(matching.handle.has_value() && wrong_origin.handle.has_value() && scenario.ready() &&
+                  item.has_value() && !unsupported.has_value(),
+              "versioned filter fixture setup")) {
+    return false;
+  }
+  const ProviderStatus submitted = scenario.composition().submit(
+      scenario.provider_handle(), *item.value(), scenario.lifecycle());
+  const auto matching_record = hub.poll(*matching.handle);
+  const auto wrong_origin_record = hub.poll(*wrong_origin.handle);
+  return expect(submitted.outcome() == ProviderOutcome::accepted,
+                "filtered provider submission") &&
+         expect(matching_record.record.has_value() &&
+                    matching_record.record->origin() == OriginKind::component &&
+                    matching_record.record->route_id().value() == "route.filtered" &&
+                    matching_record.record->provider_id().value() == "provider.filtered",
+                "exact provider-neutral filter match") &&
+         expect(wrong_origin_record.status.outcome == ObservationOutcome::no_record,
+                "origin mismatch excluded");
 }
 
 /** Verify one provider-neutral hub filters all interaction families and distinct logical providers. */
@@ -254,8 +307,61 @@ using xverse::xcom::observation_test::make_tap_spec;
                     route_after_recovery.has_value() &&
                     route_after_recovery.value()->queued_items() == 2U,
                 "lossless recovery") &&
-         expect(restored.has_value() && !restored->experiment_validity_degraded,
-                "validity acknowledgement");
+         expect(restored.has_value() && !restored->experiment_validity_degraded &&
+                    restored->backpressure_rejections == 0U,
+                "validity acknowledgement interval reset");
+}
+
+/** Verify a direct shared-hub claim rejects a competing composition before provider mutation. */
+[[nodiscard]] bool test_shared_hub_competing_reservation() {
+  ObservationHub hub;
+  const auto attached = hub.attach(make_tap_spec(
+      {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+      ObservationOverflowPolicy::lossless_validation));
+  Scenario holder("claim.a", InteractionKind::message_event, 1U, &hub);
+  Scenario competitor("claim.b", InteractionKind::message_event, 1U, &hub);
+  const auto held_item = holder.item(1U);
+  const auto competing_item = competitor.item(2U);
+  if (!expect(attached.handle.has_value() && holder.ready() && competitor.ready() &&
+                  held_item.has_value() && competing_item.has_value(),
+              "shared-hub reservation fixture setup")) {
+    return false;
+  }
+
+  ObservationReserveResult held = hub.reserve(*held_item.value());
+  if (!expect(held.status.succeeded() && held.reservation.has_value(),
+              "first publisher exact claim")) {
+    return false;
+  }
+  const ProviderStatus blocked = competitor.composition().submit(
+      competitor.provider_handle(), *competing_item.value(), competitor.lifecycle());
+  const auto holder_route = holder.composition().route_state(holder.provider_handle());
+  const auto competitor_before =
+      competitor.composition().route_state(competitor.provider_handle());
+  const auto degraded = hub.snapshot(*attached.handle);
+  const ObservationStatus cancelled = hub.cancel(std::move(*held.reservation));
+  const ProviderStatus recovered = competitor.composition().submit(
+      competitor.provider_handle(), *competing_item.value(), competitor.lifecycle());
+  const auto competitor_after = competitor.composition().route_state(competitor.provider_handle());
+  const auto retained = hub.poll(*attached.handle);
+
+  return expect(blocked.outcome() == ProviderOutcome::observation_backpressure &&
+                    blocked.diagnostic_code() == "XCOM-PROV-E029",
+                "competing publisher rejected before dispatch") &&
+         expect(holder_route.has_value() && holder_route.value()->queued_items() == 0U &&
+                    competitor_before.has_value() &&
+                    competitor_before.value()->queued_items() == 0U,
+                "no provider mutation while exact claim is held") &&
+         expect(degraded.has_value() && degraded->experiment_validity_degraded &&
+                    degraded->backpressure_rejections == 1U,
+                "competing claim loss remains visible") &&
+         expect(cancelled.succeeded() && recovered.outcome() == ProviderOutcome::accepted &&
+                    competitor_after.has_value() &&
+                    competitor_after.value()->queued_items() == 1U,
+                "capacity recovery after exact cancellation") &&
+         expect(retained.record.has_value() &&
+                    retained.record->route_id().value() == competitor.route_id(),
+                "recovered publication consumed its own claim");
 }
 
 /** Verify concurrent submissions produce bounded owned records without callback or provider loss. */
@@ -307,9 +413,11 @@ using xverse::xcom::observation_test::make_tap_spec;
 /** @return Zero only when every integration fixture passes. */
 int main() {
   const bool passed = test_payload_policies_and_provider_outcomes() &&
+                      test_versioned_exact_filters() &&
                       test_domain_neutral_routes_providers_and_families() &&
                       test_best_effort_isolation() &&
                       test_lossless_pre_dispatch_reservation() &&
+                      test_shared_hub_competing_reservation() &&
                       test_concurrent_publication();
   return passed ? 0 : 1;
 }

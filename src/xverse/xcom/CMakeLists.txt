@@ -112,6 +112,12 @@ set_target_properties(
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
 
+  # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
+  target_compile_definitions(
+    xverse_xcom_provider_loopback
+    PUBLIC XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK=1
+  )
+
   add_executable(
     xverse_xcom_core_types_unit_tests
     "${PROJECT_SOURCE_DIR}/tests/xcom/core_types/unit_tests.cpp"
