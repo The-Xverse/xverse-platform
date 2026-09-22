@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import py_compile
 from pathlib import Path
 import re
 import shutil
@@ -269,13 +270,20 @@ def _performance(build: Path) -> None:
     _ctest(build, r"^xcom_observation_disabled_benchmark$", timeout=900)
 
 
-def _lint() -> None:
+def _lint(build: Path) -> None:
     """Apply source-level warning and boundary policy checks without executing tests."""
 
     _check_layout()
     _check_boundaries()
     for path in (ROOT / "scripts" / "validate_xcom_observation.py",):
-        _run([sys.executable, "-m", "py_compile", str(path)])
+        try:
+            py_compile.compile(
+                str(path),
+                cfile=str(build / "validate_xcom_observation.pyc"),
+                doraise=True,
+            )
+        except (OSError, py_compile.PyCompileError) as error:
+            _fail(f"Python syntax check failed: {path}: {error}")
 
 
 def _static(build: Path) -> None:
@@ -319,7 +327,7 @@ def main() -> int:
             if selected in {"unit", "static", "all"}:
                 _unit(build)
             if selected in {"lint", "all"}:
-                _lint()
+                _lint(build)
             if selected in {"static", "all"}:
                 _static(build)
             if selected in {"integration", "all"}:
