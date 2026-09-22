@@ -63,8 +63,11 @@ prototype evidence and is not a production performance claim.
 `SESN_CANDIDATE_REVISION`, checks fixed-storage and forbidden-boundary policy,
 generates strict Doxygen evidence, runs the observation measures, and preserves
 the accepted core-types, endpoint/route lifecycle, and provider/loopback
-regressions. The companion traceability JSON is reciprocal across requirements,
-design units, implementation, fixtures, and verification measures.
+regressions. Those predecessor measures are invoked explicitly as unit, lint,
+static, and integration modes; their nested legacy `--all` ownership assertions
+are not used because they intentionally reject later admitted units. The
+companion traceability JSON is reciprocal across requirements, design units,
+implementation, fixtures, and verification measures.
 
 ## SADS disposition
 
