@@ -1,0 +1,239 @@
+[
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ObservationRecord",
+      "ObservationFilter",
+      "ObservationHub",
+      "TapHandle"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--unit"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-UNIT",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "unit_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-001",
+      "XCOM-OBS-002",
+      "XCOM-OBS-003",
+      "XCOM-OBS-004",
+      "XCOM-OBS-005",
+      "XCOM-OBS-006",
+      "XCOM-OBS-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Builds observation units and runs table-driven filter, payload, queue, counter, handle, and concurrency tests.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ObservationHub",
+      "ProviderComposition"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--lint"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-LINT",
+    "levels": [
+      "unit"
+    ],
+    "methods": [
+      "lint"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-001",
+      "XCOM-OBS-008",
+      "XCOM-OBS-009",
+      "XCOM-OBS-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Enforces formatting, warnings, owned paths, forbidden APIs, and dependency isolation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "FixedObservationStorage",
+      "ObservationTraceability"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--static"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-STATIC",
+    "levels": [
+      "unit",
+      "component"
+    ],
+    "methods": [
+      "static_analysis"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-002",
+      "XCOM-OBS-003",
+      "XCOM-OBS-006",
+      "XCOM-OBS-008",
+      "XCOM-OBS-009",
+      "XCOM-OBS-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs admitted clang-tidy, strict Doxygen, fixed-storage, public-safety, and reciprocal traceability checks.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderComposition",
+      "ObservationHub",
+      "SyntheticObservationSink",
+      "LoopbackProvider"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--integration"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-INTEGRATION",
+    "levels": [
+      "integration"
+    ],
+    "methods": [
+      "integration_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-001",
+      "XCOM-OBS-002",
+      "XCOM-OBS-003",
+      "XCOM-OBS-004",
+      "XCOM-OBS-005",
+      "XCOM-OBS-006",
+      "XCOM-OBS-007",
+      "XCOM-OBS-008"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Exercises actual loopback submissions through best-effort and lossless taps and proves observer failure isolation.",
+    "timeout_seconds": 600
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderComposition",
+      "DisabledObservationFastPath"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--performance"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-PERFORMANCE",
+    "levels": [
+      "integration",
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "At least seven paired samples complete; disabled taps add no more than 2% median throughput or latency regression in the admitted fixture.",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-007",
+      "XCOM-OBS-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs repeated paired loopback benchmarks and checks the accepted disabled-tap median threshold with environment disclosure.",
+    "timeout_seconds": 900
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ObservationBoundary",
+      "ProviderComposition",
+      "XComAcceptedRegressions"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-OBS-VALIDATION",
+    "levels": [
+      "software"
+    ],
+    "methods": [
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits with status zero and candidate inputs remain unchanged",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-OBS-001",
+      "XCOM-OBS-002",
+      "XCOM-OBS-003",
+      "XCOM-OBS-004",
+      "XCOM-OBS-005",
+      "XCOM-OBS-006",
+      "XCOM-OBS-007",
+      "XCOM-OBS-008",
+      "XCOM-OBS-009",
+      "XCOM-OBS-010"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs all observation measures, accepted provider/lifecycle/core regressions, isolation checks, public-safety checks, and traceability.",
+    "timeout_seconds": 1200
+  }
+]

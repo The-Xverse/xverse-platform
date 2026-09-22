@@ -1,0 +1,13 @@
+@startuml
+component ObservationValues
+component ObservationHub
+component ProviderObservationBridge
+component SyntheticObservationSink
+component ObservationEvidence
+ObservationHub --> ObservationValues
+ProviderObservationBridge --> ObservationHub
+SyntheticObservationSink --> ObservationHub
+ObservationEvidence ..> ObservationValues
+ObservationEvidence ..> ObservationHub
+ObservationEvidence ..> ProviderObservationBridge
+@enduml

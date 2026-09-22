@@ -1,0 +1,14 @@
+@startuml
+participant Composition
+participant Hub
+participant TapSlot
+participant Provider
+Composition -> Hub: reserve(item, route binding)
+Hub -> TapSlot: validate filters and lossless capacity
+Hub --> Composition: reservation/result
+Composition -> Provider: submit(item)
+Provider --> Composition: outcome
+Composition -> Hub: commit(reservation, item, outcome)
+Hub -> TapSlot: copy normalized record or apply best-effort policy
+Hub --> Composition: counters/validity status
+@enduml

@@ -1,0 +1,3 @@
+# SWE.5 Integration sequence and checks
+
+Execute three dependency-ordered SESN tasks on the approved 39977ba baseline. First implement standalone observation values/hub and focused unit fixtures. Second integrate ProviderComposition and add loopback, failure-isolation, concurrency, and performance fixtures while preserving public source compatibility. Third add the single host validator, public documentation, and reciprocal traceability. Then run six host measures on one immutable candidate, perform an independent Astra review, repair findings only in a later SESN pass, and stop for Codex and human validation.

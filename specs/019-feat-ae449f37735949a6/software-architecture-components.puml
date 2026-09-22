@@ -1,0 +1,17 @@
+@startuml
+component "External C++ consumer" as Consumer
+component "ProviderComposition" as Composition
+component "LoopbackProvider" as Provider
+component "ObservationHub" as Hub
+component "Fixed tap registry" as Registry
+component "Fixed record rings" as Rings
+component "SyntheticObservationSink" as Sink
+component "Future Argus/tool adapters" as Future
+Consumer --> Composition
+Composition --> Provider
+Composition --> Hub : preflight lossless capacity; publish outcome
+Hub --> Registry
+Hub --> Rings
+Sink --> Hub : poll exact tap handle
+Future ..> Hub : future source adapter
+@enduml

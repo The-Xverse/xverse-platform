@@ -1,0 +1,25 @@
+@startuml
+actor Caller
+participant ProviderComposition as Composition
+participant ObservationHub as Hub
+participant LoopbackProvider as Provider
+participant SyntheticObservationSink as Sink
+Caller -> Hub: attach(filter, payload policy, overflow policy)
+Hub --> Caller: exact TapHandle
+Caller -> Composition: submit(provider route handle, item)
+Composition -> Composition: authenticate lifecycle and item
+Composition -> Hub: reserve matching lossless capacity
+alt lossless capacity unavailable
+Hub --> Composition: observation-backpressure + degraded validity
+Composition --> Caller: reject before provider mutation
+else capacity available or best effort
+Composition -> Provider: submit exact item
+Provider --> Composition: provider outcome
+Composition -> Hub: publish normalized record and counters
+Hub --> Composition: bounded publish result
+Composition --> Caller: provider outcome
+end
+Sink -> Hub: poll(TapHandle)
+Hub --> Sink: owned record or empty
+Sink -> Hub: snapshot/acknowledge/detach(TapHandle)
+@enduml
