@@ -221,7 +221,11 @@ struct ObservationTapSpecInput final {
 /** Immutable validated policy for one attach operation. */
 class ObservationTapSpec final {
  public:
-  /** @brief Validate and own a bounded tap policy. @param input Call-scoped policy. */
+  /**
+   * @brief Validate and own a bounded tap policy.
+   * @param input Call-scoped policy.
+   * @return A validated immutable policy, or no value when the input is invalid or out of bounds.
+   */
   [[nodiscard]] static std::optional<ObservationTapSpec> create(
       const ObservationTapSpecInput& input) noexcept;
   /** @brief Copy a policy. @param other Valid source policy. */
@@ -403,7 +407,11 @@ class ObservationHub final {
   /** Observation hubs are non-assignable. */
   ObservationHub& operator=(const ObservationHub&) = delete;
 
-  /** @brief Attach one validated policy to a free fixed slot. @param spec Valid immutable policy. */
+  /**
+   * @brief Attach one validated policy to a free fixed slot.
+   * @param spec Valid immutable policy.
+   * @return An exact current handle on success, or a stable failure status without mutation.
+   */
   [[nodiscard]] ObservationAttachResult attach(const ObservationTapSpec& spec) noexcept;
   /**
    * @brief Check every matching lossless tap before normal provider mutation.
@@ -417,14 +425,30 @@ class ObservationHub final {
    * @return observation_backpressure if a lossless tap cannot retain it; callers must preflight first.
    */
   [[nodiscard]] ObservationStatus publish(const ObservationEvent& event) noexcept;
-  /** @brief Pull one owned record using exact authority. @param handle Exact current handle. */
+  /**
+   * @brief Pull one owned record using exact authority.
+   * @param handle Exact current handle.
+   * @return A value-owned record when queued, or the corresponding stable status otherwise.
+   */
   [[nodiscard]] ObservationPollResult poll(const ObservationTapHandle& handle) noexcept;
-  /** @brief Inspect counters using exact authority. @param handle Exact current handle. */
+  /**
+   * @brief Inspect counters using exact authority.
+   * @param handle Exact current handle.
+   * @return A value snapshot for an authenticated handle, or no value for an invalid handle.
+   */
   [[nodiscard]] std::optional<ObservationSnapshot> snapshot(
       const ObservationTapHandle& handle) const noexcept;
-  /** @brief Acknowledge one exact lossless degradation marker. @param handle Exact current handle. */
+  /**
+   * @brief Acknowledge one exact lossless degradation marker.
+   * @param handle Exact current handle.
+   * @return A stable status indicating whether the exact handle was acknowledged.
+   */
   [[nodiscard]] ObservationStatus acknowledge(const ObservationTapHandle& handle) noexcept;
-  /** @brief Close one exact current handle and discard only its retained records. */
+  /**
+   * @brief Close one exact current handle and discard only its retained records.
+   * @param handle Exact current handle.
+   * @return A stable status indicating whether the exact handle was closed.
+   */
   [[nodiscard]] ObservationStatus detach(const ObservationTapHandle& handle) noexcept;
 
  private:
@@ -484,9 +508,16 @@ class ObservationHub final {
  */
 class SyntheticObservationSink final {
  public:
-  /** @brief Bind a synthetic sink to one exact tap authority. */
+  /**
+   * @brief Bind a synthetic sink to one exact tap authority.
+   * @param hub Hub that owns the tap; it must outlive this sink.
+   * @param handle Exact current tap authority copied by the sink.
+   */
   SyntheticObservationSink(ObservationHub& hub, const ObservationTapHandle& handle) noexcept;
-  /** Sink copies preserve the exact handle but never own the hub. */
+  /**
+   * @brief Copy a synthetic sink without taking hub ownership.
+   * @param other Valid sink whose hub reference and exact handle are copied.
+   */
   SyntheticObservationSink(const SyntheticObservationSink& other) noexcept = default;
   /** Assignment is disabled to prevent accidental hub rebinding. */
   SyntheticObservationSink& operator=(const SyntheticObservationSink&) = delete;
@@ -494,7 +525,10 @@ class SyntheticObservationSink final {
   [[nodiscard]] ObservationStatus connect() noexcept;
   /** @brief Disable this consumer without detaching or mutating its tap. */
   void disconnect() noexcept { connected_ = false; }
-  /** @brief Pull one value-owned record when connected. */
+  /**
+   * @brief Pull one value-owned record when connected.
+   * @return A pulled record or the stable disconnected/underlying hub status.
+   */
   [[nodiscard]] ObservationPollResult pull() noexcept;
   /** @return true only when this local consumer is enabled. */
   [[nodiscard]] bool connected() const noexcept { return connected_; }
