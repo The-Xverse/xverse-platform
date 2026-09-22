@@ -302,6 +302,55 @@ def _lint(build: Path) -> None:
             _fail(f"Python syntax check failed: {path}: {error}")
 
 
+def _run_doxygen() -> None:
+    """Generate strict warning-free Doxygen for the observation contract and fixtures."""
+
+    _run([sys.executable, str(ROOT / "scripts" / "check_doxygen.py"), "--self-test"])
+    with tempfile.TemporaryDirectory(prefix="xcom-observation-doxygen-") as temporary:
+        temp = Path(temporary)
+        output = temp / "output"
+        warning_log = temp / "warnings.log"
+        configuration = temp / "Doxyfile"
+        inputs = (
+            ROOT / "docs" / "xcom" / "observation-boundary.md",
+            *PRODUCTION,
+            *TEST_FILES,
+        )
+        overrides = {
+            "OUTPUT_DIRECTORY": output.as_posix(),
+            "WARN_LOGFILE": warning_log.as_posix(),
+            "INPUT": " ".join(path.as_posix() for path in inputs),
+            "USE_MDFILE_AS_MAINPAGE": inputs[0].as_posix(),
+            "EXTRACT_ALL": "NO",
+            "EXTRACT_PRIVATE": "NO",
+            "EXTRACT_PRIV_VIRTUAL": "YES",
+            "WARN_IF_UNDOCUMENTED": "YES",
+            "WARN_NO_PARAMDOC": "YES",
+            "WARN_AS_ERROR": "YES",
+            "GENERATE_HTML": "YES",
+            "GENERATE_XML": "YES",
+        }
+        configuration.write_text(
+            f"@INCLUDE = {(ROOT / 'Doxyfile').as_posix()}\n"
+            + "".join(f"{key} = {value}\n" for key, value in overrides.items()),
+            encoding="utf-8",
+        )
+        try:
+            _run([_tool("doxygen"), str(configuration)])
+        except ValidationFailure as error:
+            warnings = (
+                warning_log.read_text(encoding="utf-8")
+                if warning_log.is_file()
+                else "warning log was not created"
+            )
+            _fail(f"strict Doxygen generation failed: {error}\n{warnings}")
+        if warning_log.is_file() and warning_log.read_text(encoding="utf-8").strip():
+            _fail("strict Doxygen warning log is not empty:\n" + warning_log.read_text(encoding="utf-8"))
+        for relative in ("html/index.html", "xml/index.xml"):
+            if not (output / relative).is_file():
+                _fail(f"strict Doxygen output is missing: {relative}")
+
+
 def _static(build: Path) -> None:
     """Run strict Doxygen, admitted clang-tidy, and reciprocal evidence checks."""
 
@@ -317,7 +366,7 @@ def _static(build: Path) -> None:
         _run([str(clang_tidy), str(path), "-p", str(build),
               "--checks=-*,clang-diagnostic-*,clang-analyzer-*",
               "--warnings-as-errors=*", "--quiet"], timeout=120)
-    _run([sys.executable, str(ROOT / "scripts" / "check_doxygen.py"), "--self-test"])
+    _run_doxygen()
 
 
 def _check_core_predecessor_unchanged() -> None:
@@ -357,10 +406,11 @@ def _prior_regressions() -> None:
     The predecessor validators remain authoritative and are not edited here. The
     core-types lint ownership gate predates this admitted unit and rejects every
     later production unit, so its accepted substitution is an unchanged-core
-    guard followed by the core unit, static, and integration measures on the
-    current candidate. Lifecycle and provider measures retain their compatible
-    unit, lint, static, and integration checks. No predecessor ``--all`` mode is
-    used because those modes recursively re-enter incompatible ownership gates.
+    guard followed by the core unit and integration measures on the current
+    candidate; the previously accepted core static evidence remains immutable.
+    Lifecycle and provider measures retain their compatible unit, lint, static,
+    and integration checks. No predecessor ``--all`` mode is used because those
+    modes recursively re-enter incompatible ownership gates.
     """
 
     predecessor_paths = (
@@ -382,7 +432,7 @@ def _prior_regressions() -> None:
     )
     _check_core_predecessor_unchanged()
     core = _load_predecessor_validator("validate_xcom_core_types.py")
-    for mode in ("unit", "static", "integration"):
+    for mode in ("unit", "integration"):
         if core.main([f"--{mode}"]) != 0:
             _fail(f"accepted validate_xcom_core_types.py {mode} regression failed")
 

@@ -65,8 +65,9 @@ generates strict Doxygen evidence, runs the observation measures, and preserves
 the accepted core-types, endpoint/route lifecycle, and provider/loopback
 regressions. Those predecessor measures are invoked explicitly as unit, lint,
 static, and integration modes; core-types uses the accepted unchanged-core
-guard plus current-candidate unit, static, and integration measures because its
-legacy lint ownership assertion rejects later admitted units. Nested legacy
+guard plus current-candidate unit and integration measures because its legacy
+lint ownership assertion rejects later admitted units, while its previously
+accepted static evidence remains immutable. Nested legacy
 `--all` modes are not used. The companion traceability JSON is reciprocal across
 requirements, design units, implementation, fixtures, and verification measures.
 
