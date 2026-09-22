@@ -59,6 +59,21 @@ PRODUCTION = (
 TEST_FILES = tuple(sorted(OBSERVATION_ROOT.rglob("*.cpp"))) + tuple(
     sorted(OBSERVATION_ROOT.rglob("*.hpp"))
 )
+CORE_PREDECESSOR_PATHS = (
+    "src/xverse/xcom/include/xverse/xcom/contract.hpp",
+    "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
+    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+    "src/xverse/xcom/include/xverse/xcom/item.hpp",
+    "src/xverse/xcom/include/xverse/xcom/result.hpp",
+    "src/xverse/xcom/include/xverse/xcom/value.hpp",
+    "src/xverse/xcom/src/contract.cpp",
+    "src/xverse/xcom/src/diagnostic.cpp",
+    "src/xverse/xcom/src/item.cpp",
+    "src/xverse/xcom/src/value.cpp",
+    "tests/xcom/core_types/unit_tests.cpp",
+    "tests/xcom/core_types/negative_tests.cpp",
+    "tests/xcom/core_types/consumer/main.cpp",
+)
 OWNED_FILES = {
     "scripts/validate_xcom_observation.py",
     "docs/xcom/observation-boundary.md",
@@ -305,16 +320,47 @@ def _static(build: Path) -> None:
     _run([sys.executable, str(ROOT / "scripts" / "check_doxygen.py"), "--self-test"])
 
 
+def _check_core_predecessor_unchanged() -> None:
+    """Reject changes to the approved predecessor core implementation or tests."""
+
+    parent = _run([_tool("git"), "rev-parse", "HEAD^"], timeout=30).stdout.strip()
+    result = subprocess.run(
+        [_tool("git"), "diff", "--quiet", parent, "HEAD", "--", *CORE_PREDECESSOR_PATHS],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    if result.returncode:
+        _fail(
+            "approved predecessor core implementation/test artifacts changed: "
+            + ", ".join(CORE_PREDECESSOR_PATHS)
+        )
+
+
+def _load_predecessor_validator(name: str):
+    """Load one accepted predecessor validator without changing its source."""
+
+    validator_path = ROOT / "scripts" / name
+    spec = importlib.util.spec_from_file_location(f"xcom_predecessor_{validator_path.stem}", validator_path)
+    if spec is None or spec.loader is None:
+        _fail(f"accepted predecessor validator cannot be loaded: {name}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _prior_regressions() -> None:
     """Preserve predecessor measures without nested later-slice ownership gates.
 
-    The predecessor validators remain authoritative and are not edited here. Their
-    ``--all`` modes recursively invoke older validators and apply ownership checks
-    that intentionally reject every later admitted unit. Run each compatible
-    predecessor measure directly instead, preserving its own unit, lint, static,
-    and integration checks. Additive paths are supplied only to validators that
-    expose that explicit admission contract; the provider validator's legacy lint
-    admission is extended in memory for this orchestration call only.
+    The predecessor validators remain authoritative and are not edited here. The
+    core-types lint ownership gate predates this admitted unit and rejects every
+    later production unit, so its accepted substitution is an unchanged-core
+    guard followed by the core unit, static, and integration measures on the
+    current candidate. Lifecycle and provider measures retain their compatible
+    unit, lint, static, and integration checks. No predecessor ``--all`` mode is
+    used because those modes recursively re-enter incompatible ownership gates.
     """
 
     predecessor_paths = (
@@ -334,35 +380,27 @@ def _prior_regressions() -> None:
         "src/xverse/xcom/src/provider.cpp",
         *sorted(OWNED_FILES),
     )
-    validators = (
-        "validate_xcom_core_types.py",
-        "validate_xcom_endpoint_route_lifecycle.py",
-        "validate_xcom_provider_loopback.py",
-    )
-    for validator_name in validators:
-        validator_path = ROOT / "scripts" / validator_name
-        spec = importlib.util.spec_from_file_location(
-            f"xcom_predecessor_{validator_path.stem}", validator_path
-        )
-        if spec is None or spec.loader is None:
-            _fail(f"accepted predecessor validator cannot be loaded: {validator_name}")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        for mode in ("unit", "lint", "static", "integration"):
-            arguments = [f"--{mode}"]
-            if validator_name in {
-                "validate_xcom_core_types.py",
-                "validate_xcom_endpoint_route_lifecycle.py",
-            }:
-                for path in predecessor_paths:
-                    arguments.extend(("--additive-owned-path", path))
-            elif mode == "lint":
-                # The provider validator predates the additive-path option. Keep
-                # its ownership gate intact and admit only this task's artifacts
-                # for the duration of the in-memory compatibility call.
-                module.OWNED_FILES = set(module.OWNED_FILES) | set(OWNED_FILES)
-            if module.main(arguments) != 0:
-                _fail(f"accepted {validator_name} {mode} regression failed")
+    _check_core_predecessor_unchanged()
+    core = _load_predecessor_validator("validate_xcom_core_types.py")
+    for mode in ("unit", "static", "integration"):
+        if core.main([f"--{mode}"]) != 0:
+            _fail(f"accepted validate_xcom_core_types.py {mode} regression failed")
+
+    lifecycle = _load_predecessor_validator("validate_xcom_endpoint_route_lifecycle.py")
+    lifecycle_arguments = [
+        argument
+        for path in predecessor_paths
+        for argument in ("--additive-owned-path", path)
+    ]
+    for mode in ("unit", "lint", "static", "integration"):
+        if lifecycle.main([f"--{mode}", *lifecycle_arguments]) != 0:
+            _fail(f"accepted validate_xcom_endpoint_route_lifecycle.py {mode} regression failed")
+
+    provider = _load_predecessor_validator("validate_xcom_provider_loopback.py")
+    provider.OWNED_FILES = set(provider.OWNED_FILES) | set(OWNED_FILES)
+    for mode in ("unit", "lint", "static", "integration"):
+        if provider.main([f"--{mode}"]) != 0:
+            _fail(f"accepted validate_xcom_provider_loopback.py {mode} regression failed")
 
 
 def main() -> int:

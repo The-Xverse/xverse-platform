@@ -64,10 +64,11 @@ prototype evidence and is not a production performance claim.
 generates strict Doxygen evidence, runs the observation measures, and preserves
 the accepted core-types, endpoint/route lifecycle, and provider/loopback
 regressions. Those predecessor measures are invoked explicitly as unit, lint,
-static, and integration modes; their nested legacy `--all` ownership assertions
-are not used because they intentionally reject later admitted units. The
-companion traceability JSON is reciprocal across requirements, design units,
-implementation, fixtures, and verification measures.
+static, and integration modes; core-types uses the accepted unchanged-core
+guard plus current-candidate unit, static, and integration measures because its
+legacy lint ownership assertion rejects later admitted units. Nested legacy
+`--all` modes are not used. The companion traceability JSON is reciprocal across
+requirements, design units, implementation, fixtures, and verification measures.
 
 ## SADS disposition
 
