@@ -10,7 +10,6 @@ reject ambient I/O, dynamic storage, forbidden coupling, and traceability gaps.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import os
 import py_compile
@@ -50,6 +49,28 @@ DESIGN_REQUIREMENTS = {
     "XCOM-OBS-UNIT-005": {"XCOM-OBS-009", "XCOM-OBS-010"},
 }
 DESIGN_SOURCE = "specs/019-feat-ae449f37735949a6/unit-specifications.md"
+SADS_DISPOSITIONS = {
+    "XVE-SYS-0139": "partial",
+    "XVE-SYS-0140": "partial",
+    "XVE-SYS-0141": "deferred",
+    "XVE-SYS-0142": "partial",
+    "XVE-SYS-0143": "deferred",
+    "XVE-SYS-0144": "deferred",
+    "XVE-SYS-0145": "allocated",
+    "XVE-SYS-0146": "partial",
+    "XVE-SYS-0147": "partial",
+    "XVE-SYS-0148": "deferred",
+    "XVE-SYS-0149": "partial",
+    "XVE-SYS-0150": "deferred",
+    "XVE-SYS-0151": "deferred",
+    "XVE-SYS-0152": "deferred",
+    "XVE-SYS-0153": "deferred",
+    "XVE-SYS-0154": "partial",
+    "XVE-SYS-0155": "deferred",
+    "XVE-SYS-0156": "deferred",
+    "XVE-SYS-0157": "deferred",
+    "XVE-SYS-0158": "deferred",
+}
 PRODUCTION = (
     CPP_ROOT / "include" / "xverse" / "xcom" / "observation.hpp",
     CPP_ROOT / "src" / "observation.cpp",
@@ -74,6 +95,12 @@ CORE_PREDECESSOR_PATHS = (
     "tests/xcom/core_types/negative_tests.cpp",
     "tests/xcom/core_types/consumer/main.cpp",
 )
+APPROVED_CORE_TYPES_BASELINE = "39977ba9e724524dfc42a51e53fa3d61a8964a85"
+PREDECESSOR_VALIDATORS = (
+    "validate_xcom_core_types.py",
+    "validate_xcom_endpoint_route_lifecycle.py",
+    "validate_xcom_provider_loopback.py",
+)
 OWNED_FILES = {
     "scripts/validate_xcom_observation.py",
     "docs/xcom/observation-boundary.md",
@@ -91,12 +118,17 @@ def _fail(message: str) -> NoReturn:
     raise ValidationFailure(message)
 
 
-def _run(argv: list[str], *, cwd: Path = ROOT, timeout: int = 300) -> subprocess.CompletedProcess[str]:
+def _run(
+    argv: list[str], *, cwd: Path = ROOT, timeout: int = 300,
+    environment: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     """Run a bounded local command without shell interpretation."""
 
     try:
-        completed = subprocess.run(argv, cwd=cwd, text=True, stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT, check=False, timeout=timeout)
+        completed = subprocess.run(
+            argv, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            check=False, timeout=timeout, env=environment,
+        )
     except (OSError, subprocess.TimeoutExpired) as error:
         _fail(f"command could not complete: {argv!r}: {error}")
     if completed.returncode:
@@ -122,6 +154,9 @@ def _candidate_revision() -> str:
     head = _run([_tool("git"), "rev-parse", "HEAD"]).stdout.strip()
     if revision != head:
         _fail(f"{CANDIDATE_REVISION_ENV} {revision} differs from workspace HEAD {head}")
+    changed = _run([_tool("git"), "status", "--porcelain", "--untracked-files=all"]).stdout
+    if changed:
+        _fail("exact candidate revision has uncommitted or untracked inputs")
     return revision
 
 
@@ -232,8 +267,17 @@ def _validate_traceability(candidate_revision: str) -> None:
     records = data.get("requirements")
     designs = data.get("designs")
     artifacts = data.get("artifacts")
+    sads_dispositions = data.get("sads_dispositions")
     if not isinstance(records, list) or not isinstance(designs, dict) or not isinstance(artifacts, dict):
         _fail("traceability collection shapes differ")
+    if not isinstance(sads_dispositions, list):
+        _fail("SADS disposition collection differs")
+    sads_by_id = {
+        item.get("id"): item.get("disposition")
+        for item in sads_dispositions if isinstance(item, dict)
+    }
+    if sads_by_id != SADS_DISPOSITIONS or len(sads_dispositions) != len(SADS_DISPOSITIONS):
+        _fail("SADS disposition catalog differs")
     records_by_id = {item.get("id"): item for item in records if isinstance(item, dict)}
     if set(records_by_id) != REQUIREMENTS or len(records) != len(REQUIREMENTS):
         _fail("traceability does not cover every requirement exactly once")
@@ -243,8 +287,14 @@ def _validate_traceability(candidate_revision: str) -> None:
     if not isinstance(measures, list) or set(measure_by_id) != MEASURES or len(measures) != len(MEASURES):
         _fail("authoritative observation measure catalog differs")
     for design_id, expected in DESIGN_REQUIREMENTS.items():
-        if set(designs[design_id].get("requirements", [])) != expected:
+        design = designs[design_id]
+        if design.get("source") != DESIGN_SOURCE:
+            _fail(f"design source differs: {design_id}")
+        if set(design.get("requirements", [])) != expected:
             _fail(f"design allocation differs: {design_id}")
+        for key in ("code", "tests"):
+            if not isinstance(design.get(key), list) or not design[key]:
+                _fail(f"empty design {key} edge: {design_id}")
     for requirement in records:
         if requirement.get("id") not in REQUIREMENTS:
             _fail("unknown requirement in traceability")
@@ -255,14 +305,46 @@ def _validate_traceability(candidate_revision: str) -> None:
             _fail(f"requirement design edge is unknown: {requirement['id']}")
         if not set(requirement["checks"]).issubset(MEASURES):
             _fail(f"requirement check edge is unknown: {requirement['id']}")
+    for design_id, design in designs.items():
+        for requirement_id in design["requirements"]:
+            requirement = records_by_id[requirement_id]
+            if design_id not in requirement["design"]:
+                _fail(f"missing reverse design edge: {design_id} -> {requirement_id}")
+            for artifact in design["code"]:
+                if artifact not in requirement["code"]:
+                    _fail(f"missing design-to-code edge: {design_id} -> {artifact}")
+            for artifact in design["tests"]:
+                if artifact not in requirement["tests"]:
+                    _fail(f"missing design-to-test edge: {design_id} -> {artifact}")
     for artifact, requirement_ids in artifacts.items():
         if not requirement_ids or not set(requirement_ids).issubset(REQUIREMENTS):
             _fail(f"artifact allocation differs: {artifact}")
         if not (ROOT / artifact).is_file():
             _fail(f"traceability artifact is missing: {artifact}")
-    expected_artifacts = {artifact for item in records for artifact in (*item["code"], *item["tests"])}
-    if not expected_artifacts.issubset(artifacts):
-        _fail("traceability is not reciprocal for every code/test edge")
+        for requirement_id in requirement_ids:
+            requirement = records_by_id[requirement_id]
+            if artifact not in {*requirement["code"], *requirement["tests"]}:
+                _fail(f"missing forward artifact edge: {requirement_id} -> {artifact}")
+    expected_artifacts = {
+        artifact for item in records for artifact in (*item["code"], *item["tests"])
+    }
+    if set(artifacts) != expected_artifacts:
+        _fail("traceability artifact catalog is not exactly reciprocal")
+    for requirement in records:
+        requirement_id = requirement["id"]
+        expected_checks = {
+            measure_id for measure_id, measure in measure_by_id.items()
+            if requirement_id in measure.get("requirement_ids", [])
+        }
+        if set(requirement["checks"]) != expected_checks:
+            _fail(f"requirement/measure allocation differs: {requirement_id}")
+    for measure_id, measure in measure_by_id.items():
+        requirement_ids = measure.get("requirement_ids")
+        if not isinstance(requirement_ids, list) or not requirement_ids:
+            _fail(f"measure requirement allocation differs: {measure_id}")
+        for requirement_id in requirement_ids:
+            if measure_id not in records_by_id.get(requirement_id, {}).get("checks", []):
+                _fail(f"missing reverse measure edge: {measure_id} -> {requirement_id}")
 
 
 def _unit(build: Path) -> None:
@@ -280,10 +362,34 @@ def _integration(build: Path) -> None:
 
 
 def _performance(build: Path) -> None:
-    """Run the repeated paired disabled-tap benchmark and its two-percent gate."""
+    """Run and retain the repeated paired disabled-tap benchmark evidence."""
 
     _build(build, ["xverse_xcom_observation_disabled_benchmark"])
-    _ctest(build, r"^xcom_observation_disabled_benchmark$", timeout=900)
+    completed = _run(
+        [_tool("ctest"), "--test-dir", str(build), "--verbose", "-R",
+         r"^xcom_observation_disabled_benchmark$"],
+        timeout=900,
+    )
+    output = completed.stdout
+    required_tokens = (
+        "fixture=owned-loopback-disabled-observation",
+        "baseline_revision=39977ba9e724524dfc42a51e53fa3d61a8964a85",
+        "candidate_path=public-submit-null-observation-hub",
+        "paired_samples=21",
+        "pair_order=alternating",
+        "paired_median_latency_regression_percent=",
+        "paired_median_throughput_regression_percent=",
+        "accepted_threshold_percent=2",
+        "uncertainty=",
+        "sample[0].baseline_latency_ns=",
+        "sample[20].throughput_regression_percent=",
+        "latency_threshold=PASS",
+        "throughput_threshold=PASS",
+    )
+    missing = [token for token in required_tokens if token not in output]
+    if missing:
+        _fail("benchmark output lacks retained paired evidence: " + ", ".join(missing))
+    print("X-COM observation retained performance evidence:\n" + output.rstrip())
 
 
 def _lint(build: Path) -> None:
@@ -369,12 +475,16 @@ def _static(build: Path) -> None:
     _run_doxygen()
 
 
-def _check_core_predecessor_unchanged() -> None:
+def _check_core_predecessor_unchanged(candidate_revision: str) -> None:
     """Reject changes to the approved predecessor core implementation or tests."""
 
-    parent = _run([_tool("git"), "rev-parse", "HEAD^"], timeout=30).stdout.strip()
+    baseline = _run(
+        [_tool("git"), "rev-parse", "--verify", f"{APPROVED_CORE_TYPES_BASELINE}^{{commit}}"],
+        timeout=30,
+    ).stdout.strip()
     result = subprocess.run(
-        [_tool("git"), "diff", "--quiet", parent, "HEAD", "--", *CORE_PREDECESSOR_PATHS],
+        [_tool("git"), "diff", "--quiet", baseline, candidate_revision, "--",
+         *CORE_PREDECESSOR_PATHS],
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -388,69 +498,40 @@ def _check_core_predecessor_unchanged() -> None:
         )
 
 
-def _load_predecessor_validator(name: str):
-    """Load one accepted predecessor validator without changing its source."""
+def _prior_regressions(candidate_revision: str) -> None:
+    """Run every accepted predecessor validator in a clean exact-candidate worktree.
 
-    validator_path = ROOT / "scripts" / name
-    spec = importlib.util.spec_from_file_location(f"xcom_predecessor_{validator_path.stem}", validator_path)
-    if spec is None or spec.loader is None:
-        _fail(f"accepted predecessor validator cannot be loaded: {name}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _prior_regressions() -> None:
-    """Preserve predecessor measures without nested later-slice ownership gates.
-
-    The predecessor validators remain authoritative and are not edited here. The
-    core-types lint ownership gate predates this admitted unit and rejects every
-    later production unit, so its accepted substitution is an unchanged-core
-    guard followed by the core unit and integration measures on the current
-    candidate; the previously accepted core static evidence remains immutable.
-    Lifecycle and provider measures retain their compatible unit, lint, static,
-    and integration checks. No predecessor ``--all`` mode is used because those
-    modes recursively re-enter incompatible ownership gates.
+    A separate worktree makes each predecessor validator see its native clean
+    ownership boundary.  No validator module, ownership list, gate, or candidate
+    input is altered; each validator executes its complete ``--all`` contract.
     """
 
-    predecessor_paths = (
-        "scripts/validate_xcom_endpoint_route_lifecycle.py",
-        "scripts/validate_xcom_provider_loopback.py",
-        "docs/xcom/endpoint-route-lifecycle.md",
-        "docs/xcom/endpoint-route-lifecycle-traceability.json",
-        "docs/xcom/provider-composition-loopback.md",
-        "docs/xcom/provider-composition-loopback-traceability.json",
-        "tests/xcom/endpoint_route_lifecycle",
-        "tests/xcom/provider_loopback",
-        "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
-        "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
-        "src/xverse/xcom/include/xverse/xcom/provider.hpp",
-        "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
-        "src/xverse/xcom/src/loopback_provider.cpp",
-        "src/xverse/xcom/src/provider.cpp",
-        *sorted(OWNED_FILES),
-    )
-    _check_core_predecessor_unchanged()
-    core = _load_predecessor_validator("validate_xcom_core_types.py")
-    for mode in ("unit", "integration"):
-        if core.main([f"--{mode}"]) != 0:
-            _fail(f"accepted validate_xcom_core_types.py {mode} regression failed")
-
-    lifecycle = _load_predecessor_validator("validate_xcom_endpoint_route_lifecycle.py")
-    lifecycle_arguments = [
-        argument
-        for path in predecessor_paths
-        for argument in ("--additive-owned-path", path)
-    ]
-    for mode in ("unit", "lint", "static", "integration"):
-        if lifecycle.main([f"--{mode}", *lifecycle_arguments]) != 0:
-            _fail(f"accepted validate_xcom_endpoint_route_lifecycle.py {mode} regression failed")
-
-    provider = _load_predecessor_validator("validate_xcom_provider_loopback.py")
-    provider.OWNED_FILES = set(provider.OWNED_FILES) | set(OWNED_FILES)
-    for mode in ("unit", "lint", "static", "integration"):
-        if provider.main([f"--{mode}"]) != 0:
-            _fail(f"accepted validate_xcom_provider_loopback.py {mode} regression failed")
+    _check_core_predecessor_unchanged(candidate_revision)
+    environment = dict(os.environ)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    with tempfile.TemporaryDirectory(prefix="xcom-observation-predecessors-") as temporary:
+        worktree = Path(temporary) / "candidate"
+        _run(
+            [_tool("git"), "worktree", "add", "--detach", str(worktree), candidate_revision],
+            timeout=120,
+            environment=environment,
+        )
+        try:
+            for validator in PREDECESSOR_VALIDATORS:
+                completed = _run(
+                    [sys.executable, str(worktree / "scripts" / validator), "--all"],
+                    cwd=worktree,
+                    timeout=1200,
+                    environment=environment,
+                )
+                print(f"X-COM accepted predecessor {validator} evidence:\n"
+                      + completed.stdout.rstrip())
+        finally:
+            _run(
+                [_tool("git"), "worktree", "remove", "--force", str(worktree)],
+                timeout=120,
+                environment=environment,
+            )
 
 
 def main() -> int:
@@ -477,7 +558,7 @@ def main() -> int:
             if selected in {"performance", "all"}:
                 _performance(build)
             if selected == "all":
-                _prior_regressions()
+                _prior_regressions(_candidate_revision())
                 _validate_traceability(_candidate_revision())
     except ValidationFailure as error:
         print(f"X-COM observation validation failed: {error}", file=sys.stderr)

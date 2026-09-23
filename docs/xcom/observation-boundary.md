@@ -27,10 +27,12 @@ does not perform schema decoding.
 
 Every tap owns a fixed record ring. Best-effort `drop_newest` and `coalesce_latest`
 never block or mutate provider delivery; accepted, dropped, coalesced, and queued
-counters make loss visible. `lossless_validation` is explicit: if capacity is not
-available, pre-dispatch submission returns the stable observation-backpressure
-outcome, the provider is not mutated, and experiment validity is degraded until an
-acknowledgement recovers it.
+counters make loss visible. Coalescing replaces only a queued record with the same
+logical contract, interface, endpoint, interaction, origin, route, and provider
+identity; a full queue without that match drops the new record. `lossless_validation`
+uses an exact hub-owned reservation before provider dispatch. If capacity is not
+available, submission returns the stable observation-backpressure outcome before the
+provider is mutated, and experiment validity is degraded until acknowledgement.
 
 Records and snapshots are returned by value. Pull operations are serialized with
 hub mutation, and there is no consumer callback path, including under an X-COM
@@ -50,31 +52,54 @@ not establish protocol, product, domain, parity, or production-readiness claims.
 
 ## Evidence and benchmark boundary
 
-The focused unit fixture covers values, filters, payload dispositions, counters,
-exact handles, bounded queues, and concurrent pull/publication. The integration
-fixture covers logical interaction families, provider outcomes, best-effort
-isolation, lossless pre-dispatch rejection, acknowledgement, and concurrency.
+The focused unit fixture covers values, versions, all declared filter constraints
+including origin, payload dispositions, counters, exact and recreated handles, tap
+capacity, bounded queues, and competing reservation/pull publication. The integration
+fixture covers logical interaction families, provider outcomes, best-effort isolation,
+lossless pre-dispatch rejection before provider mutation, acknowledgement, and shared-
+hub concurrency.
 The disabled-tap benchmark uses repeated paired samples on the owned loopback
 fixture, reports its environment and uncertainty limitations, and enforces the
 accepted two-percent median throughput and latency threshold. It is local
 prototype evidence and is not a production performance claim.
 
 `scripts/validate_xcom_observation.py` binds host execution to the exact
-`SESN_CANDIDATE_REVISION`, checks fixed-storage and forbidden-boundary policy,
-generates strict Doxygen evidence, runs the observation measures, and preserves
-the accepted core-types, endpoint/route lifecycle, and provider/loopback
-regressions. Those predecessor measures are invoked explicitly as unit, lint,
-static, and integration modes; core-types uses the accepted unchanged-core
-guard plus current-candidate unit and integration measures because its legacy
-lint ownership assertion rejects later admitted units, while its previously
-accepted static evidence remains immutable. Nested legacy
-`--all` modes are not used. The companion traceability JSON is reciprocal across
-requirements, design units, implementation, fixtures, and verification measures.
+`SESN_CANDIDATE_REVISION`, rejects a dirty or mismatched candidate, checks fixed-
+storage and forbidden-boundary policy, generates strict Doxygen evidence, and runs
+the observation measures. It records verbose benchmark output—including environment,
+paired samples, medians, threshold results, and uncertainty—in host-captured
+evidence. It also runs the complete accepted core-types, endpoint/route lifecycle,
+and provider/loopback validators in a disposable clean worktree at that exact
+revision. This preserves their native ownership and static gates without altering a
+predecessor validator. The companion traceability JSON enforces reciprocal
+requirements-to-design-to-code-to-test-to-measure edges.
 
-## SADS disposition
+## REF-002 SADS disposition
 
-No REF-002 SADS requirement is allocated to this Phase 6 evidence slice. Any
-future allocation for telemetry presentation, security, simulation/FMI, results,
-or UI must be accepted as a separate capability; this boundary records those
-areas as deferred rather than treating target architecture as implementation
-evidence.
+The following dispositions are scoped to this prototype observation slice and do
+not upgrade the architectural-target maturity recorded by REF-002. `partial` means
+the bounded local implementation contributes only the stated behavior; it is not a
+claim to implement the full system requirement.
+
+| REF-002 ID | Disposition | Observation-slice contribution or boundary |
+| --- | --- | --- |
+| XVE-SYS-0139 | partial | Bounded local observation augments the core bus prototype; no runtime bus claim. |
+| XVE-SYS-0140 | partial | Records retain all four generic interaction families. |
+| XVE-SYS-0141 | deferred | Protocol adapters remain outside this capability. |
+| XVE-SYS-0142 | partial | Filtering and records are provider-neutral; no provider adapter is implemented. |
+| XVE-SYS-0143 | deferred | Registry and discovery are not implemented. |
+| XVE-SYS-0144 | deferred | Sessions, permits, and security/IAM are not implemented. |
+| XVE-SYS-0145 | allocated | QoS and capability negotiation remain allocated to the broader X-COM capability. |
+| XVE-SYS-0146 | partial | The observation contract is versioned and exposes undecoded schema status only. |
+| XVE-SYS-0147 | partial | Records retain source and observation clock-domain metadata; no time authority is implemented. |
+| XVE-SYS-0148 | deferred | Persistent record/replay is not implemented. |
+| XVE-SYS-0149 | partial | Fixed observation records, counters, and pull access are implemented; no external tool stream exists. |
+| XVE-SYS-0150 | deferred | Edge or cloud routing is not implemented. |
+| XVE-SYS-0151 | deferred | Argus analytics, storage, and presentation are not implemented. |
+| XVE-SYS-0152 | deferred | Stimulation and workflow triggering are not implemented. |
+| XVE-SYS-0153 | deferred | Network, encryption, and mutual authentication are not implemented. |
+| XVE-SYS-0154 | partial | Provider outcomes and provenance metadata are retained; safe intent execution is not implemented. |
+| XVE-SYS-0155 | deferred | Multi-tenant security and deployment isolation are not implemented. |
+| XVE-SYS-0156 | deferred | Gateway behavior is not implemented. |
+| XVE-SYS-0157 | deferred | Live protocol reconfiguration is not implemented. |
+| XVE-SYS-0158 | deferred | Automatic failover and recovery are not implemented. |
