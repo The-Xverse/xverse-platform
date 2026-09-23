@@ -1,0 +1,12 @@
+@startuml
+participant Host
+participant ObservationValidator
+participant ExactClone
+participant PredecessorValidators
+Host -> ObservationValidator: --all(candidate revision)
+ObservationValidator -> ExactClone: clone and detach exact candidate
+ObservationValidator -> PredecessorValidators: each --all in ExactClone
+PredecessorValidators -> PredecessorValidators: original gates + finite extension admission
+PredecessorValidators --> ObservationValidator: complete retained evidence
+ObservationValidator --> Host: pass/fail exact candidate
+@enduml

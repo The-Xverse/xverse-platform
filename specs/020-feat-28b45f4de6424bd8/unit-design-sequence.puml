@@ -1,0 +1,11 @@
+@startuml
+participant Runner
+participant Validator
+participant OwnershipGate
+participant OriginalChecks
+Runner -> Validator: --all exact candidate
+Validator -> OwnershipGate: original paths + explicit extension catalog
+OwnershipGate --> Validator: reject unknown or continue
+Validator -> OriginalChecks: execute complete accepted suite
+OriginalChecks --> Runner: evidence and status
+@enduml

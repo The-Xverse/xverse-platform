@@ -1,0 +1,158 @@
+[
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "CoreTypesValidator"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_core_types.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-VAL-CORE",
+    "levels": [
+      "unit",
+      "component",
+      "software"
+    ],
+    "methods": [
+      "unit_test",
+      "static_analysis",
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits zero without changing candidate inputs.",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-VAL-001",
+      "XCOM-VAL-003"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete accepted core-types gate on the exact integrated candidate.",
+    "timeout_seconds": 1200
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "EndpointRouteLifecycleValidator"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_endpoint_route_lifecycle.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-VAL-LIFECYCLE",
+    "levels": [
+      "component",
+      "integration",
+      "software"
+    ],
+    "methods": [
+      "unit_test",
+      "static_analysis",
+      "integration_test",
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits zero without changing candidate inputs.",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-VAL-001",
+      "XCOM-VAL-003"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete accepted endpoint/route lifecycle gate on the exact integrated candidate.",
+    "timeout_seconds": 1200
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ProviderLoopbackValidator"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_provider_loopback.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-VAL-PROVIDER",
+    "levels": [
+      "component",
+      "integration",
+      "software"
+    ],
+    "methods": [
+      "unit_test",
+      "static_analysis",
+      "integration_test",
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits zero without changing candidate inputs.",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-VAL-001",
+      "XCOM-VAL-003"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete accepted provider/loopback gate on the exact integrated candidate.",
+    "timeout_seconds": 1200
+  },
+  {
+    "allow_network": false,
+    "architecture_refs": [
+      "ObservationEvidence",
+      "PredecessorValidationComposition"
+    ],
+    "argv": [
+      "python3",
+      "scripts/validate_xcom_observation.py",
+      "--all"
+    ],
+    "cwd": ".",
+    "id": "VM-XCOM-VAL-OBSERVATION",
+    "levels": [
+      "unit",
+      "component",
+      "integration",
+      "software"
+    ],
+    "methods": [
+      "unit_test",
+      "lint",
+      "static_analysis",
+      "integration_test",
+      "validation_test"
+    ],
+    "pass_criteria": "Command exits zero, retains exact-candidate predecessor evidence, and leaves inputs unchanged.",
+    "required": true,
+    "required_environment": [
+      "XVERSE_XCOM_TOOLCHAIN",
+      "XVERSE_XCOM_PACKAGE_MANIFEST",
+      "LD_LIBRARY_PATH"
+    ],
+    "requirement_ids": [
+      "XCOM-VAL-001",
+      "XCOM-VAL-002",
+      "XCOM-VAL-003",
+      "XCOM-VAL-004"
+    ],
+    "schema_version": 1,
+    "selection_rationale": "Runs the complete observation gate including exact-candidate predecessor regressions.",
+    "timeout_seconds": 1800
+  }
+]

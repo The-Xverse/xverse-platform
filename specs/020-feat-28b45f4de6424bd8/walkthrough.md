@@ -1,0 +1,1 @@
+Inspect the finite extension allowlists and confirm they admit only accepted later X-COM capability paths. Run all three predecessor validators and the observation validator with --all. Confirm each reports the same exact candidate, all original checks execute, no production/test/build path changed, and documentation matches retained evidence.

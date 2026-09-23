@@ -1,0 +1,18 @@
+@startuml
+component "Exact integrated candidate" as Candidate
+component "Core validator" as Core
+component "Lifecycle validator" as Lifecycle
+component "Provider validator" as Provider
+component "Observation validator" as Observation
+component "Finite later-capability allowlists" as Allowlist
+Candidate --> Core
+Candidate --> Lifecycle
+Candidate --> Provider
+Observation --> Candidate : private exact clone
+Observation --> Core : --all
+Observation --> Lifecycle : --all
+Observation --> Provider : --all
+Core --> Allowlist
+Lifecycle --> Allowlist
+Provider --> Allowlist
+@enduml
