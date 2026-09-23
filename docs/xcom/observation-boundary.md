@@ -76,11 +76,12 @@ medians, threshold results, and uncertainty—in host-captured evidence. It also
 the complete accepted core-types, endpoint/route lifecycle, and provider/loopback
 validators in a disposable clean worktree at that exact revision. This preserves
 their native ownership and static gates without altering a predecessor validator.
-The validator pins predecessor validators, specifications, documentation, fixtures,
-and untouched implementation inputs byte-for-byte to the approved pre-observation
-baseline. The provider header and source are intentional observation extension
-points: their compatibility evidence is the unmodified provider/loopback `--all`
-gate executed on the exact candidate, rather than an impossible byte-identity check.
+Each predecessor validator applies its explicit finite allowlists for accepted later-
+capability paths while retaining its original behavioral, static-analysis, Doxygen,
+traceability, ownership, and isolation gates. No historical baseline checkout or
+patched projection substitutes for the exact candidate during predecessor execution.
+The approved pre-observation revision remains pinned only for the disabled-tap
+benchmark comparison seam; it is not predecessor regression evidence.
 The companion traceability JSON records reverse artifact roles, requirement
 allocations, and design allocations; validation compares those sets exactly with
 every forward requirement/design edge and with the authoritative host-measure

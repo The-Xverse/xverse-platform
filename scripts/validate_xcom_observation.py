@@ -95,38 +95,6 @@ PRODUCTION = (
 TEST_FILES = tuple(sorted(OBSERVATION_ROOT.rglob("*.cpp"))) + tuple(
     sorted(OBSERVATION_ROOT.rglob("*.hpp"))
 )
-PREDECESSOR_PINNED_PATHS = (
-    "Doxyfile",
-    "scripts/validate_xcom_core_types.py",
-    "scripts/validate_xcom_endpoint_route_lifecycle.py",
-    "scripts/validate_xcom_provider_loopback.py",
-    "docs/xcom/core-types.md",
-    "docs/xcom/core-types-traceability.json",
-    "docs/xcom/endpoint-route-lifecycle.md",
-    "docs/xcom/endpoint-route-lifecycle-traceability.json",
-    "docs/xcom/provider-composition-loopback.md",
-    "docs/xcom/provider-composition-loopback-traceability.json",
-    "specs/012-feat-86b0e3ad8eeb4b12",
-    "specs/013-feat-5cfe89f5d1214030",
-    "specs/014-feat-e17d4ee9f29848f5",
-    "tests/xcom/core_types",
-    "tests/xcom/endpoint_route_lifecycle",
-    "tests/xcom/provider_loopback",
-    "src/xverse/xcom/include/xverse/xcom/contract.hpp",
-    "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
-    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
-    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
-    "src/xverse/xcom/include/xverse/xcom/item.hpp",
-    "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
-    "src/xverse/xcom/include/xverse/xcom/result.hpp",
-    "src/xverse/xcom/include/xverse/xcom/value.hpp",
-    "src/xverse/xcom/src/contract.cpp",
-    "src/xverse/xcom/src/diagnostic.cpp",
-    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
-    "src/xverse/xcom/src/item.cpp",
-    "src/xverse/xcom/src/loopback_provider.cpp",
-    "src/xverse/xcom/src/value.cpp",
-)
 APPROVED_PRE_OBSERVATION_BASELINE = "39977ba9e724524dfc42a51e53fa3d61a8964a85"
 PREDECESSOR_VALIDATORS = (
     "validate_xcom_core_types.py",
@@ -599,42 +567,30 @@ def _static(build: Path, candidate_revision: str) -> None:
     _run_doxygen()
 
 
-def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
-    """Reject drift in accepted gates, evidence, fixtures, and untouched inputs.
+def _require_exact_clone(clone_path: Path, candidate_revision: str) -> None:
+    """Require the predecessor worktree to remain the clean exact candidate."""
 
-    The provider header and source are deliberate observation extension points, so
-    byte identity is neither expected nor used as their compatibility proof.  The
-    unmodified provider/loopback ``--all`` gate validates those files against the
-    exact candidate in _prior_regressions().
-    """
-
-    baseline = _run(
-        [_tool("git"), "rev-parse", "--verify",
-         f"{APPROVED_PRE_OBSERVATION_BASELINE}^{{commit}}"],
+    clone_head = _run(
+        [_tool("git"), "-C", str(clone_path), "rev-parse", "HEAD"],
         timeout=30,
     ).stdout.strip()
-    result = subprocess.run(
-        [_tool("git"), "diff", "--quiet", baseline, candidate_revision, "--",
-         *PREDECESSOR_PINNED_PATHS],
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-    if result.returncode:
-        _fail(
-            "accepted predecessor gates or immutable inputs differ from the pinned baseline"
-        )
+    if clone_head != candidate_revision:
+        _fail("predecessor validator clone is not bound to the exact candidate")
+    changed = _run(
+        [_tool("git"), "-C", str(clone_path), "status", "--porcelain",
+         "--untracked-files=all"],
+        timeout=30,
+    ).stdout
+    if changed:
+        _fail("predecessor validator clone differs from the exact candidate")
 
 
 def _prior_regressions(candidate_revision: str) -> None:
-    """Run every accepted predecessor validator at its pinned admitted baseline.
+    """Run every accepted predecessor ``--all`` gate on the exact candidate.
 
-    A separate shared clone first proves the exact candidate preserves every
-    pinned predecessor input.  The same clone then projects the unchanged
-    validators onto their clean pre-observation ownership boundary, where each
-    executes its complete ``--all`` contract without accepting later units.
+    Each predecessor validator owns its explicit finite allowlist for accepted
+    later-capability paths. Running its native entry point in this clean detached
+    clone preserves all other predecessor checks and failure semantics.
     """
 
     environment = dict(os.environ)
@@ -653,30 +609,9 @@ def _prior_regressions(candidate_revision: str) -> None:
             timeout=120,
             environment=environment,
         )
-        clone_head = _run(
-            [_tool("git"), "-C", str(clone_path), "rev-parse", "HEAD"],
-            timeout=30,
-            environment=environment,
-        ).stdout.strip()
-        if clone_head != candidate_revision:
-            _fail("predecessor validator clone is not bound to the exact candidate")
-        _check_predecessor_gates_unchanged(candidate_revision)
-        _run(
-            [_tool("git"), "-C", str(clone_path), "checkout", "--detach",
-             APPROVED_PRE_OBSERVATION_BASELINE],
-            timeout=120,
-            environment=environment,
-        )
-        baseline_head = _run(
-            [_tool("git"), "-C", str(clone_path), "rev-parse", "HEAD"],
-            timeout=30,
-            environment=environment,
-        ).stdout.strip()
-        if baseline_head != APPROVED_PRE_OBSERVATION_BASELINE:
-            _fail("predecessor validator clone is not bound to the pinned baseline")
-        environment[CANDIDATE_REVISION_ENV] = APPROVED_PRE_OBSERVATION_BASELINE
+        _require_exact_clone(clone_path, candidate_revision)
+        environment[CANDIDATE_REVISION_ENV] = candidate_revision
         print(f"X-COM observation exact candidate: {candidate_revision}")
-        print(f"X-COM predecessor pinned baseline: {baseline_head}")
         for validator in PREDECESSOR_VALIDATORS:
             completed = _run(
                 [sys.executable, str(clone_path / "scripts" / validator), "--all"],
@@ -686,6 +621,7 @@ def _prior_regressions(candidate_revision: str) -> None:
             )
             print(f"X-COM accepted predecessor {validator} evidence:\n"
                   + completed.stdout.rstrip())
+            _require_exact_clone(clone_path, candidate_revision)
 
 
 def main() -> int:
