@@ -95,7 +95,7 @@ PRODUCTION = (
 TEST_FILES = tuple(sorted(OBSERVATION_ROOT.rglob("*.cpp"))) + tuple(
     sorted(OBSERVATION_ROOT.rglob("*.hpp"))
 )
-PREDECESSOR_IMMUTABLE_PATHS = (
+PREDECESSOR_PINNED_PATHS = (
     "Doxyfile",
     "scripts/validate_xcom_core_types.py",
     "scripts/validate_xcom_endpoint_route_lifecycle.py",
@@ -600,7 +600,13 @@ def _static(build: Path, candidate_revision: str) -> None:
 
 
 def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
-    """Reject drift in accepted predecessor validators, evidence, code, or fixtures."""
+    """Reject drift in accepted gates, evidence, fixtures, and untouched inputs.
+
+    The provider header and source are deliberate observation extension points, so
+    byte identity is neither expected nor used as their compatibility proof.  The
+    unmodified provider/loopback ``--all`` gate validates those files against the
+    exact candidate in _prior_regressions().
+    """
 
     baseline = _run(
         [_tool("git"), "rev-parse", "--verify",
@@ -609,7 +615,7 @@ def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
     ).stdout.strip()
     result = subprocess.run(
         [_tool("git"), "diff", "--quiet", baseline, candidate_revision, "--",
-         *PREDECESSOR_IMMUTABLE_PATHS],
+         *PREDECESSOR_PINNED_PATHS],
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
