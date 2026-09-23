@@ -629,9 +629,9 @@ def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
 
 
 def _prior_regressions(candidate_revision: str) -> None:
-    """Run every accepted predecessor validator in a clean exact-candidate worktree.
+    """Run every accepted predecessor validator in a clean exact-candidate clone.
 
-    A separate worktree makes each predecessor validator see its native clean
+    A separate shared clone makes each predecessor validator see its native clean
     ownership boundary.  No validator module, ownership list, gate, or candidate
     input is altered; each validator executes its complete ``--all`` contract.
     """
@@ -640,28 +640,35 @@ def _prior_regressions(candidate_revision: str) -> None:
     environment = dict(os.environ)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     with tempfile.TemporaryDirectory(prefix="xcom-observation-predecessors-") as temporary:
-        worktree = Path(temporary) / "candidate"
+        clone_path = Path(temporary) / "candidate"
         _run(
-            [_tool("git"), "worktree", "add", "--detach", str(worktree), candidate_revision],
+            [_tool("git"), "clone", "--shared", "--no-checkout", str(ROOT),
+             str(clone_path)],
             timeout=120,
             environment=environment,
         )
-        try:
-            for validator in PREDECESSOR_VALIDATORS:
-                completed = _run(
-                    [sys.executable, str(worktree / "scripts" / validator), "--all"],
-                    cwd=worktree,
-                    timeout=1200,
-                    environment=environment,
-                )
-                print(f"X-COM accepted predecessor {validator} evidence:\n"
-                      + completed.stdout.rstrip())
-        finally:
-            _run(
-                [_tool("git"), "worktree", "remove", "--force", str(worktree)],
-                timeout=120,
+        _run(
+            [_tool("git"), "-C", str(clone_path), "checkout", "--detach",
+             candidate_revision],
+            timeout=120,
+            environment=environment,
+        )
+        clone_head = _run(
+            [_tool("git"), "-C", str(clone_path), "rev-parse", "HEAD"],
+            timeout=30,
+            environment=environment,
+        ).stdout.strip()
+        if clone_head != candidate_revision:
+            _fail("predecessor validator clone is not bound to the exact candidate")
+        for validator in PREDECESSOR_VALIDATORS:
+            completed = _run(
+                [sys.executable, str(clone_path / "scripts" / validator), "--all"],
+                cwd=clone_path,
+                timeout=1200,
                 environment=environment,
             )
+            print(f"X-COM accepted predecessor {validator} evidence:\n"
+                  + completed.stdout.rstrip())
 
 
 def main() -> int:
