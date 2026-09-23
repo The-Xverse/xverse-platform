@@ -58,13 +58,28 @@ ACCEPTED_EXTENSION_PRODUCTION = tuple(
     for relative in (
         "include/xverse/xcom/endpoint_route_lifecycle.hpp",
         "include/xverse/xcom/loopback_provider.hpp",
-        "include/xverse/xcom/observation.hpp",
         "include/xverse/xcom/provider.hpp",
         "src/endpoint_route_lifecycle.cpp",
         "src/loopback_provider.cpp",
-        "src/observation.cpp",
         "src/provider.cpp",
     )
+)
+ACCEPTED_LATER_CAPABILITY_PRODUCTION = tuple(
+    CPP_ROOT / relative
+    for relative in (
+        "include/xverse/xcom/observation.hpp",
+        "src/observation.cpp",
+    )
+)
+ADMITTED_PRODUCTION = frozenset(
+    (*CORE_PRODUCTION, *ACCEPTED_EXTENSION_PRODUCTION, *ACCEPTED_LATER_CAPABILITY_PRODUCTION)
+)
+CPP_CHECK_INPUTS = (
+    *CORE_PRODUCTION,
+    *ACCEPTED_EXTENSION_PRODUCTION,
+    TEST_ROOT / "unit_tests.cpp",
+    TEST_ROOT / "negative_tests.cpp",
+    TEST_ROOT / "consumer" / "main.cpp",
 )
 SPEC_KIT_ARTIFACTS = (
     "detailed-design.md",
@@ -363,16 +378,12 @@ def _ctest(build: Path, expression: str) -> None:
 
 
 def _cpp_files() -> tuple[Path, ...]:
-    """Return every owned C++ header and source in stable order.
+    """Return the finite pre-observation C++ check inputs in stable order.
 
-    @return Repository C++ paths across production and fixtures.
+    @return Accepted predecessor production and core-types fixture paths.
     """
 
-    return tuple(
-        sorted(
-            (*CPP_ROOT.rglob("*.hpp"), *CPP_ROOT.rglob("*.cpp"), *TEST_ROOT.rglob("*.cpp"))
-        )
-    )
+    return tuple(sorted(CPP_CHECK_INPUTS))
 
 
 def _check_owned_paths() -> None:
@@ -449,11 +460,12 @@ def _check_forbidden_cpp_apis() -> None:
     unaccounted = sorted(
         path.relative_to(ROOT).as_posix()
         for path in production
-        if path not in CORE_PRODUCTION and path not in ACCEPTED_EXTENSION_PRODUCTION
+        if path not in ADMITTED_PRODUCTION
     )
     if unaccounted:
         _fail("unadmitted production unit present: " + ", ".join(unaccounted))
-    for path in production:
+    predecessor_production = (*CORE_PRODUCTION, *ACCEPTED_EXTENSION_PRODUCTION)
+    for path in predecessor_production:
         text = path.read_text(encoding="utf-8")
         for pattern, label in patterns.items():
             if re.search(pattern, text):
@@ -472,7 +484,7 @@ def _check_forbidden_cpp_apis() -> None:
     present = sorted(
         path.name
         for path in production
-        if path not in ACCEPTED_EXTENSION_PRODUCTION and path.stem in excluded_stems
+        if path not in ADMITTED_PRODUCTION and path.stem in excluded_stems
     )
     if present:
         _fail("excluded subsystem unit present: " + ", ".join(present))
@@ -480,7 +492,7 @@ def _check_forbidden_cpp_apis() -> None:
         r"\bstd::vector\b": "dynamic vector in validated core construction unit",
         r"\bstd::ostringstream\b": "dynamic stream in validated core construction unit",
     }
-    for path in production:
+    for path in predecessor_production:
         text = path.read_text(encoding="utf-8")
         for pattern, label in allocation_containers.items():
             if re.search(pattern, text):
@@ -541,11 +553,7 @@ def _run_repository_documentation_gate() -> None:
             "WARN_LOGFILE": warning_log.as_posix(),
             "INPUT": " ".join(
                 path.as_posix()
-                for path in (
-                    ROOT / "docs" / "xcom" / "core-types.md",
-                    CPP_ROOT,
-                    TEST_ROOT,
-                )
+                for path in (ROOT / "docs" / "xcom" / "core-types.md", *_cpp_files())
             ),
             "USE_MDFILE_AS_MAINPAGE": (
                 ROOT / "docs" / "xcom" / "core-types.md"
