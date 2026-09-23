@@ -60,8 +60,11 @@ lossless pre-dispatch rejection before provider mutation, acknowledgement, and s
 hub concurrency.
 The disabled-tap benchmark uses repeated paired samples on the owned loopback
 fixture, reports its environment and uncertainty limitations, and enforces the
-accepted two-percent median throughput and latency threshold. It is local
-prototype evidence and is not a production performance claim.
+accepted two-percent median throughput and latency threshold. Its test-only
+baseline seam must have a byte-identical function body to `ProviderComposition::submit`
+at pinned revision `39977ba9e724524dfc42a51e53fa3d61a8964a85`; validation rejects drift before
+running the benchmark. It is local prototype evidence and is not a production
+performance claim.
 
 `scripts/validate_xcom_observation.py` binds host execution to the exact
 `SESN_CANDIDATE_REVISION`, rejects a dirty or mismatched candidate, checks fixed-
@@ -71,8 +74,10 @@ paired samples, medians, threshold results, and uncertainty—in host-captured
 evidence. It also runs the complete accepted core-types, endpoint/route lifecycle,
 and provider/loopback validators in a disposable clean worktree at that exact
 revision. This preserves their native ownership and static gates without altering a
-predecessor validator. The companion traceability JSON enforces reciprocal
-requirements-to-design-to-code-to-test-to-measure edges.
+predecessor validator. The companion traceability JSON records reverse artifact
+roles, requirement allocations, and design allocations; validation compares those
+sets exactly with every forward requirement/design edge and with the authoritative
+host-measure allocations.
 
 ## REF-002 SADS disposition
 
@@ -103,3 +108,18 @@ claim to implement the full system requirement.
 | XVE-SYS-0156 | deferred | Gateway behavior is not implemented. |
 | XVE-SYS-0157 | deferred | Live protocol reconfiguration is not implemented. |
 | XVE-SYS-0158 | deferred | Automatic failover and recovery are not implemented. |
+
+Capability 007 also identifies the following shared REF-002 requirements. Their
+disposition remains `allocated` to the named owning capability; the observation
+slice neither implements nor discharges them. The bounded record contract may be
+consumed by those future capabilities through the public X-COM boundary.
+
+| REF-002 IDs | Disposition | Preserved owner/boundary |
+| --- | --- | --- |
+| XVE-SYS-0048–0049 | allocated | Simulation/model runtime, FMI, and Maestro remain future capabilities. |
+| XVE-SYS-0065, XVE-SYS-0089, XVE-SYS-0109–0111 | allocated | Maestro, Runtime, Time, and Security retain ownership. |
+| XVE-SYS-0123, XVE-SYS-0126–0127 | allocated | Runtime, Argus, Time, and Security retain ownership. |
+| XVE-SYS-0179, XVE-SYS-0183, XVE-SYS-0193–0194 | allocated | Argus owns monitoring, logging, analytics, storage, and presentation. |
+| XVE-SYS-0237–0250 | allocated | SDK, plugins, and subsystem adapters remain future extension capabilities. |
+| XVE-SYS-0251–0264 | allocated | Time and Maestro retain time-authority and determinism ownership; X-COM only retains supplied clock metadata. |
+| XVE-SYS-0265–0279 | allocated | Faults, Runtime, Maestro, and Argus retain fault and recovery ownership. |

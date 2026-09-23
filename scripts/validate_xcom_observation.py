@@ -70,6 +70,21 @@ SADS_DISPOSITIONS = {
     "XVE-SYS-0156": "deferred",
     "XVE-SYS-0157": "deferred",
     "XVE-SYS-0158": "deferred",
+    "XVE-SYS-0048": "allocated",
+    "XVE-SYS-0049": "allocated",
+    "XVE-SYS-0065": "allocated",
+    "XVE-SYS-0089": "allocated",
+    "XVE-SYS-0109": "allocated",
+    "XVE-SYS-0110": "allocated",
+    "XVE-SYS-0111": "allocated",
+    "XVE-SYS-0123": "allocated",
+    "XVE-SYS-0126": "allocated",
+    "XVE-SYS-0127": "allocated",
+    "XVE-SYS-0179": "allocated",
+    "XVE-SYS-0183": "allocated",
+    "XVE-SYS-0193": "allocated",
+    "XVE-SYS-0194": "allocated",
+    **{f"XVE-SYS-{number:04d}": "allocated" for number in range(237, 280)},
 }
 PRODUCTION = (
     CPP_ROOT / "include" / "xverse" / "xcom" / "observation.hpp",
@@ -80,22 +95,39 @@ PRODUCTION = (
 TEST_FILES = tuple(sorted(OBSERVATION_ROOT.rglob("*.cpp"))) + tuple(
     sorted(OBSERVATION_ROOT.rglob("*.hpp"))
 )
-CORE_PREDECESSOR_PATHS = (
+PREDECESSOR_IMMUTABLE_PATHS = (
+    "Doxyfile",
+    "scripts/validate_xcom_core_types.py",
+    "scripts/validate_xcom_endpoint_route_lifecycle.py",
+    "scripts/validate_xcom_provider_loopback.py",
+    "docs/xcom/core-types.md",
+    "docs/xcom/core-types-traceability.json",
+    "docs/xcom/endpoint-route-lifecycle.md",
+    "docs/xcom/endpoint-route-lifecycle-traceability.json",
+    "docs/xcom/provider-composition-loopback.md",
+    "docs/xcom/provider-composition-loopback-traceability.json",
+    "specs/012-feat-86b0e3ad8eeb4b12",
+    "specs/013-feat-5cfe89f5d1214030",
+    "specs/014-feat-e17d4ee9f29848f5",
+    "tests/xcom/core_types",
+    "tests/xcom/endpoint_route_lifecycle",
+    "tests/xcom/provider_loopback",
     "src/xverse/xcom/include/xverse/xcom/contract.hpp",
     "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
     "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
     "src/xverse/xcom/include/xverse/xcom/item.hpp",
+    "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
     "src/xverse/xcom/include/xverse/xcom/result.hpp",
     "src/xverse/xcom/include/xverse/xcom/value.hpp",
     "src/xverse/xcom/src/contract.cpp",
     "src/xverse/xcom/src/diagnostic.cpp",
+    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
     "src/xverse/xcom/src/item.cpp",
+    "src/xverse/xcom/src/loopback_provider.cpp",
     "src/xverse/xcom/src/value.cpp",
-    "tests/xcom/core_types/unit_tests.cpp",
-    "tests/xcom/core_types/negative_tests.cpp",
-    "tests/xcom/core_types/consumer/main.cpp",
 )
-APPROVED_CORE_TYPES_BASELINE = "39977ba9e724524dfc42a51e53fa3d61a8964a85"
+APPROVED_PRE_OBSERVATION_BASELINE = "39977ba9e724524dfc42a51e53fa3d61a8964a85"
 PREDECESSOR_VALIDATORS = (
     "validate_xcom_core_types.py",
     "validate_xcom_endpoint_route_lifecycle.py",
@@ -290,21 +322,35 @@ def _validate_traceability(candidate_revision: str) -> None:
         design = designs[design_id]
         if design.get("source") != DESIGN_SOURCE:
             _fail(f"design source differs: {design_id}")
-        if set(design.get("requirements", [])) != expected:
+        design_requirements = design.get("requirements")
+        if (not isinstance(design_requirements, list) or
+                len(design_requirements) != len(set(design_requirements)) or
+                set(design_requirements) != expected):
             _fail(f"design allocation differs: {design_id}")
         for key in ("code", "tests"):
-            if not isinstance(design.get(key), list) or not design[key]:
+            edges = design.get(key)
+            if (not isinstance(edges, list) or not edges or
+                    len(edges) != len(set(edges))):
                 _fail(f"empty design {key} edge: {design_id}")
     for requirement in records:
-        if requirement.get("id") not in REQUIREMENTS:
+        requirement_id = requirement.get("id")
+        if requirement_id not in REQUIREMENTS:
             _fail("unknown requirement in traceability")
         for key in ("design", "code", "tests", "checks"):
-            if not isinstance(requirement.get(key), list) or not requirement[key]:
-                _fail(f"empty reciprocal edge {key}: {requirement.get('id')}")
+            edges = requirement.get(key)
+            if (not isinstance(edges, list) or not edges or
+                    len(edges) != len(set(edges))):
+                _fail(f"invalid reciprocal edge {key}: {requirement_id}")
         if not set(requirement["design"]).issubset(designs):
-            _fail(f"requirement design edge is unknown: {requirement['id']}")
+            _fail(f"requirement design edge is unknown: {requirement_id}")
         if not set(requirement["checks"]).issubset(MEASURES):
-            _fail(f"requirement check edge is unknown: {requirement['id']}")
+            _fail(f"requirement check edge is unknown: {requirement_id}")
+        expected_designs = {
+            design_id for design_id, design in designs.items()
+            if requirement_id in design["requirements"]
+        }
+        if set(requirement["design"]) != expected_designs:
+            _fail(f"requirement/design edges are not reciprocal: {requirement_id}")
     for design_id, design in designs.items():
         for requirement_id in design["requirements"]:
             requirement = records_by_id[requirement_id]
@@ -316,20 +362,44 @@ def _validate_traceability(candidate_revision: str) -> None:
             for artifact in design["tests"]:
                 if artifact not in requirement["tests"]:
                     _fail(f"missing design-to-test edge: {design_id} -> {artifact}")
-    for artifact, requirement_ids in artifacts.items():
-        if not requirement_ids or not set(requirement_ids).issubset(REQUIREMENTS):
-            _fail(f"artifact allocation differs: {artifact}")
-        if not (ROOT / artifact).is_file():
-            _fail(f"traceability artifact is missing: {artifact}")
-        for requirement_id in requirement_ids:
-            requirement = records_by_id[requirement_id]
-            if artifact not in {*requirement["code"], *requirement["tests"]}:
-                _fail(f"missing forward artifact edge: {requirement_id} -> {artifact}")
     expected_artifacts = {
         artifact for item in records for artifact in (*item["code"], *item["tests"])
     }
+    expected_artifacts.update(
+        artifact for design in designs.values()
+        for artifact in (*design["code"], *design["tests"])
+    )
     if set(artifacts) != expected_artifacts:
         _fail("traceability artifact catalog is not exactly reciprocal")
+    for artifact, reverse in artifacts.items():
+        if not isinstance(reverse, dict) or set(reverse) != {"roles", "requirements", "designs"}:
+            _fail(f"artifact allocation differs: {artifact}")
+        if not (ROOT / artifact).is_file():
+            _fail(f"traceability artifact is missing: {artifact}")
+        for key in ("roles", "requirements", "designs"):
+            values = reverse.get(key)
+            if (not isinstance(values, list) or not values or
+                    len(values) != len(set(values))):
+                _fail(f"invalid reverse artifact {key}: {artifact}")
+        expected_roles = {
+            role for role in ("code", "tests")
+            if any(artifact in requirement[role] for requirement in records)
+            or any(artifact in design[role] for design in designs.values())
+        }
+        expected_requirements = {
+            requirement["id"] for requirement in records
+            if artifact in requirement["code"] or artifact in requirement["tests"]
+        }
+        expected_designs = {
+            design_id for design_id, design in designs.items()
+            if artifact in design["code"] or artifact in design["tests"]
+        }
+        if set(reverse["roles"]) != expected_roles:
+            _fail(f"artifact role edges are not reciprocal: {artifact}")
+        if set(reverse["requirements"]) != expected_requirements:
+            _fail(f"artifact requirement edges are not reciprocal: {artifact}")
+        if set(reverse["designs"]) != expected_designs:
+            _fail(f"artifact design edges are not reciprocal: {artifact}")
     for requirement in records:
         requirement_id = requirement["id"]
         expected_checks = {
@@ -340,11 +410,53 @@ def _validate_traceability(candidate_revision: str) -> None:
             _fail(f"requirement/measure allocation differs: {requirement_id}")
     for measure_id, measure in measure_by_id.items():
         requirement_ids = measure.get("requirement_ids")
-        if not isinstance(requirement_ids, list) or not requirement_ids:
+        if (not isinstance(requirement_ids, list) or not requirement_ids or
+                len(requirement_ids) != len(set(requirement_ids))):
             _fail(f"measure requirement allocation differs: {measure_id}")
         for requirement_id in requirement_ids:
             if measure_id not in records_by_id.get(requirement_id, {}).get("checks", []):
                 _fail(f"missing reverse measure edge: {measure_id} -> {requirement_id}")
+
+
+def _cpp_function_body(source: str, signature: str) -> str:
+    """Return one exact C++ function body selected by its fully qualified signature."""
+
+    start = source.find(signature)
+    if start < 0:
+        _fail(f"benchmark comparison function is absent: {signature}")
+    opening = source.find("{", start + len(signature))
+    if opening < 0:
+        _fail(f"benchmark comparison function has no body: {signature}")
+    depth = 0
+    for index in range(opening, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[opening:index + 1]
+    _fail(f"benchmark comparison function body is unterminated: {signature}")
+
+
+def _check_benchmark_baseline_seam() -> None:
+    """Bind the benchmark-only comparison seam to the pinned admitted implementation."""
+
+    baseline = _run(
+        [_tool("git"), "show",
+         f"{APPROVED_PRE_OBSERVATION_BASELINE}:src/xverse/xcom/src/provider.cpp"],
+        timeout=30,
+    ).stdout
+    candidate = (CPP_ROOT / "src" / "provider.cpp").read_text(encoding="utf-8")
+    baseline_body = _cpp_function_body(
+        baseline, "ProviderStatus ProviderComposition::submit(")
+    seam_body = _cpp_function_body(
+        candidate,
+        "ProviderStatus ProviderComposition::submit_disabled_observation_baseline(",
+    )
+    if seam_body != baseline_body:
+        _fail(
+            "disabled-tap benchmark seam differs from the pinned pre-observation submit body"
+        )
 
 
 def _unit(build: Path) -> None:
@@ -364,6 +476,7 @@ def _integration(build: Path) -> None:
 def _performance(build: Path) -> None:
     """Run and retain the repeated paired disabled-tap benchmark evidence."""
 
+    _check_benchmark_baseline_seam()
     _build(build, ["xverse_xcom_observation_disabled_benchmark"])
     completed = _run(
         [_tool("ctest"), "--test-dir", str(build), "--verbose", "-R",
@@ -373,7 +486,7 @@ def _performance(build: Path) -> None:
     output = completed.stdout
     required_tokens = (
         "fixture=owned-loopback-disabled-observation",
-        "baseline_revision=39977ba9e724524dfc42a51e53fa3d61a8964a85",
+        f"baseline_revision={APPROVED_PRE_OBSERVATION_BASELINE}",
         "candidate_path=public-submit-null-observation-hub",
         "paired_samples=21",
         "pair_order=alternating",
@@ -475,16 +588,17 @@ def _static(build: Path) -> None:
     _run_doxygen()
 
 
-def _check_core_predecessor_unchanged(candidate_revision: str) -> None:
-    """Reject changes to the approved predecessor core implementation or tests."""
+def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
+    """Reject drift in accepted predecessor validators, evidence, code, or fixtures."""
 
     baseline = _run(
-        [_tool("git"), "rev-parse", "--verify", f"{APPROVED_CORE_TYPES_BASELINE}^{{commit}}"],
+        [_tool("git"), "rev-parse", "--verify",
+         f"{APPROVED_PRE_OBSERVATION_BASELINE}^{{commit}}"],
         timeout=30,
     ).stdout.strip()
     result = subprocess.run(
         [_tool("git"), "diff", "--quiet", baseline, candidate_revision, "--",
-         *CORE_PREDECESSOR_PATHS],
+         *PREDECESSOR_IMMUTABLE_PATHS],
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -493,8 +607,7 @@ def _check_core_predecessor_unchanged(candidate_revision: str) -> None:
     )
     if result.returncode:
         _fail(
-            "approved predecessor core implementation/test artifacts changed: "
-            + ", ".join(CORE_PREDECESSOR_PATHS)
+            "accepted predecessor gates or immutable inputs differ from the pinned baseline"
         )
 
 
@@ -506,7 +619,7 @@ def _prior_regressions(candidate_revision: str) -> None:
     input is altered; each validator executes its complete ``--all`` contract.
     """
 
-    _check_core_predecessor_unchanged(candidate_revision)
+    _check_predecessor_gates_unchanged(candidate_revision)
     environment = dict(os.environ)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     with tempfile.TemporaryDirectory(prefix="xcom-observation-predecessors-") as temporary:
