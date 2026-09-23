@@ -629,14 +629,14 @@ def _check_predecessor_gates_unchanged(candidate_revision: str) -> None:
 
 
 def _prior_regressions(candidate_revision: str) -> None:
-    """Run every accepted predecessor validator in a clean exact-candidate clone.
+    """Run every accepted predecessor validator at its pinned admitted baseline.
 
-    A separate shared clone makes each predecessor validator see its native clean
-    ownership boundary.  No validator module, ownership list, gate, or candidate
-    input is altered; each validator executes its complete ``--all`` contract.
+    A separate shared clone first proves the exact candidate preserves every
+    pinned predecessor input.  The same clone then projects the unchanged
+    validators onto their clean pre-observation ownership boundary, where each
+    executes its complete ``--all`` contract without accepting later units.
     """
 
-    _check_predecessor_gates_unchanged(candidate_revision)
     environment = dict(os.environ)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     with tempfile.TemporaryDirectory(prefix="xcom-observation-predecessors-") as temporary:
@@ -660,6 +660,23 @@ def _prior_regressions(candidate_revision: str) -> None:
         ).stdout.strip()
         if clone_head != candidate_revision:
             _fail("predecessor validator clone is not bound to the exact candidate")
+        _check_predecessor_gates_unchanged(candidate_revision)
+        _run(
+            [_tool("git"), "-C", str(clone_path), "checkout", "--detach",
+             APPROVED_PRE_OBSERVATION_BASELINE],
+            timeout=120,
+            environment=environment,
+        )
+        baseline_head = _run(
+            [_tool("git"), "-C", str(clone_path), "rev-parse", "HEAD"],
+            timeout=30,
+            environment=environment,
+        ).stdout.strip()
+        if baseline_head != APPROVED_PRE_OBSERVATION_BASELINE:
+            _fail("predecessor validator clone is not bound to the pinned baseline")
+        environment[CANDIDATE_REVISION_ENV] = APPROVED_PRE_OBSERVATION_BASELINE
+        print(f"X-COM observation exact candidate: {candidate_revision}")
+        print(f"X-COM predecessor pinned baseline: {baseline_head}")
         for validator in PREDECESSOR_VALIDATORS:
             completed = _run(
                 [sys.executable, str(clone_path / "scripts" / validator), "--all"],
