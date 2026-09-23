@@ -51,7 +51,6 @@ DESIGN_REQUIREMENTS = {
     "XCOM-LIFE-UNIT-007": {"XCOM-LIFE-006", "XCOM-LIFE-008", "XCOM-LIFE-011"},
 }
 DESIGN_SOURCE = "specs/013-feat-5cfe89f5d1214030/unit-specifications.md"
-OWNED_PREFIXES = ("src/xverse/xcom/", "tests/xcom/endpoint_route_lifecycle/")
 OWNED_FILES = {
     "scripts/validate_xcom_endpoint_route_lifecycle.py",
     "docs/xcom/endpoint-route-lifecycle.md",
@@ -62,6 +61,101 @@ LIFECYCLE_CPP = (
     CPP_ROOT / "src" / "endpoint_route_lifecycle.cpp",
 )
 CPP_CHECK_INPUTS = (*LIFECYCLE_CPP, *sorted(TEST_ROOT.rglob("*.cpp")))
+SPEC_KIT_ARTIFACTS = (
+    "detailed-design.md",
+    "integration-plan.md",
+    "plan.md",
+    "quality-checklists.json",
+    "sesn.json",
+    "software-architecture-components.puml",
+    "software-architecture-sequence.puml",
+    "software-architecture.md",
+    "software-requirements.md",
+    "spec.md",
+    "tasks.md",
+    "unit-design-components.puml",
+    "unit-design-sequence.puml",
+    "unit-specifications.md",
+    "verification-measures.json",
+    "verification-plan.md",
+    "walkthrough.md",
+)
+
+
+def _spec_kit_paths(feature: str) -> frozenset[str]:
+    """Return the finite generated artifact catalog for one accepted capability."""
+
+    return frozenset(f"specs/{feature}/{name}" for name in SPEC_KIT_ARTIFACTS)
+
+
+ORIGINAL_OWNED_PATHS = frozenset(
+    {
+        *OWNED_FILES,
+        "src/xverse/xcom/CMakeLists.txt",
+        "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+        "src/xverse/xcom/src/diagnostic.cpp",
+        "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp",
+        "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp",
+        "tests/xcom/endpoint_route_lifecycle/unit_tests.cpp",
+    }
+    | {path.relative_to(ROOT).as_posix() for path in LIFECYCLE_CPP}
+    | _spec_kit_paths("013-feat-5cfe89f5d1214030")
+)
+ACCEPTED_LATER_CAPABILITY_PATHS = {
+    "XCOM-PROV": frozenset(
+        {
+            "scripts/validate_xcom_core_types.py",
+            "scripts/validate_xcom_provider_loopback.py",
+            "docs/xcom/provider-composition-loopback.md",
+            "docs/xcom/provider-composition-loopback-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+            "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
+            "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+            "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+            "src/xverse/xcom/src/loopback_provider.cpp",
+            "src/xverse/xcom/src/provider.cpp",
+            "tests/xcom/provider_loopback/consumer/main.cpp",
+            "tests/xcom/provider_loopback/consumer/provider_mutation_rejection.cpp",
+            "tests/xcom/provider_loopback/independent_provider.hpp",
+            "tests/xcom/provider_loopback/negative_tests.cpp",
+            "tests/xcom/provider_loopback/test_support.hpp",
+            "tests/xcom/provider_loopback/unit_tests.cpp",
+        }
+    )
+    | frozenset().union(
+        *(
+            _spec_kit_paths(feature)
+            for feature in (
+                "014-feat-e17d4ee9f29848f5",
+                "015-feat-80e5f94a8484412b",
+                "016-feat-7795845feff2492c",
+                "017-feat-ea2f9eda222f49e1",
+                "018-feat-031038d9f8524be9",
+            )
+        )
+    ),
+    "XCOM-OBS": frozenset(
+        {
+            "scripts/validate_xcom_observation.py",
+            "docs/xcom/observation-boundary.md",
+            "docs/xcom/observation-boundary-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+            "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+            "src/xverse/xcom/src/observation.cpp",
+            "src/xverse/xcom/src/provider.cpp",
+            "tests/xcom/observation/core/unit_tests.cpp",
+            "tests/xcom/observation/integration/disabled_tap_benchmark.cpp",
+            "tests/xcom/observation/integration/integration_tests.cpp",
+            "tests/xcom/observation/integration/test_support.hpp",
+        }
+    )
+    | _spec_kit_paths("019-feat-ae449f37735949a6"),
+}
+ADMITTED_OWNERSHIP_PATHS = ORIGINAL_OWNED_PATHS | frozenset().union(
+    *ACCEPTED_LATER_CAPABILITY_PATHS.values()
+)
 
 
 class ValidationFailure(RuntimeError):
@@ -157,50 +251,17 @@ def _ctest(build: Path, expression: str) -> None:
     )
 
 
-def _normalize_additive_owned_paths(values: list[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Validate explicit later-slice paths admitted only by the ownership gate."""
-
-    files: list[str] = []
-    prefixes: list[str] = []
-    for value in values:
-        candidate = Path(value)
-        if candidate.is_absolute() or value in {"", "."} or ".." in candidate.parts:
-            _fail(f"invalid additive owned path: {value!r}")
-        resolved = (ROOT / candidate).resolve()
-        try:
-            relative = resolved.relative_to(ROOT).as_posix()
-        except ValueError:
-            _fail(f"additive owned path escapes repository: {value!r}")
-        if not resolved.exists():
-            _fail(f"additive owned path does not exist: {relative}")
-        if resolved.is_dir():
-            if relative == "src/xverse/xcom" or relative.startswith("src/xverse/xcom/"):
-                _fail(
-                    "additive production ownership must name exact files, not a directory: "
-                    + relative
-                )
-            prefixes.append(relative.rstrip("/") + "/")
-        elif resolved.is_file():
-            files.append(relative)
-        else:
-            _fail(f"additive owned path is not a file or directory: {relative}")
-    return tuple(sorted(set(files))), tuple(sorted(set(prefixes)))
-
-
-def _check_owned_paths(additive_owned_paths: list[str]) -> None:
+def _check_owned_paths() -> None:
     """Reject changed paths outside this SESN task's ownership boundary."""
 
     changed = _run([_tool("git"), "diff", "--name-only", "--", "."]).stdout.splitlines()
     untracked = _run(
         [_tool("git"), "ls-files", "--others", "--exclude-standard"]
     ).stdout.splitlines()
-    additive_files, additive_prefixes = _normalize_additive_owned_paths(additive_owned_paths)
     unexpected = sorted(
         path
         for path in set((*changed, *untracked))
-        if path not in OWNED_FILES
-        and path not in additive_files
-        and not path.startswith((*OWNED_PREFIXES, *additive_prefixes))
+        if path not in ADMITTED_OWNERSHIP_PATHS
     )
     if unexpected:
         _fail("changed paths exceed task ownership: " + ", ".join(unexpected))
@@ -471,7 +532,7 @@ def _validate_traceability(candidate_revision: str) -> None:
                 _fail(f"missing forward artifact edge: {requirement} -> {path}")
 
 
-def _run_core_types_regression(additive_owned_paths: list[str]) -> None:
+def _run_core_types_regression() -> None:
     """Run the complete accepted core-types validator on the integrated candidate."""
 
     validator = ROOT / "scripts" / "validate_xcom_core_types.py"
@@ -480,19 +541,7 @@ def _run_core_types_regression(additive_owned_paths: list[str]) -> None:
         _fail("accepted core-types validator cannot be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    admitted = [
-        "scripts/validate_xcom_endpoint_route_lifecycle.py",
-        "docs/xcom/endpoint-route-lifecycle.md",
-        "docs/xcom/endpoint-route-lifecycle-traceability.json",
-        "tests/xcom/endpoint_route_lifecycle",
-        "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
-        "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
-        *additive_owned_paths,
-    ]
-    arguments = ["--all"]
-    for path in admitted:
-        arguments.extend(("--additive-owned-path", path))
-    result = module.main(arguments)
+    result = module.main(["--all"])
     if result != 0:
         _fail("accepted core-types validator rejected the integrated candidate")
 
@@ -504,10 +553,10 @@ def _unit(build: Path) -> None:
     _ctest(build, "^xcom_lifecycle_(unit|negative)$")
 
 
-def _lint(build: Path, additive_owned_paths: list[str]) -> None:
+def _lint(build: Path) -> None:
     """Run ownership, formatting, forbidden-boundary, diagnostic, and warning gates."""
 
-    _check_owned_paths(additive_owned_paths)
+    _check_owned_paths()
     _check_layout_and_text()
     _check_bounded_control_plane()
     _check_diagnostic_compatibility()
@@ -549,13 +598,6 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--static", action="store_true")
     selection.add_argument("--integration", action="store_true")
     selection.add_argument("--all", action="store_true")
-    parser.add_argument(
-        "--additive-owned-path",
-        action="append",
-        default=[],
-        metavar="PATH",
-        help="admit one exact later-slice file or directory in the ownership check",
-    )
     args = parser.parse_args(arguments)
     try:
         candidate_revision = _candidate_revision()
@@ -565,13 +607,13 @@ def main(arguments: list[str] | None = None) -> int:
             if args.unit or args.all:
                 _unit(build)
             if args.lint or args.all:
-                _lint(build, args.additive_owned_path)
+                _lint(build)
             if args.static or args.all:
                 _static(build, candidate_revision)
             if args.integration or args.all:
                 _integration(build)
             if args.all:
-                _run_core_types_regression(args.additive_owned_path)
+                _run_core_types_regression()
                 _validate_traceability(candidate_revision)
     except ValidationFailure as error:
         print(f"X-COM endpoint/route lifecycle validation failed: {error}", file=sys.stderr)

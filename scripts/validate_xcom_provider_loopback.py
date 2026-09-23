@@ -44,7 +44,6 @@ DESIGN_REQUIREMENTS = {
     "XCOM-PROV-UNIT-007": {"XCOM-PROV-010", "XCOM-PROV-011"},
 }
 DESIGN_SOURCE = "specs/014-feat-e17d4ee9f29848f5/unit-specifications.md"
-OWNED_PREFIXES = ("src/xverse/xcom/", "tests/xcom/provider_loopback/")
 OWNED_FILES = {
     "scripts/validate_xcom_provider_loopback.py",
     "scripts/validate_xcom_core_types.py",
@@ -62,6 +61,82 @@ MUTATION_REJECTION_PROBE = TEST_ROOT / "consumer" / "provider_mutation_rejection
 CPP_CHECK_INPUTS = (
     *PRODUCTION,
     *(path for path in sorted(TEST_ROOT.rglob("*.cpp")) if path != MUTATION_REJECTION_PROBE),
+)
+SPEC_KIT_ARTIFACTS = (
+    "detailed-design.md",
+    "integration-plan.md",
+    "plan.md",
+    "quality-checklists.json",
+    "sesn.json",
+    "software-architecture-components.puml",
+    "software-architecture-sequence.puml",
+    "software-architecture.md",
+    "software-requirements.md",
+    "spec.md",
+    "tasks.md",
+    "unit-design-components.puml",
+    "unit-design-sequence.puml",
+    "unit-specifications.md",
+    "verification-measures.json",
+    "verification-plan.md",
+    "walkthrough.md",
+)
+
+
+def _spec_kit_paths(feature: str) -> frozenset[str]:
+    """Return the finite generated artifact catalog for one accepted capability."""
+
+    return frozenset(f"specs/{feature}/{name}" for name in SPEC_KIT_ARTIFACTS)
+
+
+ORIGINAL_OWNED_PATHS = frozenset(
+    {
+        *OWNED_FILES,
+        "src/xverse/xcom/CMakeLists.txt",
+        "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+        "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+        "tests/xcom/provider_loopback/consumer/main.cpp",
+        "tests/xcom/provider_loopback/consumer/provider_mutation_rejection.cpp",
+        "tests/xcom/provider_loopback/independent_provider.hpp",
+        "tests/xcom/provider_loopback/negative_tests.cpp",
+        "tests/xcom/provider_loopback/test_support.hpp",
+        "tests/xcom/provider_loopback/unit_tests.cpp",
+    }
+    | {path.relative_to(ROOT).as_posix() for path in PRODUCTION}
+    | frozenset().union(
+        *(
+            _spec_kit_paths(feature)
+            for feature in (
+                "014-feat-e17d4ee9f29848f5",
+                "015-feat-80e5f94a8484412b",
+                "016-feat-7795845feff2492c",
+                "017-feat-ea2f9eda222f49e1",
+                "018-feat-031038d9f8524be9",
+            )
+        )
+    )
+)
+ACCEPTED_LATER_CAPABILITY_PATHS = {
+    "XCOM-OBS": frozenset(
+        {
+            "scripts/validate_xcom_observation.py",
+            "docs/xcom/observation-boundary.md",
+            "docs/xcom/observation-boundary-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+            "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+            "src/xverse/xcom/src/observation.cpp",
+            "src/xverse/xcom/src/provider.cpp",
+            "tests/xcom/observation/core/unit_tests.cpp",
+            "tests/xcom/observation/integration/disabled_tap_benchmark.cpp",
+            "tests/xcom/observation/integration/integration_tests.cpp",
+            "tests/xcom/observation/integration/test_support.hpp",
+        }
+    )
+    | _spec_kit_paths("019-feat-ae449f37735949a6"),
+}
+ADMITTED_OWNERSHIP_PATHS = ORIGINAL_OWNED_PATHS | frozenset().union(
+    *ACCEPTED_LATER_CAPABILITY_PATHS.values()
 )
 
 
@@ -149,7 +224,7 @@ def _check_owned_paths() -> None:
     untracked = _run([_tool("git"), "ls-files", "--others", "--exclude-standard"]).stdout.splitlines()
     unexpected = sorted(
         path for path in set((*changed, *untracked))
-        if path not in OWNED_FILES and not path.startswith(OWNED_PREFIXES)
+        if path not in ADMITTED_OWNERSHIP_PATHS
     )
     if unexpected:
         _fail("changed paths exceed task ownership: " + ", ".join(unexpected))
@@ -521,18 +596,7 @@ def _run_lifecycle_regression() -> None:
         "xcom_lifecycle_validator_provider",
         ROOT / "scripts" / "validate_xcom_endpoint_route_lifecycle.py",
     )
-    arguments = ["--all"]
-    for path in (
-        "scripts/validate_xcom_core_types.py",
-        "scripts/validate_xcom_provider_loopback.py",
-        "tests/xcom/provider_loopback",
-        "src/xverse/xcom/include/xverse/xcom/provider.hpp",
-        "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
-        "src/xverse/xcom/src/provider.cpp",
-        "src/xverse/xcom/src/loopback_provider.cpp",
-    ):
-        arguments.extend(("--additive-owned-path", path))
-    if module.main(arguments) != 0:
+    if module.main(["--all"]) != 0:
         _fail("accepted endpoint/route lifecycle validator rejected the integrated candidate")
 
 

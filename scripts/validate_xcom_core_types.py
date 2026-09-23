@@ -32,7 +32,6 @@ MEASURES = {
     "VM-XCOM-TYPES-INTEGRATION",
     "VM-XCOM-TYPES-VALIDATION",
 }
-OWNED_PREFIXES = ("src/xverse/xcom/", "tests/xcom/core_types/")
 OWNED_FILES = {
     "Doxyfile",
     "scripts/validate_xcom_core_types.py",
@@ -59,11 +58,120 @@ ACCEPTED_EXTENSION_PRODUCTION = tuple(
     for relative in (
         "include/xverse/xcom/endpoint_route_lifecycle.hpp",
         "include/xverse/xcom/loopback_provider.hpp",
+        "include/xverse/xcom/observation.hpp",
         "include/xverse/xcom/provider.hpp",
         "src/endpoint_route_lifecycle.cpp",
         "src/loopback_provider.cpp",
+        "src/observation.cpp",
         "src/provider.cpp",
     )
+)
+SPEC_KIT_ARTIFACTS = (
+    "detailed-design.md",
+    "integration-plan.md",
+    "plan.md",
+    "quality-checklists.json",
+    "sesn.json",
+    "software-architecture-components.puml",
+    "software-architecture-sequence.puml",
+    "software-architecture.md",
+    "software-requirements.md",
+    "spec.md",
+    "tasks.md",
+    "unit-design-components.puml",
+    "unit-design-sequence.puml",
+    "unit-specifications.md",
+    "verification-measures.json",
+    "verification-plan.md",
+    "walkthrough.md",
+)
+
+
+def _spec_kit_paths(feature: str) -> frozenset[str]:
+    """Return the finite generated artifact catalog for one accepted capability."""
+
+    return frozenset(f"specs/{feature}/{name}" for name in SPEC_KIT_ARTIFACTS)
+
+
+ORIGINAL_OWNED_PATHS = frozenset(
+    {
+        *OWNED_FILES,
+        "src/xverse/xcom/CMakeLists.txt",
+        "tests/xcom/core_types/unit_tests.cpp",
+        "tests/xcom/core_types/negative_tests.cpp",
+        "tests/xcom/core_types/consumer/main.cpp",
+    }
+    | {path.relative_to(ROOT).as_posix() for path in CORE_PRODUCTION}
+)
+ACCEPTED_LATER_CAPABILITY_PATHS = {
+    "XCOM-LIFE": frozenset(
+        {
+            "scripts/validate_xcom_endpoint_route_lifecycle.py",
+            "docs/xcom/endpoint-route-lifecycle.md",
+            "docs/xcom/endpoint-route-lifecycle-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+            "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+            "src/xverse/xcom/src/diagnostic.cpp",
+            "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+            "tests/xcom/endpoint_route_lifecycle/consumer/main.cpp",
+            "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp",
+            "tests/xcom/endpoint_route_lifecycle/unit_tests.cpp",
+        }
+    )
+    | _spec_kit_paths("013-feat-5cfe89f5d1214030"),
+    "XCOM-PROV": frozenset(
+        {
+            "scripts/validate_xcom_provider_loopback.py",
+            "docs/xcom/provider-composition-loopback.md",
+            "docs/xcom/provider-composition-loopback-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+            "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
+            "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+            "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+            "src/xverse/xcom/src/loopback_provider.cpp",
+            "src/xverse/xcom/src/provider.cpp",
+            "tests/xcom/provider_loopback/consumer/main.cpp",
+            "tests/xcom/provider_loopback/consumer/provider_mutation_rejection.cpp",
+            "tests/xcom/provider_loopback/independent_provider.hpp",
+            "tests/xcom/provider_loopback/negative_tests.cpp",
+            "tests/xcom/provider_loopback/test_support.hpp",
+            "tests/xcom/provider_loopback/unit_tests.cpp",
+        }
+    )
+    | frozenset().union(
+        *(
+            _spec_kit_paths(feature)
+            for feature in (
+                "014-feat-e17d4ee9f29848f5",
+                "015-feat-80e5f94a8484412b",
+                "016-feat-7795845feff2492c",
+                "017-feat-ea2f9eda222f49e1",
+                "018-feat-031038d9f8524be9",
+            )
+        )
+    ),
+    "XCOM-OBS": frozenset(
+        {
+            "scripts/validate_xcom_observation.py",
+            "docs/xcom/observation-boundary.md",
+            "docs/xcom/observation-boundary-traceability.json",
+            "src/xverse/xcom/CMakeLists.txt",
+            "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+            "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+            "src/xverse/xcom/src/observation.cpp",
+            "src/xverse/xcom/src/provider.cpp",
+            "tests/xcom/observation/core/unit_tests.cpp",
+            "tests/xcom/observation/integration/disabled_tap_benchmark.cpp",
+            "tests/xcom/observation/integration/integration_tests.cpp",
+            "tests/xcom/observation/integration/test_support.hpp",
+        }
+    )
+    | _spec_kit_paths("019-feat-ae449f37735949a6"),
+}
+ADMITTED_OWNERSHIP_PATHS = ORIGINAL_OWNED_PATHS | frozenset().union(
+    *ACCEPTED_LATER_CAPABILITY_PATHS.values()
 )
 DOCUMENTATION_CLAUSES = ("@file", "@ownership", "@lifetime", "@thread_safety", "@failure")
 DESIGN_REQUIREMENTS = {
@@ -267,42 +375,7 @@ def _cpp_files() -> tuple[Path, ...]:
     )
 
 
-def _normalize_additive_owned_paths(values: list[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Validate explicit later-slice paths admitted only by the ownership gate.
-
-    @param values Repository-relative files or directories supplied by an integrating validator.
-    @return Exact file names and normalized directory prefixes.
-    @raises ValidationFailure If a path is absolute, missing, broad, or escapes the repository.
-    """
-
-    files: list[str] = []
-    prefixes: list[str] = []
-    for value in values:
-        candidate = Path(value)
-        if candidate.is_absolute() or value in {"", "."} or ".." in candidate.parts:
-            _fail(f"invalid additive owned path: {value!r}")
-        resolved = (ROOT / candidate).resolve()
-        try:
-            relative = resolved.relative_to(ROOT).as_posix()
-        except ValueError:
-            _fail(f"additive owned path escapes repository: {value!r}")
-        if not resolved.exists():
-            _fail(f"additive owned path does not exist: {relative}")
-        if resolved.is_dir():
-            if relative == "src/xverse/xcom" or relative.startswith("src/xverse/xcom/"):
-                _fail(
-                    "additive production ownership must name exact files, not a directory: "
-                    + relative
-                )
-            prefixes.append(relative.rstrip("/") + "/")
-        elif resolved.is_file():
-            files.append(relative)
-        else:
-            _fail(f"additive owned path is not a file or directory: {relative}")
-    return tuple(sorted(set(files))), tuple(sorted(set(prefixes)))
-
-
-def _check_owned_paths(additive_owned_paths: list[str]) -> None:
+def _check_owned_paths() -> None:
     """Reject candidate changes outside the task's explicit ownership boundary.
 
     @raises ValidationFailure If tracked or untracked changed paths are outside ownership.
@@ -312,13 +385,10 @@ def _check_owned_paths(additive_owned_paths: list[str]) -> None:
     untracked = _run(
         [_tool("git"), "ls-files", "--others", "--exclude-standard"]
     ).stdout.splitlines()
-    additive_files, additive_prefixes = _normalize_additive_owned_paths(additive_owned_paths)
     unexpected = sorted(
         path
         for path in set((*tracked, *untracked))
-        if path not in OWNED_FILES
-        and path not in additive_files
-        and not path.startswith((*OWNED_PREFIXES, *additive_prefixes))
+        if path not in ADMITTED_OWNERSHIP_PATHS
     )
     if unexpected:
         _fail("changed paths exceed task ownership: " + ", ".join(unexpected))
@@ -662,14 +732,14 @@ def _unit(build: Path) -> None:
     _ctest(build, "^xcom_core_types_(unit|negative)$")
 
 
-def _lint(build: Path, additive_owned_paths: list[str]) -> None:
+def _lint(build: Path) -> None:
     """Run ownership, layout, formatting, forbidden-API, and warning compilation gates.
 
     @param build Configured disposable build directory.
     @raises ValidationFailure If any lint policy or compilation fails.
     """
 
-    _check_owned_paths(additive_owned_paths)
+    _check_owned_paths()
     _check_layout_and_format()
     _check_forbidden_cpp_apis()
     _check_cpp_documentation()
@@ -723,13 +793,6 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--static", action="store_true")
     selection.add_argument("--integration", action="store_true")
     selection.add_argument("--all", action="store_true")
-    parser.add_argument(
-        "--additive-owned-path",
-        action="append",
-        default=[],
-        metavar="PATH",
-        help="admit one exact later-slice file or directory in the ownership check",
-    )
     args = parser.parse_args(arguments)
 
     try:
@@ -740,7 +803,7 @@ def main(arguments: list[str] | None = None) -> int:
             if args.unit or args.all:
                 _unit(build)
             if args.lint or args.all:
-                _lint(build, args.additive_owned_path)
+                _lint(build)
             if args.static or args.all:
                 _static(build)
             if args.integration or args.all:
