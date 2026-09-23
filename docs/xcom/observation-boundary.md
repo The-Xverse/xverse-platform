@@ -66,18 +66,20 @@ at pinned revision `39977ba9e724524dfc42a51e53fa3d61a8964a85`; validation reject
 running the benchmark. It is local prototype evidence and is not a production
 performance claim.
 
-`scripts/validate_xcom_observation.py` binds host execution to the exact
-`SESN_CANDIDATE_REVISION`, rejects a dirty or mismatched candidate, checks fixed-
-storage and forbidden-boundary policy, generates strict Doxygen evidence, and runs
-the observation measures. It records verbose benchmark output—including environment,
-paired samples, medians, threshold results, and uncertainty—in host-captured
-evidence. It also runs the complete accepted core-types, endpoint/route lifecycle,
-and provider/loopback validators in a disposable clean worktree at that exact
-revision. This preserves their native ownership and static gates without altering a
-predecessor validator. The companion traceability JSON records reverse artifact
-roles, requirement allocations, and design allocations; validation compares those
-sets exactly with every forward requirement/design edge and with the authoritative
-host-measure allocations.
+Every `scripts/validate_xcom_observation.py` measure binds host execution to the
+exact `SESN_CANDIDATE_REVISION`, rejects a dirty or mismatched candidate before any
+measure work, and revalidates that identity after the measure completes. The
+validator checks fixed-storage and forbidden-boundary policy, generates strict
+Doxygen evidence, and runs the observation measures. It records verbose benchmark
+output—including candidate revision, build profile, environment, paired samples,
+medians, threshold results, and uncertainty—in host-captured evidence. It also runs
+the complete accepted core-types, endpoint/route lifecycle, and provider/loopback
+validators in a disposable clean worktree at that exact revision. This preserves
+their native ownership and static gates without altering a predecessor validator.
+The companion traceability JSON records reverse artifact roles, requirement
+allocations, and design allocations; validation compares those sets exactly with
+every forward requirement/design edge and with the authoritative host-measure
+allocations.
 
 ## REF-002 SADS disposition
 

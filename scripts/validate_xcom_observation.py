@@ -209,8 +209,10 @@ def _build(build: Path, targets: list[str]) -> None:
 def _ctest(build: Path, expression: str, *, timeout: int = 600) -> None:
     """Run an anchored CTest expression supplied by the verification plan."""
 
-    _run([_tool("ctest"), "--test-dir", str(build), "--output-on-failure", "-R", expression],
-         timeout=timeout)
+    _run([
+        _tool("ctest"), "--test-dir", str(build), "--output-on-failure",
+        "--no-tests=error", "-R", expression,
+    ], timeout=timeout)
 
 
 def _check_layout() -> None:
@@ -294,7 +296,7 @@ def _validate_traceability(candidate_revision: str) -> None:
         _fail("traceability schema/state differs")
     if data.get("feature_id") != "FEAT-ae449f37735949a6" or data.get("baseline_id") != "BASE-77de4af385e6433fb510":
         _fail("traceability feature or baseline identity differs")
-    if data.get("candidate_revision_binding") != CANDIDATE_REVISION_BINDING or candidate_revision != _candidate_revision():
+    if data.get("candidate_revision_binding") != CANDIDATE_REVISION_BINDING:
         _fail("traceability candidate revision binding differs")
     records = data.get("requirements")
     designs = data.get("designs")
@@ -473,18 +475,28 @@ def _integration(build: Path) -> None:
     _ctest(build, r"^xcom_observation_integration$")
 
 
-def _performance(build: Path) -> None:
+def _performance(build: Path, candidate_revision: str) -> None:
     """Run and retain the repeated paired disabled-tap benchmark evidence."""
 
     _check_benchmark_baseline_seam()
     _build(build, ["xverse_xcom_observation_disabled_benchmark"])
     completed = _run(
-        [_tool("ctest"), "--test-dir", str(build), "--verbose", "-R",
+        [_tool("ctest"), "--test-dir", str(build), "--verbose", "--no-tests=error", "-R",
          r"^xcom_observation_disabled_benchmark$"],
         timeout=900,
     )
-    output = completed.stdout
+    output = "\n".join((
+        f"candidate_revision={candidate_revision}",
+        "build_generator=Ninja",
+        "build_type=Debug",
+        "language_standard=c++20",
+        completed.stdout.rstrip(),
+    ))
     required_tokens = (
+        f"candidate_revision={candidate_revision}",
+        "build_generator=Ninja",
+        "build_type=Debug",
+        "language_standard=c++20",
         "fixture=owned-loopback-disabled-observation",
         f"baseline_revision={APPROVED_PRE_OBSERVATION_BASELINE}",
         "candidate_path=public-submit-null-observation-hub",
@@ -570,12 +582,11 @@ def _run_doxygen() -> None:
                 _fail(f"strict Doxygen output is missing: {relative}")
 
 
-def _static(build: Path) -> None:
+def _static(build: Path, candidate_revision: str) -> None:
     """Run strict Doxygen, admitted clang-tidy, and reciprocal evidence checks."""
 
     _check_layout()
     _check_boundaries()
-    candidate_revision = _candidate_revision()
     _validate_traceability(candidate_revision)
     clang_tidy = Path(os.environ.get("XVERSE_XCOM_TOOLCHAIN", "")) / "usr" / "bin" / "clang-tidy"
     if not clang_tidy.is_file() or not os.access(clang_tidy, os.X_OK):
@@ -657,6 +668,7 @@ def main() -> int:
     args = parser.parse_args()
     selected = next(name for name in ("unit", "lint", "static", "integration", "performance", "all") if getattr(args, name))
     try:
+        candidate_revision = _candidate_revision()
         with tempfile.TemporaryDirectory(prefix="xcom-observation-build-") as directory:
             build = Path(directory) / "build"
             _configure(build)
@@ -665,14 +677,16 @@ def main() -> int:
             if selected in {"lint", "all"}:
                 _lint(build)
             if selected in {"static", "all"}:
-                _static(build)
+                _static(build, candidate_revision)
             if selected in {"integration", "all"}:
                 _integration(build)
             if selected in {"performance", "all"}:
-                _performance(build)
+                _performance(build, candidate_revision)
             if selected == "all":
-                _prior_regressions(_candidate_revision())
-                _validate_traceability(_candidate_revision())
+                _prior_regressions(candidate_revision)
+                _validate_traceability(candidate_revision)
+        if _candidate_revision() != candidate_revision:
+            _fail("candidate revision changed during validation")
     except ValidationFailure as error:
         print(f"X-COM observation validation failed: {error}", file=sys.stderr)
         return 1
