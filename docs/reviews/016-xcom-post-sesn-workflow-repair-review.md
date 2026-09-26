@@ -4,6 +4,13 @@
 **Scope:** Separate documentation review after repairing the findings in review 015.
 **Maturity:** Governance and planning repair only; no production software or runtime evidence.
 
+**Later status (2026-09-27):** The T025-open statements below record the state of this 2026-09-26
+review. The user subsequently [accepted the bounded T025 successor](../engineering/xcom/t025/acceptance-decision.md),
+and it was merged into `main` as `4b01586b438a8587d231ee8828d896c206c06a96`. T025 is now checked
+complete in the [capability-007 task list](../../specs/007-xcom-core/tasks.md). T026 is no longer
+blocked by *T025 acceptance*; its own requirements and acceptance gates remain open. The original
+finding dispositions below are retained as historical review evidence.
+
 ## Verification performed
 
 - Inspected ADR-0020, `AGENTS.md`, capability-007 plan/tasks/acceptance/analysis/traceability, the tool
