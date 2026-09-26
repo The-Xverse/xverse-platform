@@ -2,9 +2,10 @@
 
 **Input**: Design documents from `specs/007-xcom-core/`
 
-**Execution rule**: All production software artifacts are generated through SESN. Codex supplies this
-package, reviews every SESN result, and does not manually repair generated production code. The user
-validates the complete software and assurance bundle before another feature begins.
+**Execution rule**: ADR-0020 requires repository-owned Spec Kit work products and exact-candidate
+evidence for all future production software changes; SESN is not used. Codex implements only the authorized
+bounded slice, records review findings before a later repair pass, and presents the complete software and
+evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 1: Governance and specification
 
@@ -13,18 +14,23 @@ validates the complete software and assurance bundle before another feature begi
 - [X] T003 Complete the specification, requirements checklist, and clarification record.
 - [X] T004 Complete research, data model, contracts, plan, tasks, analysis, and REF-002 traceability.
 - [X] T005 Conduct and record a separate architecture review of this design package.
-- [X] T006 Obtain user acceptance of the design and explicit implementation authorization.
+- [X] T006 Obtain user acceptance of the design and explicit implementation authorization; record
+  the later execution-workflow amendment in ACC015 and ADR-0020.
 
-## Phase 2: SESN engineering baseline
+## Phase 2: Repository-owned engineering baseline
 
-- [ ] T007 Submit a bounded SESN feature with separate C++ core, XDL compiler, observation, stimulation,
-  integration/evidence, and independent-review tasks.
-- [ ] T008 Generate and review SWE.1 requirements and bidirectional requirement/test traceability.
-- [ ] T009 Generate and review SWE.2 architecture, boundaries, and component/sequence diagrams.
-- [ ] T010 Generate and review SWE.3 unit design, ownership, lifetime, thread-safety, and Doxygen plan.
-- [ ] T011 Pin the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis, sanitizer,
-  and Doxygen environment with licenses, hashes, generated-code provenance, and a reproducible/offline
-  strategy.
+- [ ] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
+  stimulation, integration/evidence, and independent-review work; bind every slice to its exact baseline
+  and authorization.
+- [ ] T008 Maintain and review stakeholder/system/software requirements and bidirectional
+  requirement/design/code/test/measure traceability.
+- [ ] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
+  contracts.
+- [ ] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
+  and Doxygen plan.
+- [ ] T011 Pin and admit the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis,
+  sanitizer, and Doxygen environment with licenses, hashes, generated-code provenance, and a
+  reproducible/offline strategy.
 
 ## Phase 3: Core communication foundation (US1)
 
@@ -55,13 +61,17 @@ validates the complete software and assurance bundle before another feature begi
 
 - [ ] T025 Implement the explicit time-authority interface, local validation permit
   validation/consumption, and bounded session lifecycle.
-- [ ] T026 Implement durable stimulation intent/outcome journaling without unrestricted payload logs.
-- [ ] T027 Implement signal/message injection, service invocation, and exclusive lease-bound service
-  emulation.
-- [ ] T028 Implement schema/target/action/time/quota checks, loop protection, service-ownership exclusion,
-  revocation, expiry, drain, and evidence-incomplete handling.
-- [ ] T029 Test that every rejected or unauthorized request emits zero normal-route items and every
-  accepted item preserves synthetic provenance; test unmapped clocks and lease conflicts.
+- [ ] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
+  unrestricted payload logs, including journal-before-emission ordering, atomic/partial-write behavior,
+  finite capacity and retention, disk-full/I/O failure, restart recovery, and evidence-incomplete outcomes.
+- [ ] T027 Implement the fail-closed pre-emission guard for schema, target, direction, action, time, quota,
+  loop, service ownership, permit/session identity, revocation, and expiry; rejection must not mutate
+  operational state or emit a normal-route item.
+- [ ] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
+  service emulation, plus drain, close, revoke, expiry, and evidence-incomplete lifecycle completion.
+- [ ] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
+  failure/recovery, zero emission after every rejection, persistent synthetic provenance, unmapped clocks,
+  quotas, loop bounds, lease conflicts, drain/terminal behavior, and deterministic concurrency.
 
 ## Phase 7: External-tool gateway and conformance (US4)
 
@@ -78,24 +88,32 @@ validates the complete software and assurance bundle before another feature begi
 ## Phase 8: Evidence, documentation, and acceptance
 
 - [ ] T035 Run full C++ unit/contract/integration/negative/concurrency/sanitizer/static checks and all
-  existing Python tests.
+  existing Python tests; retain repository-owned manifests, bounded logs, tool/environment identity,
+  commands, outcomes, and hashes bound to the exact candidate revision.
 - [ ] T036 Run controlled benchmarks and record environment, uncertainty, baseline, disabled/enabled
   tap results, and explicit non-production limitations.
 - [ ] T037 Add complete Doxygen comments and generate warning-free reference documentation.
 - [ ] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe
   logs/evidence; do not promote allocated or deferred SADS targets without proof.
-- [ ] T039 Have SESN run the independent Astra review and disposition every finding without weakening
-  required acceptance criteria.
-- [ ] T040 Export and inspect the complete SESN report and artifact bundle.
-- [ ] T041 Present the generated software/evidence to the user and record acceptance or rework.
+- [ ] T039 Conduct an independent read-only review in a separate context, record every finding before
+  repair, and disposition findings without weakening required acceptance criteria; any repair creates a
+  successor candidate and repeats affected verification and review.
+- [ ] T040 Assemble and inspect the complete repository-owned exact-candidate work-product and evidence
+  bundle, including traceability, dependency/generated-code provenance, command results, manifests, hashes,
+  maintenance guidance, and limitations.
+- [ ] T041 Present the implemented software and inspected evidence bundle to the user and record explicit
+  acceptance or rework.
 
 ## Dependencies and execution order
 
-T001–T004 precede architecture review. T005–T006 gate all software work. T007–T011 precede production
-code. T012–T016 establish the core. T017–T020 bind it to XDL. Observation and stimulation may be
-implemented as separate SESN tasks after the core but both precede conformance and final integration.
-T035–T041 require all selected implementation tasks. No later platform or legacy feature begins before
-T041.
+T001–T004 precede architecture review. T005–T006 and the ACC015/ADR-0020 workflow amendment gate all
+future software work. T007–T011 precede production code. T012–T016 establish the core. T017–T020 bind it
+to XDL. Observation and stimulation may be implemented as separately owned tasks after the core, but both
+precede conformance and final integration. T025 must have an accepted successor before T026. Within the
+stimulation slice, T026 and the T027 pre-emission guard precede every T028 action path; T029 closes the
+slice. T035–T041 require all selected implementation tasks. No later platform or legacy feature begins
+before T041.
 
-Tasks modifying overlapping C++ headers or build files must be dependency-ordered in SESN. Parallel
-tasks may own only disjoint paths. No task may execute a legacy binary or external network peer.
+Tasks modifying overlapping C++ headers or build files must be dependency-ordered. Parallel tasks may own
+only disjoint paths. Every implementation and verification result must identify its exact baseline or
+candidate revision. No task may execute a legacy binary or external network peer.

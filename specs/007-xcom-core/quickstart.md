@@ -3,8 +3,9 @@
 No X-COM executable exists yet. Review this package in the following order:
 
 1. [Feature specification](spec.md) and [clarifications](clarifications.md).
-2. [ADR-0018](../../docs/adr/ADR-0018-platform-first-delivery-sequence.md) and
-   [ADR-0019](../../docs/adr/ADR-0019-xcom-validation-and-observation-boundaries.md).
+2. [ADR-0018](../../docs/adr/ADR-0018-platform-first-delivery-sequence.md),
+   [ADR-0019](../../docs/adr/ADR-0019-xcom-validation-and-observation-boundaries.md), and
+   [ADR-0020](../../docs/adr/ADR-0020-repository-owned-engineering-workflow.md).
 3. [Research](research.md), [data model](data-model.md), and [implementation plan](plan.md).
 4. [REF-002 requirement traceability](reference-traceability.md).
 5. Contracts for the [activation plan](contracts/communication-plan.md),

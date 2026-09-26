@@ -10,8 +10,10 @@ validation stimulation. A Python compiler extension derives a canonical activati
 existing normalized XDL graph; the C++ data plane never reads an authored competing configuration.
 The first proof uses only owned loopback nodes/providers and synthetic observation/stimulation tools.
 
-This plan was accepted for the bounded SESN implementation authorized by the user. It does not
-authorize work beyond the accepted capability-007 slices or any legacy-system execution.
+This plan was accepted for the bounded capability-007 implementation authorized by the user. ADR-0020
+amended the execution method on 2026-09-26: future work uses repository-owned Spec Kit work products and
+does not use SESN. The amendment does not authorize work beyond the accepted capability-007 slices or any
+legacy-system execution.
 
 ## Technical Context
 
@@ -21,7 +23,8 @@ units; Python 3.11+ only for the existing XDL-side activation-plan compiler and 
 **Primary Dependencies**: C++ standard library, CMake/CTest, pinned `nlohmann/json` for bounded
 activation-plan decoding, pinned gRPC/Protocol Buffers for the local external-tool gateway, existing
 `xverse_xdl`, and Doxygen. Exact versions, hashes, licenses, generated-code provenance, and offline
-availability are blocking SESN preflight outputs. No communication transport middleware is linked.
+availability are blocking repository-owned dependency-admission outputs. No communication transport
+middleware is linked.
 
 **Storage**: Immutable derived activation-plan files for fixtures; append-only local validation intent
 and outcome evidence. No registry, database, telemetry backend, or payload archive.
@@ -62,12 +65,12 @@ through local IPC. No distributed control-plane or production scale claim.
   contract; blueprints and profiles consume it through XDL.
 - **Maturity/evidence**: loopback and synthetic-tool proof remains prototype evidence only.
 - **Reproducibility**: locked dependencies, plan/source digests, environment facts, deterministic tests,
-  and SESN traceability are required.
+  repository-owned exact-candidate evidence, and bidirectional traceability are required.
 - **SADS traceability**: all XVE-SYS-0139–0158 requirements and identified cross-cutting IDs have an
   explicit allocation/deferment in `reference-traceability.md`; target text is not implementation proof.
 
-The gate passes for design. Re-check after the detailed design and dependency lock are produced by
-SESN and before accepting implementation.
+The gate passes for design. Re-check the detailed design, dependency lock, repository-owned evidence
+contract, and exact candidate before accepting implementation.
 
 ## Architecture
 
@@ -151,8 +154,8 @@ Python package. No `xverse.xcom` Python runtime package or empty placeholder is 
 
 ## Delivery phases
 
-1. SESN intake creates SWE.1–SWE.6 requirements, architecture, unit design, traceability, and review
-   artifacts from this accepted Spec Kit package.
+1. Establish repository-owned stakeholder/system/software requirements, architecture, unit design,
+   traceability, verification measures, ownership, and review artifacts from this accepted Spec Kit package.
 2. Establish locked C++ build, static-analysis, sanitizer, test, and Doxygen gates without networking.
 3. Implement contract/item/diagnostic value types and bounded ownership/lifecycle primitives.
 4. Implement the `io.xverse.xcom` Profile, deterministic activation-plan compilation, and bounded
@@ -166,19 +169,19 @@ Python package. No `xverse.xcom` Python runtime package or empty placeholder is 
    client, including no-TCP, bounds, deadlines, disconnect, and generated-client contract tests.
 9. Run unit, contract, integration, negative, concurrency/sanitizer, performance, Doxygen, public-safety,
    traceability, and existing-regression checks.
-10. Conduct an independent Astra review; repair findings in a later SESN pass; present all generated
-   software and assurance artifacts to the user before accepting the feature.
+10. Conduct an independent read-only review in a separate context; record findings before any later
+   repair pass; present the implemented software and inspected evidence bundle to the user before acceptance.
 
 ## Decision gates
 
 | Gate | Required evidence | Status |
 |---|---|---|
 | Specification | Requirements checklist and clarification record complete. | Complete. |
-| Architecture | ADR-0018, ADR-0019, contracts, data model, and plan reviewed. | Complete; review 012 has no unresolved BLOCKER or MAJOR finding. |
-| Implementation authorization | User approves ACC001–ACC014, the exact SESN implementation scope, and model proposal. | Complete; recorded by T006 before SESN implementation began. |
-| Dependency admission | Exact C++ toolchain/dependency versions, licenses, hashes, and offline/reproducible strategy reviewed. | Pending implementation preflight. |
-| Software acceptance | SWE.1–SWE.6 traceability, checks, Doxygen, benchmarks, and independent review pass. | Future. |
-| Human acceptance | User validates SESN-generated software and evidence. | Future; blocks the next feature. |
+| Architecture | ADR-0018, ADR-0019, ADR-0020, contracts, data model, and plan reviewed. | Complete for design; review 015 records the workflow amendment and open T025 prerequisite. |
+| Implementation authorization | User approves ACC001–ACC014; ACC015 and ADR-0020 amend only the execution workflow. | Complete for the bounded technical scope; each successor candidate still requires explicit acceptance. |
+| Dependency admission | Exact C++ toolchain/dependency versions, licenses, hashes, generated-code provenance, and offline/reproducible strategy reviewed. | Pending per implementation slice. |
+| Software acceptance | Repository-owned SWE.1–SWE.6-equivalent traceability, checks, Doxygen, benchmarks, exact-candidate evidence, and independent review pass. | Future. |
+| Human acceptance | User validates the implemented software and inspected evidence bundle. | Future; blocks the next feature. |
 
 ## Complexity Tracking
 

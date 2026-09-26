@@ -55,6 +55,8 @@ implement and accept the main platform capability baselines before target-specif
 SD-0001 derivative and parity work are therefore deferred. The next planned capability is X-COM core,
 including the validation observation/stimulation boundaries in
 [ADR-0019](docs/adr/ADR-0019-xcom-validation-and-observation-boundaries.md).
+[ADR-0020](docs/adr/ADR-0020-repository-owned-engineering-workflow.md) records the
+repository-owned Spec Kit engineering and exact-candidate evidence workflow for future software work.
 
 M0 documents are intended for public-safe review. Referenced private GitHub evidence requires
 existing repository access. Review of inventory boundaries, classifications, interfaces, and

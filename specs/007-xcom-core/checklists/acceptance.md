@@ -1,6 +1,7 @@
 # X-COM core design acceptance checklist
 
-**Status**: Design accepted and implementation authorized on 2026-09-21; software acceptance pending
+**Status**: Design accepted and implementation authorized on 2026-09-21; execution workflow amended
+on 2026-09-26; software acceptance pending
 
 - [X] ACC001 Accept ADR-0018 platform-first sequencing and the deferral of SD-0001/legacy parity.
 - [X] ACC002 Accept C++20 for the X-COM data plane and Python only for the normalized-XDL plan compiler.
@@ -27,6 +28,9 @@
   implementation claims.
 - [X] ACC014 Authorize the exact implementation plan and dependency preflight. This does not authorize
   any legacy repository change, legacy execution, external peer, TCP tool listener, or deployment.
+- [X] ACC015 Supersede the forward-looking SESN execution method in ACC012 and ACC014 with the
+  repository-owned Spec Kit workflow in ADR-0020. Preserve exact-candidate evidence, bidirectional
+  traceability, separate read-only review, recorded findings before repair, and explicit user acceptance.
 
 ## Decision record
 
@@ -35,3 +39,12 @@
 **Decision**: Approved all ACC001–ACC014 and authorized the bounded capability-007 implementation.
 **Amendments / exclusions**: Preserve the documented exclusions. No legacy integration/execution,
 external peer, TCP listener, deployment, or compatibility claim is authorized.
+
+## Workflow amendment record
+
+**Reviewer**: User
+**Date**: 2026-09-26
+**Decision**: Directed that future X-Verse work will not use SESN and authorized the corresponding
+documentation repair. ACC015 and ADR-0020 replace only the execution method; the bounded technical scope,
+safety exclusions, evidence duties, review gate, and explicit acceptance gate remain in force. Historical
+SESN evidence remains historical and revision-bound.

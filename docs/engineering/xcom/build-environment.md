@@ -108,7 +108,8 @@ The twelve-package set does not lock all shared-library dependencies of its exec
 
 ## Offline admission and build-policy validation
 
-From the repository root, first prove the host Python requirement, then run the SESN verification measures with network access absent:
+From the repository root, first prove the host Python requirement, then run the repository-owned
+preflight with network access absent:
 
 ```sh
 python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
@@ -119,13 +120,27 @@ python3 scripts/xcom_dependency_preflight.py --all
 
 `--self-test` exercises controlled positive and negative fixtures. Both admission modes verify the manifest, all twelve sibling package archives, Debian metadata, extracted-payload binding, prefix tools/headers/libraries/pkg-config metadata, host build tools, documentation, and a disposable CMake/Ninja compile-only policy probe. The checker uses local file reads, SHA-256, bounded local subprocesses, and temporary directories only. It contains no resolver or network client, installs nothing, and does not modify either explicit input.
 
-### SESN host verification evidence
+### Repository-owned host verification evidence
 
-SESN runs all five required measures—`VM-BLD-UNIT`, `VM-BLD-LINT`, `VM-BLD-STATIC`, `VM-BLD-INTEGRATION`, and `VM-BLD-VALIDATION`—with `allow_network=false`. The host verifier places each measure and its trusted tool-version probe in a bubblewrap network namespace recorded as `bubblewrap-unshare-net`; the command cannot use the host network namespace.
+The direct engineering workflow must run all five required measures—`VM-BLD-UNIT`, `VM-BLD-LINT`,
+`VM-BLD-STATIC`, `VM-BLD-INTEGRATION`, and `VM-BLD-VALIDATION`—with network access disabled.
+The accepted runner must place each measure and its trusted tool-version probe in an enforced network
+namespace and record the isolation mechanism. If the admitted host cannot enforce and demonstrate network
+isolation, the measure fails closed rather than claiming offline evidence.
 
-For each measure, SESN retains a bounded log and a private raw environment manifest bound to the exact candidate Git revision. The `index.json` evidence record identifies the measure and carries `command_argv`, `exit_code`, `outcome`, and the SHA-256 hashes of the log and manifest. The raw manifest records the network policy, isolation mechanism, and host environment; it can contain absolute executable paths. Public summaries omit those host-specific paths as well as environment-specific prefix, package-manifest, temporary, and evidence-store paths.
+For each measure, retain a bounded log and a private raw environment manifest bound to the exact candidate
+Git revision. The repository-owned `index.json` evidence record identifies the measure and carries
+`command_argv`, `exit_code`, `outcome`, candidate revision, and the SHA-256 hashes of the log and
+manifest. The raw manifest records the network policy, isolation mechanism, and relevant host environment;
+it may contain absolute executable paths. Public summaries omit host-specific paths and environment-specific
+prefix, package-manifest, temporary, and private evidence-store paths.
 
-Reviewers must find five revision-matching records in `index.json` and their log/manifest pairs, recompute both recorded hashes, inspect `command_argv`, `exit_code`, and `outcome` in each evidence record, and confirm that every raw manifest has `network_policy.allowed` set to `false` and `network_policy.enforcement` set to `bubblewrap-unshare-net`. This documentation describes the evidence contract only: admission or acceptance requires fresh passing evidence for the reviewed candidate and the separate required review; missing, stale, mismatched, or failed evidence cannot support either claim.
+Reviewers must find five revision-matching records in `index.json` and their log/manifest pairs, recompute
+both recorded hashes, inspect `command_argv`, `exit_code`, and `outcome`, and confirm that every raw
+manifest records network access as disabled with an enforced isolation mechanism. This documentation
+defines the evidence contract only: admission or acceptance requires fresh passing evidence for the
+reviewed candidate and the separate required review; missing, stale, mismatched, skipped, or failed
+evidence cannot support either claim.
 
 After admission, the repository can be configured without a fetch step:
 

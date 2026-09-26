@@ -2,7 +2,8 @@
 
 The first external-tool proof uses a versioned gRPC service with Protocol Buffers on a host-protected
 local IPC endpoint. The server must not bind a TCP address. Exact dependency versions, generated-code
-toolchain, licenses, and hashes are pinned by the SESN implementation preflight.
+toolchain, licenses, and hashes are pinned and verified by the repository-owned dependency-admission
+preflight.
 
 ## Service surface
 

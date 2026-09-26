@@ -267,7 +267,7 @@ intent/outcome records, queue/capacity counters, diagnostics, benchmark evidence
 **Maturity**: Specification/design target. An accepted first implementation would remain a prototype
 validated only with owned loopback providers and synthetic tools.
 
-**Evidence and documentation**: Spec Kit artifacts, ADR-0018/ADR-0019, public API and Doxygen
+**Evidence and documentation**: Spec Kit artifacts, ADR-0018/ADR-0019/ADR-0020, public API and Doxygen
 documentation, REF-002 requirement traceability, automated checks, bounded benchmark evidence, and
 separate review.
 

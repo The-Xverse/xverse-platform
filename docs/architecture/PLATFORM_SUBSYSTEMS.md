@@ -48,6 +48,8 @@ are implemented and accepted before target-specific legacy integrations resume. 
 [ADR-0019](../adr/ADR-0019-xcom-validation-and-observation-boundaries.md) requires observation and
 controlled stimulation to be designed with the normal communication path. Dashboards and persistence
 remain Argus or third-party responsibilities.
+[ADR-0020](../adr/ADR-0020-repository-owned-engineering-workflow.md) assigns future software work
+products, exact-candidate evidence, and separate review to the repository-owned Spec Kit workflow.
 
 ## SADS component coverage
 

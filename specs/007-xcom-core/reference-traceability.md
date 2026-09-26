@@ -19,8 +19,8 @@ Capability 007 considers all twenty REF-002 communication/interoperability IDs,
   007 still defines bounded communication failure outcomes.
 
 “Allocated” means requirements and design coverage in this feature. It does not mean implemented.
-Each allocated ID remains `architectural-target` until SESN-generated source and verification evidence
-pass independent and human review.
+Each allocated ID remains `architectural-target` until implemented source and exact-candidate
+verification evidence pass independent and human review.
 
 ## Shared requirements
 
@@ -35,8 +35,8 @@ program register.
 - SADS examples naming specific protocols are adapter targets, not X-COM core primitives.
 - SADS dynamic discovery, hot plugging, remote access, multi-tenancy, encryption, persistent replay,
   automatic failover, and dashboards remain outside the first local prototype.
-- Constitution 2.1.0, ADR-0018, and ADR-0019 govern domain neutrality, platform-first sequencing,
-  stimulation safety, and X-COM/Argus/Faults ownership.
+- Constitution 2.1.0, ADR-0018, ADR-0019, and ADR-0020 govern domain neutrality, platform-first
+  sequencing, stimulation safety, X-COM/Argus/Faults ownership, and repository-owned evidence.
 - The supplied DOCX is a target specification and cannot by itself establish implementation,
   performance, security, compatibility, or production-readiness evidence.
 
