@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-003",
+  "revision": 1,
+  "level": "software",
+  "title": "Declared source-to-destination mapping with tolerance",
+  "statement": "Converting a time from a source domain to a destination domain must require a declared mapping carrying source, destination, and maximum admissible tolerance; a missing mapping or a tolerance failure must return distinct deterministic results.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (maps between domains only under declared source, destination, and tolerance rules); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-015"
+  ],
+  "refines": "T025-STK-001",
+  "applicability": "xverse::xcom::validation time authority mapping table; finite host-configurable bound.",
+  "status": "accepted",
+  "verification_intent": "Unit: declared mapping inside, at, and beyond tolerance; reverse-direction request; undeclared pair; assert distinct outcomes and no mutation.",
+  "acceptance_criteria": [
+    "A declared mapping converts within tolerance and reports the destination domain.",
+    "An undeclared source-to-destination pair yields a distinct MissingMapping result.",
+    "A conversion beyond the declared tolerance yields a distinct tolerance-failure result.",
+    "Mappings are directional: a declared A-to-B mapping does not silently enable B-to-A."
+  ]
+}

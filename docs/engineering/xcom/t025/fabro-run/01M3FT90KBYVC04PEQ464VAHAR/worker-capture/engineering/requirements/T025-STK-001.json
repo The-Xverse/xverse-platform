@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-001",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Explicit time authority governs all time-dependent decisions",
+  "statement": "All permit-validity and session-lifecycle time decisions must be made through a single explicit time authority that knows its clock domains and only compares times within one domain or through a declared mapping.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (time-authority clause); interface-bridge.md; anchors: XVE-SYS-0147, FR-015, FR-033"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-015",
+    "FR-033"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate: xverse::xcom::validation, C++20 standard library only; foundation slice, no stimulation.",
+  "status": "accepted",
+  "verification_intent": "Preserve as the top-level intent refined by T025-SR-001..T025-SR-005; verified through their unit and static checks.",
+  "acceptance_criteria": [
+    "AC-1: No code path compares a raw timestamp from one clock domain with a raw timestamp from a different clock domain.",
+    "AC-2: An unrecognised clock domain yields a distinct deterministic result rather than silent success.",
+    "AC-3: A cross-domain comparison without a declared mapping yields a distinct deterministic result rather than silent success.",
+    "AC-4: Unknown clock, missing mapping, tolerance failure, regression, and overflow are each distinguishable by result value."
+  ]
+}

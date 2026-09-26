@@ -53,5 +53,7 @@ negative, deterministic, saturation, separate-process, performance, documentatio
 
 ## Readiness
 
-The design is ready for human review. Implementation remains blocked on acceptance checklist ACC001–
-ACC014 and a SESN preflight that pins and admits the full C++ dependency/toolchain set.
+This 2026-09-21 analysis found the design ready for human review and identified acceptance checklist
+ACC001–ACC014 and dependency admission as implementation gates. Design acceptance was subsequently
+recorded. ADR-0020 prospectively replaces the SESN preflight method; exact offline dependency
+admission remains required for each implementation slice.

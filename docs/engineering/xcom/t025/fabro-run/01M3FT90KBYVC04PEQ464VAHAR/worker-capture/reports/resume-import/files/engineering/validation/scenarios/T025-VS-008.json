@@ -1,0 +1,21 @@
+{
+  "id": "T025-VS-008",
+  "schema_version": 1,
+  "revision": 1,
+  "kind": "validation",
+  "intended_use": "Deterministic concurrency for consumption and lifecycle mutation.",
+  "validates": [
+    "T025-STK-006"
+  ],
+  "case_ids": [
+    "CON-01",
+    "CON-02",
+    "CON-03",
+    "CON-04",
+    "CON-05"
+  ],
+  "expected": "Concurrent attempts to consume one permit yield exactly one success; concurrent attempts to apply the same transition yield one applied mutation and deterministic already-applied repeats without corrupting state.",
+  "setup": "A SessionManager and PermitRegistry guarded by a single std::mutex; concurrent threads attempt one-permit consumption and the same transition on a shared live session.",
+  "observed": "Internal worker CTest run (sandbox): the 5 unit case IDs CON-01, CON-02, CON-03, CON-04, CON-05 and the 1 integration test Integration.IndependentControllerScopes all passed (part of T4 107/107 unit and T5 4/4 integration; 0 failures). Exactly one success / one applied mutation with deterministic already-applied repeats and no state corruption.",
+  "limitation": "Internal worker evidence only; concurrency is proven by deterministic stress under a coarse-grained mutex, not by a race detector (ThreadSanitizer remains pending_protected_sanitizer_verification)."
+}

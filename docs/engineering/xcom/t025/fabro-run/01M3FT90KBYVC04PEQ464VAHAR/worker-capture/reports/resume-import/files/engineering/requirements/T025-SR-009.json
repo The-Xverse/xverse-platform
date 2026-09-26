@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-009",
+  "revision": 1,
+  "level": "software",
+  "title": "Exactly-once consumption with explicit replay scope",
+  "statement": "Consumption must be controller-scoped and exactly-once: a consumed permit identity, or a session identity already bound to a consumed permit, must not be consumed again, including when presented with a changed nonce.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (define a global or controller-scoped one-time-consumption rule; prevent duplicate exact permit or session identity from being consumed twice, including with a changed nonce); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-017"
+  },
+  "source_anchors": [
+    "packet.md#permit-binding",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0152",
+    "XVE-SYS-0144",
+    "FR-017"
+  ],
+  "refines": "T025-STK-002",
+  "applicability": "xverse::xcom::validation controller-scoped consumption bookkeeping; finite bound.",
+  "status": "accepted",
+  "verification_intent": "Unit: replay matrix (same permit/same nonce, same permit/changed nonce, different session/same permit); concurrent double consumption; assert exactly one success.",
+  "acceptance_criteria": [
+    "First consumption of a valid permit succeeds and records the binding atomically.",
+    "Re-presenting the same permit identity is rejected, including with a different nonce.",
+    "A different session identity presenting an already-consumed permit identity is rejected.",
+    "Attempts to consume a permit already bound to another session identity are rejected.",
+    "The declared replay scope (per controller instance) is documented and enforced."
+  ]
+}

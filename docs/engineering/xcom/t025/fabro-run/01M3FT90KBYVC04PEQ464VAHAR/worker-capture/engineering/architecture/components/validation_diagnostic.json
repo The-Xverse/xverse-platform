@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "validation_diagnostic",
+  "revision": "1",
+  "name": "Ordered payload-free diagnostics",
+  "purpose": "Own the deterministic diagnostic precedence and the construction of ordered, stable, payload-free code sequences.",
+  "responsibilities": [
+    "Declare the single diagnostic precedence order over the Result enum, from handle failures down through context, time, action, permit, quota, and capacity failures.",
+    "Build an ordered Diagnostic (code sequence plus at most one bounded numeric locator) from the first applicable failure, highest precedence first.",
+    "Guarantee the diagnostic carries no string payload, item, observation, or free-form content, and that the same input yields the same code sequence across runs and builds.",
+    "Support bounded multi-failure accumulation for precedence tests while capping the sequence length."
+  ],
+  "state_ownership": "None. The diagnostic is an immutable value produced from inputs; the precedence order is a constexpr table.",
+  "interfaces": [
+    "Diagnostic: codes() const -> bounded code sequence; locator() const -> std::optional<std::uint32_t>",
+    "precedence_rank(Result) constexpr -> std::uint8_t",
+    "compare(Result a, Result b) constexpr -> std::strong_ordering for deterministic ordering"
+  ],
+  "concurrency": "Not applicable; diagnostics are immutable values with no shared state.",
+  "errors": [
+    "No runtime errors; structural static checks assert that Diagnostic holds only enumerable codes and a numeric locator."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" }
+  ],
+  "deployment": "Header-only within the standalone candidate; used by the manager and by tests that assert exact ordered code sequences.",
+  "rationale": "Isolating precedence in one component makes the stable, ordered, payload-free diagnostic contract (SR-016) a single auditable rule instead of ad-hoc ordering spread across the manager."
+}

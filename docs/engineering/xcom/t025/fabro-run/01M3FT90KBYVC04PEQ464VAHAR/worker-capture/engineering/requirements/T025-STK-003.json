@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-003",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Bounded session lifecycle with controller-bound handles",
+  "statement": "A validation session is created by a host-generated controller identity, is addressed by a handle bound to that controller identity and a generation, and moves only through the defined lifecycle and terminal states.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (session handle / lifecycle clause); interface-bridge.md REF-002; anchors: XVE-SYS-0144, XVE-SYS-0152, FR-018"
+  },
+  "source_anchors": [
+    "packet.md#session-lifecycle",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0144",
+    "XVE-SYS-0152",
+    "FR-018"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate; bounded lifecycle foundation only, stimulation and Maestro triggers deferred.",
+  "status": "accepted",
+  "verification_intent": "Refined by T025-SR-011..T025-SR-013 and verified by the ownership/recreation, transition-table, and ordering tests.",
+  "acceptance_criteria": [
+    "AC-1: Every lifecycle state declared, armed, active, closing, closed, expired, revoked, evidence-incomplete is reachable through defined operations.",
+    "AC-2: A stale handle, a foreign handle, and a handle from a recreated controller cannot authorise an operation on another live session.",
+    "AC-3: An unsafe repeat of an already-completed lifecycle operation is rejected deterministically.",
+    "AC-4: Validation of handle, context, time, and action completes before any state mutation."
+  ]
+}

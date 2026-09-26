@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-TYPES",
+  "revision": "1",
+  "component_id": "validation_types",
+  "purpose": "Define the closed, bounded value vocabulary shared by every T025 unit: clock/timestamp/permit/session/controller identities plus the manager uniqueness scope, result codes, lifecycle states, actions, quotas, the field-locator enum, the payload-free Diagnostic value type, and the deterministic FNV-1a 128-bit content digest.",
+  "interfaces": [
+    "using Timestamp = std::int64_t; using Tolerance = std::uint64_t; using SignedOffset = std::int64_t;",
+    "using ClockDomainId = std::uint32_t (0 reserved invalid); using Generation = std::uint64_t; using Nonce = std::uint64_t;",
+    "using ControllerId = std::array<std::uint8_t,16>; using ManagerScope = std::array<std::uint8_t,16>; using SessionId = std::array<std::uint8_t,16>; using PermitId = std::array<std::uint8_t,16>; using PlanDigest = std::array<std::uint8_t,32>;",
+    "enum class ClockKind { Monotonic, WallClock };",
+    "enum class Action : std::uint32_t { Arm, Activate, Close, Finalize, Expire, Revoke, MarkEvidenceIncomplete }; using ActionMask = std::uint32_t;",
+    "enum class LifecycleState { declared, armed, active, closing, closed, expired, revoked, evidence_incomplete };",
+    "enum class QuotaKind { Operations, Evidence }; struct Quota { QuotaKind kind; std::uint32_t limit; };",
+    "enum class Result with the 27 outcomes of design §8.1 (InvalidHandle .. Ok, including InvalidController at rank 25);",
+    "enum class FieldLocator { SessionId, PlanDigest, Scenario, Deployment, Environment, Tool, Interface, Target, Nonce, AllowedActions, Validity, Quota };",
+    "struct Diagnostic: bounded ordered Result sequence (capacity 8) plus at most one optional numeric locator;",
+    "struct Tag: bounded printable-ASCII tag (<=63 bytes, no NUL) with validation;",
+    "PermitId canonical_digest(const std::vector<std::uint8_t>& bytes);",
+    "constexpr bool is_terminal(LifecycleState); constexpr ActionMask defined_action_bits(ActionMask);",
+    "std::string_view action_mask_name(ActionMask);"
+  ],
+  "inputs": [
+    "None. This is a pure value/type layer; its types are the inputs consumed by the owning units."
+  ],
+  "outputs": [
+    "Shared value types and enums; canonical_digest() 128-bit digest; is_terminal(); defined_action_bits(); Diagnostic value."
+  ],
+  "state": [
+    "None. No shared mutable state and no object identity."
+  ],
+  "errors": [
+    "No runtime errors; value invariants are enforced by construction-time validation in the owning units."
+  ],
+  "invariants": [
+    "ClockDomainId 0 is reserved invalid.",
+    "ControllerId, ManagerScope, SessionId, and PermitId are 16 bytes; PlanDigest is 32 bytes.",
+    "ManagerScope is host-issued and non-zero per manager instance and recreation; it is bound into every issued session handle.",
+    "Tag is at most 63 bytes of printable ASCII with no NUL character.",
+    "ActionMask may contain only defined Action bits; composite masks are never implicitly decomposed into components.",
+    "Diagnostic holds only enumerable Result codes plus at most one numeric locator; no string, item, observation, or free-form content field.",
+    "canonical_digest is deterministic over identical byte sequences (FNV-1a, 128-bit output)."
+  ],
+  "concurrency": "Not applicable. All types are immutable or trivially copyable values safe to share across threads by value without synchronization.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "TYP-01",
+      "precondition": "A fixed non-empty byte sequence is available.",
+      "stimulus": "Call canonical_digest twice on the identical byte sequence.",
+      "expected": "Both calls return byte-identical 128-bit PermitId values."
+    },
+    {
+      "id": "TYP-02",
+      "precondition": "Two distinct byte sequences are available.",
+      "stimulus": "Compute canonical_digest on each sequence and measure output size.",
+      "expected": "Each digest is 16 bytes; the two digests differ."
+    },
+    {
+      "id": "TYP-03",
+      "precondition": "All eight LifecycleState values are enumerated.",
+      "stimulus": "Call is_terminal on each state.",
+      "expected": "True only for closed, expired, revoked, and evidence_incomplete; false for declared, armed, active, closing."
+    },
+    {
+      "id": "TYP-04",
+      "precondition": "A mask with a defined Action bit and a mask with an undefined bit are available.",
+      "stimulus": "Call defined_action_bits on each mask.",
+      "expected": "The defined-bit mask passes; the undefined-bit mask is reported as containing an undefined bit."
+    },
+    {
+      "id": "TYP-05",
+      "precondition": "Tag values of length 63, length 64, with NUL, and with non-printable bytes are prepared.",
+      "stimulus": "Validate each candidate Tag.",
+      "expected": "Length-63 printable ASCII without NUL is accepted; length 64, embedded NUL, and non-printable bytes are rejected."
+    },
+    {
+      "id": "TYP-06",
+      "precondition": "A defined ActionMask and an undefined-bit mask are available.",
+      "stimulus": "Call action_mask_name on each mask.",
+      "expected": "A defined mask returns a stable, non-empty name; a mask containing an undefined bit returns a distinct empty/unknown marker and is never named as a defined action."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-TYPES-01",
+      "tool": "clang-tidy",
+      "rule": "cppcoreguidelines-pro-type-member-init",
+      "expected": "clean (no diagnostic): all value types initialize every member."
+    },
+    {
+      "id": "STC-TYPES-02",
+      "tool": "clang-tidy",
+      "rule": "modernize-use-nodiscard",
+      "expected": "clean (no diagnostic): digest and predicate helpers are marked [[nodiscard]]."
+    },
+    {
+      "id": "STC-TYPES-03",
+      "tool": "clang-tidy",
+      "rule": "performance-unnecessary-value-param",
+      "expected": "clean (no diagnostic): array-typed parameters are passed by const reference or value only where trivial."
+    },
+    {
+      "id": "STC-TYPES-04",
+      "tool": "static_assert (C++20)",
+      "rule": "Diagnostic payload-freedom (verification-plan STC-03)",
+      "expected": "Diagnostic holds only enumerable codes and a numeric locator; no std::string, item, observation, or free-form member."
+    },
+    {
+      "id": "STC-TYPES-05",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: header formatted with no diff."
+    },
+    {
+      "id": "STC-TYPES-06",
+      "tool": "Doxygen",
+      "rule": "WARN_AS_ERROR=YES on public API (verification-plan STC-04)",
+      "expected": "Strict public-API documentation passes with no Doxygen warnings or errors."
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "build_evidence_sha256": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+  "checks": [
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "Diagnostic members are only a bounded Result array and a numeric locator; no std::string/payload member.",
+      "id": "STC-DIAGNOSTIC-01",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Diagnostic payload-freedom (verification-plan STC-03)",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-DIAGNOSTIC"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): codes() and locator() are const member functions.",
+      "id": "STC-DIAGNOSTIC-02",
+      "route": "worker_static_analysis",
+      "rule": "readability-make-member-function-const",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-DIAGNOSTIC"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): Result parameters are passed by value (enum) only.",
+      "id": "STC-DIAGNOSTIC-03",
+      "route": "worker_static_analysis",
+      "rule": "performance-unnecessary-value-param",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-DIAGNOSTIC"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: header formatted with no diff.",
+      "id": "STC-DIAGNOSTIC-04",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-DIAGNOSTIC"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "std::is_copy_constructible_v and std::is_move_constructible_v are false for SessionManager.",
+      "id": "STC-MANAGER-01",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted.",
+      "id": "STC-MANAGER-02",
+      "route": "worker_static_analysis",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): handle/context/now parameters are const where unmodified.",
+      "id": "STC-MANAGER-03",
+      "route": "worker_static_analysis",
+      "rule": "misc-const-correctness",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): Permit, SessionContext, and SessionHandle passed by const reference.",
+      "id": "STC-MANAGER-04",
+      "route": "worker_static_analysis",
+      "rule": "performance-unnecessary-value-param",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "symbol_list_generated; independent_review_required",
+      "expected": "No emission, transport, gateway, listener, journal, lease, dashboard, or persistent-store entry point exists.",
+      "id": "STC-MANAGER-05",
+      "route": "independent_symbol_review",
+      "rule": "Zero emission surface (verification-plan ZEM-01/STC-02)",
+      "tool": "static analysis (symbol enumeration)",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: source and header formatted with no diff.",
+      "id": "STC-MANAGER-06",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "ZEM_03_validation_test_executed; source_review_required",
+      "expected": "Nominal path opens no file/socket and performs no environment I/O.",
+      "id": "STC-MANAGER-07",
+      "route": "worker_validation_test_and_independent_review",
+      "rule": "No nominal-path I/O (verification-plan ZEM-03)",
+      "tool": "static scan + file-descriptor delta",
+      "unit_id": "T025-U-MANAGER"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): Permit and SessionContext initialize every member.",
+      "id": "STC-PERMIT-01",
+      "route": "worker_static_analysis",
+      "rule": "cppcoreguidelines-pro-type-member-init",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-PERMIT"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): all Permit accessors are const member functions.",
+      "id": "STC-PERMIT-02",
+      "route": "worker_static_analysis",
+      "rule": "readability-make-member-function-const",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-PERMIT"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): no avoidable copy of Tags, digests, or quota lists.",
+      "id": "STC-PERMIT-03",
+      "route": "worker_static_analysis",
+      "rule": "performance-unnecessary-copy-initialization",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-PERMIT"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "Permit exposes no non-const member returning a mutable reference; all bound fields are const after build.",
+      "id": "STC-PERMIT-04",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Immutability of built Permit",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-PERMIT"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: source and header formatted with no diff.",
+      "id": "STC-PERMIT-05",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-PERMIT"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "std::is_copy_constructible_v and std::is_move_constructible_v are false for the registry.",
+      "id": "STC-REGISTRY-01",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-REGISTRY"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted.",
+      "id": "STC-REGISTRY-02",
+      "route": "worker_static_analysis",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-REGISTRY"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): the session/permit/capacity branches are distinct.",
+      "id": "STC-REGISTRY-03",
+      "route": "worker_static_analysis",
+      "rule": "bugprone-branch-clone",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-REGISTRY"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): array identity parameters passed by const reference.",
+      "id": "STC-REGISTRY-04",
+      "route": "worker_static_analysis",
+      "rule": "performance-unnecessary-value-param",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-REGISTRY"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: source and header formatted with no diff.",
+      "id": "STC-REGISTRY-05",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-REGISTRY"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "The table covers all 8 states x 7 actions and is constexpr-evaluable.",
+      "id": "STC-SESSION-01",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Constexpr exhaustive transition table",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-SESSION"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): terminal, invalid, and idempotent branches are distinct.",
+      "id": "STC-SESSION-02",
+      "route": "worker_static_analysis",
+      "rule": "bugprone-branch-clone",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-SESSION"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): state(), remaining_quota(), and snapshot() are const.",
+      "id": "STC-SESSION-03",
+      "route": "worker_static_analysis",
+      "rule": "readability-make-member-function-const",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-SESSION"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): transition lookups use const references.",
+      "id": "STC-SESSION-04",
+      "route": "worker_static_analysis",
+      "rule": "misc-const-correctness",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-SESSION"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: source and header formatted with no diff.",
+      "id": "STC-SESSION-05",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-SESSION"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "std::is_copy_constructible_v<TimeAuthority> and std::is_move_constructible_v<TimeAuthority> are false.",
+      "id": "STC-TIME-01",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted and the destructor is trivial.",
+      "id": "STC-TIME-02",
+      "route": "worker_static_analysis",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): query/predicate locals are const.",
+      "id": "STC-TIME-03",
+      "route": "worker_static_analysis",
+      "rule": "misc-const-correctness",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "pending_protected_sanitizer_verification",
+      "expected": "No data race reported for concurrent now(D_MONO) calls.",
+      "id": "STC-TIME-04",
+      "route": "protected_sanitizer_verification",
+      "rule": "Concurrent authority reads (verification-plan CON-04)",
+      "tool": "ThreadSanitizer",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: source and header formatted with no diff.",
+      "id": "STC-TIME-05",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "clang_tidy_executed; source_review_required",
+      "expected": "Every time decision goes through declare/now/convert; no direct comparison of raw timestamps from different domains.",
+      "id": "STC-TIME-06",
+      "route": "worker_static_analysis_and_independent_review",
+      "rule": "No raw cross-domain timestamp comparison (verification-plan STC-02)",
+      "tool": "clang-tidy + manual source scan",
+      "unit_id": "T025-U-TIME"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): all value types initialize every member.",
+      "id": "STC-TYPES-01",
+      "route": "worker_static_analysis",
+      "rule": "cppcoreguidelines-pro-type-member-init",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-TYPES"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): digest and predicate helpers are marked [[nodiscard]].",
+      "id": "STC-TYPES-02",
+      "route": "worker_static_analysis",
+      "rule": "modernize-use-nodiscard",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-TYPES"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean (no diagnostic): array-typed parameters are passed by const reference or value only where trivial.",
+      "id": "STC-TYPES-03",
+      "route": "worker_static_analysis",
+      "rule": "performance-unnecessary-value-param",
+      "tool": "clang-tidy",
+      "unit_id": "T025-U-TYPES"
+    },
+    {
+      "disposition": "compiled_by_build_gate; semantic_review_required",
+      "expected": "Diagnostic holds only enumerable codes and a numeric locator; no std::string, item, observation, or free-form member.",
+      "id": "STC-TYPES-04",
+      "route": "worker_compilation_and_source_review",
+      "rule": "Diagnostic payload-freedom (verification-plan STC-03)",
+      "tool": "static_assert (C++20)",
+      "unit_id": "T025-U-TYPES"
+    },
+    {
+      "disposition": "executed_by_quality_gate",
+      "expected": "clean: header formatted with no diff.",
+      "id": "STC-TYPES-05",
+      "route": "worker_format",
+      "rule": "project .clang-format",
+      "tool": "clang-format",
+      "unit_id": "T025-U-TYPES"
+    },
+    {
+      "disposition": "executed_by_doxygen_gate; semantic_review_required",
+      "expected": "Strict public-API documentation passes with no Doxygen warnings or errors.",
+      "id": "STC-TYPES-06",
+      "route": "worker_doxygen_gate",
+      "rule": "WARN_AS_ERROR=YES on public API (verification-plan STC-04)",
+      "tool": "Doxygen",
+      "unit_id": "T025-U-TYPES"
+    }
+  ],
+  "doxygen_evidence_sha256": "66fc8e9118f3d092da8157537269132eef1849d696dcdf8101f99d129f0149d4",
+  "kind": "unit-static-check-dispositions",
+  "material_sha256": "44efb24efc4f29756a247da9615c2a3caf7af8749d11fee2450398ea87845818",
+  "quality_evidence_sha256": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+  "schema_version": 1,
+  "status": "worker_checks_complete_protected_checks_pending",
+  "symbol_enumeration_sha256": "86c193ca570d7eb0dae2639b475eacf101ea5e0076f89f612e7038ece78f0e7b"
+}

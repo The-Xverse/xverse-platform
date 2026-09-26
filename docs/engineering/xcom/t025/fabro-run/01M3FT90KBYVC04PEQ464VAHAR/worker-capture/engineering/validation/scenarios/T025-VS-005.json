@@ -1,0 +1,18 @@
+{
+  "case_ids": [
+    "ZEM-01",
+    "ZEM-02",
+    "ZEM-03"
+  ],
+  "expected": "The public surface exposes no emission, transport, journal, or persistence entry point, the nominal path opens no file or socket, and the reported normal-route emission counter stays zero.",
+  "id": "T025-VS-005",
+  "intended_use": "Zero normal-route emissions in the intended-use path.",
+  "kind": "validation",
+  "limitation": "Internal worker evidence only; zero emission is asserted within this candidate slice, not across the accepted repository.",
+  "observed": "Internal worker CTest run (sandbox): the 1 unit case ID ZEM-02 and the 2 validation tests Validation.ZEM_01 and Validation.ZEM_03 all passed (part of 129/129 unit and 3/3 validation tests; 0 failures). The reported normal-route emission counter stays zero and no file or socket is opened.",
+  "revision": 1,
+  "setup": "The standalone library's public surface (no transport, gateway, network listener, journal, or persistence entry point) plus one nominal session run; a file-descriptor delta is observed around the nominal path.",
+  "validates": [
+    "T025-STK-005"
+  ]
+}

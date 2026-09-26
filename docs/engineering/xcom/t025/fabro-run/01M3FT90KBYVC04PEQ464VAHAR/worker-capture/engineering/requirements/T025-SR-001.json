@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-001",
+  "revision": 1,
+  "level": "software",
+  "title": "Declare and identify clock domains",
+  "statement": "The authority must accept a finite set of declared clock domain identities and must report an unknown or undeclared domain as a distinct deterministic failure.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (time authority identifies clock domains); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-015"
+  ],
+  "refines": "T025-STK-001",
+  "applicability": "xverse::xcom::validation:: time authority public API; C++20 stdlib only.",
+  "status": "accepted",
+  "verification_intent": "Unit: register and query declared domains; query an undeclared domain and assert the UnknownClock outcome with unchanged authority state.",
+  "acceptance_criteria": [
+    "A declared domain is accepted and addressable by identity.",
+    "An undeclared domain yields a distinct UnknownClock result and no state mutation.",
+    "Domain identity is stable across calls and supports equality comparison."
+  ]
+}

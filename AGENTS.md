@@ -39,6 +39,9 @@ is justified. Distinguish task-based judgment from measured results; do not clai
 or exact costs without evidence. Verify current pricing when quoting it, and distinguish API
 prices from account usage. Do not claim to switch models unless a switch actually occurred.
 This recommendation is informational and does not add a new approval gate to authorized work.
+At the completion of every user-visible step, state the recommended model and reasoning effort
+for the next step, the concrete next action, and any relevant blocker, cost, or authorization
+requirement. This is a standing user communication preference.
 
 ## Current boundary
 Setup, M0, M1, and M2 specification/design have been delivered. The user approved M2 on 2026-09-20.
@@ -80,22 +83,27 @@ when performance is decisive. X-COM and other performance-critical data-plane mo
 C++ based. Define and verify explicit contracts at every cross-language boundary. Do not select
 languages for unapproved target modules merely to scaffold the future architecture.
 
-## SESN software work-product workflow
-For every future X-Verse production software change, use the local SESN application to produce the complete
-auditable and maintainable work-product set, not only source code. Codex acts as the SESN client: supply the
-complete baseline, stakeholder/system/software requirements, constraints, architecture, detailed design,
-unit specifications, task ownership, verification measures, model/reasoning profile, and authorization
-boundary. Require bidirectional traceability across requirements, architecture, design, code, unit tests,
-integration tests, validation, findings, configuration identity, and delivery evidence. Review SESN's
-candidate, evidence, findings, maintenance guidance, and limitations before assigning follow-up tasks or
-applying its delivery to an authoritative repository. The process is inspired by Automotive SPICE outcomes
-but must not claim certification or capability level. Replay output is not a substitute for a live SESN
-engineering run. Documentation-only governance updates and read-only analysis may be performed directly.
-Preserve the existing Spec Kit, legacy immutability, public-safety, and execution-permit gates inside every
-SESN input.
+## Repository-owned software work-product workflow
+Future X-Verse production software changes use the repository-owned Spec Kit workflow directly; SESN is
+not part of the forward-looking engineering or acceptance path. Codex must maintain the complete auditable
+and maintainable work-product set, not only source code: exact baseline and authorization boundary,
+stakeholder/system/software requirements, constraints, architecture, detailed design, unit specifications,
+task ownership, verification measures, model/reasoning profile, configuration identity, delivery evidence,
+maintenance guidance, and limitations.
 
-Report SESN defects or material workflow improvements to the user as they are discovered. Decide whether
-to repair SESN before continuing based on impact: defects that can compromise artifact correctness,
-traceability, isolation, evidence, or review validity block the affected SESN result and require a separate
-verified SESN fix; non-blocking usability defects are recorded and deferred until the active X-Verse
-delivery is complete so the engineering-tool baseline does not change mid-delivery.
+Require bidirectional traceability across requirements, architecture, design, code, unit tests,
+integration tests, validation, findings, configuration identity, and delivery evidence. Bind verification
+to the exact candidate revision and retain commands, tool versions, environment identity, exit status,
+bounded logs, and hashes in a repository-owned or explicitly referenced evidence bundle. Missing, stale,
+mismatched, skipped, or failed evidence cannot support acceptance.
+
+Conduct a separate read-only review and record its findings before repairing them in a later pass. A repair
+creates a successor candidate and requires repeated affected verification and review. Present the inspected
+software and evidence bundle to the user for explicit acceptance; do not accept or integrate it
+automatically. The process is inspired by Automotive SPICE outcomes but must not claim certification or
+capability level.
+
+Preserve the existing Spec Kit, legacy immutability, public-safety, information-classification,
+execution-permit, dependency-admission, and user-acceptance gates. Historical SESN records remain evidence
+only for the exact revisions and claims they identify; do not rewrite or extrapolate them into current
+evidence. ADR-0020 records this prospective workflow change.

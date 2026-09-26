@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-SESSION",
+  "revision": "1",
+  "component_id": "validation_session",
+  "purpose": "Own the bounded lifecycle state of one validation session and the pure transition table with safe-idempotency, unsafe-repeat, terminal-lockout, and quota-decrement rules.",
+  "interfaces": [
+    "apply(LifecycleAction action, Timestamp now, Result& out) -> Result (pure transition evaluation)",
+    "state() const -> LifecycleState",
+    "remaining_quota(QuotaKind) const -> std::uint32_t",
+    "snapshot() const -> SessionSnapshot"
+  ],
+  "inputs": [
+    "LifecycleAction and a Timestamp now value (resolved by the caller against validity)."
+  ],
+  "outputs": [
+    "Result (Ok, AlreadyApplied, InvalidTransition, TerminalState, QuotaExhausted), the resulting LifecycleState, remaining quota, and a SessionSnapshot."
+  ],
+  "state": [
+    "LifecycleState value, the bound permit identity, and the per-session remaining quota array."
+  ],
+  "errors": [
+    "AlreadyApplied: safe idempotent repeat of the action that produced the current state.",
+    "InvalidTransition: legal-state conflict with a non-terminal current state.",
+    "TerminalState: any transition attempted from a terminal state.",
+    "QuotaExhausted: the action's mapped quota is zero."
+  ],
+  "invariants": [
+    "The transition table is a constexpr static table covering every (state, action) pair.",
+    "Terminal states admit no outgoing transition.",
+    "Safe repeats return AlreadyApplied without changing state; unsafe repeats and terminal lockout do not mutate.",
+    "A quota is decremented only after a transition validates, under the owning manager's lock."
+  ],
+  "concurrency": "Not individually synchronized; reached only while the owning manager holds its single std::mutex, giving a deterministic total order.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/src/validation_session.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "LIF-01",
+      "precondition": "Session in declared.",
+      "stimulus": "apply(Arm).",
+      "expected": "Ok; state armed."
+    },
+    {
+      "id": "LIF-02",
+      "precondition": "Session in armed.",
+      "stimulus": "apply(Activate).",
+      "expected": "Ok; state active."
+    },
+    {
+      "id": "LIF-03",
+      "precondition": "Session in active.",
+      "stimulus": "apply(Close).",
+      "expected": "Ok; state closing."
+    },
+    {
+      "id": "LIF-04",
+      "precondition": "Session in closing.",
+      "stimulus": "apply(Finalize).",
+      "expected": "Ok; state closed (terminal)."
+    },
+    {
+      "id": "LIF-05",
+      "precondition": "Session in armed.",
+      "stimulus": "apply(Expire).",
+      "expected": "Ok; state expired (terminal)."
+    },
+    {
+      "id": "LIF-06",
+      "precondition": "Session in active.",
+      "stimulus": "apply(Revoke).",
+      "expected": "Ok; state revoked (terminal)."
+    },
+    {
+      "id": "LIF-07",
+      "precondition": "Session in active.",
+      "stimulus": "apply(MarkEvidenceIncomplete).",
+      "expected": "Ok; state evidence_incomplete (terminal)."
+    },
+    {
+      "id": "LIF-08",
+      "precondition": "Session in expired (terminal).",
+      "stimulus": "apply(Arm).",
+      "expected": "TerminalState; no state change."
+    },
+    {
+      "id": "LIF-09",
+      "precondition": "Session in closed (terminal).",
+      "stimulus": "apply(Arm).",
+      "expected": "TerminalState; no state change."
+    },
+    {
+      "id": "LIF-10",
+      "precondition": "Session in declared.",
+      "stimulus": "apply(Activate).",
+      "expected": "InvalidTransition; state stays declared."
+    },
+    {
+      "id": "LIF-11",
+      "precondition": "Session in active.",
+      "stimulus": "apply(Arm).",
+      "expected": "InvalidTransition; state stays active."
+    },
+    {
+      "id": "LIF-12",
+      "precondition": "Session in armed.",
+      "stimulus": "apply(Arm).",
+      "expected": "AlreadyApplied; state stays armed."
+    },
+    {
+      "id": "LIF-13",
+      "precondition": "Session in closed.",
+      "stimulus": "apply(Finalize).",
+      "expected": "AlreadyApplied; state stays closed."
+    },
+    {
+      "id": "LIF-14",
+      "precondition": "Session in revoked.",
+      "stimulus": "apply(Revoke).",
+      "expected": "AlreadyApplied; state stays revoked."
+    },
+    {
+      "id": "LIF-15",
+      "precondition": "Session in declared.",
+      "stimulus": "apply(Close).",
+      "expected": "InvalidTransition; state stays declared."
+    },
+    {
+      "id": "LIF-16",
+      "precondition": "A table-driven walk over all eight states and seven actions.",
+      "stimulus": "Apply the legal predecessor action for each state.",
+      "expected": "Each of the eight states is reached via its defined operation."
+    },
+    {
+      "id": "QUO-01",
+      "precondition": "Permit quota {Operations,1}; session in armed.",
+      "stimulus": "apply(Activate) twice.",
+      "expected": "First Ok (quota 1->0); second QuotaExhausted with state unchanged at active."
+    },
+    {
+      "id": "QUO-02",
+      "precondition": "Permit quota {Operations,3}; session progresses through mutating transitions.",
+      "stimulus": "Apply three mutating transitions then a fourth.",
+      "expected": "Third Ok; fourth QuotaExhausted; state unchanged on exhaustion."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-SESSION-01",
+      "tool": "static_assert (C++20)",
+      "rule": "Constexpr exhaustive transition table",
+      "expected": "The table covers all 8 states x 7 actions and is constexpr-evaluable."
+    },
+    {
+      "id": "STC-SESSION-02",
+      "tool": "clang-tidy",
+      "rule": "bugprone-branch-clone",
+      "expected": "clean (no diagnostic): terminal, invalid, and idempotent branches are distinct."
+    },
+    {
+      "id": "STC-SESSION-03",
+      "tool": "clang-tidy",
+      "rule": "readability-make-member-function-const",
+      "expected": "clean (no diagnostic): state(), remaining_quota(), and snapshot() are const."
+    },
+    {
+      "id": "STC-SESSION-04",
+      "tool": "clang-tidy",
+      "rule": "misc-const-correctness",
+      "expected": "clean (no diagnostic): transition lookups use const references."
+    },
+    {
+      "id": "STC-SESSION-05",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: source and header formatted with no diff."
+    }
+  ]
+}

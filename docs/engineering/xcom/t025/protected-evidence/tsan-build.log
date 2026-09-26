@@ -1,0 +1,38 @@
+[1/8] Building CXX object src/xverse/xcom/CMakeFiles/xverse_xcom_validation_validation_tests.dir/__/__/__/tests/xcom/validation_session/validation_tests.cpp.o
+[2/8] Building CXX object src/xverse/xcom/CMakeFiles/xverse_xcom_validation_integration_tests.dir/__/__/__/tests/xcom/validation_session/integration_tests.cpp.o
+[3/8] Building CXX object src/xverse/xcom/CMakeFiles/xverse_xcom_validation_session.dir/src/validation_session.cpp.o
+[4/8] Linking CXX static library src/xverse/xcom/libxverse_xcom_validation_session.a
+[5/8] Linking CXX executable src/xverse/xcom/xverse_xcom_validation_integration_tests
+FAILED: src/xverse/xcom/xverse_xcom_validation_integration_tests src/xverse/xcom/xverse_xcom_validation_integration_tests[1]_tests.cmake /tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_integration_tests[1]_tests.cmake 
+: && /usr/bin/c++ -fsanitize=thread -fno-omit-frame-pointer -g -fsanitize=thread src/xverse/xcom/CMakeFiles/xverse_xcom_validation_integration_tests.dir/__/__/__/tests/xcom/validation_session/integration_tests.cpp.o -o src/xverse/xcom/xverse_xcom_validation_integration_tests  src/xverse/xcom/libxverse_xcom_validation_session.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgtest_main.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgmock.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgtest.a && cd /tmp/xverse-t025-review/tsan-build/src/xverse/xcom && /usr/bin/cmake -D TEST_TARGET=xverse_xcom_validation_integration_tests -D TEST_EXECUTABLE=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_integration_tests -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom -D TEST_EXTRA_ARGS= -D "TEST_PROPERTIES=LABELS;t025;integration" -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=xverse_xcom_validation_integration_tests_TESTS -D CTEST_FILE=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_integration_tests[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_XML_OUTPUT_DIR= -P /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake
+FATAL: ThreadSanitizer: unexpected memory mapping 0x5e1c33ffe000-0x5e1c34008000
+CMake Error at /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake:83 (message):
+  Error running test executable.
+
+    Path: '/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_integration_tests'
+    Result: 66
+    Output:
+      
+
+Call Stack (most recent call first):
+  /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake:179 (gtest_discover_tests_impl)
+
+
+[6/8] Linking CXX executable src/xverse/xcom/xverse_xcom_validation_validation_tests
+FAILED: src/xverse/xcom/xverse_xcom_validation_validation_tests src/xverse/xcom/xverse_xcom_validation_validation_tests[1]_tests.cmake /tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_validation_tests[1]_tests.cmake 
+: && /usr/bin/c++ -fsanitize=thread -fno-omit-frame-pointer -g -fsanitize=thread src/xverse/xcom/CMakeFiles/xverse_xcom_validation_validation_tests.dir/__/__/__/tests/xcom/validation_session/validation_tests.cpp.o -o src/xverse/xcom/xverse_xcom_validation_validation_tests  src/xverse/xcom/libxverse_xcom_validation_session.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgtest_main.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgmock.a  /home/jefferson/.cache/xverse-xcom-t025-gtest-prefix/usr/lib/x86_64-linux-gnu/libgtest.a && cd /tmp/xverse-t025-review/tsan-build/src/xverse/xcom && /usr/bin/cmake -D TEST_TARGET=xverse_xcom_validation_validation_tests -D TEST_EXECUTABLE=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_validation_tests -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom -D TEST_EXTRA_ARGS= -D "TEST_PROPERTIES=LABELS;t025;validation" -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=xverse_xcom_validation_validation_tests_TESTS -D CTEST_FILE=/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_validation_tests[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_XML_OUTPUT_DIR= -P /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake
+FATAL: ThreadSanitizer: unexpected memory mapping 0x5be9a6b26000-0x5be9a6b30000
+CMake Error at /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake:83 (message):
+  Error running test executable.
+
+    Path: '/tmp/xverse-t025-review/tsan-build/src/xverse/xcom/xverse_xcom_validation_validation_tests'
+    Result: 66
+    Output:
+      
+
+Call Stack (most recent call first):
+  /usr/share/cmake-3.22/Modules/GoogleTestAddTests.cmake:179 (gtest_discover_tests_impl)
+
+
+[7/8] Building CXX object src/xverse/xcom/CMakeFiles/xverse_xcom_validation_unit_tests.dir/__/__/__/tests/xcom/validation_session/unit_tests.cpp.o
+ninja: build stopped: subcommand failed.

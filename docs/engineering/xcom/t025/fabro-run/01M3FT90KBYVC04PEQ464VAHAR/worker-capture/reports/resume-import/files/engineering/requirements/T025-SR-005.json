@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-005",
+  "revision": 1,
+  "level": "software",
+  "title": "Validity and lifecycle decisions use the authority only",
+  "statement": "Permit-validity and session-lifecycle time decisions must be expressed as authority queries in a single domain or through a declared mapping; raw timestamps from different domains must never be compared directly.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (raw timestamps from different domains are never compared); interface-bridge.md; anchors: FR-015, FR-033, XVE-SYS-0147"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "FR-015",
+    "FR-033",
+    "XVE-SYS-0147"
+  ],
+  "refines": "T025-STK-001",
+  "applicability": "xverse::xcom::validation permit validity and session lifecycle time checks.",
+  "status": "accepted",
+  "verification_intent": "Unit: valid and expired permit in-domain; permit expressed in a foreign domain with and without a mapping; static check that direct cross-domain comparison is absent.",
+  "acceptance_criteria": [
+    "Every time-dependent decision path resolves its comparison through the authority.",
+    "A permit whose validity interval is in another domain is evaluated only after a successful declared mapping, otherwise rejected with MissingMapping.",
+    "No code path directly compares two raw timestamps from different domains."
+  ]
+}

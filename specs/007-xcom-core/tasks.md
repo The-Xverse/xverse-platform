@@ -2,9 +2,10 @@
 
 **Input**: Design documents from `specs/007-xcom-core/`
 
-**Execution rule**: All production software artifacts are generated through SESN. Codex supplies this
-package, reviews every SESN result, and does not manually repair generated production code. The user
-validates the complete software and assurance bundle before another feature begins.
+**Execution rule**: ADR-0020 prospectively uses repository-owned Spec Kit work products. Maintain the
+complete requirements, architecture, design, source, tests, traceability, verification, and review
+bundle for each exact candidate. A separate read-only review records findings before a successor
+repair. The user explicitly accepts the inspected bundle before another feature begins.
 
 ## Phase 1: Governance and specification
 
@@ -15,10 +16,10 @@ validates the complete software and assurance bundle before another feature begi
 - [X] T005 Conduct and record a separate architecture review of this design package.
 - [X] T006 Obtain user acceptance of the design and explicit implementation authorization.
 
-## Phase 2: SESN engineering baseline
+## Phase 2: Repository-owned engineering baseline
 
-- [ ] T007 Submit a bounded SESN feature with separate C++ core, XDL compiler, observation, stimulation,
-  integration/evidence, and independent-review tasks.
+- [ ] T007 Maintain bounded repository-owned work packages for the C++ core, XDL compiler, observation,
+  stimulation, integration/evidence, and independent-review tasks.
 - [ ] T008 Generate and review SWE.1 requirements and bidirectional requirement/test traceability.
 - [ ] T009 Generate and review SWE.2 architecture, boundaries, and component/sequence diagrams.
 - [ ] T010 Generate and review SWE.3 unit design, ownership, lifetime, thread-safety, and Doxygen plan.
@@ -84,18 +85,18 @@ validates the complete software and assurance bundle before another feature begi
 - [ ] T037 Add complete Doxygen comments and generate warning-free reference documentation.
 - [ ] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe
   logs/evidence; do not promote allocated or deferred SADS targets without proof.
-- [ ] T039 Have SESN run the independent Astra review and disposition every finding without weakening
-  required acceptance criteria.
-- [ ] T040 Export and inspect the complete SESN report and artifact bundle.
+- [ ] T039 Conduct a separate read-only review and disposition every finding without weakening
+  required acceptance criteria; repair in a successor candidate and repeat affected checks.
+- [ ] T040 Inspect the complete repository-owned report and artifact bundle.
 - [ ] T041 Present the generated software/evidence to the user and record acceptance or rework.
 
 ## Dependencies and execution order
 
 T001–T004 precede architecture review. T005–T006 gate all software work. T007–T011 precede production
 code. T012–T016 establish the core. T017–T020 bind it to XDL. Observation and stimulation may be
-implemented as separate SESN tasks after the core but both precede conformance and final integration.
+implemented as separate owned tasks after the core but both precede conformance and final integration.
 T035–T041 require all selected implementation tasks. No later platform or legacy feature begins before
 T041.
 
-Tasks modifying overlapping C++ headers or build files must be dependency-ordered in SESN. Parallel
+Tasks modifying overlapping C++ headers or build files must be dependency-ordered. Parallel
 tasks may own only disjoint paths. No task may execute a legacy binary or external network peer.

@@ -1,0 +1,22 @@
+{
+  "case_ids": [
+    "HND-01",
+    "HND-02",
+    "HND-03",
+    "HND-04",
+    "HND-05",
+    "HND-06",
+    "HND-07"
+  ],
+  "expected": "A stale-generation handle, a foreign-controller handle, a handle from a recreated controller, and a forged handle all fail to authorise a transition, and no other live session changes state.",
+  "id": "T025-VS-004",
+  "intended_use": "Controller-bound handle ownership and recreated-controller isolation.",
+  "kind": "validation",
+  "limitation": "Internal worker evidence only; handle authenticity is opaque issuance, not cryptography, so no security claim is made.",
+  "observed": "Internal worker CTest run (sandbox): the 7 unit case IDs HND-01, HND-02, HND-03, HND-04, HND-05, HND-06, HND-07 and the 1 integration test Integration.GenerationRotationInvalidatesLiveHandle all passed (part of 129/129 unit and 4/4 integration tests; 0 failures). No other live session changes state.",
+  "revision": 1,
+  "setup": "A SessionManager owning controller identity and generation with issued SessionHandles; tests present stale-generation, foreign-controller, recreated-controller, and forged handles against a live session.",
+  "validates": [
+    "T025-STK-003"
+  ]
+}

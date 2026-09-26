@@ -19,8 +19,8 @@ Capability 007 considers all twenty REF-002 communication/interoperability IDs,
   007 still defines bounded communication failure outcomes.
 
 “Allocated” means requirements and design coverage in this feature. It does not mean implemented.
-Each allocated ID remains `architectural-target` until SESN-generated source and verification evidence
-pass independent and human review.
+Each allocated ID remains `architectural-target` until repository-owned source and verification evidence
+pass separate read-only and human review.
 
 ## Shared requirements
 
@@ -39,4 +39,3 @@ program register.
   stimulation safety, and X-COM/Argus/Faults ownership.
 - The supplied DOCX is a target specification and cannot by itself establish implementation,
   performance, security, compatibility, or production-readiness evidence.
-

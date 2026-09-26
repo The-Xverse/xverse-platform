@@ -2,7 +2,7 @@
 
 The first external-tool proof uses a versioned gRPC service with Protocol Buffers on a host-protected
 local IPC endpoint. The server must not bind a TCP address. Exact dependency versions, generated-code
-toolchain, licenses, and hashes are pinned by the SESN implementation preflight.
+toolchain, licenses, and hashes are pinned by repository-owned offline dependency admission.
 
 ## Service surface
 
@@ -25,4 +25,3 @@ codes, sizes, timing, and outcomes; unrestricted payloads and permit contents ar
 The `.proto` definition is an external API and follows additive field evolution, reserved removed field
 numbers/names, explicit protocol version negotiation, generated-client contract tests, and a separate
 compatibility review before any breaking revision.
-

@@ -1,0 +1,5 @@
+if(EXISTS "/workspace/build/bugfix/validation_session_integration_tests[1]_tests.cmake")
+  include("/workspace/build/bugfix/validation_session_integration_tests[1]_tests.cmake")
+else()
+  add_test(validation_session_integration_tests_NOT_BUILT validation_session_integration_tests_NOT_BUILT)
+endif()

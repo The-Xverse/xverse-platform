@@ -20,8 +20,9 @@
   exact ownership handles, and fail-closed stimulation.
 - [X] ACC011 Accept the prototype scope: owned loopback providers and synthetic tools only, with no
   legacy adapter/execution, external network peer, physical bus, production, or compatibility claim.
-- [X] ACC012 Accept SESN generation of all production code and SWE.1–SWE.6 evidence, followed by Codex
-  inspection, independent Astra review, and user validation before another feature.
+- [X] ACC012 Accept the complete SWE.1–SWE.6 work-product and evidence obligation, separate review,
+  and explicit user validation before another feature. ADR-0020 prospectively replaces the SESN
+  execution method with repository-owned Spec Kit work; this does not accept a software candidate.
 - [X] ACC013 Accept the REF-002 allocation: all 275 SADS IDs remain tracked program-wide, all direct
   X-COM IDs XVE-SYS-0139–0158 have an explicit capability-007 disposition, and deferred targets are not
   implementation claims.

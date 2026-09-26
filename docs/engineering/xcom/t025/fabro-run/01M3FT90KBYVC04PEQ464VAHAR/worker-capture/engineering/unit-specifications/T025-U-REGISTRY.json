@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-REGISTRY",
+  "revision": "1",
+  "component_id": "validation_permit_registry",
+  "purpose": "Enforce controller-scoped, exactly-once permit consumption and bounded consumed-identity bookkeeping with an explicit exhaustion result, independent of the session table.",
+  "interfaces": [
+    "try_consume(ControllerId, PermitId, SessionId, Result& out) -> Result (atomic check-then-insert)",
+    "is_consumed_permit(ControllerId, PermitId) const -> bool",
+    "is_consumed_session(ControllerId, SessionId) const -> bool",
+    "capacity() const -> std::size_t; size() const -> std::size_t"
+  ],
+  "inputs": [
+    "ControllerId (scope), PermitId, and SessionId."
+  ],
+  "outputs": [
+    "Result (Ok, SessionAlreadyConsumed, PermitAlreadyConsumed, CapacityExhausted) and boolean set-membership queries."
+  ],
+  "state": [
+    "Controller-scoped consumed-permit-identity set bounded by max_consumed_permits.",
+    "Controller-scoped consumed-session-identity set bounded by max_consumed_sessions.",
+    "Both sets guarded by the owning manager's single std::mutex; non-copyable and non-movable."
+  ],
+  "errors": [
+    "PermitAlreadyConsumed: permit identity already consumed.",
+    "SessionAlreadyConsumed: session identity already bound to a consumed permit.",
+    "CapacityExhausted: consumed-identity bookkeeping is full and consumption is refused."
+  ],
+  "invariants": [
+    "Check-then-insert is atomic: no partial insertion on any failure.",
+    "Session key is checked before permit key, so a changed-nonce replay is reported as SessionAlreadyConsumed.",
+    "Bookkeeping never grows past its configured capacity.",
+    "The registry is non-copyable and non-movable."
+  ],
+  "concurrency": "try_consume performs the full check-then-insert in one critical section, so N concurrent consumptions of one valid permit yield exactly one Ok and N-1 deterministic failures.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/src/validation_session.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "REG-01",
+      "precondition": "A fresh controller scope with unused permit P and session S.",
+      "stimulus": "Call try_consume(ctrl, P, S).",
+      "expected": "Ok; is_consumed_permit(ctrl,P) and is_consumed_session(ctrl,S) are true."
+    },
+    {
+      "id": "REG-02",
+      "precondition": "P and S were already consumed under ctrl.",
+      "stimulus": "Call try_consume(ctrl, P, S) again.",
+      "expected": "SessionAlreadyConsumed; sets unchanged."
+    },
+    {
+      "id": "REG-03",
+      "precondition": "P was consumed for S under ctrl.",
+      "stimulus": "Call try_consume(ctrl, P, S2) with a different session S2.",
+      "expected": "PermitAlreadyConsumed; sets unchanged."
+    },
+    {
+      "id": "REG-04",
+      "precondition": "S was consumed; a second permit P2 with the same session S and changed nonce is presented.",
+      "stimulus": "Call try_consume(ctrl, P2, S).",
+      "expected": "SessionAlreadyConsumed (session identity already bound)."
+    },
+    {
+      "id": "QUO-05",
+      "precondition": "max_consumed_permits is 2 and two distinct permits are already consumed.",
+      "stimulus": "Call try_consume(ctrl, P3, S3) for a third distinct permit.",
+      "expected": "CapacityExhausted; neither P3 nor S3 is inserted and size stays 2."
+    },
+    {
+      "id": "REG-06",
+      "precondition": "16 threads race on try_consume(ctrl, P, S) for the same fresh permit.",
+      "stimulus": "Run all 16 threads concurrently.",
+      "expected": "Exactly one Ok and 15 SessionAlreadyConsumed outcomes."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-REGISTRY-01",
+      "tool": "static_assert (C++20)",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "expected": "std::is_copy_constructible_v and std::is_move_constructible_v are false for the registry."
+    },
+    {
+      "id": "STC-REGISTRY-02",
+      "tool": "clang-tidy",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted."
+    },
+    {
+      "id": "STC-REGISTRY-03",
+      "tool": "clang-tidy",
+      "rule": "bugprone-branch-clone",
+      "expected": "clean (no diagnostic): the session/permit/capacity branches are distinct."
+    },
+    {
+      "id": "STC-REGISTRY-04",
+      "tool": "clang-tidy",
+      "rule": "performance-unnecessary-value-param",
+      "expected": "clean (no diagnostic): array identity parameters passed by const reference."
+    },
+    {
+      "id": "STC-REGISTRY-05",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: source and header formatted with no diff."
+    }
+  ]
+}

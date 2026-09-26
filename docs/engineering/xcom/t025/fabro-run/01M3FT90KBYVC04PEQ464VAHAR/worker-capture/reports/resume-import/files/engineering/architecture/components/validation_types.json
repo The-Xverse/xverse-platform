@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "validation_types",
+  "revision": "1",
+  "name": "Validation core types",
+  "purpose": "Define the closed, bounded vocabulary shared by every T025 component: identifiers, timestamps, result codes, diagnostics, actions, lifecycle states, and the field-locator enum.",
+  "responsibilities": [
+    "Define bounded value types (clock domain id, timestamp, permit id, session id, controller id, manager scope, generation, nonce, plan digest, tags, quotas) with explicit width and maximum length.",
+    "Define the closed Action bit enum, the ActionMask type, and the rule that undefined bits and non-explicit composites are invalid.",
+    "Define the LifecycleState enum (declared, armed, active, closing, closed, expired, revoked, evidence_incomplete) with an explicit terminal-state predicate.",
+    "Define the Result enum (all deterministic outcomes) and the payload-free Diagnostic type holding an ordered code sequence plus at most one bounded numeric locator.",
+    "Define the fixed FieldLocator enum used to name the mismatching permit field in a PermitMismatch diagnostic.",
+    "Provide a canonical, deterministic, standard-library-only byte-serialization and FNV-1a 128-bit content digest used for permit identity; documented as a local bookkeeping identity, not a cryptographic claim."
+  ],
+  "state_ownership": "None. This component is a pure value/type layer with no shared mutable state and no object identity.",
+  "interfaces": [
+    "types: ClockDomainId, Timestamp, Tolerance, Generation, Nonce, PlanDigest, SessionId, ControllerId, ManagerScope, Tag, Quota, QuotaKind, Action, ActionMask, LifecycleState, Result, FieldLocator, Diagnostic, PermitId",
+    "helpers: canonical_digest(bytes), is_terminal(LifecycleState), defined_action_bits(ActionMask), action_mask_name(ActionMask)"
+  ],
+  "concurrency": "Not applicable. All types are immutable or trivially copyable values; they are safe to share across threads by value without synchronization.",
+  "errors": [
+    "No runtime errors; all value invariants are enforced by construction-time validation in the owning components."
+  ],
+  "dependencies": [],
+  "deployment": "Header-only within the xverse::xcom::validation namespace; compiled as part of the standalone candidate, no external dependency beyond the C++20 standard library.",
+  "rationale": "A single closed vocabulary prevents silent cross-domain timestamp comparison, keeps diagnostics payload-free, and gives later trace links a stable anchor for every enum and value type."
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "validation_session_manager",
+  "revision": "1",
+  "name": "Session and controller manager",
+  "purpose": "Own controller identity and generation, bounded live-session capacity, handle issuance, and the single ordered validation path (handle, context, time, action) that precedes every mutation.",
+  "responsibilities": [
+    "Register a host-issued, globally unique controller identity under a host-provided controller name, within a host-supplied, non-zero uniqueness scope that is bound into every handle; track superseded controller identities in a bounded window to recognize recreated controllers, and never derive identity from a per-manager counter.",
+    "Consume a permit exactly once and bind it to a new session, validating the runtime SessionContext against the permit field-by-field and reporting the mismatching field locator.",
+    "Issue opaque handles binding the manager uniqueness scope, controller identity, generation, and session identity; validate the scope first so a foreign or recreated manager's handle is rejected before any session is addressed.",
+    "Apply the declared diagnostic precedence (handle, context, time, action, quota, capacity) and guarantee that no state mutates when any validation fails.",
+    "Resolve every time-dependent decision through the owned time authority (never a direct comparison of the caller's claim): obtain the authority's reading in the claim domain, cross-check the caller's claim against it, map to the validity domain when needed, and only then test the validity interval.",
+    "Bound live sessions by a host-configured capacity; a failed creation returns no handle and frees its slot exactly on terminal/closed reclamation.",
+    "Expose a zero normal-route emission counter that remains zero and no emission, transport, journal, or persistence API."
+  ],
+  "state_ownership": [
+    "Host-supplied, non-zero uniqueness scope (ManagerScope) required at construction and bound into every issued handle; distinct per manager instance and per recreation.",
+    "Controller table (controller id -> generation, name) with a bounded superseded-controller window.",
+    "Live session table bounded by max_sessions; each entry binds a session, its permit identity, and the owning controller id/generation.",
+    "A single std::mutex guarding all manager state; the manager is non-copyable and non-movable."
+  ],
+  "interfaces": [
+    "register_controller(ControllerId, ControllerName) -> ControllerId",
+    "consume(ControllerId, const Permit&, const SessionContext&, SessionHandle& out) -> Result",
+    "transition(SessionHandle, LifecycleAction, ClockDomainId now_domain, Timestamp now_value, Diagnostic& out) -> Result",
+    "state(SessionHandle) const -> Result with LifecycleState",
+    "capacity() const -> std::size_t; emission_count() const -> std::uint64_t (always zero)"
+  ],
+  "concurrency": "All operations take the single std::mutex; concurrent consumes and transitions serialize deterministically, and exactly-once consumption holds under concurrency via the registry's atomic check-then-insert.",
+  "errors": [
+    "PermitMismatch (with FieldLocator), PermitAlreadyConsumed, SessionAlreadyConsumed, CapacityExhausted.",
+    "InvalidHandle, ForeignHandle, StaleHandle, RecreatedController, SessionNotFound, InvalidController (zero or duplicate controller identity at registration).",
+    "UnknownClock, MissingMapping, ToleranceExceeded, ClockRegression, ClockOverflow, ClockSourceFailure, ClockOutOfBounds, PermitNotYetValid, PermitExpired.",
+    "UndefinedAction, ActionNotAllowed, InvalidTransition, TerminalState, QuotaExhausted, AlreadyApplied."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" },
+    { "component_id": "validation_time_authority", "relation": "uses" },
+    { "component_id": "validation_permit", "relation": "uses" },
+    { "component_id": "validation_permit_registry", "relation": "uses" },
+    { "component_id": "validation_session", "relation": "uses" },
+    { "component_id": "validation_diagnostic", "relation": "uses" }
+  ],
+  "deployment": "Compiled in the standalone candidate; it is the only entry point tests drive end-to-end, so no transport, gateway, or journal type is ever instantiated.",
+  "rationale": "A single facade enforces the required validation-before-mutation ordering in one place and keeps the handle/controller/generation trust boundary coherent, making stale, foreign, and recreated-handle rejection deterministic."
+}

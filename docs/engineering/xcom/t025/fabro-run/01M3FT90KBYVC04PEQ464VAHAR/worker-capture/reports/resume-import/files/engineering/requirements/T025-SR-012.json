@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-012",
+  "revision": 1,
+  "level": "software",
+  "title": "All lifecycle and terminal states are defined and reachable",
+  "statement": "The lifecycle must expose declared to armed to active to closing to closed, with expired, revoked, and evidence-incomplete as terminal states, and must define which transitions are legal from each state.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (the lifecycle exposes declared, armed, active, closing, closed; expired, revoked, and evidence-incomplete are terminal); interface-bridge.md REF-002; anchors: XVE-SYS-0152, FR-018"
+  },
+  "source_anchors": [
+    "packet.md#session-lifecycle",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0152",
+    "FR-018"
+  ],
+  "refines": "T025-STK-003",
+  "applicability": "xverse::xcom::validation session state machine.",
+  "status": "accepted",
+  "verification_intent": "Unit: full transition table (legal and illegal pairs); terminal-state lockout; assert resulting state values and rejection codes.",
+  "acceptance_criteria": [
+    "Each state is reachable via its defined operation from its predecessor.",
+    "Terminal states admit no outgoing transition and attempts are rejected deterministically.",
+    "Invalid transitions such as declared to active are rejected without mutation.",
+    "Expiry and revocation can be applied from the states where they are legal."
+  ]
+}

@@ -109,8 +109,42 @@ set_target_properties(
     CXX_EXTENSIONS OFF
 )
 
+# T025's bounded local time authority, validation permit, and session lifecycle.
+add_library(xverse_xcom_validation_session STATIC src/validation_session.cpp)
+add_library(xverse::xcom_validation_session ALIAS xverse_xcom_validation_session)
+target_include_directories(
+  xverse_xcom_validation_session PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_compile_features(xverse_xcom_validation_session PUBLIC cxx_std_20)
+xverse_xcom_apply_warnings(xverse_xcom_validation_session)
+
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
+  if(NOT DEFINED ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} OR "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
+    message(FATAL_ERROR "T025 tests require the admitted XVERSE_XCOM_T025_TEST_TOOLCHAIN prefix")
+  endif()
+  find_package(
+    GTest CONFIG REQUIRED
+    PATHS "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}/usr/lib/x86_64-linux-gnu/cmake/GTest"
+    NO_DEFAULT_PATH
+  )
+  include(GoogleTest)
+
+  foreach(test_kind IN ITEMS unit integration validation)
+    add_executable(
+      xverse_xcom_validation_${test_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/validation_session/${test_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_validation_${test_kind}_tests
+      PRIVATE xverse::xcom_validation_session GTest::gtest_main GTest::gmock Threads::Threads
+    )
+    xverse_xcom_apply_warnings(xverse_xcom_validation_${test_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_validation_${test_kind}_tests
+      PROPERTIES LABELS "t025;${test_kind}"
+    )
+  endforeach()
 
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(

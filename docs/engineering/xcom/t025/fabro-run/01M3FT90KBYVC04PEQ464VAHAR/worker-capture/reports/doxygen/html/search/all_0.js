@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['accumulate_0',['accumulate',['../classxverse_1_1xcom_1_1validation_1_1Diagnostic.html#a62eadf411e5cb90d130a079cefa227bf',1,'xverse::xcom::validation::Diagnostic']]],
+  ['action_1',['Action',['../namespacexverse_1_1xcom_1_1validation.html#ab307a8d459e481ca1c5aaf883bccd041',1,'xverse::xcom::validation']]],
+  ['action_5fmask_5fname_2',['action_mask_name',['../namespacexverse_1_1xcom_1_1validation.html#a88caf10833499389853e22f2a4907a97',1,'xverse::xcom::validation']]],
+  ['actionmask_3',['ActionMask',['../namespacexverse_1_1xcom_1_1validation.html#aef9c979e6cd4aa783ed0b83ba2eeadf7',1,'xverse::xcom::validation']]],
+  ['actionnotallowed_4',['ActionNotAllowed',['../namespacexverse_1_1xcom_1_1validation.html#a4d261acef1c4b2fe2545c321769d18bdad4ec9fffe377c35c86b27245ef2d819f',1,'xverse::xcom::validation']]],
+  ['activate_5',['Activate',['../namespacexverse_1_1xcom_1_1validation.html#ab307a8d459e481ca1c5aaf883bccd041aa13367a8e2a3f3bf4f3409079e3fdf87',1,'xverse::xcom::validation']]],
+  ['active_6',['active',['../namespacexverse_1_1xcom_1_1validation.html#aea4e6ea64c4b9d98a61602c9b646b339ac76a5e84e4bdee527e274ea30c680d79',1,'xverse::xcom::validation']]],
+  ['add_5fallowed_5faction_7',['add_allowed_action',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a2c13298f45494d46ed683a9dbad807a8',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['add_5fquota_8',['add_quota',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a50f36afc0b215feb44b30dcefaec2f0c',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['advance_5fgeneration_9',['advance_generation',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a0f5d2bbc3b37c609de5fc83928e640f5',1,'xverse::xcom::validation::SessionManager']]],
+  ['allocate_5fslot_5flocked_10',['allocate_slot_locked',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a03328e4a67463c2fc56a4c6541243bea',1,'xverse::xcom::validation::SessionManager']]],
+  ['allowed_5factions_11',['allowed_actions',['../classxverse_1_1xcom_1_1validation_1_1Permit.html#afaf8651e2871877b3dada93a656ac247',1,'xverse::xcom::validation::Permit::allowed_actions()'],['../structxverse_1_1xcom_1_1validation_1_1SessionContext.html#afd318965d5a4f89ea8b27e38666a454c',1,'xverse::xcom::validation::SessionContext::allowed_actions()']]],
+  ['allowed_5factions_5f_12',['allowed_actions_',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#aa905c6215096f2083c40979872190a3d',1,'xverse::xcom::validation::PermitBuilder::allowed_actions_()'],['../classxverse_1_1xcom_1_1validation_1_1Permit.html#a5aab31e954fd143c684c1e774e43774e',1,'xverse::xcom::validation::Permit::allowed_actions_()']]],
+  ['allowedactions_13',['AllowedActions',['../namespacexverse_1_1xcom_1_1validation.html#a91209126e926c41727279938e6f7b5b9a7b946d2ca8615c82851d545f32382093',1,'xverse::xcom::validation']]],
+  ['allows_14',['allows',['../classxverse_1_1xcom_1_1validation_1_1Permit.html#a5f143b508fabda17175657e91d9351b4',1,'xverse::xcom::validation::Permit']]],
+  ['alreadyapplied_15',['AlreadyApplied',['../namespacexverse_1_1xcom_1_1validation.html#a4d261acef1c4b2fe2545c321769d18bda2d2baf9b4bd79c0c987395bd157d46fc',1,'xverse::xcom::validation::AlreadyApplied()'],['../namespacexverse_1_1xcom_1_1validation.html#a037860ae7e8f39afb6f881976e9544afa2d2baf9b4bd79c0c987395bd157d46fc',1,'xverse::xcom::validation::AlreadyApplied()']]],
+  ['any_5fsession_5fwith_5fid_5flocked_16',['any_session_with_id_locked',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a9e18ba348520cd678eed90dceec54649',1,'xverse::xcom::validation::SessionManager']]],
+  ['append_5fbytes_17',['append_bytes',['../namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03.html#ada09b25a3b7b486e99f3884ef10c1730',1,'xverse::xcom::validation::anonymous_namespace{validation_session.cpp}']]],
+  ['append_5ftag_18',['append_tag',['../namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03.html#a6dfaa0d8db6921f31c275b58fed2ad1c',1,'xverse::xcom::validation::anonymous_namespace{validation_session.cpp}']]],
+  ['append_5fu64_19',['append_u64',['../namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03.html#a900fa2f284f8c5f32769deaa7eb86909',1,'xverse::xcom::validation::anonymous_namespace{validation_session.cpp}']]],
+  ['apply_20',['apply',['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#ac4be3e4dec32d42ddfca9b8c340b157c',1,'xverse::xcom::validation::ValidationSession']]],
+  ['arm_21',['Arm',['../namespacexverse_1_1xcom_1_1validation.html#ab307a8d459e481ca1c5aaf883bccd041a551c5c03a1a91f2cf90e0d9a9b6dd378',1,'xverse::xcom::validation']]],
+  ['armed_22',['armed',['../namespacexverse_1_1xcom_1_1validation.html#aea4e6ea64c4b9d98a61602c9b646b339a6e0c631e86ef2402cfa1ca3608a5123e',1,'xverse::xcom::validation']]],
+  ['authority_5f_23',['authority_',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a73dd225f32bccad84a326d10a4e757e4',1,'xverse::xcom::validation::SessionManager']]]
+];

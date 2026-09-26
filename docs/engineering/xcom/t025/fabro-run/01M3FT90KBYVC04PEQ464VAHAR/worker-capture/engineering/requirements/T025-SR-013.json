@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-013",
+  "revision": 1,
+  "level": "software",
+  "title": "Validation precedes mutation; safe idempotency only",
+  "statement": "Validation of handle, context, time, and action must complete before any state mutation; safe idempotent repeats must be accepted with a stable already-applied outcome and unsafe repeats must be rejected.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (define safe idempotency, reject unsafe repeats, and ensure validation of handle, context, time, and action precedes any state mutation); interface-bridge.md REF-002; anchors: XVE-SYS-0144, FR-019"
+  },
+  "source_anchors": [
+    "packet.md#session-lifecycle",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0144",
+    "FR-019"
+  ],
+  "refines": "T025-STK-003",
+  "applicability": "xverse::xcom::validation session transition operations.",
+  "status": "accepted",
+  "verification_intent": "Unit: each pre-mutation validation stage injected in turn with a state snapshot comparison; safe-repeat and unsafe-repeat cases for each transition.",
+  "acceptance_criteria": [
+    "No state change is observable when any pre-mutation validation fails.",
+    "A safe repeat (already in the requested state with the same owning handle) returns a stable already-applied outcome without changing state.",
+    "An unsafe repeat conflicting with current state is rejected distinctly.",
+    "The set of safe repeats is explicitly enumerated in the design."
+  ]
+}

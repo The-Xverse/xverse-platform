@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "validation_session",
+  "revision": "1",
+  "name": "Validation session state machine",
+  "purpose": "Own the bounded lifecycle state of one validation session and the safe-idempotency, unsafe-repeat, and terminal-lockout rules.",
+  "responsibilities": [
+    "Hold the lifecycle state (declared, armed, active, closing, closed, expired, revoked, evidence_incomplete), the bound permit reference, and the remaining quota counters.",
+    "Evaluate a requested lifecycle action against a pure transition table: legal predecessor -> successor, safe idempotent repeat, terminal lockout, and invalid transition.",
+    "Return a stable already-applied outcome for safe idempotent repeats and distinct rejection codes for unsafe repeats and terminal states without changing state.",
+    "Decrement the mapped quota only after a transition has been validated, and return QuotaExhausted when the mapped quota is zero.",
+    "Expose a deterministic state snapshot for before/after no-mutation assertions."
+  ],
+  "state_ownership": [
+    "LifecycleState value, the bound permit identity, and the per-session remaining quota array.",
+    "Sessions are addressed only through the owning manager's table; the state machine performs no allocation and owns no handle/controller bookkeeping."
+  ],
+  "interfaces": [
+    "apply(LifecycleAction action, Timestamp now, Result& out) -> Result (pure transition evaluation)",
+    "state() const -> LifecycleState",
+    "remaining_quota(QuotaKind) const -> std::uint32_t",
+    "snapshot() const -> SessionSnapshot"
+  ],
+  "concurrency": "The state machine is not individually synchronized; it is reached only while the owning manager holds its single std::mutex, giving a deterministic total order.",
+  "errors": [
+    "AlreadyApplied: safe idempotent repeat of the action that produced the current state.",
+    "InvalidTransition: legal-state conflict with a non-terminal current state.",
+    "TerminalState: any transition attempted from a terminal state.",
+    "QuotaExhausted: the action's mapped quota is zero."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" },
+    { "component_id": "validation_permit", "relation": "uses" }
+  ],
+  "deployment": "Compiled in the standalone candidate; the transition table is a constexpr static table so every legal and illegal pair is exhaustive and testable.",
+  "rationale": "A pure transition table makes SR-012 and SR-013 enforceable and lets the full transition and repeat matrix be enumerated in tests without touching the manager."
+}

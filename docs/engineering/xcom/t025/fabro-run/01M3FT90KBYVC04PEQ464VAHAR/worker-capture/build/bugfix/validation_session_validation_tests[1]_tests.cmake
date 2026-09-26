@@ -1,0 +1,7 @@
+add_test([=[Validation.ZEM_01]=]  /workspace/build/bugfix/validation_session_validation_tests [==[--gtest_filter=Validation.ZEM_01]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[Validation.ZEM_01]=]  PROPERTIES WORKING_DIRECTORY /workspace/build/bugfix SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==] LABELS validation)
+add_test([=[Validation.ZEM_03]=]  /workspace/build/bugfix/validation_session_validation_tests [==[--gtest_filter=Validation.ZEM_03]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[Validation.ZEM_03]=]  PROPERTIES WORKING_DIRECTORY /workspace/build/bugfix SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==] LABELS validation)
+add_test([=[Validation.EndToEndNominalScenario]=]  /workspace/build/bugfix/validation_session_validation_tests [==[--gtest_filter=Validation.EndToEndNominalScenario]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[Validation.EndToEndNominalScenario]=]  PROPERTIES WORKING_DIRECTORY /workspace/build/bugfix SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==] LABELS validation)
+set(  validation_session_validation_tests_TESTS Validation.ZEM_01 Validation.ZEM_03 Validation.EndToEndNominalScenario)

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-006",
+  "revision": 1,
+  "level": "software",
+  "title": "Authority lifetime and synchronisation contract",
+  "statement": "The time authority must be non-copyable, must have an explicit documented lifetime, and must be safe for concurrent read/query use with deterministic results.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (define synchronization and lifetime rules, including whether the authority is non-copyable); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+  },
+  "source_anchors": [
+    "packet.md#synchronization-lifetime",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-033"
+  ],
+  "refines": "T025-STK-006",
+  "applicability": "xverse::xcom::validation time authority ownership contract; strict Doxygen required.",
+  "status": "accepted",
+  "verification_intent": "Unit and static: non-copyability assertion; concurrent query test; strict Doxygen build for the documented ownership/lifetime/thread-safety contract.",
+  "acceptance_criteria": [
+    "Copy construction and copy assignment of the authority are not available.",
+    "The public API documents ownership, lifetime, and thread-safety guarantees.",
+    "Concurrent queries from multiple threads return deterministic results with no data race under the applicable sanitizer check."
+  ]
+}

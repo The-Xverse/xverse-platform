@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-016",
+  "revision": 1,
+  "level": "software",
+  "title": "Ordered, payload-free diagnostics",
+  "statement": "Diagnostics must be returned as an ordered sequence of stable, enumerable codes with no payload, item, observation, or free-form content, and multi-failure ordering must follow a declared precedence.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (produce stable, ordered, payload-free diagnostics); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-020"
+  },
+  "source_anchors": [
+    "packet.md#diagnostics",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0154",
+    "FR-020"
+  ],
+  "refines": "T025-STK-004",
+  "applicability": "xverse::xcom::validation public diagnostic result type.",
+  "status": "accepted",
+  "verification_intent": "Unit: precedence cases with an expected exact code sequence; repeat determinism; structural assertion that diagnostic types hold no payload.",
+  "acceptance_criteria": [
+    "A diagnostic value is a bounded enumerable code, optionally with a bounded numeric locator, and carries no data string.",
+    "Multi-failure inputs produce the declared precedence order, identical on repetition.",
+    "The same input yields the same code sequence across runs and builds.",
+    "No diagnostic can carry a communication item, observation, or payload."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-014",
+  "revision": 1,
+  "level": "software",
+  "title": "Bounded session capacity and lifecycle bookkeeping",
+  "statement": "Live session capacity and controller/handle bookkeeping must be finite and host-configurable; creation beyond capacity must fail explicitly without leaking a handle.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (finite quotas or capacities; bounded session lifecycle); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+  },
+  "source_anchors": [
+    "packet.md#synchronization-lifetime",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-033"
+  ],
+  "refines": "T025-STK-006",
+  "applicability": "xverse::xcom::validation session table and slot accounting; finite host-configurable bound.",
+  "status": "accepted",
+  "verification_intent": "Unit and boundary: fill to capacity, attempt overflow, close one, reuse; assert results, handle invalidity, and slot accounting.",
+  "acceptance_criteria": [
+    "Creating sessions up to capacity succeeds; one beyond yields an explicit capacity result.",
+    "A failed creation returns no usable handle and leaves capacity unchanged.",
+    "Closing or terminating a session frees exactly its capacity slot, allowing reuse."
+  ]
+}

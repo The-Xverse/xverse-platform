@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['operator_3d_3d_0',['operator==',['../structxverse_1_1xcom_1_1validation_1_1Quota.html#a2e1b90759b1f13dac12339f6f2c2ad0a',1,'xverse::xcom::validation::Quota::operator==()'],['../classxverse_1_1xcom_1_1validation_1_1Diagnostic.html#ae5cf38c85bdccbeca3268dbd626a4df4',1,'xverse::xcom::validation::Diagnostic::operator==()'],['../classxverse_1_1xcom_1_1validation_1_1Tag.html#a5146e25eaa398baad9ebb3f0027d3d82',1,'xverse::xcom::validation::Tag::operator==()'],['../structxverse_1_1xcom_1_1validation_1_1SessionHandle.html#a2d01dfe4c3c9d12cc71168308c4f443e',1,'xverse::xcom::validation::SessionHandle::operator==()'],['../structxverse_1_1xcom_1_1validation_1_1SessionSnapshot.html#af5a1c36f9f21ebb3f2fa3b6e3e88ce35',1,'xverse::xcom::validation::SessionSnapshot::operator==()'],['../structxverse_1_1xcom_1_1validation_1_1ManagerSnapshot.html#a173dcf3fa13ba62b1a94d495bf6a772a',1,'xverse::xcom::validation::ManagerSnapshot::operator==()']]]
+];

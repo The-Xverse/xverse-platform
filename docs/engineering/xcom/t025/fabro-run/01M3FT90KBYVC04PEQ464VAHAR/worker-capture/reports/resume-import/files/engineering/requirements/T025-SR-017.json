@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-017",
+  "revision": 1,
+  "level": "software",
+  "title": "Deterministic concurrency for consumption and mutation",
+  "statement": "Concurrent permit consumption and concurrent session mutation must be atomic with respect to shared state, producing deterministic outcomes with exactly one success where the operation is exactly-once.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (explicit time authority; deterministic concurrency; synchronization rules); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+  },
+  "source_anchors": [
+    "packet.md#synchronization-lifetime",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-033"
+  ],
+  "refines": "T025-STK-006",
+  "applicability": "xverse::xcom::validation shared controller and consumption state.",
+  "status": "accepted",
+  "verification_intent": "Unit and integration: multithreaded consumption and lifecycle stress with an exact success-count assertion and sanitizer execution.",
+  "acceptance_criteria": [
+    "N concurrent consumptions of one valid permit yield exactly one success.",
+    "The remaining N-minus-1 outcomes are drawn from the defined non-success set with no duplicate applied mutation.",
+    "Shared mutable state is guarded so no data race is reported under the applicable sanitizer run."
+  ]
+}

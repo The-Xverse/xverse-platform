@@ -1,0 +1,1045 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="classxverse_1_1xcom_1_1validation_1_1SessionManager" kind="class" language="C++" prot="public">
+    <compoundname>xverse::xcom::validation::SessionManager</compoundname>
+    <includes refid="validation__session_8hpp" local="no">validation_session.hpp</includes>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1ControllerEntry" prot="private">xverse::xcom::validation::SessionManager::ControllerEntry</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1SessionEntry" prot="private">xverse::xcom::validation::SessionManager::SessionEntry</innerclass>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab949fa297f5e82358e2f98f7c57fa272" prot="private" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr std::size_t</type>
+        <definition>constexpr std::size_t xverse::xcom::validation::SessionManager::kNoIndex</definition>
+        <argsstring></argsstring>
+        <name>kNoIndex</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::kNoIndex</qualifiedname>
+        <initializer>= static_cast&lt;std::size_t&gt;(-1)</initializer>
+        <briefdescription>
+<para>Sentinel for &quot;no slot index&quot;. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1714" column="32" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1714" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab7fc347cb32d675f448b740f3573f963" prot="private" static="no" mutable="yes">
+        <type>std::mutex</type>
+        <definition>std::mutex xverse::xcom::validation::SessionManager::mutex_</definition>
+        <argsstring></argsstring>
+        <name>mutex_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::mutex_</qualifiedname>
+        <briefdescription>
+<para>Serializes all manager access. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1754" column="22" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1754" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ad5a39ed08ac93826cddba40aa767823c" prot="private" static="no" mutable="no">
+        <type><ref refid="structxverse_1_1xcom_1_1validation_1_1ManagerConfig" kindref="compound">ManagerConfig</ref></type>
+        <definition>ManagerConfig xverse::xcom::validation::SessionManager::config_</definition>
+        <argsstring></argsstring>
+        <name>config_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::config_</qualifiedname>
+        <briefdescription>
+<para>Bounded capacities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1757" column="17" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1757" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a73dd225f32bccad84a326d10a4e757e4" prot="private" static="no" mutable="no">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref></type>
+        <definition>TimeAuthority xverse::xcom::validation::SessionManager::authority_</definition>
+        <argsstring></argsstring>
+        <name>authority_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::authority_</qualifiedname>
+        <briefdescription>
+<para>Owned time authority. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1760" column="17" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1760" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab70dbc23e23d16a4b4901167f6f8d3c1" prot="private" static="no" mutable="no">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref></type>
+        <definition>PermitRegistry xverse::xcom::validation::SessionManager::registry_</definition>
+        <argsstring></argsstring>
+        <name>registry_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::registry_</qualifiedname>
+        <briefdescription>
+<para>Owned exactly-once consumption registry. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1763" column="18" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1763" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a1ff9c796b4fc386abaaf9c008b7e99c4" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1ControllerEntry" kindref="compound">ControllerEntry</ref> &gt;</type>
+        <definition>std::vector&lt;ControllerEntry&gt; xverse::xcom::validation::SessionManager::controllers_</definition>
+        <argsstring></argsstring>
+        <name>controllers_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::controllers_</qualifiedname>
+        <briefdescription>
+<para>Bounded controller table. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1766" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1766" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a6a2270dc2393eaf1116f783dc2d9ebe7" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &gt;</type>
+        <definition>std::vector&lt;ControllerId&gt; xverse::xcom::validation::SessionManager::superseded_order_</definition>
+        <argsstring></argsstring>
+        <name>superseded_order_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::superseded_order_</qualifiedname>
+        <briefdescription>
+<para>Superseded controller identities in eviction order. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1769" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1769" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a67d3936790efdf1b2de8f92cf3245d56" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1SessionEntry" kindref="compound">SessionEntry</ref> &gt;</type>
+        <definition>std::vector&lt;SessionEntry&gt; xverse::xcom::validation::SessionManager::sessions_</definition>
+        <argsstring></argsstring>
+        <name>sessions_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::sessions_</qualifiedname>
+        <briefdescription>
+<para>Bounded live-session table. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1772" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1772" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab5315ef3cbb71f96803d00ac5fd05338" prot="private" static="no" mutable="no">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic" kindref="compound">Diagnostic</ref></type>
+        <definition>Diagnostic xverse::xcom::validation::SessionManager::last_diagnostic_</definition>
+        <argsstring></argsstring>
+        <name>last_diagnostic_</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::last_diagnostic_</qualifiedname>
+        <initializer>{}</initializer>
+        <briefdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic" kindref="compound">Diagnostic</ref> of the most recent <computeroutput>consume</computeroutput> or <computeroutput>transition</computeroutput> call. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1775" column="14" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1775" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ae3c2228c5572b4d9f4fe898d5ee226e7" prot="public" static="no" const="no" explicit="yes" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::SessionManager::SessionManager</definition>
+        <argsstring>(ManagerConfig config={})</argsstring>
+        <name>SessionManager</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::SessionManager</qualifiedname>
+        <param>
+          <type><ref refid="structxverse_1_1xcom_1_1validation_1_1ManagerConfig" kindref="compound">ManagerConfig</ref></type>
+          <declname>config</declname>
+          <defval>{}</defval>
+        </param>
+        <briefdescription>
+<para>Constructs a manager with bounded capacities and a non-zero uniqueness scope. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>config</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Bounded capacities and the host-supplied uniqueness scope; the manager copies this value. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>std::invalid_argument</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>when <computeroutput>config.scope</computeroutput> is zero. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1555" column="12" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="776" bodyend="783"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a35535ddd26d16bf490e5595df890b12c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::SessionManager::~SessionManager</definition>
+        <argsstring>()=default</argsstring>
+        <name>~SessionManager</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::~SessionManager</qualifiedname>
+        <briefdescription>
+<para>Destructor. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1559" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a79036780bf5f8bd562084273df38b4b5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::SessionManager::SessionManager</definition>
+        <argsstring>(const SessionManager &amp;)=delete</argsstring>
+        <name>SessionManager</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::SessionManager</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy construction is deleted; the manager is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1563" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a01ca8ef0b9397f47af44c8ac0f949dcc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;</type>
+        <definition>SessionManager &amp; xverse::xcom::validation::SessionManager::operator=</definition>
+        <argsstring>(const SessionManager &amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::operator=</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy assignment is deleted; the manager is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1566" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a669a4d355450b1d9c35d30a1d9cb31d9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::SessionManager::SessionManager</definition>
+        <argsstring>(SessionManager &amp;&amp;)=delete</argsstring>
+        <name>SessionManager</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::SessionManager</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move construction is deleted; the manager is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1569" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ad33ab710437c16dad716e957b25d5b19" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;</type>
+        <definition>SessionManager &amp; xverse::xcom::validation::SessionManager::operator=</definition>
+        <argsstring>(SessionManager &amp;&amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::operator=</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move assignment is deleted; the manager is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1572" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a0a2bd957003ef254caf328e60444114f" prot="public" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        <definition>TimeAuthority &amp; xverse::xcom::validation::SessionManager::time_authority</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>time_authority</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::time_authority</qualifiedname>
+        <briefdescription>
+<para>Returns the owned time authority, for host clock/mapping declarations. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The owned time authority. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1577" column="18" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="785" bodyend="785"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a382f1a67fc1b6d645165198f94098a68" prot="public" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        <definition>const TimeAuthority &amp; xverse::xcom::validation::SessionManager::time_authority</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>time_authority</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::time_authority</qualifiedname>
+        <briefdescription>
+<para>Returns the owned time authority. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The owned time authority. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1582" column="24" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="787" bodyend="787"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9fa8153cf7ceb9df708fe0149882c253" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::register_controller</definition>
+        <argsstring>(const ControllerId &amp;id, std::string_view name)</argsstring>
+        <name>register_controller</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::register_controller</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>id</declname>
+        </param>
+        <param>
+          <type>std::string_view</type>
+          <declname>name</declname>
+        </param>
+        <briefdescription>
+<para>Registers a host-issued controller identity under a controller name. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Host-issued, non-zero, globally unique controller identity. The manager never derives an identity from the name or from a per-manager sequence. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Controller name; re-registering a name supersedes its previous identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput> (issues generation 1 under this manager&apos;s uniqueness scope); <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdabe274cea13bc97f24855afbd7dd6d85e" kindref="member">Result::InvalidController</ref></computeroutput> when <computeroutput>id</computeroutput> is zero or already registered; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" kindref="member">Result::CapacityExhausted</ref></computeroutput> when the controller table is full and no superseded entry can be evicted. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1593" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="886" bodyend="917"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a0f5d2bbc3b37c609de5fc83928e640f5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1af394c8933420c6e48d1156ca8a685939" kindref="member">Generation</ref></type>
+        <definition>Generation xverse::xcom::validation::SessionManager::advance_generation</definition>
+        <argsstring>(const ControllerId &amp;controller)</argsstring>
+        <name>advance_generation</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::advance_generation</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>controller</declname>
+        </param>
+        <briefdescription>
+<para>Advances the generation of a registered, current controller. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controller</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Registered controller identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The new generation, or <computeroutput>0</computeroutput> when <computeroutput>controller</computeroutput> is unknown or superseded. Handles issued under an older generation become <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaec4fb10f5e3708942fbeadb549f6a7be" kindref="member">Result::StaleHandle</ref></computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1600" column="15" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="919" bodyend="927"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a81ea096d1f961d9a0990a45b16bfa01b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::consume</definition>
+        <argsstring>(const ControllerId &amp;controller, const Permit &amp;permit, const SessionContext &amp;context, SessionHandle &amp;out)</argsstring>
+        <name>consume</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::consume</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>controller</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> &amp;</type>
+          <declname>permit</declname>
+        </param>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionContext" kindref="compound">SessionContext</ref> &amp;</type>
+          <declname>context</declname>
+        </param>
+        <param>
+          <type><ref refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" kindref="compound">SessionHandle</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Validates the context against the permit and consumes the permit exactly once. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controller</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Issuing, registered, current controller identity. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>permit</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Immutable permit to consume. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>context</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Asserted runtime envelope, compared field-by-field to <computeroutput>permit</computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives a usable handle only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdacf4799dd7917b8d23620a5c44574922e" kindref="member">Result::PermitMismatch</ref></computeroutput> (see <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a5fbba917a23b2d9662596c0f0f8dd1e4" kindref="member">last_diagnostic()</ref>.locator()</computeroutput>); <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda491c42e77b362ed76ef1730c932b142b" kindref="member">Result::SessionAlreadyConsumed</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda694502919c8da1352133d9804ba21dc8" kindref="member">Result::PermitAlreadyConsumed</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" kindref="member">Result::CapacityExhausted</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaaab965270ebd6822209e7115e7526fc0" kindref="member">Result::ForeignHandle</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda2ff04f22b3e29ac68e521f507a989402" kindref="member">Result::RecreatedController</ref></computeroutput>. A failure returns no usable handle and leaves capacity and consumed sets unchanged. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1613" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="929" bodyend="981"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aad5344427bf11609d37593f6a4736de7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::transition</definition>
+        <argsstring>(const SessionHandle &amp;handle, Action action, ClockDomainId now_domain, Timestamp now_value, Diagnostic &amp;out)</argsstring>
+        <name>transition</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::transition</qualifiedname>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" kindref="compound">SessionHandle</ref> &amp;</type>
+          <declname>handle</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" kindref="member">Action</ref></type>
+          <declname>action</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>now_domain</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>now_value</declname>
+        </param>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic" kindref="compound">Diagnostic</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Validates and applies one lifecycle action to the addressed session. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session handle issued by this manager. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>action</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Requested lifecycle action. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>now_domain</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain of the caller&apos;s current-time claim. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>now_value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Caller&apos;s current-time claim. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the ordered, payload-free diagnostic of this operation. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; the handle outcomes <computeroutput>InvalidHandle</computeroutput>, <computeroutput>ForeignHandle</computeroutput>, <computeroutput>RecreatedController</computeroutput>, <computeroutput>StaleHandle</computeroutput>, <computeroutput>SessionNotFound</computeroutput>; the time outcomes <computeroutput>UnknownClock</computeroutput>, <computeroutput>ClockSourceFailure</computeroutput>, <computeroutput>ClockOutOfBounds</computeroutput>, <computeroutput>ClockRegression</computeroutput>, <computeroutput>ClockOverflow</computeroutput>, <computeroutput>MissingMapping</computeroutput>, <computeroutput>ToleranceExceeded</computeroutput>, <computeroutput>PermitNotYetValid</computeroutput>, <computeroutput>PermitExpired</computeroutput>; and the action outcomes <computeroutput>UndefinedAction</computeroutput>, <computeroutput>ActionNotAllowed</computeroutput>, <computeroutput>TerminalState</computeroutput>, <computeroutput>InvalidTransition</computeroutput>, <computeroutput>QuotaExhausted</computeroutput>, <computeroutput>AlreadyApplied</computeroutput>. Handle, context, time, and action validation all precede any state mutation, so a failure is non-mutating. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1631" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="983" bodyend="1048"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aff3d9443e5125883b79024e045ae3c65" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::state</definition>
+        <argsstring>(const SessionHandle &amp;handle, LifecycleState &amp;out) const</argsstring>
+        <name>state</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::state</qualifiedname>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" kindref="compound">SessionHandle</ref> &amp;</type>
+          <declname>handle</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Reads the lifecycle state of the addressed session without mutating it. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session handle issued by this manager. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the lifecycle state only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The same handle outcomes as <computeroutput>transition</computeroutput>, and <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput> on success. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1639" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1050" bodyend="1059"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a4774eceb168d1a57c6761da2046829a3" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::session_snapshot</definition>
+        <argsstring>(const SessionHandle &amp;handle, SessionSnapshot &amp;out) const</argsstring>
+        <name>session_snapshot</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::session_snapshot</qualifiedname>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" kindref="compound">SessionHandle</ref> &amp;</type>
+          <declname>handle</declname>
+        </param>
+        <param>
+          <type><ref refid="structxverse_1_1xcom_1_1validation_1_1SessionSnapshot" kindref="compound">SessionSnapshot</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Reads an immutable snapshot of the addressed session without mutating it. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session handle issued by this manager. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the snapshot only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The same handle outcomes as <computeroutput>transition</computeroutput>, and <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput> on success. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1646" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1061" bodyend="1070"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a5fbba917a23b2d9662596c0f0f8dd1e4" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic" kindref="compound">Diagnostic</ref></type>
+        <definition>Diagnostic xverse::xcom::validation::SessionManager::last_diagnostic</definition>
+        <argsstring>() const</argsstring>
+        <name>last_diagnostic</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::last_diagnostic</qualifiedname>
+        <briefdescription>
+<para>Returns the diagnostic of the most recent <computeroutput>consume</computeroutput> or <computeroutput>transition</computeroutput> call. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The diagnostic of the most recent <computeroutput>consume</computeroutput> or <computeroutput>transition</computeroutput> call. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1651" column="15" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1072" bodyend="1075"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9ffb845ff35d57d6a1dcd1f15b928679" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="structxverse_1_1xcom_1_1validation_1_1ManagerSnapshot" kindref="compound">ManagerSnapshot</ref></type>
+        <definition>ManagerSnapshot xverse::xcom::validation::SessionManager::manager_snapshot</definition>
+        <argsstring>() const</argsstring>
+        <name>manager_snapshot</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::manager_snapshot</qualifiedname>
+        <briefdescription>
+<para>Returns an immutable snapshot of all bounded manager bookkeeping. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>An immutable snapshot of all bounded manager bookkeeping. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1656" column="20" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1077" bodyend="1086"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1afc0bf2546aa474ae06b0a96d7e6436fa" prot="public" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::SessionManager::capacity</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>capacity</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::capacity</qualifiedname>
+        <briefdescription>
+<para>Returns the configured maximum number of live sessions. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The configured maximum number of live sessions. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1661" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1088" bodyend="1088"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1abd010e73c8c9a04cd01cb4e30673ed2c" prot="public" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>std::uint64_t</type>
+        <definition>std::uint64_t xverse::xcom::validation::SessionManager::emission_count</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>emission_count</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::emission_count</qualifiedname>
+        <briefdescription>
+<para>Returns the normal-route emission count, always <computeroutput>0</computeroutput>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The normal-route emission count, always <computeroutput>0</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1666" column="18" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="1090" bodyend="1090"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aa03a0706ce48ed604793277cf26dd700" prot="private" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type><ref refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1ControllerEntry" kindref="compound">ControllerEntry</ref> *</type>
+        <definition>SessionManager::ControllerEntry * xverse::xcom::validation::SessionManager::find_controller_locked</definition>
+        <argsstring>(const ControllerId &amp;id) noexcept</argsstring>
+        <name>find_controller_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::find_controller_locked</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Finds a controller entry by identity; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Controller identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Pointer to the entry, or <computeroutput>nullptr</computeroutput> when unknown. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1720" column="20" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="790" bodyend="797"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a866ecc083fa9eab93432f578e7fa9adc" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1ControllerEntry" kindref="compound">ControllerEntry</ref> *</type>
+        <definition>const SessionManager::ControllerEntry * xverse::xcom::validation::SessionManager::find_controller_locked</definition>
+        <argsstring>(const ControllerId &amp;id) const noexcept</argsstring>
+        <name>find_controller_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::find_controller_locked</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Finds a controller entry by identity; const overload, call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Controller identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Pointer to the entry, or <computeroutput>nullptr</computeroutput> when unknown. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1726" column="3" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="800" bodyend="807"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9e18ba348520cd678eed90dceec54649" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::SessionManager::any_session_with_id_locked</definition>
+        <argsstring>(const SessionId &amp;id) const noexcept</argsstring>
+        <name>any_session_with_id_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::any_session_with_id_locked</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a2ef1fcf710c5666b0d9c704c6428edb4" kindref="member">SessionId</ref> &amp;</type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether any live session carries a session identity. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when any live session carries the identity. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1731" column="9" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="809" bodyend="816"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a251669f6ba6f727291ced29e7edb56cb" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::SessionManager::locate_locked</definition>
+        <argsstring>(const SessionHandle &amp;handle, std::size_t &amp;index) const noexcept</argsstring>
+        <name>locate_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::locate_locked</qualifiedname>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" kindref="compound">SessionHandle</ref> &amp;</type>
+          <declname>handle</declname>
+        </param>
+        <param>
+          <type>std::size_t &amp;</type>
+          <declname>index</declname>
+        </param>
+        <briefdescription>
+<para>Resolves a handle to a live slot index; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session handle. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>index</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the slot index only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The handle outcome. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1737" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="818" bodyend="847"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a03328e4a67463c2fc56a4c6541243bea" prot="private" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type><ref refid="structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1SessionEntry" kindref="compound">SessionEntry</ref> *</type>
+        <definition>SessionManager::SessionEntry * xverse::xcom::validation::SessionManager::allocate_slot_locked</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>allocate_slot_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::allocate_slot_locked</qualifiedname>
+        <briefdescription>
+<para>Allocates an empty or reclaimable terminal slot; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>Pointer to the slot, or <computeroutput>nullptr</computeroutput> when none is available. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1742" column="17" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="849" bodyend="861"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ac8a4210fcb6f7d33a6154da393d2b5a2" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::SessionManager::live_session_count_locked</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>live_session_count_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::live_session_count_locked</qualifiedname>
+        <briefdescription>
+<para>Counts live (non-terminal) sessions; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The number of live sessions. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1746" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="863" bodyend="871"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a7658537c83ff9fb68f751c5506fc2b98" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::SessionManager::evict_one_superseded_locked</definition>
+        <argsstring>()</argsstring>
+        <name>evict_one_superseded_locked</name>
+        <qualifiedname>xverse::xcom::validation::SessionManager::evict_one_superseded_locked</qualifiedname>
+        <briefdescription>
+<para>Evicts the oldest superseded controller entry; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para><computeroutput>true</computeroutput> when an entry was evicted. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-MANAGER </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1750" column="9" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="873" bodyend="884"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Owns a host-supplied uniqueness scope, controller identity/generation, exactly-once consumption, bounded session capacity, and the validation-session lifecycle. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>All operations take one internal mutex, so concurrent consumption and transitions serialize into a deterministic total order and exactly-once consumption holds under concurrency. The manager is non-copyable and non-movable. It owns its <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref></computeroutput> and <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref></computeroutput>; destroy the manager before any thread that used it exits. Every public method that returns a value is <computeroutput>[[nodiscard]]</computeroutput>, and every path that fails leaves session state, consumed sets, quota counters, and authority baselines unchanged. The class exposes no emission, transport, journal, or persistence entry point, and <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1abd010e73c8c9a04cd01cb4e30673ed2c" kindref="member">emission_count()</ref></computeroutput> is always zero. <simplesect kind="par"><title>Unit specification: T025-U-MANAGER</title><para></para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="5">
+        <label>xverse::xcom::validation::Diagnostic</label>
+        <link refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic"/>
+      </node>
+      <node id="2">
+        <label>xverse::xcom::validation::ManagerConfig</label>
+        <link refid="structxverse_1_1xcom_1_1validation_1_1ManagerConfig"/>
+      </node>
+      <node id="4">
+        <label>xverse::xcom::validation::PermitRegistry</label>
+        <link refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry"/>
+      </node>
+      <node id="1">
+        <label>xverse::xcom::validation::SessionManager</label>
+        <link refid="classxverse_1_1xcom_1_1validation_1_1SessionManager"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>config_</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>authority_</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>registry_</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>last_diagnostic_</edgelabel>
+        </childnode>
+      </node>
+      <node id="3">
+        <label>xverse::xcom::validation::TimeAuthority</label>
+        <link refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority"/>
+      </node>
+    </collaborationgraph>
+    <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1548" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1548" bodyend="1776"/>
+    <listofallmembers>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a0f5d2bbc3b37c609de5fc83928e640f5" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>advance_generation</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a03328e4a67463c2fc56a4c6541243bea" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>allocate_slot_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9e18ba348520cd678eed90dceec54649" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>any_session_with_id_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a73dd225f32bccad84a326d10a4e757e4" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>authority_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1afc0bf2546aa474ae06b0a96d7e6436fa" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>capacity</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ad5a39ed08ac93826cddba40aa767823c" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>config_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a81ea096d1f961d9a0990a45b16bfa01b" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>consume</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a1ff9c796b4fc386abaaf9c008b7e99c4" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>controllers_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1abd010e73c8c9a04cd01cb4e30673ed2c" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>emission_count</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a7658537c83ff9fb68f751c5506fc2b98" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>evict_one_superseded_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aa03a0706ce48ed604793277cf26dd700" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>find_controller_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a866ecc083fa9eab93432f578e7fa9adc" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>find_controller_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab949fa297f5e82358e2f98f7c57fa272" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>kNoIndex</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a5fbba917a23b2d9662596c0f0f8dd1e4" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>last_diagnostic</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab5315ef3cbb71f96803d00ac5fd05338" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>last_diagnostic_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ac8a4210fcb6f7d33a6154da393d2b5a2" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>live_session_count_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a251669f6ba6f727291ced29e7edb56cb" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>locate_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9ffb845ff35d57d6a1dcd1f15b928679" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>manager_snapshot</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab7fc347cb32d675f448b740f3573f963" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>mutex_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a01ca8ef0b9397f47af44c8ac0f949dcc" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ad33ab710437c16dad716e957b25d5b19" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a9fa8153cf7ceb9df708fe0149882c253" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>register_controller</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ab70dbc23e23d16a4b4901167f6f8d3c1" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>registry_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a4774eceb168d1a57c6761da2046829a3" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>session_snapshot</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1ae3c2228c5572b4d9f4fe898d5ee226e7" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>SessionManager</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a79036780bf5f8bd562084273df38b4b5" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>SessionManager</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a669a4d355450b1d9c35d30a1d9cb31d9" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>SessionManager</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a67d3936790efdf1b2de8f92cf3245d56" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>sessions_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aff3d9443e5125883b79024e045ae3c65" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>state</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a6a2270dc2393eaf1116f783dc2d9ebe7" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>superseded_order_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a0a2bd957003ef254caf328e60444114f" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>time_authority</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a382f1a67fc1b6d645165198f94098a68" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>time_authority</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aad5344427bf11609d37593f6a4736de7" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>transition</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1a35535ddd26d16bf490e5595df890b12c" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::SessionManager</scope><name>~SessionManager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "checklist_version": "t025-inspection-v2",
+  "phase": "validation",
+  "reviewer": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-pro"
+  },
+  "inspected_artifacts": [
+    {"path": "engineering/requirements.md", "sha256": "b584cb18784f172c13858d1027e846d473cff619758a87e54526a33f8feba3cc"},
+    {"path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0"},
+    {"path": "engineering/verification-plan.md", "sha256": "0ecac7b94604cbd827b813f13a69580135af01fb5d194e5deb87c2b85a534d70"},
+    {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c"},
+    {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede"},
+    {"path": "engineering/build-evidence.json", "sha256": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff"},
+    {"path": "src/xverse/xcom/include/xverse/xcom/validation_session.hpp", "sha256": "a8bbfb14e25f07ff45a65e87a172ccaf52b55847764a4daa5e8f5930a3f5fa20"},
+    {"path": "src/xverse/xcom/src/validation_session.cpp", "sha256": "c3a62ab4c807b5df263ab8412d5c31201a84eebe70ae41e0aa93fb0928eec08f"},
+    {"path": "tests/validation_session_tests.cpp", "sha256": "eaf4cb469a8de39fc289c90e58b3600879903839894fafd82d2d9c95e0a0d2fb"},
+    {"path": "engineering/trace/links.json", "sha256": "f63a0a73d9e1ac87cadb9e6ad8b28f1be3447ed33a9ccbfa323dedb387a15ca4"},
+    {"path": "engineering/docs/index.rst", "sha256": "1f326e5edc939f21ac1606b3993d4ff3e1f15a7025c5fa8c9cb4049ab49c1b56"},
+    {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.json", "sha256": "c9017453a95f3ade87a01dcba305b4d2ab7d490b76569e49e9b501f7dfdbb5c1"},
+    {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.md", "sha256": "de6f3ff4675185dd727a33703325d8fd3098b422c8348e8c85527f5e8f219751"},
+    {"path": "tests/validation_session_integration_tests.cpp", "sha256": "547b9d0feb8b08b8c05495dbc4a2bbeb773e9897a2fa83301c68701b20052ce4"},
+    {"path": "tests/validation_session_validation_tests.cpp", "sha256": "5ed87a0f82e6686f2bdcb606d72d53d077599bc5c904643de5c54f89671f2eb9"},
+    {"path": "engineering/quality-evidence.json", "sha256": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da"},
+    {"path": "engineering/doxygen-evidence.json", "sha256": "66fc8e9118f3d092da8157537269132eef1849d696dcdf8101f99d129f0149d4"},
+    {"path": "engineering/unit-static-evidence.json", "sha256": "3d6bd434d97ef6cf119982ad97ce4b31791a9230facc0b1a927f20b0f7fdd53f"},
+    {"path": "engineering/implementation-repair.md", "sha256": "6b6abb4efb3e278464a0e1251767b5db9b3fc0c17dd03eadd59af1654d5b93c7"},
+    {"path": "reports/public-symbols.txt", "sha256": "86c193ca570d7eb0dae2639b475eacf101ea5e0076f89f612e7038ece78f0e7b"},
+    {"path": "reports/coverage-summary.json", "sha256": "f0e5f99f299b64899d928395827a4e7ae21979777710f0183bd8c7435d55446c"},
+    {"path": "engineering/validation/scenarios/T025-VS-001.json", "sha256": "b969bea7ace522444968f7ed8954f1af736efdd7b74b3761a6c5bafc4c66cc40"},
+    {"path": "engineering/validation/scenarios/T025-VS-002.json", "sha256": "905f302bef7d1c837df86b756cbd3938660b26b52aaeb0bcf7c8210c762582f1"},
+    {"path": "engineering/validation/scenarios/T025-VS-003.json", "sha256": "045cfa0ea8f8325e27024599a8967a32ceafe9a0e726cd379183ef93d430977e"},
+    {"path": "engineering/validation/scenarios/T025-VS-004.json", "sha256": "4a8fed7eef8e0baf2bc72c794efe27a95d5507cca6f4020e2159033c31950810"},
+    {"path": "engineering/validation/scenarios/T025-VS-005.json", "sha256": "5f47a6cf4e36a3f46e6ee26bdec4ad06d2e65db3ba17644229e09da7ce151b35"},
+    {"path": "engineering/validation/scenarios/T025-VS-006.json", "sha256": "16ace33051fffc5269517dd17c3133c814f8a357c5c203bb3b9f677024db6737"},
+    {"path": "engineering/validation/scenarios/T025-VS-007.json", "sha256": "a79a1cfd5590d93fc5df9a9f598a0522125fca59008aafd3eacf7f6b5db34c0a"},
+    {"path": "engineering/validation/scenarios/T025-VS-008.json", "sha256": "bfdc5f2a511a9c4eb782e8d6cb12673b4522f1a413e3e85f2af6ce2187500764"}
+  ],
+  "items": [
+    {
+      "id": "VAL-01",
+      "verdict": "pass",
+      "rationale": "engineering/trace/links.json is the single reciprocal graph with 148 links over 68 canonical artifacts. Programmatic re-check confirms relation counts refines=18, allocated_to=23, implemented_by=39, verified_by=35, decomposes_to=7, analyzed_by=16, validates=10; every software requirement has allocated_to/implemented_by/verified_by, every unit has implemented_by/verified_by/analyzed_by, every scenario has validates. All code target_revision values equal the current file SHA-256, so no endpoint is missing or stale.",
+      "evidence": [
+        {"path": "engineering/trace/links.json", "sha256": "f63a0a73d9e1ac87cadb9e6ad8b28f1be3447ed33a9ccbfa323dedb387a15ca4", "locator": "links[] length 148; relation histogram refines=18 allocated_to=23 implemented_by=39 verified_by=35 decomposes_to=7 analyzed_by=16 validates=10"},
+        {"path": "engineering/trace/links.json", "sha256": "f63a0a73d9e1ac87cadb9e6ad8b28f1be3447ed33a9ccbfa323dedb387a15ca4", "locator": "0 code target_revision mismatches vs current header a8bbfb14… and cpp c3a62ab4…"},
+        {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c", "locator": "§2 Link vocabulary and direction (reciprocal); §4 requirement->code/test/measure table"}
+      ]
+    },
+    {
+      "id": "VAL-02",
+      "verdict": "pass",
+      "rationale": "REF-002 dispositions agree with the admitted interface-bridge allocation and the actual standalone scope. trace.md §7 and requirements.md §8 record XVE-SYS-0144 (channel identity/access deferred), XVE-SYS-0147 (hard real-time proof deferred), XVE-SYS-0152 (stimulation deferred), and XVE-SYS-0154 (durable provenance deferred), all partial with the larger target scope clearly separated. No disposition claims full stimulation or predecessor acceptance.",
+      "evidence": [
+        {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c", "locator": "§7 REF-002 dispositions (XVE-SYS-0144/0147/0152/0154 partial + deferred)"},
+        {"path": "engineering/requirements.md", "sha256": "b584cb18784f172c13858d1027e846d473cff619758a87e54526a33f8feba3cc", "locator": "§8 REF-002 dispositions table (partial/deferred per ID)"},
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§7 Integration gaps item 3 (REF-002 scope is partial)"}
+      ]
+    },
+    {
+      "id": "VAL-03",
+      "verdict": "pass",
+      "rationale": "validation.md §1 binds the current source/test identities to SHA-256 a8bbfb14…/c3a62ab4…/eaf4cb46…/547b9d0f…/5ed87a0f…, all recomputed and matching the on-disk files. §3 records CTest totals unit 129 / integration 4 / validation 3 (136, 0 failed), which equal build-evidence.json results and my independent TEST() block counts (129/4/3). The build evidence is current (status passed) and its material_sha256 44efb24e… is recorded identically by the quality/Doxygen/unit-static records.",
+      "evidence": [
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§1 source/test SHA-256; §3 T1-T6 129/4/3 pass"},
+        {"path": "engineering/build-evidence.json", "sha256": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff", "locator": "results.unit.discovered_tests=129, integration=4, validation=3; status=passed; material_sha256=44efb24e…"},
+        {"path": "tests/validation_session_tests.cpp", "sha256": "eaf4cb469a8de39fc289c90e58b3600879903839894fafd82d2d9c95e0a0d2fb", "locator": "129 TEST() blocks (grep count)"}
+      ]
+    },
+    {
+      "id": "VAL-04",
+      "verdict": "pass",
+      "rationale": "All eight canonical scenario records carry setup, expected, observed, and limitation fields (verified programmatically). observed cites exact case/test IDs and the internal CTest counts 129/129 unit, 4/4 integration, 3/3 validation. Negative cases (VS-003 replay, VS-004 stale/foreign/recreated handles, VS-007 rejection) and boundary cases (VS-006 quota/capacity) are present.",
+      "evidence": [
+        {"path": "engineering/validation/scenarios/T025-VS-001.json", "sha256": "b969bea7ace522444968f7ed8954f1af736efdd7b74b3761a6c5bafc4c66cc40", "locator": "fields setup/expected/observed/limitation present"},
+        {"path": "engineering/validation/scenarios/T025-VS-003.json", "sha256": "045cfa0ea8f8325e27024599a8967a32ceafe9a0e726cd379183ef93d430977e", "locator": "negative replay scenario; observed RP-01..RP-05"},
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§4 Intended-use scenarios table (8 scenarios with exercising tests)"}
+      ]
+    },
+    {
+      "id": "VAL-05",
+      "verdict": "pass",
+      "rationale": "Unavailable checks are separated from worker checks and none is restated as a pass. validation.md §6 marks ThreadSanitizer, CodeQL, ASan/UBSan, predecessor regression, and protected acceptance as pending/not-executed; §9 separates internal worker evidence from protected verification. The matrix records codeql/threadsanitizer/predecessor_integration/T025-M-SA-TSAN evidence_sha256 as null.",
+      "evidence": [
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§6 Unavailable or not-executed checks; §9 Internal versus protected evidence"},
+        {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.json", "sha256": "c9017453a95f3ade87a01dcba305b4d2ab7d490b76569e49e9b501f7dfdbb5c1", "locator": "evidence_sha256 codeql:null, predecessor_integration:null, threadsanitizer:null, T025-M-SA-TSAN:null"}
+      ]
+    },
+    {
+      "id": "VAL-06",
+      "verdict": "pass",
+      "rationale": "Permit replay (RP-01..05 + ReplayOnFullTableReportsSessionAlreadyConsumed/PermitAlreadyConsumed), clock failures (CLK-02..17), lifecycle (LIF-01..16), stale/foreign/recreated handles (HND-01..11), deterministic concurrency (CON-01..05), rejection immutability (NOMUT-01..07 + seven TransitionRejects* tests), and zero emission (ZEM-01..03) all have executable tests whose names I verified in source, plus measure links in the trace. ThreadSanitizer is the only concurrency gap and is explicitly marked pending.",
+      "evidence": [
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§5 Negative cases (MIS/RP/CLK/HND/LIF/QUO/transition-reject)"},
+        {"path": "tests/validation_session_tests.cpp", "sha256": "eaf4cb469a8de39fc289c90e58b3600879903839894fafd82d2d9c95e0a0d2fb", "locator": "TransitionRejectsPermitNotYetValidInDomain, ReplayOnFullTableReportsSessionAlreadyConsumed, CON_01..05, NOMUT_01..07, ZEM_02"},
+        {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c", "locator": "§4 verified_by measure links per requirement"}
+      ]
+    },
+    {
+      "id": "VAL-07",
+      "verdict": "pass",
+      "rationale": "Unresolved items are visible with stated effect on readiness. requirements.md §10 lists assumptions A-1..A-4 and the FR material-gap decision; validation.md §7 lists five integration gaps and §8 exact limitations; trace.md §8/§9 mark the FR/REF-002 anchors and the protected boundary. Each states the effect on candidate readiness without blocking on worker-only facts.",
+      "evidence": [
+        {"path": "engineering/requirements.md", "sha256": "b584cb18784f172c13858d1027e846d473cff619758a87e54526a33f8feba3cc", "locator": "§10 Assumptions A-1..A-4 and material-gap decision"},
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§7 Integration gaps; §8 Exact limitations"},
+        {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c", "locator": "§8 Preserved accepted requirement anchors; §9 Protected boundary"}
+      ]
+    },
+    {
+      "id": "VAL-08",
+      "verdict": "pass",
+      "rationale": "Every authority statement is explicit that internal worker checks do not establish predecessor regression, source compatibility, protected verification, stakeholder acceptance, or production readiness. requirements.md §1.1, validation.md §1.1/§9, and trace.md §1.1 all state this; matrix rows use status pending_external rather than passed.",
+      "evidence": [
+        {"path": "engineering/requirements.md", "sha256": "b584cb18784f172c13858d1027e846d473cff619758a87e54526a33f8feba3cc", "locator": "§1.1 Authority statement"},
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§1.1 Authority statement; §9 Internal versus protected evidence"},
+        {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.json", "sha256": "c9017453a95f3ade87a01dcba305b4d2ab7d490b76569e49e9b501f7dfdbb5c1", "locator": "rows[].status=pending_external; no accepted-delivery claim"}
+      ]
+    },
+    {
+      "id": "VAL-09",
+      "verdict": "pass",
+      "rationale": "validation.md's conclusion (136 internal tests pass; protected checks pending) agrees with build-evidence.json (status passed, unit 129 / integration 4 / validation 3) and with the final material artifacts whose hashes I recomputed and matched. The 148-link trace graph and eight scenario records are consistent with those test counts and current source/test SHA-256.",
+      "evidence": [
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "§3 observed results; §9 conclusion (internal worker evidence only)"},
+        {"path": "engineering/build-evidence.json", "sha256": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff", "locator": "status=passed; unit 129 / integration 4 / validation 3"},
+        {"path": "engineering/trace.md", "sha256": "f32861b92fa7b4f5fa0330308b22215665a873db926efe5999b9a90413a9e84c", "locator": "§2 148 links over 68 canonical artifacts"}
+      ]
+    },
+    {
+      "id": "VAL-10",
+      "verdict": "pass",
+      "rationale": "engineering/docs/index.rst contains 68 Sphinx-Needs directives for 18 software requirements, 6 stakeholder requirements, 7 units, 7 components, 8 scenarios, and 24 measures with canonical IDs matching links.json. Source-bearing directives pin the current file SHA-256 (header a8bbfb14…, cpp c3a62ab4…, tests eaf4cb46…/547b9d0f…/5ed87a0f…), so no stale endpoint exists.",
+      "evidence": [
+        {"path": "engineering/docs/index.rst", "sha256": "1f326e5edc939f21ac1606b3993d4ff3e1f15a7025c5fa8c9cb4049ab49c1b56", "locator": ".. req:: NEED_T025_SR_001..018 / NEED_T025_STK_001..006; .. unit::; .. comp::; .. scenario:: NEED_T025_VS_001..008; 68 directives total"},
+        {"path": "engineering/trace/links.json", "sha256": "f63a0a73d9e1ac87cadb9e6ad8b28f1be3447ed33a9ccbfa323dedb387a15ca4", "locator": "148 links covering SR/STK/components/units/code/measures/scenarios"},
+        {"path": "engineering/validation.md", "sha256": "5bf0f4234d08ef877635238c37932045719588194835fdc12e72d72346ec7ede", "locator": "trace gate note: trace and Sphinx-Needs documentation passed"}
+      ]
+    },
+    {
+      "id": "VAL-11",
+      "verdict": "pass",
+      "rationale": "The worker matrix has no internal traceability gaps: top-level gaps=[], every row gaps=[], and 24 rows cover T025-SR-001..018 plus T025-STK-001..006 with code/components/units/cases/measures/trace links. CodeQL, predecessor_integration, threadsanitizer, and T025-M-SA-TSAN are listed in pending_external_checks with null evidence_sha256 values, so they are explicitly pending, not reported as passed.",
+      "evidence": [
+        {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.json", "sha256": "c9017453a95f3ade87a01dcba305b4d2ab7d490b76569e49e9b501f7dfdbb5c1", "locator": "gaps=[]; pending_external_checks=[codeql, predecessor_integration, threadsanitizer, T025-M-SA-TSAN]; rows=24"},
+        {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.json", "sha256": "c9017453a95f3ade87a01dcba305b4d2ab7d490b76569e49e9b501f7dfdbb5c1", "locator": "rows[].status=pending_external; evidence_sha256.codeql=null, predecessor_integration=null, threadsanitizer=null"},
+        {"path": "reports/worker-evidence/WORKER-T025/traceability-matrix-internal.md", "sha256": "de6f3ff4675185dd727a33703325d8fd3098b422c8348e8c85527f5e8f219751", "locator": "Pending external checks: codeql, predecessor_integration, threadsanitizer, T025-M-SA-TSAN"}
+      ]
+    }
+  ],
+  "findings": [],
+  "conclusion": "pass"
+}

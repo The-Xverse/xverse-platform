@@ -1,0 +1,24 @@
+digraph Architecture {
+  rankdir=LR;
+  node [shape=box];
+  "validation_diagnostic" [label="Ordered payload-free diagnostics"];
+  "validation_permit" [label="Immutable local validation permit"];
+  "validation_permit_registry" [label="Permit consumption registry"];
+  "validation_session" [label="Validation session state machine"];
+  "validation_session_manager" [label="Session and controller manager"];
+  "validation_time_authority" [label="Explicit time authority"];
+  "validation_types" [label="Validation core types"];
+  "validation_diagnostic" -> "validation_types";
+  "validation_permit" -> "validation_types";
+  "validation_permit_registry" -> "validation_types";
+  "validation_permit_registry" -> "validation_permit";
+  "validation_session" -> "validation_types";
+  "validation_session" -> "validation_permit";
+  "validation_session_manager" -> "validation_types";
+  "validation_session_manager" -> "validation_time_authority";
+  "validation_session_manager" -> "validation_permit";
+  "validation_session_manager" -> "validation_permit_registry";
+  "validation_session_manager" -> "validation_session";
+  "validation_session_manager" -> "validation_diagnostic";
+  "validation_time_authority" -> "validation_types";
+}

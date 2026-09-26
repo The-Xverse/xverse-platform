@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['generation_0',['generation',['../structxverse_1_1xcom_1_1validation_1_1SessionHandle.html#a523a0ea802aa6528879a3f3385435e0c',1,'xverse::xcom::validation::SessionHandle::generation()'],['../structxverse_1_1xcom_1_1validation_1_1SessionSnapshot.html#a6beaec4408cb4832f9df2d4f28b8b809',1,'xverse::xcom::validation::SessionSnapshot::generation()'],['../structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1ControllerEntry.html#ad09a0080acd213ca9b8915874a2dc22b',1,'xverse::xcom::validation::SessionManager::ControllerEntry::generation()'],['../structxverse_1_1xcom_1_1validation_1_1SessionManager_1_1SessionEntry.html#aa32fd356c6dde0c3e55fbeb73eaccbb1',1,'xverse::xcom::validation::SessionManager::SessionEntry::generation()'],['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#ab3e802cb2416c154b73fe8c57c1ffc50',1,'xverse::xcom::validation::ValidationSession::generation()']]],
+  ['generation_1',['Generation',['../namespacexverse_1_1xcom_1_1validation.html#af394c8933420c6e48d1156ca8a685939',1,'xverse::xcom::validation']]],
+  ['generation_5f_2',['generation_',['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#a37a4d7b92b68bcaa9ed92f69fbb0f11a',1,'xverse::xcom::validation::ValidationSession']]]
+];

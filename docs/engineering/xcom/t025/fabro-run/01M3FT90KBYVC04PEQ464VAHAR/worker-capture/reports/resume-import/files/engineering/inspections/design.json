@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "checklist_version": "t025-inspection-v2",
+  "phase": "design",
+  "reviewer": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-pro"
+  },
+  "inspected_artifacts": [
+    { "path": "engineering/requirements.md", "sha256": "b584cb18784f172c13858d1027e846d473cff619758a87e54526a33f8feba3cc" },
+    { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0" },
+    { "path": "engineering/verification-plan.md", "sha256": "0ecac7b94604cbd827b813f13a69580135af01fb5d194e5deb87c2b85a534d70" },
+    { "path": "engineering/architecture/diagrams/architecture.dot", "sha256": "381eea40ad64ba508a825df7b3c84909db31b0dc9096f45e4784f3d74b6764fe" },
+    { "path": "engineering/architecture/diagrams/architecture.puml", "sha256": "bb53e3d6ea206b02ec4f226ac640a084f8888fb353f24af687917227505641a4" },
+    { "path": "engineering/architecture/diagrams/architecture.svg", "sha256": "48981586cb090d97b5e71e945fbcae5b5bd7b6a1f3dc29188505874c5a765e5e" },
+    { "path": "engineering/architecture/diagrams/architecture-graphviz.svg", "sha256": "9d39fd59d58d62cc420a678cce3ad3f9a3d9504abcdf35d4de6ba3291151ec53" },
+    { "path": "engineering/architecture/components/validation_diagnostic.json", "sha256": "cdf6ed9a91dc315bc5bcf899b50637256608b237249ec1168056af19a2d1b32f" },
+    { "path": "engineering/architecture/components/validation_permit.json", "sha256": "78282aad5de3dea95c666488be4ae47e2d7510268cecb1c6ca9c167693d8a278" },
+    { "path": "engineering/architecture/components/validation_permit_registry.json", "sha256": "7b9be9cd7958b6c577005068ca6bb4f2fb276510e0b511321fb263991d4620d9" },
+    { "path": "engineering/architecture/components/validation_session.json", "sha256": "4564d89644178b800e0da604e9cb877f4e4c7a626377ece6fcbcfa447ad50479" },
+    { "path": "engineering/architecture/components/validation_session_manager.json", "sha256": "40ea5a37cca5d1d8e44bd883682c215955173579d868fc1ff8a7239327e24f3a" },
+    { "path": "engineering/architecture/components/validation_time_authority.json", "sha256": "400245df2ef7184120b2e2de0db1cb46a6d959a36a759f08ad4b0b306b4061b7" },
+    { "path": "engineering/architecture/components/validation_types.json", "sha256": "1103b8831c0b075a93dfc4f9e0c2dfef09e51a94ad8440a343b44ab277885755" },
+    { "path": "engineering/design-repair.md", "sha256": "ee81e53a4f713023ceaa7ec0be464e32f1804c8ac5a28458680e291007085311" },
+    { "path": "engineering/stage-results/design.json", "sha256": "7a51990a0226d78b27ec7a53b153b29cb9f26cb61a31e076088a73b14b85101c" }
+  ],
+  "items": [
+    {
+      "id": "DES-01",
+      "verdict": "pass",
+      "rationale": "All 18 software requirements (T025-SR-001..018) are allocated to the seven validation_* components in design.md §10. Each component record declares a bounded C++20 API (interfaces), an explicit state owner (state_ownership), and a lifetime/concurrency contract (concurrency + deployment); the non-copyable/non-movable lifetime of TimeAuthority, PermitRegistry, and SessionManager is stated in §4.1, §6.2, and §9.1.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 10. Requirement allocation (T025-SR-001..T025-SR-018 to components)" },
+        { "path": "engineering/architecture/components/validation_time_authority.json", "sha256": "400245df2ef7184120b2e2de0db1cb46a6d959a36a759f08ad4b0b306b4061b7", "locator": "interfaces / state_ownership / concurrency / deployment" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 4.1 Ownership and lifetime; ## 6.2 Boundedness; ## 9.1 Concurrency model" }
+      ]
+    },
+    {
+      "id": "DES-02",
+      "verdict": "pass",
+      "rationale": "The authority declares clock domains with injected bounded sources and kinds (§4.2), directed source→destination mappings with tolerance (§4.3), checked signed arithmetic for overflow, monotonic regression detection, full-range unsigned distance, and single-mutex synchronization (§4.4). UnknownClock, ClockSourceFailure, ClockOutOfBounds, ClockRegression, ClockOverflow, MissingMapping, and ToleranceExceeded are distinct deterministic outcomes.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 4.2 Clock domains and bounded reads (steps 1-5)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 4.3 Directed mapping with tolerance (steps 1-6, full-range distance)" },
+        { "path": "engineering/architecture/components/validation_time_authority.json", "sha256": "400245df2ef7184120b2e2de0db1cb46a6d959a36a759f08ad4b0b306b4061b7", "locator": "errors: UnknownClock..CapacityExhausted; concurrency: single std::mutex" }
+      ]
+    },
+    {
+      "id": "DES-03",
+      "verdict": "pass",
+      "rationale": "The permit is immutable with construction-time validation of every bound field (§5.2); PermitId is the FNV-1a digest over all bound fields including the nonce, so a changed nonce yields a different identity (§5.3). Consume compares the SessionContext field-by-field before the atomic try_consume (§7.3 step 1-2); replay scope is explicitly controller-scoped (D-4, §6.1).",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 5.2 Construction validation; ## 5.3 Identity and immutability" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 6.1 Controller-scoped, exactly-once consumption (steps 1-4)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 7.3 Permit consumption and session creation (step 1 field-by-field; step 2 replay); ## 11 D-4" }
+      ]
+    },
+    {
+      "id": "DES-04",
+      "verdict": "pass",
+      "rationale": "Handles bind ManagerScope, ControllerId, Generation, and SessionId (§7.1); the manager never derives identity from a per-manager counter, and re-registration supersedes the prior identity in a bounded window. The outcome table (§7.2) rejects stale (StaleHandle), foreign (ForeignHandle), recreated-controller (RecreatedController), and forged (InvalidHandle) handles without addressing a live session.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 7.1 Controller identity, generation, and uniqueness scope" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 7.2 Handle validation outcomes (scope-first ForeignHandle; StaleHandle; RecreatedController; InvalidHandle)" },
+        { "path": "engineering/architecture/components/validation_session_manager.json", "sha256": "40ea5a37cca5d1d8e44bd883682c215955173579d868fc1ff8a7239327e24f3a", "locator": "responsibilities: superseded-controller window, scope-first validation; errors: StaleHandle/ForeignHandle/RecreatedController/InvalidHandle" }
+      ]
+    },
+    {
+      "id": "DES-05",
+      "verdict": "pass",
+      "rationale": "The transition table (§7.4) defines every legal predecessor→successor pair for declared→armed→active→closing→closed plus Expire/Revoke/MarkEvidenceIncomplete terminal transitions; the idempotency table enumerates the safe AlreadyApplied repeats; terminal lockout (TerminalState) and invalid transitions (InvalidTransition) are exhaustive via a constexpr static table.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 7.4 Lifecycle state machine (transition table + idempotency table)" },
+        { "path": "engineering/architecture/components/validation_session.json", "sha256": "4564d89644178b800e0da604e9cb877f4e4c7a626377ece6fcbcfa447ad50479", "locator": "deployment: constexpr static transition table; errors: AlreadyApplied/InvalidTransition/TerminalState" }
+      ]
+    },
+    {
+      "id": "DES-06",
+      "verdict": "pass",
+      "rationale": "Shared mutable state is guarded by per-component std::mutex (§9.1); try_consume is a single atomic check-then-insert critical section so N concurrent consumptions of one permit yield exactly one Ok and N−1 failures (§6.2); the manager serializes all consumes and transitions under one lock, and TimeAuthority/PermitRegistry/SessionManager are non-copyable/non-movable.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 9.1 Concurrency model (total order, no lock-free structure)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 6.2 Boundedness (atomic check-then-insert)" },
+        { "path": "engineering/architecture/components/validation_permit_registry.json", "sha256": "7b9be9cd7958b6c577005068ca6bb4f2fb276510e0b511321fb263991d4620d9", "locator": "concurrency: one Ok, N-1 failures" }
+      ]
+    },
+    {
+      "id": "DES-07",
+      "verdict": "pass",
+      "rationale": "Every finite bound has an explicit exhaustion result in the bounded-capacity summary (§9.2); the registry uses std::array-backed open addressing for fixed-capacity bookkeeping (§6.2); live-session capacity and exact slot reclamation are observable (§7.6); quotas exhaust via QuotaExhausted without partial application.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 9.2 Bounded capacity summary (bound + exhaustion result per resource)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 6.2 Boundedness (std::array-backed open addressing); ## 7.6 Session capacity and reclamation" }
+      ]
+    },
+    {
+      "id": "DES-08",
+      "verdict": "pass",
+      "rationale": "Diagnostic precedence is a single ranked table (§8.1) over a payload-free bounded code sequence plus at most one numeric locator (§8.2); the validate-before-mutate order (§7.5) guarantees no mutation on any rejection; zero normal-route emissions are asserted with no emission/transport/persistence API surface and an always-zero counter (§9.3).",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 8.1 Result enum (precedence ranks 1-27); ## 8.2 Diagnostic shape (no string/payload)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 7.5 Per-transition validation order (mutate only after every check passes)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 9.3 Zero normal-route emissions (emission_count() == 0)" }
+      ]
+    },
+    {
+      "id": "DES-09",
+      "verdict": "pass",
+      "rationale": "The verification plan is a pre-implementation intent document (revision 2) whose named case tables carry concrete expected Result codes and Diagnostic ordering for every required group: clock CLK-01..17, nominal NOM-01..04, mismatch MIS-01..13, replay RP-01..05, quota/capacity QUO-01..06, lifecycle LIF-01..16, handle HND-01..11, concurrency CON-01..05, no-mutation NOMUT-01..07, zero-emission ZEM-01..03, and static checks STC-01..06. §15 adds the mandatory adversarial cases ADV-R1..ADV-R4 reproducing each rejected terminal-review probe with the required subsequent observation.",
+      "evidence": [
+        { "path": "engineering/verification-plan.md", "sha256": "0ecac7b94604cbd827b813f13a69580135af01fb5d194e5deb87c2b85a534d70", "locator": "## 1 (pre-code statement, revision 2); ## 3..## 13 named case tables with Expected columns" },
+        { "path": "engineering/verification-plan.md", "sha256": "0ecac7b94604cbd827b813f13a69580135af01fb5d194e5deb87c2b85a534d70", "locator": "## 14 Case-to-requirement mapping; ## 15 Independent-review adversarial regression cases ADV-R1..ADV-R4" }
+      ]
+    },
+    {
+      "id": "DES-10",
+      "verdict": "pass",
+      "rationale": "Decisions D-1..D-10 record non-cryptographic permit identity, opaque handle authenticity (XVE-SYS-0144 deferred), deferred real-time proof (XVE-SYS-0147), controller-scoped replay, coarse-grained mutex, closed quota kinds, FR-015–FR-020/FR-033 anchor allocation as unverified (D-7), no predecessor header included (D-8), and the host-controlled scope/identity (D-9). The authority statement (§1.1) disclaims predecessor regression, source compatibility, protected verification, and production readiness.",
+      "evidence": [
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 11. Decisions and unresolved integration limits (D-1..D-10)" },
+        { "path": "engineering/design.md", "sha256": "9a2ad4ba5a0297f5e30cd68e2d62996a490e7dac9d820f32916e0d6db27899c0", "locator": "## 1.1 Authority statement (no delivery/regression/compatibility/verification claim)" }
+      ]
+    },
+    {
+      "id": "DES-11",
+      "verdict": "pass",
+      "rationale": "The seven component records, the DOT source, the PlantUML source, and both rendered SVGs agree. architecture.dot and architecture.puml declare the same 7 components and the same 13 dependency edges; the sum of dependencies across the seven component records (diagnostic 1, permit 1, registry 2, session 2, manager 6, time_authority 1, types 0 = 13) matches the 13 edges; both architecture.svg and architecture-graphviz.svg render all seven validation_* component names.",
+      "evidence": [
+        { "path": "engineering/architecture/diagrams/architecture.dot", "sha256": "381eea40ad64ba508a825df7b3c84909db31b0dc9096f45e4784f3d74b6764fe", "locator": "7 node declarations, 13 edge declarations" },
+        { "path": "engineering/architecture/diagrams/architecture.puml", "sha256": "bb53e3d6ea206b02ec4f226ac640a084f8888fb353f24af687917227505641a4", "locator": "7 component declarations, 13 dependency arrows" },
+        { "path": "engineering/architecture/diagrams/architecture.svg", "sha256": "48981586cb090d97b5e71e945fbcae5b5bd7b6a1f3dc29188505874c5a765e5e", "locator": "all 7 validation_* component names rendered" },
+        { "path": "engineering/architecture/diagrams/architecture-graphviz.svg", "sha256": "9d39fd59d58d62cc420a678cce3ad3f9a3d9504abcdf35d4de6ba3291151ec53", "locator": "all 7 validation_* component names rendered" }
+      ]
+    }
+  ],
+  "findings": [],
+  "conclusion": "pass"
+}
