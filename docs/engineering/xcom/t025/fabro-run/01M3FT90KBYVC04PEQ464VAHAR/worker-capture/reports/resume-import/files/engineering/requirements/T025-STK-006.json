@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-006",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Bounded, concurrency-safe resources",
+  "statement": "The foundation's memory, permit bookkeeping, and session capacity are finite and configurable, and concurrent use yields deterministic results without duplicate consumption.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (synchronization and lifetime clause); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+  },
+  "source_anchors": [
+    "packet.md#synchronization-lifetime",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-033"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate; finite host-configurable bounds with no invented numeric reliability target.",
+  "status": "accepted",
+  "verification_intent": "Refined by T025-SR-006, T025-SR-010, T025-SR-014, T025-SR-017 and verified by boundary and concurrent stress tests.",
+  "acceptance_criteria": [
+    "AC-1: Session capacity, permit-consumption bookkeeping, and mapping tables have finite, host-configurable bounds with defined exhaustion behaviour.",
+    "AC-2: Concurrent attempts to consume the same permit produce exactly one success and a deterministic set of failures.",
+    "AC-3: Concurrent session operations do not corrupt handle/controller binding or lifecycle state.",
+    "AC-4: Time-authority lifetime and copy/synchronisation rules are explicit and honoured."
+  ]
+}

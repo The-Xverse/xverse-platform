@@ -59,7 +59,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 6: Validation stimulation boundary (US3)
 
-- [ ] T025 Implement the explicit time-authority interface, local validation permit
+- [X] T025 Implement the explicit time-authority interface, local validation permit
   validation/consumption, and bounded session lifecycle.
 - [ ] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
   unrestricted payload logs, including journal-before-emission ordering, atomic/partial-write behavior,

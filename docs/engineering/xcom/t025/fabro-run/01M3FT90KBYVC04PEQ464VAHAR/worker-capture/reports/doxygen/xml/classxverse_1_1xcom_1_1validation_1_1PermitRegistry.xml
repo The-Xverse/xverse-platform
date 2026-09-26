@@ -1,0 +1,485 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kind="class" language="C++" prot="public">
+    <compoundname>xverse::xcom::validation::PermitRegistry</compoundname>
+    <includes refid="validation__session_8hpp" local="no">validation_session.hpp</includes>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1PermitRegistry_1_1PermitKey" prot="private">xverse::xcom::validation::PermitRegistry::PermitKey</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1PermitRegistry_1_1SessionKey" prot="private">xverse::xcom::validation::PermitRegistry::SessionKey</innerclass>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1af68b00a51a1d79f208360bcd7c1013c7" prot="private" static="no" mutable="yes">
+        <type>std::mutex</type>
+        <definition>std::mutex xverse::xcom::validation::PermitRegistry::mutex_</definition>
+        <argsstring></argsstring>
+        <name>mutex_</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::mutex_</qualifiedname>
+        <briefdescription>
+<para>Serializes all registry access. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1465" column="22" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1465" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1aa87c47ccbbf02274f628b47015c823bd" prot="private" static="no" mutable="no">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::PermitRegistry::max_permits_</definition>
+        <argsstring></argsstring>
+        <name>max_permits_</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::max_permits_</qualifiedname>
+        <initializer>{0}</initializer>
+        <briefdescription>
+<para>Configured maximum consumed permit identities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1468" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1468" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a2c9a88834d87b664db84b31ac77e0e31" prot="private" static="no" mutable="no">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::PermitRegistry::max_sessions_</definition>
+        <argsstring></argsstring>
+        <name>max_sessions_</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::max_sessions_</qualifiedname>
+        <initializer>{0}</initializer>
+        <briefdescription>
+<para>Configured maximum consumed session identities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1471" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1471" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ab838405f9a584dc194d1d67c36bf3626" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1PermitRegistry_1_1PermitKey" kindref="compound">PermitKey</ref> &gt;</type>
+        <definition>std::vector&lt;PermitKey&gt; xverse::xcom::validation::PermitRegistry::permits_</definition>
+        <argsstring></argsstring>
+        <name>permits_</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::permits_</qualifiedname>
+        <briefdescription>
+<para>Consumed permit keys. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1474" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1474" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ae5831253360f421d3cf7cd7a3d0c5ee2" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1PermitRegistry_1_1SessionKey" kindref="compound">SessionKey</ref> &gt;</type>
+        <definition>std::vector&lt;SessionKey&gt; xverse::xcom::validation::PermitRegistry::sessions_</definition>
+        <argsstring></argsstring>
+        <name>sessions_</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::sessions_</qualifiedname>
+        <briefdescription>
+<para>Consumed session keys. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1477" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1477" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1abf1debf1a2369f8f82b89b4264e4ef9e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::PermitRegistry::PermitRegistry</definition>
+        <argsstring>(std::size_t max_consumed_permits, std::size_t max_consumed_sessions)</argsstring>
+        <name>PermitRegistry</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::PermitRegistry</qualifiedname>
+        <param>
+          <type>std::size_t</type>
+          <declname>max_consumed_permits</declname>
+        </param>
+        <param>
+          <type>std::size_t</type>
+          <declname>max_consumed_sessions</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a registry with bounded consumed-identity capacities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>max_consumed_permits</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Maximum consumed permit identities. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>max_consumed_sessions</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Maximum consumed session identities. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1381" column="3" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="718" bodyend="719"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a5a396d96a3fbc4e0d76f328361e85012" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::PermitRegistry::~PermitRegistry</definition>
+        <argsstring>()=default</argsstring>
+        <name>~PermitRegistry</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::~PermitRegistry</qualifiedname>
+        <briefdescription>
+<para>Destructor. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1384" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ac793bc17b3296d342199084f9438abf0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::PermitRegistry::PermitRegistry</definition>
+        <argsstring>(const PermitRegistry &amp;)=delete</argsstring>
+        <name>PermitRegistry</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::PermitRegistry</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy construction is deleted; the registry is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1388" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a6be92fe03fde9a74f28c5ba57044bbf3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;</type>
+        <definition>PermitRegistry &amp; xverse::xcom::validation::PermitRegistry::operator=</definition>
+        <argsstring>(const PermitRegistry &amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::operator=</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy assignment is deleted; the registry is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1391" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a4c8dac54ef96cea7201688acc950e3f1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::PermitRegistry::PermitRegistry</definition>
+        <argsstring>(PermitRegistry &amp;&amp;)=delete</argsstring>
+        <name>PermitRegistry</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::PermitRegistry</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move construction is deleted; the registry is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1394" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a864563a71b4bd8f31e49c5dbc14667f6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;</type>
+        <definition>PermitRegistry &amp; xverse::xcom::validation::PermitRegistry::operator=</definition>
+        <argsstring>(PermitRegistry &amp;&amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::operator=</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" kindref="compound">PermitRegistry</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move assignment is deleted; the registry is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1397" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1abce2bac3acee386ec87d977298f9e4a6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::PermitRegistry::try_consume</definition>
+        <argsstring>(const ControllerId &amp;controller, const PermitId &amp;permit_id, const SessionId &amp;session_id)</argsstring>
+        <name>try_consume</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::try_consume</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>controller</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a506101862c8fbfb98a372fe5673d3164" kindref="member">PermitId</ref> &amp;</type>
+          <declname>permit_id</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a2ef1fcf710c5666b0d9c704c6428edb4" kindref="member">SessionId</ref> &amp;</type>
+          <declname>session_id</declname>
+        </param>
+        <briefdescription>
+<para>Atomically checks and inserts a consumed <computeroutput>(controller, permit, session)</computeroutput> triple. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controller</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Consumption scope. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>permit_id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> identity. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>session_id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput> when both identities were inserted; otherwise <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda491c42e77b362ed76ef1730c932b142b" kindref="member">Result::SessionAlreadyConsumed</ref></computeroutput>, <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda694502919c8da1352133d9804ba21dc8" kindref="member">Result::PermitAlreadyConsumed</ref></computeroutput>, or <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" kindref="member">Result::CapacityExhausted</ref></computeroutput>. Nothing is inserted on failure. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1407" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="721" bodyend="740"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a2c2dcfa7479a65c8475d1ff6dddfa597" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::PermitRegistry::is_consumed_permit</definition>
+        <argsstring>(const ControllerId &amp;controller, const PermitId &amp;permit_id) const</argsstring>
+        <name>is_consumed_permit</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::is_consumed_permit</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>controller</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a506101862c8fbfb98a372fe5673d3164" kindref="member">PermitId</ref> &amp;</type>
+          <declname>permit_id</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a permit identity was consumed in a scope. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controller</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Consumption scope. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>permit_id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when the permit identity was consumed in this scope. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1415" column="9" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="742" bodyend="751"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ad0db0a34a7314e78c91722340fff7f29" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::PermitRegistry::is_consumed_session</definition>
+        <argsstring>(const ControllerId &amp;controller, const SessionId &amp;session_id) const</argsstring>
+        <name>is_consumed_session</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::is_consumed_session</qualifiedname>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" kindref="member">ControllerId</ref> &amp;</type>
+          <declname>controller</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacexverse_1_1xcom_1_1validation_1a2ef1fcf710c5666b0d9c704c6428edb4" kindref="member">SessionId</ref> &amp;</type>
+          <declname>session_id</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a session identity was consumed in a scope. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>controller</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Consumption scope. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>session_id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Session identity. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when the session identity was consumed in this scope. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1423" column="9" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="753" bodyend="762"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a9c4dd16cc7ff5d0d3308bcb59795e04e" prot="public" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::PermitRegistry::capacity</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>capacity</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::capacity</qualifiedname>
+        <briefdescription>
+<para>Returns the configured maximum consumed permit identities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The configured maximum consumed permit identities. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1429" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="764" bodyend="764"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a417db4ad07adae5410de4125de117f51" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::PermitRegistry::size</definition>
+        <argsstring>() const</argsstring>
+        <name>size</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::size</qualifiedname>
+        <briefdescription>
+<para>Returns the number of consumed permit identities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The number of consumed permit identities. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1434" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="766" bodyend="769"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a6220cfab1005af2f372c420affa04451" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::PermitRegistry::session_size</definition>
+        <argsstring>() const</argsstring>
+        <name>session_size</name>
+        <qualifiedname>xverse::xcom::validation::PermitRegistry::session_size</qualifiedname>
+        <briefdescription>
+<para>Returns the number of consumed session identities. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The number of consumed session identities. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-REGISTRY </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1439" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="771" bodyend="774"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Controller-scoped, exactly-once consumed-identity bookkeeping. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><computeroutput>try_consume</computeroutput> performs a single atomic check-then-insert under this registry&apos;s own mutex, so N concurrent consumptions of one identity yield exactly one <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput> and N-1 deterministic failures. Check order is session identity first, then permit identity, then capacity, so a changed-nonce replay is reported as <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda491c42e77b362ed76ef1730c932b142b" kindref="member">Result::SessionAlreadyConsumed</ref></computeroutput>. No partial insertion occurs on any failure, and the bookkeeping never grows past its configured capacity. The registry is non-copyable and non-movable. <simplesect kind="par"><title>Unit specification: T025-U-REGISTRY</title><para></para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1375" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1375" bodyend="1478"/>
+    <listofallmembers>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a9c4dd16cc7ff5d0d3308bcb59795e04e" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>capacity</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a2c2dcfa7479a65c8475d1ff6dddfa597" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>is_consumed_permit</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ad0db0a34a7314e78c91722340fff7f29" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>is_consumed_session</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1aa87c47ccbbf02274f628b47015c823bd" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>max_permits_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a2c9a88834d87b664db84b31ac77e0e31" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>max_sessions_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1af68b00a51a1d79f208360bcd7c1013c7" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>mutex_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a6be92fe03fde9a74f28c5ba57044bbf3" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a864563a71b4bd8f31e49c5dbc14667f6" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1abf1debf1a2369f8f82b89b4264e4ef9e" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>PermitRegistry</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ac793bc17b3296d342199084f9438abf0" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>PermitRegistry</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a4c8dac54ef96cea7201688acc950e3f1" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>PermitRegistry</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ab838405f9a584dc194d1d67c36bf3626" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>permits_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a6220cfab1005af2f372c420affa04451" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>session_size</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1ae5831253360f421d3cf7cd7a3d0c5ee2" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>sessions_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a417db4ad07adae5410de4125de117f51" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>size</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1abce2bac3acee386ec87d977298f9e4a6" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>try_consume</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry_1a5a396d96a3fbc4e0d76f328361e85012" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::PermitRegistry</scope><name>~PermitRegistry</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

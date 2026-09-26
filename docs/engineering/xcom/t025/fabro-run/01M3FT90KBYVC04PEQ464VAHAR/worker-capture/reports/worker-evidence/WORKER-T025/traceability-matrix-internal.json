@@ -1,0 +1,3151 @@
+{
+  "candidate_commit": "uncommitted-worker",
+  "feature_id": "T025",
+  "gaps": [],
+  "material_inputs_sha256": "3d7eb0905943e7341cc7e22675680dc459b023505009682c9b70a95510daef2f",
+  "pending_external_checks": [
+    "codeql",
+    "predecessor_integration",
+    "threadsanitizer",
+    "T025-M-SA-TSAN"
+  ],
+  "policy_sha256": "26874d2b53b869a8feae70b44f147a468ac920d86f0ecb9fa60fe010186a2f88",
+  "project_id": "xcom-t025-sanitized",
+  "rows": [
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-001",
+      "requirement_lineage": [
+        "T025-SR-001"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (time authority identifies clock domains); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-002",
+        "T025-L-004",
+        "T025-L-099",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119"
+      ],
+      "unit_case_ids": [
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-04"
+      ],
+      "unit_specifications": [
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-TIME"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-002",
+      "requirement_lineage": [
+        "T025-SR-002"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (obtains bounded current time); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-006",
+        "T025-L-009",
+        "T025-L-099",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119"
+      ],
+      "unit_case_ids": [
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-04"
+      ],
+      "unit_specifications": [
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-TIME"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-003",
+      "requirement_lineage": [
+        "T025-SR-003"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (maps between domains only under declared source, destination, and tolerance rules); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-011",
+        "T025-L-013",
+        "T025-L-099",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119"
+      ],
+      "unit_case_ids": [
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-04"
+      ],
+      "unit_specifications": [
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-TIME"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-004",
+      "requirement_lineage": [
+        "T025-SR-004"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (regression and overflow produce distinct deterministic results); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-015",
+        "T025-L-017",
+        "T025-L-099",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119"
+      ],
+      "unit_case_ids": [
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-04"
+      ],
+      "unit_specifications": [
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-TIME"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_session_manager",
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-CROSSDOMAIN": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-005",
+      "requirement_lineage": [
+        "T025-SR-005"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (raw timestamps from different domains are never compared); interface-bridge.md; anchors: FR-015, FR-033, XVE-SYS-0147"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-SYMBOL",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-019",
+        "T025-L-020",
+        "T025-L-023",
+        "T025-L-024",
+        "T025-L-099",
+        "T025-L-103",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-04",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-I-CROSSDOMAIN",
+        "T025-M-U-MANAGER",
+        "T025-M-U-TIME",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-SR-006",
+      "requirement_lineage": [
+        "T025-SR-006"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (define synchronization and lifetime rules, including whether the authority is non-copyable); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-026",
+        "T025-L-028",
+        "T025-L-029",
+        "T025-L-099",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119"
+      ],
+      "unit_case_ids": [
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-04"
+      ],
+      "unit_specifications": [
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-U-TIME"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::Permit",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitBuilder",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_permit",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-PERMIT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-007",
+      "requirement_lineage": [
+        "T025-SR-007"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (the immutable permit binds exactly one session identity, plan digest, ... every finite quota or capacity); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-016"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-PERMIT-01",
+        "STC-PERMIT-02",
+        "STC-PERMIT-03",
+        "STC-PERMIT-04",
+        "STC-PERMIT-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-031",
+        "T025-L-032",
+        "T025-L-035",
+        "T025-L-100",
+        "T025-L-103",
+        "T025-L-122",
+        "T025-L-123",
+        "T025-L-124",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "PRM-01",
+        "PRM-02",
+        "PRM-03",
+        "PRM-04",
+        "PRM-05",
+        "PRM-06",
+        "PRM-07",
+        "PRM-08",
+        "PRM-09",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-PERMIT"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-PERMIT",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::Permit",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitBuilder"
+      ],
+      "components": [
+        "validation_permit"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-PERMIT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-008",
+      "requirement_lineage": [
+        "T025-SR-008"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (reject undefined action bits or composite values that are not explicitly allowed); interface-bridge.md REF-002; anchors: FR-016"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE"
+      ],
+      "static_check_ids": [
+        "STC-PERMIT-01",
+        "STC-PERMIT-02",
+        "STC-PERMIT-03",
+        "STC-PERMIT-04",
+        "STC-PERMIT-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-037",
+        "T025-L-039",
+        "T025-L-040",
+        "T025-L-100",
+        "T025-L-122",
+        "T025-L-123",
+        "T025-L-124"
+      ],
+      "unit_case_ids": [
+        "PRM-01",
+        "PRM-02",
+        "PRM-03",
+        "PRM-04",
+        "PRM-05",
+        "PRM-06",
+        "PRM-07",
+        "PRM-08",
+        "PRM-09"
+      ],
+      "unit_specifications": [
+        "T025-U-PERMIT"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-PERMIT",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitRegistry",
+        "src/xverse/xcom/src/validation_session.cpp::PermitRegistry"
+      ],
+      "components": [
+        "validation_permit_registry"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-REGISTRY": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-009",
+      "requirement_lineage": [
+        "T025-SR-009"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (define a global or controller-scoped one-time-consumption rule; prevent duplicate exact permit or session identity from being consumed twice, including with a changed nonce); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-017"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE"
+      ],
+      "static_check_ids": [
+        "STC-REGISTRY-01",
+        "STC-REGISTRY-02",
+        "STC-REGISTRY-03",
+        "STC-REGISTRY-04",
+        "STC-REGISTRY-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-042",
+        "T025-L-045",
+        "T025-L-101",
+        "T025-L-126",
+        "T025-L-127",
+        "T025-L-128"
+      ],
+      "unit_case_ids": [
+        "QUO-05",
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-04",
+        "REG-06"
+      ],
+      "unit_specifications": [
+        "T025-U-REGISTRY"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-REGISTRY"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ManagerConfig",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitRegistry",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_permit_registry",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-REGISTRY": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-010",
+      "requirement_lineage": [
+        "T025-SR-010"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (return explicit exhaustion behavior; every finite quota or capacity); interface-bridge.md REF-002; anchors: XVE-SYS-0152, FR-017"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-REGISTRY-01",
+        "STC-REGISTRY-02",
+        "STC-REGISTRY-03",
+        "STC-REGISTRY-04",
+        "STC-REGISTRY-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-047",
+        "T025-L-048",
+        "T025-L-051",
+        "T025-L-052",
+        "T025-L-101",
+        "T025-L-103",
+        "T025-L-126",
+        "T025-L-127",
+        "T025-L-128",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-05",
+        "QUO-06",
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-04",
+        "REG-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-REGISTRY"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-REGISTRY",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionHandle",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-GENERATION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-011",
+      "requirement_lineage": [
+        "T025-SR-011"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (session handles bind a host-generated controller identity and generation so stale, foreign, and recreated-controller handles cannot authorize a record); interface-bridge.md REF-002; anchors: XVE-SYS-0144, XVE-SYS-0152, FR-018"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-054",
+        "T025-L-057",
+        "T025-L-058",
+        "T025-L-103",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-I-GENERATION",
+        "T025-M-U-MANAGER",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TransitionOutcome",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ValidationSession"
+      ],
+      "components": [
+        "validation_session"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-SESSION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-012",
+      "requirement_lineage": [
+        "T025-SR-012"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (the lifecycle exposes declared, armed, active, closing, closed; expired, revoked, and evidence-incomplete are terminal); interface-bridge.md REF-002; anchors: XVE-SYS-0152, FR-018"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE"
+      ],
+      "static_check_ids": [
+        "STC-SESSION-01",
+        "STC-SESSION-02",
+        "STC-SESSION-03",
+        "STC-SESSION-04",
+        "STC-SESSION-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-060",
+        "T025-L-063",
+        "T025-L-102",
+        "T025-L-130",
+        "T025-L-131",
+        "T025-L-132"
+      ],
+      "unit_case_ids": [
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "LIF-05",
+        "LIF-06",
+        "LIF-07",
+        "LIF-08",
+        "LIF-09",
+        "LIF-10",
+        "LIF-11",
+        "LIF-12",
+        "LIF-13",
+        "LIF-14",
+        "LIF-15",
+        "LIF-16",
+        "QUO-01",
+        "QUO-02"
+      ],
+      "unit_specifications": [
+        "T025-U-SESSION"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-SESSION"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ValidationSession"
+      ],
+      "components": [
+        "validation_session"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-SESSION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-013",
+      "requirement_lineage": [
+        "T025-SR-013"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (define safe idempotency, reject unsafe repeats, and ensure validation of handle, context, time, and action precedes any state mutation); interface-bridge.md REF-002; anchors: XVE-SYS-0144, FR-019"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE"
+      ],
+      "static_check_ids": [
+        "STC-SESSION-01",
+        "STC-SESSION-02",
+        "STC-SESSION-03",
+        "STC-SESSION-04",
+        "STC-SESSION-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-065",
+        "T025-L-068",
+        "T025-L-069",
+        "T025-L-102",
+        "T025-L-130",
+        "T025-L-131",
+        "T025-L-132"
+      ],
+      "unit_case_ids": [
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "LIF-05",
+        "LIF-06",
+        "LIF-07",
+        "LIF-08",
+        "LIF-09",
+        "LIF-10",
+        "LIF-11",
+        "LIF-12",
+        "LIF-13",
+        "LIF-14",
+        "LIF-15",
+        "LIF-16",
+        "QUO-01",
+        "QUO-02"
+      ],
+      "unit_specifications": [
+        "T025-U-SESSION"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-SESSION"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ManagerConfig",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-014",
+      "requirement_lineage": [
+        "T025-SR-014"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (finite quotas or capacities; bounded session lifecycle); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-071",
+        "T025-L-074",
+        "T025-L-103",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ValidationSession",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_session",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-SESSION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-015",
+      "requirement_lineage": [
+        "T025-SR-015"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (rejected operations leave state unchanged); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-019"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-SESSION-01",
+        "STC-SESSION-02",
+        "STC-SESSION-03",
+        "STC-SESSION-04",
+        "STC-SESSION-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-076",
+        "T025-L-077",
+        "T025-L-079",
+        "T025-L-080",
+        "T025-L-102",
+        "T025-L-103",
+        "T025-L-130",
+        "T025-L-131",
+        "T025-L-132",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "LIF-05",
+        "LIF-06",
+        "LIF-07",
+        "LIF-08",
+        "LIF-09",
+        "LIF-10",
+        "LIF-11",
+        "LIF-12",
+        "LIF-13",
+        "LIF-14",
+        "LIF-15",
+        "LIF-16",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-01",
+        "QUO-02",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-SESSION"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-SESSION",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::Diagnostic"
+      ],
+      "components": [
+        "validation_diagnostic"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-DIAGNOSTIC": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-016",
+      "requirement_lineage": [
+        "T025-SR-016"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (produce stable, ordered, payload-free diagnostics); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-020"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE"
+      ],
+      "static_check_ids": [
+        "STC-DIAGNOSTIC-01",
+        "STC-DIAGNOSTIC-02",
+        "STC-DIAGNOSTIC-03",
+        "STC-DIAGNOSTIC-04"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-082",
+        "T025-L-084",
+        "T025-L-104",
+        "T025-L-111",
+        "T025-L-112",
+        "T025-L-113"
+      ],
+      "unit_case_ids": [
+        "DIA-01",
+        "DIA-02",
+        "DIA-03",
+        "DIA-04",
+        "DIA-05",
+        "DIA-06"
+      ],
+      "unit_specifications": [
+        "T025-U-DIAGNOSTIC"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-U-DIAGNOSTIC"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitRegistry",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_permit_registry",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-CONTROLLER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-REGISTRY": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-017",
+      "requirement_lineage": [
+        "T025-SR-017"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (explicit time authority; deterministic concurrency; synchronization rules); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-REGISTRY-01",
+        "STC-REGISTRY-02",
+        "STC-REGISTRY-03",
+        "STC-REGISTRY-04",
+        "STC-REGISTRY-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-086",
+        "T025-L-087",
+        "T025-L-090",
+        "T025-L-091",
+        "T025-L-101",
+        "T025-L-103",
+        "T025-L-126",
+        "T025-L-127",
+        "T025-L-128",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-05",
+        "QUO-06",
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-04",
+        "REG-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-REGISTRY"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-I-CONTROLLER",
+        "T025-M-U-MANAGER",
+        "T025-M-U-REGISTRY",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::emission_count",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::emission_count"
+      ],
+      "components": [
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-V-ZEM": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "software",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-SR-018",
+      "requirement_lineage": [
+        "T025-SR-018"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet",
+        "reference": "packet.md (the foundation must neither emit a communication item nor create a transport, gateway, network listener, journal, lease, dashboard, persistent store, or external service; all normal-route emission counts remain zero); anchors: FR-020"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-093",
+        "T025-L-096",
+        "T025-L-097",
+        "T025-L-103",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER"
+      ],
+      "validation_scenarios": [],
+      "verification_measures": [
+        "T025-M-SA-SYMBOL",
+        "T025-M-U-MANAGER",
+        "T025-M-U-TRANSITION-REJECT",
+        "T025-M-V-ZEM"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_session_manager",
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-CROSSDOMAIN": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-STK-001",
+      "requirement_lineage": [
+        "T025-SR-001",
+        "T025-SR-002",
+        "T025-SR-003",
+        "T025-SR-004",
+        "T025-SR-005",
+        "T025-STK-001"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (time-authority clause); interface-bridge.md; anchors: XVE-SYS-0147, FR-015, FR-033"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-SYMBOL",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-001",
+        "T025-L-002",
+        "T025-L-004",
+        "T025-L-005",
+        "T025-L-006",
+        "T025-L-009",
+        "T025-L-010",
+        "T025-L-011",
+        "T025-L-013",
+        "T025-L-014",
+        "T025-L-015",
+        "T025-L-017",
+        "T025-L-018",
+        "T025-L-019",
+        "T025-L-020",
+        "T025-L-023",
+        "T025-L-024",
+        "T025-L-099",
+        "T025-L-103",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-141"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-04",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [
+        "T025-VS-002"
+      ],
+      "verification_measures": [
+        "T025-M-I-CROSSDOMAIN",
+        "T025-M-U-MANAGER",
+        "T025-M-U-TIME",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ManagerConfig",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::Permit",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitBuilder",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitRegistry",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::PermitRegistry",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_permit",
+        "validation_permit_registry",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-PERMIT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-REGISTRY": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-STK-002",
+      "requirement_lineage": [
+        "T025-SR-007",
+        "T025-SR-008",
+        "T025-SR-009",
+        "T025-SR-010",
+        "T025-STK-002"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (immutable permit / one-time consumption clause); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-016, FR-017"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-PERMIT-01",
+        "STC-PERMIT-02",
+        "STC-PERMIT-03",
+        "STC-PERMIT-04",
+        "STC-PERMIT-05",
+        "STC-REGISTRY-01",
+        "STC-REGISTRY-02",
+        "STC-REGISTRY-03",
+        "STC-REGISTRY-04",
+        "STC-REGISTRY-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-030",
+        "T025-L-031",
+        "T025-L-032",
+        "T025-L-035",
+        "T025-L-036",
+        "T025-L-037",
+        "T025-L-039",
+        "T025-L-040",
+        "T025-L-041",
+        "T025-L-042",
+        "T025-L-045",
+        "T025-L-046",
+        "T025-L-047",
+        "T025-L-048",
+        "T025-L-051",
+        "T025-L-052",
+        "T025-L-100",
+        "T025-L-101",
+        "T025-L-103",
+        "T025-L-122",
+        "T025-L-123",
+        "T025-L-124",
+        "T025-L-126",
+        "T025-L-127",
+        "T025-L-128",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-142",
+        "T025-L-145"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "PRM-01",
+        "PRM-02",
+        "PRM-03",
+        "PRM-04",
+        "PRM-05",
+        "PRM-06",
+        "PRM-07",
+        "PRM-08",
+        "PRM-09",
+        "QUO-03",
+        "QUO-04",
+        "QUO-05",
+        "QUO-06",
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-04",
+        "REG-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-PERMIT",
+        "T025-U-REGISTRY"
+      ],
+      "validation_scenarios": [
+        "T025-VS-003",
+        "T025-VS-006"
+      ],
+      "verification_measures": [
+        "T025-M-U-MANAGER",
+        "T025-M-U-PERMIT",
+        "T025-M-U-REGISTRY",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionHandle",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TransitionOutcome",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ValidationSession",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_session",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-GENERATION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-SESSION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-STK-003",
+      "requirement_lineage": [
+        "T025-SR-011",
+        "T025-SR-012",
+        "T025-SR-013",
+        "T025-STK-003"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (session handle / lifecycle clause); interface-bridge.md REF-002; anchors: XVE-SYS-0144, XVE-SYS-0152, FR-018"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-SESSION-01",
+        "STC-SESSION-02",
+        "STC-SESSION-03",
+        "STC-SESSION-04",
+        "STC-SESSION-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-053",
+        "T025-L-054",
+        "T025-L-057",
+        "T025-L-058",
+        "T025-L-059",
+        "T025-L-060",
+        "T025-L-063",
+        "T025-L-064",
+        "T025-L-065",
+        "T025-L-068",
+        "T025-L-069",
+        "T025-L-102",
+        "T025-L-103",
+        "T025-L-130",
+        "T025-L-131",
+        "T025-L-132",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-139",
+        "T025-L-143"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "LIF-05",
+        "LIF-06",
+        "LIF-07",
+        "LIF-08",
+        "LIF-09",
+        "LIF-10",
+        "LIF-11",
+        "LIF-12",
+        "LIF-13",
+        "LIF-14",
+        "LIF-15",
+        "LIF-16",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-01",
+        "QUO-02",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-SESSION"
+      ],
+      "validation_scenarios": [
+        "T025-VS-001",
+        "T025-VS-004"
+      ],
+      "verification_measures": [
+        "T025-M-I-GENERATION",
+        "T025-M-U-MANAGER",
+        "T025-M-U-SESSION",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::Diagnostic",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ValidationSession",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager"
+      ],
+      "components": [
+        "validation_diagnostic",
+        "validation_session",
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-DIAGNOSTIC": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-SESSION": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-STK-004",
+      "requirement_lineage": [
+        "T025-SR-015",
+        "T025-SR-016",
+        "T025-STK-004"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (rejection / diagnostics clause); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-019, FR-020"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-DIAGNOSTIC-01",
+        "STC-DIAGNOSTIC-02",
+        "STC-DIAGNOSTIC-03",
+        "STC-DIAGNOSTIC-04",
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-SESSION-01",
+        "STC-SESSION-02",
+        "STC-SESSION-03",
+        "STC-SESSION-04",
+        "STC-SESSION-05"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-075",
+        "T025-L-076",
+        "T025-L-077",
+        "T025-L-079",
+        "T025-L-080",
+        "T025-L-081",
+        "T025-L-082",
+        "T025-L-084",
+        "T025-L-102",
+        "T025-L-103",
+        "T025-L-104",
+        "T025-L-111",
+        "T025-L-112",
+        "T025-L-113",
+        "T025-L-130",
+        "T025-L-131",
+        "T025-L-132",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-147"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "DIA-01",
+        "DIA-02",
+        "DIA-03",
+        "DIA-04",
+        "DIA-05",
+        "DIA-06",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "LIF-05",
+        "LIF-06",
+        "LIF-07",
+        "LIF-08",
+        "LIF-09",
+        "LIF-10",
+        "LIF-11",
+        "LIF-12",
+        "LIF-13",
+        "LIF-14",
+        "LIF-15",
+        "LIF-16",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-01",
+        "QUO-02",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-DIAGNOSTIC",
+        "T025-U-MANAGER",
+        "T025-U-SESSION"
+      ],
+      "validation_scenarios": [
+        "T025-VS-007"
+      ],
+      "verification_measures": [
+        "T025-M-U-DIAGNOSTIC",
+        "T025-M-U-MANAGER",
+        "T025-M-U-SESSION",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::emission_count",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::emission_count"
+      ],
+      "components": [
+        "validation_session_manager"
+      ],
+      "evidence_sha256": {
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-V-ZEM": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer",
+        "T025-M-SA-TSAN"
+      ],
+      "requirement_id": "T025-STK-005",
+      "requirement_lineage": [
+        "T025-SR-018",
+        "T025-STK-005"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet",
+        "reference": "packet.md (no emission / no transport clause); anchors: FR-020"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-SYMBOL"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-092",
+        "T025-L-093",
+        "T025-L-096",
+        "T025-L-097",
+        "T025-L-103",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-140",
+        "T025-L-144"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER"
+      ],
+      "validation_scenarios": [
+        "T025-VS-001",
+        "T025-VS-005"
+      ],
+      "verification_measures": [
+        "T025-M-SA-SYMBOL",
+        "T025-M-U-MANAGER",
+        "T025-M-U-TRANSITION-REJECT",
+        "T025-M-V-ZEM"
+      ]
+    },
+    {
+      "code": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::ManagerConfig",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::PermitRegistry",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::SessionManager",
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp::TimeAuthority",
+        "src/xverse/xcom/src/validation_session.cpp::SessionManager",
+        "src/xverse/xcom/src/validation_session.cpp::TimeAuthority"
+      ],
+      "components": [
+        "validation_permit_registry",
+        "validation_session_manager",
+        "validation_time_authority"
+      ],
+      "evidence_sha256": {
+        "T025-M-I-CONTROLLER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-SA-CLANGTIDY": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-COMPILE": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-RAWCLOCK": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-SYMBOL": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "T025-M-SA-TSAN": null,
+        "T025-M-U-MANAGER": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-REGISTRY": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TIME": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "T025-M-U-TRANSITION-REJECT": "8abf8dbd310a77441c8ea82240d4c4db6fc0a0ca9147c824064ac29f16001eff",
+        "codeql": null,
+        "coverage": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "format": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "predecessor_integration": null,
+        "static_analysis": "b7cf182c262e63203e96b7ac499fc9348b733cc4385b31428d4983391ca894da",
+        "threadsanitizer": null
+      },
+      "gaps": [],
+      "level": "stakeholder",
+      "pending_external": [
+        "T025-M-SA-TSAN",
+        "codeql",
+        "predecessor_integration",
+        "threadsanitizer"
+      ],
+      "requirement_id": "T025-STK-006",
+      "requirement_lineage": [
+        "T025-SR-006",
+        "T025-SR-014",
+        "T025-SR-017",
+        "T025-STK-006"
+      ],
+      "revision": 1,
+      "source": {
+        "kind": "admitted_packet_and_bridge",
+        "reference": "packet.md (synchronization and lifetime clause); interface-bridge.md REF-002; anchors: XVE-SYS-0147, FR-033"
+      },
+      "static_analysis_measures": [
+        "T025-M-SA-CLANGTIDY",
+        "T025-M-SA-COMPILE",
+        "T025-M-SA-RAWCLOCK",
+        "T025-M-SA-SYMBOL",
+        "T025-M-SA-TSAN"
+      ],
+      "static_check_ids": [
+        "STC-MANAGER-01",
+        "STC-MANAGER-02",
+        "STC-MANAGER-03",
+        "STC-MANAGER-04",
+        "STC-MANAGER-05",
+        "STC-MANAGER-06",
+        "STC-MANAGER-07",
+        "STC-REGISTRY-01",
+        "STC-REGISTRY-02",
+        "STC-REGISTRY-03",
+        "STC-REGISTRY-04",
+        "STC-REGISTRY-05",
+        "STC-TIME-01",
+        "STC-TIME-02",
+        "STC-TIME-03",
+        "STC-TIME-04",
+        "STC-TIME-05",
+        "STC-TIME-06"
+      ],
+      "status": "pending_external",
+      "trace_link_ids": [
+        "T025-L-025",
+        "T025-L-026",
+        "T025-L-028",
+        "T025-L-029",
+        "T025-L-070",
+        "T025-L-071",
+        "T025-L-074",
+        "T025-L-085",
+        "T025-L-086",
+        "T025-L-087",
+        "T025-L-090",
+        "T025-L-091",
+        "T025-L-099",
+        "T025-L-101",
+        "T025-L-103",
+        "T025-L-116",
+        "T025-L-117",
+        "T025-L-118",
+        "T025-L-119",
+        "T025-L-126",
+        "T025-L-127",
+        "T025-L-128",
+        "T025-L-135",
+        "T025-L-136",
+        "T025-L-137",
+        "T025-L-138",
+        "T025-L-146",
+        "T025-L-148"
+      ],
+      "unit_case_ids": [
+        "ADV-R1a",
+        "ADV-R1b",
+        "ADV-R1c",
+        "ADV-R1d",
+        "ADV-R2a",
+        "ADV-R2b",
+        "ADV-R3",
+        "ADV-R4",
+        "CLK-01",
+        "CLK-02",
+        "CLK-03",
+        "CLK-04",
+        "CLK-05",
+        "CLK-06",
+        "CLK-07",
+        "CLK-08",
+        "CLK-09",
+        "CLK-10",
+        "CLK-11",
+        "CLK-12",
+        "CLK-13",
+        "CLK-14",
+        "CLK-15",
+        "CLK-16",
+        "CLK-17",
+        "CON-01",
+        "CON-02",
+        "CON-03",
+        "CON-04",
+        "CON-05",
+        "HND-01",
+        "HND-02",
+        "HND-03",
+        "HND-04",
+        "HND-05",
+        "HND-06",
+        "HND-07",
+        "HND-08",
+        "HND-09",
+        "HND-10",
+        "HND-11",
+        "MIS-01",
+        "MIS-02",
+        "MIS-03",
+        "MIS-04",
+        "MIS-05",
+        "MIS-06",
+        "MIS-07",
+        "MIS-08",
+        "MIS-09",
+        "MIS-10",
+        "MIS-11",
+        "MIS-12",
+        "MIS-13",
+        "NOM-01",
+        "NOM-02",
+        "NOM-03",
+        "NOM-04",
+        "NOMUT-01",
+        "NOMUT-02",
+        "NOMUT-03",
+        "NOMUT-04",
+        "NOMUT-05",
+        "NOMUT-06",
+        "NOMUT-07",
+        "QUO-03",
+        "QUO-04",
+        "QUO-05",
+        "QUO-06",
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-04",
+        "REG-06",
+        "RP-01",
+        "RP-02",
+        "RP-03",
+        "RP-04",
+        "RP-05",
+        "ZEM-02"
+      ],
+      "unit_specifications": [
+        "T025-U-MANAGER",
+        "T025-U-REGISTRY",
+        "T025-U-TIME"
+      ],
+      "validation_scenarios": [
+        "T025-VS-006",
+        "T025-VS-008"
+      ],
+      "verification_measures": [
+        "T025-M-I-CONTROLLER",
+        "T025-M-SA-COMPILE",
+        "T025-M-U-MANAGER",
+        "T025-M-U-REGISTRY",
+        "T025-M-U-TIME",
+        "T025-M-U-TRANSITION-REJECT"
+      ]
+    }
+  ],
+  "run_id": "WORKER-T025",
+  "schema_version": 1
+}

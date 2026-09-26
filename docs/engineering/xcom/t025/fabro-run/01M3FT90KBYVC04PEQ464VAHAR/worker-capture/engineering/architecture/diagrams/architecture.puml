@@ -1,0 +1,23 @@
+@startuml
+left to right direction
+component "Ordered payload-free diagnostics" as CMP_validation_diagnostic
+component "Immutable local validation permit" as CMP_validation_permit
+component "Permit consumption registry" as CMP_validation_permit_registry
+component "Validation session state machine" as CMP_validation_session
+component "Session and controller manager" as CMP_validation_session_manager
+component "Explicit time authority" as CMP_validation_time_authority
+component "Validation core types" as CMP_validation_types
+CMP_validation_diagnostic --> CMP_validation_types
+CMP_validation_permit --> CMP_validation_types
+CMP_validation_permit_registry --> CMP_validation_types
+CMP_validation_permit_registry --> CMP_validation_permit
+CMP_validation_session --> CMP_validation_types
+CMP_validation_session --> CMP_validation_permit
+CMP_validation_session_manager --> CMP_validation_types
+CMP_validation_session_manager --> CMP_validation_time_authority
+CMP_validation_session_manager --> CMP_validation_permit
+CMP_validation_session_manager --> CMP_validation_permit_registry
+CMP_validation_session_manager --> CMP_validation_session
+CMP_validation_session_manager --> CMP_validation_diagnostic
+CMP_validation_time_authority --> CMP_validation_types
+@enduml

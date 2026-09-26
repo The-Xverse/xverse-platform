@@ -1,0 +1,47 @@
+{
+  "kind": "internal-worker-quality",
+  "material_sha256": "6bab30957f8135f7d8419c2a8e737c65a467c80a47d3ca153e129f5a12914e90",
+  "results": {
+    "coverage": {
+      "line_percent": 92.6,
+      "line_total": 840,
+      "logical_cpus": 32,
+      "parallel_jobs": 4,
+      "summary": "reports/coverage-summary.json",
+      "tool": "gcovr"
+    },
+    "format": {
+      "files": [
+        "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+        "src/xverse/xcom/src/validation_session.cpp",
+        "tests/validation_session_integration_tests.cpp",
+        "tests/validation_session_tests.cpp",
+        "tests/validation_session_validation_tests.cpp"
+      ],
+      "tool": "clang-format"
+    },
+    "static_analysis": {
+      "rules": [
+        "bugprone-branch-clone",
+        "cppcoreguidelines-pro-type-member-init",
+        "cppcoreguidelines-special-member-functions",
+        "misc-const-correctness",
+        "modernize-use-nodiscard",
+        "performance-unnecessary-copy-initialization",
+        "performance-unnecessary-value-param",
+        "readability-make-member-function-const"
+      ],
+      "sources": [
+        "src/xverse/xcom/src/validation_session.cpp"
+      ],
+      "tool": "clang-tidy"
+    },
+    "symbol_enumeration": {
+      "path": "reports/public-symbols.txt",
+      "sha256": "c86162a7d133781a96674c2d4b4a82a8390cb760f0b418e23d979c915014a8a6",
+      "tool": "nm"
+    }
+  },
+  "schema_version": 1,
+  "status": "passed"
+}

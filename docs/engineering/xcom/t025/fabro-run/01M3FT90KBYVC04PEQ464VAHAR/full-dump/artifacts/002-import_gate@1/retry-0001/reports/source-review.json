@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "review_id": "T025-CODEX-01M3FR5F7TGWQ043HZ7KYXW7HB",
+  "reviewer": "codex",
+  "review_round": 3,
+  "run_id": "01M3FR5F7TGWQ043HZ7KYXW7HB",
+  "workflow_version_id": "74c78fb6616c046236ec2bf8274e900855933ed06f6c52d54696e1a1aec0b9f0",
+  "candidate_identity_sha256": "8f66040537c87a757a1f63a2566a69968b7892ed102ff9a7603b7ae824a88a57",
+  "terminal_index_sha256": "b8f32bbe770150fdea12f498126a25119e4f973878cd3c69a842fee4e787d2b6",
+  "worker_index_sha256": "3ebebc2819820aefe3bd9d316ea510407858f50177be56e6c4ba3dc17ac6dfa2",
+  "verdict": "changes_requested",
+  "verification": {
+    "terminal_entries_verified": 832,
+    "worker_entries_verified": 12,
+    "hash_mismatches": 0,
+    "fresh_tests_passed": 141,
+    "fresh_tests_failed": 0,
+    "ordinary_r6_regression_rejected": true,
+    "concurrent_redeclaration_stale_commit_reproduced": true,
+    "collector_manifest_omission_false_success_reproduced": true,
+    "evidence_refs": ["fresh-ctest.log", "redeclare_probe.cpp", "redeclare-normal.log", "redeclare-gdb.log", "collector_probe.py", "collector-probe.log"]
+  },
+  "issues": [
+    {
+      "id": "R6",
+      "severity": "high",
+      "priority": "P1",
+      "blocking": true,
+      "status": "partial",
+      "finding": "Concurrent re-declaration can cause a successful transition to commit the old clock reading into the replacement clock's baseline.",
+      "artifact_refs": ["../../runs/01M3FR5F7TGWQ043HZ7KYXW7HB/worker-capture/src/xverse/xcom/src/validation_session.cpp:615", "../../runs/01M3FR5F7TGWQ043HZ7KYXW7HB/worker-capture/src/xverse/xcom/src/validation_session.cpp:1064"],
+      "requested_action": "Serialize clock declaration with transition observation and commit, or generation-bind the deferred commit; retain rejection-side-effect guarantee and add concurrency regressions."
+    },
+    {
+      "id": "R5",
+      "severity": "high",
+      "priority": "P1",
+      "blocking": true,
+      "status": "partial",
+      "finding": "Current terminal package is complete, but a manifest that omits essential source still passes collection with no errors.",
+      "artifact_refs": ["../../collect_terminal.py:82", "collector_probe.py", "collector-probe.log"],
+      "requested_action": "Require an independent minimum candidate/evidence path set and test manifest omissions as well as listed-file absence."
+    }
+  ],
+  "limitations": ["Focused R6/R5 review only", "No protected predecessor integration", "Sanitizers and CodeQL not rerun"]
+}

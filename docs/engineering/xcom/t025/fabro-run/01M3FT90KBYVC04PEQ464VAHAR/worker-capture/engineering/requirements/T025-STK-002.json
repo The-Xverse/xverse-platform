@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-002",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Local validation permit is exactly-once and exactly-bound",
+  "statement": "A host-controlled local validation permit must bind exactly one session and its complete operational envelope, and must be consumed at most once.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (immutable permit / one-time consumption clause); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-016, FR-017"
+  },
+  "source_anchors": [
+    "packet.md#permit-binding",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0152",
+    "XVE-SYS-0144",
+    "FR-016",
+    "FR-017"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate; local prototype permit control only, general channel identity/access deferred to Security.",
+  "status": "accepted",
+  "verification_intent": "Refined by T025-SR-007..T025-SR-010 and verified by the permit mismatch, replay, action-set, and exhaustion matrices.",
+  "acceptance_criteria": [
+    "AC-1: A permit differing from the consuming session in any single bound field is rejected and the mismatching field is identifiable from the diagnostic.",
+    "AC-2: A consumed permit cannot be consumed again, including when presented with a changed nonce.",
+    "AC-3: A second session identity cannot consume a permit already consumed for another session.",
+    "AC-4: Undefined action bits and composite values not explicitly allowed are rejected.",
+    "AC-5: Exhausted finite quotas or capacities produce an explicit exhaustion result."
+  ]
+}

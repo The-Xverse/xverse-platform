@@ -1,0 +1,22 @@
+{
+  "case_ids": [
+    "QUO-01",
+    "QUO-02",
+    "QUO-03",
+    "QUO-04",
+    "QUO-05",
+    "QUO-06"
+  ],
+  "expected": "Consuming at the last available quota unit or the last session slot succeeds, and the next attempt returns an explicit QuotaExhausted or CapacityExhausted result without partial mutation.",
+  "id": "T025-VS-006",
+  "intended_use": "Finite quota and capacity boundaries with explicit exhaustion.",
+  "kind": "validation",
+  "limitation": "Internal worker evidence only; the quota/capacity bounds are candidate-local configuration values, not accepted-host sizing.",
+  "observed": "Internal worker CTest run (sandbox): the 6 unit case IDs QUO-01, QUO-02, QUO-03, QUO-04, QUO-05, QUO-06 and the 1 integration test Integration.QuotaExhaustionThroughTransitionPath all passed (part of 129/129 unit and 4/4 integration tests; 0 failures). Explicit QuotaExhausted / CapacityExhausted is returned with no partial mutation.",
+  "revision": 1,
+  "setup": "A SessionManager configured with finite per-session quota and max_sessions; consumption at the last quota unit or the last session slot is followed by one further attempt.",
+  "validates": [
+    "T025-STK-002",
+    "T025-STK-006"
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-TIME",
+  "revision": "1",
+  "component_id": "validation_time_authority",
+  "purpose": "Own the declared clock domains, bounded current-time acquisition, directed source-to-destination mappings with tolerance, and the distinct regression/overflow/unknown/missing-mapping outcomes.",
+  "interfaces": [
+    "declare_clock(ClockDomainId id, ClockSource source, ClockKind kind, Timestamp min, Timestamp max) -> Result",
+    "declare_mapping(ClockDomainId src, ClockDomainId dst, SignedOffset offset, Tolerance tolerance) -> Result",
+    "now(ClockDomainId id, Timestamp& out) -> Result",
+    "convert(ClockDomainId src, ClockDomainId dst, Timestamp value, Timestamp& out) -> Result",
+    "using ClockSource = std::function<std::optional<Timestamp>()>"
+  ],
+  "inputs": [
+    "ClockDomainId, ClockSource (host-injected std::function<std::optional<Timestamp>()>), ClockKind, inclusive [min,max] bound, source/destination ids, signed offset, and Tolerance."
+  ],
+  "outputs": [
+    "Result (UnknownClock, ClockSourceFailure, ClockOutOfBounds, ClockRegression, MissingMapping, ToleranceExceeded, ClockOverflow, CapacityExhausted, Ok) and, on success, a Timestamp via out parameter."
+  ],
+  "state": [
+    "Clock-domain table (id, kind, source, [min,max], last observed reading) bounded by max_domains.",
+    "Directed mapping table (source, destination, offset, tolerance) bounded by max_mappings.",
+    "All mutable state guarded by a single std::mutex; non-copyable and non-movable."
+  ],
+  "errors": [
+    "UnknownClock: undeclared domain referenced.",
+    "ClockSourceFailure: host source returned no reading.",
+    "ClockOutOfBounds: reading outside the declared inclusive bound.",
+    "ClockRegression: reading earlier than the prior reading in a monotonic domain.",
+    "MissingMapping: no declared source-to-destination mapping.",
+    "ToleranceExceeded: mapped value diverges from destination current time beyond tolerance, measured as the full-range unsigned 64-bit distance over the signed ordering (exact over the signed 64-bit domain, maximum UINT64_MAX).",
+    "ClockOverflow: mapped value not representable in Timestamp.",
+    "CapacityExhausted: domain or mapping table is full."
+  ],
+  "invariants": [
+    "No code path compares a raw timestamp from one domain with a raw timestamp from another; conversion requires a declared directed mapping.",
+    "A declared A->B mapping never enables B->A.",
+    "Reads never fabricate time and never fall back to another domain silently.",
+    "A rejected read leaves the regression baseline unchanged.",
+    "The tolerance distance is the full-range unsigned 64-bit magnitude computed from the signed ordering of the two values; it never wraps modulo 2^64 and never interprets a top bit as a sign bit.",
+    "A rejected conversion leaves the destination baseline, the output value, and all authority state unchanged; the destination baseline is committed only after overflow, bounds, and tolerance all pass, inside the same critical section.",
+    "The authority is non-copyable and non-movable."
+  ],
+  "concurrency": "Internally synchronized with one std::mutex; concurrent now/convert calls serialize into a deterministic total order with no data race under ThreadSanitizer.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/src/validation_session.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "CLK-01",
+      "precondition": "D_MONO is declared as a monotonic domain with a source returning 1000 within [0,1000000].",
+      "stimulus": "Call now(D_MONO).",
+      "expected": "Ok; out equals the source reading 1000."
+    },
+    {
+      "id": "CLK-02",
+      "precondition": "Domain 0xDEAD is undeclared.",
+      "stimulus": "Call now(0xDEAD).",
+      "expected": "UnknownClock; domain and mapping tables unchanged."
+    },
+    {
+      "id": "CLK-03",
+      "precondition": "D_MONO source is set to return nullopt.",
+      "stimulus": "Call now(D_MONO).",
+      "expected": "ClockSourceFailure; baseline unchanged."
+    },
+    {
+      "id": "CLK-04",
+      "precondition": "D_MONO source returns max+1 (outside declared bound).",
+      "stimulus": "Call now(D_MONO).",
+      "expected": "ClockOutOfBounds; baseline unchanged."
+    },
+    {
+      "id": "CLK-05",
+      "precondition": "D_MONO source returns 1000 then 999.",
+      "stimulus": "Call now(D_MONO) twice.",
+      "expected": "First Ok (1000); second ClockRegression with baseline still 1000; a later 1001 read returns Ok."
+    },
+    {
+      "id": "CLK-06",
+      "precondition": "Mapping D_MONO->D_WALL declared with offset +5 and tolerance 10; sources agree within 5.",
+      "stimulus": "Call convert(D_MONO, D_WALL, value).",
+      "expected": "Ok; out equals value+5 attributed to D_WALL."
+    },
+    {
+      "id": "CLK-07",
+      "precondition": "Only D_MONO->D_WALL is declared.",
+      "stimulus": "Call convert(D_WALL, D_MONO, value).",
+      "expected": "MissingMapping (reverse direction is not implied)."
+    },
+    {
+      "id": "CLK-08",
+      "precondition": "No mapping exists for D_MONO->D_OTHER.",
+      "stimulus": "Call convert(D_MONO, D_OTHER, value).",
+      "expected": "MissingMapping."
+    },
+    {
+      "id": "CLK-09",
+      "precondition": "Mapped value diverges from destination now by tolerance+1.",
+      "stimulus": "Call convert(D_MONO, D_WALL, value).",
+      "expected": "ToleranceExceeded; no mapping state mutated."
+    },
+    {
+      "id": "CLK-10",
+      "precondition": "Mapped value diverges from destination now by exactly tolerance.",
+      "stimulus": "Call convert(D_MONO, D_WALL, value).",
+      "expected": "Ok (tolerance comparison is <=)."
+    },
+    {
+      "id": "CLK-11",
+      "precondition": "value is INT64_MAX and offset is +1.",
+      "stimulus": "Call convert(D_MONO, D_WALL, INT64_MAX).",
+      "expected": "ClockOverflow; distinct from ToleranceExceeded."
+    },
+    {
+      "id": "CLK-12",
+      "precondition": "A regression source and a tolerance-failing mapping are prepared.",
+      "stimulus": "Trigger a regression then a tolerance failure.",
+      "expected": "Codes are distinguishable: ClockRegression != ToleranceExceeded."
+    },
+    {
+      "id": "CLK-13",
+      "precondition": "source value INT64_MIN, destination now INT64_MAX, offset 0, full-range bounds, tolerance 1.",
+      "stimulus": "Call convert with the negative-to-positive extreme pair.",
+      "expected": "ToleranceExceeded (true distance is UINT64_MAX, not 1); baseline and output unchanged."
+    },
+    {
+      "id": "CLK-14",
+      "precondition": "source value INT64_MAX, destination now INT64_MIN, offset 0, full-range bounds, tolerance 1.",
+      "stimulus": "Call convert with the positive-to-negative extreme pair.",
+      "expected": "ToleranceExceeded (true distance is UINT64_MAX); baseline and output unchanged."
+    },
+    {
+      "id": "CLK-15",
+      "precondition": "A mapping whose distance is exactly UINT64_MAX is prepared; two tolerances are tested.",
+      "stimulus": "Call convert with tolerance UINT64_MAX, then with tolerance UINT64_MAX - 1.",
+      "expected": "tolerance UINT64_MAX -> Ok; tolerance UINT64_MAX - 1 -> ToleranceExceeded (boundary is <=)."
+    },
+    {
+      "id": "CLK-16",
+      "precondition": "Destination baseline is 100 from a successful read; the source reading is then changed to 200; the mapping fails tolerance.",
+      "stimulus": "Call convert on the tolerance-failing mapping.",
+      "expected": "ToleranceExceeded; destination baseline remains 100; a subsequent now() is unaffected (no spurious ClockRegression)."
+    },
+    {
+      "id": "CLK-17",
+      "precondition": "Each conversion failure class is set up in turn.",
+      "stimulus": "Trigger UnknownClock, MissingMapping, ClockOverflow, ClockOutOfBounds, ClockSourceFailure, ClockRegression, and ToleranceExceeded.",
+      "expected": "For every failure the destination baseline and the output value are byte-identical before and after (SR-015)."
+    },
+    {
+      "id": "ADV-R3",
+      "precondition": "source value INT64_MIN, destination now INT64_MAX, offset 0, full-range bounds, tolerance 1 (rejected-state probe).",
+      "stimulus": "Call convert and observe the result and state.",
+      "expected": "ToleranceExceeded (distance UINT64_MAX); output and destination baseline unchanged."
+    },
+    {
+      "id": "ADV-R4",
+      "precondition": "Destination baseline initialized to 100; source reading changed to 200; a conversion fails tolerance (rejected-state probe).",
+      "stimulus": "Call convert and observe the baseline afterward.",
+      "expected": "ToleranceExceeded; baseline stays 100; a subsequent operation observes no ClockRegression attributable to the rejection."
+    },
+    {
+      "id": "CON-04",
+      "precondition": "D_MONO is declared; several threads are ready to read concurrently.",
+      "stimulus": "Run concurrent now(D_MONO) calls from multiple threads.",
+      "expected": "No data race (TSan clean); each read is deterministic and consistent with the serialized order."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-TIME-01",
+      "tool": "static_assert (C++20)",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "expected": "std::is_copy_constructible_v<TimeAuthority> and std::is_move_constructible_v<TimeAuthority> are false."
+    },
+    {
+      "id": "STC-TIME-02",
+      "tool": "clang-tidy",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted and the destructor is trivial."
+    },
+    {
+      "id": "STC-TIME-03",
+      "tool": "clang-tidy",
+      "rule": "misc-const-correctness",
+      "expected": "clean (no diagnostic): query/predicate locals are const."
+    },
+    {
+      "id": "STC-TIME-04",
+      "tool": "ThreadSanitizer",
+      "rule": "Concurrent authority reads (verification-plan CON-04)",
+      "expected": "No data race reported for concurrent now(D_MONO) calls."
+    },
+    {
+      "id": "STC-TIME-05",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: source and header formatted with no diff."
+    },
+    {
+      "id": "STC-TIME-06",
+      "tool": "clang-tidy + manual source scan",
+      "rule": "No raw cross-domain timestamp comparison (verification-plan STC-02)",
+      "expected": "Every time decision goes through declare/now/convert; no direct comparison of raw timestamps from different domains."
+    }
+  ]
+}

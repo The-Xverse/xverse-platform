@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "validation_time_authority",
+  "revision": "1",
+  "name": "Explicit time authority",
+  "purpose": "Own the declared clock domains, bounded current-time acquisition, directed source-to-destination mappings with tolerance, and the distinct regression/overflow/unknown/missing-mapping outcomes.",
+  "responsibilities": [
+    "Accept a finite, host-declared set of clock domains, each with an injected host time source, a monotonic/wall-clock kind, and an explicit inclusive [min,max] timestamp bound.",
+    "Acquire bounded current time for a declared domain only; report source failure and out-of-bounds reads distinctly and never fabricate or silently substitute another domain.",
+    "Detect monotonic regression in monotonic domains across successive reads and leave the baseline unchanged on a rejected read.",
+    "Register directed source-to-destination mappings carrying a signed offset and a maximum admissible tolerance; a reverse direction is never implied.",
+    "Convert a source timestamp to the destination domain only through a declared mapping, using checked arithmetic for overflow and a full-range unsigned 64-bit distance computed from the signed ordering of the two values (exact over the entire signed 64-bit domain, maximum UINT64_MAX, never modulo 2^64 and never via a sign bit).",
+    "Return distinct deterministic results for unknown clock, source failure, out-of-bounds, regression, overflow, missing mapping, and tolerance failure.",
+    "Commit the destination monotonic baseline only after overflow, bounds, and tolerance all pass, within the same critical section; a rejected conversion preserves the baseline and all authority state (SR-015)."
+  ],
+  "state_ownership": [
+    "Clock-domain table (id, kind, host source, [min,max], last observed reading) bounded by max_domains.",
+    "Directed mapping table (source, destination, offset, tolerance) bounded by max_mappings.",
+    "All mutable state guarded by a single std::mutex; the authority is non-copyable and non-movable."
+  ],
+  "interfaces": [
+    "declare_clock(ClockDomainId, ClockSource, ClockKind, Timestamp min, Timestamp max) -> Result",
+    "declare_mapping(ClockDomainId src, ClockDomainId dst, SignedOffset offset, Tolerance) -> Result",
+    "now(ClockDomainId, Timestamp& out) -> Result",
+    "convert(ClockDomainId src, ClockDomainId dst, Timestamp value, Timestamp& out) -> Result",
+    "const ClockSource = std::function<std::optional<Timestamp>()>"
+  ],
+  "concurrency": "Internally synchronized with a std::mutex. Concurrent now/convert calls are serialized into a deterministic total order; no data race under ThreadSanitizer.",
+  "errors": [
+    "UnknownClock: undeclared domain referenced.",
+    "ClockSourceFailure: host source returned no reading.",
+    "ClockOutOfBounds: reading outside the declared inclusive bound.",
+    "ClockRegression: reading earlier than the prior reading in a monotonic domain.",
+    "MissingMapping: no declared source-to-destination mapping.",
+    "ToleranceExceeded: mapped value diverges from destination current time beyond the declared tolerance, where the divergence is the full-range unsigned distance over the signed 64-bit domain.",
+    "ClockOverflow: mapped value is not representable in Timestamp.",
+    "CapacityExhausted: domain or mapping table is full."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" }
+  ],
+  "deployment": "Compiled in the standalone candidate; the host injects std::function time sources, so no system clock, transport, or external service is opened.",
+  "rationale": "Centralizing every time decision makes the SR-001..SR-006 cross-domain and regression/overflow guarantees enforceable in one place and keeps raw cross-domain comparison impossible by construction."
+}

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-DIAGNOSTIC",
+  "revision": "1",
+  "component_id": "validation_diagnostic",
+  "purpose": "Own the single deterministic diagnostic precedence order over the Result enum and the construction of ordered, stable, payload-free code sequences with at most one bounded numeric locator.",
+  "interfaces": [
+    "Diagnostic: codes() const -> bounded Result sequence; locator() const -> std::optional<std::uint32_t>",
+    "constexpr std::uint8_t precedence_rank(Result)",
+    "constexpr std::strong_ordering compare(Result a, Result b) (deterministic ordering)"
+  ],
+  "inputs": [
+    "One or more Result codes (first applicable failure, highest precedence first) and an optional numeric locator."
+  ],
+  "outputs": [
+    "An ordered Diagnostic value (bounded code sequence plus optional locator) and precedence comparisons."
+  ],
+  "state": [
+    "None. The diagnostic is an immutable value produced from inputs; the precedence order is a constexpr table."
+  ],
+  "errors": [
+    "No runtime errors; structural static checks assert that Diagnostic holds only enumerable codes and a numeric locator."
+  ],
+  "invariants": [
+    "Precedence order is fixed: handle failures before context, time, action, permit, quota, and capacity failures.",
+    "The code sequence is bounded (capacity 8) and the locator is at most one bounded numeric value.",
+    "No string, item, observation, or free-form content field exists.",
+    "The same input yields the same code sequence across runs and builds."
+  ],
+  "concurrency": "Not applicable; diagnostics are immutable values with no shared state.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "DIA-01",
+      "precondition": "A single failure Result is provided.",
+      "stimulus": "Construct a Diagnostic from the single code.",
+      "expected": "codes() has one entry equal to that code; codes().front() is the primary Result."
+    },
+    {
+      "id": "DIA-02",
+      "precondition": "A foreign handle, a stale generation, and an expired permit all apply.",
+      "stimulus": "Construct a Diagnostic from the multi-failure set.",
+      "expected": "Ordered sequence is [ForeignHandle]; handle precedence wins."
+    },
+    {
+      "id": "DIA-03",
+      "precondition": "An expired permit and an undefined action both apply.",
+      "stimulus": "Construct a Diagnostic from the multi-failure set.",
+      "expected": "Ordered sequence is [PermitExpired]; time precedes action."
+    },
+    {
+      "id": "DIA-04",
+      "precondition": "A permitted action is attempted from a terminal state.",
+      "stimulus": "Construct a Diagnostic for the terminal-state failure.",
+      "expected": "Ordered sequence is [TerminalState]."
+    },
+    {
+      "id": "DIA-05",
+      "precondition": "More than eight failure codes are accumulated.",
+      "stimulus": "Construct a Diagnostic from an over-long input set.",
+      "expected": "The sequence is capped at capacity 8 and does not overflow."
+    },
+    {
+      "id": "DIA-06",
+      "precondition": "An identical multi-failure input is constructed twice.",
+      "stimulus": "Build two Diagnostics from the same inputs.",
+      "expected": "Both code sequences are identical."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-DIAGNOSTIC-01",
+      "tool": "static_assert (C++20)",
+      "rule": "Diagnostic payload-freedom (verification-plan STC-03)",
+      "expected": "Diagnostic members are only a bounded Result array and a numeric locator; no std::string/payload member."
+    },
+    {
+      "id": "STC-DIAGNOSTIC-02",
+      "tool": "clang-tidy",
+      "rule": "readability-make-member-function-const",
+      "expected": "clean (no diagnostic): codes() and locator() are const member functions."
+    },
+    {
+      "id": "STC-DIAGNOSTIC-03",
+      "tool": "clang-tidy",
+      "rule": "performance-unnecessary-value-param",
+      "expected": "clean (no diagnostic): Result parameters are passed by value (enum) only."
+    },
+    {
+      "id": "STC-DIAGNOSTIC-04",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: header formatted with no diff."
+    }
+  ]
+}

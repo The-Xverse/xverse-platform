@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-005",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Zero normal-route emissions",
+  "statement": "The normal route must emit zero communication items, zero telemetry, zero network traffic, and zero persisted records.",
+  "source": {
+    "kind": "admitted_packet",
+    "reference": "packet.md (no emission / no transport clause); anchors: FR-020"
+  },
+  "source_anchors": [
+    "packet.md#zero-emissions",
+    "FR-020"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate; emission-free foundation, no transport, gateway, listener, journal, lease, dashboard, persistent store, or external service.",
+  "status": "accepted",
+  "verification_intent": "Refined by T025-SR-018 and verified by API-surface static checks plus a nominal-scenario zero-emission counter assertion.",
+  "acceptance_criteria": [
+    "AC-1: The candidate exposes no emission, transport, journal, or persistence API.",
+    "AC-2: Nominal (non-test) execution performs no I/O beyond in-memory state.",
+    "AC-3: Any normal-route emission counter reported by the candidate is zero."
+  ]
+}

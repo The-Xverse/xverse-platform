@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "validation_permit",
+  "revision": "1",
+  "name": "Immutable local validation permit",
+  "purpose": "Model the immutable, host-issued permit that binds exactly one session identity and its full operational envelope, with a stable content identity and a closed allowed-action set.",
+  "responsibilities": [
+    "Bind exactly one session identity, plan digest, scenario, deployment, environment, tool, interface, target, nonce, validity interval (with a declared clock domain), and a bounded list of finite quotas.",
+    "Remain immutable after construction: no mutator is exposed and all fields are comparable for equality.",
+    "Reject at construction any absent/default identity-bearing field, any undefined action bit, any composite action mask not explicitly allowed, and any unknown quota kind.",
+    "Compute a deterministic PermitId as the FNV-1a 128-bit digest of the canonical serialization of all bound fields, including the nonce.",
+    "Expose the allowed action set as a bounded list of explicitly allowed action masks for exact-membership validation."
+  ],
+  "state_ownership": "A permit is an immutable value object; a built permit never changes. The builder owns transient validation state until the permit is finalized.",
+  "interfaces": [
+    "PermitBuilder: set_<field>(...) -> Result; build(Permit& out) -> Result",
+    "Permit: const accessors for each bound field; permit_id(); allowed_actions(); equality comparison",
+    "SessionContext: the runtime-envelope claim compared field-by-field against a permit at consumption"
+  ],
+  "concurrency": "Permits are immutable values and may be shared and copied across threads without synchronization; builders are single-threaded by construction.",
+  "errors": [
+    "InvalidPermit (with FieldLocator): missing/default identity field, undefined action bit, non-explicit composite mask, unknown quota kind, or out-of-bounds value at construction."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" }
+  ],
+  "deployment": "Header/source pair in the standalone candidate; bounded fixed-size arrays carry tags, digests, and quotas so no unbounded allocation occurs.",
+  "rationale": "Immutability plus content identity make exactly-once consumption and replay detection sound: any field change (including a changed nonce) yields a different identity, while the bound session identity is still checked against the consumed-session set."
+}

@@ -1,0 +1,24 @@
+{
+  "id": "T025-VS-001",
+  "schema_version": 1,
+  "revision": 1,
+  "kind": "validation",
+  "intended_use": "Nominal, intended-use validation session lifecycle.",
+  "validates": [
+    "T025-STK-003",
+    "T025-STK-005"
+  ],
+  "case_ids": [
+    "NOM-01",
+    "NOM-02",
+    "LIF-01",
+    "LIF-02",
+    "LIF-03",
+    "LIF-04",
+    "ZEM-02"
+  ],
+  "expected": "A host consumes a valid permit and drives one session declared -> armed -> active -> closing -> closed using only declared time and allowed actions, observing zero normal-route emissions.",
+  "setup": "A PermitBuilder-built valid permit bound to one session identity, plan digest, and scenario; a TimeAuthority with a declared wall-clock domain; a SessionManager configured with a host controller identity and generation and an allowed action set. The nominal path drives declared -> armed -> active -> closing -> closed through SessionManager::transition with stimulation disabled.",
+  "observed": "Internal worker CTest run (sandbox): the 7 unit case IDs NOM-01, NOM-02, LIF-01, LIF-02, LIF-03, LIF-04, ZEM-02 and the 1 validation test Validation.EndToEndNominalScenario all passed (part of T4 107/107 unit and T6 3/3 validation; 0 failures).",
+  "limitation": "Internal worker evidence only; not protected predecessor regression and not accepted delivery. The zero-emission claim is scoped to this standalone candidate slice (ZEM-02 plus Validation.EndToEndNominalScenario)."
+}

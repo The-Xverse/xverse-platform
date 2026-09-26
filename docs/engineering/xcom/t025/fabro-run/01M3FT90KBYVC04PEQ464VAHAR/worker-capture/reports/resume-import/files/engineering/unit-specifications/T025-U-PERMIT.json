@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-PERMIT",
+  "revision": "1",
+  "component_id": "validation_permit",
+  "purpose": "Model the immutable host-issued permit binding exactly one session identity and its full operational envelope, with a stable FNV-1a content identity and a closed allowed-action set, plus the builder that validates construction and the SessionContext runtime envelope.",
+  "interfaces": [
+    "PermitBuilder: set_session_id, set_plan_digest, set_scenario, set_deployment, set_environment, set_tool, set_interface, set_target, set_nonce, set_validity(domain, from, until), add_allowed_action(ActionMask), add_quota(Quota) -> Result; build(Permit& out) -> Result",
+    "Permit: const accessors for every bound field; permit_id() const; allowed_actions() const; equality operators",
+    "SessionContext: const runtime-envelope claim with the same fields, compared field-by-field at consumption"
+  ],
+  "inputs": [
+    "SessionId, PlanDigest, six Tags (scenario, deployment, environment, tool, interface, target), Nonce, validity domain + [valid_from, valid_until], allowed ActionMask list, and quota list."
+  ],
+  "outputs": [
+    "Permit value (immutable), PermitId digest, and Result (Ok or InvalidPermit with the offending FieldLocator)."
+  ],
+  "state": [
+    "A built Permit is an immutable value object; the builder owns transient validation state until the permit is finalized."
+  ],
+  "errors": [
+    "InvalidPermit (with FieldLocator): missing/default identity-bearing field, undefined action bit, non-explicit composite mask, unknown quota kind, zero quota limit, or out-of-range/inverted validity interval."
+  ],
+  "invariants": [
+    "No mutator is exposed; every bound field is individually comparable.",
+    "Absent or default-initialised identity-bearing fields are rejected, never treated as a wildcard.",
+    "A composite ActionMask is allowed only if listed verbatim; it is never decomposed into components.",
+    "PermitId covers all bound fields including the nonce, so a changed nonce changes the identity.",
+    "valid_from <= valid_until within the declared validity domain."
+  ],
+  "concurrency": "Permits are immutable values and may be shared and copied across threads without synchronization; builders are single-threaded by construction.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/src/validation_session.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "PRM-01",
+      "precondition": "All bound fields are valid and complete.",
+      "stimulus": "Build a Permit via PermitBuilder.",
+      "expected": "Ok; permit_id() is non-zero and every accessor returns the bound value."
+    },
+    {
+      "id": "PRM-02",
+      "precondition": "SessionId is all-zero (default).",
+      "stimulus": "Build the permit.",
+      "expected": "InvalidPermit with FieldLocator SessionId."
+    },
+    {
+      "id": "PRM-03",
+      "precondition": "Scenario tag is empty.",
+      "stimulus": "Build the permit.",
+      "expected": "InvalidPermit with FieldLocator Scenario."
+    },
+    {
+      "id": "PRM-04",
+      "precondition": "An ActionMask contains an undefined Action bit.",
+      "stimulus": "Add the mask as an allowed action and build.",
+      "expected": "InvalidPermit with FieldLocator AllowedActions."
+    },
+    {
+      "id": "PRM-05",
+      "precondition": "A composite mask combining two defined actions is added but not listed verbatim as allowed.",
+      "stimulus": "Build the permit with that composite mask not explicitly allowed.",
+      "expected": "InvalidPermit with FieldLocator AllowedActions; the composite is not interpreted as its components."
+    },
+    {
+      "id": "PRM-06",
+      "precondition": "A Quota uses an unknown QuotaKind.",
+      "stimulus": "Build the permit.",
+      "expected": "InvalidPermit with FieldLocator Quota."
+    },
+    {
+      "id": "PRM-07",
+      "precondition": "A Quota has limit 0.",
+      "stimulus": "Build the permit.",
+      "expected": "InvalidPermit with FieldLocator Quota."
+    },
+    {
+      "id": "PRM-08",
+      "precondition": "Validity interval has valid_from > valid_until.",
+      "stimulus": "Build the permit.",
+      "expected": "InvalidPermit with FieldLocator Validity."
+    },
+    {
+      "id": "PRM-09",
+      "precondition": "A valid permit is built, then a second permit identical except for nonce.",
+      "stimulus": "Compare permit_id() of the two builds.",
+      "expected": "Identical fields yield equal ids; changing only the nonce yields a different id."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-PERMIT-01",
+      "tool": "clang-tidy",
+      "rule": "cppcoreguidelines-pro-type-member-init",
+      "expected": "clean (no diagnostic): Permit and SessionContext initialize every member."
+    },
+    {
+      "id": "STC-PERMIT-02",
+      "tool": "clang-tidy",
+      "rule": "readability-make-member-function-const",
+      "expected": "clean (no diagnostic): all Permit accessors are const member functions."
+    },
+    {
+      "id": "STC-PERMIT-03",
+      "tool": "clang-tidy",
+      "rule": "performance-unnecessary-copy-initialization",
+      "expected": "clean (no diagnostic): no avoidable copy of Tags, digests, or quota lists."
+    },
+    {
+      "id": "STC-PERMIT-04",
+      "tool": "static_assert (C++20)",
+      "rule": "Immutability of built Permit",
+      "expected": "Permit exposes no non-const member returning a mutable reference; all bound fields are const after build."
+    },
+    {
+      "id": "STC-PERMIT-05",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: source and header formatted with no diff."
+    }
+  ]
+}

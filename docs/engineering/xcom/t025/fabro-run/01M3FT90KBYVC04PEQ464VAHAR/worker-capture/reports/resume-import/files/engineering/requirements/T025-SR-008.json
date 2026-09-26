@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-008",
+  "revision": 1,
+  "level": "software",
+  "title": "Undefined actions and composite values are rejected",
+  "statement": "The allowed action set must be a closed, finite set; undefined action bits and composite values not explicitly allowed must be rejected deterministically.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (reject undefined action bits or composite values that are not explicitly allowed); interface-bridge.md REF-002; anchors: FR-016"
+  },
+  "source_anchors": [
+    "packet.md#permit-binding",
+    "interface-bridge.md#ref-002",
+    "FR-016"
+  ],
+  "refines": "T025-STK-002",
+  "applicability": "xverse::xcom::validation permit action-set validation.",
+  "status": "accepted",
+  "verification_intent": "Unit: allowed single action; undefined bit; disallowed combination; assert distinct codes and no partial acceptance.",
+  "acceptance_criteria": [
+    "A permitted single action within the allowed set succeeds at validation.",
+    "An undefined action bit is rejected with a distinct code.",
+    "A composite or combined value not declared allowed is rejected with a distinct code and never interpreted as its components."
+  ]
+}

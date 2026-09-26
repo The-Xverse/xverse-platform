@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "T025-STK-004",
+  "revision": 1,
+  "level": "stakeholder",
+  "title": "Rejection is non-mutating; diagnostics are stable and payload-free",
+  "statement": "Any rejected operation leaves the affected session and permit state unchanged and produces a stable, ordered diagnostic that carries no payload.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (rejection / diagnostics clause); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-019, FR-020"
+  },
+  "source_anchors": [
+    "packet.md#diagnostics",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0154",
+    "FR-019",
+    "FR-020"
+  ],
+  "refines": null,
+  "applicability": "T025 standalone candidate; payload-free diagnostic foundation, durable intent/outcome provenance deferred.",
+  "status": "accepted",
+  "verification_intent": "Refined by T025-SR-015 and T025-SR-016 and verified by snapshot-equality and diagnostic-precedence tests.",
+  "acceptance_criteria": [
+    "AC-1: For every negative case, observable session state, permit consumption state, and counters are identical before and after the rejected call.",
+    "AC-2: Repeating an identical rejected call produces an identical diagnostic code sequence.",
+    "AC-3: When more than one failure applies, the reported code follows the declared precedence order deterministically.",
+    "AC-4: No diagnostic contains a payload, item, observation, or free-form content field."
+  ]
+}

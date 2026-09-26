@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-011",
+  "revision": 1,
+  "level": "software",
+  "title": "Handles bind controller identity and generation",
+  "statement": "A session handle must bind a host-generated controller identity and a generation counter so that stale, foreign, and recreated-controller handles cannot authorise any operation.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (session handles bind a host-generated controller identity and generation so stale, foreign, and recreated-controller handles cannot authorize a record); interface-bridge.md REF-002; anchors: XVE-SYS-0144, XVE-SYS-0152, FR-018"
+  },
+  "source_anchors": [
+    "packet.md#session-lifecycle",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0144",
+    "XVE-SYS-0152",
+    "FR-018"
+  ],
+  "refines": "T025-STK-003",
+  "applicability": "xverse::xcom::validation session handle and controller identity types.",
+  "status": "accepted",
+  "verification_intent": "Unit: ownership and recreation matrix with stale, foreign, and forged handles; assert rejection, no mutation, and no effect on any other live session.",
+  "acceptance_criteria": [
+    "A valid current handle from the owning controller is accepted.",
+    "A stale handle (prior generation) is rejected distinctly.",
+    "A foreign handle (different controller identity) is rejected distinctly.",
+    "A handle from a recreated controller with the same name but a new identity is rejected.",
+    "Handle forgery never addresses a live session."
+  ]
+}

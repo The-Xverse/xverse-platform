@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-002",
+  "revision": 1,
+  "level": "software",
+  "title": "Bounded current-time acquisition",
+  "statement": "The authority must obtain current time for a declared domain from a host-supplied time source within a bounded, explicit interval, and must report failure distinctly when the source is unavailable or returns an out-of-bounds value.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (obtains bounded current time); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-015"
+  ],
+  "refines": "T025-STK-001",
+  "applicability": "xverse::xcom::validation time authority; deterministic injectable source for tests.",
+  "status": "accepted",
+  "verification_intent": "Unit: inject a deterministic source and assert domain attribution; inject failure and out-of-bounds sources and assert distinct failures.",
+  "acceptance_criteria": [
+    "A valid read returns a timestamp attributed to the requested domain only.",
+    "A source failure or out-of-bounds value yields a distinct deterministic failure, not a guessed value.",
+    "Reads never fabricate time nor silently fall back to another domain."
+  ]
+}

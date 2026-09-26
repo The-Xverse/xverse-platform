@@ -1,0 +1,1537 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="namespacexverse_1_1xcom_1_1validation" kind="namespace" language="C++">
+    <compoundname>xverse::xcom::validation</compoundname>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1Diagnostic" prot="public">xverse::xcom::validation::Diagnostic</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1ManagerConfig" prot="public">xverse::xcom::validation::ManagerConfig</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1ManagerSnapshot" prot="public">xverse::xcom::validation::ManagerSnapshot</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1Permit" prot="public">xverse::xcom::validation::Permit</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1PermitBuilder" prot="public">xverse::xcom::validation::PermitBuilder</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1PermitRegistry" prot="public">xverse::xcom::validation::PermitRegistry</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1Quota" prot="public">xverse::xcom::validation::Quota</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1SessionContext" prot="public">xverse::xcom::validation::SessionContext</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1SessionHandle" prot="public">xverse::xcom::validation::SessionHandle</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" prot="public">xverse::xcom::validation::SessionManager</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1SessionSnapshot" prot="public">xverse::xcom::validation::SessionSnapshot</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1Tag" prot="public">xverse::xcom::validation::Tag</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" prot="public">xverse::xcom::validation::TimeAuthority</innerclass>
+    <innerclass refid="classxverse_1_1xcom_1_1validation_1_1ValidationSession" prot="public">xverse::xcom::validation::ValidationSession</innerclass>
+    <innernamespace refid="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03">xverse::xcom::validation::anonymous_namespace{validation_session.cpp}</innernamespace>
+    <innernamespace refid="namespacexverse_1_1xcom_1_1validation_1_1detail">xverse::xcom::validation::detail</innernamespace>
+      <sectiondef kind="enum">
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1aed32ae42f82e40f9c47bc23cbaee7a85" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>ClockKind</name>
+        <qualifiedname>xverse::xcom::validation::ClockKind</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aed32ae42f82e40f9c47bc23cbaee7a85a14194d0b2e6c6680067975517cd58eac" prot="public">
+          <name>Monotonic</name>
+          <briefdescription>
+<para>Non-decreasing host clock; readings below the prior baseline are a regression. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aed32ae42f82e40f9c47bc23cbaee7a85a15c5bec425f9f89b6ffdd171d67486b4" prot="public">
+          <name>WallClock</name>
+          <briefdescription>
+<para>Wall-clock domain; readings are not required to be monotonic. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Closed classification of a declared clock domain. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="106" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="106" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" prot="public" static="no" strong="yes">
+        <type>std::uint32_t</type>
+        <name>Action</name>
+        <qualifiedname>xverse::xcom::validation::Action</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041a551c5c03a1a91f2cf90e0d9a9b6dd378" prot="public">
+          <name>Arm</name>
+          <initializer>= 1U &lt;&lt; 0U</initializer>
+          <briefdescription>
+<para>Arms a declared session. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041aa13367a8e2a3f3bf4f3409079e3fdf87" prot="public">
+          <name>Activate</name>
+          <initializer>= 1U &lt;&lt; 1U</initializer>
+          <briefdescription>
+<para>Activates an armed session. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041ad3d2e617335f08df83599665eef8a418" prot="public">
+          <name>Close</name>
+          <initializer>= 1U &lt;&lt; 2U</initializer>
+          <briefdescription>
+<para>Begins closing an active session. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041afd565de81da1c94807c0b80840ba18b0" prot="public">
+          <name>Finalize</name>
+          <initializer>=
+      1U
+      &lt;&lt; 3U</initializer>
+          <briefdescription>
+<para>Finalizes a closing session into the terminal <computeroutput>closed</computeroutput> state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041a4a4998a3b2da0d8aa25b4067aba9d501" prot="public">
+          <name>Expire</name>
+          <initializer>= 1U &lt;&lt; 4U</initializer>
+          <briefdescription>
+<para>Moves a session to the terminal <computeroutput>expired</computeroutput> state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041a21313f76b111bc0df501bf89fc96ba46" prot="public">
+          <name>Revoke</name>
+          <initializer>= 1U &lt;&lt; 5U</initializer>
+          <briefdescription>
+<para>Moves a session to the terminal <computeroutput>revoked</computeroutput> state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041a6f5a82527092f4bbeb61d3828291bd53" prot="public">
+          <name>MarkEvidenceIncomplete</name>
+          <initializer>=
+      1U
+      &lt;&lt; 6U</initializer>
+          <briefdescription>
+<para>Moves a session to the terminal <computeroutput>evidence_incomplete</computeroutput> state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Closed set of lifecycle actions; each enumerator is one atomic bit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="113" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="113" bodyend="125"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>LifecycleState</name>
+        <qualifiedname>xverse::xcom::validation::LifecycleState</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339ad6465c400732330871e46ffe6140eced" prot="public">
+          <name>declared</name>
+          <briefdescription>
+<para>Created by a successful consumption; no action applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339a6e0c631e86ef2402cfa1ca3608a5123e" prot="public">
+          <name>armed</name>
+          <briefdescription>
+<para><computeroutput>Arm</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339ac76a5e84e4bdee527e274ea30c680d79" prot="public">
+          <name>active</name>
+          <briefdescription>
+<para><computeroutput>Activate</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339a3b38bec18c8edcf71c5f25e5f4fee0fc" prot="public">
+          <name>closing</name>
+          <briefdescription>
+<para><computeroutput>Close</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339a349e686330723975502e9ef4f939a5ac" prot="public">
+          <name>closed</name>
+          <briefdescription>
+<para>Terminal; <computeroutput>Finalize</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339ac4bfb2a0bab0e91bc7dcfbe3bbec246e" prot="public">
+          <name>expired</name>
+          <briefdescription>
+<para>Terminal; <computeroutput>Expire</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339a80b785d265b6419ab99251d8f4340a1d" prot="public">
+          <name>revoked</name>
+          <briefdescription>
+<para>Terminal; <computeroutput>Revoke</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339a28e60fb99f09eff0ad46f6de2de3f50a" prot="public">
+          <name>evidence_incomplete</name>
+          <briefdescription>
+<para>Terminal; <computeroutput>MarkEvidenceIncomplete</computeroutput> applied. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Lifecycle states of a validation session. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="185" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="185" bodyend="194"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1a5115eb854418a3737250101ecade60eb" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>QuotaKind</name>
+        <qualifiedname>xverse::xcom::validation::QuotaKind</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a5115eb854418a3737250101ecade60eba456d0deba6a86c9585590550c797502d" prot="public">
+          <name>Operations</name>
+          <briefdescription>
+<para>Consumed by each successful mutating lifecycle transition. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a5115eb854418a3737250101ecade60ebac7b2a4d55fbea4d044644cf5b2b45d29" prot="public">
+          <name>Evidence</name>
+          <briefdescription>
+<para>Reserved for evidence bookkeeping; not decremented by a transition. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Closed set of finite quota kinds. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="208" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="208" bodyend="211"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>Result</name>
+        <qualifiedname>xverse::xcom::validation::Result</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda2d0e462e9958ce7bb443e70023241dfe" prot="public">
+          <name>InvalidHandle</name>
+          <briefdescription>
+<para>Handle matches no live session and no registered controller. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaaab965270ebd6822209e7115e7526fc0" prot="public">
+          <name>ForeignHandle</name>
+          <briefdescription>
+<para>Controller id never registered by this manager. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda2ff04f22b3e29ac68e521f507a989402" prot="public">
+          <name>RecreatedController</name>
+          <briefdescription>
+<para>Controller id superseded by a recreated controller of the same name. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaec4fb10f5e3708942fbeadb549f6a7be" prot="public">
+          <name>StaleHandle</name>
+          <briefdescription>
+<para>Controller matches but the handle generation is older. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda999a3e96785a44f4829c7e95f5497432" prot="public">
+          <name>SessionNotFound</name>
+          <briefdescription>
+<para>Controller/generation match but the session id is not live. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda44b28e0144c40180650489932927b754" prot="public">
+          <name>UnknownClock</name>
+          <briefdescription>
+<para>Clock domain not declared. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaecd7344cd2c9ce2f9cc80e386e792983" prot="public">
+          <name>ClockSourceFailure</name>
+          <briefdescription>
+<para>Host time source returned no reading. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaf1261e8c810007672bca4fcdebe87912" prot="public">
+          <name>ClockOutOfBounds</name>
+          <briefdescription>
+<para>Reading or mapped value outside the declared bound. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda01a1968de647c0f203e729c0f8d36475" prot="public">
+          <name>ClockRegression</name>
+          <briefdescription>
+<para>Monotonic reading earlier than the prior reading. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda62ed4501b1dd992731c1c333ca92c12f" prot="public">
+          <name>ClockOverflow</name>
+          <briefdescription>
+<para>Mapped value not representable in <computeroutput>Timestamp</computeroutput>. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda77221fbb47a4a86655568873762d4a57" prot="public">
+          <name>MissingMapping</name>
+          <briefdescription>
+<para>No declared source-to-destination mapping. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaf90c5915275db09805e1cef1b7d18f2b" prot="public">
+          <name>ToleranceExceeded</name>
+          <briefdescription>
+<para>Mapped value diverges from destination beyond tolerance. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda02be53a3f2bfed5743536a4b05a080fe" prot="public">
+          <name>PermitNotYetValid</name>
+          <briefdescription>
+<para>Resolved time is before the permit validity start. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda703b8875409cf1ff3db8b13fd9be3c7c" prot="public">
+          <name>PermitExpired</name>
+          <briefdescription>
+<para>Resolved time is at or after the permit validity end. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdabf09dc57124fee4d1ef317163db466e6" prot="public">
+          <name>UndefinedAction</name>
+          <briefdescription>
+<para>Requested mask contains an undefined action bit. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdad4ec9fffe377c35c86b27245ef2d819f" prot="public">
+          <name>ActionNotAllowed</name>
+          <briefdescription>
+<para>Requested action is not in the permit allowed set. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa98f8ca1d9a877e371874a476d6d930d" prot="public">
+          <name>TerminalState</name>
+          <briefdescription>
+<para>Transition attempted from a terminal state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa3be2f283ac2de37ef351225c49c9949" prot="public">
+          <name>InvalidTransition</name>
+          <briefdescription>
+<para>Legal-state conflict with a non-terminal state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdacf4799dd7917b8d23620a5c44574922e" prot="public">
+          <name>PermitMismatch</name>
+          <briefdescription>
+<para>Context differs from the permit in the located field. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda706acafa010a547dce2ca4e6effff438" prot="public">
+          <name>InvalidPermit</name>
+          <briefdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> construction validation failed. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda491c42e77b362ed76ef1730c932b142b" prot="public">
+          <name>SessionAlreadyConsumed</name>
+          <briefdescription>
+<para>Session identity already bound to a consumed permit. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda694502919c8da1352133d9804ba21dc8" prot="public">
+          <name>PermitAlreadyConsumed</name>
+          <briefdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> identity already consumed. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda5584c44f3790fff057f0b503bdd47dca" prot="public">
+          <name>QuotaExhausted</name>
+          <briefdescription>
+<para>The action&apos;s mapped quota is zero. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" prot="public">
+          <name>CapacityExhausted</name>
+          <briefdescription>
+<para>A bounded table or set is full. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdabe274cea13bc97f24855afbd7dd6d85e" prot="public">
+          <name>InvalidController</name>
+          <briefdescription>
+<para>A zero or already-registered controller identity was presented. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda2d2baf9b4bd79c0c987395bd157d46fc" prot="public">
+          <name>AlreadyApplied</name>
+          <briefdescription>
+<para>Safe idempotent repeat. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" prot="public">
+          <name>Ok</name>
+          <briefdescription>
+<para>Success. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Closed, enumerable outcome vocabulary; declaration order is diagnostic precedence order, highest precedence first. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="231" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="231" bodyend="259"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>FieldLocator</name>
+        <qualifiedname>xverse::xcom::validation::FieldLocator</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a3ba30e0308b1f88ba4e1a7e2242fd723" prot="public">
+          <name>SessionId</name>
+          <briefdescription>
+<para>Session identity. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9ae87c4b3c253afe06e5091fe3a7c46e9d" prot="public">
+          <name>PlanDigest</name>
+          <briefdescription>
+<para>Plan digest. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a54861efdd06fc309e1c9a420feff98eb" prot="public">
+          <name>Scenario</name>
+          <briefdescription>
+<para>Scenario tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9aea355214fd4bc7c57f471bd92918879b" prot="public">
+          <name>Deployment</name>
+          <briefdescription>
+<para>Deployment tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a0ba29c6a1afacf586b03a26162c72274" prot="public">
+          <name>Environment</name>
+          <briefdescription>
+<para>Environment tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9ad421fd439cd14456726791338b3b397e" prot="public">
+          <name>Tool</name>
+          <briefdescription>
+<para>Tool tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a3c1aac82863ed9e5a9aca8ce687f711d" prot="public">
+          <name>Interface</name>
+          <briefdescription>
+<para>Interface tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9ac41a31890959544c6523af684561abe5" prot="public">
+          <name>Target</name>
+          <briefdescription>
+<para>Target tag. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a3a90ac83535fb1f3d071e8beb25aa956" prot="public">
+          <name>Nonce</name>
+          <briefdescription>
+<para>One-time nonce. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9a7b946d2ca8615c82851d545f32382093" prot="public">
+          <name>AllowedActions</name>
+          <briefdescription>
+<para>Allowed action set. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9ab07cc2801693b2e722906a3db3d9c447" prot="public">
+          <name>Validity</name>
+          <briefdescription>
+<para>Validity interval (domain, start, end). </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9ad2d5c3e087f684e56b5b81d6212d7ccb" prot="public">
+          <name>Quota</name>
+          <briefdescription>
+<para><ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> list. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Names the bound permit field that produced a <computeroutput>PermitMismatch</computeroutput>. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="280" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="280" bodyend="293"/>
+      </memberdef>
+      <memberdef kind="enum" id="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544af" prot="public" static="no" strong="yes">
+        <type>std::uint8_t</type>
+        <name>TransitionOutcome</name>
+        <qualifiedname>xverse::xcom::validation::TransitionOutcome</qualifiedname>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544afaa60852f204ed8028c1c58808b746d115" prot="public">
+          <name>Ok</name>
+          <briefdescription>
+<para>Legal forward transition; state and quota change. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544afa2d2baf9b4bd79c0c987395bd157d46fc" prot="public">
+          <name>AlreadyApplied</name>
+          <briefdescription>
+<para>Safe idempotent repeat; state unchanged. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544afaa3be2f283ac2de37ef351225c49c9949" prot="public">
+          <name>InvalidTransition</name>
+          <briefdescription>
+<para>Legal-state conflict with a non-terminal state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544afaa98f8ca1d9a877e371874a476d6d930d" prot="public">
+          <name>TerminalState</name>
+          <briefdescription>
+<para>Any transition attempted from a terminal state. </para>
+          </briefdescription>
+          <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Closed outcome of evaluating one <computeroutput>(state, action)</computeroutput> pair. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1147" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1147" bodyend="1152"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" prot="public" static="no">
+        <type>std::int64_t</type>
+        <definition>using xverse::xcom::validation::Timestamp = typedef std::int64_t</definition>
+        <argsstring></argsstring>
+        <name>Timestamp</name>
+        <qualifiedname>xverse::xcom::validation::Timestamp</qualifiedname>
+        <briefdescription>
+<para>Domain-local integer timestamp. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="61" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1aba6fec5910e247e085a01477c221f379" prot="public" static="no">
+        <type>std::uint64_t</type>
+        <definition>using xverse::xcom::validation::Tolerance = typedef std::uint64_t</definition>
+        <argsstring></argsstring>
+        <name>Tolerance</name>
+        <qualifiedname>xverse::xcom::validation::Tolerance</qualifiedname>
+        <briefdescription>
+<para>Maximum admissible magnitude of a mapping divergence. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="64" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="64" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1aecb4148682491867b8fa0bee400d2414" prot="public" static="no">
+        <type>std::int64_t</type>
+        <definition>using xverse::xcom::validation::SignedOffset = typedef std::int64_t</definition>
+        <argsstring></argsstring>
+        <name>SignedOffset</name>
+        <qualifiedname>xverse::xcom::validation::SignedOffset</qualifiedname>
+        <briefdescription>
+<para>Signed offset applied by a directed clock mapping. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="67" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" prot="public" static="no">
+        <type>std::uint32_t</type>
+        <definition>using xverse::xcom::validation::ClockDomainId = typedef std::uint32_t</definition>
+        <argsstring></argsstring>
+        <name>ClockDomainId</name>
+        <qualifiedname>xverse::xcom::validation::ClockDomainId</qualifiedname>
+        <briefdescription>
+<para>Authority-issued clock-domain token; the value <computeroutput>0</computeroutput> is reserved as invalid. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="70" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1af394c8933420c6e48d1156ca8a685939" prot="public" static="no">
+        <type>std::uint64_t</type>
+        <definition>using xverse::xcom::validation::Generation = typedef std::uint64_t</definition>
+        <argsstring></argsstring>
+        <name>Generation</name>
+        <qualifiedname>xverse::xcom::validation::Generation</qualifiedname>
+        <briefdescription>
+<para>Monotonic per-controller generation. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="73" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1a6ae1ded633366a9a3daac25291fcd0a6" prot="public" static="no">
+        <type>std::uint64_t</type>
+        <definition>using xverse::xcom::validation::Nonce = typedef std::uint64_t</definition>
+        <argsstring></argsstring>
+        <name>Nonce</name>
+        <qualifiedname>xverse::xcom::validation::Nonce</qualifiedname>
+        <briefdescription>
+<para>Host-supplied one-time value bound into a permit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="76" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1a08ee74b4bac0e929f4e1407150df7e4b" prot="public" static="no">
+        <type>std::array&lt; std::uint8_t, 16 &gt;</type>
+        <definition>using xverse::xcom::validation::ControllerId = typedef std::array&lt;std::uint8_t, 16&gt;</definition>
+        <argsstring></argsstring>
+        <name>ControllerId</name>
+        <qualifiedname>xverse::xcom::validation::ControllerId</qualifiedname>
+        <briefdescription>
+<para>Host-issued controller identity (16 bytes). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="79" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1aee46eda9429b5f7e3fd98d4cafe8b5a0" prot="public" static="no">
+        <type>std::array&lt; std::uint8_t, 16 &gt;</type>
+        <definition>using xverse::xcom::validation::ManagerScope = typedef std::array&lt;std::uint8_t, 16&gt;</definition>
+        <argsstring></argsstring>
+        <name>ManagerScope</name>
+        <qualifiedname>xverse::xcom::validation::ManagerScope</qualifiedname>
+        <briefdescription>
+<para>Host-issued manager uniqueness scope (16 bytes); non-zero and distinct per manager instance and per recreation, and bound into every issued handle. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="83" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1a2ef1fcf710c5666b0d9c704c6428edb4" prot="public" static="no">
+        <type>std::array&lt; std::uint8_t, 16 &gt;</type>
+        <definition>using xverse::xcom::validation::SessionId = typedef std::array&lt;std::uint8_t, 16&gt;</definition>
+        <argsstring></argsstring>
+        <name>SessionId</name>
+        <qualifiedname>xverse::xcom::validation::SessionId</qualifiedname>
+        <briefdescription>
+<para>Host-issued session identity (16 bytes). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="86" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1a506101862c8fbfb98a372fe5673d3164" prot="public" static="no">
+        <type>std::array&lt; std::uint8_t, 16 &gt;</type>
+        <definition>using xverse::xcom::validation::PermitId = typedef std::array&lt;std::uint8_t, 16&gt;</definition>
+        <argsstring></argsstring>
+        <name>PermitId</name>
+        <qualifiedname>xverse::xcom::validation::PermitId</qualifiedname>
+        <briefdescription>
+<para>Deterministic permit content identity (16 bytes). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="89" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1aa32e2de988f9b8560fe1666a38359208" prot="public" static="no">
+        <type>std::array&lt; std::uint8_t, 32 &gt;</type>
+        <definition>using xverse::xcom::validation::PlanDigest = typedef std::array&lt;std::uint8_t, 32&gt;</definition>
+        <argsstring></argsstring>
+        <name>PlanDigest</name>
+        <qualifiedname>xverse::xcom::validation::PlanDigest</qualifiedname>
+        <briefdescription>
+<para>Host-supplied plan digest bound into a permit (32 bytes). </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="92" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="92" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" prot="public" static="no">
+        <type>std::uint32_t</type>
+        <definition>using xverse::xcom::validation::ActionMask = typedef std::uint32_t</definition>
+        <argsstring></argsstring>
+        <name>ActionMask</name>
+        <qualifiedname>xverse::xcom::validation::ActionMask</qualifiedname>
+        <briefdescription>
+<para>Bitmask of one or more <computeroutput>Action</computeroutput> bits. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="95" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="95" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacexverse_1_1xcom_1_1validation_1a4b7ff3be7673efced4e6499a690c6030" prot="public" static="no">
+        <type>std::function&lt; std::optional&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &gt;()&gt;</type>
+        <definition>using xverse::xcom::validation::ClockSource = typedef std::function&lt;std::optional&lt;Timestamp&gt;()&gt;</definition>
+        <argsstring></argsstring>
+        <name>ClockSource</name>
+        <qualifiedname>xverse::xcom::validation::ClockSource</qualifiedname>
+        <briefdescription>
+<para>Host-injected bounded clock source returning the domain-local reading. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>Returns the domain-local reading, or <computeroutput>std::nullopt</computeroutput> to signal a source failure. The authority never fabricates time and never falls back to another domain. <simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="627" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="627" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="namespacexverse_1_1xcom_1_1validation_1a55a86b9848c8c8f0752b91615cb596f0" prot="public" static="no" constexpr="yes" mutable="no">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+        <definition>constexpr ClockDomainId xverse::xcom::validation::kInvalidClockDomain</definition>
+        <argsstring></argsstring>
+        <name>kInvalidClockDomain</name>
+        <qualifiedname>xverse::xcom::validation::kInvalidClockDomain</qualifiedname>
+        <initializer>= 0</initializer>
+        <briefdescription>
+<para>Reserved invalid clock-domain token. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="99" column="32" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="99" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="namespacexverse_1_1xcom_1_1validation_1a4a71fa3db21de283db79f0777c90cd34" prot="public" static="no" constexpr="yes" mutable="no">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+        <definition>constexpr ActionMask xverse::xcom::validation::kDefinedActionMask</definition>
+        <argsstring></argsstring>
+        <name>kDefinedActionMask</name>
+        <qualifiedname>xverse::xcom::validation::kDefinedActionMask</qualifiedname>
+        <initializer>= 0x7FU</initializer>
+        <briefdescription>
+<para>All currently defined action bits. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="102" column="29" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="102" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1ad64ff38e872d77ff054e7e467b7536f2" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+        <definition>constexpr ActionMask xverse::xcom::validation::defined_action_bits</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>defined_action_bits</name>
+        <qualifiedname>xverse::xcom::validation::defined_action_bits</qualifiedname>
+        <briefdescription>
+<para>Returns the mask of every currently defined action bit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The mask of all defined action bits. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="130" column="23" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="130" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1abefeabafcb0fa203a3a719a96679fba3" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr bool</type>
+        <definition>constexpr bool xverse::xcom::validation::is_defined_action</definition>
+        <argsstring>(ActionMask mask) noexcept</argsstring>
+        <name>is_defined_action</name>
+        <qualifiedname>xverse::xcom::validation::is_defined_action</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+          <declname>mask</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a candidate action mask contains only defined bits. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>mask</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Candidate action mask. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when <computeroutput>mask</computeroutput> is non-zero and contains no undefined action bit. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="136" column="17" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="136" bodyend="138"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a32d764ac7df50875ebe4d1cdc512424a" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr bool</type>
+        <definition>constexpr bool xverse::xcom::validation::is_single_action</definition>
+        <argsstring>(ActionMask mask) noexcept</argsstring>
+        <name>is_single_action</name>
+        <qualifiedname>xverse::xcom::validation::is_single_action</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+          <declname>mask</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a candidate action mask holds exactly one bit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>mask</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Candidate action mask. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when <computeroutput>mask</computeroutput> contains exactly one bit. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="144" column="17" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="144" bodyend="146"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a31051125b0a27791534f94dcb49b3718" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+        <definition>constexpr ActionMask xverse::xcom::validation::to_mask</definition>
+        <argsstring>(Action action) noexcept</argsstring>
+        <name>to_mask</name>
+        <qualifiedname>xverse::xcom::validation::to_mask</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" kindref="member">Action</ref></type>
+          <declname>action</declname>
+        </param>
+        <briefdescription>
+<para>Converts an action into its single-bit mask. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>action</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A lifecycle action. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The single-bit mask of <computeroutput>action</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="152" column="23" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="152" bodyend="154"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a88caf10833499389853e22f2a4907a97" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr std::string_view</type>
+        <definition>constexpr std::string_view xverse::xcom::validation::action_mask_name</definition>
+        <argsstring>(ActionMask mask) noexcept</argsstring>
+        <name>action_mask_name</name>
+        <qualifiedname>xverse::xcom::validation::action_mask_name</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref></type>
+          <declname>mask</declname>
+        </param>
+        <briefdescription>
+<para>Returns the stable name of a single defined action mask. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>mask</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Candidate action mask. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The stable, non-empty action name for a single defined action bit, or an empty view for a zero, composite, or undefined-bit mask. A mask containing an undefined bit is never named as a defined action. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="162" column="29" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="162" bodyend="181"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a30fe0ef18a3a0762e6f4ba65dd2663b4" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr bool</type>
+        <definition>constexpr bool xverse::xcom::validation::is_terminal</definition>
+        <argsstring>(LifecycleState state) noexcept</argsstring>
+        <name>is_terminal</name>
+        <qualifiedname>xverse::xcom::validation::is_terminal</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref></type>
+          <declname>state</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a lifecycle state is terminal. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A lifecycle state. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> for the terminal states <computeroutput>closed</computeroutput>, <computeroutput>expired</computeroutput>, <computeroutput>revoked</computeroutput>, and <computeroutput>evidence_incomplete</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="201" column="17" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="201" bodyend="204"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a298df1ec593f69eb81a4671919bdc9bf" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr std::uint8_t</type>
+        <definition>constexpr std::uint8_t xverse::xcom::validation::precedence_rank</definition>
+        <argsstring>(Result result) noexcept</argsstring>
+        <name>precedence_rank</name>
+        <qualifiedname>xverse::xcom::validation::precedence_rank</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+          <declname>result</declname>
+        </param>
+        <briefdescription>
+<para>Returns the zero-based precedence rank of a result code. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>result</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A result code. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The zero-based precedence rank (lower rank binds earlier). </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-DIAGNOSTIC </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="265" column="25" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="265" bodyend="267"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a5036000f0a5857bcd6d92159336bdf60" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr std::strong_ordering</type>
+        <definition>constexpr std::strong_ordering xverse::xcom::validation::compare</definition>
+        <argsstring>(Result a, Result b) noexcept</argsstring>
+        <name>compare</name>
+        <qualifiedname>xverse::xcom::validation::compare</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+<para>Orders two result codes by precedence rank. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>a</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>First result. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>b</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Second result. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Strong ordering by precedence rank, so that a lower rank is &quot;less&quot;. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-DIAGNOSTIC </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="274" column="33" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="274" bodyend="276"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a55313288b3a0aeb59c099882219d2fc0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a506101862c8fbfb98a372fe5673d3164" kindref="member">PermitId</ref></type>
+        <definition>PermitId xverse::xcom::validation::canonical_digest</definition>
+        <argsstring>(const std::vector&lt; std::uint8_t &gt; &amp;bytes)</argsstring>
+        <name>canonical_digest</name>
+        <qualifiedname>xverse::xcom::validation::canonical_digest</qualifiedname>
+        <param>
+          <type>const std::vector&lt; std::uint8_t &gt; &amp;</type>
+          <declname>bytes</declname>
+        </param>
+        <briefdescription>
+<para>Computes the deterministic 128-bit FNV-1a content digest of a byte sequence. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>bytes</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Arbitrary byte sequence. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The 16-byte content digest. </para>
+</simplesect>
+<simplesect kind="note"><para>This is local bookkeeping identity, not a cryptographic claim. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="502" column="18" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="502" bodyend="504"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a3376642b71596249a427e579151ac2ee" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" kindref="member">Action</ref></type>
+        <definition>constexpr Action xverse::xcom::validation::producing_action</definition>
+        <argsstring>(LifecycleState state) noexcept</argsstring>
+        <name>producing_action</name>
+        <qualifiedname>xverse::xcom::validation::producing_action</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref></type>
+          <declname>state</declname>
+        </param>
+        <briefdescription>
+<para>Returns the action that produced a lifecycle state, if any. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A lifecycle state. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The action that produced <computeroutput>state</computeroutput>, or <computeroutput>static_cast&lt;Action&gt;(0)</computeroutput> when none does. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1158" column="19" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1158" bodyend="1178"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1af74451f87cf2fe2e2e349977b76941a1" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref></type>
+        <definition>constexpr LifecycleState xverse::xcom::validation::successor_state</definition>
+        <argsstring>(LifecycleState state, Action action) noexcept</argsstring>
+        <name>successor_state</name>
+        <qualifiedname>xverse::xcom::validation::successor_state</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref></type>
+          <declname>state</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" kindref="member">Action</ref></type>
+          <declname>action</declname>
+        </param>
+        <briefdescription>
+<para>Returns the successor state of a legal forward transition. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A non-terminal lifecycle state. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>action</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A lifecycle action. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The successor state, or <computeroutput>state</computeroutput> when the pair is not a legal forward transition. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1185" column="27" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1185" bodyend="1211"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1a7972f98e91ed49a721b4e82b25e7c2d3" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>constexpr <ref refid="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544af" kindref="member">TransitionOutcome</ref></type>
+        <definition>constexpr TransitionOutcome xverse::xcom::validation::transition_outcome</definition>
+        <argsstring>(LifecycleState state, Action action) noexcept</argsstring>
+        <name>transition_outcome</name>
+        <qualifiedname>xverse::xcom::validation::transition_outcome</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aea4e6ea64c4b9d98a61602c9b646b339" kindref="member">LifecycleState</ref></type>
+          <declname>state</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1ab307a8d459e481ca1c5aaf883bccd041" kindref="member">Action</ref></type>
+          <declname>action</declname>
+        </param>
+        <briefdescription>
+<para>Exhaustive constexpr evaluation of the lifecycle transition table. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>state</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Current lifecycle state. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>action</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Requested lifecycle action. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a037860ae7e8f39afb6f881976e9544afaa98f8ca1d9a877e371874a476d6d930d" kindref="member">TransitionOutcome::TerminalState</ref></computeroutput> from a terminal state (except a safe repeat of the producing action, which is <computeroutput>AlreadyApplied</computeroutput>); <computeroutput>AlreadyApplied</computeroutput> for a safe idempotent repeat; <computeroutput>Ok</computeroutput> for a legal forward transition; otherwise <computeroutput>InvalidTransition</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TYPES</title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1223" column="30" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1223" bodyend="1238"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Bounded validation-session foundation namespace; uses only the C++20 standard library. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TYPES </title><para></para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="57" column="1"/>
+  </compounddef>
+</doxygen>

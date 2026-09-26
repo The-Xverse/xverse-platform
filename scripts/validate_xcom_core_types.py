@@ -71,8 +71,16 @@ ACCEPTED_LATER_CAPABILITY_PRODUCTION = tuple(
         "src/observation.cpp",
     )
 )
+T025_PRODUCTION = tuple(
+    CPP_ROOT / relative
+    for relative in (
+        "include/xverse/xcom/validation_session.hpp",
+        "src/validation_session.cpp",
+    )
+)
 ADMITTED_PRODUCTION = frozenset(
-    (*CORE_PRODUCTION, *ACCEPTED_EXTENSION_PRODUCTION, *ACCEPTED_LATER_CAPABILITY_PRODUCTION)
+    (*CORE_PRODUCTION, *ACCEPTED_EXTENSION_PRODUCTION,
+     *ACCEPTED_LATER_CAPABILITY_PRODUCTION, *T025_PRODUCTION)
 )
 CPP_CHECK_INPUTS = (
     *CORE_PRODUCTION,

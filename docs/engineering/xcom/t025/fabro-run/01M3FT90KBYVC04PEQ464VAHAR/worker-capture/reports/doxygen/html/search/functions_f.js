@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['same_5faction_5fset_0',['same_action_set',['../namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03.html#a9b7fd0aa85a0cfc585b471b008c5b647',1,'xverse::xcom::validation::anonymous_namespace{validation_session.cpp}']]],
+  ['same_5fquota_5fset_1',['same_quota_set',['../namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03.html#ad2f6a533301e7459f4032fbcaf0ce5aa',1,'xverse::xcom::validation::anonymous_namespace{validation_session.cpp}']]],
+  ['scenario_2',['scenario',['../classxverse_1_1xcom_1_1validation_1_1Permit.html#a156fc80ee050940075fa214a01b6c4cd',1,'xverse::xcom::validation::Permit']]],
+  ['session_5fid_3',['session_id',['../classxverse_1_1xcom_1_1validation_1_1Permit.html#a46c9913c70b1976fb56e2d5a1bdba08f',1,'xverse::xcom::validation::Permit::session_id()'],['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#a9faab40b5d70e8812bf9ff525abbede7',1,'xverse::xcom::validation::ValidationSession::session_id()']]],
+  ['session_5fsize_4',['session_size',['../classxverse_1_1xcom_1_1validation_1_1PermitRegistry.html#a6220cfab1005af2f372c420affa04451',1,'xverse::xcom::validation::PermitRegistry']]],
+  ['session_5fsnapshot_5',['session_snapshot',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a4774eceb168d1a57c6761da2046829a3',1,'xverse::xcom::validation::SessionManager']]],
+  ['sessionmanager_6',['SessionManager',['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#ae3c2228c5572b4d9f4fe898d5ee226e7',1,'xverse::xcom::validation::SessionManager::SessionManager(ManagerConfig config={})'],['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a79036780bf5f8bd562084273df38b4b5',1,'xverse::xcom::validation::SessionManager::SessionManager(const SessionManager &amp;)=delete'],['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#a669a4d355450b1d9c35d30a1d9cb31d9',1,'xverse::xcom::validation::SessionManager::SessionManager(SessionManager &amp;&amp;)=delete']]],
+  ['set_5fdeployment_7',['set_deployment',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a28acb5445cf33150c9e62a44d51f3c27',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fenvironment_8',['set_environment',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a62132776b46219f4a087f4d1c4d9c277',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5finterface_9',['set_interface',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a3402dda1241197b978bbbabeea587499',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fnonce_10',['set_nonce',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#aea1178900f7d3846e321a63fb01a66a2',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fplan_5fdigest_11',['set_plan_digest',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a95fdfc57a8864c49d2309f9c8f7a0aa6',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fscenario_12',['set_scenario',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#ae39d7c9411b2112fd2265fbf93bda6a4',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fsession_5fid_13',['set_session_id',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a9484d807ed5a4642da11ce707b744e96',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5ftarget_14',['set_target',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a3b14e87fba2d4c4ed1267625395ebb7d',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5ftool_15',['set_tool',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a67f1fcea420572f57996b4892ceb61aa',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['set_5fvalidity_16',['set_validity',['../classxverse_1_1xcom_1_1validation_1_1PermitBuilder.html#a41b4bf534b0126e0bc60fc94aa6027e9',1,'xverse::xcom::validation::PermitBuilder']]],
+  ['size_17',['size',['../classxverse_1_1xcom_1_1validation_1_1Diagnostic.html#ab947b92f9db994dce0bc098d51a2fd47',1,'xverse::xcom::validation::Diagnostic::size()'],['../classxverse_1_1xcom_1_1validation_1_1PermitRegistry.html#a417db4ad07adae5410de4125de117f51',1,'xverse::xcom::validation::PermitRegistry::size()']]],
+  ['snapshot_18',['snapshot',['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#a1cb1dc8d5f74e5ee1dd8a1d64371728a',1,'xverse::xcom::validation::ValidationSession']]],
+  ['state_19',['state',['../classxverse_1_1xcom_1_1validation_1_1ValidationSession.html#a62145a1e04fd1c00866db25328b9f01d',1,'xverse::xcom::validation::ValidationSession::state()'],['../classxverse_1_1xcom_1_1validation_1_1SessionManager.html#aff3d9443e5125883b79024e045ae3c65',1,'xverse::xcom::validation::SessionManager::state()']]],
+  ['successor_5fstate_20',['successor_state',['../namespacexverse_1_1xcom_1_1validation.html#af74451f87cf2fe2e2e349977b76941a1',1,'xverse::xcom::validation']]]
+];

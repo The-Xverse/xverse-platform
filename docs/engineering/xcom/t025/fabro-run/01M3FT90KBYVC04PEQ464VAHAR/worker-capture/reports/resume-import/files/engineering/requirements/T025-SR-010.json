@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-010",
+  "revision": 1,
+  "level": "software",
+  "title": "Quota and capacity exhaustion is explicit",
+  "statement": "Every finite quota or capacity bound carried by the permit and every bounded bookkeeping structure must have an explicit exhaustion result and must never exceed its bound.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (return explicit exhaustion behavior; every finite quota or capacity); interface-bridge.md REF-002; anchors: XVE-SYS-0152, FR-017"
+  },
+  "source_anchors": [
+    "packet.md#permit-binding",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0152",
+    "FR-017"
+  ],
+  "refines": "T025-STK-002",
+  "applicability": "xverse::xcom::validation permit quotas and controller bookkeeping bounds; finite host-configurable.",
+  "status": "accepted",
+  "verification_intent": "Unit and boundary: capacity-1 and capacity-N boundaries for quotas and for session/permit tables; assert last-success and first-exhaustion results.",
+  "acceptance_criteria": [
+    "Consuming at the final available unit succeeds; one beyond yields a distinct exhaustion result.",
+    "Exhaustion does not consume, partially apply, or mutate unrelated state.",
+    "Bookkeeping structures never grow past their configured bound."
+  ]
+}

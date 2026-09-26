@@ -1,0 +1,20 @@
+{
+  "case_ids": [
+    "RP-01",
+    "RP-02",
+    "RP-03",
+    "RP-04",
+    "RP-05"
+  ],
+  "expected": "After a permit is consumed once, re-presenting the same permit identity, the same session identity with a changed nonce, or the permit bound to another session is rejected with a distinct, stable result.",
+  "id": "T025-VS-003",
+  "intended_use": "Exactly-once, controller-scoped permit consumption and replay rejection.",
+  "kind": "validation",
+  "limitation": "Internal worker evidence only; permit identity is an FNV-1a bookkeeping digest, not a cryptographic control, so no security claim is made.",
+  "observed": "Internal worker CTest run (sandbox): the 5 unit case IDs RP-01, RP-02, RP-03, RP-04, RP-05 all passed (part of 129/129 unit tests; 0 failures). Exactly one success and deterministic PermitAlreadyConsumed / SessionAlreadyConsumed for every repeat, including a changed nonce.",
+  "revision": 1,
+  "setup": "A PermitRegistry with controller-scoped one-time consumption and an already-consumed permit; replays re-present the same permit identity, the same session identity with a changed nonce, and the permit bound to another session.",
+  "validates": [
+    "T025-STK-002"
+  ]
+}

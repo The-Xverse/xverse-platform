@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-004",
+  "revision": 1,
+  "level": "software",
+  "title": "Regression and overflow are distinct failures",
+  "statement": "The authority must detect monotonic regression in a domain and arithmetic overflow during conversion, and must return distinct deterministic results for each.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (regression and overflow produce distinct deterministic results); interface-bridge.md; anchors: XVE-SYS-0147, FR-015"
+  },
+  "source_anchors": [
+    "packet.md#time-authority",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0147",
+    "FR-015"
+  ],
+  "refines": "T025-STK-001",
+  "applicability": "xverse::xcom::validation time authority; deterministic arithmetic checks.",
+  "status": "accepted",
+  "verification_intent": "Unit: sequence decreasing readings; construct a boundary conversion that overflows; assert distinct codes and unchanged state.",
+  "acceptance_criteria": [
+    "A reading earlier than a prior reading in the same declared monotonic domain yields a distinct regression result.",
+    "A conversion whose result cannot be represented yields a distinct overflow result.",
+    "Regression and overflow are distinguishable from tolerance failure and from each other."
+  ]
+}

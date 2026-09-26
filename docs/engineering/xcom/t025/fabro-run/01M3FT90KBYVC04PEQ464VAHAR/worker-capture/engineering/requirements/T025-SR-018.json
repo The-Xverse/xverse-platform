@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-018",
+  "revision": 1,
+  "level": "software",
+  "title": "Zero normal-route emissions",
+  "statement": "The candidate must not expose or perform any normal-route emission: no communication item, transport, gateway, network listener, journal, lease, dashboard, persistent store, or external service, and no logging or telemetry in the nominal path.",
+  "source": {
+    "kind": "admitted_packet",
+    "reference": "packet.md (the foundation must neither emit a communication item nor create a transport, gateway, network listener, journal, lease, dashboard, persistent store, or external service; all normal-route emission counts remain zero); anchors: FR-020"
+  },
+  "source_anchors": [
+    "packet.md#zero-emissions",
+    "FR-020"
+  ],
+  "refines": "T025-STK-005",
+  "applicability": "xverse::xcom::validation public API surface and nominal execution path.",
+  "status": "accepted",
+  "verification_intent": "Static: API-surface enumeration and I/O-call inspection. Unit and integration: nominal scenario asserting a zero emission counter and absence of emission side effects.",
+  "acceptance_criteria": [
+    "The public API surface contains no emission, transport, or persistence entry point.",
+    "Nominal operations perform no file, socket, or environment I/O.",
+    "A reported normal-route emission counter is zero after the nominal test scenario."
+  ]
+}

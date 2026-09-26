@@ -1,0 +1,20 @@
+{
+  "case_ids": [
+    "NOM-03",
+    "NOM-04",
+    "CLK-06",
+    "CLK-07",
+    "CLK-08"
+  ],
+  "expected": "A permit whose validity interval is declared in another clock domain is accepted only after a declared source->destination mapping resolves the caller's time, and is rejected with MissingMapping when no mapping is declared.",
+  "id": "T025-VS-002",
+  "intended_use": "Cross-domain permit validity must use the explicit time authority.",
+  "kind": "validation",
+  "limitation": "Internal worker evidence only; only the bounded clock-domain interface slice is exercised. Hard real-time proof remains deferred to protected host verification (XVE-SYS-0147 partial).",
+  "observed": "Internal worker CTest run (sandbox): the 5 unit case IDs NOM-03, NOM-04, CLK-06, CLK-07, CLK-08 and the 1 integration test Integration.MappedValidityCrossDomainLifecycle all passed (part of 129/129 unit and 4/4 integration tests; 0 failures). MissingMapping is asserted when no mapping is declared.",
+  "revision": 1,
+  "setup": "A TimeAuthority with a declared source->destination mapping (offset plus tolerance) and a permit whose validity interval is declared in a foreign clock domain; the caller's time is resolved through the declared mapping before any validity or action comparison.",
+  "validates": [
+    "T025-STK-001"
+  ]
+}

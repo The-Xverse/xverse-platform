@@ -1,0 +1,915 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kind="class" language="C++" prot="public">
+    <compoundname>xverse::xcom::validation::TimeAuthority</compoundname>
+    <includes refid="validation__session_8hpp" local="no">validation_session.hpp</includes>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1ClockEntry" prot="private">xverse::xcom::validation::TimeAuthority::ClockEntry</innerclass>
+    <innerclass refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1MappingEntry" prot="private">xverse::xcom::validation::TimeAuthority::MappingEntry</innerclass>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac01f2e55f53ab751ca060dd59189c930" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>class</type>
+        <definition>friend class SessionManager</definition>
+        <argsstring></argsstring>
+        <name>SessionManager</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::SessionManager</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager" kindref="compound">SessionManager</ref></type>
+        </param>
+        <briefdescription>
+<para>Grants the session manager access to the non-mutating time-resolution path so a rejected or successful transition never changes an authority baseline. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1034" column="16" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1034" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aa4f6dfc02b2861e55a7be04ff2930a34" prot="private" static="no" mutable="yes">
+        <type>std::mutex</type>
+        <definition>std::mutex xverse::xcom::validation::TimeAuthority::mutex_</definition>
+        <argsstring></argsstring>
+        <name>mutex_</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::mutex_</qualifiedname>
+        <briefdescription>
+<para>Serializes all authority access. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1136" column="22" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1136" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a876b9ce0aca8e2237d5ee9a15311bbb7" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1ClockEntry" kindref="compound">ClockEntry</ref> &gt;</type>
+        <definition>std::vector&lt;ClockEntry&gt; xverse::xcom::validation::TimeAuthority::clocks_</definition>
+        <argsstring></argsstring>
+        <name>clocks_</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::clocks_</qualifiedname>
+        <briefdescription>
+<para>Bounded domain table. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1139" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1139" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a72e7fa541094efc8a9e07ac5dee99e14" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1MappingEntry" kindref="compound">MappingEntry</ref> &gt;</type>
+        <definition>std::vector&lt;MappingEntry&gt; xverse::xcom::validation::TimeAuthority::mappings_</definition>
+        <argsstring></argsstring>
+        <name>mappings_</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::mappings_</qualifiedname>
+        <briefdescription>
+<para>Bounded mapping table. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1142" column="15" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="1142" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac313eb6790a87fcf5a7b7fdadb86fe7f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::TimeAuthority::TimeAuthority</definition>
+        <argsstring>(std::size_t max_domains, std::size_t max_mappings)</argsstring>
+        <name>TimeAuthority</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::TimeAuthority</qualifiedname>
+        <param>
+          <type>std::size_t</type>
+          <declname>max_domains</declname>
+        </param>
+        <param>
+          <type>std::size_t</type>
+          <declname>max_mappings</declname>
+        </param>
+        <briefdescription>
+<para>Constructs an authority with bounded domain and mapping tables. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>max_domains</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Maximum number of declared clock domains. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>max_mappings</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Maximum number of directed mappings. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="947" column="3" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="439" bodyend="440"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aa28833becd739b9d0a124d0b49086a23" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::TimeAuthority::~TimeAuthority</definition>
+        <argsstring>()=default</argsstring>
+        <name>~TimeAuthority</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::~TimeAuthority</qualifiedname>
+        <briefdescription>
+<para>Destructor. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="950" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a6436a677c38d83e095e50345cf429edb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::TimeAuthority::TimeAuthority</definition>
+        <argsstring>(const TimeAuthority &amp;)=delete</argsstring>
+        <name>TimeAuthority</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::TimeAuthority</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy construction is deleted; the authority is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="954" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a551c68ebf8d4d0cd47d9347f1533adc6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        <definition>TimeAuthority &amp; xverse::xcom::validation::TimeAuthority::operator=</definition>
+        <argsstring>(const TimeAuthority &amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::operator=</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        </param>
+        <briefdescription>
+<para>Copy assignment is deleted; the authority is non-copyable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="957" column="17"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aaecc4694867ff6feee77d7ff67eda4c7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xverse::xcom::validation::TimeAuthority::TimeAuthority</definition>
+        <argsstring>(TimeAuthority &amp;&amp;)=delete</argsstring>
+        <name>TimeAuthority</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::TimeAuthority</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move construction is deleted; the authority is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="960" column="3"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ad277fbe570f602301ee8fbf06304c961" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;</type>
+        <definition>TimeAuthority &amp; xverse::xcom::validation::TimeAuthority::operator=</definition>
+        <argsstring>(TimeAuthority &amp;&amp;)=delete</argsstring>
+        <name>operator=</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::operator=</qualifiedname>
+        <param>
+          <type><ref refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority" kindref="compound">TimeAuthority</ref> &amp;&amp;</type>
+        </param>
+        <briefdescription>
+<para>Move assignment is deleted; the authority is non-movable. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="963" column="17"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac79bbf5cf2b0e6141d9c4acbc04f8e2b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::declare_clock</definition>
+        <argsstring>(ClockDomainId id, ClockSource source, ClockKind kind, Timestamp min_value, Timestamp max_value)</argsstring>
+        <name>declare_clock</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::declare_clock</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4b7ff3be7673efced4e6499a690c6030" kindref="member">ClockSource</ref></type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aed32ae42f82e40f9c47bc23cbaee7a85" kindref="member">ClockKind</ref></type>
+          <declname>kind</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>min_value</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>max_value</declname>
+        </param>
+        <briefdescription>
+<para>Declares or replaces a clock domain. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain token; <computeroutput>0</computeroutput> is reserved invalid. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>source</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Host-injected reading source, moved into the authority. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>kind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Monotonic or wall-clock semantics. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>min_value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Inclusive lower bound. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>max_value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Inclusive upper bound. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" kindref="member">Result::CapacityExhausted</ref></computeroutput> when the domain table is full and <computeroutput>id</computeroutput> is new; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda44b28e0144c40180650489932927b754" kindref="member">Result::UnknownClock</ref></computeroutput> when <computeroutput>id == 0</computeroutput> or the bounds are inverted. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="974" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="470" bodyend="496"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ad13efc4e28d4f64509abbd2ce1e2b91e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::declare_mapping</definition>
+        <argsstring>(ClockDomainId src, ClockDomainId dst, SignedOffset offset, Tolerance tolerance)</argsstring>
+        <name>declare_mapping</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::declare_mapping</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>src</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>dst</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aecb4148682491867b8fa0bee400d2414" kindref="member">SignedOffset</ref></type>
+          <declname>offset</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1aba6fec5910e247e085a01477c221f379" kindref="member">Tolerance</ref></type>
+          <declname>tolerance</declname>
+        </param>
+        <briefdescription>
+<para>Declares or replaces a directed source-to-destination mapping. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>src</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source domain; must already be declared. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dst</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination domain; must already be declared. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>offset</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Signed offset added to the source value. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tolerance</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Maximum admissible divergence from the destination reading. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda44b28e0144c40180650489932927b754" kindref="member">Result::UnknownClock</ref></computeroutput> when either domain is undeclared; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda7c0a449a51f6694eaa3d873ac81d0615" kindref="member">Result::CapacityExhausted</ref></computeroutput> when the mapping table is full. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="985" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="498" bodyend="531"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a03bab587fc8102c383d1f74e9ca7e551" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::now</definition>
+        <argsstring>(ClockDomainId id, Timestamp &amp;out)</argsstring>
+        <name>now</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::now</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Reads the bounded current time of a domain. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared domain token. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the reading only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda44b28e0144c40180650489932927b754" kindref="member">Result::UnknownClock</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaecd7344cd2c9ce2f9cc80e386e792983" kindref="member">Result::ClockSourceFailure</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaf1261e8c810007672bca4fcdebe87912" kindref="member">Result::ClockOutOfBounds</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda01a1968de647c0f203e729c0f8d36475" kindref="member">Result::ClockRegression</ref></computeroutput> for a monotonic domain whose reading is below the retained baseline. A rejected read leaves the baseline unchanged. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="996" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="565" bodyend="567"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a1f9da9c75f10ba1c4f259913952f77ae" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::convert</definition>
+        <argsstring>(ClockDomainId src, ClockDomainId dst, Timestamp value, Timestamp &amp;out)</argsstring>
+        <name>convert</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::convert</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>src</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>dst</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>value</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+<para>Maps a source value into a destination domain under a declared rule. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>src</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared source domain. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dst</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared destination domain. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source-domain value. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the mapped value only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda44b28e0144c40180650489932927b754" kindref="member">Result::UnknownClock</ref></computeroutput> when <computeroutput>src</computeroutput> is undeclared; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda77221fbb47a4a86655568873762d4a57" kindref="member">Result::MissingMapping</ref></computeroutput> when no directed <computeroutput>src -&gt; dst</computeroutput> rule exists; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda62ed4501b1dd992731c1c333ca92c12f" kindref="member">Result::ClockOverflow</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaf1261e8c810007672bca4fcdebe87912" kindref="member">Result::ClockOutOfBounds</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaecd7344cd2c9ce2f9cc80e386e792983" kindref="member">Result::ClockSourceFailure</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bda01a1968de647c0f203e729c0f8d36475" kindref="member">Result::ClockRegression</ref></computeroutput>; <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaf90c5915275db09805e1cef1b7d18f2b" kindref="member">Result::ToleranceExceeded</ref></computeroutput> when the mapped value diverges from the destination reading by more than the tolerance. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1010" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="606" bodyend="609"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a2fc507246d3b6f8d68f79f4d1b15e8d7" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::optional&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &gt;</type>
+        <definition>std::optional&lt; Timestamp &gt; xverse::xcom::validation::TimeAuthority::baseline</definition>
+        <argsstring>(ClockDomainId id) const</argsstring>
+        <name>baseline</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::baseline</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Returns the retained regression baseline of a domain. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain token. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The retained regression baseline, or <computeroutput>std::nullopt</computeroutput> when the domain is undeclared or has no successful prior read. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1018" column="18" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="611" bodyend="618"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a42acd681b94a652ab8a7a030302a7c2a" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::TimeAuthority::domain_count</definition>
+        <argsstring>() const</argsstring>
+        <name>domain_count</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::domain_count</qualifiedname>
+        <briefdescription>
+<para>Returns the number of declared clock domains. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The number of declared clock domains. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1023" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="620" bodyend="629"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a34a693fa4c2d95223bab34f36eae7ffc" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t xverse::xcom::validation::TimeAuthority::mapping_count</definition>
+        <argsstring>() const</argsstring>
+        <name>mapping_count</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::mapping_count</qualifiedname>
+        <briefdescription>
+<para>Returns the number of declared mappings. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The number of declared mappings. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1028" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="631" bodyend="640"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a6ae5f859131fe67eb5a947ae500ec633" prot="private" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type><ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1ClockEntry" kindref="compound">ClockEntry</ref> *</type>
+        <definition>TimeAuthority::ClockEntry * xverse::xcom::validation::TimeAuthority::find_clock_locked</definition>
+        <argsstring>(ClockDomainId id) noexcept</argsstring>
+        <name>find_clock_locked</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::find_clock_locked</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Finds a declared domain by token; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain token. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Pointer to the entry, or <computeroutput>nullptr</computeroutput> when undeclared. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1086" column="15" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="442" bodyend="449"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a8919b5884d4e3c23345d8a036549f457" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1ClockEntry" kindref="compound">ClockEntry</ref> *</type>
+        <definition>const TimeAuthority::ClockEntry * xverse::xcom::validation::TimeAuthority::find_clock_locked</definition>
+        <argsstring>(ClockDomainId id) const noexcept</argsstring>
+        <name>find_clock_locked</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::find_clock_locked</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <briefdescription>
+<para>Finds a declared domain by token; const overload, call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain token. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Pointer to the entry, or <computeroutput>nullptr</computeroutput> when undeclared. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1091" column="21" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="451" bodyend="458"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a028f935712ee976a35df3b13219e5aba" prot="private" static="no" const="yes" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1MappingEntry" kindref="compound">MappingEntry</ref> *</type>
+        <definition>const TimeAuthority::MappingEntry * xverse::xcom::validation::TimeAuthority::find_mapping_locked</definition>
+        <argsstring>(ClockDomainId src, ClockDomainId dst) const noexcept</argsstring>
+        <name>find_mapping_locked</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::find_mapping_locked</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>src</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>dst</declname>
+        </param>
+        <briefdescription>
+<para>Finds a directed mapping; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>src</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source domain token. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dst</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination domain token. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Pointer to the mapping, or <computeroutput>nullptr</computeroutput> when undeclared. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1097" column="23" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="461" bodyend="468"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a37e93b186b92d56d9d26e83a4c0720ef" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::now_impl</definition>
+        <argsstring>(ClockDomainId id, Timestamp &amp;out, bool commit_baseline)</argsstring>
+        <name>now_impl</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::now_impl</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>id</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>commit_baseline</declname>
+        </param>
+        <briefdescription>
+<para>Core bounded current-time acquisition; acquires the authority lock itself. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>id</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared domain token. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the reading only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>commit_baseline</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>When <computeroutput>true</computeroutput>, a successful read advances the retained regression baseline (public <computeroutput>now</computeroutput> semantics). When <computeroutput>false</computeroutput>, the read is a non-mutating peek used by <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aad5344427bf11609d37593f6a4736de7" kindref="member">SessionManager::transition</ref></computeroutput> so a transition never changes a baseline. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The same outcomes as <computeroutput>now</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1107" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="556" bodyend="563"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a5ab83ced2deee807f12f652d0b9f006d" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::read_clock_locked</definition>
+        <argsstring>(ClockEntry &amp;entry, Timestamp &amp;out, bool commit_baseline=true)</argsstring>
+        <name>read_clock_locked</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::read_clock_locked</qualifiedname>
+        <param>
+          <type><ref refid="structxverse_1_1xcom_1_1validation_1_1TimeAuthority_1_1ClockEntry" kindref="compound">ClockEntry</ref> &amp;</type>
+          <declname>entry</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>commit_baseline</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+<para>Reads and validates one domain&apos;s current time; call only while holding the mutex. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>entry</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Domain entry. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the reading only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>commit_baseline</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>When <computeroutput>true</computeroutput>, a successful read advances the retained regression baseline (public <computeroutput>now</computeroutput> and <computeroutput>convert</computeroutput> semantics). When <computeroutput>false</computeroutput>, the read is a non-mutating peek used by <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aad5344427bf11609d37593f6a4736de7" kindref="member">SessionManager::transition</ref></computeroutput> so a transition never changes an authority baseline. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The read outcome; a rejected read leaves the baseline unchanged. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1117" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="533" bodyend="554"/>
+      </memberdef>
+      <memberdef kind="function" id="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a36f8033e7950c95f492a23eae048804d" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bd" kindref="member">Result</ref></type>
+        <definition>Result xverse::xcom::validation::TimeAuthority::convert_impl</definition>
+        <argsstring>(ClockDomainId src, ClockDomainId dst, Timestamp value, Timestamp &amp;out, bool commit_baseline)</argsstring>
+        <name>convert_impl</name>
+        <qualifiedname>xverse::xcom::validation::TimeAuthority::convert_impl</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>src</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1abf669867df1dcca15e7b1a2b70cfe47d" kindref="member">ClockDomainId</ref></type>
+          <declname>dst</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>value</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>commit_baseline</declname>
+        </param>
+        <briefdescription>
+<para>Core directed-mapping conversion; acquires the authority lock itself. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>src</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared source domain. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dst</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Declared destination domain. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Source-domain value. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Receives the mapped value only on <computeroutput><ref refid="namespacexverse_1_1xcom_1_1validation_1a4d261acef1c4b2fe2545c321769d18bdaa60852f204ed8028c1c58808b746d115" kindref="member">Result::Ok</ref></computeroutput>. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>commit_baseline</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>When <computeroutput>true</computeroutput>, the destination regression baseline advances on a successful destination read (public <computeroutput>convert</computeroutput> semantics). When <computeroutput>false</computeroutput>, the read is a non-mutating peek so a <computeroutput><ref refid="classxverse_1_1xcom_1_1validation_1_1SessionManager_1aad5344427bf11609d37593f6a4736de7" kindref="member">SessionManager::transition</ref></computeroutput> rejection or success leaves the authority baseline unchanged. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The same outcomes as <computeroutput>convert</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="1131" column="11" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="569" bodyend="604"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Explicit time authority owning declared domains and directed mappings. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>The authority is non-copyable and non-movable: moving would silently invalidate the injected host sources and regression baselines. Construct it with capacity bounds and destroy it before any thread that used it exits. Every method is internally synchronized by one mutex, so concurrent <computeroutput>now</computeroutput>/<computeroutput>convert</computeroutput> calls serialize into a deterministic total order. No code path compares a raw timestamp from one domain with a raw timestamp from another; conversion requires a declared directed mapping. <simplesect kind="par"><title>Unit specification: T025-U-TIME</title><para></para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <location file="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" line="941" column="1" bodyfile="src/xverse/xcom/include/xverse/xcom/validation_session.hpp" bodystart="941" bodyend="1143"/>
+    <listofallmembers>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a2fc507246d3b6f8d68f79f4d1b15e8d7" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>baseline</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a876b9ce0aca8e2237d5ee9a15311bbb7" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>clocks_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a1f9da9c75f10ba1c4f259913952f77ae" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>convert</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a36f8033e7950c95f492a23eae048804d" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>convert_impl</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac79bbf5cf2b0e6141d9c4acbc04f8e2b" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>declare_clock</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ad13efc4e28d4f64509abbd2ce1e2b91e" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>declare_mapping</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a42acd681b94a652ab8a7a030302a7c2a" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>domain_count</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a6ae5f859131fe67eb5a947ae500ec633" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>find_clock_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a8919b5884d4e3c23345d8a036549f457" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>find_clock_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a028f935712ee976a35df3b13219e5aba" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>find_mapping_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a34a693fa4c2d95223bab34f36eae7ffc" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>mapping_count</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a72e7fa541094efc8a9e07ac5dee99e14" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>mappings_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aa4f6dfc02b2861e55a7be04ff2930a34" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>mutex_</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a03bab587fc8102c383d1f74e9ca7e551" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>now</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a37e93b186b92d56d9d26e83a4c0720ef" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>now_impl</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a551c68ebf8d4d0cd47d9347f1533adc6" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ad277fbe570f602301ee8fbf06304c961" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>operator=</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a5ab83ced2deee807f12f652d0b9f006d" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>read_clock_locked</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac01f2e55f53ab751ca060dd59189c930" prot="private" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>SessionManager</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1ac313eb6790a87fcf5a7b7fdadb86fe7f" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>TimeAuthority</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1a6436a677c38d83e095e50345cf429edb" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>TimeAuthority</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aaecc4694867ff6feee77d7ff67eda4c7" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>TimeAuthority</name></member>
+      <member refid="classxverse_1_1xcom_1_1validation_1_1TimeAuthority_1aa28833becd739b9d0a124d0b49086a23" prot="public" virt="non-virtual"><scope>xverse::xcom::validation::TimeAuthority</scope><name>~TimeAuthority</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

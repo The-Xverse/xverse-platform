@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-015",
+  "revision": 1,
+  "level": "software",
+  "title": "Rejection leaves state unchanged",
+  "statement": "Every rejected operation must leave the affected session record, permit consumption bookkeeping, counters, and authority state unchanged.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (rejected operations leave state unchanged); interface-bridge.md REF-002; anchors: XVE-SYS-0154, FR-019"
+  },
+  "source_anchors": [
+    "packet.md#diagnostics",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0154",
+    "FR-019"
+  ],
+  "refines": "T025-STK-004",
+  "applicability": "xverse::xcom::validation all rejecting operations.",
+  "status": "accepted",
+  "verification_intent": "Unit: snapshot-before/after assertions for every negative case in the mismatch, replay, clock, handle, and lifecycle matrices.",
+  "acceptance_criteria": [
+    "For each negative case a snapshot-equality assertion covers state, consumed set, and counters.",
+    "Rejection on one session does not perturb any other session or the authority.",
+    "A failed transition never partially applies and exposes no intermediate state."
+  ]
+}

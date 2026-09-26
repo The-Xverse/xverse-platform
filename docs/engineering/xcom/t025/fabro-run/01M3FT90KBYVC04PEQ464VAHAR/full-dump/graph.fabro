@@ -1,0 +1,12 @@
+digraph T025BugfixUltraLight {
+  graph [goal="Repair only the independently reported T025 defects from a hash-verified checkpoint; return a focused candidate for terminal review", on_failure="exit", max_node_visits=1, default_max_retries=0]
+  start [shape=Mdiamond]
+  exit [shape=Msquare]
+  import_gate [shape=parallelogram, script="python3 /opt/xcom-input/bugfix_check.py import", timeout="600s", allow_partial=false]
+  repair [shape=box, backend="api", provider="deepseek", model="deepseek-v4-flash", reasoning_effort="high", timeout="1800s", prompt="@prompts/repair.md", output_schema="routing", output_retries=1]
+  focused_checks [shape=parallelogram, script="python3 /opt/xcom-input/bugfix_check.py verify", timeout="1800s", allow_partial=false]
+  final_review [shape=box, backend="api", provider="deepseek", model="deepseek-v4-pro", reasoning_effort="high", timeout="1200s", prompt="@prompts/final_review.md", output_schema="routing", output_retries=1]
+  review_gate [shape=parallelogram, script="python3 /opt/xcom-input/bugfix_check.py review", allow_partial=false]
+  delivery_gate [shape=parallelogram, script="python3 /opt/xcom-input/bugfix_check.py package", timeout="120s", goal_gate=true, allow_partial=false]
+  start -> import_gate -> repair -> focused_checks -> final_review -> review_gate -> delivery_gate -> exit
+}

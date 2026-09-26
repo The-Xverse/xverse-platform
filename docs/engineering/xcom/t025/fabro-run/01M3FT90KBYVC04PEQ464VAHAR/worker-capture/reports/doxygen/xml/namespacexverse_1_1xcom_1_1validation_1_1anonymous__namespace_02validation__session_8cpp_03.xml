@@ -1,0 +1,486 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03" kind="namespace" language="C++">
+    <compoundname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1ac5098665c76978a1c1fce28debfa4a47" prot="public" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>std::uint64_t</type>
+        <definition>std::uint64_t xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::unsigned_distance</definition>
+        <argsstring>(Timestamp left, Timestamp right) noexcept</argsstring>
+        <name>unsigned_distance</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::unsigned_distance</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1acf7f4f49c76eaa4627a84d09c372aea1" kindref="member">Timestamp</ref></type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+<para>Returns the exact full-range unsigned distance between two signed timestamps. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>left</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>First timestamp. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>right</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Second timestamp. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The absolute difference as an unsigned 64-bit value, exact over the entire signed 64-bit domain (maximum <computeroutput>UINT64_MAX</computeroutput>). The magnitude is computed from the ordering of the original signed values, so it never wraps modulo 2^64 and never treats the top bit as a sign bit. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-TIME </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="31" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="31" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a900fa2f284f8c5f32769deaa7eb86909" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_u64</definition>
+        <argsstring>(std::vector&lt; std::uint8_t &gt; &amp;out, std::uint64_t value)</argsstring>
+        <name>append_u64</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_u64</qualifiedname>
+        <param>
+          <type>std::vector&lt; std::uint8_t &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>std::uint64_t</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>Appends a 64-bit value to a byte vector in little-endian order. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination byte vector. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Value to append. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="40" column="6" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="40" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1ada09b25a3b7b486e99f3884ef10c1730" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_bytes</definition>
+        <argsstring>(std::vector&lt; std::uint8_t &gt; &amp;out, std::span&lt; const std::uint8_t &gt; bytes)</argsstring>
+        <name>append_bytes</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_bytes</qualifiedname>
+        <param>
+          <type>std::vector&lt; std::uint8_t &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>std::span&lt; const std::uint8_t &gt;</type>
+          <declname>bytes</declname>
+        </param>
+        <briefdescription>
+<para>Appends raw bytes to a byte vector. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination byte vector. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>bytes</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Bytes to append. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="50" column="6" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="50" bodyend="52"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a6dfaa0d8db6921f31c275b58fed2ad1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_tag</definition>
+        <argsstring>(std::vector&lt; std::uint8_t &gt; &amp;out, const std::string &amp;text)</argsstring>
+        <name>append_tag</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::append_tag</qualifiedname>
+        <param>
+          <type>std::vector&lt; std::uint8_t &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>text</declname>
+        </param>
+        <briefdescription>
+<para>Appends a length-prefixed tag text to a byte vector. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>out</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Destination byte vector. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>text</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Tag" kindref="compound">Tag</ref> text to append. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="58" column="6" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="58" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a1cc3bee503f799f5197def7296b7f930" prot="public" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>std::size_t</type>
+            <declname>N</declname>
+            <defname>N</defname>
+          </param>
+        </templateparamlist>
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::is_zero_bytes</definition>
+        <argsstring>(const std::array&lt; std::uint8_t, N &gt; &amp;value) noexcept</argsstring>
+        <name>is_zero_bytes</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::is_zero_bytes</qualifiedname>
+        <param>
+          <type>const std::array&lt; std::uint8_t, N &gt; &amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a fixed-size byte array is all zero. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>N</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Array length. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>value</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Array to test. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when every byte is zero. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="70" column="7" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="70" bodyend="77"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a7a742ea1572805f979e825a66765db32" prot="public" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::is_known_quota_kind</definition>
+        <argsstring>(QuotaKind kind) noexcept</argsstring>
+        <name>is_known_quota_kind</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::is_known_quota_kind</qualifiedname>
+        <param>
+          <type><ref refid="namespacexverse_1_1xcom_1_1validation_1a5115eb854418a3737250101ecade60eb" kindref="member">QuotaKind</ref></type>
+          <declname>kind</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether a quota kind is one of the two defined kinds. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>kind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> kind to test. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> for <computeroutput>Operations</computeroutput> and <computeroutput>Evidence</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="83" column="7" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="83" bodyend="85"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1ad7607c9e79123ada014def9897254448" prot="public" static="no" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::quota_less</definition>
+        <argsstring>(const Quota &amp;left, const Quota &amp;right) noexcept</argsstring>
+        <name>quota_less</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::quota_less</qualifiedname>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+<para>Orders two quota entries for set comparison. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>left</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>First quota entry. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>right</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Second quota entry. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when <computeroutput>left</computeroutput> sorts before <computeroutput>right</computeroutput>. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="92" column="7" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="92" bodyend="97"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a9b7fd0aa85a0cfc585b471b008c5b647" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::same_action_set</definition>
+        <argsstring>(const std::vector&lt; ActionMask &gt; &amp;left, const std::vector&lt; ActionMask &gt; &amp;right)</argsstring>
+        <name>same_action_set</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::same_action_set</qualifiedname>
+        <param>
+          <type>const std::vector&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref> &gt; &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1aef9c979e6cd4aa783ed0b83ba2eeadf7" kindref="member">ActionMask</ref> &gt; &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether two action-mask lists hold the same set of masks. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>left</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>First mask list. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>right</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Second mask list. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when both lists contain the same masks regardless of order. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="104" column="7" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="104" bodyend="111"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1ad2f6a533301e7459f4032fbcaf0ce5aa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::same_quota_set</definition>
+        <argsstring>(const std::vector&lt; Quota &gt; &amp;left, const std::vector&lt; Quota &gt; &amp;right)</argsstring>
+        <name>same_quota_set</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::same_quota_set</qualifiedname>
+        <param>
+          <type>const std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> &gt; &amp;</type>
+          <declname>left</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="structxverse_1_1xcom_1_1validation_1_1Quota" kindref="compound">Quota</ref> &gt; &amp;</type>
+          <declname>right</declname>
+        </param>
+        <briefdescription>
+<para>Reports whether two quota lists hold the same set of entries. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>left</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>First quota list. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>right</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Second quota list. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para><computeroutput>true</computeroutput> when both lists contain the same entries regardless of order. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="118" column="7" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="118" bodyend="124"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a478f0ca078399c564ac50133aaad2b13" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; std::uint8_t &gt;</type>
+        <definition>std::vector&lt; std::uint8_t &gt; xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::permit_envelope_bytes</definition>
+        <argsstring>(const Permit &amp;permit)</argsstring>
+        <name>permit_envelope_bytes</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::permit_envelope_bytes</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> &amp;</type>
+          <declname>permit</declname>
+        </param>
+        <briefdescription>
+<para>Serializes a permit envelope (excluding the session identity) into bytes. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>permit</parametername>
+</parameternamelist>
+<parameterdescription>
+<para><ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> to serialize. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The deterministic byte image used for the permit content digest. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="130" column="14" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="130" bodyend="157"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacexverse_1_1xcom_1_1validation_1_1anonymous__namespace_02validation__session_8cpp_03_1a0301f4d4af7301322ab8e8dc5e4d14db" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::optional&lt; <ref refid="namespacexverse_1_1xcom_1_1validation_1a91209126e926c41727279938e6f7b5b9" kindref="member">FieldLocator</ref> &gt;</type>
+        <definition>std::optional&lt; FieldLocator &gt; xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::first_mismatch</definition>
+        <argsstring>(const Permit &amp;permit, const SessionContext &amp;context)</argsstring>
+        <name>first_mismatch</name>
+        <qualifiedname>xverse::xcom::validation::anonymous_namespace{validation_session.cpp}::first_mismatch</qualifiedname>
+        <param>
+          <type>const <ref refid="classxverse_1_1xcom_1_1validation_1_1Permit" kindref="compound">Permit</ref> &amp;</type>
+          <declname>permit</declname>
+        </param>
+        <param>
+          <type>const <ref refid="structxverse_1_1xcom_1_1validation_1_1SessionContext" kindref="compound">SessionContext</ref> &amp;</type>
+          <declname>context</declname>
+        </param>
+        <briefdescription>
+<para>Returns the locator of the first field where the context differs from the permit. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>permit</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Immutable permit. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>context</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Asserted runtime envelope. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The first mismatching field locator, or <computeroutput>std::nullopt</computeroutput> when all fields match. </para>
+</simplesect>
+<simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/xverse/xcom/src/validation_session.cpp" line="164" column="16" bodyfile="src/xverse/xcom/src/validation_session.cpp" bodystart="164" bodyend="204"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>File-local helpers for permit content serialization and field comparison. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="par"><title>Unit specification: T025-U-PERMIT </title><para></para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <location file="src/xverse/xcom/src/validation_session.cpp" line="21" column="1"/>
+  </compounddef>
+</doxygen>

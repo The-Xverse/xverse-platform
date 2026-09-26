@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "validation_permit_registry",
+  "revision": "1",
+  "name": "Permit consumption registry",
+  "purpose": "Enforce controller-scoped, exactly-once permit consumption and bounded consumed-identity bookkeeping, returning explicit exhaustion results.",
+  "responsibilities": [
+    "Record, atomically, the first consumption of a permit identity and of the bound session identity under a controller scope.",
+    "Reject a second consumption of the same permit identity even when the nonce has changed, via the consumed session-identity key.",
+    "Reject a permit already consumed for one session identity when presented for another session identity.",
+    "Bound the consumed-identity bookkeeping by a host-configured capacity and return CapacityExhausted rather than growing without limit.",
+    "Expose exact-set queries for tests and trace evidence without exposing a mutator."
+  ],
+  "state_ownership": [
+    "Controller-scoped consumed-permit-identity set, bounded by max_consumed_permits.",
+    "Controller-scoped consumed-session-identity set, bounded by max_consumed_sessions.",
+    "Both sets guarded by the owning manager's single std::mutex; the registry is non-copyable and non-movable."
+  ],
+  "interfaces": [
+    "try_consume(ControllerId, PermitId, SessionId, Result& out) -> Result (atomic check-then-insert)",
+    "is_consumed_permit(ControllerId, PermitId) const -> bool",
+    "is_consumed_session(ControllerId, SessionId) const -> bool",
+    "capacity() const -> std::size_t; size() const -> std::size_t"
+  ],
+  "concurrency": "try_consume performs the full check-then-insert in one critical section, so N concurrent consumptions of one valid permit yield exactly one Ok and N-1 deterministic failures.",
+  "errors": [
+    "PermitAlreadyConsumed: permit identity already consumed.",
+    "SessionAlreadyConsumed: session identity already bound to a consumed permit.",
+    "CapacityExhausted: consumed-identity bookkeeping is full and the consumption is refused."
+  ],
+  "dependencies": [
+    { "component_id": "validation_types", "relation": "uses" },
+    { "component_id": "validation_permit", "relation": "uses" }
+  ],
+  "deployment": "Compiled in the standalone candidate; keyed sets use std::array-backed open-addressing with a fixed capacity to guarantee bounded memory.",
+  "rationale": "Keeping consumption bookkeeping separate from the session table makes the exactly-once rule and its bounded exhaustion behavior independently testable and traceable to SR-009 and SR-010."
+}

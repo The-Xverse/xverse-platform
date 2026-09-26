@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T025-SR-007",
+  "revision": 1,
+  "level": "software",
+  "title": "Immutable permit binds the exact session envelope",
+  "statement": "A permit must be immutable once constructed and must bind exactly one session identity, plan digest, scenario, deployment, environment, tool, interface, target, nonce, allowed action set, validity interval, and every finite quota or capacity.",
+  "source": {
+    "kind": "admitted_packet_and_bridge",
+    "reference": "packet.md (the immutable permit binds exactly one session identity, plan digest, ... every finite quota or capacity); interface-bridge.md REF-002; anchors: XVE-SYS-0152, XVE-SYS-0144, FR-016"
+  },
+  "source_anchors": [
+    "packet.md#permit-binding",
+    "interface-bridge.md#ref-002",
+    "XVE-SYS-0152",
+    "XVE-SYS-0144",
+    "FR-016"
+  ],
+  "refines": "T025-STK-002",
+  "applicability": "xverse::xcom::validation immutable permit value type; no mutator exposed.",
+  "status": "accepted",
+  "verification_intent": "Unit: field-by-field mismatch matrix, one test per bound field, asserting rejection and the identified mismatching field; mutability absence asserted by API shape.",
+  "acceptance_criteria": [
+    "All listed fields are present, immutable, and individually comparable; the permit exposes no mutator.",
+    "A mismatch in any single field between permit and consuming session is detected and the field is identifiable.",
+    "Absent or default-initialised values for an identity-bearing field are rejected and never treated as a wildcard."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "T025-VS-007",
+  "schema_version": 1,
+  "revision": 1,
+  "kind": "validation",
+  "intended_use": "Rejection is non-mutating and diagnostics are stable and payload-free.",
+  "validates": [
+    "T025-STK-004"
+  ],
+  "case_ids": [
+    "NOMUT-01",
+    "NOMUT-02",
+    "NOMUT-03",
+    "NOMUT-04",
+    "NOMUT-05",
+    "NOMUT-06",
+    "DIA-01",
+    "DIA-05"
+  ],
+  "expected": "Every rejected operation (permit mismatch, replay, clock failure, handle failure, invalid or terminal transition) leaves manager, session, consumed-set, counter, and authority-baseline state byte-identical and returns an ordered, payload-free diagnostic.",
+  "setup": "Full-snapshot fixtures (TransitionFixtureSnapshot) capturing manager, session, consumed permit/session sets, quota counters, live-session count, and both time-authority regression baselines before and after each rejected operation.",
+  "observed": "Internal worker CTest run (sandbox): the 8 unit case IDs NOMUT-01, NOMUT-02, NOMUT-03, NOMUT-04, NOMUT-05, NOMUT-06, DIA-01, DIA-05 all passed (part of T4 107/107 unit; 0 failures). NOMUT-01..NOMUT-06 assert byte-identical state after each rejection; DIA-01 asserts a payload-free single-code diagnostic (size 1, no locator) and DIA-05 asserts precedence-ordered accumulation.",
+  "limitation": "Internal worker evidence only; payload-free ordered diagnostics are verified for this candidate's diagnostic vocabulary, not predecessor diagnostics."
+}

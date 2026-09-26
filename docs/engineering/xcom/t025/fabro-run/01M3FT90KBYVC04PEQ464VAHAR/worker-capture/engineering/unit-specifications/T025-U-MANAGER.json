@@ -1,0 +1,415 @@
+{
+  "schema_version": 1,
+  "id": "T025-U-MANAGER",
+  "revision": "1",
+  "component_id": "validation_session_manager",
+  "purpose": "Own the host-issued manager uniqueness scope, controller identity and generation, bounded live-session capacity, scope-bound handle issuance, and the single ordered validation path (handle, context, time, action) that precedes every mutation, resolving every time decision through the authority and exposing a zero normal-route emission counter.",
+  "interfaces": [
+    "register_controller(ControllerId id, ControllerName name) -> Result (Ok | InvalidController | CapacityExhausted); issues Generation 1 under the manager's non-zero uniqueness scope",
+    "consume(ControllerId, const Permit&, const SessionContext&, SessionHandle& out) -> Result",
+    "transition(SessionHandle, LifecycleAction, ClockDomainId now_domain, Timestamp now_value, Diagnostic& out) -> Result (now_domain/now_value is a caller claim cross-checked against the authority's reading)",
+    "state(SessionHandle) const -> Result (with LifecycleState)",
+    "capacity() const -> std::size_t; emission_count() const -> std::uint64_t (always zero)"
+  ],
+  "inputs": [
+    "ManagerScope (host-supplied, non-zero, fresh per instance and recreation); ControllerId (host-issued); ControllerName; Permit; SessionContext; SessionHandle; LifecycleAction; ClockDomainId now_domain (claim domain); Timestamp now_value (claim value)."
+  ],
+  "outputs": [
+    "ControllerId, SessionHandle, Result, LifecycleState, Diagnostic, and the zero emission counter."
+  ],
+  "state": [
+    "Host-supplied non-zero ManagerScope required at construction and bound into every issued handle.",
+    "Controller table (controller id -> generation, name) with a bounded superseded-controller window.",
+    "Live session table bounded by max_sessions, each entry binding a session, its permit identity, and owning controller id/generation.",
+    "A single std::mutex guarding all manager state; non-copyable and non-movable."
+  ],
+  "errors": [
+    "PermitMismatch (with FieldLocator), PermitAlreadyConsumed, SessionAlreadyConsumed, CapacityExhausted.",
+    "InvalidHandle, ForeignHandle, StaleHandle, RecreatedController, SessionNotFound, InvalidController (zero or already-registered controller identity at registration).",
+    "UnknownClock, MissingMapping, ToleranceExceeded, ClockRegression, ClockOverflow, ClockSourceFailure, ClockOutOfBounds, PermitNotYetValid, PermitExpired.",
+    "UndefinedAction, ActionNotAllowed, InvalidTransition, TerminalState, QuotaExhausted, AlreadyApplied."
+  ],
+  "invariants": [
+    "Validation of handle, context, time, and action completes before any state mutation.",
+    "Every handle binds the manager's non-zero uniqueness scope, the controller identity, generation, and session identity; the scope is validated first, so a handle from a different or recreated manager is ForeignHandle before any session is addressed.",
+    "now_domain/now_value is a caller claim, never trusted directly: the manager obtains the authority's reading in the claim domain, cross-checks the claim (full-range distance must be zero), maps to the validity domain when needed, and only then tests [valid_from, valid_until).",
+    "A failed consume returns no usable handle and leaves capacity and consumed sets unchanged.",
+    "Terminal/closed reclamation frees exactly one capacity slot for reuse.",
+    "emission_count() is always 0 and the class exposes no emission, transport, journal, or persistence API."
+  ],
+  "concurrency": "All operations take the single std::mutex; concurrent consumes and transitions serialize deterministically, and exactly-once consumption holds under concurrency via the registry's atomic check-then-insert.",
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/src/validation_session.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "NOM-01",
+      "precondition": "P_VALID and CTX_VALID; now=1500 in D_MONO.",
+      "stimulus": "consume then Arm, Activate, Close, Finalize.",
+      "expected": "Consume Ok (handle issued, declared); each step Ok; final state closed."
+    },
+    {
+      "id": "NOM-02",
+      "precondition": "now=1500 within [1000,2000) of P_VALID.",
+      "stimulus": "transition(Arm) at now=1500 in D_MONO.",
+      "expected": "Ok."
+    },
+    {
+      "id": "NOM-03",
+      "precondition": "now_domain=D_WALL; mapping D_WALL->D_MONO declared; mapped into [1000,2000).",
+      "stimulus": "transition(Arm) at D_WALL now value.",
+      "expected": "Ok after convert."
+    },
+    {
+      "id": "NOM-04",
+      "precondition": "now_domain=D_WALL with no mapping declared.",
+      "stimulus": "transition(Arm) at D_WALL now value.",
+      "expected": "MissingMapping."
+    },
+    {
+      "id": "MIS-01",
+      "precondition": "Context session id differs; other fields equal.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator SessionId."
+    },
+    {
+      "id": "MIS-02",
+      "precondition": "Context plan digest differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator PlanDigest."
+    },
+    {
+      "id": "MIS-03",
+      "precondition": "Context scenario differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Scenario."
+    },
+    {
+      "id": "MIS-04",
+      "precondition": "Context deployment differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Deployment."
+    },
+    {
+      "id": "MIS-05",
+      "precondition": "Context environment differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Environment."
+    },
+    {
+      "id": "MIS-06",
+      "precondition": "Context tool differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Tool."
+    },
+    {
+      "id": "MIS-07",
+      "precondition": "Context interface differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Interface."
+    },
+    {
+      "id": "MIS-08",
+      "precondition": "Context target differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Target."
+    },
+    {
+      "id": "MIS-09",
+      "precondition": "Context nonce differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Nonce."
+    },
+    {
+      "id": "MIS-10",
+      "precondition": "Context allowed-action set drops one allowed mask.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator AllowedActions."
+    },
+    {
+      "id": "MIS-11",
+      "precondition": "Context validity interval differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Validity."
+    },
+    {
+      "id": "MIS-12",
+      "precondition": "Context quota list differs.",
+      "stimulus": "consume.",
+      "expected": "PermitMismatch, locator Quota."
+    },
+    {
+      "id": "MIS-13",
+      "precondition": "Context equals P_VALID in all fields.",
+      "stimulus": "consume.",
+      "expected": "Ok; handle issued."
+    },
+    {
+      "id": "RP-01",
+      "precondition": "P_VALID/CTX_VALID already consumed.",
+      "stimulus": "consume the same permit again.",
+      "expected": "First Ok; second SessionAlreadyConsumed."
+    },
+    {
+      "id": "RP-02",
+      "precondition": "P_VALID consumed; same session S with changed nonce N+1.",
+      "stimulus": "consume the changed-nonce permit.",
+      "expected": "SessionAlreadyConsumed."
+    },
+    {
+      "id": "RP-03",
+      "precondition": "P_VALID consumed for S; same PermitId for different session S2.",
+      "stimulus": "consume.",
+      "expected": "PermitAlreadyConsumed."
+    },
+    {
+      "id": "RP-04",
+      "precondition": "After RP-03 first consume, present the already-bound permit for a third session.",
+      "stimulus": "consume.",
+      "expected": "PermitAlreadyConsumed."
+    },
+    {
+      "id": "RP-05",
+      "precondition": "Two distinct valid permits and sessions.",
+      "stimulus": "consume each once.",
+      "expected": "Both Ok."
+    },
+    {
+      "id": "QUO-03",
+      "precondition": "max_sessions=8; eight sessions already live.",
+      "stimulus": "consume a ninth valid permit.",
+      "expected": "CapacityExhausted with no handle."
+    },
+    {
+      "id": "QUO-04",
+      "precondition": "Session table full; one session finalized/terminated.",
+      "stimulus": "consume a new valid permit.",
+      "expected": "Freed slot reusable; new consume Ok."
+    },
+    {
+      "id": "QUO-06",
+      "precondition": "A QuotaExhausted case and a CapacityExhausted case are prepared.",
+      "stimulus": "Trigger each exhaustion then snapshot.",
+      "expected": "Counters, sets, and state identical before and after each exhaustion."
+    },
+    {
+      "id": "HND-01",
+      "precondition": "Handle returned at consume.",
+      "stimulus": "transition with the current handle.",
+      "expected": "Ok."
+    },
+    {
+      "id": "HND-02",
+      "precondition": "Handle saved, then controller generation advanced.",
+      "stimulus": "transition with the old handle.",
+      "expected": "StaleHandle."
+    },
+    {
+      "id": "HND-03",
+      "precondition": "Handle carries a controller id never registered.",
+      "stimulus": "transition.",
+      "expected": "ForeignHandle."
+    },
+    {
+      "id": "HND-04",
+      "precondition": "Controller name re-registered (new id); old handle reused.",
+      "stimulus": "transition with the old handle.",
+      "expected": "RecreatedController."
+    },
+    {
+      "id": "HND-05",
+      "precondition": "Handle with random controller/session bytes.",
+      "stimulus": "transition.",
+      "expected": "InvalidHandle."
+    },
+    {
+      "id": "HND-06",
+      "precondition": "Valid controller+generation but session id of another controller's session.",
+      "stimulus": "transition.",
+      "expected": "SessionNotFound."
+    },
+    {
+      "id": "HND-07",
+      "precondition": "Two live sessions A and B; a rejected handle case targets A.",
+      "stimulus": "transition on A with a forged handle.",
+      "expected": "Rejection; session B state unchanged."
+    },
+    {
+      "id": "HND-08",
+      "precondition": "Two managers with distinct non-zero ManagerScope values each register the same name and host-issued id; manager B receives manager A's handle.",
+      "stimulus": "transition in manager B using manager A's handle.",
+      "expected": "ForeignHandle; B's target session state and counters unchanged."
+    },
+    {
+      "id": "HND-09",
+      "precondition": "A manager is destroyed and recreated with a fresh non-zero ManagerScope.",
+      "stimulus": "transition with the pre-recreation handle in the recreated manager.",
+      "expected": "ForeignHandle; no live session is addressed."
+    },
+    {
+      "id": "HND-10",
+      "precondition": "One manager; a host-issued ControllerId is already registered.",
+      "stimulus": "register_controller with the same ControllerId a second time.",
+      "expected": "InvalidController; the controller table is unchanged."
+    },
+    {
+      "id": "HND-11",
+      "precondition": "A zero ControllerId and a zero ManagerScope are prepared.",
+      "stimulus": "register_controller with a zero ControllerId; construct a manager with a zero scope.",
+      "expected": "Registration rejected with InvalidController; construction rejected."
+    },
+    {
+      "id": "CON-01",
+      "precondition": "16 threads share one fresh P_VALID.",
+      "stimulus": "All threads consume concurrently.",
+      "expected": "Exactly 1 Ok; 15 SessionAlreadyConsumed."
+    },
+    {
+      "id": "CON-02",
+      "precondition": "16 threads Arm one declared session.",
+      "stimulus": "All threads transition(Arm) concurrently.",
+      "expected": "Exactly 1 Ok; 15 AlreadyApplied; final state armed."
+    },
+    {
+      "id": "CON-03",
+      "precondition": "8 distinct valid permits.",
+      "stimulus": "8 threads consume concurrently.",
+      "expected": "8 Ok."
+    },
+    {
+      "id": "CON-05",
+      "precondition": "Bounded loop across permits and transitions.",
+      "stimulus": "Mixed consume/transition stress.",
+      "expected": "No duplicate success, no corrupted state, no exception."
+    },
+    {
+      "id": "ZEM-02",
+      "precondition": "Full nominal scenario NOM-01 run.",
+      "stimulus": "Read emission_count() before and after.",
+      "expected": "emission_count() is 0 before and after."
+    },
+    {
+      "id": "NOMUT-01",
+      "precondition": "Each MIS-01..MIS-12 mismatch case.",
+      "stimulus": "Reject then snapshot.",
+      "expected": "Snapshot equality after PermitMismatch: no state mutation."
+    },
+    {
+      "id": "NOMUT-02",
+      "precondition": "Each RP-01..RP-04 replay case.",
+      "stimulus": "Reject then snapshot.",
+      "expected": "Snapshot equality after rejection."
+    },
+    {
+      "id": "NOMUT-03",
+      "precondition": "Each CLK-02..CLK-11 clock failure case.",
+      "stimulus": "Reject then snapshot.",
+      "expected": "Authority state unchanged after the failure."
+    },
+    {
+      "id": "NOMUT-04",
+      "precondition": "LIF-08..LIF-15 transition rejections.",
+      "stimulus": "Reject then snapshot.",
+      "expected": "State unchanged after TerminalState/InvalidTransition/AlreadyApplied."
+    },
+    {
+      "id": "NOMUT-05",
+      "precondition": "QUO-01, QUO-03, QUO-05 exhaustion cases.",
+      "stimulus": "Exhaust then snapshot.",
+      "expected": "No partial application; counters and sets unchanged."
+    },
+    {
+      "id": "NOMUT-06",
+      "precondition": "Two live sessions; rejecting session A.",
+      "stimulus": "Snapshot session B before and after rejecting A.",
+      "expected": "Session B untouched."
+    },
+    {
+      "id": "NOMUT-07",
+      "precondition": "Each conversion failure in CLK-16/CLK-17 is set up through a session transition.",
+      "stimulus": "Reject the transition, then snapshot.",
+      "expected": "Destination baseline, output value, session state, quota counters, and permit bookkeeping all byte-identical before/after; a subsequent operation observes no ClockRegression attributable to the rejection."
+    },
+    {
+      "id": "ADV-R1a",
+      "precondition": "A valid permit is consumed; D_UNDECLARED has no declared clock domain (rejected-state probe).",
+      "stimulus": "transition(handle, Arm, D_UNDECLARED, value).",
+      "expected": "UnknownClock; session state remains declared; manager and authority state byte-identical."
+    },
+    {
+      "id": "ADV-R1b",
+      "precondition": "D_MONO source returns 2500; permit validity [1000,2000); the claim is 1500 (rejected-state probe).",
+      "stimulus": "transition(handle, Arm, D_MONO, 1500).",
+      "expected": "ToleranceExceeded (claim 1500 diverges from authoritative 2500); session state remains declared."
+    },
+    {
+      "id": "ADV-R1c",
+      "precondition": "D_MONO source returns max+1, then a regressing sequence, then nullopt (rejected-state probe).",
+      "stimulus": "transition(Arm) under each source state in turn.",
+      "expected": "ClockOutOfBounds, then ClockRegression, then ClockSourceFailure; each leaves state unchanged."
+    },
+    {
+      "id": "ADV-R1d",
+      "precondition": "D_MONO source returns 2500; permit end 2000; the claim is 2500 (exact agreement; rejected-state probe).",
+      "stimulus": "transition(handle, Arm, D_MONO, 2500).",
+      "expected": "PermitExpired; session state unchanged."
+    },
+    {
+      "id": "ADV-R2a",
+      "precondition": "Two managers with distinct ManagerScope values each register the same name and id (rejected-state probe).",
+      "stimulus": "Manager B transitions using manager A's handle.",
+      "expected": "ForeignHandle; B's target session state and counters unchanged."
+    },
+    {
+      "id": "ADV-R2b",
+      "precondition": "A manager is destroyed and recreated with a fresh scope (rejected-state probe).",
+      "stimulus": "Reuse the pre-recreation handle in the recreated manager.",
+      "expected": "ForeignHandle; no live session is addressed."
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "STC-MANAGER-01",
+      "tool": "static_assert (C++20)",
+      "rule": "Non-copyability (verification-plan STC-01)",
+      "expected": "std::is_copy_constructible_v and std::is_move_constructible_v are false for SessionManager."
+    },
+    {
+      "id": "STC-MANAGER-02",
+      "tool": "clang-tidy",
+      "rule": "cppcoreguidelines-special-member-functions",
+      "expected": "clean (no diagnostic): copy/move are explicitly deleted."
+    },
+    {
+      "id": "STC-MANAGER-03",
+      "tool": "clang-tidy",
+      "rule": "misc-const-correctness",
+      "expected": "clean (no diagnostic): handle/context/now parameters are const where unmodified."
+    },
+    {
+      "id": "STC-MANAGER-04",
+      "tool": "clang-tidy",
+      "rule": "performance-unnecessary-value-param",
+      "expected": "clean (no diagnostic): Permit, SessionContext, and SessionHandle passed by const reference."
+    },
+    {
+      "id": "STC-MANAGER-05",
+      "tool": "static analysis (symbol enumeration)",
+      "rule": "Zero emission surface (verification-plan ZEM-01/STC-02)",
+      "expected": "No emission, transport, gateway, listener, journal, lease, dashboard, or persistent-store entry point exists."
+    },
+    {
+      "id": "STC-MANAGER-06",
+      "tool": "clang-format",
+      "rule": "project .clang-format",
+      "expected": "clean: source and header formatted with no diff."
+    },
+    {
+      "id": "STC-MANAGER-07",
+      "tool": "static scan + file-descriptor delta",
+      "rule": "No nominal-path I/O (verification-plan ZEM-03)",
+      "expected": "Nominal path opens no file/socket and performs no environment I/O."
+    }
+  ]
+}
