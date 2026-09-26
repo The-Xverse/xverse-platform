@@ -28,17 +28,22 @@ evidence bundle for explicit user acceptance before another feature begins.
   contracts.
 - [ ] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
   and Doxygen plan.
-- [ ] T011 Pin and admit the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis,
+- [X] T011 Pin and admit the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis,
   sanitizer, and Doxygen environment with licenses, hashes, generated-code provenance, and a
   reproducible/offline strategy.
 
+**Reconciliation (2026-09-27):** T007–T010 remain open at capability level. The implemented build,
+core, lifecycle, provider, observation, and T025 slices have bounded work-product sets, but the missing
+T017–T020 activation-plan slice has no corresponding ownership, requirements, architecture, or unit-design
+package. T011 is complete based on the locked build foundation and retained offline-admission evidence.
+
 ## Phase 3: Core communication foundation (US1)
 
-- [ ] T012 Add CMake/CTest targets and warning-as-error rules under `src/xverse/xcom/`.
-- [ ] T013 Implement immutable contract, item, origin, time, correlation, diagnostic, and policy types.
-- [ ] T014 Implement bounded endpoint/route lifecycle and exact generation-bound ownership handles.
-- [ ] T015 Implement explicit provider composition and the owned loopback provider.
-- [ ] T016 Add unit and negative tests for interaction kinds, capabilities, policy, ownership, lifecycle,
+- [X] T012 Add CMake/CTest targets and warning-as-error rules under `src/xverse/xcom/`.
+- [X] T013 Implement immutable contract, item, origin, time, correlation, diagnostic, and policy types.
+- [X] T014 Implement bounded endpoint/route lifecycle and exact generation-bound ownership handles.
+- [X] T015 Implement explicit provider composition and the owned loopback provider.
+- [X] T016 Add unit and negative tests for interaction kinds, capabilities, policy, ownership, lifecycle,
   queue bounds, deterministic diagnostics, and recovery.
 
 ## Phase 4: XDL-derived activation plan (US1)
@@ -49,13 +54,19 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [ ] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
 - [ ] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
 
+**Reconciliation (2026-09-27):** T017–T020 are not implemented. The Profile schema, Python compiler,
+C++ decoder, and plan test suite are absent. This reconciliation does not authorize their implementation.
+
 ## Phase 5: Observation boundary (US2)
 
-- [ ] T021 Implement immutable observation records, filters, payload policy, and tap handles.
-- [ ] T022 Implement bounded best-effort drop/coalesce and explicit lossless-validation modes.
-- [ ] T023 Implement the synthetic sink and prove failure/disconnect isolation and visible counters.
-- [ ] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
+- [X] T021 Implement immutable observation records, filters, payload policy, and tap handles.
+- [X] T022 Implement bounded best-effort drop/coalesce and explicit lossless-validation modes.
+- [X] T023 Implement the synthetic sink and prove failure/disconnect isolation and visible counters.
+- [X] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
   ordering, saturation, degraded validity, and safe detach.
+
+**Reconciliation (2026-09-27):** T021–T024 are complete based on the implemented observation boundary,
+tests, traceability, exact-candidate feature-019 evidence, and the accepted T025 predecessor regression.
 
 ## Phase 6: Validation stimulation boundary (US3)
 

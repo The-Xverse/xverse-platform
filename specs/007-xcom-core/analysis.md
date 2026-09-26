@@ -26,10 +26,11 @@ Review 015 evaluated T026–T041 after the user retired SESN from future work.
 | ID | Severity | Status | Finding and disposition |
 |---|---|---|---|
 | A08 | BLOCKER | Resolved for governance | ADR-0020, ACC015, the plan, tasks, contracts, traceability, and build-evidence language now assign future work to the repository-owned Spec Kit workflow. |
-| A09 | BLOCKER | Open implementation prerequisite | T025 has no accepted successor in the current baseline. T026 remains blocked until T025 passes exact-candidate verification, separate review, and explicit user acceptance. |
+| A09 | BLOCKER | Resolved 2026-09-27 | The bounded T025 successor passed exact-candidate verification and separate review, was explicitly accepted, and was merged into `main` as `4b01586b438a8587d231ee8828d896c206c06a96`. This closes only T025. |
 | A10 | MAJOR | Resolved in tasks | T026 now defines bounded durability/failure semantics; T027 provides the pre-emission guard before T028 action paths; T029 covers journal, rejection, lifecycle, and concurrency behavior. |
 | A11 | MAJOR | Resolved for workflow | T039–T041 now require separate read-only review, a repository-owned exact-candidate bundle, and explicit user acceptance. |
-| A12 | MINOR | Open reconciliation | T012–T024 task checkboxes still require reconciliation against exact accepted revisions; source presence alone is insufficient. |
+| A12 | MINOR | Resolved 2026-09-27 | Review 017 reconciles exact source, tests, work products, acceptance, and predecessor-regression evidence: T011–T016 and T021–T024 are complete; T007–T010 remain partial/open. |
+| A13 | MAJOR | Open planned work | T017–T020 are not implemented: the X-COM Profile schema, Python activation-plan compiler, bounded C++ decoder, and plan tests are absent. Digest fields in existing lifecycle types do not establish this slice. |
 
 ## Requirement coverage
 
@@ -66,6 +67,7 @@ negative, deterministic, saturation, separate-process, performance, documentatio
 
 ## Readiness
 
-The technical design remains accepted. Future implementation follows ACC015 and ADR-0020. T026 is
-blocked until T025 has an accepted successor, the dependency/toolchain set is admitted through the
-repository-owned preflight, and accepted earlier slices are reconciled to exact revisions.
+The technical design remains accepted and T025 is accepted. Review 017 reconciles the earlier task
+state: T011–T016 and T021–T024 are complete, T007–T010 remain partial/open, and T017–T020 remain
+unimplemented. This documentation reconciliation authorizes no implementation. T026 and every other open
+task require their own applicable authorization and gates before work begins.
