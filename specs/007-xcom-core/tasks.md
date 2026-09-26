@@ -54,7 +54,7 @@ repair. The user explicitly accepts the inspected bundle before another feature 
 
 ## Phase 6: Validation stimulation boundary (US3)
 
-- [ ] T025 Implement the explicit time-authority interface, local validation permit
+- [X] T025 Implement the explicit time-authority interface, local validation permit
   validation/consumption, and bounded session lifecycle.
 - [ ] T026 Implement durable stimulation intent/outcome journaling without unrestricted payload logs.
 - [ ] T027 Implement signal/message injection, service invocation, and exclusive lease-bound service

@@ -1,6 +1,8 @@
-# T025 candidate transfer and work products
+# T025 accepted integration and work products
 
-**Status:** protected integration candidate; acceptance and final commit remain pending.
+**Status:** bounded T025 primitive scope accepted by the user on 2026-09-27 (Europe/Lisbon),
+with [acceptance decision](acceptance-decision.md) recorded after the reviewed integration commit
+`cc9044ab28d0ae9b4df8447072f68b73b3db184a`.
 **Fabro run:** `01M3FT90KBYVC04PEQ464VAHAR` against baseline
 `d244eeb3aa26f1b27d23d75fabc750380405269f`.
 
@@ -24,9 +26,9 @@ corrects the worker's explicitly unverified predecessor-anchor allocation. The
 [test dependency record](test-dependency-admission.md) pins GTest in a separate admitted prefix.
 
 T025 delivers bounded time-authority, permit, and session primitives only. Stimulation routing,
-journaling, service emulation, production readiness, and T026 onward remain outside this candidate.
-Protected exact-revision verification, separate read-only review, and explicit user acceptance remain
-required before T025 can be marked complete or this candidate committed as accepted integration.
+journaling, service emulation, production readiness, and T026 onward remain outside this acceptance.
+Protected exact-revision verification, separate read-only review, and explicit user acceptance were
+completed for the reviewed source snapshot.
 The [successor evidence](protected-evidence/successor-evidence.md) and separate
 [successor integration review](protected-review-successor.md) record the completed checks and
 their scope. The [first protected review](protected-review.md) retains the earlier open findings
