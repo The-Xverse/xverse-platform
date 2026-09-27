@@ -59,6 +59,55 @@ std::atomic<std::uint64_t> next_composition_instance{1U};
   return state == LifecycleState::validated || state == LifecycleState::active;
 }
 
+/**
+ * @brief Map a declared reliability claim to the exact admitted delivery capability.
+ * @param reliability Declared bounded reliability guarantee.
+ * @param capability Receives the mapped capability only on success.
+ * @return true only when the admitted vocabulary can express the declared claim exactly.
+ *
+ * A claim the admitted vocabulary cannot express (`at_most_once`, `exactly_once`) returns false rather
+ * than being mapped to a weaker or stronger guarantee.
+ */
+[[nodiscard]] bool declared_delivery_claim(const ReliabilityPolicy reliability,
+                                           DeliveryCapability& capability) noexcept {
+  switch (reliability) {
+    case ReliabilityPolicy::best_effort:
+      capability = DeliveryCapability::best_effort;
+      return true;
+    case ReliabilityPolicy::at_least_once:
+      capability = DeliveryCapability::reliable;
+      return true;
+    case ReliabilityPolicy::at_most_once:
+    case ReliabilityPolicy::exactly_once:
+      return false;
+  }
+  return false;
+}
+
+/**
+ * @brief Map a declared ordering claim to the exact admitted ordering capability.
+ * @param ordering Declared bounded ordering guarantee.
+ * @param capability Receives the mapped capability only on success.
+ * @return true only when the admitted vocabulary can express the declared claim exactly.
+ *
+ * A claim the admitted vocabulary cannot express (`priority`) returns false rather than being mapped to
+ * a weaker or stronger guarantee.
+ */
+[[nodiscard]] bool declared_ordering_claim(const OrderingPolicy ordering,
+                                           OrderingCapability& capability) noexcept {
+  switch (ordering) {
+    case OrderingPolicy::unordered:
+      capability = OrderingCapability::unordered;
+      return true;
+    case OrderingPolicy::fifo:
+      capability = OrderingCapability::per_route_fifo;
+      return true;
+    case OrderingPolicy::priority:
+      return false;
+  }
+  return false;
+}
+
 }  // namespace
 
 std::string_view to_string(const ProviderOutcome outcome) noexcept {
@@ -81,6 +130,7 @@ std::string_view to_string(const ProviderOutcome outcome) noexcept {
     case ProviderOutcome::unsupported_interaction: return "unsupported-interaction";
     case ProviderOutcome::unsupported_delivery: return "unsupported-delivery";
     case ProviderOutcome::unsupported_ordering: return "unsupported-ordering";
+    case ProviderOutcome::unsupported_policy: return "unsupported-policy";
     case ProviderOutcome::payload_limit_exceeded: return "payload-limit-exceeded";
     case ProviderOutcome::queue_limit_exceeded: return "queue-limit-exceeded";
     case ProviderOutcome::route_capacity_exhausted: return "route-capacity-exhausted";
@@ -116,6 +166,7 @@ std::string_view provider_diagnostic_code(const ProviderOutcome outcome) noexcep
     case ProviderOutcome::unsupported_interaction: return "XCOM-PROV-E015";
     case ProviderOutcome::unsupported_delivery: return "XCOM-PROV-E016";
     case ProviderOutcome::unsupported_ordering: return "XCOM-PROV-E017";
+    case ProviderOutcome::unsupported_policy: return "XCOM-PROV-E030";
     case ProviderOutcome::payload_limit_exceeded: return "XCOM-PROV-E018";
     case ProviderOutcome::queue_limit_exceeded: return "XCOM-PROV-E019";
     case ProviderOutcome::route_capacity_exhausted: return "XCOM-PROV-E020";
@@ -152,6 +203,8 @@ std::string_view provider_diagnostic_message(const ProviderOutcome outcome) noex
     case ProviderOutcome::unsupported_interaction: return "interaction family unsupported";
     case ProviderOutcome::unsupported_delivery: return "delivery capability unsupported";
     case ProviderOutcome::unsupported_ordering: return "ordering capability unsupported";
+    case ProviderOutcome::unsupported_policy:
+      return "declared route policy is not supported by the selected provider";
     case ProviderOutcome::payload_limit_exceeded: return "payload limit exceeded";
     case ProviderOutcome::queue_limit_exceeded: return "queue limit invalid or exceeded";
     case ProviderOutcome::route_capacity_exhausted: return "provider route storage is full";
@@ -456,6 +509,35 @@ ProviderResult<ProviderRouteHandle> ProviderComposition::prepare_route(
        interaction_capability_bit(requirements.interaction_kind)) == 0U) {
     return ProviderResult<ProviderRouteHandle>::without_value(
         ProviderOutcome::unsupported_interaction);
+  }
+  // Declared bounded delivery policy matching (T015). A policy-bound route is satisfiable only when
+  // the requested claims equal the exact claims the declaration requires and the selected provider
+  // implements the declared non-capability dimensions; every mismatch fails closed before dispatch.
+  const FlowPolicy* const declared_policy =
+      retained_route.value()->has_policy() ? retained_route.value()->policy() : nullptr;
+  if (declared_policy != nullptr) {
+    DeliveryCapability required_delivery = DeliveryCapability::best_effort;
+    if (!declared_delivery_claim(declared_policy->reliability(), required_delivery) ||
+        requirements.delivery != required_delivery) {
+      return ProviderResult<ProviderRouteHandle>::without_value(
+          ProviderOutcome::unsupported_delivery);
+    }
+    OrderingCapability required_ordering = OrderingCapability::unordered;
+    if (!declared_ordering_claim(declared_policy->ordering(), required_ordering) ||
+        requirements.ordering != required_ordering) {
+      return ProviderResult<ProviderRouteHandle>::without_value(
+          ProviderOutcome::unsupported_ordering);
+    }
+    if (declared_policy->overflow() != OverflowPolicy::reject ||
+        declared_policy->deadline_ms() > 0 || declared_policy->retry() > 0) {
+      return ProviderResult<ProviderRouteHandle>::without_value(
+          ProviderOutcome::unsupported_policy);
+    }
+    if (declared_policy->queue_depth() <
+        static_cast<std::int64_t>(requirements.queue_capacity)) {
+      return ProviderResult<ProviderRouteHandle>::without_value(
+          ProviderOutcome::queue_limit_exceeded);
+    }
   }
   if (!known_delivery(requirements.delivery) ||
       (descriptor->delivery_mask() & delivery_capability_bit(requirements.delivery)) == 0U) {

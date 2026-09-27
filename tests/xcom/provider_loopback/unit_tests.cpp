@@ -16,6 +16,7 @@
 namespace {
 
 using namespace xverse::xcom;
+using xverse::xcom::test::PolicyRouteFixture;
 using xverse::xcom::test::Scenario;
 
 /** Report one failed expectation. */
@@ -480,6 +481,287 @@ using xverse::xcom::test::Scenario;
                 "concurrent queue did not drain exactly");
 }
 
+/** Verify a supported declared policy prepares, activates, and round-trips an owned item. */
+[[nodiscard]] bool test_policy_bound_route_matching() {
+  const auto provider_descriptor =
+      test::claim_descriptor("provider.policy.match", DeliveryCapability::best_effort,
+                             OrderingCapability::per_route_fifo, 1U, 2U);
+  LoopbackProvider provider(provider_descriptor);
+  PolicyRouteFixture::Declaration declaration;
+  declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                        OverflowPolicy::reject, 0, 0, 2};
+  declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                              DeliveryCapability::best_effort,
+                              OrderingCapability::per_route_fifo, 16U, 2U};
+  PolicyRouteFixture fixture(provider, declaration, "policy.match");
+  if (!expect(fixture.ready(), "policy match fixture setup failed") ||
+      !expect(fixture.route_spec().has_policy() && fixture.route_spec().policy() != nullptr &&
+                  fixture.route_spec().policy()->reliability() ==
+                      ReliabilityPolicy::best_effort &&
+                  fixture.route_spec().policy()->ordering() == OrderingPolicy::fifo &&
+                  fixture.route_spec().policy()->overflow() == OverflowPolicy::reject,
+              "declared policy was not retained exactly")) {
+    return false;
+  }
+  const auto prepared = fixture.prepare();
+  if (!expect(prepared.outcome() == ProviderOutcome::prepared && prepared.has_value(),
+              "supported declared policy was rejected") ||
+      !expect(fixture.activate_endpoints() &&
+                  fixture.composition()
+                          .activate_route(*prepared.value(), fixture.lifecycle())
+                          .outcome() == ProviderOutcome::activated,
+              "supported declared policy did not activate")) {
+    return false;
+  }
+  const auto state = fixture.composition().route_state(*prepared.value());
+  if (!expect(state.has_value() && state.value()->queue_capacity() == 2U,
+              "prepared handle retained the wrong queue bound")) {
+    return false;
+  }
+  const auto item = fixture.item(1U);
+  if (!expect(item.has_value() &&
+                  fixture.composition()
+                          .submit(*prepared.value(), *item.value(), fixture.lifecycle())
+                          .outcome() == ProviderOutcome::accepted,
+              "policy-bound item was not accepted")) {
+    return false;
+  }
+  const auto received = fixture.composition().receive(*prepared.value(), fixture.lifecycle());
+  return expect(received.has_value() && *received.value() == *item.value(),
+                "policy-bound item round trip differs");
+}
+
+/** Verify the declared-depth boundary accepts equality and any requested capacity below it. */
+[[nodiscard]] bool test_policy_bound_route_queue_depth_bound() {
+  const auto run = [](const std::int64_t declared_depth, const std::size_t requested_capacity) {
+    const auto provider_descriptor =
+        test::claim_descriptor("provider.policy.depth", DeliveryCapability::best_effort,
+                               OrderingCapability::per_route_fifo, 1U, 2U);
+    LoopbackProvider provider(provider_descriptor);
+    PolicyRouteFixture::Declaration declaration;
+    declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                          OverflowPolicy::reject, 0, 0, declared_depth};
+    declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                                DeliveryCapability::best_effort,
+                                OrderingCapability::per_route_fifo, 16U, requested_capacity};
+    PolicyRouteFixture fixture(provider, declaration, "policy.depth");
+    const auto prepared = fixture.prepare();
+    return expect(fixture.ready() && prepared.outcome() == ProviderOutcome::prepared &&
+                      prepared.has_value(),
+                  "declared queue depth bound was rejected");
+  };
+  return expect(run(2, 2U), "declared depth equal to capacity was rejected") &&
+         expect(run(2, 1U), "declared depth above capacity was rejected");
+}
+
+/** Verify the matching does not restrict any interaction family. */
+[[nodiscard]] bool test_policy_bound_route_all_interaction_families() {
+  constexpr std::array kinds{
+      InteractionKind::signal_state_update, InteractionKind::message_event,
+      InteractionKind::service_request, InteractionKind::service_response};
+  unsigned int sequence = 1U;
+  for (const InteractionKind kind : kinds) {
+    const auto provider_descriptor =
+        test::claim_descriptor("provider.policy.family", DeliveryCapability::best_effort,
+                               OrderingCapability::per_route_fifo, 1U, 2U);
+    LoopbackProvider provider(provider_descriptor);
+    PolicyRouteFixture::Declaration declaration;
+    declaration.kind = kind;
+    declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                          OverflowPolicy::reject, 0, 0, 2};
+    declaration.requirements = {"1.0.0", kind, DeliveryCapability::best_effort,
+                                OrderingCapability::per_route_fifo, 16U, 2U};
+    PolicyRouteFixture fixture(provider, declaration,
+                              "policy.family." + std::to_string(sequence));
+    if (!expect(fixture.ready(), "policy family fixture setup failed")) {
+      return false;
+    }
+    const auto prepared = fixture.prepare();
+    if (!expect(prepared.has_value() && prepared.outcome() == ProviderOutcome::prepared &&
+                    fixture.activate_endpoints() &&
+                    fixture.composition()
+                            .activate_route(*prepared.value(), fixture.lifecycle())
+                            .outcome() == ProviderOutcome::activated,
+                "policy-bound family route did not prepare and activate")) {
+      return false;
+    }
+    const auto item = fixture.item(sequence);
+    if (!expect(item.has_value() &&
+                    fixture.composition()
+                            .submit(*prepared.value(), *item.value(), fixture.lifecycle())
+                            .outcome() == ProviderOutcome::accepted,
+                "policy-bound family item was not accepted")) {
+      return false;
+    }
+    const auto received = fixture.composition().receive(*prepared.value(), fixture.lifecycle());
+    if (!expect(received.has_value() && *received.value() == *item.value(),
+                "policy-bound family item differs")) {
+      return false;
+    }
+    ++sequence;
+  }
+  return true;
+}
+
+/** Verify an unbound route keeps baseline additivity and declares no policy. */
+[[nodiscard]] bool test_unbound_route_additivity() {
+  const auto provider_descriptor =
+      test::claim_descriptor("provider.policy.unbound", DeliveryCapability::best_effort,
+                             OrderingCapability::per_route_fifo, 1U, 2U);
+  LoopbackProvider provider(provider_descriptor);
+  PolicyRouteFixture::Declaration declaration;
+  declaration.bind_policy = false;
+  declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                              DeliveryCapability::best_effort,
+                              OrderingCapability::per_route_fifo, 16U, 2U};
+  PolicyRouteFixture fixture(provider, declaration, "policy.unbound");
+  if (!expect(fixture.ready(), "unbound additivity fixture setup failed") ||
+      !expect(!fixture.route_spec().has_policy() && fixture.route_spec().policy() == nullptr,
+              "unbound route unexpectedly declares a policy")) {
+    return false;
+  }
+  const auto prepared = fixture.prepare();
+  return expect(prepared.outcome() == ProviderOutcome::prepared && prepared.has_value(),
+                "unbound route preparation changed") &&
+         expect(fixture.activate_endpoints() &&
+                    fixture.composition()
+                            .activate_route(*prepared.value(), fixture.lifecycle())
+                            .outcome() == ProviderOutcome::activated,
+                "unbound route activation changed");
+}
+
+/** Verify the matching leaves concurrent policy-bound delivery exactly once and FIFO. */
+[[nodiscard]] bool test_policy_bound_concurrent_submit_receive() {
+  const auto provider_descriptor =
+      test::claim_descriptor("provider.policy.concurrent", DeliveryCapability::best_effort,
+                             OrderingCapability::per_route_fifo, 1U, 8U);
+  LoopbackProvider provider(provider_descriptor);
+  PolicyRouteFixture::Declaration declaration;
+  declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                        OverflowPolicy::reject, 0, 0, 8};
+  declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                              DeliveryCapability::best_effort,
+                              OrderingCapability::per_route_fifo, 16U, 8U};
+  PolicyRouteFixture fixture(provider, declaration, "policy.concurrent");
+  const auto prepared = fixture.prepare();
+  if (!expect(fixture.ready() && prepared.has_value(), "policy concurrency preparation failed") ||
+      !expect(fixture.activate_endpoints() &&
+                  fixture.composition()
+                          .activate_route(*prepared.value(), fixture.lifecycle())
+                          .outcome() == ProviderOutcome::activated,
+              "policy concurrency activation failed")) {
+    return false;
+  }
+  constexpr std::size_t count = 24U;
+  constexpr std::size_t producer_count = 4U;
+  constexpr std::size_t consumer_count = 2U;
+  constexpr std::size_t maximum_attempts = 1000000U;
+  std::array<std::optional<CommunicationItem>, count> items;
+  for (std::size_t index = 0U; index < count; ++index) {
+    const auto item = fixture.item(static_cast<unsigned int>(index + 1U));
+    if (!item.has_value()) {
+      return expect(false, "policy concurrency item construction failed");
+    }
+    items[index].emplace(*item.value());
+  }
+  const ProviderRouteHandle handle(*prepared.value());
+  std::atomic<std::size_t> accepted{0U};
+  std::atomic<std::size_t> received{0U};
+  std::atomic<bool> begin_consuming{false};
+  std::atomic<bool> failed{false};
+  std::atomic<bool> overlap_observed{false};
+  std::array<std::atomic<bool>, count> seen{};
+  std::array<std::thread, producer_count> producers;
+  for (std::size_t producer = 0U; producer < producer_count; ++producer) {
+    producers[producer] = std::thread([&fixture, &handle, &items, &accepted, &begin_consuming,
+                                       &failed, producer]() {
+      for (std::size_t index = producer; index < count; index += producer_count) {
+        bool submitted = false;
+        for (std::size_t attempt = 0U; attempt < maximum_attempts; ++attempt) {
+          if (failed.load()) {
+            return;
+          }
+          const ProviderOutcome outcome =
+              fixture.composition()
+                  .submit(handle, *items[index], fixture.lifecycle())
+                  .outcome();
+          if (outcome == ProviderOutcome::accepted) {
+            const std::size_t total = accepted.fetch_add(1U) + 1U;
+            if (total >= LoopbackProvider::kMaximumQueueItems) {
+              begin_consuming.store(true);
+            }
+            submitted = true;
+            break;
+          }
+          if (outcome != ProviderOutcome::queue_saturated) {
+            failed.store(true);
+            return;
+          }
+          std::this_thread::yield();
+        }
+        if (!submitted) {
+          failed.store(true);
+          return;
+        }
+      }
+    });
+  }
+  std::array<std::thread, consumer_count> consumers;
+  for (auto& thread : consumers) {
+    thread = std::thread([&fixture, &handle, &accepted, &received, &begin_consuming, &failed,
+                          &overlap_observed, &seen]() {
+      while (!begin_consuming.load()) {
+        if (failed.load()) {
+          return;
+        }
+        std::this_thread::yield();
+      }
+      std::size_t empty_polls = 0U;
+      while (received.load() < count && !failed.load()) {
+        const auto result = fixture.composition().receive(handle, fixture.lifecycle());
+        if (result.outcome() == ProviderOutcome::queue_empty) {
+          ++empty_polls;
+          if (empty_polls == maximum_attempts) {
+            failed.store(true);
+            return;
+          }
+          std::this_thread::yield();
+          continue;
+        }
+        empty_polls = 0U;
+        if (!result.has_value() || result.outcome() != ProviderOutcome::received ||
+            result.value()->payload().size() != 1U) {
+          failed.store(true);
+          return;
+        }
+        if (accepted.load() < count) {
+          overlap_observed.store(true);
+        }
+        const auto sequence =
+            std::to_integer<unsigned int>(result.value()->payload().bytes()[0]);
+        if (sequence == 0U || sequence > count || seen[sequence - 1U].exchange(true)) {
+          failed.store(true);
+          return;
+        }
+        received.fetch_add(1U);
+      }
+    });
+  }
+  for (auto& thread : producers) {
+    thread.join();
+  }
+  for (auto& thread : consumers) {
+    thread.join();
+  }
+  const auto state = fixture.composition().route_state(handle);
+  return expect(!failed.load(), "policy concurrency returned an invalid outcome") &&
+         expect(accepted.load() == count, "policy concurrency accepted count differs") &&
+         expect(received.load() == count, "policy concurrency received count differs") &&
+         expect(overlap_observed.load(), "policy concurrency threads did not overlap") &&
+         expect(state.has_value() && state.value()->queued_items() == 0U,
+                "policy concurrency queue did not drain exactly");
+}
+
 }  // namespace
 
 /** @return Zero when all provider-loopback unit checks pass. */
@@ -488,6 +770,9 @@ int main() {
       test_explicit_registration_and_descriptor() && test_independent_provider_contract() &&
       test_registration_reentry() && test_all_interaction_families() &&
       test_saturation_fifo_and_recovery() && test_multiple_bounded_routes() &&
-      test_drain_close_and_reconcile() && test_concurrent_submission_and_receive();
+      test_drain_close_and_reconcile() && test_concurrent_submission_and_receive() &&
+      test_policy_bound_route_matching() && test_policy_bound_route_queue_depth_bound() &&
+      test_policy_bound_route_all_interaction_families() &&
+      test_unbound_route_additivity() && test_policy_bound_concurrent_submit_receive();
   return passed ? 0 : 1;
 }
