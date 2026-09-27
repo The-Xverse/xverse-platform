@@ -6,8 +6,10 @@
 | --- | --- |
 | Task | T024 (capability 007, slice `T-OBS`) |
 | Stage / role | plan → architecture |
-| Revision | 1 |
+| Revision | 1 (observation acceptance matrix) |
+| Repair revision | 3 — terminal review R-01 governance repair (see §11) |
 | Baseline revision | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| Repair baseline | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
 | Affected source paths | `tests/xcom/observation/core/unit_tests.cpp`, `tests/xcom/observation/integration/integration_tests.cpp` (test fixtures only); no production source and no build file |
 | Requirement authority | [`requirements.md`](requirements.md) rev 1 |
 | Design authority | [`detailed-design.md`](detailed-design.md) rev 1 |
@@ -256,3 +258,81 @@ interface).
 | `T24-TS-002` | T024-SR-007 |
 | `T24-TS-007` | T024-SR-002, T024-SR-015 |
 | `T24-CMP-HUB`, `T24-CMP-DECLARATION`, `T24-CMP-RETENTION`, `T24-CMP-SINK`, `T24-CMP-ROUTE` | T024-SR-001, T024-SR-021, T024-SR-024 (re-verified unchanged) |
+
+## 11. Revision 3 — Terminal review R-01 governance-repair architecture
+
+### 11.1 Position in the delivery graph
+
+Revision 3 is a **governance-record repair**, not a runtime component. It closes finding R-01 on the
+accumulated T011–T016/T021–T024 candidate at baseline
+`d50bb48f45e422b8a7018710b1ac50cdadbcf8ed`. It changes the authoritative T007 ownership register and the
+capability analysis record so that the recorded reconciliation state matches the delivered task state,
+while keeping the external-acceptance gate explicitly open. It adds no observation, communication,
+stimulation, or gateway component, and it does not alter the Revision 1 observation acceptance matrix.
+
+```text
+terminal review R-01
+   → T024-R01 requirements (this repair) → T024-R01 detailed design → T024-R01 unit specs → T024-R01 verification
+   → T007 ownership register reconciliation (`delivered` + exact revision + pending acceptance)
+   → capability analysis A12 successor note
+   → affected validators (task-ownership, requirements-traceability)
+   → deterministic gate → external Codex review (deferred) → explicit user acceptance (deferred)
+```
+
+### 11.2 Boundary and trust boundaries
+
+- **Write boundary.** Only the paths in `requirements.md` §11.5 are writable by this repair.
+- **Read-only accepted evidence.** `docs/engineering/xcom/t008/requirements-register.{json,md}`,
+  `docs/engineering/xcom/t009/architecture-model.{json,md}`, `docs/engineering/xcom/t010/unit-design.{json,md}`,
+  the `t007-t020-acceptance-decision.md` record, and the ADRs are consumed read-only. Their historical
+  open-checkbox language is disposed by a dated successor note, not rewritten.
+- **Acceptance boundary.** The repair never writes an acceptance decision. Candidate delivery is recorded;
+  external review and user acceptance remain a separate, later gate (ADR-0020; Constitution §Capability
+  acceptance gates).
+
+### 11.3 Components and interfaces
+
+No new software component. The only structural change is to the reconciliation vocabulary of the T007
+register (`accepted`/`unreconciled`/`allocated`/`deferred` extended with `delivered`) and the projection
+that renders it. The register schema version stays `1` because the reconciliation value is a free string
+constrained by the repository-owned validator, not by the JSON schema object; the validator's
+`RECON_STATUSES` is the normative vocabulary.
+
+| Interface | Producer | Consumer | Contract |
+| --- | --- | --- | --- |
+| `reconciliation[task] = {status, revision, reason}` | `task-ownership.json` author | `validate_xcom_task_ownership.py`, `validate_xcom_requirements_traceability.py`, `validate_xcom_architecture_contracts.py`, `validate_xcom_unit_design.py` | `delivered` requires a 40-hex lowercase revision and a non-empty reason; the exact-delivered set T012–T016/T021–T024 is pinned by the validator |
+| `task-ownership.md` | deterministic projection | human review | byte-identical to `project_markdown(json)` |
+| analysis A12 | `analysis.md` author | review | records `delivered` plus pending acceptance; supersedes the checkbox-open wording |
+
+### 11.4 Prohibited elements
+
+- No change to maturity vocabulary, maturity values, REF-002 dispositions, ADRs, contracts, or schemas.
+- No acceptance, no promotion to `implemented`, no legacy or external-network interaction.
+- No edit to accepted predecessor bytes; no edit to `src/`, any existing `tests/` file, `xdl/`, `cmake/`, or `CMakeLists.txt`. The only `tests/` addition is the new governance regression test required by the T024 deterministic gate.
+
+### 11.5 Concurrency and resource bounds
+
+The repair is single-threaded, offline, and deterministic. The register validator bounds its inputs to
+1 MiB per file and 4 MiB total; it opens no network peer, subprocess, or listener. There is no shared
+mutable state, so no concurrency bound applies.
+
+### 11.6 Quality attributes
+
+| Attribute | Realization |
+| --- | --- |
+| Traceability | exact candidate revision per `delivered` task; stable `T024-R01-SR-###` links to checks |
+| Auditability | git-diff-visible one-line reason edits; regenerated deterministic projection |
+| Reproducibility | byte-stable JSON serialization and projection; offline validators |
+| Public safety | no absolute host path, credential, private address, or sensitive value |
+| Compatibility | no API, protocol, contract, or schema change; README/governance semantics preserved |
+
+### 11.7 Traceability (repair view)
+
+| Architectural element | Requirements |
+| --- | --- |
+| Register reconciliation (`delivered`) | `T024-R01-SR-001`, `T024-R01-SR-004` |
+| Analysis A12 successor note | `T024-R01-SR-002`, `T024-R01-SR-003` |
+| Validator enforcement | `T024-R01-SR-004`, `T024-R01-SR-006` |
+| Governance regression test | `T024-R01-SR-009` |
+| Acceptance boundary | `T024-R01-SR-005` |
+| Path boundary / public safety | `T024-R01-SR-007`, `T024-R01-SR-008` |

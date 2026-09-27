@@ -6,8 +6,10 @@
 | --- | --- |
 | Task | T024 (capability 007, slice `T-OBS`) |
 | Stage / role | plan → detailed design (pre-code) |
-| Revision | 1 |
+| Revision | 1 (observation acceptance matrix) |
+| Repair revision | 3 — terminal review R-01 governance repair (see §11) |
 | Baseline revision | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| Repair baseline | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
 | Requirement authority | [`requirements.md`](requirements.md) rev 1 |
 | Architecture authority | [`architecture.md`](architecture.md) rev 1 |
 | Unit authority | [`unit-specifications.md`](unit-specifications.md) rev 1 |
@@ -358,3 +360,118 @@ The seven T007 `T-OBS` evidence names are covered as: `metadata-only-zero-payloa
 `controlled-payload-view` (TS-001, TS-007), `ordering` (TS-002, TS-008), `saturation` (TS-003, TS-009),
 `degraded-validity` (TS-004, TS-009), `safe-detach` (TS-005, TS-008, TS-009); `disabled-tap-performance`
 remains T036.
+
+## 11. Revision 3 — Terminal review R-01 detailed repair design
+
+### 11.1 Design principle
+
+Correct **only** the false reconciliation statement and the validators that enforce it. Do not rewrite
+accepted predecessor bytes, do not relabel acceptance, do not touch production semantics or maturity.
+Every edit is minimal, deterministic, and reversible by git diff.
+
+### 11.2 Register edit (`docs/engineering/xcom/task-ownership.json`)
+
+For each task in the §11.3 map, the T-CORE and T-OBS `reconciliation` object changes on exactly three
+fields:
+
+| Field | From | To |
+| --- | --- | --- |
+| `status` | `unreconciled` | `delivered` |
+| `revision` | `null` | the exact task candidate revision from the map |
+| `reason` | `source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)` | `delivered as reviewed terminal candidate <revision> (predecessor <predecessor>) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)` |
+
+Every other field of the register is unchanged. T011, T017–T020, T025, and all `allocated` entries are
+unchanged. The register `baseline_revision` (`923a6db…`) is the T007 authorized baseline and is **not**
+changed; the delivered revisions are carried in the reconciliation entries.
+
+### 11.3 Exact edit values
+
+| Task | `status` | `revision` |
+| --- | --- | --- |
+| T012 | `delivered` | `863f11ac990c1ce178a0f9d8eb2489e4a5243fe7` |
+| T013 | `delivered` | `93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59` |
+| T014 | `delivered` | `8aaa9eb29ffb349538552d709d4e6f37011b3e65` |
+| T015 | `delivered` | `44d2001d48dd42dc9ed489a40d2a5f908b734501` |
+| T016 | `delivered` | `8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda` |
+| T021 | `delivered` | `7be8b9718e42e58bb1a05a486ff62e520f94567c` |
+| T022 | `delivered` | `d455c70816eb784066740427a70df9235cd1287d` |
+| T023 | `delivered` | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| T024 | `delivered` | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
+
+### 11.4 Projection regeneration
+
+`docs/engineering/xcom/task-ownership.md` is the deterministic projection of the JSON. It is regenerated
+by importing `scripts/validate_xcom_task_ownership.py` and writing `project_markdown(model)` for the
+edited model, so that `--check-human` compares byte-for-byte. The header and the note "Do not edit by
+hand" are preserved by the projection function itself.
+
+### 11.5 Validator edits
+
+**`scripts/validate_xcom_task_ownership.py`**
+
+| Location | Change |
+| --- | --- |
+| `RECON_STATUSES` | add `delivered` to the accepted vocabulary |
+| `UNRECONCILED_TASKS` | replace with `DELIVERED_TASKS` (task → exact revision map, §11.3); `ALLOCATED_TASKS` excludes `DELIVERED_TASKS` |
+| `_check_gates` | a `delivered` entry requires a 40-hex lowercase `revision` **and** a non-empty `reason`; a `delivered` task absent from the pinned map, or one whose revision differs, fails with `GATE_INVALID` |
+| `_check_required_reconciliation` | T012–T016/T021–T024 must be `delivered` at the pinned exact revision |
+| module/function docstrings | state the `delivered`/pending-acceptance semantics and drop the now-false "checkbox open" wording |
+
+**`scripts/validate_xcom_requirements_traceability.py`**
+
+| Location | Change |
+| --- | --- |
+| `_check_maturity` coverage branch | treat `delivered` like `unreconciled`: a requirement whose owning task is `delivered` must stay `partial` with a recorded reconciliation reason |
+| `_check_reconciliation_dependency` docstring | name the `delivered` T012–T016/T021–T024 coverage |
+| self-test `NEG-17` | unchanged in intent; it now exercises the `delivered` coverage branch and must still fail with `MATURITY_INVALID` |
+
+`scripts/validate_xcom_architecture_contracts.py` and `scripts/validate_xcom_unit_design.py` consume only
+the `accepted` status for the implemented-implies-accepted cross-check; they need **no** source change,
+and their `--self-test` suites must pass unchanged.
+
+**`tests/test_xcom_task_ownership_reconciliation.py` (new)**
+
+The T024 deterministic gate requires a test task's candidate to change at least one `tests/` path. The
+repair therefore adds exactly one offline governance regression test. It loads the task-ownership
+validator as a module (no child process) and asserts: the `DELIVERED_TASKS` pin set equals the
+nine-task delivered range (T012–T016, T021–T024); every delivered entry carries `status == "delivered"`,
+its pinned revision, a non-empty pending-acceptance reason, and no "checkbox is open" text; `T025`
+remains the only accepted task; the Markdown is the byte-stable projection; `run_checks` returns
+`EXIT_OK`; the nine delivered capability checkboxes are `[X]` in `tasks.md`; and A12 records the
+delivered-pending disposition. It starts no network peer, opens no file for writing, and mutates no
+shared state.
+
+### 11.6 Analysis edit (`specs/007-xcom-core/analysis.md`)
+
+- A12 severity `MINOR`; status changes from `Open reconciliation` to
+  `Resolved for delivery; external acceptance pending`, with text recording the nine `delivered` tasks,
+  their exact revisions, and that reconciliation to accepted revisions remains pending external review
+  and explicit user acceptance.
+- A dated `2026-09-27 terminal review R-01 repair` successor note records that the accepted T008/T009/T010
+  work products retain their historical open-checkbox language unmodified, superseded for the current
+  state by this note; no task is marked accepted and no maturity is promoted.
+
+### 11.7 Failure semantics
+
+| Condition | Required behaviour |
+| --- | --- |
+| `delivered` task with `revision == null` or a non-40-hex value | validator fails `GATE_INVALID`; no partial pass |
+| `delivered` task with an empty `reason` | validator fails `GATE_INVALID` |
+| T012–T016/T021–T024 with a status other than `delivered` | validator fails `GATE_INVALID` |
+| `delivered` task with a revision that differs from the pinned exact revision | validator fails `GATE_INVALID` |
+| a `delivered` task relabelled `accepted` without an accepted record | validator fails `GATE_INVALID` |
+| projection drift between JSON and Markdown | validator fails `DETERMINISM_INVALID` |
+| required requirement coverage made `implemented` while its owning task is `delivered` | requirements validator fails `MATURITY_INVALID` |
+
+No failure path writes the candidate tree, mutates accepted evidence, or emits a success claim.
+
+### 11.8 Bounds
+
+Single-threaded; per-file input bound 1 MiB and total bound 4 MiB in the task-ownership validator; no
+network, subprocess, listener, or clock. The repair itself performs no unbounded loop or wait.
+
+### 11.9 Traceability
+
+`T024-R01-SR-001` → register + validator; `T024-R01-SR-002` → A12; `T024-R01-SR-003` → successor note;
+`T024-R01-SR-004` → validators; `T024-R01-SR-005` → acceptance boundary; `T024-R01-SR-006` → gate;
+`T024-R01-SR-007` → path boundary; `T024-R01-SR-008` → public safety.

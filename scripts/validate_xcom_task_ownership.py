@@ -143,16 +143,30 @@ SORTED_SLICE_ARRAYS = (
 )
 
 RECON_FIELDS = ["status", "revision", "reason"]
-RECON_STATUSES = ("accepted", "unreconciled", "allocated", "deferred")
+RECON_STATUSES = ("accepted", "delivered", "unreconciled", "allocated", "deferred")
 
-UNRECONCILED_TASKS = (
-    [f"T{number:03d}" for number in range(12, 17)]
-    + [f"T{number:03d}" for number in range(21, 25)]
-)
+# T012-T016 and T021-T024 were delivered as reviewed terminal candidates in the ordered
+# backlog xcom-t011-t016-t021-t024; their capability task checkboxes are complete at exactly
+# these candidate revisions.  They are still awaiting external review and explicit user
+# acceptance, so they are recorded ``delivered`` -- neither ``accepted`` (no acceptance
+# record exists) nor the former ``unreconciled`` (the old checkbox-open reason is now false).
+# Every ``delivered`` entry must carry a non-empty pending-acceptance reason and exactly the
+# pinned revision below; a missing, malformed, or divergent value fails closed.
+DELIVERED_TASKS = {
+    "T012": "863f11ac990c1ce178a0f9d8eb2489e4a5243fe7",
+    "T013": "93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59",
+    "T014": "8aaa9eb29ffb349538552d709d4e6f37011b3e65",
+    "T015": "44d2001d48dd42dc9ed489a40d2a5f908b734501",
+    "T016": "8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda",
+    "T021": "7be8b9718e42e58bb1a05a486ff62e520f94567c",
+    "T022": "d455c70816eb784066740427a70df9235cd1287d",
+    "T023": "76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6",
+    "T024": "d50bb48f45e422b8a7018710b1ac50cdadbcf8ed",
+}
 ACCEPTED_TASKS = {"T025": "4b01586b438a8587d231ee8828d896c206c06a96"}
 ALLOCATED_TASKS = [
     task for task in CONSUMING_TASKS
-    if task not in UNRECONCILED_TASKS and task not in ACCEPTED_TASKS
+    if task not in DELIVERED_TASKS and task not in ACCEPTED_TASKS
 ]
 
 # Ordering constraints that the validator enforces by reachability.  Every pair
@@ -785,6 +799,26 @@ def _check_gates(model: dict, findings: Findings) -> None:
                         EXIT_GATE,
                         f"{task} is labelled accepted without a recorded 40-hex revision",
                     )
+            if status == "delivered":
+                revision = entry.get("revision")
+                if not isinstance(revision, str) or not BASELINE_SHA_RE.fullmatch(revision):
+                    findings.add(
+                        EXIT_GATE,
+                        f"{task} is labelled delivered without a recorded 40-hex revision",
+                    )
+                if not str(entry.get("reason", "")).strip():
+                    findings.add(EXIT_GATE, f"{task} is delivered without a recorded reason")
+                pinned = DELIVERED_TASKS.get(task)
+                if pinned is None:
+                    findings.add(
+                        EXIT_GATE,
+                        f"{task} is labelled delivered but is not a pinned delivered task",
+                    )
+                elif revision != pinned:
+                    findings.add(
+                        EXIT_GATE,
+                        f"{task} delivered revision differs from the pinned candidate revision",
+                    )
             if status == "unreconciled" and not str(entry.get("reason", "")).strip():
                 findings.add(EXIT_GATE, f"{task} is unreconciled without a recorded reason")
     _check_required_reconciliation(model, findings)
@@ -800,9 +834,11 @@ def _check_required_reconciliation(model: dict, findings: Findings) -> None:
             if isinstance(entry, dict):
                 status_of[task] = entry.get("status")
                 revision_of[task] = entry.get("revision")
-    for task in UNRECONCILED_TASKS:
-        if status_of.get(task) != "unreconciled":
-            findings.add(EXIT_GATE, f"{task} must be recorded unreconciled")
+    for task, revision in DELIVERED_TASKS.items():
+        if status_of.get(task) != "delivered":
+            findings.add(EXIT_GATE, f"{task} must be recorded delivered")
+        elif revision_of.get(task) != revision:
+            findings.add(EXIT_GATE, f"{task} delivered revision differs from the record")
     for task in ALLOCATED_TASKS:
         if status_of.get(task) != "allocated":
             findings.add(EXIT_GATE, f"{task} must be recorded allocated")
@@ -814,6 +850,8 @@ def _check_required_reconciliation(model: dict, findings: Findings) -> None:
     for task, status in sorted(status_of.items()):
         if status == "accepted" and task not in ACCEPTED_TASKS:
             findings.add(EXIT_GATE, f"{task} is labelled accepted without an accepted record")
+        if status == "delivered" and task not in DELIVERED_TASKS:
+            findings.add(EXIT_GATE, f"{task} is labelled delivered without a delivered record")
 
 
 def _check_determinism(model: dict, raw_text: str | None, findings: Findings) -> None:
@@ -1134,6 +1172,35 @@ def _negative_fixtures(base: dict) -> list[tuple[str, int, dict]]:
     ]
     _normalise_arrays(model)
     fixtures.append(("NEG-20", EXIT_PATHS, model))
+
+    # NEG-21..NEG-25 exercise the ``delivered`` reconciliation state introduced for the
+    # R-01 governance repair.  Each must fail closed with GATE_INVALID.
+    model = _copy(base)
+    _slice(model, "T-CORE")["reconciliation"]["T012"]["revision"] = None
+    _normalise_arrays(model)
+    fixtures.append(("NEG-21", EXIT_GATE, model))
+
+    model = _copy(base)
+    _slice(model, "T-CORE")["reconciliation"]["T012"]["revision"] = "0" * 40
+    _normalise_arrays(model)
+    fixtures.append(("NEG-22", EXIT_GATE, model))
+
+    model = _copy(base)
+    _slice(model, "T-CORE")["reconciliation"]["T012"]["reason"] = ""
+    _normalise_arrays(model)
+    fixtures.append(("NEG-23", EXIT_GATE, model))
+
+    model = _copy(base)
+    reverted = _slice(model, "T-CORE")["reconciliation"]["T012"]
+    reverted["status"] = "unreconciled"
+    reverted["revision"] = None
+    _normalise_arrays(model)
+    fixtures.append(("NEG-24", EXIT_GATE, model))
+
+    model = _copy(base)
+    _slice(model, "T-CORE")["reconciliation"]["T012"]["status"] = "accepted"
+    _normalise_arrays(model)
+    fixtures.append(("NEG-25", EXIT_GATE, model))
 
     return fixtures
 

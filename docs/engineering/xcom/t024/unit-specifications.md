@@ -6,8 +6,10 @@
 | --- | --- |
 | Task | T024 (capability 007, slice `T-OBS`) |
 | Stage / role | plan → unit specifications (pre-code) |
-| Revision | 1 |
+| Revision | 1 (observation acceptance matrix) |
+| Repair revision | 3 — terminal review R-01 governance repair (see §15) |
 | Baseline revision | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| Repair baseline | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
 | Requirement authority | [`requirements.md`](requirements.md) rev 1 |
 | Architecture authority | [`architecture.md`](architecture.md) rev 1 |
 | Design authority | [`detailed-design.md`](detailed-design.md) rev 1 |
@@ -198,3 +200,81 @@ unchanged.
 - `T024-OPEN-02` records the choice to continue the hand-rolled observation fixture style rather than add a
   separate test target; a later unification must preserve every T024 case name or replace it with an
   equivalent stronger case.
+
+## 15. Revision 3 — R-01 governance-repair units (`T24-R01-TS-###`)
+
+These units verify the repair. Each is a repository-owned, offline, single-threaded check driven by an
+existing validator; none is a runtime component, and none changes a Revision 1 case. "Lifetime" is a
+single deterministic invocation; "thread-safety" is not applicable because no shared mutable state or
+concurrency exists.
+
+### 15.1 `T24-R01-TS-001` — Register delivered-reconciliation unit
+
+- **Responsibility**: the T007 register records T012–T016/T021–T024 as `delivered` at exactly the pinned
+  candidate revision with a non-empty pending-acceptance reason.
+- **Owning paths**: `docs/engineering/xcom/task-ownership.json`, `scripts/validate_xcom_task_ownership.py`.
+- **Positive check**: `--verify` exits `0`; `--check-human` exits `0`.
+- **Negative fixtures (validator self-test)**: `delivered` with `revision == null`; `delivered` with a
+  short/wrong revision; `delivered` with an empty reason; a required task reverted to `unreconciled`; a
+  `delivered` task relabelled `accepted`. Each must fail `GATE_INVALID` (`exit 8`) with no partial pass.
+- **Bounds**: input ≤ 1 MiB; no network/subprocess/clock.
+- **Failure semantics**: any mismatch fails closed with the classified exit code; the candidate tree is
+  never written.
+
+### 15.2 `T24-R01-TS-002` — Deterministic projection unit
+
+- **Responsibility**: `docs/engineering/xcom/task-ownership.md` is the byte-exact projection of the JSON.
+- **Owning paths**: `docs/engineering/xcom/task-ownership.{json,md}`.
+- **Check**: `--check-human` exits `0`; a tampered projection fails `DETERMINISM_INVALID` (`exit 9`).
+- **Bounds**: total input ≤ 4 MiB.
+
+### 15.3 `T24-R01-TS-003` — Requirements traceability delivered-coverage unit
+
+- **Responsibility**: a requirement whose owning task is `delivered` stays `partial` with a recorded
+  reconciliation reason and is never `implemented`.
+- **Owning paths**: `docs/engineering/xcom/t008/requirements-register.json`,
+  `scripts/validate_xcom_requirements_traceability.py`.
+- **Check**: `--verify` and `--check-human` exit `0`; self-test `NEG-17` (drop the reason on
+  `XCOM-SW-CORE-001`, owning task T012) fails `MATURITY_INVALID` (`exit 8`).
+- **Bounds**: input bounded by the validator's file limits.
+
+### 15.4 `T24-R01-TS-004` — Accepted predecessor preservation unit
+
+- **Responsibility**: the accepted T008/T009/T010 artifacts are byte-unchanged by the repair.
+- **Owning paths**: `docs/engineering/xcom/t008/**`, `docs/engineering/xcom/t009/**`,
+  `docs/engineering/xcom/t010/**`.
+- **Check**: `git diff --name-only <baseline> -- docs/engineering/xcom/t00{8,9}` and
+  `docs/engineering/xcom/t010` is empty.
+- **Negative fixture**: none. Predecessor preservation is a repository-inventory check (`git diff
+  --name-only`) with no validator exit class; a non-empty inventory fails R01-CHK-05/R01-CHK-13 at the
+  deterministic gate, and `R01-NEG-08` (public safety, `exit 10`) is scoped to the task-ownership register
+  inputs and does not apply here.
+
+### 15.5 `T24-R01-TS-005` — Analysis disposition unit
+
+- **Responsibility**: A12 records the delivered-pending-acceptance disposition and a dated successor note.
+- **Owning paths**: `specs/007-xcom-core/analysis.md`.
+- **Check**: R01-CHK-04 inspection plus a public-safety scan; no `implemented` or accepted claim appears.
+
+### 15.6 `T24-R01-TS-006` — Governance regression test unit
+
+- **Responsibility**: pin the repaired delivered state, the byte-stable projection, the checked capability
+  ledger, and the analysis disposition so a regression to the old checkbox-open reason fails locally.
+- **Owning paths**: `tests/test_xcom_task_ownership_reconciliation.py`.
+- **Check**: `pytest tests/test_xcom_task_ownership_reconciliation.py` collects seven passing cases; the
+  T024 deterministic gate requires the `tests/` path change; R01-CHK-15; R01-NEG-09.
+- **Bounds**: offline, deterministic, single-threaded; loads the validator as a module; starts no child
+  process; writes no file.
+- **Failure semantics**: any restored `unreconciled`/checkbox-open state, wrong revision, empty reason,
+  accepted relabel, projection drift, unchecked ledger entry, or missing analysis disposition fails.
+
+### 15.7 Traceability (repair units)
+
+| Unit | Requirements | Checks |
+| --- | --- | --- |
+| `T24-R01-TS-001` | `T024-R01-SR-001`, `T024-R01-SR-004` | R01-CHK-01..03, R01-NEG-01..05 |
+| `T24-R01-TS-002` | `T024-R01-SR-001` | R01-CHK-03, R01-NEG-06 |
+| `T24-R01-TS-003` | `T024-R01-SR-004`, `T024-R01-SR-005` | R01-CHK-07..08, R01-NEG-07 |
+| `T24-R01-TS-004` | `T024-R01-SR-003`, `T024-R01-SR-007` | R01-CHK-05, R01-CHK-13 |
+| `T24-R01-TS-005` | `T024-R01-SR-002`, `T024-R01-SR-005` | R01-CHK-04, R01-CHK-09 |
+| `T24-R01-TS-006` | `T024-R01-SR-009` | R01-CHK-15; R01-NEG-09 |

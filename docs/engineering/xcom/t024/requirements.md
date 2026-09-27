@@ -7,8 +7,10 @@
 | Task | T024 (capability 007, slice `T-OBS`) |
 | Task title | Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state, ordering, saturation, degraded validity, and safe detach |
 | Stage / role | plan → requirements |
-| Revision | 1 |
+| Revision | 1 (observation acceptance matrix) |
+| Repair revision | 3 — terminal review R-01 governance repair (see §11) |
 | Baseline revision | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| Repair baseline | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
 | Authorization | capability 007 accepted design and bounded implementation authorization (ACC005/ACC010/ACC011/ACC014/ACC015); ADR-0016; ADR-0018; ADR-0019; ADR-0020 |
 | Owning slice | `T-OBS` (T007 ownership register) |
 | Predecessor | T023 (synthetic sink, failure/disconnect isolation, visible counters; reviewed terminal package) |
@@ -583,3 +585,101 @@ This does **not** constitute user acceptance, which remains T041.
 | T024-SR-022 | CHK-23 |
 | T024-SR-023 | CHK-24, NEG-29 |
 | T024-SR-024 | CHK-25, NEG-29 |
+
+## 11. Revision 3 — Terminal review R-01 governance repair (baseline `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed`)
+
+### 11.1 Authority and scope
+
+This revision repairs terminal-review finding **R-01** recorded in
+`docs/reviews/t011-t016-t021-t024-terminal-status-2026-09-27.md`, against the accumulated
+T011–T016/T021–T024 reviewed terminal candidate at baseline
+`d50bb48f45e422b8a7018710b1ac50cdadbcf8ed`. It runs in the ordered backlog
+`xcom-t011-t024-review-repair`; it is authored **before** the repair edits and implements no other task.
+The authoritative scope is the T024 entry in `specs/007-xcom-core/tasks.md` plus the terminal-review
+repair scope in the run goal.
+
+R-01 observes that `specs/007-xcom-core/tasks.md` checks T012–T016 and T021–T024 complete while
+`docs/engineering/xcom/task-ownership.md` still records each as `unreconciled` "because the capability
+task checkbox is open", and `specs/007-xcom-core/analysis.md` A12 still states that T012–T024 task
+checkboxes require reconciliation. The literal checkbox-open reason is now false: each of the nine task
+entries the review names (T012–T016, T021–T024) was delivered as a reviewed terminal candidate at an exact
+revision. Source presence alone is still insufficient for external acceptance, so the repair must record
+the delivered state **and** retain an explicit pending-external-acceptance state. It must not mark any task
+user-accepted, change production semantics, or broaden capability maturity.
+
+This revision is a governance-record repair. It adds no runtime component, production code, contract,
+schema, or build change. It preserves the Revision 1 observation acceptance matrix unchanged. Its only
+test-tree addition is the offline governance regression test required by the T024 deterministic gate.
+
+### 11.2 Repair requirements (`T024-R01-SR-###`)
+
+| ID | Requirement | Verification |
+| --- | --- | --- |
+| `T024-R01-SR-001` | The task-ownership register must replace the false checkbox-open reason for T012–T016 and T021–T024 with a `delivered` reconciliation state that records the exact delivered candidate revision and the pending external acceptance. | R01-CHK-01, R01-CHK-02, R01-CHK-03; R01-NEG-01..05 |
+| `T024-R01-SR-002` | `specs/007-xcom-core/analysis.md` A12 must no longer assert that the delivered task checkboxes require reconciliation; it must record the delivered-pending-acceptance disposition against the exact candidate. | R01-CHK-04 |
+| `T024-R01-SR-003` | The accepted predecessor T008/T009/T010 work products are historical accepted evidence. Their content must remain byte-unchanged; a dated successor note must record that their open-checkbox language is superseded by this repair. | R01-CHK-05, R01-CHK-13 |
+| `T024-R01-SR-004` | Every validator that enforces the old `unreconciled` state must be updated consistently, and a `delivered` task with a missing, malformed, or wrong exact revision, or an empty reason, must fail closed. | R01-CHK-06..08; R01-NEG-01..05 |
+| `T024-R01-SR-005` | No task may be relabelled `accepted`, no requirement/component/unit maturity may be promoted, and every REF-002 disposition must remain `unchanged`. | R01-CHK-09; R01-NEG-05 |
+| `T024-R01-SR-006` | The deterministic gate and every affected register validator self-test must pass on the successor candidate. | R01-CHK-10..12 |
+| `T024-R01-SR-007` | No production C++ source, existing test source, build file, contract, schema, or accepted predecessor content may change; the only test-tree addition is the new governance regression test `tests/test_xcom_task_ownership_reconciliation.py`, which the T024 deterministic gate requires so that a test task's candidate changes at least one `tests/` path. | R01-CHK-13, R01-CHK-15 |
+| `T024-R01-SR-008` | The register, its projection, the analysis record, and the successor notes must stay public-safe: no absolute host path, credential, private address, or sensitive deployment value. | R01-CHK-14; R01-NEG-08 |
+| `T024-R01-SR-009` | A repository-owned, offline, deterministic governance regression test must pin the delivered reconciliation state, the byte-stable projection, the checked capability ledger, and the analysis disposition, so that a regression to the old checkbox-open reason fails `pytest` locally. | R01-CHK-15; R01-NEG-09 |
+
+### 11.3 Delivered-task revision map (exact candidate revisions)
+
+| Task | Delivered candidate revision | Exact predecessor |
+| --- | --- | --- |
+| T012 | `863f11ac990c1ce178a0f9d8eb2489e4a5243fe7` | `ade79ee1f73f176c0178b77d6b10ed8ba8587da6` |
+| T013 | `93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59` | `863f11ac990c1ce178a0f9d8eb2489e4a5243fe7` |
+| T014 | `8aaa9eb29ffb349538552d709d4e6f37011b3e65` | `93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59` |
+| T015 | `44d2001d48dd42dc9ed489a40d2a5f908b734501` | `8aaa9eb29ffb349538552d709d4e6f37011b3e65` |
+| T016 | `8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda` | `44d2001d48dd42dc9ed489a40d2a5f908b734501` |
+| T021 | `7be8b9718e42e58bb1a05a486ff62e520f94567c` | `8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda` |
+| T022 | `d455c70816eb784066740427a70df9235cd1287d` | `7be8b9718e42e58bb1a05a486ff62e520f94567c` |
+| T023 | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` | `d455c70816eb784066740427a70df9235cd1287d` |
+| T024 | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+
+The map is derived from each task's `reports/xcom-queue/t<task>-package.json` `baseline_revision` and the
+reviewed terminal-package commit chain. T011 is not in R-01's enumerated scope and its register entry is
+left unchanged.
+
+### 11.4 REF-002 disposition
+
+`unchanged`. No SADS requirement is promoted, no `implemented` maturity is claimed, and the capability-007
+REF-002 disposition register is not edited by this revision.
+
+### 11.5 Affected paths (implementation-stage scope)
+
+| Path | Change |
+| --- | --- |
+| `docs/engineering/xcom/task-ownership.json` | T012–T016, T021–T024 reconciliation → `delivered` with exact revision and pending-acceptance reason |
+| `docs/engineering/xcom/task-ownership.md` | Regenerated deterministic projection of the register |
+| `specs/007-xcom-core/analysis.md` | A12 disposition updated; dated 2026-09-27 successor note added |
+| `scripts/validate_xcom_task_ownership.py` | `delivered` status vocabulary, revision/reason gate, required-reconciliation set, self-test negatives |
+| `scripts/validate_xcom_requirements_traceability.py` | Coverage invariant extends to `delivered` coverage |
+| `tests/test_xcom_task_ownership_reconciliation.py` | New offline governance regression test pinning the delivered state, projection, ledger, and analysis disposition |
+| `docs/engineering/xcom/t024/{requirements,architecture,detailed-design,unit-specifications,verification-plan,implementation}.md` | This repair's work products |
+| `reports/xcom-queue/t024-package.json` | Generated by the package action after internal review (excluded from the candidate inventory) |
+
+The 12 candidate paths are every row above except the generated package record; the review record
+`docs/engineering/xcom/t024/internal-review.json` is generated by the review stage and is likewise excluded.
+Both generated records are subtracted from the deterministic `candidate_paths` even though this repair
+baseline tracks them. No other path is changed.
+
+### 11.6 Explicit exclusions
+
+- Does not mark T012–T024 (or any task) user-accepted; external Codex review and explicit user acceptance
+  remain pending.
+- Does not rewrite the accepted T008/T009/T010 register, model, matrix, or Markdown content; those stay
+  byte-unchanged and are disposed by the dated successor note.
+- Does not change requirement/component/unit maturity, `REF-002` dispositions, ADRs, contracts, or the
+  T024 observation acceptance matrix.
+- Does not touch `src/`, `xdl/`, `cmake/`, `CMakeLists.txt`, `proto/`, any existing `tests/` file, or any
+  other task's path. The only `tests/` addition is the new governance regression test named in §11.5; it
+  is offline, deterministic, starts no child process, and changes no existing test, target, or case.
+
+### 11.7 Open items (unchanged and new)
+
+- `T024-OPEN-R01-01`: external Codex review of the successor candidate remains pending; the successor
+  revision is recorded by the package/acceptance record, not by this pre-code revision.
+- Revision 1 open items `T024-OPEN-01` and `T024-OPEN-02` remain as recorded in §8.

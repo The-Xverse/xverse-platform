@@ -29,7 +29,31 @@ Review 015 evaluated T026–T041 after the user retired SESN from future work.
 | A09 | BLOCKER | Open implementation prerequisite | T025 has no accepted successor in the current baseline. T026 remains blocked until T025 passes exact-candidate verification, separate review, and explicit user acceptance. |
 | A10 | MAJOR | Resolved in tasks | T026 now defines bounded durability/failure semantics; T027 provides the pre-emission guard before T028 action paths; T029 covers journal, rejection, lifecycle, and concurrency behavior. |
 | A11 | MAJOR | Resolved for workflow | T039–T041 now require separate read-only review, a repository-owned exact-candidate bundle, and explicit user acceptance. |
-| A12 | MINOR | Open reconciliation | T012–T024 task checkboxes still require reconciliation against exact accepted revisions; source presence alone is insufficient. |
+| A12 | MINOR | Resolved for delivery; external acceptance pending | T012–T016 and T021–T024 were delivered as reviewed terminal candidates at exact revisions and their task checkboxes in `tasks.md` are complete; the T007 ownership register now records each as `delivered` with its exact candidate revision and a pending-acceptance reason. They are not user-accepted: reconciliation to accepted revisions and explicit user acceptance remain pending external review (terminal review R-01, 2026-09-27). |
+
+## 2026-09-27 terminal review R-01 repair
+
+Terminal review R-01 observed that the final T011–T016/T021–T024 candidate checked T012–T016 and
+T021–T024 complete in `tasks.md` while the ownership register still recorded each as `unreconciled`
+"because the capability task checkbox is open", and A12 still asserted that those task checkboxes
+required reconciliation. The literal checkbox-open reason is now false.
+
+The repair replaces the false reason with a `delivered` reconciliation state in
+`docs/engineering/xcom/task-ownership.json` and its deterministic projection
+`docs/engineering/xcom/task-ownership.md`. Each of the nine tasks records its exact reviewed terminal
+candidate revision and states that external Codex review and explicit user acceptance remain pending.
+A12 is disposed above. The register validator (`scripts/validate_xcom_task_ownership.py`) pins the
+delivered set and fails closed on a missing, malformed, or divergent revision or an empty reason, and
+`scripts/validate_xcom_requirements_traceability.py` still requires a requirement owned by a delivered
+task to stay `partial` with a recorded reason.
+
+This is a governance-record repair only. No task is marked accepted, no requirement, component, or unit
+maturity is promoted, no REF-002 disposition changes, and no production semantics, contract, schema, or
+existing test expectation is altered. The only test-tree addition is a new offline governance regression
+test that pins this repaired state. The accepted predecessor work products T008, T009, and T010 retain
+their historical open-checkbox language byte-unchanged; that language is superseded for the current state
+by this dated successor note, not rewritten. The repaired successor candidate still requires its own
+external Codex review and explicit user acceptance before any task in this range closes.
 
 ## Requirement coverage
 

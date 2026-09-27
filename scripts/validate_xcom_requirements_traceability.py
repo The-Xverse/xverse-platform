@@ -1138,12 +1138,12 @@ def _check_maturity(
                     f"{maturity} requirement {identifier} must record a disposition note",
                 )
         status = reconciliation_status.get(requirement.get("owning_task"))
-        if status and status.get("status") == "unreconciled":
+        if status and status.get("status") in ("unreconciled", "delivered"):
             if maturity != "partial" or not (requirement.get("reconciliation") or "").strip():
                 findings.add(
                     EXIT_MATURITY,
-                    f"requirement {identifier} is covered by unreconciled source and must be "
-                    f"partial with a recorded reason",
+                    f"requirement {identifier} is covered by unreconciled or delivered source "
+                    f"and must be partial with a recorded reason",
                 )
         if status and status.get("status") == "accepted" and maturity == "implemented":
             revision = status.get("revision")
@@ -1177,8 +1177,11 @@ def _check_reconciliation_dependency(ownership: object, findings: Findings) -> N
     """Fail closed when the T007 reconciliation dependency is unavailable.
 
     ``_check_maturity`` reconciles T012-T016/T021-T024 coverage against
-    ``docs/engineering/xcom/task-ownership.json``.  A missing, unreadable, or malformed
-    ownership register must be a hard failure; it must not silently skip that check.
+    ``docs/engineering/xcom/task-ownership.json``.  Those tasks are recorded
+    ``delivered`` (reviewed terminal candidates awaiting external acceptance), so a
+    requirement they own must stay ``partial`` with a recorded reason.  A missing,
+    unreadable, or malformed ownership register must be a hard failure; it must not
+    silently skip that check.
     """
 
     if isinstance(ownership, dict):
@@ -1596,7 +1599,7 @@ def _negative_fixtures(
     _normalise(register, matrix)
     fixtures.append(("NEG-16", EXIT_MATURITY, register, matrix))
 
-    # NEG-17: drop the unreconciled reason of a source-present requirement.
+    # NEG-17: drop the delivered/unreconciled reason of a source-present requirement.
     register = _copy(base_register)
     matrix = _copy(base_matrix)
     _req(register, "XCOM-SW-CORE-001")["reconciliation"] = None

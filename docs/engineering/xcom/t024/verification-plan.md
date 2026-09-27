@@ -6,8 +6,10 @@
 | --- | --- |
 | Task | T024 (capability 007, slice `T-OBS`) |
 | Stage / role | plan → verification plan (pre-code) |
-| Revision | 1 |
+| Revision | 1 (observation acceptance matrix) |
+| Repair revision | 3 — terminal review R-01 governance repair (see §10) |
 | Baseline revision | `76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6` |
+| Repair baseline | `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed` |
 | Requirement authority | [`requirements.md`](requirements.md) rev 1 |
 | Architecture authority | [`architecture.md`](architecture.md) rev 1 |
 | Design authority | [`detailed-design.md`](detailed-design.md) rev 1 |
@@ -240,3 +242,124 @@ completes six of them and leaves the benchmark with T036.
 
 No evidence name above is claimed beyond what its own exact-candidate evidence shows; no slice evidence is
 claimed for a task that has not produced its own exact-candidate evidence.
+
+## 10. Revision 3 — R-01 governance-repair verification (baseline `d50bb48f45e422b8a7018710b1ac50cdadbcf8ed`)
+
+This plan is written **before** the repair edits. It verifies that R-01 is closed: the current ownership
+and analysis records no longer assert the false checkbox-open reason, the accepted predecessor artifacts
+are preserved with a dated successor note, and the external-acceptance gate stays explicitly open. It does
+not re-accept any task. Weakening an expected result below is a verification-contract change requiring a
+successor candidate.
+
+### 10.1 Deterministic gate (primary)
+
+```sh
+python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T024 d50bb48f45e422b8a7018710b1ac50cdadbcf8ed
+```
+
+This requires the six T024 work products, the T024 checkbox `[X]`, and a changed-path inventory confined
+to the R-01 scope. It exits `0`; the implementation record supplies the `ctest:` count for the re-run
+observation suites.
+
+### 10.2 Supporting commands (offline, repository-owned)
+
+```sh
+git rev-parse d50bb48f45e422b8a7018710b1ac50cdadbcf8ed
+python3 scripts/validate_xcom_task_ownership.py --verify
+python3 scripts/validate_xcom_task_ownership.py --check-human
+python3 scripts/validate_xcom_task_ownership.py --self-test
+python3 scripts/validate_xcom_requirements_traceability.py --verify
+python3 scripts/validate_xcom_requirements_traceability.py --check-human
+python3 scripts/validate_xcom_requirements_traceability.py --self-test
+python3 scripts/validate_xcom_architecture_contracts.py --verify
+python3 scripts/validate_xcom_architecture_contracts.py --check-human
+python3 scripts/validate_xcom_architecture_contracts.py --self-test
+python3 scripts/validate_xcom_unit_design.py --verify
+python3 scripts/validate_xcom_unit_design.py --check-human
+python3 scripts/validate_xcom_unit_design.py --self-test
+python3 /home/jefferson/x-verse_fabric/automation/run_xcom_system_tests.py unit
+python3 /home/jefferson/x-verse_fabric/automation/run_xcom_system_tests.py integration
+python3 /home/jefferson/x-verse_fabric/automation/run_xcom_system_tests.py validation
+python3 -m pytest tests/test_xcom_task_ownership_reconciliation.py -q
+git diff --name-only d50bb48f45e422b8a7018710b1ac50cdadbcf8ed --
+git diff --check d50bb48f45e422b8a7018710b1ac50cdadbcf8ed --
+```
+
+Every register validator mode must exit `0`; `unit`/`integration` must report 100 % tests passed (306/306
+CTest unchanged); `validation` must report a positive pytest pass count. `git rev-parse` must print the
+repair baseline.
+
+### 10.3 Nominal checks
+
+| ID | Name | Command / inspection | Expected |
+| --- | --- | --- | --- |
+| R01-CHK-01 | Delivered status present | `validate_xcom_task_ownership.py --verify`; read the register | T012–T016 and T021–T024 read `delivered`; no entry for them reads `unreconciled` or claims the checkbox is open |
+| R01-CHK-02 | Exact delivered revisions | read the register reconciliation entries | each delivered task records exactly the §11.3 revision |
+| R01-CHK-03 | Projection integrity | `--check-human` | exit 0; Markdown is the byte-stable projection |
+| R01-CHK-04 | Analysis disposition | read `specs/007-xcom-core/analysis.md` A12 and the dated successor note | A12 no longer says checkboxes require reconciliation; it records delivered + pending external acceptance |
+| R01-CHK-05 | Accepted predecessor preserved | `git diff --name-only <baseline> -- docs/engineering/xcom/t008 docs/engineering/xcom/t009 docs/engineering/xcom/t010` | empty; predecessor bytes unchanged; the successor note supersedes their wording |
+| R01-CHK-06 | Task-ownership validator self-test | `--self-test` | positive fixture passes; every negative fixture rejects with its declared class |
+| R01-CHK-07 | Requirements validator self-test | `validate_xcom_requirements_traceability.py --self-test` | positive fixture passes; `NEG-17` rejects with `MATURITY_INVALID` via the delivered coverage branch |
+| R01-CHK-08 | Adjacent validators unchanged | `validate_xcom_architecture_contracts.py --self-test`; `validate_xcom_unit_design.py --self-test` | both pass unchanged; neither needs a source edit |
+| R01-CHK-09 | Acceptance / maturity preserved | read the register, T008 register, A12 | no task is `accepted` except the pre-existing T025; no maturity is promoted; `ref002_disposition == unchanged` |
+| R01-CHK-10 | Deterministic gate | `xcom_feature_gate.py verify T024 <baseline>` | exit 0 with the re-run observation suite count |
+| R01-CHK-11 | Unit / integration re-run | `run_xcom_system_tests.py unit`; `integration` | 100 % tests passed; 306/306 CTest; no target/name/label change |
+| R01-CHK-12 | Validation re-run | `run_xcom_system_tests.py validation` | positive pytest pass count |
+| R01-CHK-13 | Changed-path boundary | `git diff --name-only <baseline> --`; `git ls-files --others --exclude-standard` | only the §11.5 paths, including the single new `tests/test_xcom_task_ownership_reconciliation.py`; no other `tests/` path, and no `src/`, `xdl/`, `cmake/`, `CMakeLists.txt`, `proto/`, or `t008/t009/t010` content |
+| R01-CHK-14 | Public safety and diff hygiene | `git diff --check <baseline> --`; scan register, projection, and A12 | whitespace-clean; no absolute host path, credential, private address, or sensitive value |
+| R01-CHK-15 | Governance regression test | `python3 -m pytest tests/test_xcom_task_ownership_reconciliation.py -q`; `xcom_feature_gate.py verify T024 <baseline>` | seven passing cases; the gate finds the `tests/` change and reports the CTest count |
+
+### 10.4 Negative cases
+
+| ID | Injected defect | Expected |
+| --- | --- | --- |
+| R01-NEG-01 | a delivered task's `status` reverted to `unreconciled` | `GATE_INVALID` (`exit 8`) from the task-ownership validator |
+| R01-NEG-02 | a delivered task's `revision` set to `null` | `GATE_INVALID` |
+| R01-NEG-03 | a delivered task's `revision` set to a short/wrong SHA | `GATE_INVALID` |
+| R01-NEG-04 | a delivered task's `reason` emptied | `GATE_INVALID` |
+| R01-NEG-05 | a delivered task relabelled `accepted` with no accepted record | `GATE_INVALID` |
+| R01-NEG-06 | `task-ownership.md` tampered by one byte | `DETERMINISM_INVALID` (`exit 9`) |
+| R01-NEG-07 | `XCOM-SW-CORE-001` (owning task T012, delivered) reconciliation reason dropped | `MATURITY_INVALID` (`exit 8`) from the requirements validator |
+| R01-NEG-08 | an absolute host path inserted into `docs/engineering/xcom/task-ownership.json` or its projected `task-ownership.md` reason | `PUBLIC_SAFETY_INVALID` (`exit 10`) from `validate_xcom_task_ownership.py` |
+| R01-NEG-09 | a delivered entry's reason reverted to the old checkbox-open text | `pytest tests/test_xcom_task_ownership_reconciliation.py` fails its delivered-reason assertion |
+
+R01-NEG-01..08 inject their defect into an input a validator actually scans: the task-ownership validator
+scans `task-ownership.json` and `task-ownership.md`, and the requirements-traceability validator scans the
+T008 register/matrix. The public-safety class is `PUBLIC_SAFETY_INVALID` = `exit 10` in
+`validate_xcom_task_ownership.py` and `exit 11` in `validate_xcom_requirements_traceability.py`; R01-NEG-08 is
+bound to the former. `specs/007-xcom-core/analysis.md` is not scanned by any validator, so its public-safety
+disposition is the R01-CHK-14 inspection and is **not** claimed as a validator negative. R01-NEG-09 is a
+governance-regression-test case (R01-CHK-15), not a validator fixture. Accepted-predecessor preservation
+(`docs/engineering/xcom/t00{8,9,10}`) is a repository-inventory check (`git diff --name-only`, R01-CHK-05 and
+R01-CHK-13) with no validator exit class, so it has no R01-NEG fixture.
+
+### 10.5 Evidence retention
+
+Retain the exact register/projection/A12 diffs, each validator mode's exit status and bounded output, the
+`git rev-parse`/`git diff` inventories, and the feature-gate result, all bound to the successor candidate
+revision. Record commands, tool versions, and environment identity in
+`docs/engineering/xcom/t024/implementation.md`. Missing, stale, or mismatched evidence cannot support
+acceptance.
+
+### 10.6 Exit criteria
+
+R-01 is closed for the successor candidate only when: R01-CHK-01..15 pass; every R01-NEG rejects with its
+declared class; no production or accepted-predecessor path changed; and the analysis note records that
+external Codex review and explicit user acceptance remain pending. Passing these checks does not accept
+any task; acceptance remains a separate explicit user gate.
+
+### 10.7 Requirement-to-check coverage (repair view)
+
+| Requirement | Checks |
+| --- | --- |
+| `T024-R01-SR-001` | R01-CHK-01, R01-CHK-02, R01-CHK-03, R01-CHK-13; R01-NEG-01..05 |
+| `T024-R01-SR-002` | R01-CHK-04, R01-CHK-14 |
+| `T024-R01-SR-003` | R01-CHK-05, R01-CHK-13 (repository-inventory checks; no validator negative applies) |
+| `T024-R01-SR-004` | R01-CHK-06, R01-CHK-07, R01-CHK-08; R01-NEG-01..05, R01-NEG-07 |
+| `T024-R01-SR-005` | R01-CHK-09; R01-NEG-05 |
+| `T024-R01-SR-006` | R01-CHK-10, R01-CHK-11, R01-CHK-12 |
+| `T024-R01-SR-007` | R01-CHK-13 |
+| `T024-R01-SR-008` | R01-CHK-14; R01-NEG-08 |
+| `T024-R01-SR-009` | R01-CHK-15; R01-NEG-09 |
+
+No repair requirement is left without at least one check, and no check claims acceptance.

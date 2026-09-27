@@ -139,11 +139,11 @@ Prohibitions:
 
 Reconciliation:
 
-- T012: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T013: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T014: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T015: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T016: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
+- T012: delivered (`863f11ac990c1ce178a0f9d8eb2489e4a5243fe7`) — delivered as reviewed terminal candidate 863f11ac990c1ce178a0f9d8eb2489e4a5243fe7 (predecessor ade79ee1f73f176c0178b77d6b10ed8ba8587da6) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T013: delivered (`93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59`) — delivered as reviewed terminal candidate 93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59 (predecessor 863f11ac990c1ce178a0f9d8eb2489e4a5243fe7) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T014: delivered (`8aaa9eb29ffb349538552d709d4e6f37011b3e65`) — delivered as reviewed terminal candidate 8aaa9eb29ffb349538552d709d4e6f37011b3e65 (predecessor 93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T015: delivered (`44d2001d48dd42dc9ed489a40d2a5f908b734501`) — delivered as reviewed terminal candidate 44d2001d48dd42dc9ed489a40d2a5f908b734501 (predecessor 8aaa9eb29ffb349538552d709d4e6f37011b3e65) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T016: delivered (`8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda`) — delivered as reviewed terminal candidate 8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda (predecessor 44d2001d48dd42dc9ed489a40d2a5f908b734501) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
 - T030: allocated
 - T031: allocated
 - T032: allocated
@@ -275,10 +275,10 @@ Prohibitions:
 
 Reconciliation:
 
-- T021: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T022: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T023: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
-- T024: unreconciled — source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)
+- T021: delivered (`7be8b9718e42e58bb1a05a486ff62e520f94567c`) — delivered as reviewed terminal candidate 7be8b9718e42e58bb1a05a486ff62e520f94567c (predecessor 8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T022: delivered (`d455c70816eb784066740427a70df9235cd1287d`) — delivered as reviewed terminal candidate d455c70816eb784066740427a70df9235cd1287d (predecessor 7be8b9718e42e58bb1a05a486ff62e520f94567c) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T023: delivered (`76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6`) — delivered as reviewed terminal candidate 76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6 (predecessor d455c70816eb784066740427a70df9235cd1287d) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
+- T024: delivered (`d50bb48f45e422b8a7018710b1ac50cdadbcf8ed`) — delivered as reviewed terminal candidate d50bb48f45e422b8a7018710b1ac50cdadbcf8ed (predecessor 76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6) in ordered backlog xcom-t011-t016-t021-t024; the capability task checkbox is complete at that candidate; no accepted exact-candidate revision is recorded, so external Codex review and explicit user acceptance remain pending (terminal review R-01; analysis A12)
 
 ### T-STIM — Validation stimulation boundary: time authority, permit/session, journal, guard, actions
 
