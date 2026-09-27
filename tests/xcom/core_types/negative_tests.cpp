@@ -12,6 +12,7 @@
 #include <array>
 #include <clocale>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -353,12 +354,100 @@ using namespace xverse::xcom;
          expect(stable, "validated construction changed with the caller locale");
 }
 
+/** @return true when every unknown policy enumeration and out-of-range number fails closed. */
+[[nodiscard]] bool test_flow_policy_rejections() {
+  struct Case final {
+    FlowPolicyInput input;    /**< Rejected declaration. */
+    std::string_view field;   /**< Expected affected field name. */
+  };
+  const std::array<Case, 9U> cases{{
+      {{static_cast<OrderingPolicy>(255), ReliabilityPolicy::at_least_once, OverflowPolicy::reject,
+        1000, 1, 8},
+       "ordering"},
+      {{OrderingPolicy::fifo, static_cast<ReliabilityPolicy>(255), OverflowPolicy::reject, 1000, 1,
+        8},
+       "reliability"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, static_cast<OverflowPolicy>(255),
+        1000, 1, 8},
+       "overflow"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, -1, 1, 8},
+       "deadline_ms"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, 600001, 1,
+        8},
+       "deadline_ms"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, 1000, -1,
+        8},
+       "retry"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, 1000, 65,
+        8},
+       "retry"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, 1000, 1, 0},
+       "queue_depth"},
+      {{OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, 1000, 1,
+        65537},
+       "queue_depth"},
+  }};
+  if (!expect(to_string(DiagnosticCode::invalid_policy) == "XCOM-TYPE-E006",
+              "invalid_policy external code differs") ||
+      !expect(to_string(ValidationPhase::policy) == "policy", "policy phase text differs")) {
+    return false;
+  }
+  for (const Case& entry : cases) {
+    const auto result = FlowPolicy::create(entry.input);
+    if (!expect(!result.has_value() && result.value() == nullptr &&
+                    result.diagnostics() != nullptr,
+                "invalid policy declaration was accepted") ||
+        !expect(result.diagnostics()->size() == 1U, "policy rejection count differs")) {
+      return false;
+    }
+    const Diagnostic& diagnostic = result.diagnostics()->values().front();
+    if (!expect(diagnostic.code() == DiagnosticCode::invalid_policy &&
+                    diagnostic.severity() == DiagnosticSeverity::error &&
+                    diagnostic.phase() == ValidationPhase::policy &&
+                    diagnostic.affected_identity() == entry.field,
+                "policy rejection diagnostic differs")) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** @return true when a multi-field policy rejection yields one exact sorted byte sequence. */
+[[nodiscard]] bool test_flow_policy_exact_diagnostics() {
+  const auto two = FlowPolicy::create(
+      {OrderingPolicy::fifo, ReliabilityPolicy::at_least_once, OverflowPolicy::reject, -5, 65, 4});
+  const auto three = FlowPolicy::create(
+      {OrderingPolicy::unordered, ReliabilityPolicy::best_effort, static_cast<OverflowPolicy>(255),
+       -5, 65, 4});
+  const std::string expected_two =
+      "policy|error|XCOM-TYPE-E006|deadline_ms|deadline is outside the declared range|use a "
+      "deadline between 0 and 600000 milliseconds\n"
+      "policy|error|XCOM-TYPE-E006|retry|retry is outside the declared range|use a retry count "
+      "between 0 and 64";
+  const std::string expected_three =
+      "policy|error|XCOM-TYPE-E006|deadline_ms|deadline is outside the declared range|use a "
+      "deadline between 0 and 600000 milliseconds\n"
+      "policy|error|XCOM-TYPE-E006|overflow|overflow policy is outside the declared vocabulary|use "
+      "one declared overflow policy\n"
+      "policy|error|XCOM-TYPE-E006|retry|retry is outside the declared range|use a retry count "
+      "between 0 and 64";
+  return expect(two.diagnostics() != nullptr && three.diagnostics() != nullptr,
+                "policy exact-diagnostic fixtures did not fail") &&
+         expect(two.diagnostics()->size() == 2U, "two-field policy diagnostic count differs") &&
+         expect(two.diagnostics()->serialize() == expected_two,
+                "two-field policy diagnostic bytes differ") &&
+         expect(three.diagnostics()->size() == 3U, "three-field policy diagnostic count differs") &&
+         expect(three.diagnostics()->serialize() == expected_three,
+                "three-field policy diagnostic bytes differ");
+}
+
 }  // namespace
 
 /** @return Zero when every negative fixture passes, otherwise one. */
 int main() {
   const bool passed = test_invalid_direction_table() && test_contract_field_boundaries() &&
                       test_item_field_boundaries() && test_diagnostic_boundaries_and_codes() &&
-                      test_exact_multi_error_sequence() && test_locale_independent_validation();
+                      test_exact_multi_error_sequence() && test_locale_independent_validation() &&
+                      test_flow_policy_rejections() && test_flow_policy_exact_diagnostics();
   return passed ? 0 : 1;
 }

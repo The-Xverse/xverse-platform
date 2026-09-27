@@ -1,6 +1,6 @@
 /**
  * @file contract.cpp
- * @brief Allocation-free contract validation and interaction compatibility.
+ * @brief Allocation-free contract and flow-policy validation with interaction compatibility.
  * @ownership Successful contracts own copied values; failures own fixed diagnostics.
  * @lifetime No caller-provided view is retained after construction.
  * @thread_safety Validation uses call-local state and supports concurrent calls.
@@ -10,6 +10,7 @@
 #include "xverse/xcom/contract.hpp"
 
 #include <array>
+#include <cstdint>
 #include <span>
 
 namespace xverse::xcom {
@@ -25,16 +26,17 @@ namespace {
 class DiagnosticAccumulator final {
  public:
   /**
-   * @brief Append one deterministic contract diagnostic input.
+   * @brief Append one deterministic contract or policy diagnostic input.
    * @param code Stable diagnostic code.
    * @param field Affected field name.
    * @param reason Deterministic failure reason.
    * @param correction Deterministic corrective action.
+   * @param phase Validation phase that produced the diagnostic.
    */
   void add(const DiagnosticCode code, const std::string_view field,
-           const std::string_view reason, const std::string_view correction) noexcept {
-    inputs_[size_++] = {code, DiagnosticSeverity::error, ValidationPhase::contract,
-                        field, reason, correction};
+           const std::string_view reason, const std::string_view correction,
+           const ValidationPhase phase = ValidationPhase::contract) noexcept {
+    inputs_[size_++] = {code, DiagnosticSeverity::error, phase, field, reason, correction};
   }
 
   /** @return The initialized diagnostic-input prefix. */
@@ -46,7 +48,7 @@ class DiagnosticAccumulator final {
   [[nodiscard]] bool empty() const noexcept { return size_ == 0U; }
 
  private:
-  /** Contract validation has at most six independent diagnostics. */
+  /** Contract and policy validation each have at most six independent diagnostics. */
   std::array<DiagnosticInput, 6U> inputs_{};
   /** Initialized input count. */
   std::size_t size_{0U};
@@ -110,6 +112,63 @@ void validate_version(DiagnosticAccumulator& diagnostics, const std::string_view
   return false;
 }
 
+/** @brief Return whether ordering is a declared value. */
+[[nodiscard]] bool known_ordering(const OrderingPolicy ordering) noexcept {
+  switch (ordering) {
+    case OrderingPolicy::fifo:
+    case OrderingPolicy::priority:
+    case OrderingPolicy::unordered:
+      return true;
+  }
+  return false;
+}
+
+/** @brief Return whether reliability is a declared value. */
+[[nodiscard]] bool known_reliability(const ReliabilityPolicy reliability) noexcept {
+  switch (reliability) {
+    case ReliabilityPolicy::at_most_once:
+    case ReliabilityPolicy::at_least_once:
+    case ReliabilityPolicy::exactly_once:
+    case ReliabilityPolicy::best_effort:
+      return true;
+  }
+  return false;
+}
+
+/** @brief Return whether overflow is a declared value. */
+[[nodiscard]] bool known_overflow(const OverflowPolicy overflow) noexcept {
+  switch (overflow) {
+    case OverflowPolicy::drop_oldest:
+    case OverflowPolicy::drop_newest:
+    case OverflowPolicy::coalesce:
+    case OverflowPolicy::lossless_backpressure:
+    case OverflowPolicy::reject:
+    case OverflowPolicy::fail_closed:
+      return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Append one policy rejection when a declared number is out of range.
+ * @param diagnostics Call-local accumulator.
+ * @param field Stable field name.
+ * @param value Candidate declared number.
+ * @param minimum Inclusive lower bound.
+ * @param maximum Inclusive upper bound.
+ * @param reason Deterministic failure reason.
+ * @param correction Deterministic corrective action.
+ */
+void validate_policy_range(DiagnosticAccumulator& diagnostics, const std::string_view field,
+                           const std::int64_t value, const std::int64_t minimum,
+                           const std::int64_t maximum, const std::string_view reason,
+                           const std::string_view correction) noexcept {
+  if (value < minimum || value > maximum) {
+    diagnostics.add(DiagnosticCode::invalid_policy, field, reason, correction,
+                    ValidationPhase::policy);
+  }
+}
+
 }  // namespace
 
 std::string_view to_string(const InteractionKind kind) noexcept {
@@ -136,6 +195,50 @@ std::string_view to_string(const EndpointDirection direction) noexcept {
       return "request";
     case EndpointDirection::respond:
       return "respond";
+  }
+  return "unknown";
+}
+
+std::string_view to_string(const OrderingPolicy policy) noexcept {
+  switch (policy) {
+    case OrderingPolicy::fifo:
+      return "fifo";
+    case OrderingPolicy::priority:
+      return "priority";
+    case OrderingPolicy::unordered:
+      return "unordered";
+  }
+  return "unknown";
+}
+
+std::string_view to_string(const ReliabilityPolicy policy) noexcept {
+  switch (policy) {
+    case ReliabilityPolicy::at_most_once:
+      return "at-most-once";
+    case ReliabilityPolicy::at_least_once:
+      return "at-least-once";
+    case ReliabilityPolicy::exactly_once:
+      return "exactly-once";
+    case ReliabilityPolicy::best_effort:
+      return "best-effort";
+  }
+  return "unknown";
+}
+
+std::string_view to_string(const OverflowPolicy policy) noexcept {
+  switch (policy) {
+    case OverflowPolicy::drop_oldest:
+      return "drop-oldest";
+    case OverflowPolicy::drop_newest:
+      return "drop-newest";
+    case OverflowPolicy::coalesce:
+      return "coalesce";
+    case OverflowPolicy::lossless_backpressure:
+      return "lossless-backpressure";
+    case OverflowPolicy::reject:
+      return "reject";
+    case OverflowPolicy::fail_closed:
+      return "fail-closed";
   }
   return "unknown";
 }
@@ -169,6 +272,41 @@ Result<CommunicationContract> CommunicationContract::create(
                                        *schema_version, input.interaction_kind,
                                        input.source_direction, input.target_direction);
   return Result<CommunicationContract>::success(contract);
+}
+
+Result<FlowPolicy> FlowPolicy::create(const FlowPolicyInput& input) noexcept {
+  DiagnosticAccumulator diagnostics;
+  if (!known_ordering(input.ordering)) {
+    diagnostics.add(DiagnosticCode::invalid_policy, "ordering",
+                    "ordering policy is outside the declared vocabulary",
+                    "use one declared ordering policy", ValidationPhase::policy);
+  }
+  if (!known_reliability(input.reliability)) {
+    diagnostics.add(DiagnosticCode::invalid_policy, "reliability",
+                    "reliability policy is outside the declared vocabulary",
+                    "use one declared reliability policy", ValidationPhase::policy);
+  }
+  if (!known_overflow(input.overflow)) {
+    diagnostics.add(DiagnosticCode::invalid_policy, "overflow",
+                    "overflow policy is outside the declared vocabulary",
+                    "use one declared overflow policy", ValidationPhase::policy);
+  }
+  validate_policy_range(diagnostics, "deadline_ms", input.deadline_ms, 0,
+                        kMaximumDeadlineMs, "deadline is outside the declared range",
+                        "use a deadline between 0 and 600000 milliseconds");
+  validate_policy_range(diagnostics, "retry", input.retry, 0, kMaximumRetry,
+                        "retry is outside the declared range",
+                        "use a retry count between 0 and 64");
+  validate_policy_range(diagnostics, "queue_depth", input.queue_depth, 1,
+                        kMaximumQueueDepth, "queue depth is outside the declared range",
+                        "use a finite queue depth between 1 and 65536");
+
+  if (!diagnostics.empty()) {
+    const auto set = DiagnosticSet::create_from_inputs(diagnostics.inputs());
+    return Result<FlowPolicy>::failure(*set);
+  }
+
+  return Result<FlowPolicy>::success(FlowPolicy(input));
 }
 
 }  // namespace xverse::xcom

@@ -35,6 +35,8 @@ enum class DiagnosticCode {
   endpoint_in_use,
   route_incompatible,
   generation_exhausted,
+  /** A declared flow-policy field is outside its accepted vocabulary or range. */
+  invalid_policy,
 };
 
 /** Diagnostic severity ordered from informational to error. */
@@ -50,6 +52,8 @@ enum class ValidationPhase {
   ownership,
   lifecycle,
   route_compatibility,
+  /** Immutable flow-policy declaration validation. */
+  policy,
 };
 
 /**

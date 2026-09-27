@@ -44,6 +44,7 @@ namespace {
     case DiagnosticCode::endpoint_in_use:
     case DiagnosticCode::route_incompatible:
     case DiagnosticCode::generation_exhausted:
+    case DiagnosticCode::invalid_policy:
       return true;
   }
   return false;
@@ -71,6 +72,7 @@ namespace {
     case ValidationPhase::ownership:
     case ValidationPhase::lifecycle:
     case ValidationPhase::route_compatibility:
+    case ValidationPhase::policy:
       return true;
   }
   return false;
@@ -169,6 +171,8 @@ std::string_view to_string(const DiagnosticCode code) noexcept {
       return "XCOM-LIFE-E012";
     case DiagnosticCode::generation_exhausted:
       return "XCOM-LIFE-E013";
+    case DiagnosticCode::invalid_policy:
+      return "XCOM-TYPE-E006";
   }
   return "XCOM-TYPE-E000";
 }
@@ -203,6 +207,8 @@ std::string_view to_string(const ValidationPhase phase) noexcept {
       return "lifecycle";
     case ValidationPhase::route_compatibility:
       return "route_compatibility";
+    case ValidationPhase::policy:
+      return "policy";
   }
   return "unknown";
 }
