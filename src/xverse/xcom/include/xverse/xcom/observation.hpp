@@ -19,6 +19,10 @@
  * lossless-validation mode, the applied declared validity effect, and the observable realized
  * validity status exposed by ObservationSnapshot::validity_state; see
  * docs/engineering/xcom/t022/{requirements,detailed-design,unit-specifications,verification-plan}.md.
+ * T023 refines XCOM-SW-OBS-004 with the synthetic sink's visible consumer counter projection
+ * (SyntheticSinkCounters) and the disconnect/failure/blocking isolation rules over the existing
+ * pull-only sink surface; see
+ * docs/engineering/xcom/t023/{requirements,detailed-design,unit-specifications,verification-plan}.md.
  * Focused behavioral fixtures reside in tests/xcom/observation/core/unit_tests.cpp
  * (XCOM-OBS-002 through XCOM-OBS-006).
  */
@@ -752,13 +756,35 @@ class ObservationHub final {
 };
 
 /**
+ * @brief Immutable value-owned consumer counter projection for one synthetic sink.
+ * @ownership Owns only four fixed 64-bit counter values; it holds no view into hub or sink storage.
+ * @lifetime It is copied out by value, lives for the sink's lifetime, and is discarded with the sink;
+ * it is not a durable log.
+ * @thread_safety Concurrent const access is safe; the sink updates it on the calling thread only.
+ * @failure It is derived only from actual pull outcomes, so a counter is never raised without a matching
+ * pull, and it does not duplicate or reinterpret the tap loss counters on ObservationSnapshot.
+ */
+struct SyntheticSinkCounters final {
+  /** Records successfully pulled and returned to the caller (`accepted`). */
+  std::uint64_t pulled{0U};
+  /** Pulls that found no retained record (`no_record`). */
+  std::uint64_t empty{0U};
+  /** Pulls rejected by a local disconnect (`sink_disconnected`). */
+  std::uint64_t disconnected{0U};
+  /** Pulls rejected for a stale, foreign, or closed exact handle (`invalid_tap_handle`). */
+  std::uint64_t failed{0U};
+};
+
+/**
  * @brief A pull-only synthetic consumer for focused tests and isolated local validation fixtures.
- * @ownership Retains only a non-owning hub pointer and a copied exact handle; pulled records remain owned
- * by their return value.
+ * @ownership Retains only a non-owning hub pointer, a copied exact handle, a local connected flag, and
+ * four fixed consumer counters; pulled records remain owned by their return value.
  * @lifetime The referenced hub must outlive this sink. disconnect() only disables this sink, never a tap.
  * @thread_safety Individual sink calls are serialized by the hub; concurrent connect/disconnect on one
  * sink is not supported.
- * @failure Disconnection produces sink_disconnected and does not block, mutate, or callback into a route.
+ * @failure Disconnection produces sink_disconnected, a stale/foreign/closed exact handle produces
+ * invalid_tap_handle, and neither blocks, delays, reorders, mutates, or callbacks into a route; every
+ * outcome is counted in the visible SyntheticSinkCounters projection.
  */
 class SyntheticObservationSink final {
  public:
@@ -770,27 +796,51 @@ class SyntheticObservationSink final {
   SyntheticObservationSink(ObservationHub& hub, const ObservationTapHandle& handle) noexcept;
   /**
    * @brief Copy a synthetic sink without taking hub ownership.
-   * @param other Valid sink whose hub reference and exact handle are copied.
+   * @param other Valid sink whose hub reference, exact handle, local flag, and counters are copied.
    */
   SyntheticObservationSink(const SyntheticObservationSink& other) noexcept = default;
   /** Assignment is disabled to prevent accidental hub rebinding. */
   SyntheticObservationSink& operator=(const SyntheticObservationSink&) = delete;
-  /** @brief Enable pulling after a local disconnect. @return Exact-handle status. */
+  /**
+   * @brief Enable pulling after a local disconnect.
+   * @return accepted when the copied exact handle is still current, or invalid_tap_handle (leaving the
+   * sink disabled) for an invalid, foreign, stale, or closed handle.
+   * @ownership Mutates only this sink's local flag; it never mutates a tap, counter, or route.
+   * @lifetime The referenced hub must still be alive.
+   * @thread_safety Serialized with this sink's other calls through the hub.
+   * @failure It reports the stable exact-handle outcome without changing any consumer counter.
+   */
   [[nodiscard]] ObservationStatus connect() noexcept;
-  /** @brief Disable this consumer without detaching or mutating its tap. */
+  /** @brief Disable this consumer without detaching or mutating its tap or counters. */
   void disconnect() noexcept { connected_ = false; }
   /**
    * @brief Pull one value-owned record when connected.
-   * @return A pulled record or the stable disconnected/underlying hub status.
+   * @return A pulled record (`pulled` + 1), no_record (`empty` + 1), sink_disconnected
+   * (`disconnected` + 1), or invalid_tap_handle (`failed` + 1).
+   * @ownership Returns a value-owned record or counter-independent status; it never mutates a tap.
+   * @lifetime The returned record (when present) is owned by the caller.
+   * @thread_safety Serialized through the hub; counters are updated on the calling thread only.
+   * @failure It consumes no record on a non-`accepted` outcome and never blocks, reorders, or mutates a
+   * tap or route; no counter is raised without a matching pull outcome.
    */
   [[nodiscard]] ObservationPollResult pull() noexcept;
   /** @return true only when this local consumer is enabled. */
   [[nodiscard]] bool connected() const noexcept { return connected_; }
+  /**
+   * @brief Return the immutable consumer counter projection.
+   * @return Value copy of the sink's own pull-outcome counters.
+   * @ownership The returned value is owned by the caller; it is not a view into hub storage.
+   * @lifetime The value remains valid independently of the sink.
+   * @thread_safety It is `noexcept` and adds no shared mutable state; counters update on the calling thread.
+   * @failure It reports only actual pull outcomes and never mutates a tap or route.
+   */
+  [[nodiscard]] SyntheticSinkCounters counters() const noexcept { return counters_; }
 
  private:
   ObservationHub* hub_;
   ObservationTapHandle handle_;
   bool connected_{true};
+  SyntheticSinkCounters counters_{};
 };
 
 }  // namespace xverse::xcom

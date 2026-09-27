@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "task_id": "T023",
+  "baseline_revision": "d455c70816eb784066740427a70df9235cd1287d",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 2,
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t023/architecture.md",
+    "docs/engineering/xcom/t023/detailed-design.md",
+    "docs/engineering/xcom/t023/implementation.md",
+    "docs/engineering/xcom/t023/requirements.md",
+    "docs/engineering/xcom/t023/unit-specifications.md",
+    "docs/engineering/xcom/t023/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+    "src/xverse/xcom/src/observation.cpp",
+    "tests/xcom/observation/core/unit_tests.cpp",
+    "tests/xcom/observation/integration/integration_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T023-IR-01",
+      "name": "Exact candidate inventory, baseline binding, and diff hygiene",
+      "method": "ran `git rev-parse d455c70816eb784066740427a70df9235cd1287d`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, computed the gate's candidate set as `sorted(tracked | (untracked - {internal-review.json, t023-package.json}))`, ran `git diff --numstat <baseline> --`, `git diff --check <baseline> --`, and `git diff <baseline> -- specs/007-xcom-core/tasks.md`",
+      "result": "pass: the baseline resolves to the exact SHA and `git diff --check` is clean. The independently recomputed candidate set is exactly the 11 reviewed paths (tracked: `tasks.md`, `observation.hpp`, `observation.cpp`, `unit_tests.cpp`, `integration_tests.cpp`; untracked: the six T023 `.md` work products), matching the review inventory in both membership and sorted order. The only `specs` change is the single `- [ ] T023` -> `- [X] T023` line and T024 remains unchecked. Numstat: hpp 57/7, cpp 16/1, unit fixture 207/2, integration fixture 69/1, tasks.md 1/1."
+    },
+    {
+      "id": "T023-IR-02",
+      "name": "Changed-path boundary: only T023-owned observation paths",
+      "method": "filtered the changed-path list for `CMakeLists|*.cmake`, `xdl/`, `proto/`, `src/xverse_xdl/`, `contracts/`, the other production units (`activation_plan.*`, `provider.*`, `loopback_provider.*`, `endpoint_route_lifecycle.*`, `contract.hpp`, `item.hpp`, `value.hpp`, `result.hpp`, `diagnostic.hpp`, `validation_session.*`, `stimulation_journal.*`), `test_support.hpp`, and `disabled_tap_benchmark.cpp`",
+      "result": "pass: no build file, XDL/proto/contracts path, other production unit, `test_support.hpp`, `disabled_tap_benchmark.cpp`, or another task's ownership path is changed. The shared `tests/xcom/observation/integration/test_support.hpp` `make_tap_spec` helper already declares the default `none` effect and a valid observation point, so the integration case needed no helper edit."
+    },
+    {
+      "id": "T023-IR-03",
+      "name": "Rejected-operation failure atomicity and side-effect freedom",
+      "method": "read `ObservationHub::authenticate` (cpp 298-315), `poll` (cpp 519-534), `snapshot` (cpp 536-553), and `detach` (cpp 568-591); read `SyntheticObservationSink::connect`/`pull` (cpp 597-622); read `test_synthetic_sink_disconnect_isolation` (unit_tests.cpp 1215-1255) and `test_synthetic_sink_failure_isolation` (unit_tests.cpp 1258-1301); ran the unit executable",
+      "result": "pass: `poll` acquires the hub mutex, calls `authenticate` first, and returns `invalid_tap_handle` with no mutation when authentication fails (foreign/stale/closed handle); on `no_record` it returns before touching any record; on `accepted` it copies the record and advances `head`/`size` under the same lock. `connect()` only reads through const `snapshot` and mutates the sink's own `connected_` flag. The disconnect-isolation case proves a disconnected pull leaves the observed tap's `queued`/`accepted`/`dropped` unchanged and the retained sequence-1 record still pullable by the other sink and after reconnect; the failure-isolation case proves the foreign hub's slot keeps `accepted == 0`/`queued == 0`, the recreated slot keeps its own zero counters, and the stale `connect()` leaves the sink disabled. All rejects are side-effect free and atomic before mutation."
+    },
+    {
+      "id": "T023-IR-04",
+      "name": "Visible consumer counter semantics and accounting identity",
+      "method": "read `SyntheticSinkCounters` (hpp 767-777) and `counters()` (hpp 837); read `SyntheticObservationSink::pull` (cpp 606-622); confirmed `ObservationStatus::succeeded()` is `outcome == accepted` (hpp 194) and that `poll` can only return `accepted`/`no_record`/`invalid_tap_handle`; read `test_synthetic_sink_visible_counters` (unit_tests.cpp 1151-1212); ran `strings` on the built `xverse_xcom_observation_unit_tests`",
+      "result": "pass: `pull` increments exactly one counter on the actual outcome -- disconnected short-circuit -> `disconnected`, `accepted` -> `pulled`, `no_record` -> `empty`, and the final branch -> `failed` (reachable only for `invalid_tap_handle` because `poll` has no other failing return). `connect()`/`disconnect()` change no counter. `counters()` is `noexcept` and returns a value copy (no hub view). The case drives two record pulls, one empty pull, one disconnected pull, and one stale-handle pull and asserts the identity `pulled + empty + disconnected + failed == 5 == attempts` plus `connected()` after each transition. The new assertion strings are present in the built binary, so the case executes rather than being dead code."
+    },
+    {
+      "id": "T023-IR-05",
+      "name": "Local disconnect isolation is sink-local and consumes no record",
+      "method": "read `test_synthetic_sink_disconnect_isolation`; ran the unit executable; cross-checked `disconnect()` (hpp 815) and `pull` (cpp 606-610)",
+      "result": "pass: `disconnect()` mutates only `connected_` and never calls the hub; a disconnected `pull` returns `sink_disconnected` without calling `poll`. The case attaches two sinks to two taps, disconnects sink A while its tap holds a retained record, and asserts the `sink_disconnected` outcome, `disconnected == 1` with `pulled == 0`, the observed tap's `queued`/`accepted` unchanged and `dropped == 0`, sink B still pulls sequence 1, and reconnect lets sink A pull the same retained record. No cross-sink or route coupling."
+    },
+    {
+      "id": "T023-IR-06",
+      "name": "Failure isolation for stale/foreign/closed exact handles",
+      "method": "read `test_synthetic_sink_failure_isolation`; ran the unit executable; re-read `authenticate` and `ObservationHub::make_handle`/constructor (cpp 290-295, 79) to confirm per-hub instance ids are unique",
+      "result": "pass: `hub_instance_id_` is a monotonically increasing atomic, so a foreign hub's handle never authenticates. A sink constructed over a foreign hub's handle reports `invalid_tap_handle` with `failed == 1` and no record; the foreign hub keeps `accepted == 0`/`queued == 0` and the foreign handle authenticates at neither hub. After `detach` of the observed tap, a pull reports `invalid_tap_handle` with `failed == 1`; the recreated slot keeps its own zero counters; `connect()` on the stale handle is refused (`invalid_tap_handle`) and leaves the sink disabled. No tap, generation, counter, or record is mutated."
+    },
+    {
+      "id": "T023-IR-07",
+      "name": "Blocking (non-pulling) isolation, bounds, and loss visibility",
+      "method": "read `test_synthetic_sink_blocking_isolation` (unit_tests.cpp 1304-1348); ran the unit executable; cross-checked the `retain` drop-newest/coalesce-latest branches and the `ObservationSnapshot` counter projection (cpp 536-553)",
+      "result": "pass: five identical-keyed submissions against capacity-2 taps while two connected sinks never pull; the drop-newest tap reports `queued == 2`, `accepted == 2`, `dropped == 3` and the coalesce-latest tap reports `queued == 2`, `accepted == 2`, `coalesced == 3`, both within the declared bound, while every emit still succeeds (no blocking). The sink counters remain all zero until the sink pulls, then reflect only its own pulls (`pulled == 2`, `empty == 1`) with retained FIFO order (sequences 1, 2). Loss is visible through the tap snapshot, not hidden."
+    },
+    {
+      "id": "T023-IR-08",
+      "name": "Read-only sink authority",
+      "method": "grepped `observation.cpp` for `hub_->detach|acknowledge|reserve|commit|cancel` and for every `hub_->` call; resolved each match",
+      "result": "pass: the sink's only hub calls are `hub_->snapshot(handle_)` in `connect()` (cpp 598) and `hub_->poll(handle_)` in `pull()` (cpp 611). The single `hub_->cancel_from_destructor` match (cpp 286) is inside the unrelated `ObservationReservation` destructor. The sink never detaches, acknowledges, reserves, commits, or cancels, and never mutates a tap, generation, counter, or record."
+    },
+    {
+      "id": "T023-IR-09",
+      "name": "Bounded resources, no allocation, and offline/domain neutrality",
+      "method": "scanned `observation.cpp` for `new|delete|malloc|std::vector|make_unique|make_shared`; scanned both changed production files for socket/resolver/TLS/ambient/filesystem/process/dynamic-load access; re-read the constants (hpp 47-53) and the sink member layout (hpp 840-843)",
+      "result": "pass: the allocation scan returns no match; no timer, retry, rate, or quota appears on any T023 path. The sink footprint is one non-owning `ObservationHub*`, one copied handle, one bool, and four counters; `SyntheticSinkCounters` is four fixed `std::uint64_t`. `kObservationContractVersion == \"1.0.0\"`, `kMaximumObservationTaps == 8`, `kMaximumObservationRecordsPerTap == 16`, and `kMaximumObservedPayloadBytes == 1024` are unchanged. The only `connect`/`disconnect` matches are the in-process sink methods and their Doxygen; no forbidden API, new dependency, or domain-specific/export/dashboard/storage primitive is introduced, and the offline configure/build succeeds."
+    },
+    {
+      "id": "T023-IR-10",
+      "name": "Route-level isolation and provider compatibility",
+      "method": "read `test_synthetic_sink_route_isolation_counters` (integration_tests.cpp 412-480); ran the integration executable; compared against the preserved `test_best_effort_isolation`",
+      "result": "pass: over the owned loopback route, a disconnected sink returns `sink_disconnected` (`disconnected == 1`) while the route still accepts the item (`queued_items == 1`) and the tap retains it (`queued == 1`). After reconnect and `detach`, the route accepts a second item (`queued_items == 2`), the sink records `failed == 1` on `invalid_tap_handle`, the stale snapshot is absent, and the receiver returns both items in FIFO order (timestamps 1, 2) with unchanged `accepted` outcomes. The preserved `test_best_effort_isolation` body is unchanged."
+    },
+    {
+      "id": "T023-IR-11",
+      "name": "Additivity: no existing test, target, name, or label weakened",
+      "method": "inspected every deleted line of the production and test diffs; counted test functions before/after with `rg -c '^\\[\\[nodiscard\\]\\] bool test_'` at the baseline and candidate; ran `ctest --test-dir build/fabro-t023 -N` and the full `ctest` run; ran `strings` on the built unit binary",
+      "result": "pass: the only deleted lines are Doxygen/comment lines in the two production files and the two fixtures, plus the single-line `return hub_->poll(handle_);` (replaced by the counted block), the comment continuation `* (XCOM-SW-OBS-003, FR-013, SC-004).`, and the `main()` call-list terminators `test_synthetic_sink_concurrency()` and `test_concurrent_publication();` that were re-added with `&&` continuations. No existing test case body or assertion is modified. Test functions went 24 -> 28 (unit) and 7 -> 8 (integration), i.e. exactly the four added unit cases and one added integration case. Discovery reports `Total Tests: 306` (equal to the baseline) and the full run reports `100% tests passed, 0 tests failed out of 306`; no target, test name, or label is added, renamed, or removed."
+    },
+    {
+      "id": "T023-IR-12",
+      "name": "Concurrency, no callback, and single-threaded counter ownership",
+      "method": "read `test_synthetic_sink_concurrency` (unit_tests.cpp 1116-1148, preserved); read the sink class Doxygen (hpp 779-837) and the concurrency rules in `detailed-design.md` §7 / `unit-specifications.md` §3.1-3.2; ran the unit executable",
+      "result": "pass: the preserved concurrency case uses one writer thread publishing 64 items through the hub and one reader thread pulling 64 times; the hub mutex serializes publication and pull, and only the single reader touches the sink's `counters_`, so the counter update stays caller-thread and race-free for the supported usage. `connect`/`disconnect`/`pull`/`connected`/`counters` are all `noexcept`, and no consumer callback exists anywhere in the boundary (a source scan finds no function-pointer/callback member), so no user code runs under the hub lock."
+    },
+    {
+      "id": "T023-IR-13",
+      "name": "Traceability, registers, REF-002 disposition, and scope/stage boundary",
+      "method": "read requirements.md sections 3-10, architecture.md sections 3-10, detailed-design.md sections 2-10, unit-specifications.md sections 2-7, verification-plan.md sections 2-9, and implementation.md sections 3-9; ran `git rev-parse`, the four register validators (`--verify`) and the ownership `--check-human`; recomputed the four artifact SHA-256 values",
+      "result": "pass: every T023-STK-001..005 and T023-SR-001..016 maps to at least one named CHK/NEG in the verification plan and to a realized symbol, test, or inspection; the requirement-to-check index and the unit/test traceability tables agree. `validate_xcom_task_ownership.py --verify`/`--check-human`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, and `validate_xcom_unit_design.py --verify` all pass. The recomputed hashes of `observation.hpp`, `observation.cpp`, `unit_tests.cpp`, and `integration_tests.cpp` match `implementation.md` §3.2 exactly (`eda631bd...`, `3385ab0d...`, `eebe4406...`, `3e54ff46...`). `reference-traceability.md` is unmodified, so the REF-002 disposition remains `unchanged` with an empty `promoted` list; the XCOM-SW-OBS-004 attribution nuance and the T021-GAP-03/T022-GAP-02 handoff are recorded, not rewritten. The `tasks.md` change is the single T023 checkbox; T024 and every later task remain unchecked, so no later task was implemented."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "This is a separate, read-only DeepSeek internal review of the exact 11-path T023 candidate over baseline d455c70816eb784066740427a70df9235cd1287d. No production code, test, work product, or predecessor artifact was edited by the review pass; the only file written by the review stage is this record.",
+    "T023-IR-NOTE-01 (non-blocking documentation nit): the `observation.hpp` file-block note still states that focused behavioral fixtures reside in `tests/xcom/observation/core/unit_tests.cpp` (XCOM-OBS-002 through XCOM-OBS-006); T023 also adds one integration case in `tests/xcom/observation/integration/integration_tests.cpp`. The per-task traceability sentences for T021/T022/T023 are accurate, and the sentence is a pre-existing convention inherited from the baseline, so this is not a coverage or requirement-mapping defect.",
+    "T023-IR-NOTE-02 (non-blocking documentation nuance): the plan documents state that new/changed declarations carry Doxygen in the `xcom_obs` group, but no `@defgroup`/`@ingroup xcom_obs` exists anywhere in the admitted source (T021/T022 carry the same convention, and the changed header instead adds full `@brief` plus ownership/lifetime/thread-safety/failure tags). The accepted documentation configuration is unchanged, so this is a pre-existing convention gap rather than a T023 requirement-mapping defect.",
+    "T023-IR-NOTE-03 (non-blocking scope clarification): the synthetic sink's pull-only surface, copy semantics, and `connect()` exact-handle re-validation predate T023 in the baseline; T023's production delta is the visible `SyntheticSinkCounters` projection and its maintenance on the actual pull outcomes, proven by the four added unit cases and one added integration case. This matches the authoritative XCOM-SW-OBS-004 attribution and the requirements/architecture statements that the accepted T021/T022 retention, validity, payload, record, handle, and vocabulary behavior is preserved exactly.",
+    "T023-IR-NOTE-04 (non-blocking latent-code observation): `pull()` uses a final unconditional `++counters_.failed` for any non-`accepted`, non-`no_record` outcome. This is exact today because `ObservationHub::poll` can return only `accepted`/`no_record`/`invalid_tap_handle` and is unchanged in this candidate; it is recorded only so a future change to `poll`'s outcome set is reviewed against this counter mapping.",
+    "External Codex review and user acceptance remain deferred until the xcom-t011-t016-t021-t024 backlog completes; this review claims no measure pass, integration, or production readiness."
+  ]
+}

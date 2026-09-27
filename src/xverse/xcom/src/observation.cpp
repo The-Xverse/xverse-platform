@@ -8,6 +8,10 @@
  * @par Traceability
  * Implements the declarations and requirement allocation documented in observation.hpp; focused
  * behavior is exercised by tests/xcom/observation/core/unit_tests.cpp.
+ * T023 maintains the synthetic sink's visible SyntheticSinkCounters projection on the actual
+ * disconnect/no_record/invalid_tap_handle outcomes and re-validates the copied exact handle in
+ * connect(); the accepted T021/T022 declaration, retention, and validity behavior is unchanged
+ * (XCOM-SW-OBS-004).
  */
 
 #include "xverse/xcom/observation.hpp"
@@ -601,9 +605,20 @@ ObservationStatus SyntheticObservationSink::connect() noexcept {
 
 ObservationPollResult SyntheticObservationSink::pull() noexcept {
   if (!connected_) {
+    ++counters_.disconnected;
     return {{ObservationOutcome::sink_disconnected}, std::nullopt};
   }
-  return hub_->poll(handle_);
+  ObservationPollResult result = hub_->poll(handle_);
+  if (result.status.succeeded()) {
+    ++counters_.pulled;
+    return result;
+  }
+  if (result.status.outcome == ObservationOutcome::no_record) {
+    ++counters_.empty;
+    return result;
+  }
+  ++counters_.failed;
+  return result;
 }
 
 }  // namespace xverse::xcom

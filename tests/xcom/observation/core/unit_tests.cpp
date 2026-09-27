@@ -14,7 +14,9 @@
  * docs/engineering/xcom/t021/verification-plan.md (XCOM-SW-OBS-001, FR-011). T022 adds the bounded
  * drop, coalesce, lossless pre-dispatch, applied validity-effect, realized-status, and
  * acknowledgement-interval cases of docs/engineering/xcom/t022/verification-plan.md
- * (XCOM-SW-OBS-003, FR-013, SC-004).
+ * (XCOM-SW-OBS-003, FR-013, SC-004). T023 adds the visible consumer-counter, disconnect-isolation,
+ * failure-isolation, and blocking-isolation cases of docs/engineering/xcom/t023/verification-plan.md
+ * (XCOM-SW-OBS-004, FR-014, SC-005).
  */
 
 #include "xverse/xcom/observation.hpp"
@@ -1145,6 +1147,206 @@ using namespace xverse::xcom;
                 "reconnected pull path");
 }
 
+/** @brief Verify the synthetic sink's visible consumer counters track each pull outcome exactly. */
+[[nodiscard]] bool test_synthetic_sink_visible_counters() {
+  const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 4U,
+                                        ObservationOverflowPolicy::drop_newest));
+  if (!expect(tap.handle.has_value(), "visible counters attachment")) {
+    return false;
+  }
+  SyntheticObservationSink sink(hub, *tap.handle);
+  const SyntheticSinkCounters initial = sink.counters();
+  bool valid = expect(initial.pulled == 0U && initial.empty == 0U &&
+                          initial.disconnected == 0U && initial.failed == 0U,
+                      "counters start at zero") &&
+               expect(sink.connected(), "sink starts connected");
+  static_cast<void>(emit(hub, alpha, 1U));
+  static_cast<void>(emit(hub, alpha, 2U));
+  const auto first = sink.pull();
+  const auto second = sink.pull();
+  const SyntheticSinkCounters after_records = sink.counters();
+  valid = expect(first.record.has_value() && *first.record->sequence() == 1U &&
+                     second.record.has_value() && *second.record->sequence() == 2U,
+                 "records returned in FIFO order") &&
+          expect(after_records.pulled == 2U && after_records.empty == 0U &&
+                     after_records.disconnected == 0U && after_records.failed == 0U,
+                 "successful pulls counted once each") &&
+          valid;
+  const auto empty = sink.pull();
+  const SyntheticSinkCounters after_empty = sink.counters();
+  valid = expect(empty.status.outcome == ObservationOutcome::no_record,
+                 "empty pull reports no_record") &&
+          expect(after_empty.pulled == 2U && after_empty.empty == 1U,
+                 "empty pull counted once") &&
+          valid;
+  sink.disconnect();
+  const auto disconnected = sink.pull();
+  const SyntheticSinkCounters after_disconnect = sink.counters();
+  valid = expect(!sink.connected() &&
+                     disconnected.status.outcome == ObservationOutcome::sink_disconnected,
+                 "disconnect reports sink_disconnected") &&
+          expect(after_disconnect.disconnected == 1U && after_disconnect.empty == 1U,
+                 "disconnected pull counted once") &&
+          valid;
+  const auto reconnected = sink.connect();
+  const SyntheticSinkCounters after_connect = sink.counters();
+  valid = expect(reconnected.succeeded() && sink.connected(), "reconnect restores pulling") &&
+          expect(after_connect.disconnected == 1U && after_connect.pulled == 2U &&
+                     after_connect.empty == 1U && after_connect.failed == 0U,
+                 "connect does not change counters") &&
+          valid;
+  const auto detached = hub.detach(*tap.handle);
+  const auto failed = sink.pull();
+  const SyntheticSinkCounters final_counts = sink.counters();
+  const std::uint64_t attempts = final_counts.pulled + final_counts.empty +
+                                 final_counts.disconnected + final_counts.failed;
+  return expect(detached.succeeded() &&
+                    failed.status.outcome == ObservationOutcome::invalid_tap_handle,
+                "stale handle reports invalid_tap_handle") &&
+         expect(final_counts.failed == 1U && attempts == 5U,
+                "accounting identity holds over five pull attempts") &&
+         valid;
+}
+
+/** @brief Verify a local disconnect isolates its own sink and consumes no retained record. */
+[[nodiscard]] bool test_synthetic_sink_disconnect_isolation() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto first_tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                              ObservationOverflowPolicy::drop_newest));
+  const auto second_tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                               ObservationOverflowPolicy::drop_newest));
+  if (!expect(first_tap.handle.has_value() && second_tap.handle.has_value(),
+              "disconnect isolation attachment")) {
+    return false;
+  }
+  SyntheticObservationSink sink_a(hub, *first_tap.handle);
+  SyntheticObservationSink sink_b(hub, *second_tap.handle);
+  static_cast<void>(emit(hub, alpha, 1U));
+  const auto before = hub.snapshot(*first_tap.handle);
+  sink_a.disconnect();
+  const auto blocked = sink_a.pull();
+  const auto after = hub.snapshot(*first_tap.handle);
+  bool valid = expect(blocked.status.outcome == ObservationOutcome::sink_disconnected &&
+                          !blocked.record.has_value(),
+                      "disconnected sink consumes nothing") &&
+               expect(before.has_value() && before->queued == 1U && before->accepted == 1U &&
+                          after.has_value() && after->queued == 1U && after->accepted == 1U &&
+                          after->dropped == 0U,
+                      "disconnect leaves the observed tap unchanged") &&
+               expect(sink_a.counters().disconnected == 1U && sink_a.counters().pulled == 0U,
+                      "disconnected counter visible");
+  const auto other = sink_b.pull();
+  valid = expect(other.record.has_value() && *other.record->sequence() == 1U &&
+                     sink_b.counters().pulled == 1U,
+                 "unrelated sink is unaffected") &&
+          valid;
+  const auto reconnected = sink_a.connect();
+  const auto restored = sink_a.pull();
+  valid = expect(reconnected.succeeded() && restored.record.has_value() &&
+                     *restored.record->sequence() == 1U && sink_a.counters().pulled == 1U,
+                 "reconnect restores the retained record") &&
+          valid;
+  return valid;
+}
+
+/** @brief Verify a stale, foreign, or closed exact handle fails without mutating any tap. */
+[[nodiscard]] bool test_synthetic_sink_failure_isolation() {
+  ObservationHub hub;
+  ObservationHub foreign_hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                        ObservationOverflowPolicy::drop_newest));
+  const auto foreign_tap = foreign_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                                        ObservationOverflowPolicy::drop_newest));
+  if (!expect(tap.handle.has_value() && foreign_tap.handle.has_value(),
+              "failure isolation attachment")) {
+    return false;
+  }
+  SyntheticObservationSink sink(hub, *tap.handle);
+  SyntheticObservationSink foreign_sink(hub, *foreign_tap.handle);
+  const auto foreign_pull = foreign_sink.pull();
+  const auto foreign_snapshot = foreign_hub.snapshot(*foreign_tap.handle);
+  const auto foreign_at_this_hub = hub.snapshot(*foreign_tap.handle);
+  bool valid = expect(foreign_pull.status.outcome == ObservationOutcome::invalid_tap_handle &&
+                          !foreign_pull.record.has_value() &&
+                          foreign_sink.counters().failed == 1U,
+                      "foreign handle fails and is counted") &&
+               expect(foreign_snapshot.has_value() && foreign_snapshot->accepted == 0U &&
+                          foreign_snapshot->queued == 0U,
+                      "foreign hub slot unchanged") &&
+               expect(!foreign_at_this_hub.has_value(),
+                      "foreign handle authenticates at neither hub");
+  const auto detached = hub.detach(*tap.handle);
+  const auto failed = sink.pull();
+  valid = expect(detached.succeeded() &&
+                     failed.status.outcome == ObservationOutcome::invalid_tap_handle &&
+                     sink.counters().failed == 1U,
+                 "detached handle fails and is counted") &&
+          valid;
+  const auto recreated = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                              ObservationOverflowPolicy::drop_newest));
+  const auto recreated_snapshot = hub.snapshot(*recreated.handle);
+  const auto refused = sink.connect();
+  valid = expect(recreated.handle.has_value() && recreated_snapshot.has_value() &&
+                     recreated_snapshot->accepted == 0U && recreated_snapshot->queued == 0U,
+                 "recreated slot keeps its own counters") &&
+          expect(refused.outcome == ObservationOutcome::invalid_tap_handle && !sink.connected(),
+                 "stale reconnect refused and leaves the sink disabled") &&
+          valid;
+  return valid;
+}
+
+/** @brief Verify a connected non-pulling sink never blocks a bounded, loss-visible tap. */
+[[nodiscard]] bool test_synthetic_sink_blocking_isolation() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto drop_tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                             ObservationOverflowPolicy::drop_newest));
+  const auto coalesce_tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                                 ObservationOverflowPolicy::coalesce_latest));
+  if (!expect(drop_tap.handle.has_value() && coalesce_tap.handle.has_value(),
+              "blocking isolation attachment")) {
+    return false;
+  }
+  SyntheticObservationSink drop_sink(hub, *drop_tap.handle);
+  SyntheticObservationSink coalesce_sink(hub, *coalesce_tap.handle);
+  bool accepted = true;
+  for (std::uint64_t sequence = 1U; sequence <= 5U; ++sequence) {
+    accepted = emit(hub, alpha, sequence).succeeded() && accepted;
+  }
+  const auto drop_snapshot = hub.snapshot(*drop_tap.handle);
+  const auto coalesce_snapshot = hub.snapshot(*coalesce_tap.handle);
+  const SyntheticSinkCounters drop_before = drop_sink.counters();
+  const SyntheticSinkCounters coalesce_before = coalesce_sink.counters();
+  bool valid = expect(accepted, "saturation stays best effort without blocking") &&
+               expect(drop_snapshot.has_value() && drop_snapshot->queued == 2U &&
+                          drop_snapshot->accepted == 2U && drop_snapshot->dropped == 3U,
+                      "drop loss counters visible within the bound") &&
+               expect(coalesce_snapshot.has_value() && coalesce_snapshot->queued == 2U &&
+                          coalesce_snapshot->accepted == 2U && coalesce_snapshot->coalesced == 3U,
+                      "coalesce loss counters visible within the bound") &&
+               expect(drop_before.pulled == 0U && drop_before.empty == 0U &&
+                          drop_before.disconnected == 0U && drop_before.failed == 0U &&
+                          coalesce_before.pulled == 0U && coalesce_before.failed == 0U,
+                      "sink counters stay zero until it pulls");
+  const auto retained_first = drop_sink.pull();
+  const auto retained_second = drop_sink.pull();
+  const auto exhausted = drop_sink.pull();
+  valid = expect(retained_first.record.has_value() && *retained_first.record->sequence() == 1U &&
+                     retained_second.record.has_value() && *retained_second.record->sequence() == 2U,
+                 "bounded records keep FIFO order after saturation") &&
+          expect(exhausted.status.outcome == ObservationOutcome::no_record &&
+                     drop_sink.counters().pulled == 2U && drop_sink.counters().empty == 1U,
+                 "counters reflect only the sink's own pulls") &&
+          valid;
+  return valid;
+}
+
 }  // namespace
 
 /** @brief Run all focused observation fixtures. @return Zero only when every check passes. */
@@ -1163,7 +1365,10 @@ int main() {
                  test_validity_state_vocabulary() && test_acknowledge_closes_validity_interval() &&
                  test_lossless_reservations() &&
                  test_competing_reservation_interleaving() && test_exact_tap_handles() &&
-                 test_synthetic_sink_concurrency()
+                 test_synthetic_sink_concurrency() && test_synthetic_sink_visible_counters() &&
+                 test_synthetic_sink_disconnect_isolation() &&
+                 test_synthetic_sink_failure_isolation() &&
+                 test_synthetic_sink_blocking_isolation()
              ? 0
              : 1;
 }

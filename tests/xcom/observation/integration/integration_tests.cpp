@@ -408,6 +408,73 @@ using xverse::xcom::observation_test::make_tap_spec;
   return true;
 }
 
+/** Verify a disconnected and a stale observer leave the bounded loopback route unchanged. */
+[[nodiscard]] bool test_synthetic_sink_route_isolation_counters() {
+  ObservationHub hub;
+  const auto attached = hub.attach(make_tap_spec(
+      {}, ObservationPayloadMode::metadata_only, 0U, 8U,
+      ObservationOverflowPolicy::drop_newest));
+  Scenario scenario("sink-isolation", InteractionKind::message_event, 4U, &hub);
+  if (!expect(attached.handle.has_value() && scenario.ready(), "route isolation fixture setup")) {
+    return false;
+  }
+  SyntheticObservationSink sink(hub, *attached.handle);
+  sink.disconnect();
+  const auto first = scenario.item(1U);
+  if (!expect(first.has_value() &&
+                  scenario.composition()
+                          .submit(scenario.provider_handle(), *first.value(), scenario.lifecycle())
+                          .outcome() == ProviderOutcome::accepted,
+              "disconnected observer blocks submission")) {
+    return false;
+  }
+  const auto disconnected = sink.pull();
+  const auto route_after_disconnect = scenario.composition().route_state(scenario.provider_handle());
+  const auto tap_after_disconnect = hub.snapshot(*attached.handle);
+  if (!expect(disconnected.status.outcome == ObservationOutcome::sink_disconnected &&
+                  sink.counters().disconnected == 1U,
+              "disconnected counter visible") ||
+      !expect(route_after_disconnect.has_value() &&
+                  route_after_disconnect.value()->queued_items() == 1U,
+              "disconnected observer changed the route") ||
+      !expect(tap_after_disconnect.has_value() && tap_after_disconnect->queued == 1U,
+              "disconnected observer consumed a retained record")) {
+    return false;
+  }
+  const auto reconnected = sink.connect();
+  const auto detached = hub.detach(*attached.handle);
+  const auto second = scenario.item(2U);
+  if (!expect(reconnected.succeeded() && detached.succeeded() && second.has_value() &&
+                  scenario.composition()
+                          .submit(scenario.provider_handle(), *second.value(), scenario.lifecycle())
+                          .outcome() == ProviderOutcome::accepted,
+              "route accepts after observer removal")) {
+    return false;
+  }
+  const auto failed = sink.pull();
+  const auto stale_snapshot = hub.snapshot(*attached.handle);
+  const auto route_after_removal = scenario.composition().route_state(scenario.provider_handle());
+  if (!expect(failed.status.outcome == ObservationOutcome::invalid_tap_handle &&
+                  sink.counters().failed == 1U && !stale_snapshot.has_value(),
+              "stale observer fails safely") ||
+      !expect(route_after_removal.has_value() &&
+                  route_after_removal.value()->queued_items() == 2U,
+              "observer removal changed the route count")) {
+    return false;
+  }
+  for (unsigned int sequence = 1U; sequence <= 2U; ++sequence) {
+    const auto received =
+        scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+    if (!expect(received.has_value() &&
+                    received.value()->timestamp().nanoseconds() ==
+                        static_cast<std::int64_t>(sequence),
+                "observer failure reordered the route")) {
+      return false;
+    }
+  }
+  return true;
+}
+
 }  // namespace
 
 /** @return Zero only when every integration fixture passes. */
@@ -418,6 +485,7 @@ int main() {
                       test_best_effort_isolation() &&
                       test_lossless_pre_dispatch_reservation() &&
                       test_shared_hub_competing_reservation() &&
-                      test_concurrent_publication();
+                      test_concurrent_publication() &&
+                      test_synthetic_sink_route_isolation_counters();
   return passed ? 0 : 1;
 }
