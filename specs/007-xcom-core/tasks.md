@@ -19,7 +19,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 2: Repository-owned engineering baseline
 
-- [ ] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
+- [X] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
   stimulation, integration/evidence, and independent-review work; bind every slice to its exact baseline
   and authorization.
 - [ ] T008 Maintain and review stakeholder/system/software requirements and bidirectional
