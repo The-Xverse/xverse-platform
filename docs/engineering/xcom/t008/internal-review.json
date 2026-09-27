@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "task_id": "T008",
+  "baseline_revision": "957a60723f99c3a31efba1cbd137c454c4acb462",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 5,
+  "supersedes": 4,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t008/architecture.md",
+    "docs/engineering/xcom/t008/detailed-design.md",
+    "docs/engineering/xcom/t008/implementation.md",
+    "docs/engineering/xcom/t008/requirements-register.json",
+    "docs/engineering/xcom/t008/requirements-register.md",
+    "docs/engineering/xcom/t008/requirements.md",
+    "docs/engineering/xcom/t008/traceability-matrix.json",
+    "docs/engineering/xcom/t008/traceability-matrix.md",
+    "docs/engineering/xcom/t008/unit-specifications.md",
+    "docs/engineering/xcom/t008/verification-plan.md",
+    "docs/engineering/xcom/task-ownership.json",
+    "docs/engineering/xcom/task-ownership.md",
+    "scripts/validate_xcom_requirements_traceability.py",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "R5-CHK-01",
+      "name": "Exact candidate inventory and docs-only boundary",
+      "method": "git diff --name-only/--check against the baseline; classified each changed path and diffed the checkpointed (pre-repair) file set against the current worktree",
+      "result": "pass: exactly 14 tracked changed paths and no untracked candidate file other than the (replaced) review record; no src/, tests/, or xdl/ path; git diff --check exits 0; the only capability-state change is the single T008 checkbox in specs/007-xcom-core/tasks.md; T008 is the latest task marked complete (T009+ remain unchecked). The repair changed exactly detailed-design.md, implementation.md, requirements.md, verification-plan.md, and the validator relative to checkpoint 01M3GK2HCDJ02N29SNAA1FV137, matching the declared repair scope."
+    },
+    {
+      "id": "R5-CHK-02",
+      "name": "Validator modes, determinism, and bounded resources on the repaired candidate",
+      "method": "ran --verify, --check-human, and --self-test; ran --verify twice; inspected the validator for writes/network/subprocess/threads and input bounds",
+      "result": "pass: --verify and --check-human both exit 0; --self-test prints the positive fixture and rejects NEG-01..NEG-28 with their declared exit classes and exits 0; two --verify runs produce byte-identical stdout (sha256 aff780c7…), reproducing the recorded determinism evidence; wall clock well under the 60 s bound; the validator opens no file for writing, spawns no subprocess/thread, and opens no network peer, reading only the five repository-relative inputs plus the T007 ownership register under the declared 1 MiB/file and 4 MiB total bounds."
+    },
+    {
+      "id": "R5-CHK-03",
+      "name": "T008-IR-007 closure: declared ordering set equals enforced ordering set (ORD-01)",
+      "method": "mechanically extracted the id-sorted array names from detailed-design.md §4 (Serialization) and the array labels iterated by _check_ordering, and compared the two sets; inspected §3 schema rows independently",
+      "result": "pass: both sets equal {requirements, ref002_dispositions, artifacts, links}. detailed-design.md §3 now declares requirements and ref002_dispositions 'sorted by id (validator-enforced)', §4 declares artifacts/links 'sorted by id … ids unique (validator-enforced)', and the new normative 'Array ordering' paragraph names exactly the four top-level arrays while stating nested arrays (source_anchors, refines, acceptance_criteria, covers) preserve authored order. No residual 'Sorted requirement ids' or 'every array sorted lexicographically' wording remains, so option (a) of the finding's required_correction is satisfied."
+    },
+    {
+      "id": "R5-CHK-04",
+      "name": "Register nested-array ordering now declared and valid; data and projections unchanged",
+      "method": "read XCOM-SW-XDL-001.refines/source_anchors and XCOM-STK-001.source_anchors from the register; confirmed the register and requirements-register.md are byte-identical to the checkpoint; re-ran --check-human",
+      "result": "pass: XCOM-SW-XDL-001.refines = ['XCOM-SYS-FR-031','XCOM-SYS-FR-002'], XCOM-SW-XDL-001.source_anchors = ['FR-031','FR-002'], and XCOM-STK-001.source_anchors = ['US1','SC-001','SC-002'] are stored in authored (primary-first) order, which the narrowed §3/§4 now explicitly declares valid and deliberately not sorted; requirements-register.json (bc6cc9fe…) and requirements-register.md (ca1c4357…) are byte-unchanged from revision 3 and the md remains the exact deterministic projection."
+    },
+    {
+      "id": "R5-CHK-05",
+      "name": "Validator repair did not weaken any accepted check; _check_ordering is load-bearing",
+      "method": "diffed the checkpointed validator against the current validator; neutralised _check_ordering in-memory and re-ran _self_test",
+      "result": "pass: the only change to scripts/validate_xcom_requirements_traceability.py is the _check_ordering docstring; every check function body, exit class, fixture, and bound is unchanged. Neutralising _check_ordering makes --self-test exit nonzero (NEG-25/26/27 collapse to OK), confirming the ordering/uniqueness enforcement remains load-bearing after the repair; restoring it returns exit 0."
+    },
+    {
+      "id": "R5-CHK-06",
+      "name": "Negative self-test coverage for the declared ordering contract",
+      "method": "read the NEG fixture definitions and observed their declared exits under --self-test",
+      "result": "pass: NEG-25 (duplicated link id -> SCHEMA_INVALID), NEG-26 (duplicated artifact id -> SCHEMA_INVALID), and NEG-27 (out-of-order requirement array -> SCHEMA_INVALID) exercise the four enforced arrays and their uniqueness; they reject with the declared exit class (2), and all other pre-existing fixtures still reject with their declared classes."
+    },
+    {
+      "id": "R5-CHK-07",
+      "name": "Data fidelity, counts, and recorded artifact hashes",
+      "method": "recomputed the eight sha256 values recorded in implementation.md and the register/matrix counts, id ordering/uniqueness, and link totals",
+      "result": "pass: all eight recorded sha256 values match the on-disk bytes; 91 requirements (8 stakeholder / 46 system / 37 software; 35 FR + 11 SC), 20 REF-002 dispositions, 21 artifacts, 327 links; requirements/ref002_dispositions/artifacts/links are sorted by id and unique; no allocated/deferred REF-002 id is referenced by an established implemented_by link."
+    },
+    {
+      "id": "R5-CHK-08",
+      "name": "Ownership, baseline, and authorization binding",
+      "method": "re-ran the T007 ownership validator and verified the modified ownership entry and register/matrix baseline binding",
+      "result": "pass: validate_xcom_task_ownership.py --verify and --check-human exit 0; the ownership diff is one line per projection adding scripts/validate_xcom_requirements_traceability.py to T-ENABLER paths_exclusive with no other field changed; the register and matrix bind baseline 957a607… with the declared candidate-revision rule and an authorization set drawn only from ACC001–ACC015/ADR-0018/ADR-0019/ADR-0020; no accepted ADR or requirement text was edited."
+    },
+    {
+      "id": "R5-CHK-09",
+      "name": "Public safety and REF-002 non-promotion",
+      "method": "scanned the candidate artifacts and validator for absolute host paths, private addresses, credential tokens, and key markers; checked the T008-SR-012 carve-out; reviewed the REF-002 disposition table",
+      "result": "pass: the only absolute-path occurrences are the pre-existing, explicitly scoped workflow-infrastructure carve-out in architecture.md/verification-plan.md/implementation.md (T008-SR-012) and the intentional forbidden-path literal inside the NEG-20 fixture; no credential/private-address/key-marker content occurs in the register, matrix, projections, or real validator output; REF-002 dispositions remain allocated/deferred at architectural-target maturity with no promotion."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "T008 internal read-only review (revision 5) of the revision-4 repaired candidate; it supersedes revision 4 and neither accepts nor integrates the candidate.",
+    "T008-IR-007 is closed under option (a): the declared ordering rules in detailed-design.md §3/§4 now name exactly the four top-level arrays the validator enforces ({requirements, ref002_dispositions, artifacts, links}), and nested arrays are explicitly declared authored-order. Closing check ORD-01 reproduces mechanically, and the register data already conforms without change.",
+    "No accepted check was weakened: the validator change is docstring-only, executable behaviour and every exit class are unchanged, and _check_ordering remains load-bearing (NEG-25/26/27). All prior closures (T008-IR-003 system-text fidelity; T008-IR-004/005/006) remain intact, and determinism, bounds, offline purity, ownership binding, artifact hashes, and public-safety scope all hold.",
+    "External Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes.",
+    "Any further repair creates a successor candidate and must repeat --self-test, --verify, --check-human, the neutralisation probes, the T007 ownership checks, the artifact-hash check, and this review."
+  ]
+}

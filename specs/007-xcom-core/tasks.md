@@ -22,7 +22,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [X] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
   stimulation, integration/evidence, and independent-review work; bind every slice to its exact baseline
   and authorization.
-- [ ] T008 Maintain and review stakeholder/system/software requirements and bidirectional
+- [X] T008 Maintain and review stakeholder/system/software requirements and bidirectional
   requirement/design/code/test/measure traceability.
 - [ ] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
   contracts.
