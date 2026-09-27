@@ -38,7 +38,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [X] T013 Implement immutable contract, item, origin, time, correlation, diagnostic, and policy types.
 - [X] T014 Implement bounded endpoint/route lifecycle and exact generation-bound ownership handles.
 - [X] T015 Implement explicit provider composition and the owned loopback provider.
-- [ ] T016 Add unit and negative tests for interaction kinds, capabilities, policy, ownership, lifecycle,
+- [X] T016 Add unit and negative tests for interaction kinds, capabilities, policy, ownership, lifecycle,
   queue bounds, deterministic diagnostics, and recovery.
 
 ## Phase 4: XDL-derived activation plan (US1)

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "task_id": "T016",
+  "baseline_revision": "44d2001d48dd42dc9ed489a40d2a5f908b734501",
+  "candidate_state": "Working-tree successor candidate over the authorized baseline 44d2001d48dd42dc9ed489a40d2a5f908b734501. The deterministic inventory is exactly 20 paths: 7 tracked edits (the T016 test/build/ledger edits plus the 5 repaired inherited provenance records) and 13 new files (6 T016 plan/implementation work products and 7 core_matrix test sources). The generated docs/engineering/xcom/t016/internal-review.json and reports/xcom-queue/t016-package.json are excluded from the inventory, exactly as xcom_feature_gate.candidate_paths requires. Frozen checkpoint dc71d9f6759e795d18dcae90f0939e96d150eb44 is the reviewed predecessor; this pass re-reviews the successor that also repairs the inherited T020 provenance hashes.",
+  "stage": "internal_review",
+  "review_type": "internal_review",
+  "review_revision": 3,
+  "reviewer": "DeepSeek Flash internal review (fresh separate read-only pass over the repaired successor; supersedes review_revision 2; not external Codex review and not user acceptance)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t016/architecture.md",
+    "docs/engineering/xcom/t016/detailed-design.md",
+    "docs/engineering/xcom/t016/implementation.md",
+    "docs/engineering/xcom/t016/requirements.md",
+    "docs/engineering/xcom/t016/unit-specifications.md",
+    "docs/engineering/xcom/t016/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "tests/xcom/core_matrix/concurrency_tests.cpp",
+    "tests/xcom/core_matrix/consumer/main.cpp",
+    "tests/xcom/core_matrix/fault_boundary_tests.cpp",
+    "tests/xcom/core_matrix/negative_tests.cpp",
+    "tests/xcom/core_matrix/recovery_tests.cpp",
+    "tests/xcom/core_matrix/test_support.hpp",
+    "tests/xcom/core_matrix/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "IR-01-candidate-inventory-and-scope",
+      "method": "Recompute the deterministic inventory exactly as xcom_feature_gate.candidate_paths: git diff --name-only 44d2001d48dd42dc9ed489a40d2a5f908b734501 -- , union git ls-files --others --exclude-standard, minus the generated review record and package manifest.",
+      "result": "pass",
+      "observed": "Exactly 20 paths: 7 tracked edits (specs/007-xcom-core/tasks.md, src/xverse/xcom/CMakeLists.txt, engineering/trace/links.json, engineering/stage-results/{documentation,implementation,integration,internal-review}.json) and 13 new files (6 T016 work products, 7 core_matrix test sources). reviewed_paths is set-equal to that inventory. No production .hpp/.cpp unit, cmake/*.cmake, root CMakeLists.txt, xdl/, proto/, src/xverse_xdl/, another task's test path, or another task's documentation path is present."
+    },
+    {
+      "id": "IR-02-repair-isolation",
+      "method": "git show dc71d9f:<path> | diff - <path> for every T016 path; git diff 44d2001 -- engineering/trace/links.json engineering/stage-results/.",
+      "result": "pass",
+      "observed": "The repair changed only provenance: docs/engineering/xcom/t016/implementation.md gained section 12 (lines 297-331), engineering/trace/links.json changed exactly one value (T020-L-046 target_revision, line 371), and engineering/stage-results/{documentation,implementation,integration,internal-review}.json each changed exactly one sha256 line. Every other T016 file (architecture.md, detailed-design.md, requirements.md, unit-specifications.md, verification-plan.md, all 7 core_matrix test sources, tasks.md, CMakeLists.txt) is byte-identical to the frozen reviewed checkpoint dc71d9f."
+    },
+    {
+      "id": "IR-03-inherited-link-hash",
+      "method": "sha256sum src/xverse/xcom/CMakeLists.txt; read engineering/trace/links.json T020-L-046 (line 370-371); fabro_engineering.core.validate_trace.",
+      "result": "pass",
+      "observed": "sha256(src/xverse/xcom/CMakeLists.txt) == 8f6d081225aba7d3c5fed9bf61e207ffa7b6f5a2014a15b522d2c488e56fa984, equal to the repaired T020-L-046 target_revision. validate_trace (which recomputes every implemented_by endpoint hash via code_endpoint) now returns {'artifacts': 37, 'links': 97}, so the previously observed 'stale endpoint revision in T020-L-046' is resolved. links.json sha256 == 5f066d8eb1da4aed960bbc782fdf2bb012ed7a1e95e8cf73b9d9463eda03a32d."
+    },
+    {
+      "id": "IR-04-stage-artifact-hashes",
+      "method": "For every engineering/stage-results/*.json, recompute sha256 of each declared artifact with hashlib.sha256; run audit_delivery_inputs.py (which executes validate_project, validate_trace, validate_stage).",
+      "result": "pass",
+      "observed": "All 8 inherited T020 stage records validate: provider=deepseek, backend=api, status=complete; every declared artifact hash matches the file on disk, including engineering/trace/links.json == 5f066d8eb1da4aed960bbc782fdf2bb012ed7a1e95e8cf73b9d9463eda03a32d in documentation.json, integration.json, and internal-review.json, and src/xverse/xcom/CMakeLists.txt == 8f6d0812... in implementation.json. Zero mismatches, zero missing artifacts."
+    },
+    {
+      "id": "IR-05-no-relation-or-test-removed",
+      "method": "Compare engineering/trace/links.json to git show 44d2001:engineering/trace/links.json; git diff --diff-filter=D --name-only 44d2001 --.",
+      "result": "pass",
+      "observed": "Both revisions contain 97 links with identical relation counts (refines 17, allocated_to 13, decomposes_to 5, implemented_by 12, verified_by 25, analyzed_by 5, validates 11, executed_as 9). No link id was added or removed; T020-L-046 is the only changed link, and only its target_revision hash. git diff --diff-filter=D reports no deleted tracked path, so no test, target, label, or existing source was removed."
+    },
+    {
+      "id": "IR-06-delivery-input-audit",
+      "method": "python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t016-checkpoint-flash/audit_delivery_inputs.py; exit status.",
+      "result": "pass",
+      "observed": "Output {'ok': true, 'stage_results': 8} with exit code 0, matching the delivery_inputs_gate result. The audit runs the unchanged core checkers over engineering/project.json, engineering/trace/links.json, and all eight stage results."
+    },
+    {
+      "id": "IR-07-build-and-test",
+      "method": "ctest --test-dir build/fabro-t016 -N; ctest --test-dir build/fabro-t016 --output-on-failure --parallel 4; ctest label summary.",
+      "result": "pass",
+      "observed": "Total Tests: 306 (baseline 248 + 58 T016). Independent full run: '100% tests passed, 0 tests failed out of 306'. Per-label totals: t016-unit 19, t016-negative 27, t016-recovery 5, t016-concurrency 3, t016-fault-boundary 3, t016 1 (external consumer). Existing suites t012, t019, t020-*, t025 all still pass, proving additivity. The repaired implementation.md records the same 306/100% result."
+    },
+    {
+      "id": "IR-08-negative-matrix",
+      "method": "Read tests/xcom/core_matrix/negative_tests.cpp (27 TEST cases) and cross-check each exact outcome/diagnostic against verification-plan.md section 5 and detailed-design.md section 4.2.",
+      "result": "pass",
+      "observed": "27 individually named CoreMatrixNegative cases span all four interaction families (signal_state_update via NEG-26, message_event via NEG-01..NEG-25, service_request, service_response via NEG-27) and the four classes (malformed NEG-01..05, incompatible NEG-06..14, over-capacity NEG-15..20, unauthorized/ownership NEG-21..25). Each asserts an exact stable ProviderOutcome and where required the exact XCOM-PROV-E0xx code plus a no-mutation property: rejection-before-dispatch (prepare_calls()==0 at negative_tests.cpp:168,185,202,220,258,296,321,341,362,691), unchanged queue snapshot/same_provider_state (negative_tests.cpp:494,512,533,657,714), not prepared/activated (negative_tests.cpp:297-298,322-323,363-364,692-693), or a still-usable retained route (negative_tests.cpp:586-592,612-613). No case is skipped, disabled, or tautological."
+    },
+    {
+      "id": "IR-09-capability-and-ownership-boundary",
+      "method": "Read unit_tests.cpp CapabilityMask_* / CapabilityContainment_* / DeclaredPolicy_* / Ownership_* and fault_boundary_tests.cpp CoreSurface_HasNoUncontrolledMutationEntryPoint.",
+      "result": "pass",
+      "observed": "Capability bits 1/2/4/8 and delivery/ordering bits are pinned (unit_tests.cpp:77-84); descriptor rejects zero and unknown masks (89-100); requested claims must be advertised (104-116); positive at_least_once -> reliable activation is asserted with probe counters (118-137). Same-identity routes differing only by declared FlowPolicy compare unequal (162-197), closing the T014 review note. Exact-handle copy/read and rvalue-snapshot readability are asserted (200-229). The uncontrolled-mutation proposition holds: the raw-token SFINAE detectors reject both submit and route_state signatures, and a healthy stack succeeds only through the exact handle (fault_boundary_tests.cpp:135-146). NEG-21/22/27 confirm a stale, foreign, or mismatched handle is rejected while the original route stays usable."
+    },
+    {
+      "id": "IR-10-lifecycle-and-bounded-queue",
+      "method": "Read unit_tests.cpp Lifecycle_* / QueueBounds_* and negative_tests.cpp NEG-17/18/20/23.",
+      "result": "pass",
+      "observed": "The accepted declare->validate->activate->drain->close table with idempotence and wrong-order rejection is asserted (unit_tests.cpp:236-279); the provider route prepared->active->draining->closed sequence and drain/close semantics are asserted (282-320). Bounds are exact: kMaximumRoutes==4, kMaximumQueueItems==8, kMaximumProviders==8, LifecycleController::kMaximumEndpoints/Routes==32, kMaximumPayloadBytes==65536, descriptor routes/queue <=32 (unit_tests.cpp:324-345). Reject-new saturation preserves every queued item and FIFO index (348-368; NEG-18 at negative_tests.cpp:498-518). NEG-17 exercises the 4-route loopback bound (416-495) and NEG-20 shows a draining route retains its item until received (538-557)."
+    },
+    {
+      "id": "IR-11-deterministic-diagnostics",
+      "method": "Read unit_tests.cpp Diagnostics_ExactProviderOutcomeMapping / Diagnostics_ByteStableOrderingAcrossConstructionOrder / Diagnostics_LocaleIndependent; cross-check provider.hpp outcome vocabulary.",
+      "result": "pass",
+      "observed": "The mapping table asserts to_string/provider_diagnostic_code/provider_diagnostic_message for all 29 ProviderOutcome values plus interrupted_resource (unit_tests.cpp:378-444), including the T015 unsupported_policy == XCOM-PROV-E030 row (414-415). Byte-stable ordering across permuted construction order is asserted via DiagnosticSet::serialize() equality (456-475), and locale independence across C/POSIX/C.UTF-8/en_US.UTF-8 is asserted (478-495). NEG-11 asserts the exact E030 message text 'declared route policy is not supported by the selected provider' (negative_tests.cpp:292-294)."
+    },
+    {
+      "id": "IR-12-recovery",
+      "method": "Read tests/xcom/core_matrix/recovery_tests.cpp (5 cases) and negative_tests.cpp NEG-20/21/25; check limitations T016-LIM-06.",
+      "result": "pass",
+      "observed": "Saturation-then-drain recovers FIFO and accepts new submissions again without loss or duplication (recovery_tests.cpp:29-52); a rejected operation leaves the route unchanged and reusable (55-73); a closed route recreated as a new generation rejects the earlier generation's handle while the recreated route works (76-113); reconcile after divergence reports interrupted_resource, never success (116-128); empty receive reports queue_empty with XCOM-PROV-I009 (131-138). Restart/durable reconciliation across processes is explicitly out of scope (T016-LIM-06) and not overstated."
+    },
+    {
+      "id": "IR-13-target-repository-assembly-precondition",
+      "method": "validate_project/validate_trace over the candidate; read the trusted policy system_integration; git -C target_repository rev-parse --verify <target_revision>^{commit}; check the assembly script exists.",
+      "result": "pass",
+      "observed": "The strict delivery path (check_delivery) calls validate_trace, which now passes over 37 artifacts and 97 links; the previously blocking stale T020-L-046 endpoint revision is cleared. The trusted policy declares mode=target_repository, target_id=xverse-platform, target_repository=/home/jefferson/xverse-phase5-system-integration (exists), target_revision=44d2001d48dd42dc9ed489a40d2a5f908b734501 (resolves to a commit in that repository), and assembly_command=/home/jefferson/x-verse_fabric/automation/assemble_xcom_queue_target.py (exists). The unit/static/integration/validation/delivery gates execute after this review under the queue candidate; this review confirms their provenance precondition is restored and does not itself execute a production workload."
+    },
+    {
+      "id": "IR-14-task-scope-and-additivity",
+      "method": "git diff 44d2001 -- specs/007-xcom-core/tasks.md src/xverse/xcom/CMakeLists.txt; read tasks.md T016/T021-T024 entries.",
+      "result": "pass",
+      "observed": "CMakeLists.txt is +64/-0: one appended T016 block registering five gtest_discover_tests suites and one external consumer; every pre-existing target, test name, label, command, and expected result is byte-unchanged. tasks.md is a single changed line: '- [ ] T016' -> '- [X] T016' (tasks.md:41). T021-T024 remain '- [ ]' (tasks.md:54-57). No observation, stimulation, gateway, or later-task source/header/test is added; no production unit outside the shared serialized CMake registration changes."
+    },
+    {
+      "id": "IR-15-source-to-test-trace",
+      "method": "Cross-check implementation.md section 6 and verification-plan.md section 8 requirement-to-check/test tables against the discovered CTest names; confirm every T016-SR-001..-020 maps to at least one named check and executable.",
+      "result": "pass",
+      "observed": "Every T016 requirement maps to a named CHK/NEG and, for the executable requirements, to a discovered test name (e.g. T016-SR-002 -> four InteractionKind_*_RoundTripsExactly; T016-SR-011 -> Neg01..Neg27; T016-SR-012 -> CoreSurface_*; T016-SR-009 -> the five CoreMatrixRecovery cases). NEG-28..NEG-30 are explicitly documented as inspection/repository probes, not executable cases, and are realized by the section 5 scans and the additivity evidence. No orphan check and no unverified requirement remains."
+    },
+    {
+      "id": "IR-16-diff-hygiene-public-safety-and-offline",
+      "method": "git diff --check 44d2001 --; rg for forbidden APIs; inspect the new sources and work products for public-safety and Doxygen content.",
+      "result": "pass",
+      "observed": "git diff --check is clean. The new test sources contain no socket/resolver/openssl/curl/fork/popen/dlopen/getenv/std::filesystem/::listen/TLS use; the only filesystem use is the bounded read-only scan of ten fixed committed headers in fault_boundary_tests.cpp (ifstream, 262144-byte cap), recorded in implementation.md section 5.1 and T016-LIM-07. Payload bytes are synthetic and bounded; no credential, private address, proprietary excerpt, or absolute host path appears. Every new file carries a @file/@brief block and the classes/helpers carry ownership/lifetime/thread-safety/failure tags."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Non-blocking consistency note: T016-SR-015 and requirements.md section 2.2 phrase the offline constraint as 'no ... filesystem ... access', while fault_boundary_tests.cpp reads ten fixed committed headers with std::ifstream. The read is a bounded, deterministic repository inspection of committed artifacts at a build-time path, explicitly recorded (implementation.md section 5.1, T016-LIM-07) and does not touch ambient, secret, process, network, or legacy state. The intent (no ambient/unadmitted I/O) is satisfied; the CHK-20 scan pattern does not include <fstream>, so this is the single documented deviation from the literal wording rather than a functional defect.",
+    "Non-blocking verification-strength note: the forbidden-vocabulary scan matches only whole words (is_word_char treats '_' as a word character, fault_boundary_tests.cpp:42-45), so a compound identifier such as fault_campaign would evade it. The whole-word rule is justified at this revision because 'fault' would otherwise false-match the benign word 'default'; a future hardening could tokenize on '_' and case boundaries. This is a regression-sensitivity improvement, not a defect in the current evidence.",
+    "Non-blocking documentation note: detailed-design.md section 3.1 lists design helper signatures (core_digest(), make_item(fixture, sequence), a five-argument loopback_descriptor, make_contract returning std::optional) that differ in name/shape from the realized symbols recorded in implementation.md section 3.1 (kCoreDigest, CoreStackFixture::item(), a three-argument loopback_descriptor, make_contract returning Result). The pre-code design hedges these as '(design)'; the realized units are documented accurately in unit-specifications.md and implementation.md.",
+    "Non-blocking diagnostic note: NEG-10, NEG-15, and NEG-16 assert the exact ProviderOutcome (and, for NEG-15/16, the retained-slot/no-dispatch properties) rather than re-asserting the derived XCOM-PROV-E0xx code inline; the outcome-to-code mapping is verified exhaustively for all 29 outcomes plus interrupted_resource by CHK-13 (unit_tests.cpp:378-444), so the diagnostic is still pinned exactly.",
+    "Non-blocking test note: NEG-23 (negative_tests.cpp:617-635) asserts the inactive_route outcome on a prepared and on a draining route but does not additionally assert a zero queued-items count; the non-active outcome already precludes queuing, and the neighbouring NEG-20/24 cases assert the queue state directly.",
+    "This review is a fresh, separate read-only pass over the exact 20-path repaired successor candidate. No production file, test, or provenance record was edited; the only file written is this generated review record. The prior review's T016-IR-01 (medium, family coverage) and T016-IR-02 (low, no-mutation assertions) remain verified closed by NEG-26/NEG-27 and the NEG-11/12/14 assertions, and the inherited T020 provenance-hash repair is verified complete."
+  ],
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)"
+}

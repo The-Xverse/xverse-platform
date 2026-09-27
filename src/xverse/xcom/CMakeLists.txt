@@ -771,4 +771,68 @@ if(BUILD_TESTING)
       PROPERTIES LABELS "t020-${label}"
     )
   endforeach()
+
+  # T016 consolidated core unit and negative test matrix under tests/xcom/core_matrix/. Registration
+  # is additive: no existing target, test name, label, command, or expected result is changed. Each
+  # suite uses gtest_discover_tests so every SC-001 rejection case is individually named and
+  # reportable, and each carries one hyphenated `t016-*` label (CMake 3.22 label workaround). The
+  # fault-boundary suite receives the committed public-header include directory as a build-time path
+  # for its bounded read-only vocabulary scan.
+  foreach(
+    core_matrix_kind
+    IN ITEMS
+      unit
+      negative
+      recovery
+      concurrency
+      fault_boundary
+  )
+    string(REPLACE "_" "-" core_matrix_label "${core_matrix_kind}")
+    add_executable(
+      xverse_xcom_core_matrix_${core_matrix_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/core_matrix/${core_matrix_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_core_matrix_${core_matrix_kind}_tests
+      PRIVATE
+        "${PROJECT_SOURCE_DIR}/tests/xcom/core_matrix"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom"
+    )
+    target_compile_definitions(
+      xverse_xcom_core_matrix_${core_matrix_kind}_tests
+      PRIVATE
+        "XCOM_T016_INCLUDE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom\""
+    )
+    target_link_libraries(
+      xverse_xcom_core_matrix_${core_matrix_kind}_tests
+      PRIVATE
+        xverse::xcom_provider_loopback
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_core_matrix_${core_matrix_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_core_matrix_${core_matrix_kind}_tests
+      PROPERTIES LABELS "t016-${core_matrix_label}"
+    )
+  endforeach()
+
+  add_executable(
+    xverse_xcom_core_matrix_consumer
+    "${PROJECT_SOURCE_DIR}/tests/xcom/core_matrix/consumer/main.cpp"
+  )
+  target_link_libraries(
+    xverse_xcom_core_matrix_consumer
+    PRIVATE xverse::xcom_provider_loopback
+  )
+  xverse_xcom_apply_runtime_rules(xverse_xcom_core_matrix_consumer)
+  add_test(
+    NAME xcom_core_matrix_external_consumer
+    COMMAND xverse_xcom_core_matrix_consumer
+  )
+  set_tests_properties(
+    xcom_core_matrix_external_consumer
+    PROPERTIES LABELS "t016"
+  )
 endif()
