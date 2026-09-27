@@ -1,0 +1,3689 @@
+{
+  "schema_version": 1,
+  "task_id": "T010",
+  "capability": "007-xcom-core",
+  "baseline_revision": "abb81681e0d844edaecbaf2843f1c2a7deb1e40f",
+  "candidate_revision_rule": "Every candidate records its own exact revision and the exact accepted predecessor revision it derives from; acceptance is per candidate and is never inherited from a sibling or inferred from source presence.",
+  "family_vocabulary": [
+    "CORE",
+    "ENB",
+    "GW",
+    "INTG",
+    "OBS",
+    "STIM",
+    "XDL"
+  ],
+  "kind_vocabulary": [
+    "boundary",
+    "build-time",
+    "data-plane",
+    "derived-artifact",
+    "documentation",
+    "edge",
+    "evidence",
+    "test-fixture"
+  ],
+  "language_vocabulary": [
+    "cpp",
+    "json",
+    "markdown",
+    "proto",
+    "python"
+  ],
+  "maturity_vocabulary": [
+    "allocated",
+    "conflicting",
+    "deferred",
+    "implemented",
+    "needs_clarification",
+    "partial",
+    "superseded"
+  ],
+  "ownership_vocabulary": [
+    "caller-owns-value",
+    "gateway-issued-handle",
+    "platform-owns-shared",
+    "provider-issued-handle",
+    "session-issued-handle",
+    "task-owns-artifact"
+  ],
+  "lifetime_vocabulary": [
+    "document-scoped",
+    "endpoint-generation",
+    "invocation-scoped",
+    "plan-scoped",
+    "process-scoped",
+    "route-scoped",
+    "session-scoped",
+    "static-immutable"
+  ],
+  "thread_safety_vocabulary": [
+    "externally-synchronized",
+    "immutable-value",
+    "internally-synchronized",
+    "message-passing",
+    "offline-single-threaded",
+    "process-isolated",
+    "read-only-static",
+    "single-thread-owner"
+  ],
+  "bound_kind_vocabulary": [
+    "bytes",
+    "capacity",
+    "deadline",
+    "depth",
+    "quota",
+    "rate",
+    "retry",
+    "thread-count",
+    "timeout"
+  ],
+  "overflow_policy_vocabulary": [
+    "coalesce",
+    "drop-newest",
+    "drop-oldest",
+    "fail-closed",
+    "lossless-backpressure",
+    "n/a",
+    "reject"
+  ],
+  "outcome_vocabulary": [
+    "accepted",
+    "cancelled",
+    "delivered",
+    "evidence-incomplete",
+    "expired",
+    "failed",
+    "rejected",
+    "unknown"
+  ],
+  "doxygen_tag_vocabulary": [
+    "brief",
+    "failure",
+    "file",
+    "ingroup",
+    "lifetime",
+    "note",
+    "ownership",
+    "param",
+    "post",
+    "pre",
+    "retval",
+    "return",
+    "thread_safety"
+  ],
+  "adr_vocabulary": [
+    "ADR-0016",
+    "ADR-0018",
+    "ADR-0019",
+    "ADR-0020"
+  ],
+  "authorization_records": [
+    "ACC001",
+    "ACC002",
+    "ACC003",
+    "ACC004",
+    "ACC005",
+    "ACC006",
+    "ACC007",
+    "ACC008",
+    "ACC009",
+    "ACC010",
+    "ACC011",
+    "ACC012",
+    "ACC013",
+    "ACC014",
+    "ACC015",
+    "ADR-0018",
+    "ADR-0019",
+    "ADR-0020"
+  ],
+  "ref002": {
+    "disposition": "unchanged",
+    "promoted": [],
+    "source": "specs/007-xcom-core/reference-traceability.md"
+  },
+  "dependencies": {
+    "task_ownership": "docs/engineering/xcom/task-ownership.json",
+    "requirement_register": "docs/engineering/xcom/t008/requirements-register.json",
+    "architecture_model": "docs/engineering/xcom/t009/architecture-model.json"
+  },
+  "coverage": {
+    "component_exemptions": [],
+    "requirement_exemptions": []
+  },
+  "doxygen_plan": {
+    "configuration": "Doxyfile",
+    "admitted_inputs": [
+      "Doxyfile",
+      "scripts/check_doxygen.py",
+      "docs/xcom/"
+    ],
+    "warn_as_error": true,
+    "current_strictness": "WARN_IF_UNDOCUMENTED = NO and WARN_NO_PARAMDOC = NO in the admitted Doxyfile",
+    "strict_target": "WARN_IF_UNDOCUMENTED = YES and WARN_NO_PARAMDOC = YES for the owned C++ inputs",
+    "mandatory_file_block": [
+      "file",
+      "brief",
+      "ingroup"
+    ],
+    "mandatory_public_tags": [
+      "brief",
+      "ownership",
+      "lifetime",
+      "thread_safety",
+      "failure"
+    ],
+    "conditional_public_tags": [
+      "param",
+      "return",
+      "retval",
+      "note",
+      "pre",
+      "post"
+    ],
+    "groups": {
+      "CORE": "xcom_core",
+      "XDL": "xcom_xdl",
+      "OBS": "xcom_obs",
+      "STIM": "xcom_stim",
+      "GW": "xcom_gw",
+      "INTG": "xcom_intg",
+      "ENB": "xcom_enb"
+    },
+    "coverage_rule": "Every public declaration in a C++ unit header is documented; every unit header carries the mandatory file block; the ownership, lifetime, thread-safety, and failure aliases are present on every public declaration.",
+    "gaps": [
+      {
+        "id": "DOX-GAP-01",
+        "description": "Doxyfile sets WARN_IF_UNDOCUMENTED = NO and WARN_NO_PARAMDOC = NO; the strict C++ configuration is not yet admitted.",
+        "owning_tasks": [
+          "T011",
+          "T037"
+        ],
+        "status": "allocated"
+      },
+      {
+        "id": "DOX-GAP-02",
+        "description": "Generated protobuf C++ provenance and documentation policy are admitted by T011.",
+        "owning_tasks": [
+          "T011"
+        ],
+        "status": "allocated"
+      },
+      {
+        "id": "DOX-GAP-03",
+        "description": "System and third-party headers are out of documentation scope; the allowed exclusion list is admitted by T011.",
+        "owning_tasks": [
+          "T011",
+          "T037"
+        ],
+        "status": "allocated"
+      }
+    ]
+  },
+  "counts": {
+    "CORE": 8,
+    "ENB": 5,
+    "GW": 3,
+    "INTG": 4,
+    "OBS": 2,
+    "STIM": 5,
+    "XDL": 3,
+    "invariants": 14,
+    "units": 30
+  },
+  "units": [
+    {
+      "id": "XCOM-DU-001",
+      "name": "Value and payload view",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T013"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline value and payload source is present under T013 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Typed value and bounded payload view with a metadata-only default and an explicit bounded view lifetime.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/value.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/value.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/core_types/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-004"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-002",
+        "XCOM-SW-CORE-004"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "Values are constructed by the caller and owned by the caller; the unit retains no shared state.",
+      "lifetime_model": "invocation-scoped",
+      "lifetime_rationale": "A value is valid for the callback or invocation scope and is not retained beyond it.",
+      "exposes_view": true,
+      "view_lifetime": "bounded to the owning item or callback scope; the view is not retained after the callback returns",
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "Values are immutable after construction and are copied on hand-off.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "payload view size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        },
+        {
+          "resource": "value elements",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "declared bound exceeded",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for the payload view",
+          "outcome": "failed"
+        },
+        {
+          "condition": "malformed value or payload view",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-04",
+        "CHK-05",
+        "CHK-06",
+        "CHK-07",
+        "NEG-12",
+        "NEG-15",
+        "NEG-20"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-002",
+      "name": "Contract and logical identity",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T012"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline contract and identity source is present under T012 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Versioned contract descriptor and logical-identity record separating logical identity from realization.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/contract.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/contract.cpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-004"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-001",
+        "XCOM-SW-CORE-003"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "platform-owns-shared",
+      "ownership_rationale": "The contract descriptor is published once by the platform and read by many consumers.",
+      "lifetime_model": "plan-scoped",
+      "lifetime_rationale": "The descriptor is valid for the activation-plan scope and is replaced only by a new plan.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "The descriptor is immutable after publication and copies are independent.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "descriptor size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "internal descriptor defect",
+          "outcome": "failed"
+        },
+        {
+          "condition": "incompatible contract version or logical identity",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 4,
+        "public_elements": 4,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-04",
+        "NEG-07",
+        "NEG-12",
+        "NEG-13"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-003",
+      "name": "Item identity, origin, time, and correlation",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T013"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline item source is present under T013 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Item identity, origin, timestamps, and correlation and causation references carried without interpretation.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/item.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/item.cpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-004"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-002",
+        "XCOM-SW-CORE-003",
+        "XCOM-SW-CORE-010"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "Items are constructed by the caller and owned by the caller; the unit keeps no registry.",
+      "lifetime_model": "invocation-scoped",
+      "lifetime_rationale": "An item is valid for the routing invocation scope and is not retained by this unit.",
+      "exposes_view": true,
+      "view_lifetime": "bounded to the item lifetime; a payload view is never retained beyond the owning item",
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "Items are immutable after construction and copied or moved on hand-off.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "item record size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        },
+        {
+          "resource": "identifier elements",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "declared bound exceeded",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for item provenance",
+          "outcome": "failed"
+        },
+        {
+          "condition": "malformed item identity or origin",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-04",
+        "NEG-08",
+        "NEG-09"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-004",
+      "name": "Diagnostics and deterministic ordering",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T013"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline diagnostic source is present under T013 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Stable diagnostic codes with severity, phase, reason, and correction, ordered deterministically.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/diagnostic.cpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-004"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-006",
+        "XCOM-SW-CORE-010"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "Diagnostics are values produced for the caller and owned by the caller.",
+      "lifetime_model": "invocation-scoped",
+      "lifetime_rationale": "A diagnostic is valid for the reporting invocation and is not retained.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "Diagnostics are immutable after construction and ordered by a stable key.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "diagnostic record size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "internal diagnostic defect",
+          "outcome": "failed"
+        },
+        {
+          "condition": "incompatible severity, phase, or reason mapping",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 4,
+        "public_elements": 4,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-05",
+        "CHK-06"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-005",
+      "name": "Result, outcome, and core type aggregate",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T013"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline result and core-type aggregate is present under T013 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Result and outcome value type plus the aggregate core type header, with honest unknown handling.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/result.hpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-004"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-003",
+        "XCOM-SW-CORE-004"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "Result values are produced for the caller and owned by the caller.",
+      "lifetime_model": "invocation-scoped",
+      "lifetime_rationale": "A result is valid for the calling invocation scope and is not retained.",
+      "exposes_view": true,
+      "view_lifetime": "bounded to the owning result; a payload view is not retained after the result is consumed",
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "Results are immutable after construction and copied on hand-off.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "payload view size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        },
+        {
+          "resource": "value elements",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "declared bound exceeded",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for the result",
+          "outcome": "failed"
+        },
+        {
+          "condition": "malformed result variant",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 4,
+        "public_elements": 4,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-04",
+        "CHK-07",
+        "NEG-25",
+        "NEG-26"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-006",
+      "name": "Endpoint and route lifecycle with generation handles",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T014"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline endpoint/route lifecycle source is present under T014 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Bounded endpoint and route lifecycle in which only the exact issued generation-bound handle mutates or closes a resource.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/endpoint_route_lifecycle/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-005"
+      ],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-CORE-003",
+        "XCOM-SW-CORE-004",
+        "XCOM-SW-CORE-005"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "provider-issued-handle",
+      "ownership_rationale": "A provider issues the only handle that may mutate or close an endpoint or route; a stale or foreign handle is rejected.",
+      "lifetime_model": "endpoint-generation",
+      "lifetime_rationale": "A handle is valid only for the endpoint generation that issued it; restart reconciliation never infers ownership from a name or address.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "Concurrent lifecycle transitions share a per-provider handle table and generation counters.",
+        "shared_state": [
+          "generation counters",
+          "per-provider endpoint and route handle table"
+        ],
+        "synchronization": "per-provider mutex held only for the state transition; no lock is held across a provider callback"
+      },
+      "bounds": [
+        {
+          "resource": "active endpoints and routes",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        },
+        {
+          "resource": "retry count",
+          "kind": "retry",
+          "configured": true,
+          "value": 0,
+          "declared_in": "activation plan"
+        }
+      ],
+      "overflow_policies": [
+        "reject"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "outcome unknown for a lifecycle transition",
+          "outcome": "failed"
+        },
+        {
+          "condition": "provider lifecycle failure",
+          "outcome": "failed"
+        },
+        {
+          "condition": "stale, foreign, or duplicate handle",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 7,
+        "public_elements": 7,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-04",
+        "CHK-05",
+        "CHK-06",
+        "NEG-15",
+        "NEG-18",
+        "NEG-19",
+        "NEG-24"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-007",
+      "name": "Provider boundary and composition",
+      "family": "CORE",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T015"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline provider boundary source is present under T015 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Explicit provider boundary and one-time composition with capability and version negotiation.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/provider.cpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-006"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-004"
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-005",
+        "XCOM-SW-CORE-007",
+        "XCOM-SW-CORE-008"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "provider-issued-handle",
+      "ownership_rationale": "The provider issues the handle that owns its realization; composition never adopts a handle from an address or name.",
+      "lifetime_model": "process-scoped",
+      "lifetime_rationale": "A registered provider is valid for the process lifetime and is removed only through its handle.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "externally-synchronized",
+        "rationale": "Composition happens once before activation; the registered-provider table is read-only afterwards.",
+        "shared_state": [
+          "registered provider table"
+        ],
+        "synchronization": "caller composes providers before activation and performs no concurrent registration afterwards"
+      },
+      "bounds": [
+        {
+          "resource": "registered providers",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "explicit composition input"
+        },
+        {
+          "resource": "retry count",
+          "kind": "retry",
+          "configured": true,
+          "value": 0,
+          "declared_in": "explicit composition input"
+        }
+      ],
+      "overflow_policies": [
+        "reject"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "outcome unknown for a provider registration",
+          "outcome": "failed"
+        },
+        {
+          "condition": "provider composition failure",
+          "outcome": "failed"
+        },
+        {
+          "condition": "incompatible provider capability or version",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-05",
+        "CHK-09",
+        "NEG-17"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-008",
+      "name": "Owned loopback provider",
+      "family": "CORE",
+      "kind": "test-fixture",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T015",
+        "T016"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline loopback provider source is present under T015/T016 but the tasks are not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Owned loopback provider that exercises the first proof deterministically without a legacy asset or external peer.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/loopback_provider.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/provider_loopback/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-007"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-004"
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-007",
+        "XCOM-SW-CORE-009"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "provider-issued-handle",
+      "ownership_rationale": "The loopback provider issues the handle for its own route; a foreign handle is rejected.",
+      "lifetime_model": "process-scoped",
+      "lifetime_rationale": "The test-owned loopback provider is valid for the process lifetime of the fixture.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "single-thread-owner",
+        "rationale": "The owning test thread drives the loopback route and exclusively owns its per-route in-flight queue; there is no cross-thread hand-off in the first proof.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "per-route in-flight queue depth",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        },
+        {
+          "resource": "retry count",
+          "kind": "retry",
+          "configured": true,
+          "value": 0,
+          "declared_in": "activation plan"
+        }
+      ],
+      "overflow_policies": [
+        "reject",
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "loopback delivery failure",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for a loopback emission",
+          "outcome": "failed"
+        },
+        {
+          "condition": "loopback policy violation",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_core",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-05",
+        "CHK-06"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-009",
+      "name": "XDL Profile and activation-plan compiler",
+      "family": "XDL",
+      "kind": "build-time",
+      "language": "python",
+      "scope": "first-proof",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T017",
+        "T018"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Deterministic Profile-aware activation-plan compilation from the normalized XDL input, offline and bounded.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse_xdl/xcom_plan.py",
+          "status": "planned"
+        },
+        {
+          "path": "tests/test_xcom_plan.py",
+          "status": "planned"
+        },
+        {
+          "path": "xdl/profiles/xcom-v0.1.schema.json",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-001",
+        "XCOM-CMP-002"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-005"
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-001",
+        "XCOM-SW-XDL-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "The compiler returns a new plan value to its caller and owns no shared runtime state.",
+      "lifetime_model": "process-scoped",
+      "lifetime_rationale": "The compiler runs as a bounded build-time process and retains no state after it exits.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Build-time compiler: one process, one thread, offline.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "graph input size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "XDL input"
+        },
+        {
+          "resource": "compiled nodes and edges",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "declared bound exceeded",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for a compilation step",
+          "outcome": "failed"
+        },
+        {
+          "condition": "invalid or malformed graph input",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Python build-time tooling; module and function docstrings are covered by scripts/check_doxygen.py."
+      },
+      "planned_evidence": [
+        "CHK-09",
+        "CHK-10",
+        "NEG-37",
+        "NEG-39"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-010",
+      "name": "Activation-plan v1 schema",
+      "family": "XDL",
+      "kind": "derived-artifact",
+      "language": "json",
+      "scope": "first-proof",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T017"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Canonical activation-plan v1 schema and digest contract that the C++ decoder validates independently.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/contracts/v1/activation-plan.schema.json",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-003"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-001"
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The schema is a versioned build artifact owned by its authoring task.",
+      "lifetime_model": "static-immutable",
+      "lifetime_rationale": "The schema is immutable once published and superseded additively by a new version.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "read-only-static",
+        "rationale": "Immutable schema artifact read concurrently without synchronization.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "schema artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "static artifact"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "schema or digest defect",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "JSON schema artifact; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-09",
+        "NEG-42",
+        "NEG-43"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-011",
+      "name": "Bounded activation-plan decode",
+      "family": "XDL",
+      "kind": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T019",
+        "T020"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Bounded activation-plan decode with independent version and digest checks that fails closed on malformed or drifted input.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/activation_plan.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/activation_plan.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/activation_plan/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-003"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-001"
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-003",
+        "XCOM-SW-CORE-003"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "caller-owns-value",
+      "ownership_rationale": "The decoded plan is returned to the caller, which owns it; the unit retains no decoded state.",
+      "lifetime_model": "plan-scoped",
+      "lifetime_rationale": "The decoded plan is valid for the activation-plan scope and is immutable after decode.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "The decoded plan is immutable after a bounded decode and shared read-only.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "plan bytes",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        },
+        {
+          "resource": "decoded entities",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        },
+        {
+          "resource": "nested structure depth",
+          "kind": "depth",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "declared bound exceeded",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for a decode step",
+          "outcome": "failed"
+        },
+        {
+          "condition": "malformed plan bytes or version or digest mismatch",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_xdl",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-06",
+        "CHK-09",
+        "NEG-21",
+        "NEG-22",
+        "NEG-23"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-012",
+      "name": "Observation record and payload-view policy",
+      "family": "OBS",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-OBS",
+      "owning_tasks": [
+        "T021"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline observation record source is present under T021 but the task is not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Immutable observation record and payload-view policy with metadata-only as the default.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/observation.cpp",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-008"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-003"
+      ],
+      "requirement_links": [
+        "XCOM-SW-OBS-001",
+        "XCOM-SW-OBS-002",
+        "XCOM-SW-OBS-005"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "platform-owns-shared",
+      "ownership_rationale": "The platform owns the observation record and publishes it read-only to observers.",
+      "lifetime_model": "route-scoped",
+      "lifetime_rationale": "A record is valid for the route scope in which it was produced.",
+      "exposes_view": true,
+      "view_lifetime": "bounded to the observation record and route scope; metadata-only is the default and a payload view is not retained",
+      "thread_safety": {
+        "model": "immutable-value",
+        "rationale": "Observation records are immutable projections once built.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "payload view size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        },
+        {
+          "resource": "record elements",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "unit configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "outcome unknown for a record projection",
+          "outcome": "failed"
+        },
+        {
+          "condition": "payload policy absent or payload view beyond the declared bound",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_obs",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-04",
+        "CHK-05",
+        "CHK-09"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-013",
+      "name": "Bounded observer queue, counters, and synthetic sink",
+      "family": "OBS",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-OBS",
+      "owning_tasks": [
+        "T022",
+        "T023"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline observer queue source is present under T022/T023 but the tasks are not user-accepted; coverage stays partial per analysis A12.",
+      "responsibility": "Bounded observer queue with drop and coalesce counters and a synthetic sink, isolating observer failure from the route.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/observation.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/observation/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-008",
+        "XCOM-CMP-011"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-003"
+      ],
+      "requirement_links": [
+        "XCOM-SW-OBS-003",
+        "XCOM-SW-OBS-004"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "platform-owns-shared",
+      "ownership_rationale": "The platform owns the bounded queue and counters shared between the route thread and the observer.",
+      "lifetime_model": "route-scoped",
+      "lifetime_rationale": "A tap queue is valid for the route scope and is drained or released with the route.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "message-passing",
+        "rationale": "Producers enqueue records on the route thread and the observer drains them on its own thread through a bounded queue.",
+        "shared_state": [
+          "drop and coalesce counters",
+          "per-tap bounded record queue"
+        ],
+        "synchronization": "producer enqueues under the tap mutex and the observer drains on its own thread; counters are atomic"
+      },
+      "bounds": [
+        {
+          "resource": "per-tap queue depth",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "tap policy"
+        },
+        {
+          "resource": "coalesce window per tap",
+          "kind": "quota",
+          "configured": true,
+          "value": null,
+          "declared_in": "tap policy"
+        },
+        {
+          "resource": "retry count",
+          "kind": "retry",
+          "configured": true,
+          "value": 0,
+          "declared_in": "tap policy"
+        }
+      ],
+      "overflow_policies": [
+        "drop-newest",
+        "coalesce",
+        "lossless-backpressure"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "observer detached or failing, isolated from the normal route",
+          "outcome": "failed"
+        },
+        {
+          "condition": "outcome unknown for delivery to the synthetic sink",
+          "outcome": "failed"
+        },
+        {
+          "condition": "queue saturated at the declared bound under the drop-newest tap policy",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_obs",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-05",
+        "CHK-06",
+        "NEG-18",
+        "NEG-19",
+        "NEG-45"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-014",
+      "name": "Time authority",
+      "family": "STIM",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T025"
+      ],
+      "maturity": "implemented",
+      "accepted_revision": "4b01586b438a8587d231ee8828d896c206c06a96",
+      "reconciliation": null,
+      "responsibility": "Explicit time authority with clock-domain mapping and a declared tolerance, rejecting unmapped domains before emission.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/validation_session.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/validation_session/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-009"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-006"
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-006"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "platform-owns-shared",
+      "ownership_rationale": "The platform owns the host-implemented time authority for the session lifetime.",
+      "lifetime_model": "session-scoped",
+      "lifetime_rationale": "The time authority is valid for the validation-session scope.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "externally-synchronized",
+        "rationale": "The host-implemented time authority is read by the session's single active thread.",
+        "shared_state": [],
+        "synchronization": "caller invokes the time authority from the session's single active thread; the authority holds no internally synchronized state"
+      },
+      "bounds": [
+        {
+          "resource": "clock-domain mapping tolerance",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "session time-authority policy"
+        },
+        {
+          "resource": "bounded clock read",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "session time-authority policy"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "elapsed validity interval",
+          "outcome": "expired"
+        },
+        {
+          "condition": "outcome unknown for a clock read",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unmapped or out-of-tolerance clock domain before emission",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_stim",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-03",
+        "CHK-06",
+        "CHK-11"
+      ],
+      "notes": "Bound to the accepted T025 merge revision."
+    },
+    {
+      "id": "XCOM-DU-015",
+      "name": "Validation permit and session lifecycle",
+      "family": "STIM",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T025"
+      ],
+      "maturity": "implemented",
+      "accepted_revision": "4b01586b438a8587d231ee8828d896c206c06a96",
+      "reconciliation": null,
+      "responsibility": "Exclusive validation permit and bounded session lifecycle guarding arming, consumption, and quota.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/validation_session.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/validation_session/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-009"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-006"
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-001",
+        "XCOM-SW-STIM-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "session-issued-handle",
+      "ownership_rationale": "Only the handle issued for an armed session may consume its permit or close it.",
+      "lifetime_model": "session-scoped",
+      "lifetime_rationale": "A permit handle is valid only for its session scope and is consumed exactly once.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "Session transitions and quota consumption share a per-session state machine.",
+        "shared_state": [
+          "consumed-permit record",
+          "quota counters",
+          "session state machine"
+        ],
+        "synchronization": "per-session mutex guarding transitions and quota consumption"
+      },
+      "bounds": [
+        {
+          "resource": "armed sessions",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "permit validity interval",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "actions per session",
+          "kind": "quota",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "requests per interval",
+          "kind": "rate",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        }
+      ],
+      "overflow_policies": [
+        "reject",
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "permit validity interval elapsed",
+          "outcome": "expired"
+        },
+        {
+          "condition": "outcome unknown after an injection attempt",
+          "outcome": "failed"
+        },
+        {
+          "condition": "missing, consumed, or mismatched permit",
+          "outcome": "rejected"
+        },
+        {
+          "condition": "quota exceeded",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_stim",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-04",
+        "CHK-05",
+        "CHK-06"
+      ],
+      "notes": "Bound to the accepted T025 merge revision."
+    },
+    {
+      "id": "XCOM-DU-016",
+      "name": "Durable stimulation intent and outcome journal",
+      "family": "STIM",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T026"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Durable stimulation intent and outcome journal that records intent before emission and reports evidence-incomplete on a lost outcome.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/stimulation_journal.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/stimulation_journal.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/stimulation_journal/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-009"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-006"
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-007"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "platform-owns-shared",
+      "ownership_rationale": "The platform owns the journal handle and index for the session lifetime.",
+      "lifetime_model": "session-scoped",
+      "lifetime_rationale": "Journal records are valid for the session scope and retained up to the declared bound.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "The append-only journal handle and index are shared by the single writer.",
+        "shared_state": [
+          "append-only journal file handle",
+          "journal index"
+        ],
+        "synchronization": "per-journal mutex with a single writer; the intent is persisted before emission"
+      },
+      "bounds": [
+        {
+          "resource": "journal record size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "journal configuration"
+        },
+        {
+          "resource": "retained journal records",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "journal configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "intent recorded without an outcome",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "journal write or fsync failure or disk full",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "outcome unknown after a journal write",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "journal configuration rejected",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_stim",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-07",
+        "NEG-27"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-017",
+      "name": "Fail-closed pre-emission guard",
+      "family": "STIM",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T027"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Fail-closed pre-emission guard that rejects every schema, target, direction, action, time, quota, loop, or ownership mismatch with zero emission.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/stimulation_guard.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/stimulation_guard/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-009"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-006"
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-004",
+        "XCOM-SW-STIM-005",
+        "XCOM-SW-STIM-006"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "session-issued-handle",
+      "ownership_rationale": "Only the session-issued handle may evaluate and reject an action; a rejection mutates no owned state.",
+      "lifetime_model": "session-scoped",
+      "lifetime_rationale": "The guard is valid for the session scope and retains only the declared action tally.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "The action tally and loop-detection window are shared per session.",
+        "shared_state": [
+          "loop-detection window",
+          "per-session action tally"
+        ],
+        "synchronization": "per-session mutex; a rejection performs no state mutation"
+      },
+      "bounds": [
+        {
+          "resource": "loop-detection window",
+          "kind": "depth",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "actions per session",
+          "kind": "quota",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "actions per interval",
+          "kind": "rate",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        }
+      ],
+      "overflow_policies": [
+        "reject",
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "outcome unknown after a guard evaluation",
+          "outcome": "failed"
+        },
+        {
+          "condition": "schema, target, direction, action, time, quota, loop, or ownership mismatch",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_stim",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-07",
+        "CHK-11"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-018",
+      "name": "Guarded injection and exclusive service-emulation lease",
+      "family": "STIM",
+      "kind": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T028"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Guarded injection and exclusive service-emulation lease with synthetic provenance, release, or quarantine on expiry, revocation, or disconnect.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/stimulation_actions.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/stimulation_actions/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-009"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-006"
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-001",
+        "XCOM-SW-STIM-003",
+        "XCOM-SW-STIM-008",
+        "XCOM-SW-STIM-009"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "ownership_model": "session-issued-handle",
+      "ownership_rationale": "Only the session-issued handle may acquire or release the exclusive lease for an endpoint generation.",
+      "lifetime_model": "endpoint-generation",
+      "lifetime_rationale": "A lease is valid only for the endpoint generation under which it was acquired.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "The exclusive lease table and drain state are shared by concurrent session actions.",
+        "shared_state": [
+          "drain state",
+          "exclusive lease table keyed by endpoint and generation"
+        ],
+        "synchronization": "atomic lease acquisition under a per-session mutex; release or quarantine on expiry, revocation, or disconnect"
+      },
+      "bounds": [
+        {
+          "resource": "active leases",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "activation plan"
+        },
+        {
+          "resource": "drain deadline",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        },
+        {
+          "resource": "drain queue depth",
+          "kind": "depth",
+          "configured": true,
+          "value": null,
+          "declared_in": "validation permit"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed",
+        "reject"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "lease revoked, expired, or disconnected",
+          "outcome": "cancelled"
+        },
+        {
+          "condition": "emission without a recorded outcome",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "outcome unknown after emission",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "lease validity elapsed",
+          "outcome": "expired"
+        },
+        {
+          "condition": "lease conflict or unauthorized action",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_stim",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 6,
+        "public_elements": 6,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-05",
+        "CHK-07"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-019",
+      "name": "Tool gateway Protocol Buffers API",
+      "family": "GW",
+      "kind": "edge",
+      "language": "proto",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T030"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Versioned Protocol Buffers tool API with additive evolution and explicit rejection of an unknown field or service version.",
+      "artifact_paths": [
+        {
+          "path": "proto/xverse/xcom/v1/tool_gateway.proto",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-010"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-002"
+      ],
+      "requirement_links": [
+        "XCOM-SW-GW-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The service definition is a versioned artifact owned by its authoring task.",
+      "lifetime_model": "static-immutable",
+      "lifetime_rationale": "The service definition is immutable once published and evolved additively.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "read-only-static",
+        "rationale": "The immutable service definition and generated types are read concurrently.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "message and stream size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "tool API schema"
+        },
+        {
+          "resource": "concurrent streams",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "tool API schema"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "outcome unknown for a gateway call",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unknown field or unsupported service version",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Protocol Buffers definition; the generated C++ documentation policy is gap DOX-GAP-02 owned by T011."
+      },
+      "planned_evidence": [
+        "CHK-09",
+        "NEG-28"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-020",
+      "name": "Local-IPC-only gateway session",
+      "family": "GW",
+      "kind": "edge",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T031"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Local-IPC-only gateway session with per-request deadlines, flow control, and no TCP listener.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/tool_gateway.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/tool_gateway/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-010"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-002"
+      ],
+      "requirement_links": [
+        "XCOM-SW-GW-001",
+        "XCOM-SW-GW-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "gateway-issued-handle",
+      "ownership_rationale": "The gateway issues the only handle that owns an accepted peer session and its flow-control window.",
+      "lifetime_model": "session-scoped",
+      "lifetime_rationale": "A gateway session handle is valid for its session scope and is closed on disconnect or expiry.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "internally-synchronized",
+        "rationale": "Accepted peer sessions and their per-session flow-control windows are shared.",
+        "shared_state": [
+          "accepted local IPC peer sessions",
+          "per-session deadlines and flow-control windows"
+        ],
+        "synchronization": "per-session mutex plus a bounded request queue; local IPC only, no TCP listener"
+      },
+      "bounds": [
+        {
+          "resource": "message size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "gateway configuration"
+        },
+        {
+          "resource": "concurrent sessions and streams",
+          "kind": "capacity",
+          "configured": true,
+          "value": null,
+          "declared_in": "gateway configuration"
+        },
+        {
+          "resource": "per-request deadline",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "gateway configuration"
+        },
+        {
+          "resource": "requests per interval",
+          "kind": "rate",
+          "configured": true,
+          "value": null,
+          "declared_in": "gateway configuration"
+        },
+        {
+          "resource": "session idle timeout",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "gateway configuration"
+        }
+      ],
+      "overflow_policies": [
+        "fail-closed",
+        "reject"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "disconnected after an intent",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "expired session",
+          "outcome": "expired"
+        },
+        {
+          "condition": "outcome unknown after a request",
+          "outcome": "failed"
+        },
+        {
+          "condition": "transport or peer failure",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unauthorized session",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_gw",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 7,
+        "public_elements": 7,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-05",
+        "CHK-06",
+        "CHK-11"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-021",
+      "name": "Separate-process synthetic tool client",
+      "family": "GW",
+      "kind": "test-fixture",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T032",
+        "T033"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Separate-process synthetic tool client that exercises the gateway contract without an external or legacy peer.",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/fixtures/synthetic_tool.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/tool_gateway/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [
+        "XCOM-CMP-011"
+      ],
+      "contract_refs": [
+        "XCOM-XLC-002"
+      ],
+      "requirement_links": [
+        "XCOM-SW-GW-002",
+        "XCOM-SW-GW-003"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "gateway-issued-handle",
+      "ownership_rationale": "The client holds the gateway-issued session handle and owns its in-flight request table.",
+      "lifetime_model": "process-scoped",
+      "lifetime_rationale": "The synthetic client is valid for the process lifetime of its own test process.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "externally-synchronized",
+        "rationale": "The client issues one request or stream at a time per session.",
+        "shared_state": [
+          "in-flight request table"
+        ],
+        "synchronization": "caller issues one request or stream at a time per client session"
+      },
+      "bounds": [
+        {
+          "resource": "message size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "tool client configuration"
+        },
+        {
+          "resource": "request deadline",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "tool client configuration"
+        },
+        {
+          "resource": "transport timeout",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "tool client configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "disconnected after an intent",
+          "outcome": "evidence-incomplete"
+        },
+        {
+          "condition": "session expired",
+          "outcome": "expired"
+        },
+        {
+          "condition": "transport or peer failure",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_gw",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 5,
+        "public_elements": 5,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-05",
+        "CHK-09"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-022",
+      "name": "Doxygen documentation and warning gate",
+      "family": "INTG",
+      "kind": "documentation",
+      "language": "python",
+      "scope": "first-proof",
+      "owning_slice": "T-INTG",
+      "owning_tasks": [
+        "T037"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Admitted Doxygen configuration and check_doxygen.py exist, but the strict C++ configuration and warning-free generation are allocated to T011/T037; coverage stays partial.",
+      "responsibility": "Doxygen documentation, alias support, and the warning gate over the changed units.",
+      "artifact_paths": [
+        {
+          "path": "Doxyfile",
+          "status": "established"
+        },
+        {
+          "path": "docs/xcom/",
+          "status": "established"
+        },
+        {
+          "path": "scripts/check_doxygen.py",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-INTG-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The documentation configuration and generated output are owned by the documentation task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A generated documentation set is valid for its exact source revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline documentation tooling: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "missing docstring or Doxygen warning",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unavailable documentation tool",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Python documentation tooling; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-08",
+        "NEG-29"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-023",
+      "name": "Requirements traceability validation",
+      "family": "INTG",
+      "kind": "documentation",
+      "language": "python",
+      "scope": "first-proof",
+      "owning_slice": "T-INTG",
+      "owning_tasks": [
+        "T038"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Requirements traceability validation exists, but full Spec Kit and REF-002 closure is allocated to T038; coverage stays partial.",
+      "responsibility": "Offline requirements and traceability validation across the register, architecture, design, and tests.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t008/",
+          "status": "established"
+        },
+        {
+          "path": "scripts/validate_xcom_requirements_traceability.py",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-INTG-002",
+        "XCOM-SW-ENB-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The traceability tooling and its evidence are owned by the validation task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A traceability result is valid for its exact candidate revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline traceability tooling: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "dangling traceability link",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unavailable requirement register",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Python offline validator; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-10",
+        "NEG-39"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-024",
+      "name": "Public-safe evidence bundle and manifests",
+      "family": "INTG",
+      "kind": "evidence",
+      "language": "markdown",
+      "scope": "first-proof",
+      "owning_slice": "T-INTG",
+      "owning_tasks": [
+        "T035",
+        "T040"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "The queue manifest directory exists, but the full evidence bundle is allocated to T035/T040; coverage stays partial.",
+      "responsibility": "Public-safe evidence bundle and per-task manifests bound to the exact candidate revision.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t035/",
+          "status": "planned"
+        },
+        {
+          "path": "docs/engineering/xcom/t036/",
+          "status": "planned"
+        },
+        {
+          "path": "docs/engineering/xcom/t038/",
+          "status": "planned"
+        },
+        {
+          "path": "docs/engineering/xcom/t040/",
+          "status": "planned"
+        },
+        {
+          "path": "reports/xcom-queue/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-INTG-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The evidence bundle is owned by the integration task that produced it.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "An evidence bundle is valid for its exact candidate revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline evidence assembly: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "absent required evidence",
+          "outcome": "failed"
+        },
+        {
+          "condition": "prohibited content in evidence",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Markdown evidence documents; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-14",
+        "NEG-41"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-025",
+      "name": "Controlled disabled-tap benchmark evidence",
+      "family": "INTG",
+      "kind": "evidence",
+      "language": "cpp",
+      "scope": "first-proof",
+      "owning_slice": "T-INTG",
+      "owning_tasks": [
+        "T036"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "The disabled-tap benchmark harness exists, but the controlled benchmark run and its uncertainty record are allocated to T036; coverage stays partial.",
+      "responsibility": "Controlled disabled-tap benchmark evidence recording environment identity and measurement uncertainty.",
+      "artifact_paths": [
+        {
+          "path": "tests/xcom/observation/integration/disabled_tap_benchmark.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/performance/",
+          "status": "planned"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-INTG-003"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The benchmark evidence is owned by the integration task that produced it.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A benchmark result is valid for the environment identity it records.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline benchmark harness: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "benchmark input size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "benchmark run deadline",
+          "kind": "deadline",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "benchmark timeout",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "benchmark harness failure",
+          "outcome": "failed"
+        },
+        {
+          "condition": "environment identity or uncertainty missing",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": true,
+        "group": "xcom_intg",
+        "file_block": [
+          "file",
+          "brief",
+          "ingroup"
+        ],
+        "public_tags": [
+          "brief",
+          "ownership",
+          "lifetime",
+          "thread_safety",
+          "failure"
+        ],
+        "documented_elements": 4,
+        "public_elements": 4,
+        "reason": ""
+      },
+      "planned_evidence": [
+        "CHK-08",
+        "NEG-30"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-026",
+      "name": "Requirement register and REF-002 model",
+      "family": "ENB",
+      "kind": "documentation",
+      "language": "json",
+      "scope": "first-proof",
+      "owning_slice": "T-ENABLER",
+      "owning_tasks": [
+        "T008"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "The T008 register is reviewed but not user-accepted; coverage stays partial per ADR-0020.",
+      "responsibility": "Requirement register and REF-002 disposition model that every unit design resolves against.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t008/requirements-register.json",
+          "status": "established"
+        },
+        {
+          "path": "docs/engineering/xcom/t008/traceability-matrix.json",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-ENB-001",
+        "XCOM-SW-ENB-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The register is a repository-owned work product of the enabler task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A register revision is valid for its exact candidate revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline register validation: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "REF-002 promotion defect",
+          "outcome": "failed"
+        },
+        {
+          "condition": "register schema defect",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "JSON work product; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-10",
+        "NEG-32"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-027",
+      "name": "Architecture and contract model",
+      "family": "ENB",
+      "kind": "documentation",
+      "language": "json",
+      "scope": "first-proof",
+      "owning_slice": "T-ENABLER",
+      "owning_tasks": [
+        "T009"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "The T009 architecture model is reviewed but not user-accepted; coverage stays partial per ADR-0020.",
+      "responsibility": "Component, boundary, contract, diagram, and invariant model that the unit design resolves against.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t009/architecture-model.json",
+          "status": "established"
+        },
+        {
+          "path": "docs/engineering/xcom/t009/architecture-model.md",
+          "status": "established"
+        },
+        {
+          "path": "scripts/validate_xcom_architecture_contracts.py",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-ENB-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The architecture model is a repository-owned work product of the enabler task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "An architecture-model revision is valid for its exact candidate revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline architecture validation: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "architecture model schema defect",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unresolved component or contract reference",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "JSON work product; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-09",
+        "NEG-38"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-028",
+      "name": "Unit-design model and Doxygen plan",
+      "family": "ENB",
+      "kind": "documentation",
+      "language": "json",
+      "scope": "first-proof",
+      "owning_slice": "T-ENABLER",
+      "owning_tasks": [
+        "T010"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Canonical unit-design model, its deterministic projection, and the Doxygen plan for every public interface.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t010/design-units.md",
+          "status": "established"
+        },
+        {
+          "path": "docs/engineering/xcom/t010/unit-design.json",
+          "status": "established"
+        },
+        {
+          "path": "scripts/validate_xcom_unit_design.py",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-ENB-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The unit-design model is a repository-owned work product of this task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A unit-design revision is valid for its exact candidate revision.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline unit-design validation: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "coverage or cross-resolution defect",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unit-design schema defect",
+          "outcome": "rejected"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "JSON work product produced by this unit; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-01",
+        "CHK-16",
+        "NEG-33"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-029",
+      "name": "Dependency admission and build lock",
+      "family": "ENB",
+      "kind": "documentation",
+      "language": "markdown",
+      "scope": "first-proof",
+      "owning_slice": "T-ENABLER",
+      "owning_tasks": [
+        "T011"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Dependency admission documents and the offline preflight exist, but T011 is not user-accepted; coverage stays partial.",
+      "responsibility": "Compiler, dependency, license, hash, and generated-code provenance admission with an offline preflight.",
+      "artifact_paths": [
+        {
+          "path": "cmake/XComOfflineDependencies.cmake",
+          "status": "established"
+        },
+        {
+          "path": "docs/engineering/xcom/build-environment.md",
+          "status": "established"
+        },
+        {
+          "path": "docs/engineering/xcom/dependency-lock.md",
+          "status": "established"
+        },
+        {
+          "path": "scripts/xcom_dependency_preflight.py",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-ENB-004"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The admission records are repository-owned work products of the enabler task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "An admission record is valid for its exact candidate revision and dependency set.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline dependency preflight: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "unadmitted dependency version, hash, or license",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unavailable dependency metadata",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Markdown admission documents; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-12",
+        "NEG-35"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "XCOM-DU-030",
+      "name": "Independent review and acceptance record",
+      "family": "ENB",
+      "kind": "documentation",
+      "language": "markdown",
+      "scope": "first-proof",
+      "owning_slice": "T-REVIEW",
+      "owning_tasks": [
+        "T039",
+        "T041"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "responsibility": "Independent read-only review record and the explicit user-acceptance record kept separate from implementation.",
+      "artifact_paths": [
+        {
+          "path": "docs/engineering/xcom/t039/",
+          "status": "planned"
+        },
+        {
+          "path": "docs/reviews/",
+          "status": "established"
+        }
+      ],
+      "component_refs": [],
+      "contract_refs": [],
+      "requirement_links": [
+        "XCOM-SW-ENB-003"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "ownership_model": "task-owns-artifact",
+      "ownership_rationale": "The review and acceptance records are repository-owned work products of the review task.",
+      "lifetime_model": "document-scoped",
+      "lifetime_rationale": "A review record is valid for the exact candidate revision it inspected.",
+      "exposes_view": false,
+      "view_lifetime": null,
+      "thread_safety": {
+        "model": "offline-single-threaded",
+        "rationale": "Offline review record: one process, one thread.",
+        "shared_state": [],
+        "synchronization": null
+      },
+      "bounds": [
+        {
+          "resource": "artifact size",
+          "kind": "bytes",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "worker threads",
+          "kind": "thread-count",
+          "configured": true,
+          "value": 1,
+          "declared_in": "offline tooling configuration"
+        },
+        {
+          "resource": "validation runtime",
+          "kind": "timeout",
+          "configured": true,
+          "value": null,
+          "declared_in": "offline tooling configuration"
+        }
+      ],
+      "overflow_policies": [
+        "n/a"
+      ],
+      "failure_semantics": [
+        {
+          "condition": "absent review record",
+          "outcome": "failed"
+        },
+        {
+          "condition": "unresolved blocker or major review finding",
+          "outcome": "failed"
+        }
+      ],
+      "doxygen": {
+        "required": false,
+        "group": "",
+        "file_block": [],
+        "public_tags": [],
+        "documented_elements": 0,
+        "public_elements": 0,
+        "reason": "Markdown review records; not a hand-written C/C++ interface."
+      },
+      "planned_evidence": [
+        "CHK-18",
+        "NEG-46"
+      ],
+      "notes": ""
+    }
+  ],
+  "invariants": [
+    {
+      "id": "XCOM-UDI-01",
+      "kind": "ownership",
+      "statement": "Every unit has exactly one owning slice and a task set consistent with the T007 register.",
+      "enforcing_check": "CHK-03, CHK-11"
+    },
+    {
+      "id": "XCOM-UDI-02",
+      "kind": "ownership",
+      "statement": "Only an exact issued handle mutates, closes, or replaces an active resource.",
+      "enforcing_check": "CHK-04"
+    },
+    {
+      "id": "XCOM-UDI-03",
+      "kind": "lifetime",
+      "statement": "Immutable values and static artifacts are shared without synchronization.",
+      "enforcing_check": "CHK-05"
+    },
+    {
+      "id": "XCOM-UDI-04",
+      "kind": "thread-safety",
+      "statement": "Every shared mutable state is protected by a declared synchronization mechanism or boundary.",
+      "enforcing_check": "CHK-05"
+    },
+    {
+      "id": "XCOM-UDI-05",
+      "kind": "bounds",
+      "statement": "Every queue, quota, depth, rate, byte, and retry bound is finite and declared with its source.",
+      "enforcing_check": "CHK-06"
+    },
+    {
+      "id": "XCOM-UDI-06",
+      "kind": "bounds",
+      "statement": "No unit silently retries or silently upgrades delivery guarantees.",
+      "enforcing_check": "CHK-06"
+    },
+    {
+      "id": "XCOM-UDI-07",
+      "kind": "failure",
+      "statement": "An unknown or incomplete outcome is never reported as success.",
+      "enforcing_check": "CHK-07"
+    },
+    {
+      "id": "XCOM-UDI-08",
+      "kind": "doxygen",
+      "statement": "Every public C/C++ interface documents its ownership, lifetime, thread-safety, and failure contract.",
+      "enforcing_check": "CHK-08"
+    },
+    {
+      "id": "XCOM-UDI-09",
+      "kind": "lifetime",
+      "statement": "Payload views have an explicit bounded lifetime and metadata-only is the observation default.",
+      "enforcing_check": "CHK-04, CHK-05"
+    },
+    {
+      "id": "XCOM-UDI-10",
+      "kind": "failure",
+      "statement": "Synthetic provenance survives routing, observation, and restart classification.",
+      "enforcing_check": "CHK-07"
+    },
+    {
+      "id": "XCOM-UDI-11",
+      "kind": "dependency",
+      "statement": "Dependencies flow one-way blueprints to profiles to XDL/platform to runtime; subsystem naming is preserved.",
+      "enforcing_check": "CHK-11"
+    },
+    {
+      "id": "XCOM-UDI-12",
+      "kind": "neutrality",
+      "statement": "No core unit embeds a domain-specific primitive (ECU, CAN, SOME/IP, Zenoh, or a product name).",
+      "enforcing_check": "CHK-11"
+    },
+    {
+      "id": "XCOM-UDI-13",
+      "kind": "safety",
+      "statement": "The first proof executes no legacy workload, contacts no external peer, and exposes no TCP listener except the host-protected local tool gateway.",
+      "enforcing_check": "CHK-11"
+    },
+    {
+      "id": "XCOM-UDI-14",
+      "kind": "documentation",
+      "statement": "Every unit declares explicit, classified failure semantics and planned evidence.",
+      "enforcing_check": "CHK-07, CHK-10"
+    }
+  ]
+}

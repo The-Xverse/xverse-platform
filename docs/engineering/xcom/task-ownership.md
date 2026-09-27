@@ -451,6 +451,7 @@ Exclusive paths:
 - `reports/xcom-queue/t011-package.json`
 - `scripts/validate_xcom_architecture_contracts.py`
 - `scripts/validate_xcom_requirements_traceability.py`
+- `scripts/validate_xcom_unit_design.py`
 - `specs/007-xcom-core/analysis.md`
 - `specs/007-xcom-core/checklists/`
 - `specs/007-xcom-core/contracts/communication-plan.md`

@@ -26,7 +26,7 @@ evidence bundle for explicit user acceptance before another feature begins.
   requirement/design/code/test/measure traceability.
 - [X] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
   contracts.
-- [ ] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
+- [X] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
   and Doxygen plan.
 - [ ] T011 Pin and admit the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis,
   sanitizer, and Doxygen environment with licenses, hashes, generated-code provenance, and a
