@@ -24,7 +24,7 @@ evidence bundle for explicit user acceptance before another feature begins.
   and authorization.
 - [X] T008 Maintain and review stakeholder/system/software requirements and bidirectional
   requirement/design/code/test/measure traceability.
-- [ ] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
+- [X] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
   contracts.
 - [ ] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
   and Doxygen plan.

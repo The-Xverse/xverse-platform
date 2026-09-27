@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "task_id": "T009",
+  "baseline_revision": "209084b11a211273f815980f753ba728e1251a09",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 4,
+  "supersedes": "revision-3 internal review (verdict fail, finding T009-IR-05); this is a fresh read-only pass over the repaired candidate bound to the same baseline",
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t009/architecture-model.json",
+    "docs/engineering/xcom/t009/architecture-model.md",
+    "docs/engineering/xcom/t009/architecture.md",
+    "docs/engineering/xcom/t009/detailed-design.md",
+    "docs/engineering/xcom/t009/implementation.md",
+    "docs/engineering/xcom/t009/requirements.md",
+    "docs/engineering/xcom/t009/unit-specifications.md",
+    "docs/engineering/xcom/t009/verification-plan.md",
+    "docs/engineering/xcom/task-ownership.json",
+    "docs/engineering/xcom/task-ownership.md",
+    "scripts/validate_xcom_architecture_contracts.py",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "R4-CHK-01",
+      "name": "Exact reviewed inventory and docs-only boundary",
+      "method": "git diff --name-only 209084b11a211273f815980f753ba728e1251a09 -- ; git ls-files --others --exclude-standard ; git diff --check 209084b --",
+      "result": "pass: the tracked baseline diff is exactly the twelve work-product/governance paths listed in reviewed_paths; no src/, tests/, xdl/, or proto/ path is created or changed; the untracked set is exactly docs/engineering/xcom/t009/internal-review.json and reports/xcom-queue/t009-package.json (both excluded by the gate); git diff --check exits 0. T009-SR-011 / CHK-14 / BND-01 / BND-06 hold."
+    },
+    {
+      "id": "R4-CHK-02",
+      "name": "Governance diff is minimal and does not weaken accepted artifacts",
+      "method": "git diff 209084b -- specs/007-xcom-core/tasks.md docs/engineering/xcom/task-ownership.json docs/engineering/xcom/task-ownership.md",
+      "result": "pass: the only tasks.md change is the single T009 checkbox line; the only task-ownership change is the added scripts/validate_xcom_architecture_contracts.py path under T-ENABLER paths_exclusive (JSON plus its deterministic md projection). No accepted ADR, accepted contract, accepted requirement, or existing test is edited."
+    },
+    {
+      "id": "R4-CHK-03",
+      "name": "No later task implemented accidentally",
+      "method": "read every task line in specs/007-xcom-core/tasks.md ; joined every model maturity/accepted_revision/owning_tasks binding to the T007 reconciliation state ; listed docs/engineering/xcom/",
+      "result": "pass: the checked set is T001-T009 and T025 only; T010-T041 remain unchecked and no t010 directory or later-task artifact exists. T025 is the only task recorded 'accepted' (revision 4b01586b438a8587d231ee8828d896c206c06a96 under T-STIM) and XCOM-CMP-009 is the only 'implemented' record; the T012-T016/T021-T024 components stay partial with an unreconciled reason and T017-T020/T030-T033 stay allocated."
+    },
+    {
+      "id": "R4-CHK-04",
+      "name": "Independent structural resolution (not via the validator)",
+      "method": "re-derived from the raw JSON with an independent script: family counts vs counts, id sortedness/uniqueness/string-ness, boundary endpoint and contract resolution, kind/contract-kind consistency, endpoint-language subset, contract producer/consumer resolution, participant/step resolution, bidirectional coverage, and US1-US4 sequence coverage",
+      "result": "pass: 13 components / 11 boundaries / 6 contracts / 5 diagrams / 15 invariants; declared counts match lengths; every array id-sorted, unique and a non-empty string; every boundary endpoint and contract resolves; every from/to language is inside the resolved contract endpoint_languages; producer/consumer sets resolve; no uncovered component, boundary, or contract; exactly one component view and one US1-US4 sequence each."
+    },
+    {
+      "id": "R4-CHK-05",
+      "name": "Product-path anchoring and status across the working tree",
+      "method": "compared every artifact_paths status against the working tree independently of _check_paths; confirmed the anchored established xdl/ and validation_session paths exist",
+      "result": "pass: every 'established' path exists and every 'planned' path is absent; 'n/a' is used only by the external component XCOM-CMP-012. T009 anchors these paths and changes none."
+    },
+    {
+      "id": "R4-CHK-06",
+      "name": "Governance, neutrality, and one-way dependency direction",
+      "method": "re-derived the reverse-dependency relation and the core domain-primitive scan from the raw layers/text; resolved every governing_adrs against the closed set; checked ref002",
+      "result": "pass: no runtime -> upstream boundary; no core-layer component names a domain primitive (ECU/CAN/SOME-IP/Zenoh/AUTOSAR/FlexRay/MOST); python is confined to xdl-input/build-time and every data-plane component is C++; every governing_adrs entry is in {ADR-0016, ADR-0018, ADR-0019, ADR-0020}; ref002.disposition is 'unchanged' with an empty promoted set."
+    },
+    {
+      "id": "R4-CHK-07",
+      "name": "Maturity, reconciliation honesty, and requirement-link resolution",
+      "method": "joined each component maturity/accepted_revision/reconciliation to the T007 reconciliation state; resolved every requirement_links entry against the 91-entry T008 requirements-register.json plus the accepted FR-001..035 / SC-001..011 / US1..US4 anchor set",
+      "result": "pass: 7 partial (each with an unreconciled reason, none with an accepted_revision), 5 allocated, 1 implemented (XCOM-CMP-009, revision 4b01586b, matching the accepted T025 owning-task revision); every non-partial record carries no reconciliation reason; all 24 distinct requirement links resolve in the T008 register. authorization_records equals the T007 closed set exactly (ACC001-ACC015, ADR-0018, ADR-0019, ADR-0020)."
+    },
+    {
+      "id": "R4-CHK-08",
+      "name": "Determinism, projection exactness, and recorded artifact hashes",
+      "method": "ran --verify twice and hashed stdout; ran --check-human; recomputed sha256 of all eleven hashed candidate artifacts against implementation.md section 5",
+      "result": "pass: two --verify runs are byte-identical (sha256 864c435ab89d94eed1d9ee8947f1d8d18338de96cb0851e52d272d52beeb473d, matching the recorded DET-01 value); --check-human confirms architecture-model.md is the exact projection. Every recomputed hash equals the value recorded in implementation.md (model ce818ffe..., projection fac61d8b..., validator 1358ecd5..., ownership 1c341dda.../79b46be1..., tasks.md ee827248...). DET-01/DET-02/CHK-12 hold."
+    },
+    {
+      "id": "R4-CHK-09",
+      "name": "Self-test is load-bearing for all fifteen checks (DET-04, re-derived)",
+      "method": "independently neutralised each of the fifteen check functions in memory, one at a time, and re-ran _self_test; ran the unmodified _self_test",
+      "result": "pass: the baseline self-test exits 0 with the positive fixture and NEG-01..NEG-39 including NEG-21 and NEG-22; neutralising any one of _check_model_schema, _check_ordering, _check_identity, _check_paths, _check_boundaries, _check_contracts, _check_diagrams, _check_governance, _check_neutrality, _check_safety, _check_binding, _check_maturity, _check_dependencies, _check_determinism, or _scan_public_safety makes the self-test exit 7. Every check is load-bearing; the tests exercise failure behaviour, not only the normal path."
+    },
+    {
+      "id": "R4-CHK-10",
+      "name": "Failure atomicity on malformed family ids (T009-IR-05 closure, re-derived)",
+      "method": "injected integer/null/list/dict/float/bool ids into components[0], boundaries[0], contracts[0], invariants[0], and diagrams[0] through run_checks; re-ran the revision-3 reproduction verbatim; independently removed the four str() id coercions and re-ran the fixtures",
+      "result": "pass: every injected non-string id now yields exit 2 SCHEMA_INVALID with a bounded diagnostic and no traceback for all five families; the revision-3 reproduction that raised 'TypeError: unhashable type: list' now returns SCHEMA_INVALID (2). Removing any of the four str(...) coercions in _check_contracts/_check_diagrams/_check_neutrality/_check_safety restores 'TypeError: unhashable type: list', so the coercions and new fixtures NEG-35..NEG-39 are load-bearing. T009-IR-05 is closed."
+    },
+    {
+      "id": "R4-CHK-11",
+      "name": "Rejected-operation side effects and failure atomicity",
+      "method": "grep for write/subprocess/thread/network primitives; captured candidate-file mtimes across a --check-human run; confirmed the self-test mutates only deep copies",
+      "result": "pass: the validator imports only argparse/json/re/sys/pathlib; it contains no open-for-write, .write, os./shutil rename/unlink/mkdir, subprocess, socket, or threading call; the four candidate/dependency files are byte- and mtime-identical across a run; every fixture operates on a json round-trip copy, so a rejected model never mutates the real candidate or emits an 'OK' line."
+    },
+    {
+      "id": "R4-CHK-12",
+      "name": "Bounded resources and fail-closed dependencies",
+      "method": "probed _read_bounded on a >1 MiB file; probed _check_dependencies with absent/None and with malformed (non-slice) ownership/register objects; inspected the 4 MiB total and 60 s bounds",
+      "result": "pass: an over-bound file yields IO_ERROR (13); a missing or malformed task-ownership/requirements-register dependency yields BINDING_INVALID (9), never a skipped check or a pass; the fixed 1 MiB/file, 4 MiB total, single-threaded, offline, and sub-second wall-clock bounds hold. BND-03/BND-04/BND-05 hold."
+    },
+    {
+      "id": "R4-CHK-13",
+      "name": "Public safety of model, projection, and output",
+      "method": "ran --verify/--check-human (which scan the model and projection); independently scanned the raw model JSON and the Markdown projection for absolute host paths, private IPv4 ranges, credential-assignment tokens, private-key markers, and unbounded payload tokens",
+      "result": "pass: none of the prohibited classes appear in the model, the projection, or the validator output. The only absolute host paths in the candidate are the documented external deterministic-gate invocation path in verification-plan.md/architecture.md/implementation.md, explicitly scoped out by T009-SR-012, and the synthetic negative-fixture literal inside the validator source (not model/projection/output content). T009-SR-012 / CHK-13 / NEG-23 hold."
+    },
+    {
+      "id": "R4-CHK-14",
+      "name": "Traceability, evidence honesty, and no acceptance claim",
+      "method": "checked the requirements/architecture/design/unit/verification/implementation cross-tables for internal consistency; read implementation.md sections 2.3, 5, and 7; re-ran the T007 ownership validator",
+      "result": "pass: implementation.md revision 3 truthfully records the T009-IR-05 repair and re-scopes its earlier inaccurate list-id sentence to the value actually observed; hashes and the 12-path inventory are correct for this candidate state; the record makes no acceptance/integration/external-review claim and marks no later task complete. docs/engineering/xcom/task-ownership.py --verify, --check-human, and --self-test all exit 0 after the consistency update."
+    },
+    {
+      "id": "R4-CHK-15",
+      "name": "Applicability of restart/recovery and concurrency challenges",
+      "method": "inspected the unit specifications and validator design for persistent state, recovery, and thread usage; checked the documentation classifies them",
+      "result": "pass: T009 has no runtime artifact, no persistent state, no recovery path, and no concurrency (single-threaded, offline, one invocation); unit-specifications.md section 2 and section 5 and verification-plan.md section 6 record these as explicit not-applicable decisions rather than silent gaps. The applicable bounds (input size, offline, runtime) are enforced and verified (R4-CHK-12)."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Fresh DeepSeek Flash read-only review (revision 4) of the repaired T009 candidate bound to baseline 209084b11a211273f815980f753ba728e1251a09. It neither accepts nor integrates the candidate and edits no production code or test.",
+    "The revision-3 blocking finding T009-IR-05 (unhashable non-string family id raised an uncaught TypeError) is closed: all five families now classify list/dict/float/bool ids as SCHEMA_INVALID (2) with no traceback, the four str(...) id coercions are load-bearing, and new fixtures NEG-35..NEG-39 exercise the unhashable-id path. Revision-1 findings T009-IR-01..04 remain closed.",
+    "Non-blocking observation (not a defect and not a finding): requirements.md T009-STK-003 AC-3 lists ADR-0016 in the accepted authorization set, while the T007 closed set and the model record exactly ACC001-ACC015 plus ADR-0018/0019/0020; the model cites only records from the accepted set, so AC-3 holds, and only the illustrative requirement wording is broader than the enforced closed set.",
+    "External Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes. The deterministic gate (verify) reports changed_paths 12 for this candidate state."
+  ]
+}
