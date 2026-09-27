@@ -118,10 +118,35 @@ target_include_directories(
 target_compile_features(xverse_xcom_validation_session PUBLIC cxx_std_20)
 xverse_xcom_apply_warnings(xverse_xcom_validation_session)
 
+# T019's bounded C++ decoder for the canonical activation-plan v1 artifact. It links only the
+# standard library and the already-admitted nlohmann/json header; the third-party JSON type is an
+# implementation detail and does not appear in the public header.
+add_library(xverse_xcom_activation_plan STATIC src/activation_plan.cpp)
+add_library(xverse::xcom_activation_plan ALIAS xverse_xcom_activation_plan)
+target_include_directories(
+  xverse_xcom_activation_plan PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(xverse_xcom_activation_plan PUBLIC nlohmann_json::nlohmann_json)
+target_compile_features(xverse_xcom_activation_plan PUBLIC cxx_std_20)
+xverse_xcom_apply_warnings(xverse_xcom_activation_plan)
+set_target_properties(
+  xverse_xcom_activation_plan
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
   if(NOT DEFINED ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} OR "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
-    message(FATAL_ERROR "T025 tests require the admitted XVERSE_XCOM_T025_TEST_TOOLCHAIN prefix")
+    # Accept an explicit, previously admitted cache value when the environment input is absent;
+    # no new mandatory input is introduced and the admitted prefix is still used unmodified.
+    if(DEFINED XVERSE_XCOM_T025_TEST_TOOLCHAIN AND NOT "${XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
+      set(ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} "${XVERSE_XCOM_T025_TEST_TOOLCHAIN}")
+    else()
+      message(FATAL_ERROR "T025 tests require the admitted XVERSE_XCOM_T025_TEST_TOOLCHAIN prefix")
+    endif()
   endif()
   find_package(
     GTest CONFIG REQUIRED
@@ -326,4 +351,32 @@ if(BUILD_TESTING)
     xcom_observation_disabled_benchmark
     PROPERTIES LABELS "performance;observation"
   )
+
+  # T019 bounded activation-plan decoder tests. The fixture directory and the committed plan
+  # schema are supplied as build-time paths so the tests read the T017 artifacts read-only.
+  foreach(plan_kind IN ITEMS unit negative)
+    add_executable(
+      xverse_xcom_activation_plan_${plan_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/activation_plan/decoder_${plan_kind}_tests.cpp"
+    )
+    target_compile_definitions(
+      xverse_xcom_activation_plan_${plan_kind}_tests
+      PRIVATE
+        "XCOM_ACTIVATION_PLAN_FIXTURE_DIR=\"${PROJECT_SOURCE_DIR}/tests/xcom/activation_plan/fixtures\""
+        "XCOM_ACTIVATION_PLAN_SCHEMA_PATH=\"${PROJECT_SOURCE_DIR}/src/xverse/xcom/contracts/v1/activation-plan.schema.json\""
+    )
+    target_link_libraries(
+      xverse_xcom_activation_plan_${plan_kind}_tests
+      PRIVATE
+        xverse::xcom_activation_plan
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_warnings(xverse_xcom_activation_plan_${plan_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_activation_plan_${plan_kind}_tests
+      PROPERTIES LABELS "t019;${plan_kind}"
+    )
+  endforeach()
 endif()

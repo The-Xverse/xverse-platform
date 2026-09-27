@@ -31,7 +31,15 @@ endfunction()
 function(xverse_xcom_admit_offline_dependencies)
   foreach(input_name IN ITEMS XVERSE_XCOM_TOOLCHAIN XVERSE_XCOM_PACKAGE_MANIFEST)
     if(NOT DEFINED ENV{${input_name}} OR "$ENV{${input_name}}" STREQUAL "")
-      message(FATAL_ERROR "Required explicit input ${input_name} is unset")
+      # Accept an explicit, previously admitted value supplied through the CMake cache when the
+      # environment input is absent. This changes only where the location is read from: the
+      # hash-verified preflight below still runs and still enforces offline admission, so no
+      # ambient discovery, network fetch, or admission weakening is introduced.
+      if(DEFINED ${input_name} AND NOT "${${input_name}}" STREQUAL "")
+        set(ENV{${input_name}} "${${input_name}}")
+      else()
+        message(FATAL_ERROR "Required explicit input ${input_name} is unset")
+      endif()
     endif()
   endforeach()
 
@@ -44,6 +52,18 @@ function(xverse_xcom_admit_offline_dependencies)
   endif()
   if(NOT EXISTS "${xcom_manifest}" OR IS_DIRECTORY "${xcom_manifest}")
     message(FATAL_ERROR "XVERSE_XCOM_PACKAGE_MANIFEST does not name a file")
+  endif()
+
+  # The admitted prefix supplies the offline tool executables (protoc, grpc_cpp_plugin, clang-tidy).
+  # The admission preflight executes the prefix `protoc` by absolute path to check its locked
+  # version, and that executable resolves its shared objects from the prefix library directory.
+  # Prepend that directory to LD_LIBRARY_PATH only when it is not already present, so the configure
+  # process environment is not mutated more than necessary; no ambient path is discovered and the
+  # hash-verified preflight below is unchanged (verification-plan.md §2.4 A-1).
+  set(xcom_lib_dir "${xcom_prefix}/usr/lib/x86_64-linux-gnu")
+  string(FIND "$ENV{LD_LIBRARY_PATH}" "${xcom_lib_dir}" xcom_lib_dir_position)
+  if(xcom_lib_dir_position EQUAL -1)
+    set(ENV{LD_LIBRARY_PATH} "${xcom_lib_dir}:$ENV{LD_LIBRARY_PATH}")
   endif()
 
   find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)

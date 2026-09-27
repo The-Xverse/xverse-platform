@@ -46,7 +46,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [X] T017 Define and validate `io.xverse.xcom` Profile v0.1 and the canonical activation-plan v1
   schema and digest/provenance contract.
 - [X] T018 Implement deterministic Profile-aware plan compilation in `src/xverse_xdl/xcom_plan.py`.
-- [ ] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
+- [X] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
 - [ ] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
 
 ## Phase 5: Observation boundary (US2)
