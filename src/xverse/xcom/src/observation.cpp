@@ -38,6 +38,16 @@ namespace {
   return false;
 }
 
+[[nodiscard]] bool known_validity_effect(const ObservationValidityEffect effect) noexcept {
+  switch (effect) {
+    case ObservationValidityEffect::none:
+    case ObservationValidityEffect::degrade_on_loss:
+    case ObservationValidityEffect::invalidate_on_loss:
+      return true;
+  }
+  return false;
+}
+
 [[nodiscard]] std::optional<Identity> optional_identity(const std::string_view value) noexcept {
   if (value.empty()) {
     return std::optional<Identity>{};
@@ -92,6 +102,18 @@ std::string_view to_string(const ObservationOutcome outcome) noexcept {
   return "unknown";
 }
 
+std::string_view to_string(const ObservationValidityEffect effect) noexcept {
+  switch (effect) {
+    case ObservationValidityEffect::none:
+      return "none";
+    case ObservationValidityEffect::degrade_on_loss:
+      return "degrade-on-loss";
+    case ObservationValidityEffect::invalidate_on_loss:
+      return "invalidate-on-loss";
+  }
+  return "unknown";
+}
+
 ObservationFilter::ObservationFilter(std::optional<Identity> contract_id,
                                      std::optional<Identity> interface_id,
                                      std::optional<Identity> endpoint_id,
@@ -136,26 +158,37 @@ bool ObservationFilter::matches(const CommunicationItem& item) const noexcept {
 }
 
 ObservationTapSpec::ObservationTapSpec(const SemanticVersion& contract_version,
+                                       const Identity& declared_tap_id,
                                        const ObservationFilter& filter,
                                        const ObservationPayloadMode payload_mode,
                                        const std::size_t maximum_payload_bytes,
                                        const std::size_t record_capacity,
-                                       const ObservationOverflowPolicy overflow_policy) noexcept
+                                       const ObservationOverflowPolicy overflow_policy,
+                                       const ObservationValidityEffect validity_effect) noexcept
     : contract_version_(contract_version),
+      declared_tap_id_(declared_tap_id),
       filter_(filter),
       payload_mode_(payload_mode),
       maximum_payload_bytes_(maximum_payload_bytes),
       record_capacity_(record_capacity),
-      overflow_policy_(overflow_policy) {}
+      overflow_policy_(overflow_policy),
+      validity_effect_(validity_effect) {}
 
 std::optional<ObservationTapSpec> ObservationTapSpec::create(
     const ObservationTapSpecInput& input) noexcept {
   const auto version = SemanticVersion::create(input.contract_version);
+  if (!version.has_value() || input.contract_version != kObservationContractVersion) {
+    return std::nullopt;
+  }
+  const auto declared_tap_id = Identity::create(input.tap_id);
+  if (!declared_tap_id.has_value()) {
+    return std::nullopt;
+  }
   const auto filter = ObservationFilter::create(input.filter);
-  if (!version.has_value() || !filter.has_value() ||
-      input.contract_version != kObservationContractVersion || !known_payload_mode(input.payload_mode) ||
+  if (!filter.has_value() || !known_payload_mode(input.payload_mode) ||
       !known_overflow_policy(input.overflow_policy) || input.record_capacity == 0U ||
-      input.record_capacity > kMaximumObservationRecordsPerTap) {
+      input.record_capacity > kMaximumObservationRecordsPerTap ||
+      !known_validity_effect(input.validity_effect)) {
     return std::nullopt;
   }
   const bool prefix = input.payload_mode == ObservationPayloadMode::bounded_prefix;
@@ -164,14 +197,17 @@ std::optional<ObservationTapSpec> ObservationTapSpec::create(
       (!prefix && input.maximum_payload_bytes != 0U)) {
     return std::nullopt;
   }
-  return ObservationTapSpec(*version, *filter, input.payload_mode, input.maximum_payload_bytes,
-                            input.record_capacity, input.overflow_policy);
+  return ObservationTapSpec(*version, *declared_tap_id, *filter, input.payload_mode,
+                            input.maximum_payload_bytes, input.record_capacity,
+                            input.overflow_policy, input.validity_effect);
 }
 
 ObservationRecord::ObservationRecord(const ObservationEvent& event,
                                      const Identity& observation_clock_domain,
                                      const ObservationPayloadMode mode,
-                                     const std::size_t maximum_payload_bytes) noexcept
+                                     const std::size_t maximum_payload_bytes,
+                                     const Identity& tap_id,
+                                     const ObservationRecordCounters& counters) noexcept
     : contract_id_(event.item.contract_id()),
       contract_version_(event.item.contract_version()),
       interface_id_(event.item.interface_id()),
@@ -191,7 +227,9 @@ ObservationRecord::ObservationRecord(const ObservationEvent& event,
       provider_id_(event.item.provider_id()),
       source_payload_size_(event.item.payload().size()),
       provider_outcome_(event.provider_outcome),
-      payload_view_state_(PayloadViewState::omitted) {
+      payload_view_state_(PayloadViewState::omitted),
+      tap_id_(tap_id),
+      counters_(counters) {
   if (mode == ObservationPayloadMode::redacted) {
     payload_view_state_ = PayloadViewState::redacted;
     return;
@@ -337,10 +375,11 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
         const std::size_t candidate =
             (slot.head + slot.size - 1U - offset) % spec.record_capacity();
         if (has_coalescing_key(*slot.records[candidate], event.item)) {
-          const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
-                                         spec.maximum_payload_bytes());
-          slot.records[candidate].emplace(record);
           ++slot.coalesced;
+          const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
+                                         spec.maximum_payload_bytes(), spec.declared_tap_id(),
+                                         {slot.size, slot.accepted, slot.dropped, slot.coalesced});
+          slot.records[candidate].emplace(record);
           return {ObservationOutcome::accepted};
         }
       }
@@ -352,11 +391,12 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
     return {ObservationOutcome::observation_backpressure};
   }
   const std::size_t tail = (slot.head + slot.size) % spec.record_capacity();
-  const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
-                                 spec.maximum_payload_bytes());
-  slot.records[tail].emplace(record);
   ++slot.size;
   ++slot.accepted;
+  const ObservationRecord record(event, *observation_clock_domain, spec.payload_mode(),
+                                 spec.maximum_payload_bytes(), spec.declared_tap_id(),
+                                 {slot.size, slot.accepted, slot.dropped, slot.coalesced});
+  slot.records[tail].emplace(record);
   return {ObservationOutcome::accepted};
 }
 
@@ -458,8 +498,15 @@ std::optional<ObservationSnapshot> ObservationHub::snapshot(
   if (slot == nullptr) {
     return std::nullopt;
   }
-  return ObservationSnapshot{handle, slot->size, slot->accepted, slot->dropped, slot->coalesced,
-                             slot->backpressure_rejections, slot->experiment_validity_degraded};
+  return ObservationSnapshot{handle,
+                             slot->size,
+                             slot->accepted,
+                             slot->dropped,
+                             slot->coalesced,
+                             slot->backpressure_rejections,
+                             slot->experiment_validity_degraded,
+                             slot->spec->declared_tap_id(),
+                             slot->spec->validity_effect()};
 }
 
 ObservationStatus ObservationHub::acknowledge(const ObservationTapHandle& handle) noexcept {

@@ -137,7 +137,7 @@ using xverse::xcom::observation_test::make_tap_spec;
       wrong_origin_filter, ObservationPayloadMode::metadata_only, 0U, 1U,
       ObservationOverflowPolicy::drop_newest));
   const auto unsupported = ObservationTapSpec::create(
-      {"2.0.0", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+      {"2.0.0", "tap.integration", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
        ObservationOverflowPolicy::drop_newest});
   Scenario scenario("filtered", InteractionKind::message_event, 1U, &hub);
   const auto item = scenario.item(1U);

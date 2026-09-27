@@ -11,8 +11,12 @@
  * @failure Invalid, stale, foreign, closed, and capacity-exhausted operations return stable outcomes
  * without unrelated mutation. This boundary performs no I/O, process, environment, or network work.
  * @par Traceability
- * Implements XCOM-OBS-001 through XCOM-OBS-006, XCOM-OBS-008, and XCOM-OBS-009. Focused behavioral
- * fixtures reside in tests/xcom/observation/core/unit_tests.cpp (XCOM-OBS-002 through XCOM-OBS-006).
+ * Implements XCOM-OBS-001 through XCOM-OBS-006, XCOM-OBS-008, and XCOM-OBS-009 (historical SESN-era
+ * identifiers retained as evidence). T021 refines XCOM-SW-OBS-001 with the declared observation point,
+ * declared route point, declared validity effect, and self-describing record; see
+ * docs/engineering/xcom/t021/{requirements,detailed-design,unit-specifications,verification-plan}.md.
+ * Focused behavioral fixtures reside in tests/xcom/observation/core/unit_tests.cpp
+ * (XCOM-OBS-002 through XCOM-OBS-006).
  */
 
 #ifndef XVERSE_XCOM_OBSERVATION_HPP
@@ -61,6 +65,23 @@ enum class ObservationOverflowPolicy : std::uint8_t {
   coalesce_latest,
   /** Reject matching normal submission before provider mutation when capacity is unavailable. */
   lossless_validation,
+};
+
+/**
+ * @brief Declared validity effect for observations lost by bounded saturation.
+ * @ownership Owns no resource; it is an immutable enumeration value.
+ * @lifetime It is a value copied with the policy that declares it.
+ * @thread_safety Concurrent const access is safe.
+ * @failure Unknown values are rejected by ObservationTapSpec::create; this slice implements no
+ * behavior from the declaration, so loss semantics remain unchanged.
+ */
+enum class ObservationValidityEffect : std::uint8_t {
+  /** Declared loss does not change experiment validity. */
+  none,
+  /** Declared loss degrades experiment validity. */
+  degrade_on_loss,
+  /** Declared loss invalidates experiment validity. */
+  invalidate_on_loss,
 };
 
 /** Visibility and completeness of the payload view returned in one record. */
@@ -119,6 +140,13 @@ enum class ObservationOutcome : std::uint8_t {
 
 /** @param outcome Observation outcome. @return Stable external outcome text. */
 [[nodiscard]] std::string_view to_string(ObservationOutcome outcome) noexcept;
+
+/**
+ * @brief Report the accepted io.xverse.xcom validity-effect text for one declaration.
+ * @param effect Declared validity effect.
+ * @return Stable external text: "none", "degrade-on-loss", or "invalidate-on-loss".
+ */
+[[nodiscard]] std::string_view to_string(ObservationValidityEffect effect) noexcept;
 
 /** Immutable operation status without dynamically allocated diagnostic text. */
 struct ObservationStatus final {
@@ -198,6 +226,25 @@ class ObservationFilter final {
    * @return true when the item satisfies every declared constraint.
    */
   [[nodiscard]] bool matches(const CommunicationItem& item) const noexcept;
+  /** @brief Return the declared contract constraint. @return Owned constraint, or no value. */
+  [[nodiscard]] const std::optional<Identity>& contract_id() const noexcept { return contract_id_; }
+  /** @brief Return the declared interface constraint. @return Owned constraint, or no value. */
+  [[nodiscard]] const std::optional<Identity>& interface_id() const noexcept { return interface_id_; }
+  /** @brief Return the declared endpoint constraint. @return Owned constraint, or no value. */
+  [[nodiscard]] const std::optional<Identity>& endpoint_id() const noexcept { return endpoint_id_; }
+  /**
+   * @brief Return the declared logical route point.
+   * @return Owned route constraint, or no value when the tap observes every route.
+   */
+  [[nodiscard]] const std::optional<Identity>& route_id() const noexcept { return route_id_; }
+  /** @brief Return the declared provider constraint. @return Owned constraint, or no value. */
+  [[nodiscard]] const std::optional<Identity>& provider_id() const noexcept { return provider_id_; }
+  /** @brief Return the declared interaction-family constraint. @return Constraint, or no value. */
+  [[nodiscard]] std::optional<InteractionKind> interaction_kind() const noexcept {
+    return interaction_kind_;
+  }
+  /** @brief Return the declared origin constraint. @return Constraint, or no value. */
+  [[nodiscard]] std::optional<OriginKind> origin() const noexcept { return origin_; }
 
  private:
   ObservationFilter(std::optional<Identity> contract_id, std::optional<Identity> interface_id,
@@ -218,6 +265,8 @@ class ObservationFilter final {
 struct ObservationTapSpecInput final {
   /** Version of this declared observation contract. */
   std::string_view contract_version;
+  /** Mandatory declared observation-point identity realized by this tap (1-128 bytes). */
+  std::string_view tap_id;
   /** Provider-neutral logical filter. */
   ObservationFilterInput filter;
   /** Payload exposure policy. */
@@ -228,6 +277,8 @@ struct ObservationTapSpecInput final {
   std::size_t record_capacity{0U};
   /** Declared saturation behavior. */
   ObservationOverflowPolicy overflow_policy{ObservationOverflowPolicy::drop_newest};
+  /** Declared validity effect; reported only, never applied, in this slice. */
+  ObservationValidityEffect validity_effect{ObservationValidityEffect::none};
 };
 
 /** Immutable validated policy for one attach operation. */
@@ -246,6 +297,28 @@ class ObservationTapSpec final {
   ObservationTapSpec& operator=(const ObservationTapSpec&) = delete;
   /** @return Exact implemented observation-contract version. */
   [[nodiscard]] const SemanticVersion& contract_version() const noexcept { return contract_version_; }
+  /**
+   * @brief Return the declared observation point realized by this tap.
+   * @return Owned declared observation-point identity.
+   * @ownership The identity is owned by this policy.
+   * @lifetime The returned reference is valid while this policy lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure It is correlation metadata only; it confers no tap or route authority.
+   */
+  [[nodiscard]] const Identity& declared_tap_id() const noexcept { return declared_tap_id_; }
+  /**
+   * @brief Return the declared logical route point this tap attaches to.
+   * @return The filter's declared route constraint, or no value when every route is observed.
+   * @ownership The identity is owned by this policy's filter.
+   * @lifetime The returned reference is valid while this policy lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure The filter is the single source of truth, so a contradictory attachment is impossible.
+   */
+  [[nodiscard]] const std::optional<Identity>& declared_route_point() const noexcept {
+    return filter_.route_id();
+  }
+  /** @brief Return the declared validity effect. @return Declared effect; never applied here. */
+  [[nodiscard]] ObservationValidityEffect validity_effect() const noexcept { return validity_effect_; }
   /** @return Provider-neutral logical filter. */
   [[nodiscard]] const ObservationFilter& filter() const noexcept { return filter_; }
   /** @return Declared payload exposure mode. */
@@ -258,15 +331,19 @@ class ObservationTapSpec final {
   [[nodiscard]] ObservationOverflowPolicy overflow_policy() const noexcept { return overflow_policy_; }
 
  private:
-  ObservationTapSpec(const SemanticVersion& contract_version, const ObservationFilter& filter,
-                     ObservationPayloadMode payload_mode, std::size_t maximum_payload_bytes,
-                     std::size_t record_capacity, ObservationOverflowPolicy overflow_policy) noexcept;
+  ObservationTapSpec(const SemanticVersion& contract_version, const Identity& declared_tap_id,
+                     const ObservationFilter& filter, ObservationPayloadMode payload_mode,
+                     std::size_t maximum_payload_bytes, std::size_t record_capacity,
+                     ObservationOverflowPolicy overflow_policy,
+                     ObservationValidityEffect validity_effect) noexcept;
   SemanticVersion contract_version_;
+  Identity declared_tap_id_;
   ObservationFilter filter_;
   ObservationPayloadMode payload_mode_;
   std::size_t maximum_payload_bytes_;
   std::size_t record_capacity_;
   ObservationOverflowPolicy overflow_policy_;
+  ObservationValidityEffect validity_effect_;
 };
 
 /** Input metadata for normalizing one already-attempted logical observation event. */
@@ -281,6 +358,24 @@ struct ObservationEvent final {
   std::optional<std::uint64_t> sequence;
   /** Explicit provider result, never inferred by this boundary. */
   ObservationProviderOutcome provider_outcome;
+};
+
+/**
+ * @brief Immutable retention-time queue-counter projection stamped into one record.
+ * @ownership Owns only fixed counter values.
+ * @lifetime It is copied with the record that carries it.
+ * @thread_safety Concurrent const access is safe.
+ * @failure It is a projection at the moment of retention; it is not a durable log.
+ */
+struct ObservationRecordCounters final {
+  /** Records retained in the fixed queue when this record was retained. */
+  std::size_t queued{0U};
+  /** Records accepted into the tap queue when this record was retained. */
+  std::uint64_t accepted{0U};
+  /** Records dropped by drop-newest when this record was retained. */
+  std::uint64_t dropped{0U};
+  /** Records coalesced when this record was retained. */
+  std::uint64_t coalesced{0U};
 };
 
 /**
@@ -338,11 +433,30 @@ class ObservationRecord final {
   [[nodiscard]] std::span<const std::byte> payload_bytes() const noexcept {
     return {payload_bytes_.data(), payload_size_};
   }
+  /**
+   * @brief Return the declared observation point that produced this record.
+   * @return Owned declared identity of the producing tap.
+   * @ownership Owned by this record.
+   * @lifetime The returned reference is valid while this record lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure It is stamped from the authenticated producing tap and cannot be forged.
+   */
+  [[nodiscard]] const Identity& tap_id() const noexcept { return tap_id_; }
+  /**
+   * @brief Return the retention-time queue-counter projection.
+   * @return Owned counter values captured after the retention rule updated them.
+   * @ownership Owned by this record.
+   * @lifetime The returned reference is valid while this record lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure It is a snapshot projection, not a durable loss log.
+   */
+  [[nodiscard]] const ObservationRecordCounters& counters() const noexcept { return counters_; }
 
  private:
   friend class ObservationHub;
   ObservationRecord(const ObservationEvent& event, const Identity& observation_clock_domain,
-                    ObservationPayloadMode mode, std::size_t maximum_payload_bytes) noexcept;
+                    ObservationPayloadMode mode, std::size_t maximum_payload_bytes,
+                    const Identity& tap_id, const ObservationRecordCounters& counters) noexcept;
   Identity contract_id_;
   SemanticVersion contract_version_;
   Identity interface_id_;
@@ -366,6 +480,8 @@ class ObservationRecord final {
   PayloadSchemaState payload_schema_state_{PayloadSchemaState::undecoded};
   std::array<std::byte, kMaximumObservedPayloadBytes> payload_bytes_{};
   std::size_t payload_size_{0U};
+  Identity tap_id_;
+  ObservationRecordCounters counters_;
 };
 
 /** Immutable exact counter snapshot returned by a tap inspection. */
@@ -384,6 +500,10 @@ struct ObservationSnapshot final {
   std::uint64_t backpressure_rejections{0U};
   /** True after lossless capacity loss until an exact acknowledgement. */
   bool experiment_validity_degraded{false};
+  /** Declared observation point realized by the authenticated tap. */
+  Identity declared_tap_id;
+  /** Declared validity effect of the authenticated tap; reported only. */
+  ObservationValidityEffect validity_effect{ObservationValidityEffect::none};
 };
 
 /** Result of attach, carrying an exact handle only on success. */

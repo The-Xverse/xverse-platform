@@ -204,7 +204,7 @@ class Scenario final {
 };
 
 /**
- * @brief Create one observation policy.
+ * @brief Create one observation policy declaring a valid shared observation point.
  * @param filter Provider-neutral logical constraints.
  * @param payload_mode Payload visibility policy.
  * @param maximum_payload_bytes Explicit prefix bound, or zero.
@@ -217,7 +217,7 @@ class Scenario final {
     const std::size_t maximum_payload_bytes, const std::size_t record_capacity,
     const ObservationOverflowPolicy overflow_policy) {
   const auto spec = ObservationTapSpec::create(
-      {kObservationContractVersion, filter, payload_mode, maximum_payload_bytes,
+      {kObservationContractVersion, "tap.integration", filter, payload_mode, maximum_payload_bytes,
        record_capacity, overflow_policy});
   return *spec;
 }

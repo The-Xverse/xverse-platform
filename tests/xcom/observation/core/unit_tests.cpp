@@ -8,7 +8,10 @@
  * @failure The executable reports failed assertions and exits nonzero; it performs no external I/O.
  * @par Traceability
  * Verifies XCOM-OBS-001 through XCOM-OBS-006 and XCOM-OBS-008 against observation.hpp and
- * observation.cpp. XCOM-OBS-009 remains a source/interface inspection obligation.
+ * observation.cpp. XCOM-OBS-009 remains a source/interface inspection obligation. T021 adds the
+ * declared observation-point, declared filter-constraint, validity-effect, self-describing record,
+ * counter-projection, snapshot-declaration, and repeated-declaration cases of
+ * docs/engineering/xcom/t021/verification-plan.md (XCOM-SW-OBS-001, FR-011).
  */
 
 #include "xverse/xcom/observation.hpp"
@@ -17,6 +20,8 @@
 #include <atomic>
 #include <cstddef>
 #include <iostream>
+#include <span>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -63,29 +68,31 @@ using namespace xverse::xcom;
   return *result.value();
 }
 
-/** @return A valid value-owned item with caller-selected logical coalescing fields. */
+/** @return A valid value-owned item with caller-selected logical fields and payload size. */
 [[nodiscard]] CommunicationItem make_item(
     const std::array<std::byte, 4U>& payload, const std::string_view route_id = "route.alpha",
     const std::string_view provider_id = "provider.alpha",
     const OriginKind origin = OriginKind::component,
-    const InteractionKind kind = InteractionKind::message_event) {
+    const InteractionKind kind = InteractionKind::message_event,
+    const std::size_t payload_size = 4U) {
   const CommunicationContract contract = make_contract(kind);
   const auto result = CommunicationItem::create(
       {"contract.alpha", "1.2.3", "interface.alpha", "endpoint.alpha", "schema.alpha", "2.0.1",
        kind, origin, Timestamp(42), "clock.source", "correlation.alpha", "causation.alpha", route_id,
-       provider_id, payload},
+       provider_id, std::span<const std::byte>(payload.data(), payload_size)},
       contract);
   return *result.value();
 }
 
-/** @return One valid policy with a caller-selected filter, payload, and overflow behavior. */
+/** @return One valid policy with a caller-selected filter, payload, and declared observation point. */
 [[nodiscard]] ObservationTapSpec make_spec(
     const ObservationPayloadMode payload_mode, const std::size_t maximum_payload_bytes,
     const std::size_t record_capacity, const ObservationOverflowPolicy overflow_policy,
-    const ObservationFilterInput& filter = {}) {
-  const auto result = ObservationTapSpec::create({kObservationContractVersion, filter, payload_mode,
-                                                   maximum_payload_bytes, record_capacity,
-                                                   overflow_policy});
+    const ObservationFilterInput& filter = {}, const std::string_view tap_id = "tap.unit",
+    const ObservationValidityEffect validity_effect = ObservationValidityEffect::none) {
+  const auto result = ObservationTapSpec::create(
+      {kObservationContractVersion, tap_id, filter, payload_mode, maximum_payload_bytes,
+       record_capacity, overflow_policy, validity_effect});
   return *result;
 }
 
@@ -120,13 +127,13 @@ using namespace xverse::xcom;
   const auto wrong_origin = ObservationFilter::create(
       {{}, {}, {}, {}, {}, std::nullopt, OriginKind::validation_tool});
   const auto unsupported = ObservationTapSpec::create(
-      {"2.0.0", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+      {"2.0.0", "tap.unit", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
        ObservationOverflowPolicy::drop_newest});
   const auto zero_capacity = ObservationTapSpec::create(
-      {kObservationContractVersion, {}, ObservationPayloadMode::metadata_only, 0U, 0U,
+      {kObservationContractVersion, "tap.unit", {}, ObservationPayloadMode::metadata_only, 0U, 0U,
        ObservationOverflowPolicy::drop_newest});
   const auto oversized_prefix = ObservationTapSpec::create(
-      {kObservationContractVersion, {}, ObservationPayloadMode::bounded_prefix,
+      {kObservationContractVersion, "tap.unit", {}, ObservationPayloadMode::bounded_prefix,
        kMaximumObservedPayloadBytes + 1U, 1U, ObservationOverflowPolicy::drop_newest});
   bool valid = expect(exact.has_value() && exact->matches(item), "exact filter") &&
                expect(wrong_contract.has_value() && !wrong_contract->matches(item), "contract filter") &&
@@ -158,6 +165,391 @@ using namespace xverse::xcom;
             valid;
   }
   return valid;
+}
+
+/** @brief Verify declared-constraint accessors round-trip while the matching matrix is unchanged. */
+[[nodiscard]] bool test_filter_declared_constraints() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem item = make_item(bytes);
+  const auto declared = ObservationFilter::create(
+      {"contract.alpha", "interface.alpha", "endpoint.alpha", "route.alpha", "provider.alpha",
+       InteractionKind::message_event, OriginKind::component});
+  const auto route_only =
+      ObservationFilter::create({{}, {}, {}, "route.alpha", {}, std::nullopt});
+  if (!expect(declared.has_value() && route_only.has_value(), "declared filter creation")) {
+    return false;
+  }
+  const ObservationFilter& filter = *declared;
+  bool valid =
+      expect(filter.contract_id().has_value() && filter.contract_id()->value() == "contract.alpha",
+             "declared contract accessor") &&
+      expect(filter.interface_id().has_value() &&
+                 filter.interface_id()->value() == "interface.alpha",
+             "declared interface accessor") &&
+      expect(filter.endpoint_id().has_value() && filter.endpoint_id()->value() == "endpoint.alpha",
+             "declared endpoint accessor") &&
+      expect(filter.route_id().has_value() && filter.route_id()->value() == "route.alpha",
+             "declared route accessor") &&
+      expect(filter.provider_id().has_value() &&
+                 filter.provider_id()->value() == "provider.alpha",
+             "declared provider accessor") &&
+      expect(filter.interaction_kind().has_value() &&
+                 *filter.interaction_kind() == InteractionKind::message_event,
+             "declared interaction accessor") &&
+      expect(filter.origin().has_value() && *filter.origin() == OriginKind::component,
+             "declared origin accessor") &&
+      expect(filter.matches(item), "declared filter match matrix unchanged");
+  const ObservationFilter& partial = *route_only;
+  valid = expect(partial.route_id().has_value() && partial.route_id()->value() == "route.alpha",
+                 "route-only declared point") &&
+          expect(!partial.contract_id().has_value() && !partial.interface_id().has_value() &&
+                     !partial.endpoint_id().has_value() && !partial.provider_id().has_value() &&
+                     !partial.interaction_kind().has_value() && !partial.origin().has_value(),
+                 "unconstrained fields report no value") &&
+          expect(partial.matches(item), "route-only match matrix unchanged") && valid;
+  return valid;
+}
+
+/** @brief Verify a declared tap policy exposes its exact declared observation point and vocabulary. */
+[[nodiscard]] bool test_declared_tap_binding() {
+  ObservationFilterInput filter{};
+  filter.route_id = "route.alpha";
+  filter.provider_id = "provider.alpha";
+  const auto spec = ObservationTapSpec::create(
+      {kObservationContractVersion, "tap.declared", filter, ObservationPayloadMode::bounded_prefix,
+       64U, 4U, ObservationOverflowPolicy::coalesce_latest,
+       ObservationValidityEffect::degrade_on_loss});
+  if (!expect(spec.has_value(), "declared tap policy creation")) {
+    return false;
+  }
+  return expect(spec->declared_tap_id().value() == "tap.declared", "declared tap identity") &&
+         expect(spec->declared_route_point().has_value() &&
+                    spec->declared_route_point()->value() == "route.alpha",
+                "declared route point reported") &&
+         expect(spec->declared_route_point() == spec->filter().route_id(),
+                "declared route point single source of truth") &&
+         expect(spec->validity_effect() == ObservationValidityEffect::degrade_on_loss,
+                "declared validity effect round-trip") &&
+         expect(spec->contract_version().value() == kObservationContractVersion,
+                "declared contract version round-trip") &&
+         expect(spec->payload_mode() == ObservationPayloadMode::bounded_prefix,
+                "declared payload mode round-trip") &&
+         expect(spec->maximum_payload_bytes() == 64U, "declared payload bound round-trip") &&
+         expect(spec->record_capacity() == 4U, "declared capacity round-trip") &&
+         expect(spec->overflow_policy() == ObservationOverflowPolicy::coalesce_latest,
+                "declared overflow round-trip");
+}
+
+/** @brief Verify every malformed declaration fails closed with no partial policy value. */
+[[nodiscard]] bool test_declared_tap_rejections() {
+  const std::string too_long(129U, 'a');
+  std::string control_byte = "tap";
+  control_byte.push_back(static_cast<char>(0x1FU));
+  const std::string leading_space = " tap";
+  const std::string trailing_space = "tap ";
+  ObservationFilterInput malformed_filter{};
+  malformed_filter.interface_id = too_long;
+  const auto rejects = [](const ObservationTapSpecInput& input) {
+    return !ObservationTapSpec::create(input).has_value();
+  };
+  return expect(rejects({kObservationContractVersion, "", {}, ObservationPayloadMode::metadata_only,
+                         0U, 1U, ObservationOverflowPolicy::drop_newest}),
+                "empty declared identity") &&
+         expect(rejects({kObservationContractVersion, too_long, {},
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "over-bound declared identity") &&
+         expect(rejects({kObservationContractVersion, control_byte, {},
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "control-byte declared identity") &&
+         expect(rejects({kObservationContractVersion, leading_space, {},
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}) &&
+                    rejects({kObservationContractVersion, trailing_space, {},
+                             ObservationPayloadMode::metadata_only, 0U, 1U,
+                             ObservationOverflowPolicy::drop_newest}),
+                "whitespace-padded declared identity") &&
+         expect(rejects({"2.0.0", "tap.unit", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "wrong observation version") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         static_cast<ObservationPayloadMode>(0x7FU), 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "unknown payload mode") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         static_cast<ObservationOverflowPolicy>(0x7FU)}),
+                "unknown overflow policy") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest,
+                         static_cast<ObservationValidityEffect>(0x7FU)}),
+                "unknown validity effect") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::metadata_only, 0U, 0U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "zero record capacity") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::metadata_only, 0U,
+                         kMaximumObservationRecordsPerTap + 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "over-bound record capacity") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::bounded_prefix, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "zero prefix bound") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::bounded_prefix,
+                         kMaximumObservedPayloadBytes + 1U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "over-bound prefix") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", {},
+                         ObservationPayloadMode::metadata_only, 1U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "non-zero bound on metadata mode") &&
+         expect(rejects({kObservationContractVersion, "tap.unit", malformed_filter,
+                         ObservationPayloadMode::metadata_only, 0U, 1U,
+                         ObservationOverflowPolicy::drop_newest}),
+                "malformed filter identity");
+}
+
+/** @brief Verify the declared validity-effect vocabulary and its stable external text. */
+[[nodiscard]] bool test_validity_effect_vocabulary() {
+  bool valid = expect(to_string(ObservationValidityEffect::none) == "none",
+                      "none external text") &&
+               expect(to_string(ObservationValidityEffect::degrade_on_loss) == "degrade-on-loss",
+                      "degrade external text") &&
+               expect(to_string(ObservationValidityEffect::invalidate_on_loss) ==
+                          "invalidate-on-loss",
+                      "invalidate external text");
+  for (const ObservationValidityEffect effect :
+       {ObservationValidityEffect::none, ObservationValidityEffect::degrade_on_loss,
+        ObservationValidityEffect::invalidate_on_loss}) {
+    const auto spec = ObservationTapSpec::create(
+        {kObservationContractVersion, "tap.unit", {}, ObservationPayloadMode::metadata_only, 0U, 2U,
+         ObservationOverflowPolicy::drop_newest, effect});
+    valid = expect(spec.has_value() && spec->validity_effect() == effect,
+                   "declared validity effect accepted") &&
+            valid;
+  }
+  return expect(!ObservationTapSpec::create(
+                    {kObservationContractVersion, "tap.unit", {},
+                     ObservationPayloadMode::metadata_only, 0U, 2U,
+                     ObservationOverflowPolicy::drop_newest,
+                     static_cast<ObservationValidityEffect>(0x9FU)})
+                    .has_value(),
+                "unknown validity effect rejected") &&
+         valid;
+}
+
+/** @brief Verify declared payload bounds echo exactly and drive complete/truncated views. */
+[[nodiscard]] bool test_payload_policy_bounds() {
+  const std::array<std::byte, 4U> bytes{std::byte{5}, std::byte{6}, std::byte{7}, std::byte{8}};
+  const auto smallest = ObservationTapSpec::create(
+      {kObservationContractVersion, "tap.min", {}, ObservationPayloadMode::bounded_prefix, 1U, 1U,
+       ObservationOverflowPolicy::drop_newest});
+  const auto largest = ObservationTapSpec::create(
+      {kObservationContractVersion, "tap.max", {}, ObservationPayloadMode::bounded_prefix,
+       kMaximumObservedPayloadBytes, kMaximumObservationRecordsPerTap,
+       ObservationOverflowPolicy::drop_newest});
+  if (!expect(smallest.has_value() && smallest->maximum_payload_bytes() == 1U &&
+                  smallest->record_capacity() == 1U,
+              "smallest prefix policy") ||
+      !expect(largest.has_value() &&
+                  largest->maximum_payload_bytes() == kMaximumObservedPayloadBytes &&
+                  largest->record_capacity() == kMaximumObservationRecordsPerTap,
+              "largest prefix policy")) {
+    return false;
+  }
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::bounded_prefix, 2U, 4U,
+                                        ObservationOverflowPolicy::drop_newest));
+  if (!expect(tap.handle.has_value(), "prefix tap attachment") ||
+      !expect(emit(hub, make_item(bytes, "route.alpha", "provider.alpha", OriginKind::component,
+                                  InteractionKind::message_event, 0U),
+                   1U)
+                  .succeeded() &&
+                  emit(hub, make_item(bytes, "route.alpha", "provider.alpha",
+                                      OriginKind::component, InteractionKind::message_event, 2U),
+                       2U)
+                      .succeeded() &&
+                  emit(hub, make_item(bytes), 3U).succeeded(),
+              "prefix submissions")) {
+    return false;
+  }
+  const auto empty = hub.poll(*tap.handle);
+  const auto exact = hub.poll(*tap.handle);
+  const auto oversized = hub.poll(*tap.handle);
+  return expect(empty.record.has_value() && empty.record->payload_bytes().empty() &&
+                    empty.record->payload_view_state() == PayloadViewState::complete,
+                "zero-byte source complete") &&
+         expect(exact.record.has_value() && exact.record->payload_bytes().size() == 2U &&
+                    exact.record->payload_view_state() == PayloadViewState::complete,
+                "source equal to bound complete") &&
+         expect(oversized.record.has_value() && oversized.record->payload_bytes().size() == 2U &&
+                    oversized.record->payload_bytes()[0] == std::byte{5} &&
+                    oversized.record->payload_view_state() == PayloadViewState::truncated,
+                "source over bound truncated");
+}
+
+/** @brief Verify a pulled record reports its producing declared point and every baseline field. */
+[[nodiscard]] bool test_record_self_description() {
+  const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+  const CommunicationItem item = make_item(bytes);
+  ObservationHub hub;
+  const auto attach = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                           ObservationOverflowPolicy::drop_newest, {},
+                                           "tap.declared"));
+  if (!expect(attach.handle.has_value() && emit(hub, item, 5U).succeeded(),
+              "record self-description publication")) {
+    return false;
+  }
+  const auto pulled = hub.poll(*attach.handle);
+  if (!expect(pulled.record.has_value(), "record self-description pull")) {
+    return false;
+  }
+  const ObservationRecord& record = *pulled.record;
+  static_cast<void>(emit(hub, item, 6U));
+  return expect(record.tap_id().value() == "tap.declared", "record declared tap identity") &&
+         expect(record.contract_id().value() == "contract.alpha", "record contract identity") &&
+         expect(record.contract_version().value() == "1.2.3", "record contract version") &&
+         expect(record.interface_id().value() == "interface.alpha", "record interface identity") &&
+         expect(record.endpoint_id().value() == "endpoint.alpha", "record endpoint identity") &&
+         expect(record.schema_id().value() == "schema.alpha", "record schema identity") &&
+         expect(record.schema_version().value() == "2.0.1", "record schema version") &&
+         expect(record.interaction_kind() == InteractionKind::message_event, "record interaction") &&
+         expect(record.origin() == OriginKind::component, "record origin") &&
+         expect(record.source_timestamp().nanoseconds() == 42, "record source timestamp") &&
+         expect(record.source_clock_domain().value() == "clock.source", "record source clock") &&
+         expect(record.observation_timestamp().nanoseconds() == 5, "record observation timestamp") &&
+         expect(record.observation_clock_domain().value() == "clock.observer",
+                "record observation clock") &&
+         expect(record.sequence().has_value() && *record.sequence() == 5U, "record sequence") &&
+         expect(record.correlation_id().value() == "correlation.alpha", "record correlation") &&
+         expect(record.causation_id().value() == "causation.alpha", "record causation") &&
+         expect(record.route_id().value() == "route.alpha", "record route identity") &&
+         expect(record.provider_id().value() == "provider.alpha", "record provider identity") &&
+         expect(record.source_payload_size() == bytes.size(), "record source size") &&
+         expect(record.provider_outcome() == ObservationProviderOutcome::accepted,
+                "record provider outcome") &&
+         expect(record.payload_view_state() == PayloadViewState::omitted, "record payload state") &&
+         expect(record.payload_schema_state() == PayloadSchemaState::undecoded,
+                "record schema state");
+}
+
+/** @brief Verify retained and coalesced records carry their post-retention counter projection. */
+[[nodiscard]] bool test_record_counter_projection() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  const CommunicationItem beta = make_item(bytes, "route.beta");
+  ObservationHub drop_hub;
+  const auto drop = drop_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                              ObservationOverflowPolicy::drop_newest));
+  const auto first = emit(drop_hub, alpha, 1U);
+  const auto second = emit(drop_hub, alpha, 2U);
+  const auto drop_snapshot = drop_hub.snapshot(*drop.handle);
+  const auto retained = drop_hub.poll(*drop.handle);
+  const auto no_second = drop_hub.poll(*drop.handle);
+
+  ObservationHub coalesce_hub;
+  const auto coalesce = coalesce_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                                      ObservationOverflowPolicy::coalesce_latest));
+  static_cast<void>(emit(coalesce_hub, alpha, 1U));
+  static_cast<void>(emit(coalesce_hub, beta, 2U));
+  static_cast<void>(emit(coalesce_hub, alpha, 3U));
+  const auto replaced = coalesce_hub.poll(*coalesce.handle);
+
+  ObservationHub lossless_hub;
+  const auto lossless = lossless_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                                      ObservationOverflowPolicy::lossless_validation));
+  static_cast<void>(emit(lossless_hub, alpha, 1U));
+  const auto backpressure = emit(lossless_hub, alpha, 2U);
+  const auto lossless_retained = lossless_hub.poll(*lossless.handle);
+  return expect(first.succeeded() && second.succeeded(), "counter projection submissions") &&
+         expect(drop_snapshot.has_value() && drop_snapshot->queued == 1U &&
+                    drop_snapshot->accepted == 1U && drop_snapshot->dropped == 1U,
+                "drop snapshot counters") &&
+         expect(retained.record.has_value() && retained.record->counters().queued == 1U &&
+                    retained.record->counters().accepted == 1U &&
+                    retained.record->counters().dropped == 0U &&
+                    retained.record->counters().coalesced == 0U,
+                "retained record counter projection") &&
+         expect(no_second.status.outcome == ObservationOutcome::no_record,
+                "dropped submission produced no record") &&
+         expect(replaced.record.has_value() && replaced.record->counters().coalesced == 1U &&
+                    replaced.record->counters().queued == 2U &&
+                    *replaced.record->sequence() == 3U,
+                "coalesced replacement counter projection") &&
+         expect(backpressure.outcome == ObservationOutcome::observation_backpressure &&
+                    lossless_retained.record.has_value() &&
+                    lossless_retained.record->counters().queued == 1U,
+                "backpressure rejection produced no replacement record");
+}
+
+/** @brief Verify the snapshot reports the declared point and rejects foreign or stale handles. */
+[[nodiscard]] bool test_snapshot_reports_declaration() {
+  ObservationHub hub;
+  ObservationHub foreign_hub;
+  const auto attach = hub.attach(
+      make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                ObservationOverflowPolicy::drop_newest, {}, "tap.snapshot",
+                ObservationValidityEffect::invalidate_on_loss));
+  if (!expect(attach.handle.has_value(), "snapshot declaration attachment")) {
+    return false;
+  }
+  const auto snapshot = hub.snapshot(*attach.handle);
+  const auto foreign = foreign_hub.snapshot(*attach.handle);
+  const auto closed = hub.detach(*attach.handle);
+  const auto stale = hub.snapshot(*attach.handle);
+  return expect(snapshot.has_value() && snapshot->declared_tap_id.value() == "tap.snapshot" &&
+                    snapshot->validity_effect == ObservationValidityEffect::invalidate_on_loss &&
+                    snapshot->queued == 0U && snapshot->accepted == 0U && snapshot->dropped == 0U,
+                "snapshot reports the declaration") &&
+         expect(!foreign.has_value(), "foreign snapshot absent") &&
+         expect(closed.succeeded() && !stale.has_value(), "closed snapshot absent");
+}
+
+/** @brief Verify two taps may declare one observation point with independent slots and counters. */
+[[nodiscard]] bool test_repeated_declaration_capacity() {
+  ObservationHub hub;
+  const auto first = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {}, "tap.shared"));
+  const auto second = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                           ObservationOverflowPolicy::drop_newest, {}, "tap.shared"));
+  if (!expect(first.handle.has_value() && second.handle.has_value() &&
+                  first.handle->hub_instance_id() == second.handle->hub_instance_id() &&
+                  first.handle->tap_id() != second.handle->tap_id(),
+              "repeated declared-point slots")) {
+    return false;
+  }
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem item = make_item(bytes);
+  static_cast<void>(emit(hub, item, 1U));
+  const auto first_snapshot = hub.snapshot(*first.handle);
+  const auto second_snapshot = hub.snapshot(*second.handle);
+  const auto detached = hub.detach(*first.handle);
+  const auto second_after = hub.snapshot(*second.handle);
+  const auto first_after = hub.snapshot(*first.handle);
+  const auto recreated = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                              ObservationOverflowPolicy::drop_newest, {},
+                                              "tap.shared"));
+  return expect(first_snapshot.has_value() &&
+                    first_snapshot->declared_tap_id.value() == "tap.shared" &&
+                    second_snapshot.has_value() &&
+                    second_snapshot->declared_tap_id.value() == "tap.shared",
+                "both taps report the declared identity") &&
+         expect(first_snapshot->accepted == 1U && second_snapshot->accepted == 1U,
+                "independent counters") &&
+         expect(detached.succeeded() && second_after.has_value() &&
+                    second_after->declared_tap_id.value() == "tap.shared" &&
+                    !first_after.has_value(),
+                "detaching one leaves the other active") &&
+         expect(recreated.handle.has_value() &&
+                    recreated.handle->tap_id() == first.handle->tap_id() &&
+                    recreated.handle->generation() > first.handle->generation() &&
+                    recreated.handle->generation() != second.handle->generation(),
+                "recreated generation independent of the other tap");
 }
 
 /** @brief Verify metadata-only exposes no bytes while retaining all normalized metadata. */
@@ -448,10 +840,15 @@ using namespace xverse::xcom;
 
 /** @brief Run all focused observation fixtures. @return Zero only when every check passes. */
 int main() {
-  return test_values_filters_and_versions() && test_metadata_only() &&
-                 test_controlled_payload_states() && test_best_effort_overflow() &&
-                 test_lossless_reservations() && test_competing_reservation_interleaving() &&
-                 test_exact_tap_handles() && test_synthetic_sink_concurrency()
+  return test_values_filters_and_versions() && test_filter_declared_constraints() &&
+                 test_declared_tap_binding() && test_declared_tap_rejections() &&
+                 test_validity_effect_vocabulary() && test_payload_policy_bounds() &&
+                 test_record_self_description() && test_record_counter_projection() &&
+                 test_snapshot_reports_declaration() && test_repeated_declaration_capacity() &&
+                 test_metadata_only() && test_controlled_payload_states() &&
+                 test_best_effort_overflow() && test_lossless_reservations() &&
+                 test_competing_reservation_interleaving() && test_exact_tap_handles() &&
+                 test_synthetic_sink_concurrency()
              ? 0
              : 1;
 }

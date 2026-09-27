@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "task_id": "T021",
+  "baseline_revision": "8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 1,
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t021/architecture.md",
+    "docs/engineering/xcom/t021/detailed-design.md",
+    "docs/engineering/xcom/t021/implementation.md",
+    "docs/engineering/xcom/t021/requirements.md",
+    "docs/engineering/xcom/t021/unit-specifications.md",
+    "docs/engineering/xcom/t021/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+    "src/xverse/xcom/src/observation.cpp",
+    "tests/xcom/observation/core/unit_tests.cpp",
+    "tests/xcom/observation/integration/integration_tests.cpp",
+    "tests/xcom/observation/integration/test_support.hpp"
+  ],
+  "checks": [
+    {
+      "id": "T021-IR-01",
+      "name": "Exact candidate inventory and baseline binding",
+      "method": "ran `git rev-parse 8e3c4cf...`, `git diff --name-only 8e3c4cf... --`, `git ls-files --others --exclude-standard`, and `git diff --check 8e3c4cf... --`; recomputed the gate inventory as tracked union (untracked minus the review record and package manifest)",
+      "result": "pass: the baseline resolves to the exact SHA; the deterministic inventory is exactly the 12 paths in `reviewed_paths` (6 tracked edits and 6 untracked T021 work products); `git diff --check` is clean (exit 0). The only untracked paths are the six `docs/engineering/xcom/t021/*.md` work products; this review record and `reports/xcom-queue/t021-package.json` are excluded per `candidate_paths`. No `src/xverse_xdl/`, `xdl/`, `proto/`, `contracts/`, `CMakeLists.txt`, `cmake/*.cmake`, `activation_plan.*`, `provider.*`, `loopback_provider.*`, `endpoint_route_lifecycle.*`, `validation_session.*`, `stimulation_journal.*`, `disabled_tap_benchmark.cpp`, or another task's path appears."
+    },
+    {
+      "id": "T021-IR-02",
+      "name": "Requirement-to-change-to-check traceability",
+      "method": "read requirements.md sections 3-5, 10; detailed-design.md sections 2-13; unit-specifications.md sections 2-6; verification-plan.md sections 4-5, 8; implementation.md sections 3, 5, 6; cross-checked each T021-SR-001..022 against the realized symbols in observation.hpp/observation.cpp and the named cases in unit_tests.cpp",
+      "result": "pass: every T021-STK/SR requirement maps to at least one CHK/NEG and to a realized symbol; the declared observation-point identity, filter-constraint accessors, declared validity-effect vocabulary, single-source-of-truth route point, self-describing record (`tap_id()`, `counters()`), and snapshot declaration (`declared_tap_id`, `validity_effect`) are all present and named. The declared validity effect is vocabulary/report only (no behavior), matching T021-LIM-03 and leaving T022 unclaimed. One wording nuance is recorded in `notes` under T021-IR-NOTE-01; it does not break the implementation-to-requirement chain."
+    },
+    {
+      "id": "T021-IR-03",
+      "name": "No later task (T022/T023/T024) implemented",
+      "method": "diffed observation.cpp `reserve`/`commit`/`retain`/`detach` against the baseline; grepped the changed sources for payload allow-list, redaction profile, decoder, and validity-effect application",
+      "result": "pass: the only retention-adjacent change in `retain` is moving `++slot.size; ++slot.accepted;` ahead of record construction and stamping the record counters; every drop-newest, coalesce-latest, lossless-validation, backpressure, and degraded-marker rule is otherwise byte-identical to the baseline. No allow-list, decoder, schema success, validity-effect application, or synthetic-sink/isolation change is added; the synthetic sink is untouched. The retention behavior therefore remains T022-owned and unclaimed."
+    },
+    {
+      "id": "T021-IR-04",
+      "name": "Failure atomicity and rejected-operation side effects",
+      "method": "read `ObservationFilter::create`, `ObservationTapSpec::create`, `known_validity_effect`, and the `ObservationHub` mutation paths; read `test_declared_tap_rejections` and `test_validity_effect_vocabulary`",
+      "result": "pass: `ObservationFilter::create` and `ObservationTapSpec::create` are pure `noexcept` factories that copy into fixed local storage and return `std::nullopt` on the first violation; a rejected declaration performs no tap-slot, generation, counter, or retained-record mutation. The validation order declared in detailed-design.md section 4.1 (version, declared identity, filter, mode, overflow, capacity, validity effect, bound) is realized exactly in observation.cpp:177-203. All 14 injected defects in `test_declared_tap_rejections` (empty/129-byte/control-byte/whitespace `tap_id`, wrong version, unknown mode/overflow/validity effect, zero/over capacity, zero/over prefix, non-zero bound on metadata, malformed filter identity) assert no policy value."
+    },
+    {
+      "id": "T021-IR-05",
+      "name": "Bounded resources and no dynamic allocation",
+      "method": "inspected `kMaximumObservationTaps`/`kMaximumObservationRecordsPerTap`/`kMaximumObservedPayloadBytes`, the new fixed members (`Identity declared_tap_id_`, `ObservationRecordCounters counters_`, snapshot trailing fields), and grepped the changed sources for `new`/`delete`/`malloc`/`std::vector`/unbounded containers",
+      "result": "pass: bounds remain 8 tap slots, 16 fixed record slots per tap, 1-16 declared capacity, and 1024 payload bytes; `tap_id` is bounded to 1-128 bytes by the T013 `Identity` rule (verified in value.cpp:54-66 and kMaximumIdentityBytes==128 in value.hpp:24). The new fields are fixed-size (one identity plus four counters), matching detailed-design.md section 9 and architecture.md section 7; no allocation, timer, retry, quota, or wall-clock dependency is introduced on the T021 path."
+    },
+    {
+      "id": "T021-IR-06",
+      "name": "Concurrency, restart/recovery, and no callback",
+      "method": "read `retain`, `commit`, `snapshot`, `poll`, and `detach`; read `test_competing_reservation_interleaving` and `test_synthetic_sink_concurrency`; ran `ctest -R xcom_observation`",
+      "result": "pass: every new counter stamp happens inside the single hub mutex in `retain`; the snapshot is copied after unlock; the new accessors are `const noexcept` over owned storage and introduce no shared mutable state. No consumer callback path exists, so no user code runs under an X-COM lock. The hub is an in-process, non-durable object; T021 adds no persistence, so no restart/recovery behavior is added or required (matching T021-LIM-01/LIM-02). The 64-iteration writer/reader concurrency fixture and the forced competing-reservation fixture still pass."
+    },
+    {
+      "id": "T021-IR-07",
+      "name": "Tests exercise required behavior beyond the normal path",
+      "method": "read all nine added cases and the eight preserved cases; ran `ctest --test-dir build/fabro-t021 -R xcom_observation --output-on-failure`",
+      "result": "pass: `3/3` observation tests pass (unit, integration, disabled benchmark). The new cases cover the rejection/boundary paths, not only the happy path: 14 fail-closed declaration rejections; unknown validity effect; smallest/largest prefix and capacity bounds; zero-byte, equal-to-bound, and over-bound payload views; foreign/stale/closed snapshot absence; drop/coalesce/backpressure counter projections with a dropped submission producing no record; and repeated declared-point capacity with independent generations. No assertion is tautological beyond the structural single-source-of-truth check documented as NEG-05."
+    },
+    {
+      "id": "T021-IR-08",
+      "name": "Compatibility and additivity",
+      "method": "ran `git diff --stat`, scanned deleted lines in `tests/`, ran `ctest -N` and the observation tests, and compared the baseline registration of `xcom_observation_disabled_benchmark`",
+      "result": "pass: the diff is additive (`+606/-42`); every deleted test line is a helper-signature/initializer or `main()` line replaced by an equivalent carrying the new declared point, and no assertion, case, target, or label is removed, renamed, or weakened. `ctest -N` reports 306 tests (unchanged count), the deprecated/benchmark target was not edited, and no build file changed. The only source-incompatible surface is the `ObservationTapSpecInput` brace-init sites, exactly the in-repository fixture call sites named in detailed-design.md section 12, all updated."
+    },
+    {
+      "id": "T021-IR-09",
+      "name": "Public safety, offline/domain-neutral boundary, and Doxygen",
+      "method": "scanned the changed sources and work products for forbidden APIs and secret/private content; inspected the new/changed public declarations for Doxygen",
+      "result": "pass: no network/socket/resolver/TLS, ambient/secret lookup, filesystem, process, dynamic-load, or legacy access appears; the only new vocabulary mirrors `xdl/profiles/xcom-v0.1.schema.json` `validityEffect` `{none, degrade-on-loss, invalidate-on-loss}` (schema line 151) with no competing vocabulary, and the declared `ObservationValidityEffect` matches `activation_plan.hpp`'s decoded model text. Fixture payloads are synthetic and <= 4 bytes; no credential, private address, absolute host path, or deployment value is present; no export/dashboard/storage/query primitive is added. New/changed declarations carry Doxygen `@brief` with applicable ownership/lifetime/thread-safety/failure tags (one tag-coverage nuance recorded as T021-IR-NOTE-02)."
+    },
+    {
+      "id": "T021-IR-10",
+      "name": "Candidate artifact hash binding",
+      "method": "recomputed SHA-256 of the five changed source/test artifacts and compared them with implementation.md section 3.2",
+      "result": "pass: `observation.hpp`=25a59e1cda36e16bcdcb96adfdfbdfad5b3461131077325f629faf73b06d391d, `observation.cpp`=1aad1b4ed001895807284eda01e64d5f77d50bd4b902e7c5a64a23ff15d7741b, `unit_tests.cpp`=8f2e5c85325f8e67e6f84cd00a427ce726be524adc1753540c0295f31c8b379d, `test_support.hpp`=e2c05633cc00b2924af27152787a7df5a4ee343d0f5e4587f2c0da3ad2c0bf4c, `integration_tests.cpp`=2b5c003b02eff2fa62c7c3a67eae3f7df1c936fb9df74b6691541fcb1c47e749; all five match the recorded values (zero mismatches), so the implementation record is bound to this exact candidate."
+    },
+    {
+      "id": "T021-IR-11",
+      "name": "Deterministic verify gate and ledger",
+      "method": "reviewed the recorded verify result and independently ran `ctest --test-dir build/fabro-t021 -N` and `-R xcom_observation`; read the `specs/007-xcom-core/tasks.md` diff",
+      "result": "pass: the verify gate reported `ok` with `changed_paths: 12` and `ctest:306`; independent discovery reports 306 tests and the observation selection reports 100% pass. The only `tasks.md` change is `- [ ] T021` -> `- [X] T021`; T022-T024 remain unchecked, so no later task is marked or implemented."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "T021-IR-NOTE-01 (non-blocking traceability wording): requirements.md:237-242 (T021-SR-012) states the tap shall expose 'its declared identity, declared route point, declared validity effect, and counters through an exact-handle snapshot'. The snapshot carries only the declared identity and validity effect plus counters; the declared route point is exposed through `ObservationTapSpec::declared_route_point()` (observation.hpp:317-319), not through `ObservationSnapshot`. The requirement's own verification intent and CHK-12 (verification-plan.md:97) enumerate only identity, validity effect, and counters, and architecture.md:143/163 and detailed-design.md section 6 consistently place the route point on the policy. The functional intent (exposing the declared route point, single source of truth) is delivered and verified by `test_declared_tap_binding`; the snapshot omission is a plan-text imprecision, not a capability gap, so it is recorded rather than raised as a blocking finding. A later editorial pass may align T021-SR-012 with CHK-12.",
+    "T021-IR-NOTE-02 (non-blocking documentation nuance): the seven new `ObservationFilter` accessors (observation.hpp:229-247) and `ObservationTapSpec::validity_effect()` (observation.hpp:320-321) carry `@brief`/`@return` only, whereas the sibling new accessors `declared_tap_id()`/`declared_route_point()` carry the full `@ownership`/`@lifetime`/`@thread_safety`/`@failure` set. The class-level Doxygen already documents ownership, lifetime, thread-safety, and failure for the immutable value, and the admitted documentation configuration (group `xcom_obs`, strict mode DOX-GAP-01) is unchanged and owned by T011/T037, so this is a consistency nicety rather than a defect.",
+    "The `retain` reordering (size/accepted incremented before record construction) is behaviour-neutral: the constructed record reads only the event and policy except for the newly stamped counters, `optional::emplace` cannot fail in the `noexcept` context, and `tail` is computed before the increments. No drop/coalesce/backpressure outcome, ordering, or existing counter changes.",
+    "The declared validity effect and the `validityEffect` vocabulary are declared and reported only; `ObservationSnapshot::experiment_validity_degraded` keeps its exact accepted meaning and no degrade/invalidate behavior is applied, correctly leaving T022 (XCOM-SW-OBS-002/003) and T024 (XCOM-SW-OBS-005) unclaimed.",
+    "This is a fresh, separate, read-only internal review of the exact 12-path candidate over baseline 8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda. No production code, test, or predecessor work product was edited; the only file written is this review record. External Codex review and user acceptance remain deferred until the xcom-t011-t016-t021-t024 backlog completes; this review claims no measure pass, integration, or production readiness."
+  ]
+}
