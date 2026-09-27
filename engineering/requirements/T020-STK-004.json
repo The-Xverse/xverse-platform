@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "T020-STK-004",
+  "revision": "1",
+  "level": "stakeholder",
+  "title": "Every declared bound is exercised and fails closed",
+  "statement": "T020 must exercise every declared DecodeLimits bound, byte/depth/node/string and each decoded-entity cap, at, below, and above its declared value; a limit below 1 must fail closed with XCOM-DECODE-UNKNOWN; and no bound breach may return a decoded value.",
+  "source": {
+    "kind": "capability_007_specification",
+    "reference": "specs/007-xcom-core/spec.md FR-007; docs/engineering/xcom/t020/requirements.md T020-STK-004"
+  },
+  "applicability": "X-Verse capability 007 bounded decoder; T019 declared DecodeLimits caps, no production value fixed.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Refined by T020-SR-004; verified by the T20BoundMatrix CTest cases and the repository bound-derivation pytest case.",
+  "acceptance_criteria": [
+    "AC-1: for each bound an input within the bound is accepted and an input over the bound is failed XCOM-DECODE-BOUND, except an over-length string which is rejected XCOM-DECODE-SHAPE, with no decoded value in either breach case.",
+    "AC-2: every DecodeLimits member exercised with the value 0 is failed XCOM-DECODE-UNKNOWN.",
+    "AC-3: the bound-matrix cases are finite, bounded, and deterministic and fix no production numeric value."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "T020-STK-001",
+  "revision": "1",
+  "level": "stakeholder",
+  "title": "Ordering equivalence is proven across the derived plan chain",
+  "statement": "Capability 007 must prove that equivalent normalized inputs and equivalent representations of one activation plan produce byte-identical canonical plan bodies, equal domain-separated digests, and identical decode outcomes and diagnostic ordering regardless of source document order, and that the accepted Python compiler and accepted C++ decoder agree on that one canonical body and digest.",
+  "source": {
+    "kind": "capability_007_specification",
+    "reference": "specs/007-xcom-core/spec.md SC-002, FR-002; docs/engineering/xcom/t020/requirements.md T020-STK-001"
+  },
+  "applicability": "X-Verse capability 007 phase 4 XDL-derived activation-plan chain; bounded committed fixtures and repository-owned synthetic vectors.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Refined by T020-SR-001 and T020-SR-005; verified by the T20OrderingEquivalence CTest cases and the T020 pytest ordering cases.",
+  "acceptance_criteria": [
+    "AC-1: member-reordered, whitespace-varied, and integral-number-variant representations of one plan yield one canonical byte string and one digest from both the Python reference and the C++ decoder.",
+    "AC-2: per-collection ordering by the declared key, unique keys, and the duplicate-free activationOrder rule are asserted; an out-of-order or duplicate-keyed collection is rejected.",
+    "AC-3: diagnostics are ordered deterministically and a reordered-but-equivalent input yields the same decoded diagnostics and outcome."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-006",
+  "revision": "1",
+  "level": "software",
+  "title": "Test registration and no-existing-test weakening",
+  "statement": "The five C++ suites must be registered as CMake/CTest targets under the shared src/xverse/xcom/CMakeLists.txt with T020-specific labels and discovered/executed by the deterministic gate; the Python module must be discovered by pytest; and neither the T017/T018 Python suites nor the T019 decoder suites may be edited or weakened.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-006"
+  },
+  "applicability": "src/xverse/xcom/CMakeLists.txt (shared) and the T020 pytest module discovery",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-005",
+    "XCOM-SYS-FR-030"
+  ],
+  "verification_intent": "CTest discovery of the t020 label and pytest collection; trusted unit, integration, and validation measures.",
+  "acceptance_criteria": [
+    "ctest discovers the T020 suites and runs them together with the existing suites.",
+    "pytest collects and passes the T020 module.",
+    "git diff shows no edit to an existing test."
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "id": "T020-U-04",
+  "component_id": "T020-CMP-004",
+  "title": "Bound-matrix suite",
+  "purpose": "Exercise each declared DecodeLimits member at, below, and above its value, assert the declared failed/rejected classification with no decoded value on a breach, and assert every limit below 1 fails closed.",
+  "interfaces": [
+    "t20::for_each_limit / t20::two_item_collection helpers",
+    "decode_activation_plan (T019)"
+  ],
+  "inputs": [
+    "small valid two-item collection vectors with adjusted caps"
+  ],
+  "outputs": [
+    "accept at the bound and fail-closed over it"
+  ],
+  "state": "static-immutable test source",
+  "errors": [
+    "assertion failure on an accepted breach or a returned value"
+  ],
+  "invariants": [
+    "bounded allocation only",
+    "no production numeric bound value fixed"
+  ],
+  "concurrency": "offline-single-threaded",
+  "source_paths": [
+    "tests/xcom/activation_plan/t020_bound_matrix_tests.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "T20BoundMatrix.ByteBoundAtAndOver",
+      "case": "T20-BND-01",
+      "precondition": "max_bytes set to the fixture length and one byte less",
+      "stimulus": "decode at and over the byte bound",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND with no plan (T20-BND-01)"
+    },
+    {
+      "id": "T20BoundMatrix.DepthBoundAtAndOver",
+      "case": "T20-BND-02",
+      "precondition": "a document exactly at max_depth and one level deeper",
+      "stimulus": "decode at and over the depth bound",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-02)"
+    },
+    {
+      "id": "T20BoundMatrix.NodeBoundAtAndOver",
+      "case": "T20-BND-03",
+      "precondition": "a document exactly at max_nodes and one node more",
+      "stimulus": "decode at and over the node bound",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-03)"
+    },
+    {
+      "id": "T20BoundMatrix.StringLengthOverIsRejected",
+      "case": "T20-BND-04",
+      "precondition": "a decoded string one byte over max_string_length",
+      "stimulus": "decode the over-length string",
+      "expected": "rejected XCOM-DECODE-SHAPE with no plan (T20-BND-04)"
+    },
+    {
+      "id": "T20BoundMatrix.ContractCapAtAndOver",
+      "case": "T20-BND-05",
+      "precondition": "a valid two-contract plan with max_contracts 2 then 1",
+      "stimulus": "decode at and over the contract cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-05)"
+    },
+    {
+      "id": "T20BoundMatrix.EndpointCapAtAndOver",
+      "case": "T20-BND-06",
+      "precondition": "a valid two-endpoint plan with max_endpoints 2 then 1",
+      "stimulus": "decode at and over the endpoint cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-06)"
+    },
+    {
+      "id": "T20BoundMatrix.RouteCapAtAndOver",
+      "case": "T20-BND-07",
+      "precondition": "a valid two-route plan with max_routes 2 then 1",
+      "stimulus": "decode at and over the route cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-07)"
+    },
+    {
+      "id": "T20BoundMatrix.ProviderCapAtAndOver",
+      "case": "T20-BND-08",
+      "precondition": "a valid two-provider plan with max_providers 2 then 1",
+      "stimulus": "decode at and over the provider cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-08)"
+    },
+    {
+      "id": "T20BoundMatrix.ObservationPointAndClockDomainCapsAtAndOver",
+      "case": "T20-BND-09",
+      "precondition": "max_observation_points and max_clock_domains at and one below the plan count",
+      "stimulus": "decode at and over each cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-09)"
+    },
+    {
+      "id": "T20BoundMatrix.DiagnosticActivationOrderAndResourceCapsAtAndOver",
+      "case": "T20-BND-10",
+      "precondition": "max_diagnostics, max_activation_order, max_provenance_resources at and one below",
+      "stimulus": "decode at and over each cap",
+      "expected": "at accepts; over failed XCOM-DECODE-BOUND (T20-BND-10)"
+    },
+    {
+      "id": "T20BoundMatrix.EveryLimitBelowOneFailsClosed",
+      "case": "T20-BND-11",
+      "precondition": "each of the 13 DecodeLimits members set to 0",
+      "stimulus": "decode with the zeroed limit",
+      "expected": "failed XCOM-DECODE-UNKNOWN with no plan (T20-BND-11)"
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "T020-SC-CPPCHECK",
+      "tool": "cppcheck (trusted policy measures.static_analysis)",
+      "rule": "cppcheck --error-exitcode=1 --quiet --std=c++20 --language=c++ --suppress=invalidLifetime src/xverse/xcom/src/activation_plan.cpp reports no error/portability defect in the consumed T019 decoder source built into the T020 suites",
+      "expected": "cppcheck exits 0"
+    },
+    {
+      "id": "T020-SC-WARNINGS",
+      "tool": "GNU g++ 11.4.0 via CMake target xverse_xcom_activation_plan_t020_<kind>_tests with xverse_xcom_apply_warnings",
+      "rule": "the T020 test target compiles under the project strict warning flags with no warning and no error",
+      "expected": "build succeeds with no warning-as-error"
+    }
+  ],
+  "schema_version": 1,
+  "revision": "1"
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "XCOM-SYS-FR-007",
+  "revision": "1",
+  "level": "system",
+  "title": "Explicit bounded queue, ordering, reliability, deadline, retry, overflow, and backpressure",
+  "statement": "The X-Verse platform must expose explicit bounded queue, ordering, reliability, deadline, retry, overflow, and backpressure policy with fail-closed overflow semantics.",
+  "source": {
+    "kind": "accepted_xverse_system_baseline",
+    "reference": "docs/engineering/xcom/t008/requirements-register.json XCOM-SYS-FR-007; specs/007-xcom-core/spec.md FR-007"
+  },
+  "applicability": "X-Verse capability 007; T020 verifies the declared decode bounds only; runtime enforcement is a later task.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Realized for the T020 test slice by T020-SR-004.",
+  "acceptance_criteria": [
+    "Every declared DecodeLimits bound is finite and exercised at and over its value.",
+    "A limit below 1 and any breach fails closed with no decoded value."
+  ]
+}

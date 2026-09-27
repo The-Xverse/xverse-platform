@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-007",
+  "revision": "1",
+  "level": "software",
+  "title": "Boundary, dependency, and REF-002 non-promotion",
+  "statement": "The T020 candidate must change only the declared T020-owned and shared paths, must bind to the exact baseline revision, must cite only accepted authorizations, must link the accepted X-COM software requirements and locators, must add no admitted dependency and no legacy coupling, and must record REF-002 disposition unchanged with an empty promoted set.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-007"
+  },
+  "applicability": "docs/engineering/xcom/t020/ requirements, architecture, design, unit, and verification work products",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-005",
+    "XCOM-SYS-FR-030"
+  ],
+  "verification_intent": "The changed-path boundary check and public-safety scan performed by the deterministic gate and the separate review.",
+  "acceptance_criteria": [
+    "git diff --name-only is a subset of the declared path set and the baseline binds by git rev-parse.",
+    "The C++ suites include only admitted headers and the Python module imports only the standard library and repository modules.",
+    "REF-002 promoted set is empty and no public-safety leak is present."
+  ]
+}

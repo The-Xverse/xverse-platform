@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "T020-STK-002",
+  "revision": "1",
+  "level": "stakeholder",
+  "title": "Malformed plans are rejected fail-closed and systematically",
+  "statement": "The derived-plan chain must reject malformed plan bytes and closed-shape violations fail-closed, with a stable code and no decoded value, across a systematic matrix of structural defects, without duplicating or weakening the T019 NEG-D* set.",
+  "source": {
+    "kind": "capability_007_specification",
+    "reference": "specs/007-xcom-core/spec.md FR-006 failure semantics; docs/engineering/xcom/t020/requirements.md T020-STK-002"
+  },
+  "applicability": "X-Verse capability 007 plan decoder boundary; repository-owned synthetic malformed documents.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Refined by T020-SR-002; verified by the T20MalformedPlan CTest cases and the T020 pytest malformed-plan case.",
+  "acceptance_criteria": [
+    "AC-1: truncation, unbalanced delimiters, trailing content, duplicate members, non-object roots, wrong JSON types, null where an object/array is required, missing required members, unknown nested members, invalid UTF-8, and over-nesting are each classified with the declared outcome and code.",
+    "AC-2: every malformed-plan case returns no decoded plan and no case reports accepted.",
+    "AC-3: the T020 matrix is a distinct family from the T019 NEG-D* set and neither edits nor weakens any T019 case."
+  ]
+}

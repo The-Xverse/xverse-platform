@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-005",
+  "revision": "1",
+  "level": "software",
+  "title": "Cross-language regression suite",
+  "statement": "The T020 candidate must add a regression suite, in C++ and Python, that pins the committed T017 fixtures' decode, recorded and recomputed digests, canonical digested bytes, the 16 required members, the DecodeLimits defaults, the closed decode-code vocabulary, and the SHA-256 known answers, and that proves the Python compiler/validator and the C++ decoder agree on the committed fixtures' canonical body and digest.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-005"
+  },
+  "applicability": "tests/xcom/activation_plan/t020_regression_tests.cpp and tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-001",
+    "T020-STK-005",
+    "XCOM-SYS-SC-002",
+    "XCOM-SYS-FR-031"
+  ],
+  "verification_intent": "CTest cases T20Regression.* and the T020 pytest fixture-digest case; trusted unit and integration measures.",
+  "acceptance_criteria": [
+    "Both fixtures decode to accepted with the pinned field values.",
+    "The recorded and recomputed digests equal the pinned golden values in both languages.",
+    "The defaults, member set, and code vocabulary equal their pinned values."
+  ]
+}

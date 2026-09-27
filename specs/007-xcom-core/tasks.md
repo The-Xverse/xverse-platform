@@ -47,7 +47,7 @@ evidence bundle for explicit user acceptance before another feature begins.
   schema and digest/provenance contract.
 - [X] T018 Implement deterministic Profile-aware plan compilation in `src/xverse_xdl/xcom_plan.py`.
 - [X] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
-- [ ] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
+- [X] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
 
 ## Phase 5: Observation boundary (US2)
 

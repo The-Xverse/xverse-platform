@@ -1,0 +1,110 @@
+{
+  "id": "T020-U-01",
+  "component_id": "T020-CMP-001",
+  "title": "Ordering-equivalence and cross-language suite",
+  "purpose": "Prove that equivalent plan representations produce one canonical body and digest and one decode outcome, that the declared per-collection ordering and duplicate-free activationOrder rules hold, and that diagnostics are ordered deterministically; provide the Python cross-language leg (compiler versus validator).",
+  "interfaces": [
+    "t20::seal / t20::canonical_body / t20::reverse_key_order_text helpers",
+    "decode_activation_plan (T019)"
+  ],
+  "inputs": [
+    "committed T017 fixtures (read-only)",
+    "bounded inline synthetic plan bodies"
+  ],
+  "outputs": [
+    "canonical plan bytes and domain-separated digests"
+  ],
+  "state": "static-immutable test source; decoded value plan-scoped",
+  "errors": [
+    "assertion failure on an unexpected outcome, code, canonical byte, or digest"
+  ],
+  "invariants": [
+    "no accepted defect",
+    "deterministic across repetition"
+  ],
+  "concurrency": "offline-single-threaded",
+  "source_paths": [
+    "tests/xcom/activation_plan/t020_ordering_equivalence_tests.cpp",
+    "tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py"
+  ],
+  "unit_cases": [
+    {
+      "id": "T20OrderingEquivalence.EquivalentSyntheticPlansShareCanonicalBytes",
+      "case": "T20-ORD-01",
+      "precondition": "two synthetic plan bodies differing only in member order/whitespace",
+      "stimulus": "canonicalize both with the T019 decoder",
+      "expected": "one byte-identical canonical body (T20-ORD-01)"
+    },
+    {
+      "id": "T20OrderingEquivalence.ReorderedFixtureSharesCanonicalBytesAndDigest",
+      "case": "T20-ORD-02",
+      "precondition": "a dump(3) re-serialization of the committed T017 fixture",
+      "stimulus": "decode and recompute the canonical body/digest",
+      "expected": "same canonical bytes and recomputed digest as the original (T20-ORD-02)"
+    },
+    {
+      "id": "T20OrderingEquivalence.DeclaredCollectionOrderingIsEnforced",
+      "case": "T20-ORD-03",
+      "precondition": "a committed fixture with each identity-bearing collection in declared key order",
+      "stimulus": "reverse one collection and re-decode",
+      "expected": "baseline accepted; reversed collection rejected XCOM-DECODE-SHAPE with no plan (T20-ORD-03)"
+    },
+    {
+      "id": "T20OrderingEquivalence.ActivationOrderIsDuplicateFree",
+      "case": "T20-ORD-04",
+      "precondition": "the fixture activationOrder sequence",
+      "stimulus": "duplicate an entry, empty it, and reorder it completely",
+      "expected": "duplicate/empty rejected XCOM-DECODE-SHAPE; complete reordered sequence accepted and preserved verbatim (T20-ORD-04)"
+    },
+    {
+      "id": "T20OrderingEquivalence.DecodedDiagnosticsAreOrderedDeterministically",
+      "case": "T20-ORD-05",
+      "precondition": "the fixture diagnostics collection",
+      "stimulus": "decode the fixture and equivalent representations",
+      "expected": "decoded diagnostics equal the declared order and are identical across representations (T20-ORD-05)"
+    },
+    {
+      "id": "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+      "case": "T20-ORD-06",
+      "precondition": "the fixture and a reordered-but-equivalent document",
+      "stimulus": "decode both twice",
+      "expected": "identical outcome, code, digest value/algorithm, and the compared decoded fields (T20-ORD-06, T20-DET-01, T20-DET-02)"
+    },
+    {
+      "id": "T20OrderingEquivalence.IntegralNumberVariantSharesCanonicalBody",
+      "case": "T20-ORD-07",
+      "precondition": "a body with an integral token 100",
+      "stimulus": "replace it with 100.0 and decode",
+      "expected": "same canonical body and digest; still accepted (T20-ORD-07, T20-DET-03)"
+    },
+    {
+      "id": "T20OrderingEquivalence.RepeatedDecodeAndWhitespaceVariantsAreIdentical",
+      "case": "T20-ORD-08",
+      "precondition": "whitespace-varied representations of the fixture",
+      "stimulus": "decode repeatedly and hash with the domain separator",
+      "expected": "identical outcome/code/digest; domain-separated SHA-256 deterministic (T20-ORD-08, T20-DET-01, T20-DET-04)"
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "T020-SC-CPPCHECK",
+      "tool": "cppcheck (trusted policy measures.static_analysis)",
+      "rule": "cppcheck --error-exitcode=1 --quiet --std=c++20 --language=c++ --suppress=invalidLifetime src/xverse/xcom/src/activation_plan.cpp reports no error/portability defect in the consumed T019 decoder source built into the T020 suites",
+      "expected": "cppcheck exits 0"
+    },
+    {
+      "id": "T020-SC-WARNINGS",
+      "tool": "GNU g++ 11.4.0 via CMake target xverse_xcom_activation_plan_t020_<kind>_tests with xverse_xcom_apply_warnings",
+      "rule": "the T020 test target compiles under the project strict warning flags with no warning and no error",
+      "expected": "build succeeds with no warning-as-error"
+    }
+  ],
+  "python_cases": [
+    "test_t020_compiler_and_validator_agree_on_canonical_bytes",
+    "test_t020_equivalent_graphs_produce_byte_identical_plans",
+    "test_t020_diagnostic_ordering_is_deterministic"
+  ],
+  "note": "The Python cases are executed by the trusted validation (pytest) measure and are not CTest-discovered, so they are not listed as unit-measure cases.",
+  "schema_version": 1,
+  "revision": "1"
+}

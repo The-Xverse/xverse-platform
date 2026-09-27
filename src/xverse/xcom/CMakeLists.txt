@@ -379,4 +379,47 @@ if(BUILD_TESTING)
       PROPERTIES LABELS "t019;${plan_kind}"
     )
   endforeach()
+
+  # T020 ordering-equivalence, malformed-plan, drift, bound-matrix, and regression tests. The
+  # fixture, plan-schema, and Profile-schema paths are supplied as build-time compile definitions so
+  # the suites read the anchored T017 artifacts read-only. The T019 targets are unchanged and the
+  # T020 labels are distinct.
+  foreach(
+    kind
+    IN ITEMS
+      ordering_equivalence
+      malformed_plan
+      drift
+      bound_matrix
+      regression
+  )
+    string(REPLACE "_" "-" label "${kind}")
+    add_executable(
+      xverse_xcom_activation_plan_t020_${kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/activation_plan/t020_${kind}_tests.cpp"
+    )
+    target_compile_definitions(
+      xverse_xcom_activation_plan_t020_${kind}_tests
+      PRIVATE
+        "XCOM_ACTIVATION_PLAN_FIXTURE_DIR=\"${PROJECT_SOURCE_DIR}/tests/xcom/activation_plan/fixtures\""
+        "XCOM_ACTIVATION_PLAN_SCHEMA_PATH=\"${PROJECT_SOURCE_DIR}/src/xverse/xcom/contracts/v1/activation-plan.schema.json\""
+        "XCOM_T020_PROFILE_SCHEMA_PATH=\"${PROJECT_SOURCE_DIR}/xdl/profiles/xcom-v0.1.schema.json\""
+    )
+    target_link_libraries(
+      xverse_xcom_activation_plan_t020_${kind}_tests
+      PRIVATE
+        xverse::xcom_activation_plan
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_warnings(xverse_xcom_activation_plan_t020_${kind}_tests)
+    # A single hyphenated label is used because CMake 3.22's gtest_discover_tests
+    # splits a semicolon-separated LABELS value, registering only its first element.
+    # `ctest -L t020` and `ctest -L ${label}` both match this one label by regex.
+    gtest_discover_tests(
+      xverse_xcom_activation_plan_t020_${kind}_tests
+      PROPERTIES LABELS "t020-${label}"
+    )
+  endforeach()
 endif()

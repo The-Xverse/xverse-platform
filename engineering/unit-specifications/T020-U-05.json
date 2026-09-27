@@ -1,0 +1,120 @@
+{
+  "id": "T020-U-05",
+  "component_id": "T020-CMP-005",
+  "title": "Cross-language regression suite",
+  "purpose": "Pin the committed fixtures' decode, recorded and recomputed digests, canonical digested bytes, required members, DecodeLimits defaults, closed decode-code vocabulary, and SHA-256 known answers, and prove the Python compiler/validator and the C++ decoder agree on the fixtures' canonical body and digest.",
+  "interfaces": [
+    "t20::activatable / t20::inspectable / t20::recompute_digest helpers",
+    "decode_activation_plan (T019)"
+  ],
+  "inputs": [
+    "committed T017 fixtures (read-only); golden literals captured from the accepted artifacts"
+  ],
+  "outputs": [
+    "golden equality assertions and decode-code vocabulary"
+  ],
+  "state": "static-immutable test source; decoded value plan-scoped",
+  "errors": [
+    "assertion failure on any golden mismatch"
+  ],
+  "invariants": [
+    "a golden is never updated to match a drifted artifact"
+  ],
+  "concurrency": "offline-single-threaded",
+  "source_paths": [
+    "tests/xcom/activation_plan/t020_regression_tests.cpp",
+    "tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py"
+  ],
+  "unit_cases": [
+    {
+      "id": "T20Regression.ActivatableFixtureDecodesWithPinnedFields",
+      "case": "T20-REG-01",
+      "precondition": "the committed activatable fixture",
+      "stimulus": "decode and compare every pinned field/count",
+      "expected": "accepted with the pinned plan_version, status, and field-count goldens (T20-REG-01)"
+    },
+    {
+      "id": "T20Regression.InspectableFixtureDecodesWithPinnedFields",
+      "case": "T20-REG-02",
+      "precondition": "the committed inspectable fixture",
+      "stimulus": "decode and compare status/members",
+      "expected": "accepted with status==inspectable and the pinned unresolved member (T20-REG-02)"
+    },
+    {
+      "id": "T20Regression.GoldenRecordedAndRecomputedDigests",
+      "case": "T20-REG-03",
+      "precondition": "the recorded digest of each fixture",
+      "stimulus": "recompute with the decoder",
+      "expected": "recorded and recomputed digests equal kFixture*Digest (T20-REG-03)"
+    },
+    {
+      "id": "T20Regression.Sha256KnownAnswersUnchanged",
+      "case": "T20-REG-04",
+      "precondition": "the FIPS 180-4 known-answer inputs",
+      "stimulus": "hash empty, abc, and 0x00 0x01 0x02",
+      "expected": "known answers unchanged (T20-REG-04)"
+    },
+    {
+      "id": "T20Regression.DomainSeparatorRegression",
+      "case": "T20-REG-05",
+      "precondition": "a digest with and without the domain separator",
+      "stimulus": "verify against a non-canonical body",
+      "expected": "with separator matches; without/over non-canonical rejected XCOM-DECODE-DIGEST (T20-REG-05)"
+    },
+    {
+      "id": "T20Regression.RequiredMemberSetAndClosedSchemaUnchanged",
+      "case": "T20-REG-06",
+      "precondition": "the 16 required members and closed $defs",
+      "stimulus": "compare with the pinned set",
+      "expected": "unchanged (T20-REG-06)"
+    },
+    {
+      "id": "T20Regression.FixtureBytesAreUnchanged",
+      "case": "T20-REG-07",
+      "precondition": "the committed fixture file bytes",
+      "stimulus": "hash each file",
+      "expected": "equal kFixture*FileSha256; anchored T017 fixtures not mutated (T20-REG-07)"
+    },
+    {
+      "id": "T20Regression.GoldenCanonicalBodyHashIsStable",
+      "case": "T20-REG-08",
+      "precondition": "sha256(canonical_plan_body_bytes(fixture))",
+      "stimulus": "recompute for each fixture",
+      "expected": "equal kFixture*BodySha256 (T20-REG-08)"
+    },
+    {
+      "id": "T20Regression.DecodeLimitsDefaultsUnchanged",
+      "case": "T20-REG-09",
+      "precondition": "all 13 DecodeLimits defaults",
+      "stimulus": "read the defaults and is_valid",
+      "expected": "defaults unchanged and is_valid true (T20-REG-09)"
+    },
+    {
+      "id": "T20Regression.DecodeCodeVocabularyIsClosed",
+      "case": "T20-REG-10",
+      "precondition": "a representative defect per decode code",
+      "stimulus": "decode each and map outcomes",
+      "expected": "exactly the nine declared codes; BOUND/UNKNOWN failed, rest rejected (T20-REG-10)"
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "T020-SC-CPPCHECK",
+      "tool": "cppcheck (trusted policy measures.static_analysis)",
+      "rule": "cppcheck --error-exitcode=1 --quiet --std=c++20 --language=c++ --suppress=invalidLifetime src/xverse/xcom/src/activation_plan.cpp reports no error/portability defect in the consumed T019 decoder source built into the T020 suites",
+      "expected": "cppcheck exits 0"
+    },
+    {
+      "id": "T020-SC-WARNINGS",
+      "tool": "GNU g++ 11.4.0 via CMake target xverse_xcom_activation_plan_t020_<kind>_tests with xverse_xcom_apply_warnings",
+      "rule": "the T020 test target compiles under the project strict warning flags with no warning and no error",
+      "expected": "build succeeds with no warning-as-error"
+    }
+  ],
+  "python_cases": [
+    "test_t020_committed_fixtures_match_reference_digest"
+  ],
+  "note": "The Python fixture-digest case is executed by the trusted validation (pytest) measure and is not CTest-discovered.",
+  "schema_version": 1,
+  "revision": "1"
+}

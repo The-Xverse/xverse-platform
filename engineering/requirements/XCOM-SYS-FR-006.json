@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "XCOM-SYS-FR-006",
+  "revision": "1",
+  "level": "system",
+  "title": "Fail before traffic flows on an incompatible or malformed plan",
+  "statement": "The X-Verse platform must fail closed before any traffic flows when an identity, direction, schema, interaction, capability, policy, or plan-shape condition is incompatible or malformed.",
+  "source": {
+    "kind": "accepted_xverse_system_baseline",
+    "reference": "docs/engineering/xcom/t008/requirements-register.json XCOM-SYS-FR-006; specs/007-xcom-core/spec.md FR-006"
+  },
+  "applicability": "X-Verse capability 007; T020 verifies the plan-shape/malformed leg only.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Realized for the T020 test slice by T020-SR-002.",
+  "acceptance_criteria": [
+    "A malformed or closed-shape-violating plan is rejected with a stable code and no decoded value.",
+    "No rejected/failed call returns a partial or decoded value."
+  ]
+}

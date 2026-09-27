@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "attempt_id": "1",
+  "role": "integration",
+  "status": "complete",
+  "inputs": [
+    "/home/jefferson/x-verse_fabric/automation/trusted/xcom-t020-integration-policy.json",
+    "engineering/verification/measures/integration.json"
+  ],
+  "artifacts": [
+    {
+      "path": "engineering/verification/measures/integration.json",
+      "sha256": "10a062329d184473c0765fa3a96671ff04bdb114bf3fb6644526b4cc824d156b"
+    },
+    {
+      "path": "engineering/trace/links.json",
+      "sha256": "5cf8b39c91af651fa664158be96617b65d1b6ad2a81391e40a9ae1910eb57e34"
+    }
+  ],
+  "assumptions": [
+    "The whole-system integration measure is defined only by the trusted policy system_integration contract (mode target_repository, target_id xverse-platform, target_repository /home/jefferson/xverse-t020-system-integration-01m3h0, pinned revision 1e289bfe6234553df94eb25065371f7d423fad88, assembly_command automation/assemble_xcom_target.py).",
+    "The measure has not been run by this stage; its passed/failed outcome and trusted evidence are recorded by the trusted integration gate, not by this record.",
+    "Provisional prerequisite: the assembly/configure path requires the admitted offline inputs XVERSE_XCOM_TOOLCHAIN, XVERSE_XCOM_PACKAGE_MANIFEST, and XVERSE_XCOM_T025_TEST_TOOLCHAIN in the gate environment, or a pre-seeded CMake cache; if absent the fresh configure fails in the offline admission preflight (recorded as open limitation L-A1)."
+  ],
+  "findings": [],
+  "blockers": [],
+  "notes": "Declared the whole-system integration measure and its exact discovered test IDs; the measure execution remains a trusted-gate obligation.",
+  "model": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash",
+    "observed_model": "deepseek-v4-flash"
+  }
+}

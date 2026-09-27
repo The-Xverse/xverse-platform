@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "attempt_id": "1",
+  "role": "verification_design",
+  "status": "complete",
+  "inputs": [
+    "docs/engineering/xcom/t020/verification-plan.md",
+    "docs/engineering/xcom/t020/unit-specifications.md",
+    "/home/jefferson/x-verse_fabric/automation/trusted/xcom-t020-integration-policy.json",
+    "local ctest -N -L t020 and pytest --collect-only discovery runs"
+  ],
+  "artifacts": [
+    {
+      "path": "engineering/unit-specifications/T020-U-01.json",
+      "sha256": "e975622284736dab76df9dc04522730b602b739787ac267f1d368c9c8231d4f4"
+    },
+    {
+      "path": "engineering/unit-specifications/T020-U-02.json",
+      "sha256": "6f43f27c7aefbda2d8520067746488e1b7acb323720ba846e66bf05be5657b67"
+    },
+    {
+      "path": "engineering/unit-specifications/T020-U-03.json",
+      "sha256": "c86e768010faa93c9d680d053051feb4e79493b1ab648da4936d7d7b4909aa29"
+    },
+    {
+      "path": "engineering/unit-specifications/T020-U-04.json",
+      "sha256": "ef9b19fac2665cc881368660dca6013a4d63f65bbf31d7ec2b18f875d06199a1"
+    },
+    {
+      "path": "engineering/unit-specifications/T020-U-05.json",
+      "sha256": "5ddc7fcfbc5212b324ad16be0cbb305880b256a82142796ab6a48a85b96d2e35"
+    },
+    {
+      "path": "engineering/verification/measures/unit.json",
+      "sha256": "1a281a23c5f6892a85b8ef6ff6ed8ef5d69a883316b95e6ca511a2aec629dddf"
+    },
+    {
+      "path": "engineering/verification/measures/integration.json",
+      "sha256": "10a062329d184473c0765fa3a96671ff04bdb114bf3fb6644526b4cc824d156b"
+    },
+    {
+      "path": "engineering/verification/measures/validation.json",
+      "sha256": "66a286db91aafc477f73ca713e323f8aae111f09f4b1148158a2258cfc15c66a"
+    },
+    {
+      "path": "engineering/verification/measures/static_analysis.json",
+      "sha256": "dc9d92163c9f548a6264b64617d387af1efdd3459f9f791306bcc8aeda1b05b9"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-01.json",
+      "sha256": "8b8f5dc48b4e7eeaf2c6441b639f211cb2ab715d1c27eae704db93bc51f8c7da"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-02.json",
+      "sha256": "94be08bd5fb9df19a6d79ac74afbb137d85a1b21f63e57715ce651996817517c"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-03.json",
+      "sha256": "c4d24f1371745c1f6b7a8b7598a4aff522b0a2ad14b1893282d92dafcb2a7b95"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-04.json",
+      "sha256": "657cd4e6f7f9a44ea123e7534ee94a00bcf37f70156cec3c2b67b01733c21a69"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-05.json",
+      "sha256": "ba6a45e7e61ad1a7cc0e0819f26ff8eaf53bad196e5b92dd681a97f6b36b05eb"
+    }
+  ],
+  "assumptions": [
+    "Unit case IDs are the exact CTest-discovered GoogleTest names so the trusted unit measure's expected IDs are discoverable in ctest output.",
+    "Validation scenario IDs are exact pytest node-id fragments discoverable by the trusted validation measure in the candidate checkout.",
+    "Integration IDs are whole-system pytest/CTest names discoverable only in the assembled pinned checkout; no candidate-local check is labelled integration.",
+    "The exact discovered ID sets were enumerated locally from build/fabro-t020 (52 t020 CTest cases, 246 total) and from pytest --collect-only (136 collected); the trusted measures re-run the same commands."
+  ],
+  "findings": [],
+  "blockers": [],
+  "notes": "Defined unit, static, integration, and validation measures with exact runnable test IDs and five intended-use validation scenarios; declared only IDs the trusted commands discover.",
+  "model": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash",
+    "observed_model": "deepseek-v4-flash"
+  }
+}

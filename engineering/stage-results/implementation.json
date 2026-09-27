@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "attempt_id": "1",
+  "role": "implementation",
+  "status": "complete",
+  "inputs": [
+    "docs/engineering/xcom/t020/implementation.md",
+    "tests/xcom/activation_plan/",
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "artifacts": [
+    {
+      "path": "tests/xcom/activation_plan/t020_support.hpp",
+      "sha256": "2f46864d8f486c0ef15467ab29fef22b3c031cf1a65341550fbf1759fd92d657"
+    },
+    {
+      "path": "tests/xcom/activation_plan/t020_ordering_equivalence_tests.cpp",
+      "sha256": "825cc791a6005431eaf41fdd0bdd798410f65d33316857b57f8dc1f74e92176e"
+    },
+    {
+      "path": "tests/xcom/activation_plan/t020_malformed_plan_tests.cpp",
+      "sha256": "38e60e613fae4316f7536c7e774dc0046133d963b0b80ca566de36d50b9b5bef"
+    },
+    {
+      "path": "tests/xcom/activation_plan/t020_drift_tests.cpp",
+      "sha256": "1d5c6e12e99183b92a8bc22ed1c940605abe09795285b52d5f1cc86b3da87b21"
+    },
+    {
+      "path": "tests/xcom/activation_plan/t020_bound_matrix_tests.cpp",
+      "sha256": "999f3561c68532873ee5639413aeec7c43683aad9dfec19109b2a5f06bc8bad5"
+    },
+    {
+      "path": "tests/xcom/activation_plan/t020_regression_tests.cpp",
+      "sha256": "21da7b85c70fc140593727bed3b79a4d7c1ee152450ff357c076f34b7b1019a4"
+    },
+    {
+      "path": "tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py",
+      "sha256": "595d3ec0f4bd6df59a7d3bf7c575ee2809f75e2535a13ba53ebe57254bcf4576"
+    },
+    {
+      "path": "src/xverse/xcom/CMakeLists.txt",
+      "sha256": "8f30173427eba0ce70fd314571ca484503221113ae4ea617462b2df09153abd0"
+    },
+    {
+      "path": "docs/engineering/xcom/t020/implementation.md",
+      "sha256": "bd7eadd5a491ede1144b430695a3792bbe255ad2225c485ecf282777f627dcdb"
+    }
+  ],
+  "assumptions": [
+    "The T020 test package is unchanged from the reviewed rev-4 candidate; this stage added no test source.",
+    "The rev-4 repair reverted the out-of-scope T025 RUN_SERIAL change, so the only src/xverse/xcom/CMakeLists.txt hunk is the T020 foreach block adding the five t020-labelled targets."
+  ],
+  "findings": [],
+  "blockers": [],
+  "notes": "Recorded the candidate implementation identity: one support header, five C++ suites, one pytest module, and the shared CTest wiring. No production source or accepted predecessor test is changed.",
+  "model": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash",
+    "observed_model": "deepseek-v4-flash"
+  }
+}

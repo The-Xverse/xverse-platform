@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "T020-VS-01",
+  "revision": "1",
+  "title": "Equivalent XDL graphs derive one canonical activation plan",
+  "intended_use": "An X-Verse engineer compiles two equivalent normalized XDL graphs and expects one byte-identical canonical activation plan and digest from the Python compiler, the T017 validator, and the C++ decoder.",
+  "expected": "Both representations compile and decode to one canonical body and digest with deterministic diagnostics.",
+  "test_ids": [
+    "test_t020_compiler_and_validator_agree_on_canonical_bytes",
+    "test_t020_equivalent_graphs_produce_byte_identical_plans",
+    "test_t020_diagnostic_ordering_is_deterministic"
+  ],
+  "validates": [
+    "T020-STK-001",
+    "XCOM-SYS-SC-002",
+    "XCOM-SYS-FR-002"
+  ],
+  "environment": "candidate checkout, offline, Python 3.11+; the whole-system integration measure re-runs the bound case in the assembled X-Verse checkout."
+}
