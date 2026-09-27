@@ -16,7 +16,13 @@
  * acknowledgement-interval cases of docs/engineering/xcom/t022/verification-plan.md
  * (XCOM-SW-OBS-003, FR-013, SC-004). T023 adds the visible consumer-counter, disconnect-isolation,
  * failure-isolation, and blocking-isolation cases of docs/engineering/xcom/t023/verification-plan.md
- * (XCOM-SW-OBS-004, FR-014, SC-005).
+ * (XCOM-SW-OBS-004, FR-014, SC-005). T024 adds the consolidated observation acceptance matrix of
+ * docs/engineering/xcom/t024/verification-plan.md: metadata-only zero-payload completeness, the
+ * bounded-prefix/redacted payload-view table, drop/coalesce ordering and multi-tap independence,
+ * min/max saturation and lossless rejection/recovery, bounded deterministic concurrency over one
+ * lossless tap, the declared-effect validity interval,
+ * safe detach/ownership, and the complete normalized record
+ * (XCOM-SW-OBS-001…-005, FR-011…FR-014, FR-023, SC-003…SC-005).
  */
 
 #include "xverse/xcom/observation.hpp"
@@ -24,12 +30,15 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -113,6 +122,93 @@ using namespace xverse::xcom;
   return hub.commit(std::move(*result.reservation),
                     {item, Timestamp(static_cast<std::int64_t>(sequence)), "clock.observer", sequence,
                      provider_outcome});
+}
+
+/** @brief The four accepted interaction families exercised by the T024 matrix. */
+constexpr std::array<InteractionKind, 4U> kT024Families{
+    InteractionKind::signal_state_update, InteractionKind::message_event,
+    InteractionKind::service_request, InteractionKind::service_response};
+
+/**
+ * @brief Commit one normalized event whose producer declared no sequence.
+ * @ownership Owns the reservation it creates and consumes; caller items are borrowed for the call.
+ * @lifetime The reservation is committed before return; the hub must outlive this call.
+ * @thread_safety Serialized through the hub; single-threaded use only.
+ * @failure Returns the stable reserve status without a provider or queue mutation when capacity is
+ * unavailable.
+ */
+[[nodiscard]] ObservationStatus emit_absent_sequence(ObservationHub& hub, const CommunicationItem& item,
+                                                     const std::int64_t observation_timestamp) {
+  auto result = hub.reserve(item);
+  if (!result.status.succeeded() || !result.reservation.has_value()) {
+    return result.status;
+  }
+  return hub.commit(std::move(*result.reservation),
+                    {item, Timestamp(observation_timestamp), "clock.observer", std::nullopt,
+                     ObservationProviderOutcome::accepted});
+}
+
+/**
+ * @brief Pull up to count retained records into owned values for FIFO assertions.
+ * @ownership Owns every returned record copy; the hub and handle are borrowed.
+ * @lifetime The returned records live independently of the hub; the handle must be current.
+ * @thread_safety Serialized through the hub; single-threaded use only.
+ * @failure Stops early at the first non-`accepted` pull; never loops without a finite bound.
+ */
+[[nodiscard]] std::vector<ObservationRecord> poll_all(ObservationHub& hub,
+                                                      const ObservationTapHandle& handle,
+                                                      const std::size_t count) {
+  std::vector<ObservationRecord> records;
+  for (std::size_t index = 0U; index < count; ++index) {
+    auto result = hub.poll(handle);
+    if (!result.record.has_value()) {
+      break;
+    }
+    records.push_back(*result.record);
+  }
+  return records;
+}
+
+/**
+ * @brief Assert the complete normalized self-description of one metadata-only record.
+ * @ownership Borrows the record for the call; asserts only.
+ * @lifetime The borrowed record must remain valid for the call.
+ * @thread_safety Pure; concurrent const access is safe.
+ * @failure Returns false and reports the first violated field expectation.
+ */
+[[nodiscard]] bool expect_metadata_record(const ObservationRecord& record,
+                                          const InteractionKind family, const std::size_t source_size,
+                                          const std::uint64_t sequence, const std::string_view tap_id,
+                                          const OriginKind origin,
+                                          const ObservationProviderOutcome provider_outcome) {
+  return expect(record.payload_bytes().empty(), "metadata exposes zero payload bytes") &&
+         expect(record.payload_view_state() == PayloadViewState::omitted, "metadata view omitted") &&
+         expect(record.payload_schema_state() == PayloadSchemaState::undecoded,
+                "metadata schema undecoded") &&
+         expect(record.source_payload_size() == source_size, "metadata source size complete") &&
+         expect(record.interaction_kind() == family, "metadata interaction preserved") &&
+         expect(record.origin() == origin, "metadata origin preserved") &&
+         expect(record.contract_id().value() == "contract.alpha", "metadata contract identity") &&
+         expect(record.contract_version().value() == "1.2.3", "metadata contract version") &&
+         expect(record.interface_id().value() == "interface.alpha", "metadata interface identity") &&
+         expect(record.endpoint_id().value() == "endpoint.alpha", "metadata endpoint identity") &&
+         expect(record.schema_id().value() == "schema.alpha", "metadata schema identity") &&
+         expect(record.schema_version().value() == "2.0.1", "metadata schema version") &&
+         expect(record.source_timestamp().nanoseconds() == 42, "metadata source timestamp") &&
+         expect(record.source_clock_domain().value() == "clock.source", "metadata source clock") &&
+         expect(record.observation_timestamp().nanoseconds() ==
+                    static_cast<std::int64_t>(sequence),
+                "metadata observation timestamp") &&
+         expect(record.observation_clock_domain().value() == "clock.observer",
+                "metadata observation clock") &&
+         expect(record.sequence().has_value() && *record.sequence() == sequence,
+                "metadata sequence") &&
+         expect(record.correlation_id().value() == "correlation.alpha", "metadata correlation") &&
+         expect(record.causation_id().value() == "causation.alpha", "metadata causation") &&
+         expect(record.route_id().value() == "route.alpha", "metadata route identity") &&
+         expect(record.provider_id().value() == "provider.alpha", "metadata provider identity") &&
+         expect(record.provider_outcome() == provider_outcome, "metadata provider outcome") &&
+         expect(record.tap_id().value() == tap_id, "metadata declared tap identity");
 }
 
 /** @brief Verify exact filters, origin constraints, versions, bounds, and all interaction families. */
@@ -1347,6 +1443,929 @@ using namespace xverse::xcom;
   return valid;
 }
 
+/**
+ * @brief Prove metadata-only zero-payload completeness and the bounded/redacted payload-view table.
+ * @details Realizes T24-TS-001 (`metadata-only-zero-payload`, `controlled-payload-view`):
+ * T024-SR-003, T024-SR-005, T024-SR-006; XCOM-SW-OBS-001/-002/-005; FR-011, FR-012, SC-003.
+ * @return true only when every metadata and payload-view assertion holds.
+ */
+[[nodiscard]] bool test_observation_metadata_and_payload_view_matrix() {
+  const std::array<std::byte, 4U> source{std::byte{11}, std::byte{22}, std::byte{33}, std::byte{44}};
+  constexpr std::array<std::size_t, 3U> sizes{0U, 1U, 4U};
+
+  ObservationHub hub;
+  const auto metadata = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U,
+                                             kMaximumObservationRecordsPerTap,
+                                             ObservationOverflowPolicy::drop_newest, {},
+                                             "tap.t024.metadata"));
+  if (!expect(metadata.handle.has_value(), "T024 metadata attachment")) {
+    return false;
+  }
+  bool valid = true;
+  std::uint64_t sequence = 0U;
+  for (const InteractionKind family : kT024Families) {
+    for (const std::size_t size : sizes) {
+      ++sequence;
+      valid = expect(emit(hub,
+                          make_item(source, "route.alpha", "provider.alpha", OriginKind::component,
+                                    family, size),
+                          sequence)
+                         .succeeded(),
+                     "T024 metadata publication") &&
+              valid;
+    }
+  }
+  const auto batch = hub.snapshot(*metadata.handle);
+  valid = expect(batch.has_value() && batch->accepted == 12U && batch->queued == 12U &&
+                     batch->dropped == 0U && batch->coalesced == 0U,
+                 "T024 metadata batch retained exactly once") &&
+          valid;
+  sequence = 0U;
+  for (const InteractionKind family : kT024Families) {
+    for (const std::size_t size : sizes) {
+      ++sequence;
+      const auto pulled = hub.poll(*metadata.handle);
+      valid = expect(pulled.record.has_value(), "T024 metadata record pulled exactly once") &&
+              expect_metadata_record(*pulled.record, family, size, sequence, "tap.t024.metadata",
+                                     OriginKind::component, ObservationProviderOutcome::accepted) &&
+              valid;
+    }
+  }
+
+  struct PrefixRow final {
+    ObservationPayloadMode mode;
+    std::size_t bound;
+    std::size_t source_size;
+    std::size_t visible;
+    PayloadViewState state;
+  };
+  const std::array<PrefixRow, 8U> rows{{
+      {ObservationPayloadMode::bounded_prefix, 1U, 0U, 0U, PayloadViewState::complete},
+      {ObservationPayloadMode::bounded_prefix, 1U, 1U, 1U, PayloadViewState::complete},
+      {ObservationPayloadMode::bounded_prefix, 1U, 4U, 1U, PayloadViewState::truncated},
+      {ObservationPayloadMode::bounded_prefix, 3U, 4U, 3U, PayloadViewState::truncated},
+      {ObservationPayloadMode::bounded_prefix, 4U, 4U, 4U, PayloadViewState::complete},
+      {ObservationPayloadMode::bounded_prefix, kMaximumObservedPayloadBytes, 4U, 4U,
+       PayloadViewState::complete},
+      {ObservationPayloadMode::redacted, 0U, 4U, 0U, PayloadViewState::redacted},
+      {ObservationPayloadMode::metadata_only, 0U, 4U, 0U, PayloadViewState::omitted},
+  }};
+  for (const PrefixRow& row : rows) {
+    ObservationHub view_hub;
+    const auto tap = view_hub.attach(make_spec(row.mode, row.bound, 1U,
+                                               ObservationOverflowPolicy::drop_newest, {},
+                                               "tap.t024.prefix"));
+    if (!expect(tap.handle.has_value(), "T024 payload-view attachment") ||
+        !expect(emit(view_hub,
+                     make_item(source, "route.alpha", "provider.alpha", OriginKind::component,
+                               InteractionKind::message_event, row.source_size),
+                     1U)
+                     .succeeded(),
+                 "T024 payload-view publication")) {
+      return false;
+    }
+    const auto pulled = view_hub.poll(*tap.handle);
+    if (!expect(pulled.record.has_value(), "T024 payload-view record")) {
+      return false;
+    }
+    const ObservationRecord& record = *pulled.record;
+    const std::span<const std::byte> visible = record.payload_bytes();
+    valid = expect(visible.size() == row.visible, "T024 payload-view visible size") &&
+            expect(record.payload_view_state() == row.state, "T024 payload-view state") &&
+            expect(record.payload_schema_state() == PayloadSchemaState::undecoded,
+                   "T024 payload-view schema stays undecoded") &&
+            expect(record.source_payload_size() == row.source_size,
+                   "T024 payload-view complete source size") &&
+            valid;
+    for (std::size_t index = 0U; index < visible.size(); ++index) {
+      valid = expect(visible[index] == source[index], "T024 payload-view exact leading byte") && valid;
+    }
+  }
+
+  const auto minimum = ObservationTapSpec::create(
+      {kObservationContractVersion, "tap.t024.min", {}, ObservationPayloadMode::bounded_prefix, 1U,
+       1U, ObservationOverflowPolicy::drop_newest});
+  const auto maximum = ObservationTapSpec::create(
+      {kObservationContractVersion, "tap.t024.max", {}, ObservationPayloadMode::bounded_prefix,
+       kMaximumObservedPayloadBytes, kMaximumObservationRecordsPerTap,
+       ObservationOverflowPolicy::drop_newest});
+  valid = expect(minimum.has_value() && minimum->maximum_payload_bytes() == 1U,
+                 "T024 minimum prefix bound accepted") &&
+          expect(maximum.has_value() &&
+                     maximum->maximum_payload_bytes() == kMaximumObservedPayloadBytes,
+                 "T024 maximum prefix bound accepted") &&
+          expect(!ObservationTapSpec::create(
+                      {kObservationContractVersion, "tap.t024.reject", {},
+                       ObservationPayloadMode::bounded_prefix, 0U, 1U,
+                       ObservationOverflowPolicy::drop_newest})
+                      .has_value(),
+                 "T024 zero prefix bound rejected") &&
+          expect(!ObservationTapSpec::create(
+                      {kObservationContractVersion, "tap.t024.reject", {},
+                       ObservationPayloadMode::bounded_prefix, kMaximumObservedPayloadBytes + 1U, 1U,
+                       ObservationOverflowPolicy::drop_newest})
+                      .has_value(),
+                 "T024 over-bound prefix rejected") &&
+          expect(!ObservationTapSpec::create(
+                      {kObservationContractVersion, "tap.t024.reject", {},
+                       ObservationPayloadMode::metadata_only, 1U, 1U,
+                       ObservationOverflowPolicy::drop_newest})
+                      .has_value(),
+                 "T024 non-zero bound on metadata rejected") &&
+          expect(!ObservationTapSpec::create(
+                      {kObservationContractVersion, "tap.t024.reject", {},
+                       ObservationPayloadMode::redacted, 1U, 1U,
+                       ObservationOverflowPolicy::drop_newest})
+                      .has_value(),
+                 "T024 non-zero bound on redacted rejected") &&
+          valid;
+  return valid;
+}
+
+/**
+ * @brief Prove per-tap FIFO under drop/coalesce, coalesce position, and multi-tap independence.
+ * @details Realizes T24-TS-002 (`ordering`): T024-SR-007; XCOM-SW-OBS-003; FR-013, SC-004.
+ * @return true only when every ordering assertion holds.
+ */
+[[nodiscard]] bool test_observation_ordering_matrix() {
+  const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto drop = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 4U,
+                                         ObservationOverflowPolicy::drop_newest, {}, "tap.t024.drop"));
+  const auto coalesce =
+      hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 4U,
+                           ObservationOverflowPolicy::coalesce_latest, {}, "tap.t024.coalesce"));
+  if (!expect(drop.handle.has_value() && coalesce.handle.has_value(), "T024 ordering attachment")) {
+    return false;
+  }
+  bool valid = true;
+  for (std::uint64_t sequence = 1U; sequence <= 5U; ++sequence) {
+    valid = expect(emit(hub, alpha, sequence).succeeded(), "T024 ordering publication") && valid;
+  }
+  const auto drop_snapshot = hub.snapshot(*drop.handle);
+  const auto coalesce_snapshot = hub.snapshot(*coalesce.handle);
+  const std::vector<ObservationRecord> drop_records = poll_all(hub, *drop.handle, 4U);
+  const std::vector<ObservationRecord> coalesce_records = poll_all(hub, *coalesce.handle, 4U);
+  valid = expect(drop_snapshot.has_value() && drop_snapshot->accepted == 4U &&
+                     drop_snapshot->dropped == 1U && drop_snapshot->queued == 4U,
+                 "T024 drop-newest ordering counters") &&
+          expect(coalesce_snapshot.has_value() && coalesce_snapshot->accepted == 4U &&
+                     coalesce_snapshot->coalesced == 1U && coalesce_snapshot->queued == 4U,
+                 "T024 coalesce-latest ordering counters") &&
+          expect(drop_records.size() == 4U && coalesce_records.size() == 4U,
+                 "T024 ordering record counts") &&
+          valid;
+  constexpr std::array<std::uint64_t, 4U> drop_order{1U, 2U, 3U, 4U};
+  constexpr std::array<std::uint64_t, 4U> coalesce_order{1U, 2U, 3U, 5U};
+  for (std::size_t index = 0U; index < drop_records.size(); ++index) {
+    valid = expect(drop_records[index].sequence().has_value() &&
+                       *drop_records[index].sequence() == drop_order[index],
+                   "T024 drop-newest preserves retained FIFO order") &&
+            valid;
+  }
+  for (std::size_t index = 0U; index < coalesce_records.size(); ++index) {
+    valid = expect(coalesce_records[index].sequence().has_value() &&
+                       *coalesce_records[index].sequence() == coalesce_order[index],
+                   "T024 coalesce replacement position") &&
+            valid;
+  }
+  for (std::size_t index = 1U; index < drop_records.size(); ++index) {
+    valid = expect(drop_records[index - 1U].sequence().has_value() &&
+                       drop_records[index].sequence().has_value() &&
+                       *drop_records[index - 1U].sequence() < *drop_records[index].sequence(),
+                   "T024 pulled sequence strictly increasing") &&
+            valid;
+  }
+
+  ObservationHub pair;
+  const auto a = pair.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                       ObservationOverflowPolicy::drop_newest, {}, "tap.t024.a"));
+  const auto b = pair.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                       ObservationOverflowPolicy::drop_newest, {}, "tap.t024.b"));
+  if (!expect(a.handle.has_value() && b.handle.has_value(), "T024 multi-tap attachment")) {
+    return false;
+  }
+  for (std::uint64_t sequence = 1U; sequence <= 3U; ++sequence) {
+    valid = expect(emit(pair, alpha, sequence).succeeded(), "T024 multi-tap publication") && valid;
+  }
+  const auto a_snapshot = pair.snapshot(*a.handle);
+  const auto b_snapshot = pair.snapshot(*b.handle);
+  const std::vector<ObservationRecord> a_records = poll_all(pair, *a.handle, 3U);
+  const auto b_after_a = pair.snapshot(*b.handle);
+  const std::vector<ObservationRecord> b_records = poll_all(pair, *b.handle, 3U);
+  valid = expect(a_snapshot.has_value() && a_snapshot->accepted == 2U && a_snapshot->queued == 2U &&
+                     b_snapshot.has_value() && b_snapshot->accepted == 2U &&
+                     b_snapshot->queued == 2U,
+                 "T024 independent multi-tap counters") &&
+          expect(a_records.size() == 2U && a_records[0].sequence().has_value() &&
+                     *a_records[0].sequence() == 1U && a_records[1].sequence().has_value() &&
+                     *a_records[1].sequence() == 2U,
+                 "T024 first tap FIFO order") &&
+          expect(b_after_a.has_value() && b_after_a->queued == 2U,
+                 "T024 pulling one tap leaves the other queue") &&
+          expect(b_records.size() == 2U && b_records[0].sequence().has_value() &&
+                     *b_records[0].sequence() == 1U && b_records[1].sequence().has_value() &&
+                     *b_records[1].sequence() == 2U,
+                 "T024 second tap independent FIFO order") &&
+          valid;
+  return valid;
+}
+
+/**
+ * @brief Prove drop-newest min/max bounds, coalesce key selection, lossless rejection/recovery, and
+ * bounded deterministic concurrency.
+ * @details Realizes T24-TS-003 (`saturation`): T024-SR-004, T024-SR-008, T024-SR-009, T024-SR-010,
+ * and the T024-SR-018 deterministic bounded concurrency sub-check over one lossless tap;
+ * XCOM-SW-OBS-003/-004; FR-013, FR-014, SC-003, SC-004.
+ * @return true only when every saturation, accounting, and concurrency assertion holds.
+ */
+[[nodiscard]] bool test_observation_saturation_bound_matrix() {
+  const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  const CommunicationItem beta = make_item(bytes, "route.beta");
+  const CommunicationItem gamma = make_item(bytes, "route.gamma");
+  bool valid = true;
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.drop1"));
+    if (!expect(tap.handle.has_value(), "T024 bound-min attachment")) {
+      return false;
+    }
+    for (std::uint64_t sequence = 1U; sequence <= 5U; ++sequence) {
+      valid = expect(emit(hub, alpha, sequence).succeeded(),
+                     "T024 bound-min stays best effort") &&
+              valid;
+      const auto bounded = hub.snapshot(*tap.handle);
+      valid = expect(bounded.has_value() && bounded->queued <= 1U,
+                     "T024 bound-min queue within capacity") &&
+              valid;
+    }
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const auto oldest = hub.poll(*tap.handle);
+    const auto exhausted = hub.poll(*tap.handle);
+    valid = expect(snapshot.has_value() && snapshot->accepted == 1U && snapshot->dropped == 4U &&
+                       snapshot->queued == 1U,
+                   "T024 bound-min loss counters") &&
+            expect(oldest.record.has_value() && oldest.record->sequence().has_value() &&
+                       *oldest.record->sequence() == 1U,
+                   "T024 bound-min oldest retained") &&
+            expect(exhausted.status.outcome == ObservationOutcome::no_record,
+                   "T024 bound-min no phantom record") &&
+            expect(snapshot->accepted + snapshot->dropped == 5U,
+                   "T024 bound-min accounting identity") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U,
+                                          kMaximumObservationRecordsPerTap,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.drop16"));
+    if (!expect(tap.handle.has_value(), "T024 bound-max attachment")) {
+      return false;
+    }
+    for (std::uint64_t sequence = 1U; sequence <= 20U; ++sequence) {
+      valid = expect(emit(hub, alpha, sequence).succeeded(),
+                     "T024 bound-max stays best effort") &&
+              valid;
+    }
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const std::vector<ObservationRecord> records =
+        poll_all(hub, *tap.handle, kMaximumObservationRecordsPerTap);
+    const auto exhausted = hub.poll(*tap.handle);
+    valid = expect(snapshot.has_value() &&
+                       snapshot->queued <= kMaximumObservationRecordsPerTap,
+                   "T024 bound-max queue within capacity") &&
+            expect(records.size() == kMaximumObservationRecordsPerTap,
+                   "T024 bound-max retains the declared capacity") &&
+            expect(exhausted.status.outcome == ObservationOutcome::no_record,
+                   "T024 bound-max no phantom record") &&
+            expect(snapshot.has_value() && snapshot->accepted == 16U && snapshot->dropped == 4U &&
+                       snapshot->queued == 16U,
+                   "T024 bound-max loss counters") &&
+            expect(snapshot->accepted + snapshot->dropped == 20U,
+                   "T024 bound-max accounting identity") &&
+            valid;
+    for (std::size_t index = 0U; index < records.size(); ++index) {
+      valid = expect(records[index].sequence().has_value() &&
+                         *records[index].sequence() == static_cast<std::uint64_t>(index + 1U),
+                     "T024 bound-max FIFO order") &&
+              valid;
+    }
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::coalesce_latest, {},
+                                          "tap.t024.coal1"));
+    if (!expect(tap.handle.has_value(), "T024 coalesce-min attachment")) {
+      return false;
+    }
+    valid = expect(emit(hub, alpha, 1U).succeeded() && emit(hub, beta, 2U).succeeded() &&
+                       emit(hub, alpha, 3U).succeeded() && emit(hub, gamma, 4U).succeeded(),
+                   "T024 coalesce-min submissions") &&
+            valid;
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const auto record = hub.poll(*tap.handle);
+    valid = expect(snapshot.has_value() && snapshot->accepted == 1U && snapshot->dropped == 2U &&
+                       snapshot->coalesced == 1U && snapshot->queued == 1U,
+                   "T024 coalesce-min key selection counters") &&
+            expect(record.record.has_value() && record.record->route_id().value() == "route.alpha" &&
+                       record.record->sequence().has_value() &&
+                       *record.record->sequence() == 3U,
+                   "T024 coalesce-min replaces only the matching key") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::lossless_validation, {},
+                                          "tap.t024.lossless"));
+    if (!expect(tap.handle.has_value(), "T024 lossless attachment")) {
+      return false;
+    }
+    auto held = hub.reserve(alpha);
+    const auto blocked = hub.reserve(alpha);
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const auto cancelled = hub.cancel(std::move(*held.reservation));
+    auto recovered = hub.reserve(alpha);
+    const auto committed = hub.commit(
+        std::move(*recovered.reservation),
+        {alpha, Timestamp(1), "clock.observer", 1U, ObservationProviderOutcome::accepted});
+    const auto after = hub.snapshot(*tap.handle);
+    const auto record = hub.poll(*tap.handle);
+    valid = expect(held.status.succeeded() && held.reservation.has_value(),
+                   "T024 lossless capacity claimed before provider") &&
+            expect(blocked.status.outcome == ObservationOutcome::observation_backpressure &&
+                       !blocked.reservation.has_value(),
+                   "T024 lossless rejection before mutation") &&
+            expect(snapshot.has_value() && snapshot->backpressure_rejections == 1U &&
+                       snapshot->experiment_validity_degraded && snapshot->queued == 0U &&
+                       snapshot->accepted == 0U,
+                   "T024 lossless rejection raises validity without mutation") &&
+            expect(cancelled.succeeded() && recovered.status.succeeded() &&
+                       recovered.reservation.has_value() && committed.succeeded(),
+                   "T024 lossless recovery commits") &&
+            expect(after.has_value() && after->queued == 1U && after->accepted == 1U,
+                   "T024 lossless recovered queue state") &&
+            expect(record.record.has_value() && record.record->sequence().has_value() &&
+                       *record.record->sequence() == 1U,
+                   "T024 lossless commit retained exactly once") &&
+            valid;
+  }
+
+  {
+    // T024-SR-018: bounded, deterministic concurrency over one lossless tap. Four publishers each
+    // perform a fixed number of reserve/commit attempts; because lossless capacity is claimed before
+    // provider mutation and every successful claim is committed, the finite-capacity rule makes the
+    // total committed and rejected counts independent of thread interleaving. Three repeated runs
+    // must produce the same observable outcome. No callback is installed under the hub mutex.
+    constexpr std::size_t kPublishers = 4U;
+    constexpr std::size_t kAttemptsPerPublisher = 4U;
+    constexpr std::size_t kTotalAttempts = kPublishers * kAttemptsPerPublisher;
+    for (std::size_t run = 0U; run < 3U; ++run) {
+      ObservationHub hub;
+      const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, kPublishers,
+                                            ObservationOverflowPolicy::lossless_validation, {},
+                                            "tap.t024.concurrent"));
+      if (!expect(tap.handle.has_value(), "T024 concurrent attachment")) {
+        return false;
+      }
+      std::atomic<std::uint64_t> committed{0U};
+      std::atomic<std::uint64_t> rejected{0U};
+      std::atomic<bool> consistent{true};
+      std::array<std::thread, kPublishers> publishers;
+      for (std::size_t index = 0U; index < publishers.size(); ++index) {
+        publishers[index] = std::thread([&hub, &alpha, &committed, &rejected, &consistent, index]() {
+          for (std::size_t step = 0U; step < kAttemptsPerPublisher; ++step) {
+            const std::uint64_t sequence =
+                static_cast<std::uint64_t>(index * kAttemptsPerPublisher + step + 1U);
+            auto claim = hub.reserve(alpha);
+            if (claim.status.succeeded() && claim.reservation.has_value()) {
+              if (!hub
+                       .commit(std::move(*claim.reservation),
+                               {alpha, Timestamp(static_cast<std::int64_t>(sequence)),
+                                "clock.observer", sequence, ObservationProviderOutcome::accepted})
+                       .succeeded()) {
+                consistent = false;
+                continue;
+              }
+              ++committed;
+            } else if (claim.status.outcome == ObservationOutcome::observation_backpressure &&
+                       !claim.reservation.has_value()) {
+              ++rejected;
+            } else {
+              consistent = false;
+            }
+          }
+        });
+      }
+      for (std::thread& publisher : publishers) {
+        publisher.join();
+      }
+      const auto snapshot = hub.snapshot(*tap.handle);
+      const std::vector<ObservationRecord> records = poll_all(hub, *tap.handle, kPublishers);
+      std::array<bool, kTotalAttempts> observed{};
+      bool distinct = records.size() == kPublishers;
+      for (const ObservationRecord& record : records) {
+        if (!record.sequence().has_value() || *record.sequence() < 1U ||
+            *record.sequence() > static_cast<std::uint64_t>(kTotalAttempts)) {
+          distinct = false;
+          continue;
+        }
+        const std::size_t slot = static_cast<std::size_t>(*record.sequence() - 1U);
+        if (observed[slot]) {
+          distinct = false;
+        }
+        observed[slot] = true;
+      }
+      valid = expect(consistent.load(), "T024 concurrent no unstable outcome") &&
+              expect(committed.load() == kPublishers && rejected.load() == kTotalAttempts - kPublishers,
+                     "T024 concurrent exact claim accounting") &&
+              expect(snapshot.has_value() && snapshot->accepted == kPublishers &&
+                         snapshot->queued == kPublishers && snapshot->dropped == 0U &&
+                         snapshot->coalesced == 0U &&
+                         snapshot->backpressure_rejections ==
+                             static_cast<std::uint64_t>(kTotalAttempts - kPublishers) &&
+                         snapshot->experiment_validity_degraded,
+                     "T024 concurrent consistent counter and queue state") &&
+              expect(distinct, "T024 concurrent no lost or duplicated claim") &&
+              valid;
+    }
+  }
+  return valid;
+}
+
+/**
+ * @brief Prove the declared-effect to realized-status table and the validity interval semantics.
+ * @details Realizes T24-TS-004 (`degraded-validity`): T024-SR-011, T024-SR-012;
+ * XCOM-SW-OBS-003/-004; FR-013, FR-014, SC-004.
+ * @return true only when every validity assertion holds.
+ */
+[[nodiscard]] bool test_observation_validity_interval_matrix() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  constexpr std::array<ObservationValidityEffect, 3U> effects{
+      ObservationValidityEffect::none, ObservationValidityEffect::degrade_on_loss,
+      ObservationValidityEffect::invalidate_on_loss};
+  constexpr std::array<ObservationValidityState, 3U> expected{
+      ObservationValidityState::valid, ObservationValidityState::degraded,
+      ObservationValidityState::invalid};
+  bool valid = true;
+  for (std::size_t index = 0U; index < effects.size(); ++index) {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.effect", effects[index]));
+    if (!expect(tap.handle.has_value(), "T024 effect-table attachment")) {
+      return false;
+    }
+    valid = expect(emit(hub, alpha, 1U).succeeded() && emit(hub, alpha, 2U).succeeded(),
+                   "T024 effect-table submissions") &&
+            valid;
+    const auto snapshot = hub.snapshot(*tap.handle);
+    valid = expect(snapshot.has_value() && snapshot->validity_state == expected[index] &&
+                       snapshot->experiment_validity_degraded ==
+                           (expected[index] != ObservationValidityState::valid) &&
+                       snapshot->dropped == 1U,
+                   "T024 declared effect applied to a best-effort loss") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.mono",
+                                          ObservationValidityEffect::degrade_on_loss));
+    if (!expect(tap.handle.has_value(), "T024 monotonic attachment")) {
+      return false;
+    }
+    static_cast<void>(emit(hub, alpha, 1U));
+    static_cast<void>(emit(hub, alpha, 2U));
+    const auto first = hub.snapshot(*tap.handle);
+    const auto second = hub.snapshot(*tap.handle);
+    const auto acknowledged = hub.acknowledge(*tap.handle);
+    const auto restored = hub.snapshot(*tap.handle);
+    static_cast<void>(emit(hub, alpha, 3U));
+    static_cast<void>(emit(hub, alpha, 4U));
+    const auto again = hub.snapshot(*tap.handle);
+    valid = expect(first.has_value() &&
+                       first->validity_state == ObservationValidityState::degraded,
+                   "T024 loss raises degraded") &&
+            expect(second.has_value() &&
+                       second->validity_state == ObservationValidityState::degraded,
+                   "T024 validity never lowered without acknowledgement") &&
+            expect(acknowledged.succeeded() && restored.has_value() &&
+                       restored->validity_state == ObservationValidityState::valid &&
+                       restored->backpressure_rejections == 0U &&
+                       !restored->experiment_validity_degraded,
+                   "T024 acknowledgement closes the degraded interval") &&
+            expect(again.has_value() &&
+                       again->validity_state == ObservationValidityState::degraded,
+                   "T024 a further loss degrades again") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.invalid",
+                                          ObservationValidityEffect::invalidate_on_loss));
+    if (!expect(tap.handle.has_value(), "T024 invalid-persistence attachment")) {
+      return false;
+    }
+    static_cast<void>(emit(hub, alpha, 1U));
+    static_cast<void>(emit(hub, alpha, 2U));
+    const auto invalid = hub.snapshot(*tap.handle);
+    const auto acknowledged = hub.acknowledge(*tap.handle);
+    static_cast<void>(emit(hub, alpha, 3U));
+    const auto still_invalid = hub.snapshot(*tap.handle);
+    valid = expect(invalid.has_value() &&
+                       invalid->validity_state == ObservationValidityState::invalid,
+                   "T024 invalid status raised by a loss") &&
+            expect(acknowledged.succeeded() && still_invalid.has_value() &&
+                       still_invalid->validity_state == ObservationValidityState::invalid &&
+                       still_invalid->dropped == 2U,
+                   "T024 invalid status persists across acknowledgement and a further loss") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.recreate",
+                                          ObservationValidityEffect::degrade_on_loss));
+    if (!expect(tap.handle.has_value(), "T024 recreation attachment")) {
+      return false;
+    }
+    static_cast<void>(emit(hub, alpha, 1U));
+    static_cast<void>(emit(hub, alpha, 2U));
+    const auto before = hub.snapshot(*tap.handle);
+    const auto detached = hub.detach(*tap.handle);
+    const auto recreated = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                                ObservationOverflowPolicy::drop_newest, {},
+                                                "tap.t024.recreate",
+                                                ObservationValidityEffect::degrade_on_loss));
+    const auto fresh = hub.snapshot(*recreated.handle);
+    const auto stale = hub.snapshot(*tap.handle);
+    valid = expect(before.has_value() &&
+                       before->validity_state == ObservationValidityState::degraded,
+                   "T024 interval starts degraded") &&
+            expect(detached.succeeded() && recreated.handle.has_value() &&
+                       recreated.handle->generation() > tap.handle->generation(),
+                   "T024 slot recreated with a new generation") &&
+            expect(fresh.has_value() && fresh->validity_state == ObservationValidityState::valid &&
+                       fresh->accepted == 0U && fresh->queued == 0U && fresh->dropped == 0U,
+                   "T024 recreation discards the realized status and counters") &&
+            expect(!stale.has_value(), "T024 old generation no longer authenticates") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::lossless_validation, {},
+                                          "tap.t024.least", ObservationValidityEffect::none));
+    if (!expect(tap.handle.has_value(), "T024 at-least-degraded attachment")) {
+      return false;
+    }
+    auto held = hub.reserve(alpha);
+    const auto blocked = hub.reserve(alpha);
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const auto cancelled = hub.cancel(std::move(*held.reservation));
+    valid = expect(held.status.succeeded() && held.reservation.has_value(),
+                   "T024 at-least-degraded held claim") &&
+            expect(blocked.status.outcome == ObservationOutcome::observation_backpressure,
+                   "T024 at-least-degraded backpressure") &&
+            expect(snapshot.has_value() &&
+                       snapshot->validity_state == ObservationValidityState::degraded &&
+                       snapshot->experiment_validity_degraded &&
+                       snapshot->backpressure_rejections == 1U,
+                   "T024 lossless realizes at least degraded under none") &&
+            expect(cancelled.succeeded(), "T024 at-least-degraded claim released") &&
+            valid;
+  }
+  return valid;
+}
+
+/**
+ * @brief Prove detach/ownership semantics and that detach discards only its own records.
+ * @details Realizes T24-TS-005 (`safe-detach`): T024-SR-013; XCOM-SW-OBS-004; FR-009, FR-014,
+ * SC-005.
+ * @return true only when every detach and ownership assertion holds.
+ */
+[[nodiscard]] bool test_observation_safe_detach_matrix() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  ObservationHub foreign_hub;
+  const auto a = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                      ObservationOverflowPolicy::drop_newest, {}, "tap.t024.detach.a"));
+  const auto b = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                      ObservationOverflowPolicy::drop_newest, {}, "tap.t024.detach.b"));
+  if (!expect(a.handle.has_value() && b.handle.has_value(), "T024 detach attachment")) {
+    return false;
+  }
+  static_cast<void>(emit(hub, alpha, 1U));
+  static_cast<void>(emit(hub, alpha, 2U));
+  const auto detached_a = hub.detach(*a.handle);
+  const auto a_snapshot = hub.snapshot(*a.handle);
+  const auto a_poll = hub.poll(*a.handle);
+  const auto b_snapshot = hub.snapshot(*b.handle);
+  const auto b_record = hub.poll(*b.handle);
+  const auto duplicate_a = hub.detach(*a.handle);
+  bool valid = expect(detached_a.succeeded(), "T024 detach accepted") &&
+               expect(!a_snapshot.has_value(), "T024 detached snapshot absent") &&
+               expect(a_poll.status.outcome == ObservationOutcome::invalid_tap_handle,
+                      "T024 detached poll rejected") &&
+               expect(b_snapshot.has_value() && b_snapshot->queued == 2U &&
+                          b_snapshot->accepted == 2U && b_snapshot->dropped == 0U,
+                      "T024 detach discards only its own records") &&
+               expect(b_record.record.has_value() && b_record.record->sequence().has_value() &&
+                          *b_record.record->sequence() == 1U,
+                      "T024 other tap authenticates and keeps FIFO order") &&
+               expect(duplicate_a.outcome == ObservationOutcome::tap_closed,
+                      "T024 repeated close returns tap_closed");
+  const auto c = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                      ObservationOverflowPolicy::lossless_validation, {},
+                                      "tap.t024.detach.c"));
+  if (!expect(c.handle.has_value(), "T024 claimed-tap attachment")) {
+    return false;
+  }
+  auto held = hub.reserve(alpha);
+  const auto busy = hub.detach(*c.handle);
+  const auto claimed = hub.snapshot(*c.handle);
+  const auto cancelled = hub.cancel(std::move(*held.reservation));
+  const auto detached_c = hub.detach(*c.handle);
+  valid = expect(busy.outcome == ObservationOutcome::tap_busy, "T024 claimed detach is busy") &&
+          expect(claimed.has_value() && claimed->queued == 0U &&
+                     claimed->validity_state == ObservationValidityState::valid,
+                 "T024 claimed tap state untouched") &&
+          expect(cancelled.succeeded() && detached_c.succeeded(),
+                 "T024 detach succeeds after the claim is released") &&
+          valid;
+  const auto foreign = foreign_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                                    ObservationOverflowPolicy::drop_newest, {},
+                                                    "tap.t024.detach.f"));
+  if (!expect(foreign.handle.has_value(), "T024 foreign attachment")) {
+    return false;
+  }
+  const auto foreign_detach = hub.detach(*foreign.handle);
+  const auto foreign_here = hub.snapshot(*foreign.handle);
+  const auto foreign_there = foreign_hub.snapshot(*foreign.handle);
+  valid = expect(foreign_detach.outcome == ObservationOutcome::invalid_tap_handle,
+                 "T024 foreign detach rejected") &&
+          expect(!foreign_here.has_value(), "T024 foreign handle absent at this hub") &&
+          expect(foreign_there.has_value(), "T024 foreign slot unchanged") &&
+          valid;
+  const auto recreated = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                              ObservationOverflowPolicy::drop_newest, {},
+                                              "tap.t024.detach.a"));
+  const auto fresh = hub.snapshot(*recreated.handle);
+  const auto stale_detach = hub.detach(*a.handle);
+  valid = expect(recreated.handle.has_value() &&
+                     recreated.handle->generation() > a.handle->generation(),
+                 "T024 recreated generation is newer") &&
+          expect(fresh.has_value() && fresh->validity_state == ObservationValidityState::valid &&
+                     fresh->accepted == 0U && fresh->queued == 0U && fresh->dropped == 0U,
+                 "T024 recreated generation starts clean") &&
+          expect(stale_detach.outcome == ObservationOutcome::invalid_tap_handle,
+                 "T024 stale handle rejected after recreation") &&
+          valid;
+  return valid;
+}
+
+/**
+ * @brief Prove the complete, self-describing, provider-neutral normalized record for every dimension.
+ * @details Realizes T24-TS-006 (`metadata-only-zero-payload` normalized record): T024-SR-015,
+ * T024-SR-016; XCOM-SW-OBS-005; FR-023.
+ * @return true only when every normalized-record and value-ownership assertion holds.
+ */
+[[nodiscard]] bool test_observation_normalized_record_matrix() {
+  const std::array<std::byte, 4U> source{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+  constexpr std::array<OriginKind, 3U> origins{OriginKind::component, OriginKind::replay,
+                                               OriginKind::validation_tool};
+  constexpr std::array<ObservationProviderOutcome, 3U> outcomes{
+      ObservationProviderOutcome::not_attempted, ObservationProviderOutcome::accepted,
+      ObservationProviderOutcome::rejected};
+  bool valid = true;
+  for (const ObservationProviderOutcome outcome : outcomes) {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U,
+                                          kMaximumObservationRecordsPerTap,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.norm"));
+    if (!expect(tap.handle.has_value(), "T024 normalized attachment")) {
+      return false;
+    }
+    std::uint64_t sequence = 0U;
+    for (const InteractionKind family : kT024Families) {
+      for (const OriginKind origin : origins) {
+        ++sequence;
+        valid = expect(emit(hub,
+                            make_item(source, "route.alpha", "provider.alpha", origin, family, 4U),
+                            sequence, outcome)
+                           .succeeded(),
+                       "T024 normalized publication") &&
+                valid;
+      }
+    }
+    const auto batch = hub.snapshot(*tap.handle);
+    valid = expect(batch.has_value() && batch->accepted == 12U && batch->queued == 12U,
+                   "T024 normalized batch retained exactly once") &&
+            valid;
+    sequence = 0U;
+    for (const InteractionKind family : kT024Families) {
+      for (const OriginKind origin : origins) {
+        ++sequence;
+        const auto pulled = hub.poll(*tap.handle);
+        valid = expect(pulled.record.has_value(), "T024 normalized record pulled exactly once") &&
+                expect_metadata_record(*pulled.record, family, 4U, sequence, "tap.t024.norm", origin,
+                                       outcome) &&
+                valid;
+      }
+    }
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 4U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.owner"));
+    if (!expect(tap.handle.has_value(), "T024 value-ownership attachment")) {
+      return false;
+    }
+    const CommunicationItem item = make_item(source, "route.alpha", "provider.alpha",
+                                             OriginKind::component, InteractionKind::message_event,
+                                             4U);
+    static_cast<void>(emit(hub, item, 1U));
+    const auto pulled = hub.poll(*tap.handle);
+    if (!expect(pulled.record.has_value(), "T024 value-ownership record")) {
+      return false;
+    }
+    const ObservationRecord copy = *pulled.record;
+    const ObservationRecordCounters before = copy.counters();
+    static_cast<void>(emit(hub, item, 2U));
+    static_cast<void>(emit(hub, item, 3U));
+    valid = expect(copy.sequence().has_value() && *copy.sequence() == 1U,
+                   "T024 value-owned sequence independent of later mutation") &&
+            expect(copy.route_id().value() == "route.alpha", "T024 value-owned route") &&
+            expect(copy.source_payload_size() == 4U, "T024 value-owned source size") &&
+            expect(copy.counters().queued == before.queued &&
+                       copy.counters().accepted == before.accepted &&
+                       copy.counters().dropped == before.dropped &&
+                       copy.counters().coalesced == before.coalesced,
+                   "T024 value-owned counter projection") &&
+            valid;
+    // Provider neutrality (T024-SR-016, ADR-0019): ObservationRecord exposes only the provider-neutral
+    // normalized fields asserted above; no Argus-side or provider-specific accessor is introduced or
+    // required by the accepted observation surface.
+  }
+  return valid;
+}
+
+/**
+ * @brief Prove normalized edge values: absent sequence, distinct clock, zero payload, and counters.
+ * @details Realizes T24-TS-007 (`controlled-payload-view` edge values): T024-SR-002, T024-SR-015;
+ * XCOM-SW-OBS-005; FR-023.
+ * @return true only when every edge-value assertion holds.
+ */
+[[nodiscard]] bool test_observation_record_edge_value_matrix() {
+  const std::array<std::byte, 4U> source{std::byte{5}, std::byte{6}, std::byte{7}, std::byte{8}};
+  bool valid = true;
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.edge"));
+    const CommunicationItem item =
+        make_item(source, "route.alpha", "provider.alpha", OriginKind::replay,
+                  InteractionKind::service_request, 4U);
+    const auto committed = emit_absent_sequence(hub, item, 77);
+    const auto pulled = hub.poll(*tap.handle);
+    valid = expect(committed.succeeded(), "T024 absent-sequence commit") &&
+            expect(pulled.record.has_value() && !pulled.record->sequence().has_value(),
+                   "T024 absent sequence is not defaulted") &&
+            expect(pulled.record->contract_id().value() == "contract.alpha" &&
+                       pulled.record->route_id().value() == "route.alpha" &&
+                       pulled.record->provider_id().value() == "provider.alpha" &&
+                       pulled.record->interaction_kind() == InteractionKind::service_request &&
+                       pulled.record->origin() == OriginKind::replay,
+                   "T024 absent-sequence fields preserved") &&
+            expect(pulled.record->observation_timestamp().nanoseconds() == 77,
+                   "T024 absent-sequence observation time preserved") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.edge"));
+    const CommunicationItem item = make_item(source);
+    auto reserved = hub.reserve(item);
+    const auto committed = hub.commit(
+        std::move(*reserved.reservation),
+        {item, Timestamp(1234), "clock.distinct", 5U, ObservationProviderOutcome::accepted});
+    const auto pulled = hub.poll(*tap.handle);
+    valid = expect(committed.succeeded() && pulled.record.has_value(),
+                   "T024 distinct observation clock commit") &&
+            expect(pulled.record->source_timestamp().nanoseconds() == 42 &&
+                       pulled.record->source_clock_domain().value() == "clock.source",
+                   "T024 source clock preserved") &&
+            expect(pulled.record->observation_timestamp().nanoseconds() == 1234 &&
+                       pulled.record->observation_clock_domain().value() == "clock.distinct",
+                   "T024 observation clock preserved independently") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.edge"));
+    const CommunicationItem item =
+        make_item(source, "route.alpha", "provider.alpha", OriginKind::component,
+                  InteractionKind::message_event, 0U);
+    const auto emitted = emit(hub, item, 1U);
+    const auto pulled = hub.poll(*tap.handle);
+    valid = expect(emitted.succeeded() && pulled.record.has_value() &&
+                       pulled.record->source_payload_size() == 0U &&
+                       pulled.record->payload_bytes().empty() &&
+                       pulled.record->payload_view_state() == PayloadViewState::omitted,
+                   "T024 zero-length payload metadata view") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto fresh = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                            ObservationOverflowPolicy::drop_newest, {},
+                                            "tap.t024.count"));
+    const CommunicationItem alpha = make_item(source, "route.alpha");
+    static_cast<void>(emit(hub, alpha, 1U));
+    const auto first = hub.poll(*fresh.handle);
+    valid = expect(first.record.has_value() && first.record->counters().queued == 1U &&
+                       first.record->counters().accepted == 1U &&
+                       first.record->counters().dropped == 0U &&
+                       first.record->counters().coalesced == 0U,
+                   "T024 retention-time counter projection") &&
+            valid;
+
+    ObservationHub coalesce_hub;
+    const auto coalesce =
+        coalesce_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                      ObservationOverflowPolicy::coalesce_latest, {},
+                                      "tap.t024.count"));
+    static_cast<void>(emit(coalesce_hub, alpha, 1U));
+    static_cast<void>(emit(coalesce_hub, alpha, 2U));
+    const auto replaced = coalesce_hub.poll(*coalesce.handle);
+    valid = expect(replaced.record.has_value() && replaced.record->counters().coalesced == 1U &&
+                       replaced.record->counters().queued == 1U &&
+                       replaced.record->sequence().has_value() &&
+                       *replaced.record->sequence() == 2U,
+                   "T024 coalesced replacement counter projection") &&
+            valid;
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U,
+                                          kMaximumObservationRecordsPerTap,
+                                          ObservationOverflowPolicy::drop_newest, {},
+                                          "tap.t024.family"));
+    if (!expect(tap.handle.has_value(), "T024 family attachment")) {
+      return false;
+    }
+    std::uint64_t sequence = 0U;
+    for (const InteractionKind family : kT024Families) {
+      ++sequence;
+      static_cast<void>(emit(hub,
+                             make_item(source, "route.alpha", "provider.alpha",
+                                       OriginKind::component, family, 4U),
+                             sequence));
+    }
+    for (const InteractionKind family : kT024Families) {
+      const auto pulled = hub.poll(*tap.handle);
+      valid = expect(pulled.record.has_value() && pulled.record->interaction_kind() == family,
+                     "T024 family preserved for every record") &&
+              valid;
+    }
+  }
+  return valid;
+}
+
 }  // namespace
 
 /** @brief Run all focused observation fixtures. @return Zero only when every check passes. */
@@ -1368,7 +2387,14 @@ int main() {
                  test_synthetic_sink_concurrency() && test_synthetic_sink_visible_counters() &&
                  test_synthetic_sink_disconnect_isolation() &&
                  test_synthetic_sink_failure_isolation() &&
-                 test_synthetic_sink_blocking_isolation()
+                 test_synthetic_sink_blocking_isolation() &&
+                 test_observation_metadata_and_payload_view_matrix() &&
+                 test_observation_ordering_matrix() &&
+                 test_observation_saturation_bound_matrix() &&
+                 test_observation_validity_interval_matrix() &&
+                 test_observation_safe_detach_matrix() &&
+                 test_observation_normalized_record_matrix() &&
+                 test_observation_record_edge_value_matrix()
              ? 0
              : 1;
 }

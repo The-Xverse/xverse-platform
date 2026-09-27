@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "task_id": "T024",
+  "baseline_revision": "76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 2,
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t024/architecture.md",
+    "docs/engineering/xcom/t024/detailed-design.md",
+    "docs/engineering/xcom/t024/implementation.md",
+    "docs/engineering/xcom/t024/requirements.md",
+    "docs/engineering/xcom/t024/unit-specifications.md",
+    "docs/engineering/xcom/t024/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "tests/xcom/observation/core/unit_tests.cpp",
+    "tests/xcom/observation/integration/integration_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T024-IR2-01",
+      "name": "Exact candidate inventory, baseline binding, and diff hygiene",
+      "method": "ran `git rev-parse 76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, recomputed the inventory as `sorted(tracked | (untracked - {docs/engineering/xcom/t024/internal-review.json, reports/xcom-queue/t024-package.json}))`, and ran `git diff --check <baseline> --`",
+      "result": "pass: the baseline resolves to the exact 40-hex SHA and `git diff --check` is clean. The recomputed inventory is exactly the 9 reviewed paths in membership and sorted order (tracked: `specs/007-xcom-core/tasks.md`, `tests/xcom/observation/core/unit_tests.cpp`, `tests/xcom/observation/integration/integration_tests.cpp`; untracked T024 additions: the six `.md` work products). The review record and the regenerated `reports/xcom-queue/t024-package.json` manifest are correctly excluded as generated. The sole `specs` change is the single `- [ ] T024` -> `- [X] T024` line; no other T0xx line is touched."
+    },
+    {
+      "id": "T024-IR2-02",
+      "name": "Changed-path boundary: test-only, no production/build/xdl/contract/later-task change",
+      "method": "filtered the candidate paths for `src/`, `CMakeLists.txt`, `*.cmake`, `xdl/`, `proto/`, `src/xverse_xdl/`, `contracts/`, and other task test sources; scanned every added test line for later-task or forbidden vocabulary (`T025|T026|stimulat|journal|gateway|rateHz|maxRate|protobuf|gRPC|socket|network|dashboard|storage|query|export|opentelemetry|adapter|filesystem|fstream|curl|http`); ran `python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T024 <baseline>`",
+      "result": "pass: `git diff --stat <baseline>` is three files only (`specs/007-xcom-core/tasks.md`, the two observation fixtures) with 1343 insertions / 5 deletions; the production delta is empty (no `src/xverse/xcom/**`, no build file, no `xdl/`, `proto/`, `src/xverse_xdl/`, or `contracts/`). The forbidden/later-task vocabulary scan returns zero matches. No shared `test_support.hpp` or another task's fixture is changed. The gate reports `ok`, `changed_paths: 9`, `ctest:306`. The tracked T025 material present in the baseline tree is untouched by this candidate."
+    },
+    {
+      "id": "T024-IR2-03",
+      "name": "Additivity: existing cases/assertions/wiring preserved; vocabulary unchanged",
+      "method": "enumerated removed lines with `grep -E '^-[^-]'` over both fixture diffs; read both `main()` conjunctions; counted added `test_` declarations; compared `ctest -N`",
+      "result": "pass: the only removed lines are the final traceability-note tails (extended to name T024) and the main() conjunction tails (`test_synthetic_sink_blocking_isolation()` / `test_synthetic_sink_route_isolation_counters();`) which are re-terminated with `&&` and extended. No existing case, assertion, expected value, helper, target, label, or command is removed, renamed, reordered, or weakened. Exactly 9 new cases are added (7 unit, 2 integration), matching `requirements.md`/`implementation.md`; `ctest -N` remains `Total Tests: 306`. `ObservationOutcome`/`ObservationOverflowPolicy`/`ObservationValidityEffect`/`ObservationValidityState`/`PayloadViewState` enumerators are unchanged."
+    },
+    {
+      "id": "T024-IR2-04",
+      "name": "Metadata-only zero-payload completeness and normalized-record self-description",
+      "method": "read `test_observation_metadata_and_payload_view_matrix`, `test_observation_normalized_record_matrix`, `test_observation_record_edge_value_matrix`, `expect_metadata_record`, `make_item`, and `ObservationRecord` construction (observation.cpp 438-441); rebuilt and ran the unit executable",
+      "result": "pass: the 4-family x {0,1,4}-byte batch asserts `accepted == 12 == queued`, pulls every record exactly once in FIFO order, and for each record asserts empty `payload_bytes()` with `PayloadViewState::omitted` and `PayloadSchemaState::undecoded`, the complete `source_payload_size`, contract/version, interface, endpoint, schema/version, interaction, origin, source/observation timestamps and clock domains, sequence, correlation, causation, route, provider, declared tap, and provider outcome. The normalized matrix repeats the 4-family x 3-origin x 3-outcome cross-product and proves value-ownership of a copied record under later hub mutation (unit_tests.cpp 2200-2233)."
+    },
+    {
+      "id": "T024-IR2-05",
+      "name": "Controlled payload views, redaction/truncation, and bound rejection",
+      "method": "read the `PrefixRow` table and bound acceptance/rejection block of `test_observation_metadata_and_payload_view_matrix`; cross-checked `ObservationTapSpec::create` bound rules (observation.cpp 210-215)",
+      "result": "pass: for the 4-byte fixture the table asserts `bound 1 src 0 -> complete(0)`, `bound 1 src 1 -> complete(1)`, `bound 1 src 4 -> truncated(1)`, `bound 3 src 4 -> truncated(3)`, `bound 4 src 4 -> complete(4)`, `bound 1024 src 4 -> complete(4)`, `redacted -> redacted(0)`, `metadata_only -> omitted(0)`, each with `undecoded`, the complete source size, and byte-exact leading source bytes. Bound 1 and 1024 are accepted; bound 0, bound 1025, a non-zero bound on `metadata_only`, and a non-zero bound on `redacted` are rejected. No decode/schema success is invented."
+    },
+    {
+      "id": "T024-IR2-06",
+      "name": "Ordering: per-tap FIFO, coalesce position, multi-tap independence",
+      "method": "read `test_observation_ordering_matrix` and `poll_all`; cross-checked the `retain` drop/coalesce branches (observation.cpp 407-430) and `poll` (observation.cpp 519-534)",
+      "result": "pass: with capacity 4 and five same-key submissions, `drop_newest` reports `accepted == 4`, `dropped == 1`, `queued == 4` and pulls exactly `1,2,3,4` (strictly increasing), while `coalesce_latest` reports `coalesced == 1`, `queued == 4` and pulls `1,2,3,5`, catching an oldest-vs-newest replacement error. On a fresh hub with two capacity-2 taps, both report `accepted == 2 == queued`; pulling tap `a` twice returns `1,2` and leaves tap `b` at `queued == 2`, which then returns its own `1,2`."
+    },
+    {
+      "id": "T024-IR2-07",
+      "name": "Saturation at minimum and maximum capacity with exact accounting",
+      "method": "read the bound-min, bound-max, and coalesce-min blocks of `test_observation_saturation_bound_matrix`; cross-checked the drop/coalesce branches (observation.cpp 407-430) and `kMaximumObservationRecordsPerTap`",
+      "result": "pass: `drop_newest` capacity 1 over 5 submissions reports `accepted == 1`, `dropped == 4`, `queued == 1`, pulls sequence 1 then `no_record`, and satisfies `accepted + dropped == 5`, with a per-step `queued <= 1`. Capacity 16 over 20 submissions reports `accepted == 16`, `dropped == 4`, `queued == 16`, pulls `1..16` in order then `no_record`, and satisfies `accepted + dropped == 20`. Capacity-1 `coalesce_latest` over `alpha,beta,alpha,gamma` reports `accepted == 1`, `dropped == 2`, `coalesced == 1`, retains only the matching `alpha` sequence 3."
+    },
+    {
+      "id": "T024-IR2-08",
+      "name": "Lossless pre-mutation rejection, rejected-operation side effects, and recovery",
+      "method": "read the lossless blocks of `test_observation_saturation_bound_matrix` and `test_observation_route_saturation_safe_detach_matrix`; cross-checked `reserve`/`cancel`/`commit` (observation.cpp 343-517) and the provider submit observation path",
+      "result": "pass: with capacity 1 and an active first claim, a second matching `reserve` returns `observation_backpressure` with `backpressure_rejections == 1` and `!reservation.has_value()` while the queue stays `queued == 0`/`accepted == 0`; at the route boundary `queued_items() == 1` proves no provider mutation precedes the rejection (integration_tests.cpp 733-748). After exact cancellation/drain+acknowledge the capacity recovers and the next reserve/commit retains exactly one record. The counter/validity side effects on a rejected operation are the accepted declared behaviour (T024-SR-010), not hidden queue mutation: `reserve` never increments `active_claims`/`reserved_lossless` on the unavailable path and `retain` is not reached."
+    },
+    {
+      "id": "T024-IR2-09",
+      "name": "Degraded validity: declared-effect table, monotonicity, acknowledgement, detach/recreation recovery",
+      "method": "read `test_observation_validity_interval_matrix`; cross-checked `raise_realized_validity` (observation.cpp 378-399), `acknowledge` (observation.cpp 555-566), `attach`/`detach` generation reset (observation.cpp 317-341, 568-591), and the snapshot projection (observation.cpp 543-552)",
+      "result": "pass: the best-effort drop table realizes `none -> valid`, `degrade_on_loss -> degraded`, `invalidate_on_loss -> invalid` with `experiment_validity_degraded == (state != valid)` and `dropped == 1`. Two reads stay `degraded` (never lowered without acknowledgement); `acknowledge` returns `valid` with `backpressure_rejections == 0`; a further loss degrades again; `invalid` persists across acknowledgement and a further loss. A lossless backpressure under `none` realizes at least `degraded`. Detach plus re-attach yields a strictly greater generation whose snapshot is `valid` with zero counters, and the old handle no longer authenticates (restart/recovery/slot-recreation)."
+    },
+    {
+      "id": "T024-IR2-10",
+      "name": "Safe detach and exact-handle ownership (rejected-operation no-mutation)",
+      "method": "read `test_observation_safe_detach_matrix`; cross-checked `authenticate` (observation.cpp 298-315) and `detach` (observation.cpp 568-591)",
+      "result": "pass: detaching tap `a` discards only its own records (`snapshot(a)` absent, `poll(a) == invalid_tap_handle`) while `b` keeps `queued == 2`, `accepted == 2`, `dropped == 0` and FIFO order. A repeated close returns `tap_closed`; a detach while an exact claim is held returns `tap_busy` with the retained state untouched; a foreign-hub handle returns `invalid_tap_handle` with the foreign slot unchanged; a stale-generation handle after recreation returns `invalid_tap_handle`. Rejected detaches mutate no unrelated tap."
+    },
+    {
+      "id": "T024-IR2-11",
+      "name": "Route neutrality (SC-005) across blocked/removed/failed observers",
+      "method": "read `test_observation_route_ordering_neutrality_matrix` and `test_observation_route_saturation_safe_detach_matrix`; cross-checked `Scenario` and the owned loopback composition",
+      "result": "pass: over the owned loopback the route item count, `per_route_fifo` receive order, and delivery outcomes are re-asserted before, during, and after a non-pulling observer, an observer removal (`detach`), and a stale-handle sink failure; a detached handle no longer authenticates; tap-level saturation does not change the route count or order (queued `1`/`4` and FIFO `1..4` preserved)."
+    },
+    {
+      "id": "T024-IR2-12",
+      "name": "Bounded deterministic concurrency (T024-SR-018 / CHK-18 / CHK-19) realization and traceability",
+      "method": "read the concurrency sub-check `test_observation_saturation_bound_matrix` (unit_tests.cpp 1824-1902); counted `std::thread`/`std::atomic` constructs in the fixture additions; cross-read `requirements.md` §4.9, `verification-plan.md` CHK-18/CHK-19, `detailed-design.md` §6, `unit-specifications.md` §5/§12/§13, `architecture.md` §7/§9, and `implementation.md` §5/§7/§10; rebuilt and ran `ctest -R xcom_observation`",
+      "result": "pass (repair closure): `T24-TS-003` now contains the bounded concurrency sub-check — over one capacity-4 `lossless_validation` tap, four joined publisher threads each perform four reserve/commit attempts (16 bounded attempts, `<= 4` threads, atomic `committed`/`rejected`/`consistent` flags, three repeated runs, no callback and no wall-clock wait). The finite-capacity rule taken before provider mutation makes the outcome interleaving-independent, so the sub-check asserts exactly `committed == 4`, `rejected == 12`, `accepted == queued == 4`, `dropped == coalesced == 0`, `backpressure_rejections == 12`, degraded validity, and four distinct retained sequences with no lost or duplicated claim. All plan work products now locate `T024-SR-018`/CHK-18/CHK-19 in `T24-TS-003` and agree on those bounds and the expected result, resolving review-1 finding `T024-IR-F01` by option (a). The prior `fail` disposition is superseded by this revision."
+    },
+    {
+      "id": "T024-IR2-13",
+      "name": "Bounded resources, offline/domain-neutral behaviour, and public safety",
+      "method": "read the new cases' loop/thread/capacity/payload bounds; scanned the changed fixtures and work products for network/socket/TLS/ambient/secret/filesystem/process/dynamic-load access, credentials, private addresses, real payloads, and host paths",
+      "result": "pass: the new cases use finite declared loops (largest is 20 submissions), at most four publishers in the concurrency sub-check, capacities 1..16, and payloads of at most 4 synthetic bytes with no wall-clock verdict. No forbidden API, dependency, credential, private address, real payload, or environment-specific host path is introduced; the only absolute path is the accepted deterministic-gate command."
+    },
+    {
+      "id": "T024-IR2-14",
+      "name": "Candidate build, discovered count, and passing tests exercise the required behaviour",
+      "method": "ran `cmake --build build/fabro-t024 --parallel 4`, `ctest --test-dir build/fabro-t024 -N`, `ctest --test-dir build/fabro-t024 -R xcom_observation --output-on-failure`, and the full `ctest --test-dir build/fabro-t024 --parallel 4`",
+      "result": "pass: the candidate builds with no work pending; the discovered CTest count is `Total Tests: 306`; the observation subset reports `3/3` passing including `xcom_observation_unit` and `xcom_observation_integration`; the full suite reports `100% tests passed, 0 tests failed out of 306`. The added cases assert boundary and negative behaviour (exact counters, byte-exact prefixes, rejection outcomes, `tap_busy`/`tap_closed`/`invalid_tap_handle`, degraded/invalid validity, concurrent exact accounting) rather than only the normal path."
+    },
+    {
+      "id": "T024-IR2-15",
+      "name": "Governance: registers, REF-002 disposition, attribution, and stage rule",
+      "method": "ran `validate_xcom_task_ownership.py --verify`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, and `validate_xcom_unit_design.py --verify`; read the `XCOM-SW-OBS-005` register row and the T024 checkbox diff",
+      "result": "pass: all four validators report passed. `XCOM-SW-OBS-005` remains attributed to T024 with `maturity: partial` and its existing `reconciliation` note; no register row is rewritten and no maturity is promoted. `requirements.md` §6 records that T024 owns no REF-002 SADS ID and promotes none, keeping the disposition `unchanged` with an empty `promoted` list. The T024 checkbox is marked `[X]` only in the implementation stage."
+    },
+    {
+      "id": "T024-IR2-16",
+      "name": "Later-task isolation and compatibility",
+      "method": "compared tracked/untracked candidate paths against T025+ ownership paths; inspected the baseline tree for pre-existing T025 material; confirmed the production and header surfaces are untouched",
+      "result": "pass: no T025+ file, path, vocabulary, or behaviour is added or modified by this candidate; the tracked T025 documentation present in the baseline tree is untouched. Because no production source, header, contract, or build file changes, the accepted T021/T022/T023 observation API and behaviour remain binary- and source-compatible, and no new dependency is admitted."
+    }
+  ],
+  "findings": []
+}

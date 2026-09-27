@@ -54,7 +54,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [X] T021 Implement immutable observation records, filters, payload policy, and tap handles.
 - [X] T022 Implement bounded best-effort drop/coalesce and explicit lossless-validation modes.
 - [X] T023 Implement the synthetic sink and prove failure/disconnect isolation and visible counters.
-- [ ] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
+- [X] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
   ordering, saturation, degraded validity, and safe detach.
 
 ## Phase 6: Validation stimulation boundary (US3)
