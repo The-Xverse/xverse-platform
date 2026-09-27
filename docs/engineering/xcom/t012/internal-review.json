@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "task_id": "T012",
+  "baseline_revision": "ade79ee1f73f176c0178b77d6b10ed8ba8587da6",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 2,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t012/architecture.md",
+    "docs/engineering/xcom/t012/detailed-design.md",
+    "docs/engineering/xcom/t012/implementation.md",
+    "docs/engineering/xcom/t012/requirements.md",
+    "docs/engineering/xcom/t012/unit-specifications.md",
+    "docs/engineering/xcom/t012/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "checks": [
+    {
+      "id": "T012-RV2-01",
+      "name": "Baseline identity, exact inventory, diff hygiene, and scope",
+      "method": "ran `git rev-parse ade79ee1f73f176c0178b77d6b10ed8ba8587da6`, `git diff --name-only <baseline> --`, `git diff --stat <baseline> --`, `git diff --check <baseline> --`, `git status --porcelain`, `git ls-files --others --exclude-standard -z`",
+      "result": "pass: the baseline resolves to the exact SHA and `git diff --name-only <baseline> --` returns exactly the 13 reviewed paths, so `reviewed_paths` equals that set. The diff is +176/0, +286/0, +296/0, +294/0, +242/0, +206/0 (six work products), +1/-1 (four stage records: each a single hash line) , +1/-1 (`engineering/trace/links.json` single hash line), +1/-1 (the single T012 checkbox line in `specs/007-xcom-core/tasks.md`), and +370/-21 (`src/xverse/xcom/CMakeLists.txt`). `git diff --check` is clean (exit 0). No `.hpp`, `.cpp`, `tests/`, `xdl/`, `proto/`, or `Doxyfile` path appears. The only untracked files are this review record and the workflow-regenerated `reports/xcom-queue/t012-package.json`, both excluded per the review-gate inventory rule."
+    },
+    {
+      "id": "T012-RV2-02",
+      "name": "Revised T020-L-046 link endpoint hash matches the actual file bytes",
+      "method": "recomputed `sha256sum src/xverse/xcom/CMakeLists.txt` and compared it with `engineering/trace/links.json` T020-L-046 `target_revision` and with `docs/engineering/xcom/t012/implementation.md` section 4.4; independently re-ran `python3 scripts/validate_xcom_requirements_traceability.py --verify`",
+      "result": "pass: the actual file hash is `3174c0c182ce53f541609795bd47d139c331aa106b969874c0ee4fababbf8100` and it equals `engineering/trace/links.json:371` (`T020-L-046`, relation `implemented_by`, source `T020-SR-006`, target `src/xverse/xcom/CMakeLists.txt`). The stale pre-T012 value `8f301734...` no longer appears at that link. `validate_xcom_requirements_traceability.py --verify` reports `X-COM requirements/traceability validation passed` (exit 0), which is the checker (`fabro_engineering.core.validate_trace` -> `code_endpoint`) that previously rejected the stale endpoint. The link's relation, source, target, and source_revision are unchanged."
+    },
+    {
+      "id": "T012-RV2-03",
+      "name": "All inherited stage-artifact hashes match the actual files",
+      "method": "loaded all eight `engineering/stage-results/*.json` records and recomputed `sha256` for every `artifacts[].path`; ran the workflow's `audit_delivery_inputs.py`",
+      "result": "pass: every artifact row in all eight stage records resolves to the current file bytes. The revised rows are `engineering/stage-results/implementation.json:43` (`src/xverse/xcom/CMakeLists.txt` = `3174c0c1...`), `engineering/stage-results/documentation.json:43`, `engineering/stage-results/integration.json:18`, and `engineering/stage-results/internal-review.json:38` (each `engineering/trace/links.json` = `753ae487...`, the actual trace hash). No stage record still carries the stale `8f301734...` or `fa0dd2f7...` values. `audit_delivery_inputs.py` (unchanged `validate_project` / `validate_trace` / `validate_stage`) prints `{\"ok\": true, \"stage_results\": 8}` and exits 0."
+    },
+    {
+      "id": "T012-RV2-04",
+      "name": "No trace relation was added, removed, or rewritten",
+      "method": "diffed `engineering/trace/links.json` against `git show ade79ee...:engineering/trace/links.json`: compared counts and every link id and field",
+      "result": "pass: 97 links before and after; no id added, no id removed, and exactly one link changed — `T020-L-046`, whose sole changed field is `target_revision` (`8f301734...` -> `3174c0c1...`). Every other relation, source, target, and revision is byte-identical. The nine `T020-L-089..097` rows remain `pending_trus...` external-evidence references and are untouched."
+    },
+    {
+      "id": "T012-RV2-05",
+      "name": "No CTest test or label was removed or renamed",
+      "method": "extracted the baseline `add_test`/`gtest_discover_tests`/`LABELS`/`set_tests_properties` inventory from `git show ade79ee...:src/xverse/xcom/CMakeLists.txt` and compared it with the candidate; ran `ctest --test-dir build/fabro-t012 -N`",
+      "result": "pass: the baseline inventory is preserved verbatim (core-types, lifecycle, observation, provider-loopback, observation integration/benchmark, T019 decoder, T020 suites, T025 validation) and the only addition is `add_test(NAME xcom_build_contract ...)` with `set_tests_properties(xcom_build_contract PROPERTIES LABELS \"t012\")` (`src/xverse/xcom/CMakeLists.txt:499-505`). Live `ctest -N` reports `Total Tests: 248`, i.e. the 247 baseline tests plus exactly one additive test; test #236 is `xcom_build_contract` and the existing `t019`/`t020-*`/`t025`/`observation`/`performance` labels are intact."
+    },
+    {
+      "id": "T012-RV2-06",
+      "name": "Delivery-input audit passed, including task/review/package identity",
+      "method": "ran `python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t012-checkpoint-flash/audit_delivery_inputs.py` from the repository root; cross-read `automation/trusted/xcom-t011-t016-t021-t024-policy.json` and `engineering/project.json`",
+      "result": "pass: the audit exits 0 with `{\"ok\": true, \"stage_results\": 8}`. `engineering/stage-results` supplies all eight policy roles (`requirements`, `architecture`, `verification_design`, `implementation`, `integration`, `validation`, `internal_review`, `documentation`), each a complete T020 record with an approved `deepseek`/`api` model block. `engineering/project.json` declares `assurance_profile: engineered`, consistent with the policy's required roles and measures."
+    },
+    {
+      "id": "T012-RV2-07",
+      "name": "Warning-as-error behavior is preserved and enforced before any target",
+      "method": "read `cmake/XComWarnings.cmake`, the assertion (`src/xverse/xcom/CMakeLists.txt:23-51`), its call site (line 128), and the uniform helper (117-126); counted the call sites; inspected `build/fabro-t012/xcom-build-policy.json` and the generated contract JSON",
+      "result": "pass: `xverse::xcom_warnings` publishes `INTERFACE_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror`; `xverse_xcom_assert_runtime_warning_policy()` runs at line 128, before the first `add_library` (line 342), and fails closed if the target is missing, publishes no options, or carries no `-Werror`/`/WX`/`-Werror=` option. Baseline and candidate each have exactly 21 subtree call sites; the candidate routes all 21 through `xverse_xcom_apply_runtime_rules`, which calls `xverse_xcom_apply_warnings`. The root policy evidence records `warnings_as_errors: true` with the four options, and the generated `xcom-runtime-contract.json` records `warning_options: [\"-Wall\",\"-Wextra\",\"-Wpedantic\",\"-Werror\"]`."
+    },
+    {
+      "id": "T012-RV2-08",
+      "name": "CTest discovery and the build-contract verifier run independently",
+      "method": "ran `ctest --test-dir build/fabro-t012 -R '^xcom_build_contract$' --output-on-failure`; read the generated `xcom-runtime-contract.json` and `verify-xcom-runtime-contract.cmake`",
+      "result": "pass: `xcom_build_contract` passes (`100% tests passed, 0 tests failed out of 1`, label `t012`). The generated evidence records `cxx_standard: 20`, `cxx_extensions: \"OFF\"`, `sanitizers: []`, `build_testing: \"ON\"`, and the six-target inventory. The verifier is a bounded, offline `cmake -P` read of one small JSON file that fails closed on a missing file, unreadable field, missing `-Wall/-Wextra/-Wpedantic`, non-error-promoting warnings, standard/extensions/build_testing deviation, inventory mismatch, and unsupported or conflicting sanitizers (see ADV-01 for the CMake-level inventory limit)."
+    },
+    {
+      "id": "T012-RV2-09",
+      "name": "Target-repository assembly contract is coherent for the pinned baseline",
+      "method": "read `automation/assemble_xcom_queue_target.py`, `automation/prepare_xcom_queue_candidate.py`, `automation/trusted/xcom-t011-t016-t021-t024-policy.json`, `automation/trusted/xcom-t011-t016-t021-t024-pending-dispatch.json`, and the queue manifest; checked the pinned target checkout",
+      "result": "pass: the queue policy pins `system_integration.mode = target_repository`, `target_id = xverse-platform`, `target_repository = /home/jefferson/xverse-phase5-system-integration`, `target_revision = ade79ee1f73f176c0178b77d6b10ed8ba8587da6` (equal to the baseline) and `assembly_command = automation/assemble_xcom_queue_target.py`. That pinned checkout exists and contains the revision (`git rev-parse --verify ade79ee1...^{commit}` succeeds). The assembly applies the candidate's `git diff --binary <baseline>` and copies the untracked review/package records onto that pinned tree, so the repaired trace/stage hash fields travel with the candidate. The queue manifest still lists `T012` among `['T011','T012','T013',...,'T024']`, so T012 stays active in the ordered backlog; external review and acceptance remain separate."
+    },
+    {
+      "id": "T012-RV2-10",
+      "name": "Task scope: only the authorized CMake contract plus the authorized provenance repair",
+      "method": "classified every reviewed path by role; diffed the pre-repair candidate `b1da80e80f37ed89d82363d6b887e690d71876b6` against the working tree; read `git show b1da80e8...:docs/engineering/xcom/t012/implementation.md` versus the current record",
+      "result": "pass: the sole production path is `src/xverse/xcom/CMakeLists.txt`, and its 21 non-additive hunks are exactly the mechanical `xverse_xcom_apply_warnings(<target>)` -> `xverse_xcom_apply_runtime_rules(<target>)` substitutions. The checkpoint `candidate_commit` `b1da80e8` contains the ten reviewed T012 paths (six work products, review record, package, `tasks.md`, CMakeLists). The successor repair adds exactly five inherited-provenance paths (`engineering/trace/links.json` and four T020 stage records) and edits only the current-provenance hash fields plus the `implementation.md` section 4.4 correction record; the candidate-vs-worktree diff of `implementation.md` is the single new section 4.4 (no behavior, source, test, or accepted-intent change). No T013+ artifact, directory, checkbox, `xdl/`, `proto/`, or `tests/` path is introduced; `specs/007-xcom-core/tasks.md:37` flips only `- [ ] T012` to `- [X] T012`."
+    },
+    {
+      "id": "T012-RV2-11",
+      "name": "Source-to-test trace and T020 decoder/test block preserved",
+      "method": "read `src/xverse/xcom/CMakeLists.txt:704-773`; confirmed the T020 `foreach` block, sources, compile definitions, links, and labels are byte-identical to baseline; re-ran the requirements/traceability validator",
+      "result": "pass: the T020 `ordering_equivalence`/`malformed_plan`/`drift`/`bound_matrix`/`regression` executables and their `gtest_discover_tests(... LABELS \"t020-${label}\")` registrations are unchanged, so the `T020-SR-006` -> `src/xverse/xcom/CMakeLists.txt` code endpoint remains a real, current artifact and its hash is now exact. `validate_xcom_requirements_traceability.py --verify` passing confirms every accepted software requirement keeps its implemented_by endpoint."
+    },
+    {
+      "id": "T012-RV2-12",
+      "name": "Public safety of the committed change",
+      "method": "scanned every reviewed path for `/home/`, `/tmp/`, `/opt/`, `/private/`, drive-letter paths, and the admitted input values; checked that generated evidence stays beneath the build tree",
+      "result": "pass: the only absolute path introduced by T012 work products is the permitted workflow-gate invocation (`/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py`) in `requirements.md`, `verification-plan.md`, and `implementation.md`; the two inherited T020 absolute paths (`.../xcom-t020-integration-policy.json`, `/home/jefferson/xverse-t020-system-integration-01m3h0`) are baseline text, not introduced or modified by the repair. No credential, private address, unrestricted payload, or admitted input value is committed. The generated `xcom-runtime-contract.json` and `xcom-build-policy.json` (which names the admitted host prefix) exist only beneath the git-ignored `build/` tree."
+    },
+    {
+      "id": "T012-RV2-13",
+      "name": "Provenance-repair completeness against the checkers the delivery gate runs",
+      "method": "searched the whole tree for the stale `8f301734...` and `fa0dd2f7...` values; read `fabro_engineering.core.validate_stage`, `validate_trace`, and `check_delivery`; inspected `automation/trusted/xcom-t011-t016-t021-t024-active-candidate.json`",
+      "result": "pass: the stale `8f301734...` value now survives only in the historical `reports/xcom-queue/t020-package.json` snapshot, and `fa0dd2f7...` only in the historical T011 `reports/xcom-queue/t011-package.json` and `docs/engineering/xcom/t011/implementation.md`; none of these are in the policy `required_artifact_paths` or the changed set, so no delivery-gate check consumes them. `check_delivery` consumes exactly the candidate artifacts (changed plus required paths), `engineering/stage-results/*.json` via `validate_stage`, and `engineering/trace/links.json` via `validate_trace`; all of these now carry current hashes. The old `xcom-t011-t016-t021-t024-active-candidate.json` still shows the pre-repair hashes but is regenerated by `prepare_xcom_queue_candidate.py` at the `candidate_gate` after this review."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Read-only internal review, revision 2, of task T012 on baseline ade79ee1f73f176c0178b77d6b10ed8ba8587da6. No production code, test, work product, trace, or stage record was modified in this pass; the only file written is this review record, and the build-contract test was executed read-only against the existing git-ignored `build/fabro-t012` tree.",
+    "`reviewed_paths` equals `git diff --name-only ade79ee1f73f176c0178b77d6b10ed8ba8587da6 --` exactly (13 paths). The untracked `docs/engineering/xcom/t012/internal-review.json` and the carried-over/regenerated `reports/xcom-queue/t012-package.json` are excluded per the review-gate inventory rule; the package action regenerates the manifest after this review.",
+    {
+      "id": "T012-IR-03",
+      "severity": "MEDIUM",
+      "status": "closed",
+      "summary": "The pre-repair candidate left the inherited T020 provenance stale for the T012-edited shared subtree contract, which failed the delivery gate with `stale endpoint revision in T020-L-046`.",
+      "evidence_before": "engineering/trace/links.json:371 carried `target_revision = 8f301734...` (pre-T012 `src/xverse/xcom/CMakeLists.txt`) and engineering/stage-results/implementation.json:43 carried the same stale value; the cascade made the `engineering/trace/links.json` rows in documentation.json, integration.json, and internal-review.json stale too.",
+      "required_correction": "Refresh only the current-provenance hash fields to the exact current file hashes (CMakeLists -> 3174c0c1..., links.json -> 753ae487...), preserve every relation and behavior, and record the correction and evidence in the T012 implementation record.",
+      "closure_test": "Recompute each revised hash against the actual file bytes (all match) and re-run `audit_delivery_inputs.py`, which executes the unchanged `validate_project`/`validate_trace`/`validate_stage` and now prints `{\"ok\": true, \"stage_results\": 8}` with exit 0 (previously it reported the `T020-L-046` stale endpoint and then the trace stage-hash mismatch).",
+      "evidence_after": "engineering/trace/links.json:371 = 3174c0c1...; engineering/stage-results/implementation.json:43 = 3174c0c1...; engineering/stage-results/documentation.json:43, integration.json:18, internal-review.json:38 = 753ae487...; recorded in docs/engineering/xcom/t012/implementation.md section 4.4."
+    },
+    {
+      "id": "ADV-01",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "The build-contract verifier's `runtime_targets` assertion remains self-referential, so a CMake-level inventory rename/addition drift is not detected; the declared NEG-11 executable probe is therefore stronger than the implemented check.",
+      "evidence": "src/xverse/xcom/CMakeLists.txt:151-158 emits the evidence `runtime_targets` from `XVERSE_XCOM_RUNTIME_TARGETS`, and lines 327-333 substitute the verifier's `@XVERSE_XCOM_EXPECTED_TARGETS@` from the same variable; the generated verifier (build tree `verify-xcom-runtime-contract.cmake`) therefore compares the recorded list against a copy of itself. A library rename (with its alias/`apply_runtime_rules` call updated and reconfigured) or a seventh runtime library added without updating `XVERSE_XCOM_RUNTIME_TARGETS` would leave both sides equal and the check green, whereas verification-plan.md NEG-11 expects `xcom_build_contract` to fail naming the inventory mismatch. Mutating only the generated evidence file is still detected.",
+      "required_correction": "In a later pass, bind the declared inventory to the actually-defined targets independently of the generated evidence (e.g. a configure-time `foreach(... if(NOT TARGET ${t}) message(FATAL_ERROR ...))` over `XVERSE_XCOM_RUNTIME_TARGETS`) so a renamed/removed/added runtime target fails configuration or `xcom_build_contract` naming the inventory mismatch.",
+      "closure_test": "Rename or remove one declared runtime target with all references updated and reconfigure; require a configure-time assertion or `xcom_build_contract` to exit nonzero naming the inventory mismatch, while the unmutated candidate still reports `100% tests passed` with 248 tests."
+    },
+    {
+      "id": "ADV-02",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "Two function line ranges in the implementation record are off by a few lines relative to the realized `src/xverse/xcom/CMakeLists.txt`.",
+      "evidence": "docs/engineering/xcom/t012/implementation.md:63 records `xverse_xcom_assert_runtime_warning_policy()` as `lines 23-55` (actual function spans `function(` at 23 to `endfunction()` at 51; line 55 is sanitizer comment text) and line 64 records `xverse_xcom_runtime_sanitizers()` as `lines 57-115` (actual function spans 57 to 113). All other recorded references (11-22, 117-126, 128-129, 188, 336, 499-505) and every recorded SHA-256/byte size in section 4.3 are correct.",
+      "required_correction": "Correct the two ranges in implementation.md section 3.1 to 23-51 and 57-113 in a later pass.",
+      "closure_test": "Re-read implementation.md section 3.1 against the candidate `src/xverse/xcom/CMakeLists.txt` and confirm each recorded function range begins at its `function(` line and ends at its `endfunction()` line."
+    },
+    "Documentation layering observed and accepted: `implementation.md` commands 24 and 26 record the eight-path pre-repair successor candidate (`changed_paths: 8`), while the current provenance-repaired candidate has 13 changed paths (verify stage observed `changed_paths: 13, checks: [\"ctest:248\"]`). Section 4.4 explicitly scopes the successor revision, records the correction and evidence, and states that a successor candidate must record its own exact revision and repeat every affected check; the revised hashes in section 4.3 and this review bind the current candidate. This is a recorded layering statement, not an open finding; requirements.md section 7.1 enumerates the T012-owned production and work-product paths and does not itemize the inherited-provenance files repaired by this checkpoint.",
+    "Limitations accepted, not findings: executed sanitizer evidence (running the suite under ASan/TSan/UBSan), executed static analysis, and strict Doxygen evidence remain T035-T037's (T012-LIM-01, T011-GAP-01/GAP-03); this review verified only the sanitizer opt-in wiring, fail-closed selection, uniform flag application, and default-unchanged behavior. The A-1 explicit-cache fallback for `XVERSE_XCOM_T025_TEST_TOOLCHAIN` (src/xverse/xcom/CMakeLists.txt:481-489) and the two root admitted inputs is the pre-existing admitted mechanism, introduces no new mandatory input, and leaves the hash-verified preflight unchanged (T012-LIM-04, T012-OPEN-02). T012 remains active in the ordered backlog; external review and user acceptance (T039/T041) remain separate and deferred.",
+    "Context isolation: this is a repository-owned internal read-only review executed on the same host toolchain as the implementation work, not an external or independent-organization review; it claims neither external review nor user acceptance."
+  ],
+  "reviewed_configuration": {
+    "cmake": "3.22.1",
+    "generator": "Ninja",
+    "cxx_standard": 20,
+    "cxx_extensions": "OFF",
+    "warning_options": ["-Wall", "-Wextra", "-Wpedantic", "-Werror"],
+    "sanitizers": [],
+    "ctest_total": 248,
+    "baseline_ctest_total": 247,
+    "checkpoint_candidate_commit": "b1da80e80f37ed89d82363d6b887e690d71876b6"
+  }
+}

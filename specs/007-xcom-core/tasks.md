@@ -34,7 +34,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 3: Core communication foundation (US1)
 
-- [ ] T012 Add CMake/CTest targets and warning-as-error rules under `src/xverse/xcom/`.
+- [X] T012 Add CMake/CTest targets and warning-as-error rules under `src/xverse/xcom/`.
 - [ ] T013 Implement immutable contract, item, origin, time, correlation, diagnostic, and policy types.
 - [ ] T014 Implement bounded endpoint/route lifecycle and exact generation-bound ownership handles.
 - [ ] T015 Implement explicit provider composition and the owned loopback provider.
