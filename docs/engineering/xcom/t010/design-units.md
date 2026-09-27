@@ -630,9 +630,9 @@ Overflow policies: `reject`, `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse_xdl/xcom_plan.py` (planned)
-- `tests/test_xcom_plan.py` (planned)
-- `xdl/profiles/xcom-v0.1.schema.json` (planned)
+- `src/xverse_xdl/xcom_plan.py` (established)
+- `tests/test_xcom_plan.py` (established)
+- `xdl/profiles/xcom-v0.1.schema.json` (established)
 
 **Ownership / lifetime.**
 
@@ -695,7 +695,7 @@ Overflow policies: `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/contracts/v1/activation-plan.schema.json` (planned)
+- `src/xverse/xcom/contracts/v1/activation-plan.schema.json` (established)
 
 **Ownership / lifetime.**
 
@@ -755,9 +755,9 @@ Overflow policies: `n/a`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/activation_plan.hpp` (planned)
-- `src/xverse/xcom/src/activation_plan.cpp` (planned)
-- `tests/xcom/activation_plan/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/activation_plan.hpp` (established)
+- `src/xverse/xcom/src/activation_plan.cpp` (established)
+- `tests/xcom/activation_plan/` (established)
 
 **Ownership / lifetime.**
 

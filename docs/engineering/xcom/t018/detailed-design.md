@@ -130,7 +130,7 @@ def plan_status(plan: Mapping[str, Any]) -> str: ...
 
 `load_normalized_graph(document, *, limits)`:
 
-1. If `document` is a `GraphView`, return it unchanged (idempotent).
+1. If `document` is a `GraphView`, take a detached resource snapshot and reapply the supplied limits; a reused view may have been created under looser limits.
 2. If `document` is a sequence (not a string/bytes), treat it as the resource list; if it is a mapping, require
    the key `resources` and use its value. Otherwise `XCOM-PLAN-INPUT`.
 3. Require `resources` to be a list; otherwise `XCOM-PLAN-INPUT`.

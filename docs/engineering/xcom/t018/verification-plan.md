@@ -197,6 +197,10 @@ asserts the declared outcome with **no** partial plan and no success claim.
 | `tests/test_xcom_plan.py::test_reordered_equivalent_graph_is_byte_identical` | determinism | CHK-08, DET-01, DET-02 |
 | `tests/test_xcom_plan.py::test_canonical_bytes_stability_and_integral_numbers` | determinism | CHK-08, DET-03 |
 | `tests/test_xcom_plan.py::test_declared_bounds_enforced` | bound | CHK-07; BND-01..BND-03, NEG-C21, NEG-C22 |
+| `tests/test_xcom_plan.py::test_graph_view_revalidates_limits_and_does_not_alias_input` | bound | T018-SR-001/008; R-02 |
+| `tests/test_xcom_plan.py::test_profile_policy_values_are_checked_before_plan_emission` | negative | T018-SR-002; R-03 |
+| `tests/test_xcom_plan.py::test_generated_at_rejects_impossible_calendar_and_clock_values` | negative | T018-SR-006; R-04 |
+| `tests/test_xcom_plan.py::test_text_parser_failures_use_declared_error_codes` | bound | T018-SR-001/008; R-05 |
 | `tests/test_xcom_plan.py::test_compiler_negatives` | negative | NEG-C01..NEG-C15, NEG-C23..NEG-C26 |
 | `tests/test_xcom_plan.py::test_compiler_is_offline_and_pure` | governance/offline | CHK-09, BND-04 |
 | `tests/test_xcom_plan.py::test_verification_plan_lists_every_implemented_test` | traceability | plan/test identifier agreement |

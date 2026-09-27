@@ -656,6 +656,56 @@ def test_declared_bounds_enforced():
     assert compiler.plan_status(compiler.compile_plan(_graph())) == "activatable"
 
 
+def test_graph_view_revalidates_limits_and_does_not_alias_input():
+    """A reusable view must remain bounded and immutable after its caller mutates the graph."""
+
+    graph = _graph()
+    view = compiler.load_normalized_graph(graph)
+    manual = compiler.GraphView(tuple(graph["resources"]))
+    baseline = compiler.compute_digest(compiler.compile_plan(view))
+    for name in ("max_resources", "max_depth", "max_nodes", "max_bytes"):
+        limits = compiler.CompileLimits(**{name: 1})
+        assert _error_code(lambda: compiler.compile_plan(view, limits=limits)) == "XCOM-PLAN-BOUND"
+        assert _error_code(lambda: compiler.compile_plan(manual, limits=limits)) == "XCOM-PLAN-BOUND"
+    graph["resources"][0]["revision"] = "9.9.9"
+    assert compiler.compute_digest(compiler.compile_plan(view)) == baseline
+    assert compiler.compute_digest(compiler.compile_plan(manual)) == baseline
+    view.resources[0]["revision"] = "8.8.8"
+    assert compiler.compute_digest(compiler.compile_plan(view)) == baseline
+
+
+def test_profile_policy_values_are_checked_before_plan_emission():
+    """Malformed caller-supplied policy values never yield an activatable plan or raw TypeError."""
+
+    for field, value in (("queueDepth", 0), ("queueDepth", []), ("reliability", "made-up")):
+        graph = _graph()
+        for resource in graph["resources"]:
+            if "extensions" not in resource:
+                continue
+            for payload in _payloads_of(resource):
+                if payload["value"]["kind"] == "flow-policy":
+                    payload["value"]["policy"][field] = value
+        assert _error_code(lambda: compiler.compile_plan(graph)) == "XCOM-PLAN-PROFILE"
+
+
+def test_generated_at_rejects_impossible_calendar_and_clock_values():
+    """An RFC 3339 shaped but impossible time must not cross the plan boundary."""
+
+    for timestamp in ("2026-02-30T12:00:00Z", "2026-09-27T25:61:61Z", "2026-09-27T12:00:00+24:00"):
+        assert _error_code(lambda: compiler.compile_plan(_graph(), generated_at=timestamp)) == "XCOM-PLAN-INPUT"
+    plan = compiler.compile_plan(_graph(), generated_at="2024-02-29T23:59:59.123+01:30")
+    assert validator.validate_plan_structure(plan, PLAN_SCHEMA) == []
+
+
+def test_text_parser_failures_use_declared_error_codes():
+    """Documents under the byte cap still fail closed when parser depth or integer limits trip."""
+
+    deep = '{"resources":' + '[' * 20_000 + '0' + ']' * 20_000 + '}'
+    huge_int = '{"resources":[],"n":' + '1' * 5_000 + '}'
+    assert _error_code(lambda: compiler.compile_plan_text(deep)) == "XCOM-PLAN-BOUND"
+    assert _error_code(lambda: compiler.compile_plan_text(huge_int)) == "XCOM-PLAN-BOUND"
+
+
 # --------------------------------------------------------------------------------------
 # NEG-C: compiler negative cases
 # --------------------------------------------------------------------------------------
@@ -806,7 +856,7 @@ def test_compiler_is_offline_and_pure():
             imported |= {alias.name.split(".")[0] for alias in node.names}
         elif isinstance(node, ast.ImportFrom) and node.module:
             imported.add(node.module.split(".")[0])
-    assert imported <= {"__future__", "hashlib", "json", "math", "re", "collections", "dataclasses", "typing"}
+    assert imported <= {"__future__", "copy", "datetime", "hashlib", "json", "math", "re", "collections", "dataclasses", "typing"}
     for forbidden in ("os", "socket", "subprocess", "urllib", "requests", "shutil", "tempfile", "pathlib"):
         assert forbidden not in imported
 

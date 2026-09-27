@@ -107,6 +107,60 @@ BytesResult bytes_from_error(const DecodeError& err) {
 
 bool is_lower_alpha(char c) { return c >= 'a' && c <= 'z'; }
 bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+int decimal(std::string_view value, std::size_t offset, std::size_t count) {
+  if (offset + count > value.size()) {
+    return -1;
+  }
+  int result = 0;
+  for (std::size_t index = offset; index < offset + count; ++index) {
+    if (!is_digit(value[index])) {
+      return -1;
+    }
+    result = result * 10 + (value[index] - '0');
+  }
+  return result;
+}
+
+bool valid_rfc3339(std::string_view value) {
+  if (value.size() < 20 || value[4] != '-' || value[7] != '-' ||
+      (value[10] != 'T' && value[10] != 't') || value[13] != ':' || value[16] != ':') {
+    return false;
+  }
+  const int year = decimal(value, 0, 4);
+  const int month = decimal(value, 5, 2);
+  const int day = decimal(value, 8, 2);
+  const int hour = decimal(value, 11, 2);
+  const int minute = decimal(value, 14, 2);
+  const int second = decimal(value, 17, 2);
+  if (year < 1 || month < 1 || month > 12 || hour < 0 || hour > 23 ||
+      minute < 0 || minute > 59 || second < 0 || second > 60) {
+    return false;
+  }
+  const bool leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+  const int days[] = {0, 31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  if (day < 1 || day > days[month]) {
+    return false;
+  }
+  std::size_t position = 19;
+  if (position < value.size() && value[position] == '.') {
+    ++position;
+    const std::size_t fraction_start = position;
+    while (position < value.size() && is_digit(value[position])) {
+      ++position;
+    }
+    if (position == fraction_start) {
+      return false;
+    }
+  }
+  if (position + 1 == value.size() && (value[position] == 'Z' || value[position] == 'z')) {
+    return true;
+  }
+  return position + 6 == value.size() && (value[position] == '+' || value[position] == '-') &&
+         value[position + 3] == ':' && decimal(value, position + 1, 2) <= 23 &&
+         decimal(value, position + 1, 2) >= 0 && decimal(value, position + 4, 2) <= 59 &&
+         decimal(value, position + 4, 2) >= 0;
+}
 bool is_lower_alnum(char c) { return is_lower_alpha(c) || is_digit(c); }
 bool is_upper_alnum_dash(char c) {
   return (c >= 'A' && c <= 'Z') || is_digit(c) || c == '-';
@@ -845,7 +899,11 @@ bool validate_shape(const json& plan, DecodeError& err) {
   if (!check_object(provenance, "provenance", err, {"generatedAt", "graphDigest", "resources"})) {
     return false;
   }
-  if (!require_string(provenance.at("generatedAt"), "provenance", err)) {
+  if (!require_string(provenance.at("generatedAt"), "provenance", err) ||
+      !valid_rfc3339(provenance.at("generatedAt").get_ref<const std::string&>())) {
+    if (err.code.empty()) {
+      return fail_shape(err, "provenance", "generatedAt must be a real RFC 3339 date-time");
+    }
     return false;
   }
   if (!check_digest_shape(provenance.at("graphDigest"), "provenance", err)) {

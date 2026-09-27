@@ -227,9 +227,9 @@ TEST(T20MalformedPlan, MalformedPlansNeverReturnADecodedValue) {
 }
 
 TEST(T20MalformedPlan, MalformedMutationsRemainDistinctFromT019Cases) {
-  // T20-MAL-14: source-inspection guard over the T019 negative test file (read read-only). The T019
-  // file is byte-identical to its accepted revision, carries the T019 `DecodeNegative`/`NegD*`
-  // identifiers, and carries no T020 `T20-MAL` identifier; no T019 test is edited or weakened.
+  // T20-MAL-14: source-inspection guard over the T019 negative test file (read read-only).
+  // The pinned successor hash includes only the authorized R-04 generatedAt regression case;
+  // the existing T019 `DecodeNegative`/`NegD*` cases remain present and T020 cases stay separate.
   const std::string path =
       std::string(XCOM_ACTIVATION_PLAN_FIXTURE_DIR) + "/../decoder_negative_tests.cpp";
   const std::string t019 = t20::read_text(path);

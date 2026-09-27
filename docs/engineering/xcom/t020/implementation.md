@@ -310,6 +310,11 @@ separate T025 successor candidate with its own authorisation and review.
 - No production source, schema, contract, fixture, decoder, or other task's test source is changed. No
   communication item, transport, network peer, or legacy artifact is touched.
 
+The statements in this section describe the original T020 revision-4 boundary. The later R-04
+successor repairs the T019 decoder's `generatedAt` validation and repins the T020 negative-test
+file hash. Its verification and review evidence are recorded separately; the original 246-case
+result above remains evidence for the original revision only.
+
 ### 10.4 Re-verification after the revision-4 revert
 
 | ID | Command | Observed result |

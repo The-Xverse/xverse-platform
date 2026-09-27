@@ -203,6 +203,11 @@ probability figure is asserted.
 | Plan schema | `src/xverse/xcom/contracts/v1/activation-plan.schema.json` | the closed member set, vocabularies, patterns, conditional status rule, and collection keys |
 | Decoder API | `src/xverse/xcom/include/xverse/xcom/activation_plan.hpp`, `src/xverse/xcom/src/activation_plan.cpp` (T019; anchored, unchanged) | the bounded decode entry points and immutable value the tests consume |
 | T019 tests | `tests/xcom/activation_plan/decoder_{unit,negative}_tests.cpp` (T019; anchored, unchanged) | the existing decoder test style and the `NEG-D*` set T020 must not duplicate or weaken |
+
+**R-04 successor boundary.** The original T020 slice left T019 unchanged. This separately authorized
+review repair adds a T019 `generatedAt` shape check and one negative-test case, without changing the
+public decoder API or removing the earlier T019 cases. T020's source-hash guard is repinned to the
+exact successor negative-test file and still checks that its cases remain distinct.
 | T017/T018 references | `scripts/validate_xcom_plan.py` (`canonical_bytes`, `compute_digest`, `check_digest`, `validate_plan_structure`), `src/xverse_xdl/xcom_plan.py` (`compile_plan_text`, `compile_plan`, `canonical_plan_bytes`, `compute_digest`) | the independent Python reference the T020 Python module cross-checks read-only |
 | T017 fixtures | `tests/xcom/activation_plan/fixtures/plan/valid/plan-activatable.json`, `plan-inspectable.json` | bounded positive inputs read read-only by both the C++ and Python suites |
 | Unit design | `docs/engineering/xcom/t010/design-units.md` (`XCOM-DU-010`, `XCOM-DU-011`) | ownership, lifetime, thread-safety, bounds, failure semantics, and planned-evidence tokens |

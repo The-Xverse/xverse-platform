@@ -214,9 +214,11 @@ artifact still decodes `accepted` (C26).
   planned paths present (the implementation). Neither validator is used by the T019 deterministic
   gate, and the condition is reported for the reviewer, not repaired (repairing it would edit the
   T009/T010 work products owned by other tasks).
-- **L-3 (`generatedAt` format).** The decoder requires `provenance.generatedAt` to be a string but does
-  not re-validate the RFC 3339 `date-time` format; the accepted T017 validator applies that
-  format check. Recorded as a bounded-scope limitation, not a claim.
+- **L-3 (`generatedAt` format), closed in the R-04 successor.** The original T019 decoder required
+  `provenance.generatedAt` to be a string without validating its RFC 3339 date and clock values.
+  The successor rejects impossible calendar dates, clock fields, and offsets at the shape gate;
+  `DecodeNegative.GeneratedAtDateTime` covers the rejection and a valid leap-day offset. The original
+  rev-3 differential-fuzz counts above remain historical results for that earlier revision.
 - **L-4 (no clang-format/clang-tidy run).** The repository defines no `.clang-format`, and no
   `clang-format` binary is present in the admitted prefix or host; formatting follows the adjacent
   X-COM files and C6 (`git diff --check`) is clean. This is an environment limitation, not a claim of

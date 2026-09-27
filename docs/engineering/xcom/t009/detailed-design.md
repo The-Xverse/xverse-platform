@@ -201,8 +201,8 @@ Identifiers fix the candidate-chosen names. Layer abbreviations: `xdl-input`, `b
 | Component | Layer | Language | Scope | Owns | Maturity | Anchored paths (status) |
 | --- | --- | --- | --- | --- | --- | --- |
 | `XCOM-CMP-001` Normalized XDL input | xdl-input | python | first-proof | T-XDL (T018) | partial | `xdl/metamodel/NORMALIZED_MODEL.md` (established), `xdl/schemas/v1alpha1/` (established) |
-| `XCOM-CMP-002` X-COM Profile/plan compiler | build-time | python | first-proof | T-XDL (T017, T018) | allocated | `xdl/profiles/xcom-v0.1.schema.json` (planned), `src/xverse_xdl/xcom_plan.py` (planned), `tests/test_xcom_plan.py` (planned) |
-| `XCOM-CMP-003` Canonical activation plan | derived-artifact | json | first-proof | T-XDL (T017, T019) | allocated | `src/xverse/xcom/contracts/v1/activation-plan.schema.json` (planned) |
+| `XCOM-CMP-002` X-COM Profile/plan compiler | build-time | python | first-proof | T-XDL (T017, T018) | allocated | `xdl/profiles/xcom-v0.1.schema.json` (established), `src/xverse_xdl/xcom_plan.py` (established), `tests/test_xcom_plan.py` (established) |
+| `XCOM-CMP-003` Canonical activation plan | derived-artifact | json | first-proof | T-XDL (T017, T019) | allocated | `src/xverse/xcom/contracts/v1/activation-plan.schema.json` (established) |
 | `XCOM-CMP-004` Core value/contract/diagnostic types | data-plane | cpp | first-proof | T-CORE (T013) | partial | `src/xverse/xcom/include/xverse/xcom/contract.hpp` etc. (established) |
 | `XCOM-CMP-005` Endpoint/route lifecycle and handles | data-plane | cpp | first-proof | T-CORE (T014) | partial | `src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp`, `src/xverse/xcom/src/endpoint_route_lifecycle.cpp`, `tests/xcom/endpoint_route_lifecycle/` (established) |
 | `XCOM-CMP-006` Provider boundary and composition | data-plane | cpp | first-proof | T-CORE (T015) | partial | `src/xverse/xcom/include/xverse/xcom/provider.hpp`, `src/xverse/xcom/src/provider.cpp` (established) |

@@ -66,7 +66,7 @@ inline constexpr std::string_view kFixtureInspectableBodySha256 =
 inline constexpr std::string_view kFixtureInspectableDigest =
     "98c13f81e6945485e5ac74bbd0f44b271ca05b68c47a2ac5cc55c964c3030d3f";
 inline constexpr std::string_view kT019NegativeFileSha256 =
-    "14cb56ec5cac23826735350d5db302fbf1ae0cba0514923882ca14bae3017ab5";
+    "7cc9f17469193fc3bf914d2783222721fc1baac3c7a4b72671749f833104a703";
 
 /// Read a file as bounded binary text; aborts the calling case when it cannot be read.
 inline std::string read_text(const std::string& path) {

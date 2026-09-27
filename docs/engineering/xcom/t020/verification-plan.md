@@ -112,7 +112,8 @@ gate discovers them via `ctest -N` and runs them via `ctest`. A single hyphenate
 admitted CMake 3.22 `gtest_discover_tests` splits a semicolon-separated label list and registers only its first
 element; CTest `-L` is a regular-expression match, so both `ctest -L t020` (all 52 T020 cases) and the per-suite
 `ctest -L <kind>` commands in §3 select the intended tests. The Python module is discovered by the gate's
-`pytest`. The T017/T018 Python tests, the T019 decoder tests, and every other CTest target are unchanged.
+`pytest`. The R-04 successor adds one T019 date-time decoder regression case and updates the T020
+source hash guard to that exact test file. Existing T019 cases and every other CTest target remain intact.
 
 ### 2.4 Environment prerequisite (A-1)
 

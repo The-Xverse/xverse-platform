@@ -248,6 +248,7 @@ mutation of a committed fixture and asserts the declared outcome, code, affected
 | `…::Decode.LimitsValidationBounds` | bound | CHK-07; BND-05 |
 | `…::Decode.SchemaDriftGuard` | drift | CHK-06; member/enum/pattern and `$defs/digest` table-vs-schema equality |
 | `tests/xcom/activation_plan/decoder_negative_tests.cpp::DecodeNegative.NegD08DigestPattern` | negative | CHK-06, NEG-D08; embedded `graphDigest`/`sourceDigest` closed digest sub-schema (`XCOM-DECODE-SHAPE`, target `provenance`, no plan) |
+| `tests/xcom/activation_plan/decoder_negative_tests.cpp::DecodeNegative.GeneratedAtDateTime` | negative/positive | R-04; invalid calendar, clock and offset values fail as `XCOM-DECODE-SHAPE`, while a real leap day with fractional seconds and offset decodes |
 | `tests/xcom/activation_plan/decoder_negative_tests.cpp::DecodeNegative.NegD01…NegD22` | negative | NEG-D01..NEG-D22; CHK-04, CHK-05, CHK-06, CHK-07; BND-01..BND-03 |
 | `ctest --test-dir build/fabro-t019 -L t019 --output-on-failure` | suite | the decoder tests pass |
 | `ctest --test-dir build/fabro-t019 --output-on-failure` | gate | the full CTest suite passes; no existing test is modified |

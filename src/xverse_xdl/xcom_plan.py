@@ -21,9 +21,11 @@ configuration language: the plan is derived from declared graph members only.
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
 import math
 import re
+from datetime import datetime
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -276,11 +278,20 @@ class CompileLimits:
                 raise XcomPlanError(ERROR_INPUT, f"compile limit {name} must be a positive integer")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class GraphView:
-    """Immutable, identity-sorted, bounded view over the normalized graph resources."""
+    """Caller-owned immutable snapshot of identity-sorted normalized resources."""
 
-    resources: tuple[Mapping[str, Any], ...]
+    _snapshot: tuple[Mapping[str, Any], ...]
+
+    def __init__(self, resources: tuple[Mapping[str, Any], ...]) -> None:
+        object.__setattr__(self, "_snapshot", copy.deepcopy(tuple(resources)))
+
+    @property
+    def resources(self) -> tuple[Mapping[str, Any], ...]:
+        """Return a detached copy so callers cannot mutate a compiled view."""
+
+        return copy.deepcopy(self._snapshot)
 
 
 # --------------------------------------------------------------------------------------
@@ -389,8 +400,8 @@ def load_normalized_graph(document: Any, *, limits: CompileLimits | None = None)
 
     limits = limits if limits is not None else CompileLimits()
     if isinstance(document, GraphView):
-        return document
-    if isinstance(document, Mapping):
+        resources: Any = document.resources
+    elif isinstance(document, Mapping):
         if "resources" not in document:
             raise XcomPlanError(ERROR_INPUT, "graph document must carry a resources array")
         resources: Any = document["resources"]
@@ -432,6 +443,12 @@ def load_normalized_graph(document: Any, *, limits: CompileLimits | None = None)
         raise XcomPlanError(ERROR_BOUND, "graph depth exceeds max_depth")
     if nodes > limits.max_nodes:
         raise XcomPlanError(ERROR_BOUND, "graph node count exceeds max_nodes")
+    try:
+        graph_bytes = json.dumps(entries, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    except (TypeError, ValueError, UnicodeError) as exc:
+        raise XcomPlanError(ERROR_INPUT, "graph resources must be JSON-compatible") from exc
+    if len(graph_bytes) > limits.max_bytes:
+        raise XcomPlanError(ERROR_BOUND, "graph input exceeds max_bytes")
     entries.sort(key=_identity_key)
     return GraphView(resources=tuple(entries))
 
@@ -450,12 +467,35 @@ def compile_plan_text(
         raise XcomPlanError(ERROR_INPUT, "graph text must be a string")
     if len(text.encode("utf-8")) > active.max_bytes:
         raise XcomPlanError(ERROR_BOUND, "graph text exceeds max_bytes")
+    depth = 0
+    inside_string = False
+    escaped = False
+    for character in text:
+        if inside_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                inside_string = False
+        elif character == '"':
+            inside_string = True
+        elif character in "{[":
+            depth += 1
+            if depth > active.max_depth + 2:
+                raise XcomPlanError(ERROR_BOUND, "graph JSON exceeds max_depth")
+        elif character in "}]":
+            depth -= 1
     try:
         document = json.loads(text, object_pairs_hook=_reject_duplicate_members)
     except XcomPlanError:
         raise
     except json.JSONDecodeError as exc:
         raise XcomPlanError(ERROR_INPUT, f"graph JSON is malformed: {exc.msg}") from exc
+    except RecursionError as exc:
+        raise XcomPlanError(ERROR_BOUND, "graph JSON exceeds parser depth") from exc
+    except ValueError as exc:
+        raise XcomPlanError(ERROR_BOUND, "graph JSON exceeds numeric parser bounds") from exc
     return compile_plan(
         document,
         generated_at=generated_at,
@@ -484,6 +524,87 @@ class _ProfileRecord:
         return (self.kind, self.resource_key, self.collection, self.element_id or "", self.pointer)
 
 
+def _validate_policy_values(kind: str, policy: Mapping[str, Any]) -> None:
+    """Enforce the Profile's closed value grammar before any policy is derived."""
+
+    required = set(PROFILE_FORM_REQUIRED[kind])
+    # A missing stimulation permit has the established XCOM-PLAN-POLICY classification.
+    if kind == "validation-policy":
+        required.discard("permitPolicyRef")
+    if not required <= set(policy):
+        raise XcomPlanError(ERROR_PROFILE, "profile policy is missing a required member")
+
+    def choice(field: str, allowed: tuple[str, ...]) -> None:
+        if not isinstance(policy[field], str) or policy[field] not in allowed:
+            raise XcomPlanError(ERROR_PROFILE, f"profile policy {field} is outside its closed vocabulary")
+
+    def integer(value: Any, label: str, low: int, high: int) -> None:
+        if not isinstance(value, int) or isinstance(value, bool) or not low <= value <= high:
+            raise XcomPlanError(ERROR_PROFILE, f"profile policy {label} is outside its integer bounds")
+
+    def identifiers(value: Any, label: str, *, nonempty: bool = False) -> None:
+        if not isinstance(value, (list, tuple)) or (nonempty and not value):
+            raise XcomPlanError(ERROR_PROFILE, f"profile policy {label} must be an identifier array")
+        seen: set[str] = set()
+        for item in value:
+            identifier = _plan_id(item, ERROR_PROFILE, label)
+            if identifier in seen:
+                raise XcomPlanError(ERROR_PROFILE, f"profile policy {label} repeats an identifier")
+            seen.add(identifier)
+
+    if kind == "interface-policy":
+        choice("interactionKind", ("signal", "message", "service"))
+        choice("semanticCompatibility", ("exact", "backward-compatible", "forward-compatible", "none"))
+        for field in ("schemaId", "encoding"):
+            _plan_id(policy[field], ERROR_PROFILE, field)
+        if not isinstance(policy["schemaVersion"], str) or not VERSION_PATTERN.fullmatch(policy["schemaVersion"]):
+            raise XcomPlanError(ERROR_PROFILE, "profile policy schemaVersion is invalid")
+    elif kind == "flow-policy":
+        choice("ordering", ORDERING_VALUES)
+        choice("reliability", RELIABILITY_VALUES)
+        choice("overflow", OVERFLOW_POLICIES)
+        for field, low, high in (("deadlineMs", 0, 600_000), ("retry", 0, 64), ("queueDepth", 1, 65_536)):
+            integer(policy[field], field, low, high)
+        identifiers(policy["observationPoints"], "observationPoints")
+    elif kind == "network-provider":
+        identifiers(policy["requiredCapabilities"], "requiredCapabilities", nonempty=True)
+        choice("fidelity", ("exact", "bounded", "declared"))
+        limitations = policy["limitations"]
+        if (not isinstance(limitations, (list, tuple)) or len(set(map(str, limitations))) != len(limitations)
+                or any(not isinstance(item, str) or not 1 <= len(item) <= 200 for item in limitations)):
+            raise XcomPlanError(ERROR_PROFILE, "profile policy limitations are invalid")
+    elif kind == "observation-policy":
+        identifiers(policy["filters"], "filters")
+        choice("payloadAccess", PAYLOAD_ACCESS_VALUES)
+        choice("validityEffect", VALIDITY_EFFECT_VALUES)
+        if "allowList" in policy:
+            identifiers(policy["allowList"], "allowList", nonempty=True)
+        elif policy["payloadAccess"] == "allow-listed":
+            raise XcomPlanError(ERROR_PROFILE, "allow-listed observation requires allowList")
+        bounds = policy["bounds"]
+        if not isinstance(bounds, Mapping) or set(bounds) != {"maxPayloadBytes", "maxRateHz"}:
+            raise XcomPlanError(ERROR_PROFILE, "observation bounds are invalid")
+        integer(bounds["maxPayloadBytes"], "maxPayloadBytes", 0, 1_048_576)
+        integer(bounds["maxRateHz"], "maxRateHz", 0, 100_000)
+    else:
+        identifiers(policy["allowedActions"], "allowedActions", nonempty=True)
+        identifiers(policy["injectionPoints"], "injectionPoints")
+        if not isinstance(policy["serviceEmulation"], bool):
+            raise XcomPlanError(ERROR_PROFILE, "serviceEmulation must be boolean")
+        choice("timePolicy", ("local-validation-clock", "unmapped"))
+        quotas = policy["quotas"]
+        if not isinstance(quotas, Mapping) or set(quotas) != {"maxActions", "maxRateHz"}:
+            raise XcomPlanError(ERROR_PROFILE, "validation quotas are invalid")
+        integer(quotas["maxActions"], "maxActions", 0, 100_000)
+        integer(quotas["maxRateHz"], "maxRateHz", 0, 100_000)
+        if "permitPolicyRef" in policy:
+            _plan_id(policy["permitPolicyRef"], ERROR_PROFILE, "permitPolicyRef")
+        elif policy["serviceEmulation"]:
+            raise XcomPlanError(ERROR_POLICY, "service emulation requires a permit-policy reference")
+        else:
+            raise XcomPlanError(ERROR_PROFILE, "validation policy is missing permitPolicyRef")
+
+
 def _validate_payload(value: Any) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     """Validate a payload against the closed Profile v0.1 grammar and return (target, policy)."""
 
@@ -510,12 +631,19 @@ def _validate_payload(value: Any) -> tuple[Mapping[str, Any], Mapping[str, Any]]
         raise XcomPlanError(ERROR_PROFILE, "profile payload target kind is not a legal decorated kind")
     if not isinstance(target.get("namespace"), str) or not isinstance(target.get("name"), str):
         raise XcomPlanError(ERROR_PROFILE, "profile payload target identity members must be strings")
+    _plan_id(target["namespace"], ERROR_PROFILE, "target namespace")
+    _plan_id(target["name"], ERROR_PROFILE, "target name")
+    if "version" in target and (
+        not isinstance(target["version"], str) or not VERSION_PATTERN.fullmatch(target["version"])
+    ):
+        raise XcomPlanError(ERROR_PROFILE, "profile payload target version is invalid")
     policy = value.get("policy")
     if not isinstance(policy, Mapping):
         raise XcomPlanError(ERROR_PROFILE, "profile payload policy must be an object")
     unknown_policy = set(policy) - set(PROFILE_FORM_PERMITTED[kind])
     if unknown_policy:
         raise XcomPlanError(ERROR_PROFILE, "profile payload policy is not the declared form for its kind")
+    _validate_policy_values(kind, policy)
     return target, policy
 
 
@@ -1328,8 +1456,12 @@ def _provenance_resources(
 def _validate_generated_at(generated_at: str | None) -> str:
     if generated_at is None:
         return DEFAULT_GENERATED_AT
-    if not isinstance(generated_at, str) or not DATETIME_PATTERN.match(generated_at):
+    if not isinstance(generated_at, str) or not DATETIME_PATTERN.fullmatch(generated_at):
         raise XcomPlanError(ERROR_INPUT, "generated_at must be an RFC 3339 date-time string")
+    try:
+        datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise XcomPlanError(ERROR_INPUT, "generated_at is not a real RFC 3339 date-time") from exc
     return generated_at
 
 

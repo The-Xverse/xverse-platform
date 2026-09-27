@@ -1724,7 +1724,7 @@ def _negative_fixtures(base: dict):
 
     # NEG-25: mark an absent path established.
     model = _copy(base)
-    _component(model, "XCOM-CMP-002")["artifact_paths"][0]["status"] = "established"
+    _component(model, "XCOM-CMP-010")["artifact_paths"][0]["status"] = "established"
     fixtures.append(("NEG-25", EXIT_PATH, model))
 
     # NEG-26: mark a present path planned.

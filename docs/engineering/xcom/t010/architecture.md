@@ -150,7 +150,7 @@ plan/tasks and are not yet present in the baseline; the full per-unit table is i
 | Family | Anchor examples |
 | --- | --- |
 | `CORE` | `src/xverse/xcom/include/xverse/xcom/{value,contract,item,diagnostic,result,core_types}.hpp` and `src/{value,contract,item,diagnostic}.cpp` (established); `src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp`, `provider.hpp`, `loopback_provider.hpp` (established) |
-| `XDL` | `xdl/metamodel/NORMALIZED_MODEL.md`, `xdl/schemas/v1alpha1/` (established); `src/xverse_xdl/xcom_plan.py`, `xdl/profiles/xcom-v0.1.schema.json`, `src/xverse/xcom/contracts/v1/activation-plan.schema.json`, `src/xverse/xcom/include/xverse/xcom/activation_plan.hpp` *(planned)* |
+| `XDL` | `xdl/metamodel/NORMALIZED_MODEL.md`, `xdl/schemas/v1alpha1/`, `src/xverse_xdl/xcom_plan.py`, `xdl/profiles/xcom-v0.1.schema.json`, `src/xverse/xcom/contracts/v1/activation-plan.schema.json`, `src/xverse/xcom/include/xverse/xcom/activation_plan.hpp` *(established paths; acceptance pending)* |
 | `OBS` | `src/xverse/xcom/include/xverse/xcom/observation.hpp`, `src/xverse/xcom/src/observation.cpp`, `tests/xcom/observation/` (established) |
 | `STIM` | `src/xverse/xcom/include/xverse/xcom/validation_session.hpp`, `src/xverse/xcom/src/validation_session.cpp` (established, bound to the accepted T025 revision); `src/xverse/xcom/include/xverse/xcom/stimulation_journal.hpp` *(planned)* |
 | `GW` | `proto/xverse/xcom/v1/tool_gateway.proto`, `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp`, `src/xverse/xcom/src/tool_gateway.cpp` *(planned)* |

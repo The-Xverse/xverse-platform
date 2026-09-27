@@ -126,7 +126,7 @@ plan/tasks and are not yet present in the baseline.
 | Component | Anchored product paths |
 | --- | --- |
 | `XCOM-CMP-001` Normalized XDL graph | `xdl/metamodel/NORMALIZED_MODEL.md`, `xdl/schemas/v1alpha1/` (established) |
-| `XCOM-CMP-002` X-COM Profile/plan compiler | `xdl/profiles/xcom-v0.1.schema.json` *(planned)*, `src/xverse_xdl/xcom_plan.py` *(planned)*, `tests/test_xcom_plan.py` *(planned)* |
+| `XCOM-CMP-002` X-COM Profile/plan compiler | `xdl/profiles/xcom-v0.1.schema.json` *(established)*, `src/xverse_xdl/xcom_plan.py` *(established)*, `tests/test_xcom_plan.py` *(established)* |
 | `XCOM-CMP-003` Canonical activation plan | `src/xverse/xcom/contracts/v1/activation-plan.schema.json` *(planned)* |
 | `XCOM-CMP-004` Core value/contract/diagnostic types | `src/xverse/xcom/include/xverse/xcom/{contract,core_types,diagnostic,item,result,value}.hpp`, `src/xverse/xcom/src/{contract,diagnostic,item,value}.cpp`, `tests/xcom/core_types/` (established) |
 | `XCOM-CMP-005` Endpoint/route lifecycle | `src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp`, `src/xverse/xcom/src/endpoint_route_lifecycle.cpp`, `tests/xcom/endpoint_route_lifecycle/` (established) |
