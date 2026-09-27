@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "task_id": "T022",
+  "baseline_revision": "7be8b9718e42e58bb1a05a486ff62e520f94567c",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 3,
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t022/architecture.md",
+    "docs/engineering/xcom/t022/detailed-design.md",
+    "docs/engineering/xcom/t022/implementation.md",
+    "docs/engineering/xcom/t022/requirements.md",
+    "docs/engineering/xcom/t022/unit-specifications.md",
+    "docs/engineering/xcom/t022/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+    "src/xverse/xcom/src/observation.cpp",
+    "tests/xcom/observation/core/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T022-IR-01",
+      "name": "Exact candidate inventory, baseline binding, and diff hygiene",
+      "method": "ran `git rev-parse 7be8b9718e42e58bb1a05a486ff62e520f94567c`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, a Python recomputation of the gate's `candidate_paths` (`tracked | (untracked - {internal-review.json, t022-package.json})`), `git diff --check <baseline> --`, and `git diff --stat <baseline> --`",
+      "result": "pass: the baseline resolves to the exact SHA; `git diff --check` is clean. The recomputed candidate inventory is exactly the ten `reviewed_paths` (tracked: `tasks.md`, `observation.hpp`, `observation.cpp`, `unit_tests.cpp`; untracked: the six T022 `.md` work products). Tracked delta is `+432/-17` across four files (hpp +75, cpp +53, unit_tests +319, tasks.md 1/1); this review record and the carried-over `reports/xcom-queue/t022-package.json` are correctly excluded. No build file, `xdl/`, `proto/`, `src/xverse_xdl/`, contract, other production unit, integration fixture, or `disabled_tap_benchmark.cpp` appears."
+    },
+    {
+      "id": "T022-IR-02",
+      "name": "No later task implemented; accepted behaviour preserved",
+      "method": "read the complete tracked diffs of `observation.hpp`, `observation.cpp`, and `tests/xcom/observation/core/unit_tests.cpp`; diffed `reserve` (339-372), `commit` (476-513), `cancel`/`release_claims`, `retain` (397-439), `snapshot` (532-549), `acknowledge` (551-562), `attach` (313-337), `poll`, `detach`, `SyntheticObservationSink`, and the coalescing key against the baseline; scanned for payload allow-list, redaction, decoder, rate-limit, and T023/T024 behaviour",
+      "result": "pass: the production delta is limited to `to_string(ObservationValidityState)` (117), the private `raise_realized_validity` (374-395), the raise calls on the loss branches (348, 406, 419, 424, 428), the derived `experiment_validity_degraded` projection (545), the acknowledge interval reset (558-560), the `TapSlot` field swap (`experiment_validity_degraded` -> `realized_validity`, 333 + hpp 710), and the trailing `ObservationSnapshot::validity_state` (hpp 553). `SyntheticObservationSink`, the payload-view constructor, `PayloadSchemaState::undecoded`, the coalescing key, and every `ObservationOutcome` value are unchanged. No T023 sink/isolation behaviour, T024 matrix, payload allow-list, decoder, rate limit, or new dependency is added. The only capability-document change is the single `- [ ] T022` -> `- [X] T022` line."
+    },
+    {
+      "id": "T022-IR-03",
+      "name": "Bounded best-effort drop and coalesce with negative paths",
+      "method": "read the `retain` full-queue branches (`observation.cpp`:403-425) and `test_drop_newest_bounded_loss` (673), `test_coalesce_latest_key_selection` (704), plus the preserved `test_best_effort_overflow`; ran the unit executable",
+      "result": "pass: `drop_newest` at capacity increments `dropped` once, stores no record, returns `accepted`, and leaves FIFO order intact; `coalesce_latest` scans newest-first for the exact logical key (`has_coalescing_key`, 63-71), replaces only the newest match and increments `coalesced`, or increments `dropped` with no replacement when no key matches. `test_drop_newest_bounded_loss` (capacity 2, three submits -> `dropped == 1`, retained sequences 1/2, then `no_record`) and `test_coalesce_latest_key_selection` (capacity 3, replacing sequence 3 with 4 and then a non-matching gamma drop) exercise the loss and ordering paths, not only the normal path. The declared effect is applied on each coalesce branch (419, 424)."
+    },
+    {
+      "id": "T022-IR-04",
+      "name": "Lossless pre-dispatch atomicity and the post-claim guard",
+      "method": "read `reserve` (339-372), `commit` (476-513), `cancel` (466-474), `release_claims` (441-456), and `retain`'s lossless branch (427-429); read `test_lossless_backpressure_pre_dispatch` (740), `test_validity_effect_on_lossless_backpressure` (823), and preserved `test_lossless_reservations`; ran an independent read-only state-space model over capacities 1..16 (reserve/commit/cancel/retain) in `/tmp`",
+      "result": "pass: `reserve` increments `backpressure_rejections` and raises validity with `required_loss = true` for a matching full lossless tap, then returns `observation_backpressure` with no reservation and no other matching tap claimed, i.e. the provider is not mutated and no record is emitted. The post-claim `retain` branch (427-429) is a defensive guard: the model confirms `size + reserved_lossless <= record_capacity` is invariant, so a claimed lossless slot always reaches `retain` with `size <= record_capacity - 1 < record_capacity` and always appends; the branch is unreachable for capacities 1..16 and no test claims to exercise it. This matches the repaired NEG-05 classification."
+    },
+    {
+      "id": "T022-IR-05",
+      "name": "Applied declared validity effect and realized vocabulary",
+      "method": "read `raise_realized_validity` (374-395), the `ObservationValidityState` declaration (hpp 101-107) and `to_string` (cpp 117-126), and `test_validity_effect_on_best_effort_loss` (777), `test_validity_effect_on_lossless_backpressure` (823), `test_validity_state_vocabulary` (857)",
+      "result": "pass: the raise target is selected solely by the declared effect (`none` -> `valid`, `degrade_on_loss` -> `degraded`, `invalidate_on_loss` -> `invalid`); `required_loss` forces at least `degraded`; the update is monotonic by encoded numeric value and is never raised without a matching loss. `to_string` returns exactly `\"valid\"`/`\"degraded\"`/`\"invalid\"`, and the enumerators encode `valid < degraded < invalid`. The three declarations are asserted for drop, coalesce-replacement, and lossless backpressure, including the accepted lossless `none` case that still degrades."
+    },
+    {
+      "id": "T022-IR-06",
+      "name": "Failure atomicity and rejected-operation side effects",
+      "method": "read every rejection path in `reserve` (342-354), `commit` pre-check (487-498), `cancel` (468-471), `authenticate` (303-311), `attach` (313-337), `snapshot` (535-538), `acknowledge` (553-556), and `detach` (566-579); read `test_acknowledge_closes_validity_interval` (896), `test_declared_tap_rejections`, `test_exact_tap_handles`, `test_snapshot_reports_declaration`",
+      "result": "pass: `commit` validates every claimed slot before mutating any; a foreign/stale/moved-from/completed reservation or mismatched item returns `invalid_reservation`/`invalid_argument` with no related mutation; `attach` returns before `spec.emplace` on generation exhaustion; a foreign/stale handle mutates nothing and returns the accepted stable outcome. A lossless rejection mutates only its own tap's `backpressure_rejections` and realized status (the intended observable rejection record), returns no reservation/record, and emits no normal-route item. No rejection yields an unvalidated value, silent default, inferred success, or emitted item."
+    },
+    {
+      "id": "T022-IR-07",
+      "name": "Bounded resources and restart/recovery",
+      "method": "inspected the constants and scanned `observation.cpp` for `new`/`delete`/`malloc`/`std::vector`/`make_unique`/`make_shared`/timer/retry/rate/quota; read the bounds in `detailed-design.md` sections 7-8 and `architecture.md` section 7",
+      "result": "pass: bounds remain `kMaximumObservationTaps == 8`, `kMaximumObservationRecordsPerTap == 16`, capacity 1-16, `kMaximumObservedPayloadBytes == 1024`, with one fixed enumerator per tap and no dynamic allocation on the T022 path. Restart/recovery is not applicable to this in-process prototype: no durability, journaling, or restart reconciliation is claimed (`T022-LIM-03`); detach plus re-attach discards the interval state, and `attach` resets `realized_validity` to `valid` (333)."
+    },
+    {
+      "id": "T022-IR-08",
+      "name": "Concurrency and no callback under a lock",
+      "method": "read both `raise_realized_validity` call sites and their lock scope; confirmed `retain` is only reachable from `commit` under `mutex_`; confirmed value-copy snapshot/poll after unlock; ran `test_competing_reservation_interleaving`, `test_synthetic_sink_concurrency`, and the observation suite",
+      "result": "pass: all counter/validity updates occur under the single hub `mutex_`; snapshots and records are value copies taken/returned around the lock; the boundary has no consumer callback, so no user code runs under an X-COM lock and the new vocabulary adds no shared mutable state. `to_string(ObservationValidityState)` and the accessors are pure `noexcept`."
+    },
+    {
+      "id": "T022-IR-09",
+      "name": "Compatibility, additivity, and preserved marker semantics",
+      "method": "read the `ObservationSnapshot` field changes (hpp 539-553), the derived marker (cpp 545), `acknowledge` (551-562), and the preserved `test_lossless_reservations`/integration fixtures; grepped for every `ObservationSnapshot{` aggregate-initialization site and for `validity_effect` use in the integration tests",
+      "result": "pass: `ObservationSnapshot` gains one trailing field with a default initializer, and the only in-repository aggregate-initialization site (`observation.cpp:539`) is updated, so no other construction site is broken and source compatibility is preserved (no ABI promised). `experiment_validity_degraded` is retained as the projection `validity_state != valid`; for the accepted integration/unit lossless fixtures (default `none` effect, no explicit `validity_effect` use in `tests/xcom/observation/integration/`) it yields exactly the accepted `true`/`false` values, so no existing assertion changes. No existing enumerator, signature, outcome value, test name, target, or label is removed, renamed, or reordered."
+    },
+    {
+      "id": "T022-IR-10",
+      "name": "Traceability, registers, and REF-002 disposition",
+      "method": "read requirements.md sections 3-10, architecture.md sections 3-10, detailed-design.md sections 2-11, unit-specifications.md sections 2-6, verification-plan.md sections 4-9, and implementation.md sections 3-10; cross-checked T022-STK-001..005 and T022-SR-001..017 against realized symbols and named cases; verified anchors FR-013 (`spec.md`:145-146), SC-004 (`spec.md`:225-226), FR-012, FR-014, and `contracts/observation.md`; ran the four register validators and the ownership `--check-human`",
+      "result": "pass: every T022 requirement maps to at least one CHK/NEG and to a realized element or inspection; all quoted anchor text matches the accepted sources; the declared `validityEffect` vocabulary matches the Profile; and FR-013/SC-004 authorize the applied validity effect. `validate_xcom_task_ownership.py --verify`/`--check-human`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, and `validate_xcom_unit_design.py --verify` all pass. The `tasks.md` change is the single checkbox line; `reference-traceability.md` is unmodified, so the REF-002 disposition remains `unchanged` with an empty `promoted` list."
+    },
+    {
+      "id": "T022-IR-11",
+      "name": "Passing tests exercise the required behaviour, not only the normal path",
+      "method": "read all seven added cases and their `main()` registration; ran `ctest --test-dir build/fabro-t022 -R xcom_observation --output-on-failure`; confirmed `ctest --test-dir build/fabro-t022 -N` reports 306",
+      "result": "pass: the added cases exercise overflow loss (drop and coalesce), coalesce non-match drop, pre-dispatch lossless backpressure, exact cancel/recover/commit, the full validity-effect matrix, the lossless `at least degraded` rule, the vocabulary/ordering, and acknowledgement of degraded (reset) and invalid (persists) intervals plus foreign/stale rejection. `xcom_observation_unit`, `xcom_observation_integration`, and `xcom_observation_disabled_benchmark` pass, and the discovered count is 306 (baseline), so additivity holds and no case only proves the normal path."
+    },
+    {
+      "id": "T022-IR-12",
+      "name": "Prior internal-review finding closure (T022-IR-F-01)",
+      "method": "re-read the repaired `verification-plan.md` (115, 125, 143-152, 198), `implementation.md` (188, 191, 214, 273-302), `detailed-design.md` (99-106, 193-205), `requirements.md` (181-182, 459), `unit-specifications.md` (60-61, 238), and `architecture.md` (143-144, 187)",
+      "result": "pass: NEG-05 is now classified as a non-constructible defensive guard with the `size + reserved_lossless <= record_capacity` reachability argument, removed from the executable `NEG-01..NEG-04`/`NEG-06..NEG-15` set, and no work product names a test as exercising the post-claim branch; the production guard remains unchanged and uncovered. The prior finding is closed, and the independent model check in T022-IR-04 confirms the argument."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "T022-IR-NOTE-01 (non-blocking work-product accuracy nit): `unit-specifications.md`:207 describes `test_coalesce_latest_key_selection` as a 'coalesce_latest tap with capacity 2 ... two logical routes', but the realized fixture (tests/xcom/observation/core/unit_tests.cpp:704-737) uses capacity 3 and three routes (alpha/beta/gamma). The behavioural claims in the same sentence (`coalesced` + 1, `dropped` + 1, unrelated FIFO order preserved, newest matching key replaced) remain accurate and are genuinely exercised, so no requirement mapping or coverage claim is overstated. Recommended follow-up in a later pass: correct the capacity/route count in that one sentence.",
+    "T022-IR-NOTE-02 (recorded design decision, non-blocking): the accepted `experiment_validity_degraded` field is redefined as the compatibility projection `validity_state != valid`. For the accepted integration/unit lossless fixtures (default `none` effect) it yields exactly the accepted values; for a best-effort loss under `degrade_on_loss`/`invalidate_on_loss` the marker now also becomes true. This widening is explicitly authorized by FR-013/SC-004 and T022-SR-005/-007 and is recorded, not raised as a defect.",
+    "T022-IR-NOTE-03 (recorded documentation nuance, non-blocking): the plan documents refer to an `xcom_obs` Doxygen group, but no `@defgroup`/`@ingroup xcom_obs` exists in the admitted configuration; the changed header adds full `@brief` plus ownership/lifetime/thread-safety/failure tags without inventing a group, matching the T021 convention and leaving the configured documentation build unchanged.",
+    "T022-IR-NOTE-04 (recorded scope clarification, non-blocking): the drop/coalesce/lossless retention mechanics predate T022 in the baseline; T022's production delta is the applied declared validity effect, the realized-status vocabulary/projection, and the acknowledgement-interval rule plus the focused cases. This matches the authoritative `XCOM-SW-OBS-003` attribution and the requirements/architecture statements that the accepted retention mechanics are preserved exactly; the task title's 'modes' are completed semantically and proven by the added tests.",
+    "This is a fresh, separate, read-only internal review of the exact ten-path candidate over baseline 7be8b9718e42e58bb1a05a486ff62e520f94567c. No production code, test, work product, or predecessor artifact was edited; the only file written by the review stage is this record, and the independent invariant model ran outside the repository (`/tmp`). External Codex review and user acceptance remain deferred until the xcom-t011-t016-t021-t024 backlog completes; this review claims no measure pass, integration, or production readiness."
+  ]
+}

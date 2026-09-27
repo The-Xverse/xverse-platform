@@ -114,6 +114,18 @@ std::string_view to_string(const ObservationValidityEffect effect) noexcept {
   return "unknown";
 }
 
+std::string_view to_string(const ObservationValidityState state) noexcept {
+  switch (state) {
+    case ObservationValidityState::valid:
+      return "valid";
+    case ObservationValidityState::degraded:
+      return "degraded";
+    case ObservationValidityState::invalid:
+      return "invalid";
+  }
+  return "unknown";
+}
+
 ObservationFilter::ObservationFilter(std::optional<Identity> contract_id,
                                      std::optional<Identity> interface_id,
                                      std::optional<Identity> endpoint_id,
@@ -318,7 +330,7 @@ ObservationAttachResult ObservationHub::attach(const ObservationTapSpec& spec) n
     slot.backpressure_rejections = 0U;
     slot.reserved_lossless = 0U;
     slot.active_claims = 0U;
-    slot.experiment_validity_degraded = false;
+    slot.realized_validity = ObservationValidityState::valid;
     return {{ObservationOutcome::accepted}, make_handle(index, slot.generation)};
   }
   return {{ObservationOutcome::tap_capacity_exhausted}, std::nullopt};
@@ -333,7 +345,7 @@ ObservationReserveResult ObservationHub::reserve(const CommunicationItem& item) 
         slot.spec->filter().matches(item) &&
         slot.size + slot.reserved_lossless >= slot.spec->record_capacity()) {
       ++slot.backpressure_rejections;
-      slot.experiment_validity_degraded = true;
+      raise_realized_validity(slot, true);
       unavailable = true;
     }
   }
@@ -359,6 +371,29 @@ ObservationReserveResult ObservationHub::reserve(const CommunicationItem& item) 
           std::optional<ObservationReservation>(std::move(reservation))};
 }
 
+void ObservationHub::raise_realized_validity(TapSlot& slot, const bool required_loss) noexcept {
+  ObservationValidityState target = ObservationValidityState::valid;
+  switch (slot.spec->validity_effect()) {
+    case ObservationValidityEffect::none:
+      target = ObservationValidityState::valid;
+      break;
+    case ObservationValidityEffect::degrade_on_loss:
+      target = ObservationValidityState::degraded;
+      break;
+    case ObservationValidityEffect::invalidate_on_loss:
+      target = ObservationValidityState::invalid;
+      break;
+  }
+  if (required_loss &&
+      static_cast<std::uint8_t>(target) <
+          static_cast<std::uint8_t>(ObservationValidityState::degraded)) {
+    target = ObservationValidityState::degraded;
+  }
+  if (static_cast<std::uint8_t>(target) > static_cast<std::uint8_t>(slot.realized_validity)) {
+    slot.realized_validity = target;
+  }
+}
+
 ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& event) noexcept {
   const ObservationTapSpec& spec = *slot.spec;
   const auto observation_clock_domain = Identity::create(event.observation_clock_domain);
@@ -368,6 +403,7 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
   if (slot.size == spec.record_capacity()) {
     if (spec.overflow_policy() == ObservationOverflowPolicy::drop_newest) {
       ++slot.dropped;
+      raise_realized_validity(slot, false);
       return {ObservationOutcome::accepted};
     }
     if (spec.overflow_policy() == ObservationOverflowPolicy::coalesce_latest) {
@@ -380,14 +416,16 @@ ObservationStatus ObservationHub::retain(TapSlot& slot, const ObservationEvent& 
                                          spec.maximum_payload_bytes(), spec.declared_tap_id(),
                                          {slot.size, slot.accepted, slot.dropped, slot.coalesced});
           slot.records[candidate].emplace(record);
+          raise_realized_validity(slot, false);
           return {ObservationOutcome::accepted};
         }
       }
       ++slot.dropped;
+      raise_realized_validity(slot, false);
       return {ObservationOutcome::accepted};
     }
     ++slot.backpressure_rejections;
-    slot.experiment_validity_degraded = true;
+    raise_realized_validity(slot, true);
     return {ObservationOutcome::observation_backpressure};
   }
   const std::size_t tail = (slot.head + slot.size) % spec.record_capacity();
@@ -504,9 +542,10 @@ std::optional<ObservationSnapshot> ObservationHub::snapshot(
                              slot->dropped,
                              slot->coalesced,
                              slot->backpressure_rejections,
-                             slot->experiment_validity_degraded,
+                             slot->realized_validity != ObservationValidityState::valid,
                              slot->spec->declared_tap_id(),
-                             slot->spec->validity_effect()};
+                             slot->spec->validity_effect(),
+                             slot->realized_validity};
 }
 
 ObservationStatus ObservationHub::acknowledge(const ObservationTapHandle& handle) noexcept {
@@ -516,7 +555,9 @@ ObservationStatus ObservationHub::acknowledge(const ObservationTapHandle& handle
     return {ObservationOutcome::invalid_tap_handle};
   }
   slot->backpressure_rejections = 0U;
-  slot->experiment_validity_degraded = false;
+  if (slot->realized_validity == ObservationValidityState::degraded) {
+    slot->realized_validity = ObservationValidityState::valid;
+  }
   return {ObservationOutcome::accepted};
 }
 

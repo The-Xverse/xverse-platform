@@ -11,7 +11,10 @@
  * observation.cpp. XCOM-OBS-009 remains a source/interface inspection obligation. T021 adds the
  * declared observation-point, declared filter-constraint, validity-effect, self-describing record,
  * counter-projection, snapshot-declaration, and repeated-declaration cases of
- * docs/engineering/xcom/t021/verification-plan.md (XCOM-SW-OBS-001, FR-011).
+ * docs/engineering/xcom/t021/verification-plan.md (XCOM-SW-OBS-001, FR-011). T022 adds the bounded
+ * drop, coalesce, lossless pre-dispatch, applied validity-effect, realized-status, and
+ * acknowledgement-interval cases of docs/engineering/xcom/t022/verification-plan.md
+ * (XCOM-SW-OBS-003, FR-013, SC-004).
  */
 
 #include "xverse/xcom/observation.hpp"
@@ -666,6 +669,312 @@ using namespace xverse::xcom;
                 "nonmatching logical slot retained");
 }
 
+/** @brief Verify drop-newest keeps the oldest records in FIFO order and counts each loss. */
+[[nodiscard]] bool test_drop_newest_bounded_loss() {
+  const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{0}, std::byte{0}, std::byte{0}};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 2U,
+                                        ObservationOverflowPolicy::drop_newest));
+  if (!expect(tap.handle.has_value(), "bounded drop attachment")) {
+    return false;
+  }
+  const auto first = emit(hub, alpha, 1U);
+  const auto second = emit(hub, alpha, 2U);
+  const auto third = emit(hub, alpha, 3U);
+  const auto snapshot = hub.snapshot(*tap.handle);
+  const auto retained_first = hub.poll(*tap.handle);
+  const auto retained_second = hub.poll(*tap.handle);
+  const auto exhausted = hub.poll(*tap.handle);
+  return expect(first.succeeded() && second.succeeded() && third.succeeded(),
+                "drop-newest stays best effort") &&
+         expect(snapshot.has_value() && snapshot->queued == 2U && snapshot->accepted == 2U &&
+                    snapshot->dropped == 1U && snapshot->coalesced == 0U &&
+                    snapshot->validity_state == ObservationValidityState::valid &&
+                    !snapshot->experiment_validity_degraded,
+                "bounded drop counters and bound") &&
+         expect(retained_first.record.has_value() && *retained_first.record->sequence() == 1U &&
+                    retained_second.record.has_value() && *retained_second.record->sequence() == 2U,
+                "oldest records retained in FIFO order") &&
+         expect(exhausted.status.outcome == ObservationOutcome::no_record,
+                "dropped submission produced no record");
+}
+
+/** @brief Verify coalesce-latest replaces only the newest matching key and drops a non-match. */
+[[nodiscard]] bool test_coalesce_latest_key_selection() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  const CommunicationItem beta = make_item(bytes, "route.beta");
+  const CommunicationItem gamma = make_item(bytes, "route.gamma");
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 3U,
+                                        ObservationOverflowPolicy::coalesce_latest));
+  if (!expect(tap.handle.has_value(), "coalesce attachment")) {
+    return false;
+  }
+  static_cast<void>(emit(hub, alpha, 1U));
+  static_cast<void>(emit(hub, beta, 2U));
+  static_cast<void>(emit(hub, alpha, 3U));
+  const auto replaced = emit(hub, alpha, 4U);
+  const auto dropped = emit(hub, gamma, 5U);
+  const auto snapshot = hub.snapshot(*tap.handle);
+  const auto first = hub.poll(*tap.handle);
+  const auto second = hub.poll(*tap.handle);
+  const auto third = hub.poll(*tap.handle);
+  return expect(replaced.succeeded() && dropped.succeeded(), "coalesce stays best effort") &&
+         expect(snapshot.has_value() && snapshot->queued == 3U && snapshot->accepted == 3U &&
+                    snapshot->coalesced == 1U && snapshot->dropped == 1U,
+                "coalesce counters stay within the declared bound") &&
+         expect(first.record.has_value() && first.record->route_id().value() == "route.alpha" &&
+                    *first.record->sequence() == 1U,
+                "oldest matching record untouched") &&
+         expect(second.record.has_value() && second.record->route_id().value() == "route.beta" &&
+                    *second.record->sequence() == 2U,
+                "unrelated FIFO order preserved") &&
+         expect(third.record.has_value() && third.record->route_id().value() == "route.alpha" &&
+                    *third.record->sequence() == 4U,
+                "only the newest matching record replaced");
+}
+
+/** @brief Verify lossless capacity is claimed before dispatch and rejects exactly once. */
+[[nodiscard]] bool test_lossless_backpressure_pre_dispatch() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                        ObservationOverflowPolicy::lossless_validation));
+  if (!expect(tap.handle.has_value(), "lossless pre-dispatch attachment")) {
+    return false;
+  }
+  auto claim = hub.reserve(alpha);
+  const auto blocked = hub.reserve(alpha);
+  const auto degraded = hub.snapshot(*tap.handle);
+  const auto cancelled = hub.cancel(std::move(*claim.reservation));
+  auto recovered = hub.reserve(alpha);
+  const auto committed = hub.commit(
+      std::move(*recovered.reservation),
+      {alpha, Timestamp(9), "clock.observer", 9U, ObservationProviderOutcome::accepted});
+  const auto after = hub.snapshot(*tap.handle);
+  const auto retained = hub.poll(*tap.handle);
+  return expect(claim.status.succeeded() && claim.reservation.has_value(),
+                "lossless capacity claimed before dispatch") &&
+         expect(blocked.status.outcome == ObservationOutcome::observation_backpressure &&
+                    !blocked.reservation.has_value(),
+                "lossless capacity unavailable before provider mutation") &&
+         expect(degraded.has_value() && degraded->backpressure_rejections == 1U &&
+                    degraded->experiment_validity_degraded &&
+                    degraded->validity_state == ObservationValidityState::degraded,
+                "lossless rejection realizes at least degraded") &&
+         expect(cancelled.succeeded() && recovered.status.succeeded() &&
+                    recovered.reservation.has_value() && committed.succeeded(),
+                "exact cancellation recovers capacity") &&
+         expect(retained.record.has_value() && *retained.record->sequence() == 9U &&
+                    after.has_value() && after->queued == 1U && after->accepted == 1U,
+                "recovered claim retained exactly one record");
+}
+
+/** @brief Verify the declared validity effect applied to best-effort drop and coalesce losses. */
+[[nodiscard]] bool test_validity_effect_on_best_effort_loss() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  const std::array<ObservationValidityEffect, 3U> effects{
+      ObservationValidityEffect::none, ObservationValidityEffect::degrade_on_loss,
+      ObservationValidityEffect::invalidate_on_loss};
+  const std::array<ObservationValidityState, 3U> expected{
+      ObservationValidityState::valid, ObservationValidityState::degraded,
+      ObservationValidityState::invalid};
+  ObservationHub drop_hub;
+  ObservationHub coalesce_hub;
+  bool valid = true;
+  for (std::size_t index = 0U; index < effects.size(); ++index) {
+    const auto drop = drop_hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                                ObservationOverflowPolicy::drop_newest, {},
+                                                "tap.drop", effects[index]));
+    const auto coalesce = coalesce_hub.attach(make_spec(
+        ObservationPayloadMode::metadata_only, 0U, 1U,
+        ObservationOverflowPolicy::coalesce_latest, {}, "tap.coalesce", effects[index]));
+    if (!expect(drop.handle.has_value() && coalesce.handle.has_value(),
+                "validity-effect loss attachment")) {
+      return false;
+    }
+    static_cast<void>(emit(drop_hub, alpha, 1U));
+    static_cast<void>(emit(drop_hub, alpha, 2U));
+    static_cast<void>(emit(coalesce_hub, alpha, 1U));
+    static_cast<void>(emit(coalesce_hub, alpha, 2U));
+    const auto drop_snapshot = drop_hub.snapshot(*drop.handle);
+    const auto coalesce_snapshot = coalesce_hub.snapshot(*coalesce.handle);
+    const bool lost = expected[index] != ObservationValidityState::valid;
+    valid = expect(drop_snapshot.has_value() && coalesce_snapshot.has_value(),
+                   "validity-effect snapshot") &&
+            expect(drop_snapshot->validity_state == expected[index] &&
+                       drop_snapshot->experiment_validity_degraded == lost &&
+                       drop_snapshot->dropped == 1U,
+                   "declared effect applied to a drop loss") &&
+            expect(coalesce_snapshot->validity_state == expected[index] &&
+                       coalesce_snapshot->experiment_validity_degraded == lost &&
+                       coalesce_snapshot->coalesced == 1U,
+                   "declared effect applied to a coalesce loss") &&
+            valid;
+  }
+  return valid;
+}
+
+/** @brief Verify a lossless backpressure realizes at least degraded under every declaration. */
+[[nodiscard]] bool test_validity_effect_on_lossless_backpressure() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  const std::array<ObservationValidityEffect, 3U> effects{
+      ObservationValidityEffect::none, ObservationValidityEffect::degrade_on_loss,
+      ObservationValidityEffect::invalidate_on_loss};
+  const std::array<ObservationValidityState, 3U> expected{
+      ObservationValidityState::degraded, ObservationValidityState::degraded,
+      ObservationValidityState::invalid};
+  bool valid = true;
+  for (std::size_t index = 0U; index < effects.size(); ++index) {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                          ObservationOverflowPolicy::lossless_validation, {},
+                                          "tap.lossless", effects[index]));
+    if (!expect(tap.handle.has_value(), "lossless validity attachment")) {
+      return false;
+    }
+    const auto first = emit(hub, alpha, 1U);
+    const auto blocked = emit(hub, alpha, 2U);
+    const auto snapshot = hub.snapshot(*tap.handle);
+    valid = expect(first.succeeded(), "lossless first submission") &&
+            expect(blocked.outcome == ObservationOutcome::observation_backpressure,
+                   "lossless backpressure outcome") &&
+            expect(snapshot.has_value() && snapshot->validity_state == expected[index] &&
+                       snapshot->experiment_validity_degraded &&
+                       snapshot->backpressure_rejections == 1U,
+                   "lossless realizes at least degraded") &&
+            valid;
+  }
+  return valid;
+}
+
+/** @brief Verify the realized status vocabulary, ordering, and snapshot compatibility projection. */
+[[nodiscard]] bool test_validity_state_vocabulary() {
+  bool valid =
+      expect(to_string(ObservationValidityState::valid) == "valid", "valid external text") &&
+      expect(to_string(ObservationValidityState::degraded) == "degraded",
+             "degraded external text") &&
+      expect(to_string(ObservationValidityState::invalid) == "invalid",
+             "invalid external text") &&
+      expect(static_cast<std::uint8_t>(ObservationValidityState::valid) <
+                     static_cast<std::uint8_t>(ObservationValidityState::degraded) &&
+                 static_cast<std::uint8_t>(ObservationValidityState::degraded) <
+                     static_cast<std::uint8_t>(ObservationValidityState::invalid),
+             "valid < degraded < invalid");
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub hub;
+  const auto tap = hub.attach(make_spec(ObservationPayloadMode::metadata_only, 0U, 1U,
+                                        ObservationOverflowPolicy::drop_newest, {}, "tap.vocab",
+                                        ObservationValidityEffect::degrade_on_loss));
+  if (!expect(tap.handle.has_value(), "vocabulary attachment")) {
+    return false;
+  }
+  const auto before = hub.snapshot(*tap.handle);
+  valid = expect(before.has_value() &&
+                     before->validity_state == ObservationValidityState::valid &&
+                     !before->experiment_validity_degraded,
+                 "no loss reports valid") &&
+          valid;
+  static_cast<void>(emit(hub, alpha, 1U));
+  static_cast<void>(emit(hub, alpha, 2U));
+  const auto after = hub.snapshot(*tap.handle);
+  return expect(after.has_value() &&
+                    after->validity_state == ObservationValidityState::degraded &&
+                    after->experiment_validity_degraded ==
+                        (after->validity_state != ObservationValidityState::valid),
+                "loss reports the realized status projection") &&
+         valid;
+}
+
+/** @brief Verify acknowledgement closes a degraded interval while an invalid status persists. */
+[[nodiscard]] bool test_acknowledge_closes_validity_interval() {
+  const std::array<std::byte, 4U> bytes{};
+  const CommunicationItem alpha = make_item(bytes, "route.alpha");
+  ObservationHub degraded_hub;
+  const auto degraded_tap = degraded_hub.attach(make_spec(
+      ObservationPayloadMode::metadata_only, 0U, 1U, ObservationOverflowPolicy::lossless_validation,
+      {}, "tap.degraded", ObservationValidityEffect::degrade_on_loss));
+  if (!expect(degraded_tap.handle.has_value(), "degraded interval attachment")) {
+    return false;
+  }
+  auto held = degraded_hub.reserve(alpha);
+  const auto blocked = degraded_hub.reserve(alpha);
+  const auto degraded = degraded_hub.snapshot(*degraded_tap.handle);
+  const auto acknowledged = degraded_hub.acknowledge(*degraded_tap.handle);
+  const auto restored = degraded_hub.snapshot(*degraded_tap.handle);
+  const auto cancelled = degraded_hub.cancel(std::move(*held.reservation));
+  auto recovered = degraded_hub.reserve(alpha);
+  const auto committed = degraded_hub.commit(
+      std::move(*recovered.reservation),
+      {alpha, Timestamp(1), "clock.observer", 1U, ObservationProviderOutcome::accepted});
+  const auto retained = degraded_hub.poll(*degraded_tap.handle);
+
+  ObservationHub invalid_hub;
+  const auto invalid_tap = invalid_hub.attach(make_spec(
+      ObservationPayloadMode::metadata_only, 0U, 1U, ObservationOverflowPolicy::drop_newest, {},
+      "tap.invalid", ObservationValidityEffect::invalidate_on_loss));
+  if (!expect(invalid_tap.handle.has_value(), "invalid persistence attachment")) {
+    return false;
+  }
+  static_cast<void>(emit(invalid_hub, alpha, 1U));
+  static_cast<void>(emit(invalid_hub, alpha, 2U));
+  const auto invalid = invalid_hub.snapshot(*invalid_tap.handle);
+  const auto invalid_acknowledged = invalid_hub.acknowledge(*invalid_tap.handle);
+  static_cast<void>(emit(invalid_hub, alpha, 3U));
+  const auto still_invalid = invalid_hub.snapshot(*invalid_tap.handle);
+
+  ObservationHub foreign_hub;
+  const auto foreign_tap = foreign_hub.attach(make_spec(
+      ObservationPayloadMode::metadata_only, 0U, 1U, ObservationOverflowPolicy::drop_newest, {},
+      "tap.foreign", ObservationValidityEffect::degrade_on_loss));
+  if (!expect(foreign_tap.handle.has_value(), "foreign handle attachment")) {
+    return false;
+  }
+  static_cast<void>(emit(foreign_hub, alpha, 1U));
+  static_cast<void>(emit(foreign_hub, alpha, 2U));
+  const auto foreign_acknowledged = degraded_hub.acknowledge(*foreign_tap.handle);
+  const auto foreign_after = foreign_hub.snapshot(*foreign_tap.handle);
+  const auto detached = foreign_hub.detach(*foreign_tap.handle);
+  const auto stale_acknowledged = foreign_hub.acknowledge(*foreign_tap.handle);
+  const auto stale_snapshot = foreign_hub.snapshot(*foreign_tap.handle);
+
+  return expect(blocked.status.outcome == ObservationOutcome::observation_backpressure &&
+                    degraded.has_value() &&
+                    degraded->validity_state == ObservationValidityState::degraded &&
+                    degraded->backpressure_rejections == 1U &&
+                    degraded->experiment_validity_degraded,
+                "degraded interval reported before acknowledgement") &&
+         expect(acknowledged.succeeded() && restored.has_value() &&
+                    restored->validity_state == ObservationValidityState::valid &&
+                    restored->backpressure_rejections == 0U &&
+                    !restored->experiment_validity_degraded,
+                "acknowledgement closes the degraded interval") &&
+         expect(cancelled.succeeded() && committed.succeeded() && retained.record.has_value() &&
+                    retained.record->sequence().has_value(),
+                "acknowledgement leaves exact claim authority intact") &&
+         expect(invalid.has_value() && invalid->validity_state == ObservationValidityState::invalid &&
+                    invalid->dropped == 1U && invalid_acknowledged.succeeded() &&
+                    still_invalid.has_value() &&
+                    still_invalid->validity_state == ObservationValidityState::invalid &&
+                    still_invalid->dropped == 2U,
+                "invalid status persists across acknowledgement and a further loss") &&
+         expect(foreign_acknowledged.outcome == ObservationOutcome::invalid_tap_handle &&
+                    foreign_after.has_value() &&
+                    foreign_after->validity_state == ObservationValidityState::degraded &&
+                    foreign_after->dropped == 1U,
+                "foreign acknowledgement performs no interval reset") &&
+         expect(detached.succeeded() &&
+                    stale_acknowledged.outcome == ObservationOutcome::invalid_tap_handle &&
+                    !stale_snapshot.has_value(),
+                "stale acknowledgement performs no interval reset");
+}
+
 /** @brief Verify reservations claim capacity, authenticate exactly, reset counters, and auto-cancel. */
 [[nodiscard]] bool test_lossless_reservations() {
   const std::array<std::byte, 4U> bytes{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
@@ -846,7 +1155,13 @@ int main() {
                  test_record_self_description() && test_record_counter_projection() &&
                  test_snapshot_reports_declaration() && test_repeated_declaration_capacity() &&
                  test_metadata_only() && test_controlled_payload_states() &&
-                 test_best_effort_overflow() && test_lossless_reservations() &&
+                 test_best_effort_overflow() && test_drop_newest_bounded_loss() &&
+                 test_coalesce_latest_key_selection() &&
+                 test_lossless_backpressure_pre_dispatch() &&
+                 test_validity_effect_on_best_effort_loss() &&
+                 test_validity_effect_on_lossless_backpressure() &&
+                 test_validity_state_vocabulary() && test_acknowledge_closes_validity_interval() &&
+                 test_lossless_reservations() &&
                  test_competing_reservation_interleaving() && test_exact_tap_handles() &&
                  test_synthetic_sink_concurrency()
              ? 0

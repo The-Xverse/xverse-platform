@@ -15,6 +15,10 @@
  * identifiers retained as evidence). T021 refines XCOM-SW-OBS-001 with the declared observation point,
  * declared route point, declared validity effect, and self-describing record; see
  * docs/engineering/xcom/t021/{requirements,detailed-design,unit-specifications,verification-plan}.md.
+ * T022 refines XCOM-SW-OBS-003 with the bounded best-effort drop and coalesce modes, the explicit
+ * lossless-validation mode, the applied declared validity effect, and the observable realized
+ * validity status exposed by ObservationSnapshot::validity_state; see
+ * docs/engineering/xcom/t022/{requirements,detailed-design,unit-specifications,verification-plan}.md.
  * Focused behavioral fixtures reside in tests/xcom/observation/core/unit_tests.cpp
  * (XCOM-OBS-002 through XCOM-OBS-006).
  */
@@ -72,8 +76,8 @@ enum class ObservationOverflowPolicy : std::uint8_t {
  * @ownership Owns no resource; it is an immutable enumeration value.
  * @lifetime It is a value copied with the policy that declares it.
  * @thread_safety Concurrent const access is safe.
- * @failure Unknown values are rejected by ObservationTapSpec::create; this slice implements no
- * behavior from the declaration, so loss semantics remain unchanged.
+ * @failure Unknown values are rejected by ObservationTapSpec::create; the declaration selects the
+ * realized ObservationValidityState raised on a matching loss and is never inferred or strengthened.
  */
 enum class ObservationValidityEffect : std::uint8_t {
   /** Declared loss does not change experiment validity. */
@@ -82,6 +86,25 @@ enum class ObservationValidityEffect : std::uint8_t {
   degrade_on_loss,
   /** Declared loss invalidates experiment validity. */
   invalidate_on_loss,
+};
+
+/**
+ * @brief Realized observation-validity status of one tap interval.
+ * @ownership Owns no resource; it is an immutable enumeration value owned by the hub slot and copied
+ * into an ObservationSnapshot.
+ * @lifetime It persists for the current tap interval and is discarded by detach or slot recreation;
+ * acknowledgement closes a `degraded` interval while `invalid` persists until detach.
+ * @thread_safety Concurrent const access is safe; the hub raises it only under its mutex.
+ * @failure It is raised only by a matching declared loss, is monotonic within an interval, and is
+ * never lowered except by acknowledgement or detach/recreation.
+ */
+enum class ObservationValidityState : std::uint8_t {
+  /** No declared loss has affected the current observation interval. */
+  valid = 0U,
+  /** A declared loss degraded experiment validity. */
+  degraded = 1U,
+  /** A declared loss invalidated experiment validity. */
+  invalid = 2U,
 };
 
 /** Visibility and completeness of the payload view returned in one record. */
@@ -147,6 +170,17 @@ enum class ObservationOutcome : std::uint8_t {
  * @return Stable external text: "none", "degrade-on-loss", or "invalidate-on-loss".
  */
 [[nodiscard]] std::string_view to_string(ObservationValidityEffect effect) noexcept;
+
+/**
+ * @brief Report the stable external text for one realized observation-validity status.
+ * @param state Realized validity status.
+ * @return Stable external text: "valid", "degraded", or "invalid".
+ * @ownership Owns no resource; it returns a static-lifetime view.
+ * @lifetime The returned view remains valid for the program lifetime.
+ * @thread_safety It is pure, `noexcept`, and introduces no shared mutable state.
+ * @failure An unknown value returns stable fallback text and never raises or mutates a tap.
+ */
+[[nodiscard]] std::string_view to_string(ObservationValidityState state) noexcept;
 
 /** Immutable operation status without dynamically allocated diagnostic text. */
 struct ObservationStatus final {
@@ -277,7 +311,7 @@ struct ObservationTapSpecInput final {
   std::size_t record_capacity{0U};
   /** Declared saturation behavior. */
   ObservationOverflowPolicy overflow_policy{ObservationOverflowPolicy::drop_newest};
-  /** Declared validity effect; reported only, never applied, in this slice. */
+  /** Declared validity effect applied to the realized status on a matching loss. */
   ObservationValidityEffect validity_effect{ObservationValidityEffect::none};
 };
 
@@ -317,7 +351,14 @@ class ObservationTapSpec final {
   [[nodiscard]] const std::optional<Identity>& declared_route_point() const noexcept {
     return filter_.route_id();
   }
-  /** @brief Return the declared validity effect. @return Declared effect; never applied here. */
+  /**
+   * @brief Return the declared validity effect.
+   * @return Declared effect applied to the realized ObservationValidityState on a matching loss.
+   * @ownership Owned by this policy.
+   * @lifetime The returned value is valid while this policy lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure It selects the realized status and is never inferred, defaulted, or strengthened.
+   */
   [[nodiscard]] ObservationValidityEffect validity_effect() const noexcept { return validity_effect_; }
   /** @return Provider-neutral logical filter. */
   [[nodiscard]] const ObservationFilter& filter() const noexcept { return filter_; }
@@ -498,12 +539,18 @@ struct ObservationSnapshot final {
   std::uint64_t coalesced{0U};
   /** Number of lossless reservation rejections since acknowledgement. */
   std::uint64_t backpressure_rejections{0U};
-  /** True after lossless capacity loss until an exact acknowledgement. */
+  /**
+   * Compatibility projection of the realized validity status: true while
+   * validity_state is not valid, and false otherwise. It is set by a declared loss (always for a
+   * lossless backpressure) and cleared by an exact acknowledgement of a `degraded` interval.
+   */
   bool experiment_validity_degraded{false};
   /** Declared observation point realized by the authenticated tap. */
   Identity declared_tap_id;
-  /** Declared validity effect of the authenticated tap; reported only. */
+  /** Declared validity effect of the authenticated tap. */
   ObservationValidityEffect validity_effect{ObservationValidityEffect::none};
+  /** Realized validity status raised by the declared effect on a matching loss. */
+  ObservationValidityState validity_state{ObservationValidityState::valid};
 };
 
 /** Result of attach, carrying an exact handle only on success. */
@@ -631,9 +678,12 @@ class ObservationHub final {
   [[nodiscard]] std::optional<ObservationSnapshot> snapshot(
       const ObservationTapHandle& handle) const noexcept;
   /**
-   * @brief Acknowledge one exact lossless degradation marker.
+   * @brief Acknowledge and close the current observation-validity interval of one exact tap.
    * @param handle Exact current handle.
    * @return A stable status indicating whether the exact handle was acknowledged.
+   * @note Acknowledgement resets backpressure_rejections to zero and returns a `degraded` realized
+   * status to `valid`; an `invalid` status persists until detach or slot recreation. A foreign,
+   * stale, or closed handle returns invalid_tap_handle and performs no interval reset.
    */
   [[nodiscard]] ObservationStatus acknowledge(const ObservationTapHandle& handle) noexcept;
   /**
@@ -657,7 +707,7 @@ class ObservationHub final {
     std::uint64_t backpressure_rejections{0U};
     std::size_t reserved_lossless{0U};
     std::size_t active_claims{0U};
-    bool experiment_validity_degraded{false};
+    ObservationValidityState realized_validity{ObservationValidityState::valid};
   };
   /**
    * @brief Resolve an exact current handle to its mutable tap slot.
@@ -679,6 +729,15 @@ class ObservationHub final {
    * @param event Event.
    */
   [[nodiscard]] ObservationStatus retain(TapSlot& slot, const ObservationEvent& event) noexcept;
+  /**
+   * @brief Raise one tap slot's realized validity status for a matching declared loss.
+   * @param slot Authenticated slot whose declared effect selects the target status.
+   * @param required_loss true when the loss removes a required (lossless-validation) observation,
+   * which realizes at least `degraded`.
+   * @note It is called only while mutex_ is held; it is monotonic within the interval and never
+   * lowers the realized status.
+   */
+  void raise_realized_validity(TapSlot& slot, bool required_loss) noexcept;
   /**
    * @brief Create an authority-bearing handle for one tap slot.
    * @param index Slot index.

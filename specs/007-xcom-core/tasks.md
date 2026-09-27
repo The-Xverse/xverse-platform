@@ -52,7 +52,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 ## Phase 5: Observation boundary (US2)
 
 - [X] T021 Implement immutable observation records, filters, payload policy, and tap handles.
-- [ ] T022 Implement bounded best-effort drop/coalesce and explicit lossless-validation modes.
+- [X] T022 Implement bounded best-effort drop/coalesce and explicit lossless-validation modes.
 - [ ] T023 Implement the synthetic sink and prove failure/disconnect isolation and visible counters.
 - [ ] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
   ordering, saturation, degraded validity, and safe detach.
