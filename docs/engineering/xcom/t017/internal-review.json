@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "task_id": "T017",
+  "baseline_revision": "a78d6d55dd5a68b1572cf5a594100dfba3be523e",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 5,
+  "predecessor_review_revision": 4,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t017/architecture.md",
+    "docs/engineering/xcom/t017/detailed-design.md",
+    "docs/engineering/xcom/t017/implementation.md",
+    "docs/engineering/xcom/t017/requirements.md",
+    "docs/engineering/xcom/t017/unit-specifications.md",
+    "docs/engineering/xcom/t017/verification-plan.md",
+    "scripts/validate_xcom_plan.py",
+    "specs/007-xcom-core/contracts/xdl-profile.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/contracts/v1/activation-plan.schema.json",
+    "tests/xcom/activation_plan/fixtures/expected-summary.txt",
+    "tests/xcom/activation_plan/fixtures/plan/valid/plan-activatable.json",
+    "tests/xcom/activation_plan/fixtures/plan/valid/plan-inspectable.json",
+    "tests/xcom/activation_plan/fixtures/profile/valid/flow-policy.json",
+    "tests/xcom/activation_plan/fixtures/profile/valid/interface-policy.json",
+    "tests/xcom/activation_plan/fixtures/profile/valid/network-provider.json",
+    "tests/xcom/activation_plan/fixtures/profile/valid/observation-policy.json",
+    "tests/xcom/activation_plan/fixtures/profile/valid/validation-policy.json",
+    "tests/xcom/activation_plan/test_activation_plan_schema.py",
+    "tests/xcom/activation_plan/test_digest_contract.py",
+    "tests/xcom/activation_plan/test_profile_schema.py",
+    "xdl/profiles/xcom-v0.1.schema.json"
+  ],
+  "checks": [
+    {
+      "id": "T017-CHK-01",
+      "name": "Exact candidate inventory, baseline binding, and T017 authorization",
+      "method": "ran `git rev-parse a78d6d55dd5a68b1572cf5a594100dfba3be523e`, `git diff --name-only a78d6d55... --`, `git diff --numstat`, and `git diff --check`; compared the 22-path set against the `T-XDL` exclusive list in `docs/engineering/xcom/task-ownership.json` and the T017 `AUTHORIZED_PATH_PREFIXES` in `scripts/validate_xcom_plan.py:124-133`",
+      "result": "pass: the baseline SHA resolves and HEAD is the baseline; `git diff --name-only` returns exactly 22 tracked paths and `git diff --check` is clean (`73 0` additions to `xdl-profile.md`, `1 1` to `tasks.md`). Every path is inside the T-XDL exclusive list for T017 (`docs/engineering/xcom/t017/`, `scripts/validate_xcom_plan.py`, `specs/007-xcom-core/contracts/xdl-profile.md`, `specs/007-xcom-core/tasks.md`, `src/xverse/xcom/contracts/v1/activation-plan.schema.json`, `tests/xcom/activation_plan/`, `xdl/profiles/xcom-v0.1.schema.json`). The only untracked file is this review record, which the review gate excludes; no `reports/xcom-queue/t017-package.json` is present to carry over. `scripts/validate_xcom_plan.py --verify --changed-paths <22-path file>` exits 0 while a synthetic `src/xverse_xdl/xcom_plan.py` entry exits 7, so the boundary check consumes a real set."
+    },
+    {
+      "id": "T017-CHK-02",
+      "name": "No later backlog task implemented accidentally",
+      "method": "read `specs/007-xcom-core/tasks.md` phase 4; grepped the changed-path set for `src/xverse_xdl/`, `src/xverse/xcom/include/`, `src/xverse/xcom/src/`, `proto/`, CMake, and `Doxyfile`; inspected the T019/T020 test ownership boundary (`tests/xcom/activation_plan/` is shared by the T-XDL slice per `task-ownership.json`)",
+      "result": "pass: `tasks.md` marks only `- [X] T017`; T018/T019/T020 remain `- [ ]` (grep for `^- [X] T018|T019|T020` returns 0 matches). The diff contains no compiler (`src/xverse_xdl/xcom_plan.py`), decoder header/source (`src/xverse/xcom/include/**`, `src/xverse/xcom/src/**`), `proto/`, CMake, or `Doxyfile` path, and no C++/CTest target. The `tests/xcom/activation_plan/` additions are the T017 Python validation modules and JSON fixtures declared in requirements.md §2.1/§2.2; the T019/T020 shared-slice path is not pre-empted because those tasks add distinct files (unit-specifications.md §9 records the shared-path rule)."
+    },
+    {
+      "id": "T017-CHK-03",
+      "name": "Profile v0.1 closure, discriminator, version, and per-form grammar",
+      "method": "read `xdl/profiles/xcom-v0.1.schema.json`; read `check_profile_contract`/`check_schema_structure`; ran `--verify` and the five positive fixtures plus NEG-P01..NEG-P14 through `validate_profile_payload`/`validate_profile_set`",
+      "result": "pass: valid Draft 2020-12 with `additionalProperties: false` at every object definition; top-level `required` is exactly {schemaVersion, kind, target, policy}; `schemaVersion` const `\"0.1\"`; `$defs.kind.enum` is exactly the five permitted forms; each of `interfacePolicy`/`flowPolicy`/`networkProviderPolicy`/`observationPolicy`/`validationPolicy` is a closed object with a non-empty required set, selected by exactly one `allOf`/`if`/`then` branch on `kind`, so an unknown member inside `policy` is rejected (NEG-P11). NEG-P01..NEG-P14 all yield PROFILE_INVALID (exit 3). The top-level `policy` property is `{\"type\": \"object\"}` and derives its closure from the per-kind `$ref`, as disclosed in detailed-design.md §3.1 and implementation.md §2.1.1."
+    },
+    {
+      "id": "T017-CHK-04",
+      "name": "Activation-plan v1 coverage, closure, version, and inspectable rule",
+      "method": "read `src/xverse/xcom/contracts/v1/activation-plan.schema.json`; read `check_plan_contract`/`validate_plan_structure`; exercised `plan-activatable.json`/`plan-inspectable.json` and NEG-A01..A22",
+      "result": "pass: 16 required top-level members cover every `COMMUNICATION_PLAN_GROUPS` entry of `contracts/communication-plan.md`; `planVersion` const `\"1\"`; `status` enum exactly {inspectable, activatable}; every `$defs` object is closed; `inputResolution` references `#/$defs/inputResolution` with the six required states; the `allOf` conditional narrows all six states to `resolved` under `status: activatable`, so NEG-A09 (activatable with one unresolved) is rejected and NEG-A10 (inspectable with one unresolved) is accepted with no findings."
+    },
+    {
+      "id": "T017-CHK-05",
+      "name": "Ordering/uniqueness totality over the optional resource version (T017-IR-008 closure)",
+      "method": "read `_order_token`/`_is_sorted`/`check_ordering` (`scripts/validate_xcom_plan.py:516-607`); independently reproduced the predecessor finding against the repaired module: a schema-valid activatable plan whose `provenance.resources` carries two otherwise-identical identities with the optional `version` declared on exactly one; also probed a direct `check_ordering` call with a `None`-valued version",
+      "result": "pass: `_order_token` maps each identity element to `(0, \"\")` for `None` and `(1, value)` otherwise, so the sort is total. The exact reproduction returns `_json_schema_findings == []` (schema-valid input), `validate_plan_structure(...) == [(4, 'plan provenance resources is not ordered by identity')]`, `exit_code == PLAN_INVALID (4)`, and `check_ordering(...)` returns the same classified finding with no raised exception. The direct `None`-version probe behaves identically. No `TypeError`/uncaught exception survives in the ordering path."
+    },
+    {
+      "id": "T017-CHK-06",
+      "name": "Digest/provenance contract, canonicalization, and reproducibility",
+      "method": "read `_normalize_numbers`/`canonical_bytes`/`canonical_body`/`compute_digest`/`check_digest`; recomputed both fixture digests; read the normative text added to `specs/007-xcom-core/contracts/xdl-profile.md`; probed integral-number normalization, key reordering/whitespace stability, duplicate-member rejection, and the digested-region exclusion; ran NEG-D01..NEG-D04",
+      "result": "pass: the domain separator `xverse.xcom.activation-plan.v1\\x00` and the digested region (plan value minus the top-level `digest` member) match the normative contract text; both recorded fixture digests reproduce exactly (`--verify` reports `digestVectors=2`, exit 0); `canonical_bytes({'a': 1}) == canonical_bytes({'a': 1.0}) == b'{\"a\":1}'`; reordered and whitespace-formatted copies produce identical canonical bytes/digest; a repeated JSON member is rejected fail-closed as IO_ERROR rather than collapsed; NEG-D01..NEG-D04 all yield DIGEST_INVALID (exit 5)."
+    },
+    {
+      "id": "T017-CHK-07",
+      "name": "Validator determinism, offline purity, exit classes, and bounded resources",
+      "method": "ran `--verify`, `--self-test` (53 cases), `--check-human`, and `--verify --changed-paths`; diffed two `--verify` and two `--self-test` runs by sha256; grepped imports and the source for write/network/child-process use; inspected `read_text_bounded`, `check_input_bounds`, `check_wall_bound`, `parse_json_text`, and `exit_code`",
+      "result": "pass: all three entry points exit 0; `--self-test` reports `cases=53 OK=1 SCHEMA_INVALID=3 PROFILE_INVALID=14 PLAN_INVALID=21 DIGEST_INVALID=4 IO_ERROR=5 BOUNDARY_INVALID=5` with one distinct nonzero class per family; two `--verify` runs are byte-identical (`sha256=0813cd170f68a57247c75d00b444fcbf2f4d745c53288d9a78fb0ec7fb9f7c43`) as are two `--self-test` runs (`426d7752...`), matching implementation.md §5 rows 7-8. The source imports only stdlib (`argparse`, `hashlib`, `json`, `math`, `re`, `sys`, `time`, `pathlib`, `typing`) plus `jsonschema`; there is no file write, no network import, and no child process. Per-document 1 MiB/5 MiB, aggregate 16 MiB, depth 100, node 100 000, and 60 s wall bounds are declared and applied fail-closed to every document the validator parses (`read_text_bounded` + `check_input_bounds` + `check_wall_bound`); over-bound inputs map to IO_ERROR (NEG-V04..V08)."
+    },
+    {
+      "id": "T017-CHK-08",
+      "name": "Passing tests exercise the required positive and negative behavior",
+      "method": "read the three pytest modules and their fixtures; ran `python3 -m pytest -q tests/xcom/activation_plan` and the full `python3 -m pytest -q`; compared the exercised cases with the declared NEG-P/NEG-A/NEG-D/NEG-V/NEG-G set and the `check_ordering` branches",
+      "result": "pass: `tests/xcom/activation_plan` runs 23 tests (4 Profile + 7 plan + 12 digest/validator) and the full suite reports `113 passed, 24 subtests` (baseline 90; +23 new, none removed or weakened). `test_plan_negatives` asserts all 22 NEG-A cases; `test_profile_negatives` all 14 NEG-P; `test_digest_negatives` NEG-D01..D04; `test_validator_and_governance_negatives` the 13 NEG-V/NEG-G cases. Negative branches are exercised directly as well as through the self-test (`test_ordering_uniqueness_branches_exercised_directly`, `test_ordering_totality_over_optional_version`, `test_declared_bounds_enforced`, `test_authorized_path_boundary_consumes_changed_set`, `test_ref002_authoritative_record_not_promoted`), so the checks are not limited to the normal path. `test_verification_plan_lists_every_implemented_test` confirms the verification-plan test table and the implemented modules agree exactly."
+    },
+    {
+      "id": "T017-CHK-09",
+      "name": "Failure atomicity, rejected-operation side effects, concurrency, and restart/recovery",
+      "method": "inspected every rejection path for partial mutation or success reporting; searched the validator and tests for writes, shared mutable state, threads, and lifecycle; called the unsatisfiable probes directly (`parse_probe`, `check_input_bounds`, `check_wall_bound`, `check_ordering`)",
+      "result": "pass: the validator is a pure read-only process that returns a classified `Finding` set; `exit_code` returns the minimum class and the CLI prints nothing but classified findings before a nonzero exit, so no rejected operation reports partial success or leaves a mutated artifact. Rejections are non-destructive: `validate_*` operate on caller-provided values; `run_checks` never writes; `parse_json_text` fails closed on duplicate members. Concurrency is not applicable (offline single-threaded, `offline-single-threaded`/`read-only-static` per unit-specifications.md §4-§11); restart/recovery is not applicable because there is no runtime lifecycle and no persisted state in this slice. This matches the accepted non-runtime scope and is disclosed in implementation.md §7."
+    },
+    {
+      "id": "T017-CHK-10",
+      "name": "Traceability, REF-002 non-promotion, ownership, compatibility, and public safety",
+      "method": "read the five plan documents and the implementation record; diffed `xdl-profile.md` and `tasks.md`; ran `scripts/validate_xcom_task_ownership.py --verify`; checked the authoritative `docs/architecture/sads-requirements-traceability.json` for XVE-SYS-0139..0158; verified the `implementation.md` §5 artifact hashes against the working tree; grepped the changed set for credentials, private addresses, absolute host paths, and key markers",
+      "result": "pass: requirement/unit/design/evidence identifiers are bidirectionally linked across requirements.md §10, detailed-design.md §10, unit-specifications.md §12, verification-plan.md §7/§9, and implementation.md §4, and every T017-SR maps to >=1 unit and every unit to >=1 requirement. The `xdl-profile.md` change is purely additive (`73 0`; no accepted sentence altered) and the only `tasks.md` change is the T017 checkbox. The T007 ownership validator exits 0; the T008 links `XCOM-SW-XDL-001`/`XCOM-DU-XDL-BASELINE`/`XCOM-T-XDL` resolve in `docs/engineering/xcom/t008/traceability-matrix.{md,json}`. All twenty direct REF-002 IDs `XVE-SYS-0139`-`0158` remain `allocated`/`deferred` `architectural-target` with none promoted (`check_ref002` returns []). All 20 recorded artifact sha256 values in implementation.md §5 match the working tree. Compatibility: T017 defines new versioned contracts additively and claims no compatibility/parity (implementation.md §7). Public safety: the schemas and fixtures contain no credential, private address, absolute host path, or key marker; the only absolute-host-path strings in the diff are the documented deterministic-gate invocation in verification-plan.md §2/architecture.md §7/implementation.md §5 and the synthetic `/home/agent/secret` + `password = hunter2` NEG-G04 probe literal inside the validator, both explicitly carved out by requirements.md §2.4 and disclosed in implementation.md §7.5."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "T017 internal read-only review revision 5 over baseline a78d6d55dd5a68b1572cf5a594100dfba3be523e. This pass independently re-inspected the successor candidate after the second repair, re-derived the T017-IR-008 reproduction, and re-ran every declared check. The verdict is pass. This record edits no production code or test and neither accepts nor integrates the candidate.",
+    "T017-IR-008 closure verified independently of the repository's own tests (T017-CHK-05): the exact schema-valid mixed present/absent optional `version` provenance input that previously raised `TypeError` now returns a single PLAN_INVALID finding with exit class 4 and no exception, satisfying detailed-design.md §8 and unit-specifications.md §5.",
+    "Predecessor findings T017-IR-001..IR-007 were re-verified as still closed: integral-number canonicalization (`test_canonical_bytes_normalize_integral_numbers`), duplicate-member rejection (`test_duplicate_json_member_rejected`/NEG-V05), the changed-set boundary (`test_authorized_path_boundary_consumes_changed_set`), the authoritative REF-002 record (`test_ref002_authoritative_record_not_promoted`), enforced bounds (`test_declared_bounds_enforced`), direct ordering-branch coverage, and plan/test traceability. No accepted requirement, contract statement, check, or test was weakened by the repair.",
+    "Residual limitation recorded, not a required correction: `parse_json_text`/`load_json` is not depth-guarded before parsing, so an unadmitted adversarial JSON document nested beyond Python's recursion limit would raise `RecursionError` rather than IO_ERROR. This is not reachable within T017's declared input set (the validator parses only repository-owned schemas, fixtures, and the REF-002 record, all parsed successfully and then checked by `check_input_bounds`; `--changed-paths` is a plain line file), so BND-03's depth/node bound is enforced for every document the validator actually admits. The T019 decoder owns untrusted bounded decode, where the same limit must be enforced on the byte stream.",
+    "Residual wording note, not a required correction: detailed-design.md §4.4 calls `activationOrder` a 'permutation' of declared route/endpoint ids, while the normative `xdl-profile.md` statement and the implemented validator require a duplicate-free sequence drawn from declared ids (uniqueness + no undeclared id). The accepted `contracts/communication-plan.md` requires only 'activation order', and the implemented behavior matches the normative contract; a future revision could align the design wording.",
+    "Concurrency, restart, and recovery are not applicable rather than verified: the two schemas are `static-immutable` artifacts and the validator is offline, single-threaded, stateless, and read-only (unit-specifications.md §4-§11). No runtime lifecycle exists in this slice.",
+    "External Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes; the deterministic review gate decides whether further repair is required after this record."
+  ]
+}

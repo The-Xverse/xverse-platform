@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1",
+  "kind": "validation-policy",
+  "target": {
+    "apiVersion": "xverse.io/xdl/v1alpha1",
+    "kind": "Scenario",
+    "namespace": "xcom",
+    "name": "loopback-scenario"
+  },
+  "policy": {
+    "allowedActions": ["inject-message"],
+    "injectionPoints": ["endpoint-controller"],
+    "serviceEmulation": false,
+    "timePolicy": "local-validation-clock",
+    "quotas": {
+      "maxActions": 8,
+      "maxRateHz": 8
+    },
+    "permitPolicyRef": "local-permit"
+  }
+}

@@ -43,7 +43,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 4: XDL-derived activation plan (US1)
 
-- [ ] T017 Define and validate `io.xverse.xcom` Profile v0.1 and the canonical activation-plan v1
+- [X] T017 Define and validate `io.xverse.xcom` Profile v0.1 and the canonical activation-plan v1
   schema and digest/provenance contract.
 - [ ] T018 Implement deterministic Profile-aware plan compilation in `src/xverse_xdl/xcom_plan.py`.
 - [ ] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
