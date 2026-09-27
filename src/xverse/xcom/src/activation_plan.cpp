@@ -134,7 +134,7 @@ bool valid_rfc3339(std::string_view value) {
   const int minute = decimal(value, 14, 2);
   const int second = decimal(value, 17, 2);
   if (year < 1 || month < 1 || month > 12 || hour < 0 || hour > 23 ||
-      minute < 0 || minute > 59 || second < 0 || second > 60) {
+      minute < 0 || minute > 59 || second < 0 || second > 59) {
     return false;
   }
   const bool leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);

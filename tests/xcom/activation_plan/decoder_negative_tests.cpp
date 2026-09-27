@@ -154,7 +154,7 @@ TEST(DecodeNegative, NegD08DigestPattern) {
 
 TEST(DecodeNegative, GeneratedAtDateTime) {
   for (const char* timestamp : {"2026-02-30T12:00:00Z", "2026-09-27T25:61:61Z",
-                                "2026-09-27T12:00:00+24:00"}) {
+                                "2026-09-27T12:00:60Z", "2026-09-27T12:00:00+24:00"}) {
     json plan = activatable();
     plan["provenance"]["generatedAt"] = timestamp;
     expect_error(decode_activation_plan(seal(plan)), "XCOM-DECODE-SHAPE", "provenance");

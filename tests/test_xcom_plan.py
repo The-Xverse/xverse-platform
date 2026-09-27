@@ -691,7 +691,7 @@ def test_profile_policy_values_are_checked_before_plan_emission():
 def test_generated_at_rejects_impossible_calendar_and_clock_values():
     """An RFC 3339 shaped but impossible time must not cross the plan boundary."""
 
-    for timestamp in ("2026-02-30T12:00:00Z", "2026-09-27T25:61:61Z", "2026-09-27T12:00:00+24:00"):
+    for timestamp in ("2026-02-30T12:00:00Z", "2026-09-27T25:61:61Z", "2026-09-27T12:00:60Z", "2026-09-27T12:00:00+24:00"):
         assert _error_code(lambda: compiler.compile_plan(_graph(), generated_at=timestamp)) == "XCOM-PLAN-INPUT"
     plan = compiler.compile_plan(_graph(), generated_at="2024-02-29T23:59:59.123+01:30")
     assert validator.validate_plan_structure(plan, PLAN_SCHEMA) == []
