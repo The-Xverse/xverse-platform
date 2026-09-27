@@ -49,6 +49,12 @@ constexpr std::string_view kOtherDigest =
   return *EndpointSpec::create({id, digest, provider, direction}, contract).value();
 }
 
+[[nodiscard]] FlowPolicy message_policy() {
+  return *FlowPolicy::create({OrderingPolicy::fifo, ReliabilityPolicy::at_least_once,
+                              OverflowPolicy::reject, 250, 3, 16})
+              .value();
+}
+
 [[nodiscard]] LifecycleConfiguration configuration() {
   return *LifecycleConfiguration::create({4U, 2U}).value();
 }
@@ -646,6 +652,133 @@ constexpr std::string_view kOtherDigest =
                 "stale route handle was not rejected");
 }
 
+[[nodiscard]] bool test_route_policy_absent_diagnostic() {
+  const auto communication = message_contract();
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto route_spec =
+      *RouteSpec::create({"route.main", kDigest, "provider.main"}, source, destination).value();
+  LifecycleController controller(configuration());
+  const auto source_handle = controller.declare_endpoint(source);
+  const auto destination_handle = controller.declare_endpoint(destination);
+  const auto route_handle = controller.declare_route(route_spec);
+  if (!expect(source_handle.has_value() && destination_handle.has_value() &&
+                  route_handle.has_value(),
+              "absent-policy route fixture declarations failed")) {
+    return false;
+  }
+  const auto before = controller.route_snapshot(*route_handle.value());
+  const auto rejected = controller.route_policy(*route_handle.value());
+  const auto after = controller.route_snapshot(*route_handle.value());
+  const std::string expected =
+      "route_declaration|error|XCOM-TYPE-E001|route.main|route generation declares no bounded "
+      "flow policy|declare the route with an exact validated flow policy";
+  return expect(!rejected.has_value() && rejected.diagnostics() != nullptr &&
+                    rejected.diagnostics()->serialize() == expected,
+                "exact absent-policy diagnostic differs") &&
+         expect(before.has_value() && after.has_value() && *before.value() == *after.value(),
+                "absent-policy read mutated the route");
+}
+
+[[nodiscard]] bool test_route_policy_handle_boundaries() {
+  const auto communication = message_contract();
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto declared = message_policy();
+  const auto route_spec =
+      *RouteSpec::create({"route.main", kDigest, "provider.main"}, source, destination, declared)
+           .value();
+  LifecycleController owner(configuration());
+  LifecycleController foreign(configuration());
+  const auto source_handle = owner.declare_endpoint(source);
+  const auto destination_handle = owner.declare_endpoint(destination);
+  const auto first = owner.declare_route(route_spec);
+  const auto foreign_route = foreign.declare_route(route_spec);
+  if (!expect(source_handle.has_value() && destination_handle.has_value() && first.has_value() &&
+                  foreign_route.has_value(),
+              "route-policy handle fixture declarations failed")) {
+    return false;
+  }
+  const auto before = owner.route_snapshot(*first.value());
+  const auto current_read = owner.route_policy(*first.value());
+  const auto foreign_read = owner.route_policy(*foreign_route.value());
+  const auto after = owner.route_snapshot(*first.value());
+  if (!expect(before.has_value() && after.has_value() && *before.value() == *after.value(),
+              "rejected route-policy handle read mutated the route") ||
+      !expect(current_read.has_value() && *current_read.value() == declared,
+              "current route-policy read differs") ||
+      !expect(foreign_read.diagnostics() != nullptr &&
+                  foreign_read.diagnostics()->serialize() ==
+                      invalid_handle_diagnostic("route.main"),
+              "foreign route-policy handle diagnostic differs") ||
+      !owner.fail_route(*first.value()).has_value() ||
+      !owner.close_route(*first.value()).has_value()) {
+    return false;
+  }
+  const auto second = owner.declare_route(route_spec);
+  if (!expect(second.has_value() && second.value()->generation() > first.value()->generation(),
+              "superseded route recreation failed")) {
+    return false;
+  }
+  const auto stale_read = owner.route_policy(*first.value());
+  const auto second_read = owner.route_policy(*second.value());
+  return expect(!stale_read.has_value() && stale_read.diagnostics() != nullptr &&
+                    stale_read.diagnostics()->serialize() ==
+                        invalid_handle_diagnostic("route.main"),
+                "stale route-policy handle diagnostic differs") &&
+         expect(second_read.has_value() && *second_read.value() == declared,
+                "recreated route-policy read differs");
+}
+
+[[nodiscard]] bool test_policy_bound_route_compatibility_unchanged() {
+  const auto communication = message_contract();
+  const auto planned_source =
+      endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto planned_destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto bound =
+      *RouteSpec::create({"route.main", kDigest, "provider.main"}, planned_source,
+                         planned_destination, message_policy())
+           .value();
+  const auto other_source =
+      endpoint("endpoint.other", EndpointDirection::produce, communication);
+  const auto other_destination =
+      endpoint("endpoint.other", EndpointDirection::consume, communication);
+  if (!rejects_route_compatibility(bound, other_source, planned_destination, false) ||
+      !rejects_route_compatibility(bound, planned_source, other_destination, true)) {
+    return false;
+  }
+  LifecycleController controller(configuration());
+  const auto source_handle = controller.declare_endpoint(planned_source);
+  const auto destination_handle = controller.declare_endpoint(planned_destination);
+  const auto route_handle = controller.declare_route(bound);
+  if (!expect(source_handle.has_value() && destination_handle.has_value() &&
+                  route_handle.has_value(),
+              "policy-bound compatibility fixture declarations failed") ||
+      !expect(controller.route_policy(*route_handle.value()).has_value(),
+              "policy-bound route lost its declared policy") ||
+      !controller.validate_endpoint(*source_handle.value()).has_value() ||
+      !controller.validate_endpoint(*destination_handle.value()).has_value() ||
+      !controller
+           .validate_route(*route_handle.value(), *source_handle.value(), *destination_handle.value())
+           .has_value() ||
+      !controller.activate_endpoint(*source_handle.value()).has_value()) {
+    return false;
+  }
+  const auto before = controller.route_snapshot(*route_handle.value());
+  const auto rejected = controller.activate_route(*route_handle.value(), *source_handle.value(),
+                                                  *destination_handle.value());
+  const auto after = controller.route_snapshot(*route_handle.value());
+  return expect(!rejected.has_value() && rejected.diagnostics() != nullptr &&
+                    rejected.diagnostics()->serialize() ==
+                        route_activation_diagnostic("route.main"),
+                "policy-bound route activation bypassed endpoint state") &&
+         expect(before.has_value() && after.has_value() && *before.value() == *after.value(),
+                "policy-bound activation rejection mutated the route");
+}
+
 }  // namespace
 
 /** @return Zero only when every invalid input is rejected without mutation. */
@@ -656,7 +789,9 @@ int main() {
                  test_retained_endpoint_closure_boundary() &&
                  test_ownership_and_transition_rejections() &&
                  test_route_boundaries_and_endpoint_use() &&
-                 test_route_capacity_and_stale_handle()
+                 test_route_capacity_and_stale_handle() &&
+                 test_route_policy_absent_diagnostic() && test_route_policy_handle_boundaries() &&
+                 test_policy_bound_route_compatibility_unchanged()
              ? 0
              : 1;
 }

@@ -159,6 +159,25 @@ class RouteSpec final {
                                                 const EndpointSpec& source,
                                                 const EndpointSpec& destination) noexcept;
 
+  /**
+   * @brief Validate a route and bind exactly one already-validated declared flow policy.
+   * @param input Logical route, plan digest, and provider identity.
+   * @param source Exact logical source endpoint declaration.
+   * @param destination Exact logical destination endpoint declaration.
+   * @param policy Already-validated immutable declared bounded delivery policy to bind.
+   * @return Valid policy-bound route declaration or stable diagnostics.
+   * @ownership The factory copies the policy into the returned route; the caller keeps its own value.
+   * @lifetime The bound policy is reachable only through this route value and the exact generation
+   * that declared it.
+   * @thread_safety The caller's policy and the returned route support concurrent const reads.
+   * @failure Rejects exactly as the three-argument factory does and never substitutes, defaults, or
+   * weakens the declared policy.
+   */
+  [[nodiscard]] static Result<RouteSpec> create(const RouteSpecInput& input,
+                                                const EndpointSpec& source,
+                                                const EndpointSpec& destination,
+                                                const FlowPolicy& policy) noexcept;
+
   /** @brief Copy an immutable route declaration. @param other Valid source declaration. */
   RouteSpec(const RouteSpec& other) noexcept = default;
   /** Assignment is disabled so returned views remain stable. */
@@ -180,24 +199,60 @@ class RouteSpec final {
   [[nodiscard]] const CommunicationContract& contract() const noexcept { return contract_; }
 
   /**
+   * @brief Report whether this route generation declared exactly one bounded flow policy.
+   * @return true only when the declared policy is present.
+   * @ownership The answer describes storage owned by this RouteSpec.
+   * @lifetime Reflects the declaration for the whole lifetime of this value.
+   * @thread_safety Concurrent const access is safe; no mutation is exposed.
+   * @failure Never fails; an unbound route reports false rather than a substituted default.
+   */
+  [[nodiscard]] bool has_policy() const noexcept { return policy_.has_value(); }
+
+  /**
+   * @brief View the owned declared bounded delivery policy, if any.
+   * @return Pointer to the owned declared policy, or nullptr when this route declared none.
+   * @ownership The returned pointer views storage owned by this RouteSpec.
+   * @lifetime Valid only while this RouteSpec lives; it is never a temporary or default value.
+   * @thread_safety Concurrent const access is safe; no mutation is exposed.
+   * @failure Returns nullptr rather than substituting, defaulting, or inferring a policy.
+   */
+  [[nodiscard]] const FlowPolicy* policy() const noexcept {
+    return policy_.has_value() ? &*policy_ : nullptr;
+  }
+
+  /**
    * @param left First route declaration.
    * @param right Second route declaration.
-   * @return true only when every immutable route field is equal.
+   * @return true only when every immutable route field, including the declared policy, is equal.
    */
   friend bool operator==(const RouteSpec& left, const RouteSpec& right) = default;
 
  private:
   /**
-   * @brief Own already validated route and endpoint fields.
+   * @brief Shared validation path for the three- and four-argument route factories.
+   * @param input Logical route, plan digest, and provider identity.
+   * @param source Exact logical source endpoint declaration.
+   * @param destination Exact logical destination endpoint declaration.
+   * @param policy Declared policy to copy, or nullptr when the route declares none.
+   * @return Valid route declaration or stable diagnostics.
+   */
+  [[nodiscard]] static Result<RouteSpec> create_impl(const RouteSpecInput& input,
+                                                     const EndpointSpec& source,
+                                                     const EndpointSpec& destination,
+                                                     const FlowPolicy* policy) noexcept;
+
+  /**
+   * @brief Own already validated route, endpoint, and optional declared-policy fields.
    * @param route_id Logical route identity.
    * @param digest Exact plan digest.
    * @param provider_id Logical provider identity.
    * @param source Compatible source declaration.
    * @param destination Compatible destination declaration.
+   * @param policy Already-validated declared policy copied when non-null, or nullptr for none.
    */
   RouteSpec(const Identity& route_id, const detail::FixedText<EndpointSpec::kPlanDigestBytes>& digest,
             const Identity& provider_id, const EndpointSpec& source,
-            const EndpointSpec& destination) noexcept;
+            const EndpointSpec& destination, const FlowPolicy* policy) noexcept;
 
   Identity route_id_; /**< Owned logical route identity. */
   detail::FixedText<EndpointSpec::kPlanDigestBytes> plan_digest_; /**< Exact plan digest. */
@@ -205,6 +260,7 @@ class RouteSpec final {
   Identity source_endpoint_id_; /**< Owned logical source endpoint identity. */
   Identity destination_endpoint_id_; /**< Owned logical destination endpoint identity. */
   CommunicationContract contract_; /**< Owned exact endpoint contract. */
+  std::optional<FlowPolicy> policy_; /**< Owned declared policy, empty when this route declared none. */
 };
 
 /**
@@ -353,6 +409,16 @@ class LifecycleSnapshot final {
   /** @return Observed lifecycle state. */
   [[nodiscard]] LifecycleState state() const noexcept { return state_; }
   /**
+   * @brief Report whether the observed generation declared a bounded flow policy.
+   * @return true only for a route generation that declared exactly one policy; false for endpoints
+   * and for routes that declared none.
+   * @ownership The answer describes the snapshot's own immutable state.
+   * @lifetime Valid while this snapshot lives.
+   * @thread_safety Concurrent const access is safe.
+   * @failure Never fails; an unbound observation reports false without inference.
+   */
+  [[nodiscard]] bool policy_bound() const noexcept { return policy_bound_; }
+  /**
    * @param left First snapshot.
    * @param right Second snapshot.
    * @return true only when all snapshot fields are equal.
@@ -368,14 +434,16 @@ class LifecycleSnapshot final {
    * @param digest Exact plan digest.
    * @param generation Current nonzero generation.
    * @param state Current lifecycle state.
+   * @param policy_bound Whether the observed route generation declared a bounded flow policy.
    */
   LifecycleSnapshot(ResourceKind kind, const Identity& identity, std::string_view digest,
-                    std::uint64_t generation, LifecycleState state) noexcept;
+                    std::uint64_t generation, LifecycleState state, bool policy_bound) noexcept;
   ResourceKind kind_; /**< Exact resource kind. */
   Identity identity_; /**< Owned logical resource identity. */
   detail::FixedText<EndpointSpec::kPlanDigestBytes> plan_digest_; /**< Exact plan digest. */
   std::uint64_t generation_; /**< Nonzero observed generation. */
   LifecycleState state_; /**< Observed lifecycle state. */
+  bool policy_bound_; /**< Whether the observed generation declared a bounded flow policy. */
 };
 
 /**
@@ -453,6 +521,20 @@ class LifecycleController final {
    * transitions. A stale, foreign, recreated, or otherwise inauthentic handle returns failure.
    */
   [[nodiscard]] Result<RouteSpec> route_declaration(const RouteHandle& handle) const noexcept;
+
+  /**
+   * @brief Return the exact declared bounded delivery policy after route-handle authentication.
+   * @param handle Exact current route handle.
+   * @return The exact declared policy copied from the route generation, or stable diagnostics.
+   * @ownership The returned policy is an independent owned copy of the generation's declaration.
+   * @lifetime The returned value remains valid independently of the controller; the binding stays
+   * reachable only through the exact generation that declared it.
+   * @thread_safety Serialized with every controller operation; concurrent const reads are safe.
+   * @failure Returns an ownership diagnostic for a stale, foreign, or mismatched handle, and a
+   * route-declaration diagnostic when the generation declared no policy; it never substitutes,
+   * defaults, or infers a policy.
+   */
+  [[nodiscard]] Result<FlowPolicy> route_policy(const RouteHandle& handle) const noexcept;
 
   /**
    * @brief Transition an endpoint from declared to validated; validated repeats are safe.

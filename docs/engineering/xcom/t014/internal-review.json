@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "task_id": "T014",
+  "baseline_revision": "93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 1,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t014/architecture.md",
+    "docs/engineering/xcom/t014/detailed-design.md",
+    "docs/engineering/xcom/t014/implementation.md",
+    "docs/engineering/xcom/t014/requirements.md",
+    "docs/engineering/xcom/t014/unit-specifications.md",
+    "docs/engineering/xcom/t014/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+    "tests/xcom/endpoint_route_lifecycle/negative_tests.cpp",
+    "tests/xcom/endpoint_route_lifecycle/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T014-RV-01",
+      "name": "Baseline identity, exact candidate inventory, and diff hygiene",
+      "method": "ran `git rev-parse 93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, `git diff --stat <baseline> --`, and `git diff --check <baseline> --`; recomputed the gate inventory as `tracked | (untracked - {internal-review.json, t014-package.json})`",
+      "result": "pass: HEAD resolves to the baseline SHA. The tracked diff is exactly five paths (specs/007-xcom-core/tasks.md, both lifecycle sources, both lifecycle test files) at +448/-25; the untracked set is the six T014 work products plus the two generated records excluded by the gate. Removing internal-review.json and t014-package.json yields exactly the eleven reviewed paths, matching candidate_paths(). `git diff --check` prints nothing."
+    },
+    {
+      "id": "T014-RV-02",
+      "name": "Authorized scope: only the T014 slice and its work products changed; no later task implemented",
+      "method": "classified every reviewed path by role; read specs/007-xcom-core/tasks.md against requirements.md section 2 and implementation.md section 3; inspected the sole tasks.md diff hunk; enumerated the changed paths for any provider, loopback, observation, stimulation, validation-session, activation-plan, proto, xdl, or build-file path",
+      "result": "pass: the only task-ledger change flips `- [ ] T014` to `- [X] T014` (one line). The production change is confined to the additive declared-policy binding, the snapshot policy flag, and the exact-handle route_policy read inside the existing endpoint_route_lifecycle translation unit. No src/xverse/xcom/include or src path other than the two lifecycle files, no tests/xcom path other than the two lifecycle test files, and no xdl/, proto/, src/xverse_xdl/, .cmake, root CMakeLists.txt, or src/xverse/xcom/CMakeLists.txt path appears, so no later task (T015, T019, T021, T025, T030) was implemented."
+    },
+    {
+      "id": "T014-RV-03",
+      "name": "Additivity and compatibility of the public interface",
+      "method": "read the full header and source diff; confirmed every deleted header line is a private constructor declaration or a documentation comment; grepped src/xverse/xcom and tests/xcom for RouteSpec equality/near-equality use, route_snapshot, policy_bound, and route_policy consumers",
+      "result": "pass: the four-argument RouteSpec::create overload is additive; the three-argument factory, RouteSpecInput/EndpointSpecInput/LifecycleConfigurationInput aggregates, and every existing accessor are unchanged. The deleted header lines are the private RouteSpec and LifecycleSnapshot constructor signatures (now carrying an extra policy/policy_bound parameter) and two updated doc comments; no public declaration is removed or renamed. The only semantic change to an existing public member is RouteSpec's defaulted operator==, which now also compares the optional declared policy; no production or test consumer compares RouteSpec values (provider.cpp, loopback_provider.cpp, provider.hpp, and the test trees contain no such comparison), so no existing consumer behaviour changes. LifecycleSnapshot's constructor is private/controller-only. The declared-policy binding therefore preserves source and behavioural compatibility with the baseline consumers."
+    },
+    {
+      "id": "T014-RV-04",
+      "name": "Declared-policy binding semantics: explicit, bounded, immutable, no substitution, no silent upgrade",
+      "method": "read RouteSpec::policy_, has_policy(), policy(), create_impl, the four-argument factory, the private RouteSpec constructor, LifecycleSnapshot::policy_bound, and LifecycleController::route_policy; cross-checked detailed-design.md sections 4.1-4.3 and requirements.md T014-SR-007..-010; read the four new unit cases and three new negative cases",
+      "result": "pass: a route either declares exactly one already-validated FlowPolicy, copied through policy_.emplace(*policy), or none. policy() returns nullptr and route_policy returns a stable failure for an unbound generation, so no default is substituted. At most one FlowPolicy is stored per RouteSpec and per route record (std::optional), so the binding is bounded and the declared policy is not reinterpreted as lifecycle capacity. No public operation rebinds, replaces, weakens, or strengthens a live generation's declared policy; the only change path is close plus recreation as a strictly higher generation, after which the earlier handle's route_policy fails invalid_handle. The generation value is only advanced after a successful declaration, so a rejected declaration cannot consume or reuse a generation."
+    },
+    {
+      "id": "T014-RV-05",
+      "name": "Exact handle authentication, fail-closed diagnostics, and rejected-operation atomicity",
+      "method": "read authenticate_route (both overloads), route_policy, and the invalid_handle/failure helpers; read test_route_policy_handle_boundaries, test_route_policy_absent_diagnostic, and test_policy_bound_route_compatibility_unchanged; re-ran the lifecycle CTest executables",
+      "result": "pass: route_policy is const, takes the single internal std::mutex via lock_guard, and calls authenticate_route, which accepts a handle only when controller identity, resource kind, logical identity, plan digest, and generation all equal a current record. A stale, foreign, wrong-kind, or mismatched handle yields exactly one ownership-phase XCOM-LIFE-E009 diagnostic; a generation that declared no policy yields exactly one route_declaration-phase XCOM-TYPE-E001 diagnostic. Neither path mutates a record. The negative suite compares fresh route snapshots before and after the absent-policy read, the foreign-handle read, and the policy-bound activation rejection, so the no-side-effect property is asserted rather than assumed."
+    },
+    {
+      "id": "T014-RV-06",
+      "name": "No new diagnostic code or phase; declaration/transition/capacity semantics preserved",
+      "method": "diffed diagnostic.hpp/diagnostic.cpp (absent from the candidate diff); read DiagnosticCode/ValidationPhase serialization in diagnostic.cpp; re-read the baseline declaration, capacity, and transition logic in the unchanged regions of endpoint_route_lifecycle.cpp; inspected the test diff for removals or weakening",
+      "result": "pass: neither diagnostic.hpp nor diagnostic.cpp is in the diff, so no code, phase, ordering key, or bound changed. The absent-policy failure reuses DiagnosticCode::required_field (XCOM-TYPE-E001) and ValidationPhase::route_declaration, whose serialized forms are unchanged. kMaximumEndpoints/kMaximumRoutes remain 32/32. The test diffs delete only the two `main()` conjunction lines that are immediately re-added with the new cases; no existing case is removed, renamed, or weakened. The generation-exhaustion, duplicate-identity, capacity-exhausted, invalid-transition, endpoint-in-use, and route-compatibility paths are byte-identical to the baseline."
+    },
+    {
+      "id": "T014-RV-07",
+      "name": "Bounded resources, restart/recovery, and concurrency",
+      "method": "read the fixed std::array storage, configured-prefix scan, generation guard, mutex placement, and controller-identity issuance; read test_route_policy_concurrent_read and the existing serialized-safe-repeat case; ran `ctest --test-dir build/fabro-t014 -R xcom_lifecycle`",
+      "result": "pass: storage is fixed at compile time (32/32 optional records) and only the configured prefix is scanned; every operation that may mutate a record or generation returns before mutation on rejection. Handles bind an opaque process-local controller identity, so a new controller instance rejects an earlier controller's handles and no ownership is inferred from a name or address (restart within the process, T014-LIM-06). Every controller operation, including the new route_policy read, locks the same std::mutex and invokes no callback under the lock; the new concurrent-read case runs eight threads over route_policy and route_snapshot and requires one identical declared policy, and the three lifecycle executables pass."
+    },
+    {
+      "id": "T014-RV-08",
+      "name": "Offline, dependency, and public-safety posture",
+      "method": "read every include and scanned the four changed source/test files for network/socket/resolver, OpenSSL, ambient/secret lookup, filesystem, process/subprocess, dynamic-load, and legacy access; scanned the six work products for credentials, private addresses, unrestricted payloads, and environment-specific host paths",
+      "result": "pass: the change uses only the C++ standard library (the added unit-test include is <cstdint>; the header adds <optional>) and introduces no dependency, thread, or ambient/network/filesystem/process access. No credential, private address, payload, or sensitive deployment value appears. The only non-repository absolute path is the workflow's own deterministic-gate tool invocation, which appears identically in the accepted T009-T013 work products and is recorded as a non-blocking convention in notes."
+    },
+    {
+      "id": "T014-RV-09",
+      "name": "Work-product completeness, mutual consistency, and candidate-bound hash evidence",
+      "method": "read requirements.md, architecture.md, detailed-design.md, unit-specifications.md, verification-plan.md, and implementation.md in full; recomputed `sha256sum` for the five plan documents and the four changed source/test files and compared them to implementation.md section 4.3; cross-checked the requirement-to-check, requirement-to-unit-to-test, and requirement-to-evidence indices",
+      "result": "pass: all six work products exist and agree on scope, the additive declared-policy binding, the reused diagnostic code/phase, the zero-build-file decision, and the eleven-path boundary. Every T014-STK/T014-SR requirement maps to at least one CHK/NEG check and, where executable, to a unit and test case. The nine SHA-256 values recorded in implementation.md section 4.3 match the current file bytes exactly, so the plan/source evidence is candidate-current; the recorded 248-test discovery count matches `ctest -N`."
+    },
+    {
+      "id": "T014-RV-10",
+      "name": "REF-002 disposition, attribution anomaly recorded, and governance validators replay",
+      "method": "read requirements.md sections 6, 7.3, 7.4, and 8.2 and implementation.md section 7; inspected docs/engineering/xcom/t008/requirements-register.json ref002_dispositions; ran `python3 scripts/validate_xcom_task_ownership.py --verify --check-human`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, and `validate_xcom_unit_design.py --verify`",
+      "result": "pass: the REF-002 dispositions remain allocated/deferred with no entry promoted to implemented, matching the recorded `unchanged` capability disposition and empty promoted set; no XVE-SYS-* ID is promoted. The T009 XCOM-CMP-005 link anomaly against the T008/T010 T014 attribution is recorded in requirements.md section 7.4/8.2 and implementation.md section 7 and is not rewritten. All four governance validators report success at exit 0 with the shared T007-T010 artifacts unchanged."
+    },
+    {
+      "id": "T014-RV-11",
+      "name": "Executed tests exercise the new behaviour, including failure paths",
+      "method": "ran `ctest --test-dir build/fabro-t014 -N` and `ctest --test-dir build/fabro-t014 -R xcom_lifecycle --output-on-failure`; verified the lifecycle object files are newer than the current sources; read the seven added cases end to end",
+      "result": "pass: discovery reports 248 tests (baseline count, no new target) and the three lifecycle executables pass 3/3 at exit 0 against objects rebuilt after the last source edit. The added cases exercise the required behaviour and not only the normal path: test_route_declared_policy_binding asserts presence/absence, the exact round-tripped policy fields, the snapshot flag, and the absent-policy failure; test_route_policy_generation_binding and test_route_policy_handle_boundaries exercise superseded-generation and foreign-controller rejection; test_route_policy_absent_diagnostic asserts the exact serialized bytes and no mutation; test_policy_bound_route_compatibility_unchanged asserts non-bypass with exact XCOM-LIFE-E012 bytes and no mutation; test_route_policy_concurrent_read exercises concurrent reads."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Read-only internal review of the T014 candidate on baseline 93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59. No production code, test, work product, or accepted artifact was modified; the only file written is this review record. Test and validator evidence was replayed against the existing git-ignored build/fabro-t014 tree with object files verified newer than the current sources.",
+    "reviewed_paths equals the union of `git diff --name-only 93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59 --` (5 paths) and `git ls-files --others --exclude-standard` (8 paths) minus docs/engineering/xcom/t014/internal-review.json and reports/xcom-queue/t014-package.json, i.e. exactly the 11 paths above, matching the deterministic gate's candidate_paths().",
+    "Non-blocking observation (no correction required for this task, surface for the deferred external review): in tests/xcom/endpoint_route_lifecycle/unit_tests.cpp the case `test_route_policy_immutability` states `routes differing only by declared policy compared equal` but constructs its two compared routes with different logical identities (`policy_route(\"route.a\", ...)` versus `policy_route(\"route.b\", ...)`). The inequality assertion therefore holds on identity alone and would not by itself detect a regression in which RouteSpec's defaulted operator== stopped comparing the declared policy. The required property is still guaranteed by construction (RouteSpec's `= default` comparison compares every non-static member, including the optional declared policy) and is covered operationally by the additivity check T014-RV-03 and the recreation case in `test_route_policy_generation_binding`, so the property is verified; the assertion could be strengthened in a later task (T016's consolidated matrix owns cross-cutting policy/equality coverage) by comparing two same-identity routes that differ only in policy. Recorded as a note rather than a finding because production behaviour is correct and the requirement is independently established.",
+    "Public-safety convention observed and accepted: the workflow's own deterministic-gate tool path appears in verification-plan.md and implementation.md. It is the workflow tool path (not a credential, private address, payload, or sensitive deployment value) and is used identically in the accepted T007-T013 work products; it is recorded rather than treated as a blocking finding under T014-SR-019.",
+    "Context isolation: this is a repository-owned internal read-only review executed on the same host toolchain as the implementation work, not an external or independent-organization review; it claims no external independence, no runtime/production readiness, and no user acceptance. External Codex review and explicit user acceptance remain deferred until the xcom-t011-t016-t021-t024 backlog completes and to T041 respectively.",
+    "Limitations accepted, not findings: the declared FlowPolicy is bound and exposed but not enforced on the wire (T014-LIM-03, provider matching is T015); strict declaration-level C++ Doxygen remains DOX-GAP-01 owned by T011/T037 (T014-LIM-02); the consolidated core matrix is T016 (T014-GAP-03); restart reconciliation across processes is out of scope (T014-LIM-06); and scripts/validate_xcom_endpoint_route_lifecycle.py is legacy SESN-era tooling that is neither executed nor edited (T014-LIM-04). The T009 XCOM-CMP-005 attribution anomaly is recorded and not rewritten (T014-GAP-01)."
+  ],
+  "reviewed_configuration": {
+    "cmake": "3.22.1",
+    "generator": "Ninja",
+    "cxx_standard": 20,
+    "cxx_extensions": "OFF",
+    "warning_options": [
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror"
+    ],
+    "sanitizers": [],
+    "ctest_total": 248,
+    "baseline_ctest_total": 248,
+    "lifecycle_checks": [
+      "xverse_xcom_lifecycle_unit_tests",
+      "xverse_xcom_lifecycle_negative_tests",
+      "xverse_xcom_lifecycle_consumer"
+    ]
+  }
+}

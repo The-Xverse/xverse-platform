@@ -11,6 +11,7 @@
 
 #include <array>
 #include <atomic>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -67,6 +68,27 @@ constexpr std::array kOperations{Operation::validate, Operation::activate, Opera
                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                "provider.main"},
               source, destination)
+              .value();
+}
+
+[[nodiscard]] FlowPolicy flow_policy(const OrderingPolicy ordering = OrderingPolicy::fifo,
+                                     const ReliabilityPolicy reliability =
+                                         ReliabilityPolicy::at_least_once,
+                                     const OverflowPolicy overflow = OverflowPolicy::reject,
+                                     const std::int64_t deadline = 100,
+                                     const std::int64_t retry = 2,
+                                     const std::int64_t queue_depth = 8) {
+  return *FlowPolicy::create({ordering, reliability, overflow, deadline, retry, queue_depth})
+              .value();
+}
+
+[[nodiscard]] RouteSpec policy_route(const char* identity, const EndpointSpec& source,
+                                     const EndpointSpec& destination, const FlowPolicy& policy) {
+  return *RouteSpec::create(
+              {identity,
+               "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+               "provider.main"},
+              source, destination, policy)
               .value();
 }
 
@@ -473,6 +495,152 @@ constexpr std::array kOperations{Operation::validate, Operation::activate, Opera
   return true;
 }
 
+[[nodiscard]] bool test_route_declared_policy_binding() {
+  const auto communication = contract(InteractionKind::message_event);
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto declared = flow_policy(OrderingPolicy::priority, ReliabilityPolicy::exactly_once,
+                                    OverflowPolicy::lossless_backpressure, 1500, 5, 64);
+  const auto bound = policy_route("route.bound", source, destination, declared);
+  const auto unbound = route("route.unbound", source, destination);
+  if (!expect(bound.has_policy() && bound.policy() != nullptr && *bound.policy() == declared,
+              "declared route policy binding differs") ||
+      !expect(!unbound.has_policy() && unbound.policy() == nullptr,
+              "unbound route policy state differs")) {
+    return false;
+  }
+  LifecycleController controller(configuration());
+  const auto source_handle = controller.declare_endpoint(source);
+  const auto destination_handle = controller.declare_endpoint(destination);
+  const auto bound_handle = controller.declare_route(bound);
+  const auto unbound_handle = controller.declare_route(unbound);
+  if (!expect(source_handle.has_value() && destination_handle.has_value() &&
+                  bound_handle.has_value() && unbound_handle.has_value(),
+              "declared-policy route declarations failed")) {
+    return false;
+  }
+  const auto bound_snapshot = controller.route_snapshot(*bound_handle.value());
+  const auto unbound_snapshot = controller.route_snapshot(*unbound_handle.value());
+  const auto bound_read = controller.route_policy(*bound_handle.value());
+  const auto unbound_read = controller.route_policy(*unbound_handle.value());
+  const auto bound_declaration = controller.route_declaration(*bound_handle.value());
+  return expect(bound_snapshot.has_value() && bound_snapshot.value()->policy_bound(),
+                "bound route snapshot policy flag differs") &&
+         expect(unbound_snapshot.has_value() && !unbound_snapshot.value()->policy_bound(),
+                "unbound route snapshot policy flag differs") &&
+         expect(bound_read.has_value() && *bound_read.value() == declared &&
+                    bound_read.value()->ordering() == OrderingPolicy::priority &&
+                    bound_read.value()->reliability() == ReliabilityPolicy::exactly_once &&
+                    bound_read.value()->overflow() == OverflowPolicy::lossless_backpressure &&
+                    bound_read.value()->deadline_ms() == 1500 &&
+                    bound_read.value()->retry() == 5 &&
+                    bound_read.value()->queue_depth() == 64,
+                "route_policy did not return the exact declared policy") &&
+         expect(bound_declaration.has_value() && bound_declaration.value()->has_policy() &&
+                    bound_declaration.value()->policy() != nullptr &&
+                    *bound_declaration.value()->policy() == declared,
+                "route declaration lost the declared policy") &&
+         expect(!unbound_read.has_value() && unbound_read.diagnostics() != nullptr &&
+                    unbound_read.diagnostics()->values().front().code() ==
+                        DiagnosticCode::required_field,
+                "unbound route_policy did not fail closed");
+}
+
+[[nodiscard]] bool test_route_policy_generation_binding() {
+  const auto communication = contract(InteractionKind::message_event);
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto first_policy = flow_policy(OrderingPolicy::fifo, ReliabilityPolicy::at_least_once,
+                                        OverflowPolicy::reject, 100, 2, 8);
+  const auto second_policy =
+      flow_policy(OrderingPolicy::unordered, ReliabilityPolicy::best_effort,
+                  OverflowPolicy::drop_oldest, 0, 0, 1);
+  LifecycleController controller(configuration());
+  const auto source_handle = controller.declare_endpoint(source);
+  const auto destination_handle = controller.declare_endpoint(destination);
+  const auto first =
+      controller.declare_route(policy_route("route.main", source, destination, first_policy));
+  if (!expect(source_handle.has_value() && destination_handle.has_value() && first.has_value(),
+              "first declared-policy route generation failed") ||
+      !controller.fail_route(*first.value()).has_value() ||
+      !controller.close_route(*first.value()).has_value()) {
+    return false;
+  }
+  const auto second =
+      controller.declare_route(policy_route("route.main", source, destination, second_policy));
+  if (!expect(second.has_value() && second.value()->generation() > first.value()->generation(),
+              "recreated policy route did not advance generation")) {
+    return false;
+  }
+  const auto second_read = controller.route_policy(*second.value());
+  const auto stale_read = controller.route_policy(*first.value());
+  return expect(second_read.has_value() && *second_read.value() == second_policy,
+                "new generation route_policy returned the wrong policy") &&
+         expect(!stale_read.has_value() && stale_read.diagnostics() != nullptr &&
+                    stale_read.diagnostics()->values().front().code() ==
+                        DiagnosticCode::invalid_handle,
+                "superseded generation route_policy was not rejected");
+}
+
+[[nodiscard]] bool test_route_policy_immutability() {
+  const auto communication = contract(InteractionKind::message_event);
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto weaker = flow_policy(OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                                  OverflowPolicy::reject, 100, 0, 4);
+  const auto stronger = flow_policy(OrderingPolicy::fifo, ReliabilityPolicy::exactly_once,
+                                    OverflowPolicy::reject, 100, 8, 64);
+  const auto route_a = policy_route("route.a", source, destination, weaker);
+  const auto route_b = policy_route("route.b", source, destination, stronger);
+  const RouteSpec copied = route_a;
+  const auto unbound = route("route.c", source, destination);
+  return expect(route_a != route_b, "routes differing only by declared policy compared equal") &&
+         expect(copied == route_a && copied.has_policy() && copied.policy() != nullptr &&
+                    *copied.policy() == weaker,
+                "copied route did not preserve its declared policy") &&
+         expect(!unbound.has_policy() && unbound.policy() == nullptr,
+                "unbound route substituted a default policy");
+}
+
+[[nodiscard]] bool test_route_policy_concurrent_read() {
+  const auto communication = contract(InteractionKind::message_event);
+  const auto source = endpoint("endpoint.source", EndpointDirection::produce, communication);
+  const auto destination =
+      endpoint("endpoint.destination", EndpointDirection::consume, communication);
+  const auto declared = flow_policy(OrderingPolicy::priority, ReliabilityPolicy::at_least_once,
+                                    OverflowPolicy::coalesce, 250, 3, 16);
+  LifecycleController controller(configuration());
+  const auto source_handle = controller.declare_endpoint(source);
+  const auto destination_handle = controller.declare_endpoint(destination);
+  const auto handle = controller.declare_route(
+      policy_route("route.concurrent", source, destination, declared));
+  if (!expect(source_handle.has_value() && destination_handle.has_value() && handle.has_value(),
+              "concurrent declared-policy fixture failed")) {
+    return false;
+  }
+  std::atomic<unsigned int> failures{0U};
+  std::array<std::thread, 8U> workers;
+  for (std::thread& worker : workers) {
+    worker = std::thread([&controller, &handle, &declared, &failures]() {
+      for (std::size_t repeat = 0U; repeat < 100U; ++repeat) {
+        const auto read = controller.route_policy(*handle.value());
+        const auto snapshot = controller.route_snapshot(*handle.value());
+        if (!read.has_value() || *read.value() != declared || !snapshot.has_value() ||
+            !snapshot.value()->policy_bound()) {
+          ++failures;
+        }
+      }
+    });
+  }
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
+  return expect(failures.load() == 0U, "concurrent declared-policy read differs");
+}
+
 }  // namespace
 
 /** @return Zero only when all lifecycle unit tests pass. */
@@ -482,7 +650,9 @@ int main() {
                  test_complete_route_transition_table() &&
                  test_failure_and_recreation() && test_fixed_capacity_and_isolation() &&
                  test_serialized_safe_repeat() &&
-                 test_maximum_escaped_diagnostic_ordering_keys()
+                 test_maximum_escaped_diagnostic_ordering_keys() &&
+                 test_route_declared_policy_binding() && test_route_policy_generation_binding() &&
+                 test_route_policy_immutability() && test_route_policy_concurrent_read()
              ? 0
              : 1;
 }
