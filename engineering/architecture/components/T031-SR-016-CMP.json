@@ -1,0 +1,26 @@
+{
+  "concurrency": "internally synchronized: one per-session mutex plus a bounded queue",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-016-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "The gateway **shall** be deterministic and bounded under concurrency: one per-session mutex plus a bounded request queue, a finite declared operation per call, and no verdict that depends on ambient wall-clock time, randomness, or environment."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "per-session mutex and bounded queue",
+  "title": "T031-SR-016 allocation"
+}

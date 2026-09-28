@@ -1,0 +1,27 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-001-CMP",
+  "interfaces": [
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "The gateway **shall** be defined once by `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` and `src/xverse/xcom/src/tool_gateway.cpp`, realizing the accepted `XCOM-XLC-002` message contract without introducing a competing contract, RPC definition, or configuration language."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one committed gateway interface over immutable generated messages",
+  "title": "T031-SR-001 allocation"
+}

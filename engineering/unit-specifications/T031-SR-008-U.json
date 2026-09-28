@@ -1,0 +1,60 @@
+{
+  "component_id": "T031-SR-008-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-008-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "invariants": [
+    "If the gateway endpoint used any `AF_INET`/`AF_INET6`, DNS, resolver, or TLS facility, the tests **shall** fail closed; the gateway **shall** expose only host-protected local IPC (`AF_UNIX`/`socketpair`) and **shall** bind no TCP address."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "If the gateway endpoint used any `AF_INET`/`AF_INET6`, DNS, resolver, or TLS facility, the tests **shall** fail closed; the gateway **shall** expose only host-protected local IPC (`AF_UNIX`/`socketpair`) and **shall** bind no TCP address.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md",
+    "tests/xcom/tool_gateway/gateway_local_ipc_tests.cpp",
+    "tests/xcom/tool_gateway/gateway_negative_tests.cpp"
+  ],
+  "state": "one AF_UNIX endpoint socket and its bound path",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-008-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-008 unit verification",
+  "unit_cases": [
+    {
+      "expected": "the socket family is AF_UNIX and is_local_unix() is true",
+      "id": "XcomToolGatewayLocalIpc.EndpointFamilyIsUnixOnly",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "create a LocalIpcEndpoint on a local path"
+    },
+    {
+      "expected": "no AF_INET/AF_INET6 family or TCP address is exposed",
+      "id": "XcomToolGatewayLocalIpc.NoTcpListenerBound",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "inspect the created endpoint and its bind path"
+    },
+    {
+      "expected": "no AF_INET/AF_INET6, DNS, resolver, or TLS token is present",
+      "id": "XcomToolGatewayNegative.NoInetOrDnsOrTlsApi",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "scan the gateway source for forbidden families/facilities"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-006-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a unary request arrives, the gateway **shall** enforce its declared deadline against the accepted T025 time authority (not an ambient wall clock); an overdue request **shall** return a deterministic diagnostic and emit no item."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "per-session deadline state against the injected time authority",
+  "title": "T031-SR-006 allocation"
+}

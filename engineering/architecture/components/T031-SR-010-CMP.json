@@ -1,0 +1,26 @@
+{
+  "concurrency": "observation operations serialized through the accepted hub",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-010-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a tool opens, reads, or closes an observation stream, the gateway **shall** use the accepted bounded observation boundary, return at most the granted number of metadata-only records before the deadline, and return delivered and dropped counters on close."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded observation stream and tap handles",
+  "title": "T031-SR-010 allocation"
+}

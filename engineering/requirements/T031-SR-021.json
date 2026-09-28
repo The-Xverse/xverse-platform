@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "CHK-03; CHK-04; CHK-20"
+  ],
+  "applicability": "T031 bounded local-IPC-only tool gateway candidate",
+  "conformance_check_id": "T031-SR-021",
+  "id": "T031-SR-021",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-032",
+    "XCOM-SYS-FR-030"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t031/requirements.md T031-SR-021"
+  },
+  "statement": "Because the T011 admitted envelope cannot link the gRPC runtime (verified fail-closed; `T030-GAP-02`), the gateway **shall** realize the accepted message and method contract over a bounded, host-protected local-IPC framing bound 1:1 to the T030 method names; it **shall** add no admitted dependency and **shall not** claim a linked gRPC runtime. The deferred gRPC transport runtime **shall** be recorded as an explicit gap (`T031-GAP-01`).",
+  "status": "accepted",
+  "title": "T031 requirement 021",
+  "verification_intent": "CHK-03; CHK-04; CHK-20",
+  "verification_mode": "conformance"
+}

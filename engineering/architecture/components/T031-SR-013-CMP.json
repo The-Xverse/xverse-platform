@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-013-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a peer disconnects or a session reaches its idle timeout, the gateway **shall** close its observation handles and drain, revoke, release, or quarantine its validation-owned resources according to durable state; a pending request **shall** end explicit (`evidence-incomplete` or `failed`), and an unknown outcome **shall never** be reported as success."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "session cleanup state and terminal flag",
+  "title": "T031-SR-013 allocation"
+}

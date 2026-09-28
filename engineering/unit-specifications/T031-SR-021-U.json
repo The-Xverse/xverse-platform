@@ -1,0 +1,54 @@
+{
+  "component_id": "T031-SR-021-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-021-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "invariants": [
+    "Because the T011 admitted envelope cannot link the gRPC runtime (verified fail-closed; `T030-GAP-02`), the gateway **shall** realize the accepted message and method contract over a bounded, host-protected local-IPC framing bound 1:1 to the T030 method names; it **shall** add no admitted dependency and **shall not** claim a linked gRPC runtime. The deferred gRPC transport runtime **shall** be recorded as an explicit gap (`T031-GAP-01`)."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "Because the T011 admitted envelope cannot link the gRPC runtime (verified fail-closed; `T030-GAP-02`), the gateway **shall** realize the accepted message and method contract over a bounded, host-protected local-IPC framing bound 1:1 to the T030 method names; it **shall** add no admitted dependency and **shall not** claim a linked gRPC runtime. The deferred gRPC transport runtime **shall** be recorded as an explicit gap (`T031-GAP-01`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md",
+    "tests/xcom/tool_gateway/gateway_session_tests.cpp",
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "state": "recorded gRPC transport envelope decision",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-021-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-021 unit verification",
+  "unit_cases": [
+    {
+      "expected": "the supported major is accepted and the higher minor is additive",
+      "id": "XcomToolGatewaySession.VersionNegotiationAcceptsSupportedMajor",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "QueryVersion with the supported major and a higher minor"
+    },
+    {
+      "expected": "the table equals the descriptor method set in order",
+      "id": "XcomToolGatewaySession.OperationSurfaceMatchesContract",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "compare the committed operation table with the T030 descriptor method set"
+    }
+  ]
+}

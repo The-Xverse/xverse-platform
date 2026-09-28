@@ -1,0 +1,27 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-014-CMP",
+  "interfaces": [
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "The gateway **shall** expose a bounded structured log boundary that records only stable codes, phase, logical identity, size, and timing; it **shall not** log payload bytes, permit contents, or unrestricted content."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded payload-free log records",
+  "title": "T031-SR-014 allocation"
+}

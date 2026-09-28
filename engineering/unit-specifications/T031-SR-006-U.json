@@ -1,0 +1,47 @@
+{
+  "component_id": "T031-SR-006-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-006-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "invariants": [
+    "When a unary request arrives, the gateway **shall** enforce its declared deadline against the accepted T025 time authority (not an ambient wall clock); an overdue request **shall** return a deterministic diagnostic and emit no item."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "When a unary request arrives, the gateway **shall** enforce its declared deadline against the accepted T025 time authority (not an ambient wall clock); an overdue request **shall** return a deterministic diagnostic and emit no item.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md",
+    "tests/xcom/tool_gateway/gateway_bounds_tests.cpp"
+  ],
+  "state": "per-session deadline state against the injected time authority",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-006-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-006 unit verification",
+  "unit_cases": [
+    {
+      "expected": "a deterministic diagnostic is returned and no item is emitted",
+      "id": "XcomToolGatewayBounds.DeadlineEnforcedBeforeEmission",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a request whose declared deadline has passed"
+    }
+  ]
+}

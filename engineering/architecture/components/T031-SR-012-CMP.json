@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-012-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a tool acquires or releases a service-emulation lease, the gateway **shall** delegate to the accepted T028 exclusive generation-bound lease, and conflict, expiry, or disconnect **shall** release or quarantine the lease without ambiguous ownership."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "exclusive generation-bound emulation lease",
+  "title": "T031-SR-012 allocation"
+}

@@ -1,0 +1,46 @@
+{
+  "component_id": "T031-SR-017-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-017-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "invariants": [
+    "Build wiring **shall** be additive: one new gateway runtime library and additive `t031-<kind>`-labelled test executables registered in `src/xverse/xcom/CMakeLists.txt`, with any runtime-inventory change declared explicitly and no existing target, test name, label, command, or expected value changed."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "Build wiring **shall** be additive: one new gateway runtime library and additive `t031-<kind>`-labelled test executables registered in `src/xverse/xcom/CMakeLists.txt`, with any runtime-inventory change declared explicitly and no existing target, test name, label, command, or expected value changed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md"
+  ],
+  "state": "additive build target inventory",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-017-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its named changed-path and discovered-count inspection (CHK-19). Context: the additively registered gateway runtime library and its t031-session executable build and dispatch the committed operation surface.",
+      "id": "XcomToolGatewaySession.OperationSurfaceMatchesContract",
+      "precondition": "the committed gateway interface, its additive runtime library, and the t031 suites are built",
+      "stimulus": "run the named contributory gateway case and the changed-path/discovered-count inspection"
+    }
+  ]
+}

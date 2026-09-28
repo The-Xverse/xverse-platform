@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-021-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "Because the T011 admitted envelope cannot link the gRPC runtime (verified fail-closed; `T030-GAP-02`), the gateway **shall** realize the accepted message and method contract over a bounded, host-protected local-IPC framing bound 1:1 to the T030 method names; it **shall** add no admitted dependency and **shall not** claim a linked gRPC runtime. The deferred gRPC transport runtime **shall** be recorded as an explicit gap (`T031-GAP-01`)."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "recorded gRPC transport envelope decision",
+  "title": "T031-SR-021 allocation"
+}

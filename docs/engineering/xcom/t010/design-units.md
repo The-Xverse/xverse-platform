@@ -1368,8 +1368,8 @@ Overflow policies: `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` (planned)
-- `src/xverse/xcom/src/tool_gateway.cpp` (planned)
+- `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` (established)
+- `src/xverse/xcom/src/tool_gateway.cpp` (established)
 - `tests/xcom/tool_gateway/` (established)
 
 **Ownership / lifetime.**

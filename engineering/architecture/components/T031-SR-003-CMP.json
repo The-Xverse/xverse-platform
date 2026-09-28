@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-003-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a tool negotiates the protocol, the gateway **shall** apply a production compatibility predicate that accepts the supported major (and a higher minor additively) and rejects any other major fail-closed before any other operation executes."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "immutable production compatibility predicate",
+  "title": "T031-SR-003 allocation"
+}

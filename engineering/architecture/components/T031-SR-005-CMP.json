@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-005-CMP",
+  "interfaces": [
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "The gateway **shall** declare and enforce every bound - maximum message size, maximum concurrent sessions and streams, maximum pending requests, maximum observation records, and maximum payload bytes - as an explicit configuration value; no bound **shall** be implicit or unbounded, and an over-bound message, stream, queue, or payload **shall** be rejected before allocation or emission."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "immutable validated GatewayConfig",
+  "title": "T031-SR-005 allocation"
+}

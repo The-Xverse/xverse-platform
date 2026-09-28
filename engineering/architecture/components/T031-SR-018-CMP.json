@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-018-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "The gateway and its tests **shall** be offline and local-only: only the C++ standard library, the T030 generated Protocol Buffers message library, the accepted in-process T021-T029 libraries, and GTest; no network, `AF_INET`/`AF_INET6`, DNS, resolver, TLS, ambient/secret, dynamic-load, subprocess, or legacy access and no new admitted dependency."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "offline linkage set",
+  "title": "T031-SR-018 allocation"
+}

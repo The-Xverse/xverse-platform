@@ -1,0 +1,46 @@
+{
+  "component_id": "T031-SR-020-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-020-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t031/verification-plan.md"
+  ],
+  "invariants": [
+    "The T031 candidate **shall** satisfy the deterministic Phase 7 gate: the five plan work products and the implementation record exist; `src/xverse/xcom/**` and at least one `tests/` path change; the Phase 7 runner's unit configure/build and `t031-`-labelled discovery pass; `git diff --check` is clean; and the T031 checkbox is marked complete only in the implementation stage."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "The T031 candidate **shall** satisfy the deterministic Phase 7 gate: the five plan work products and the implementation record exist; `src/xverse/xcom/**` and at least one `tests/` path change; the Phase 7 runner's unit configure/build and `t031-`-labelled discovery pass; `git diff --check` is clean; and the T031 checkbox is marked complete only in the implementation stage.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md"
+  ],
+  "state": "candidate revision and gate state",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-020-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-020 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by the named deterministic Phase 7 gate (CHK-22). Context: the gate discovers the same committed revision whose t031- case enforces the deadline against the injected time authority, not an ambient clock.",
+      "id": "XcomToolGatewayBounds.DeadlineEnforcedBeforeEmission",
+      "precondition": "the committed gateway interface and its additive t031 suites are built",
+      "stimulus": "run the named contributory gateway case and the deterministic Phase 7 gate"
+    }
+  ]
+}

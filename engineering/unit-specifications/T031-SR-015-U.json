@@ -1,0 +1,47 @@
+{
+  "component_id": "T031-SR-015-CMP",
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed gateway rejection"
+  ],
+  "id": "T031-SR-015-U",
+  "inputs": [
+    "the committed gateway interface and bounded test-local fixtures"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "invariants": [
+    "The gateway **shall** expose bounded session outcome and counter queries with finite counters and an explicit evidence-incomplete state, and **shall not** expose dashboard, storage, query-presentation, or export primitives."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared gateway outcome or bounded counter/record set"
+  ],
+  "purpose": "The gateway **shall** expose bounded session outcome and counter queries with finite counters and an explicit evidence-incomplete state, and **shall not** expose dashboard, storage, query-presentation, or export primitives.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t031/requirements.md",
+    "tests/xcom/tool_gateway/gateway_session_tests.cpp"
+  ],
+  "state": "bounded session counter snapshot",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T031-SR-015-STATIC",
+      "rule": "the gateway source and tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T031-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "the counter set is finite and includes evidence_incomplete",
+      "id": "XcomToolGatewaySession.QuerySessionCountersBounded",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "QuerySession on an armed session"
+    }
+  ]
+}

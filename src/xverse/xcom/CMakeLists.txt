@@ -20,6 +20,7 @@ set(
   xverse_xcom_stimulation_guard
   xverse_xcom_stimulation_actions
   xverse_xcom_tool_gateway_proto
+  xverse_xcom_tool_gateway
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -645,6 +646,46 @@ add_custom_target(
     "${xcom_t030_grpc_source}"
 )
 
+# T031's bounded, host-protected, local-IPC-only tool gateway session. It realizes the accepted
+# T030 message and method contract and delegates onto the accepted T021-T029 in-process boundaries.
+# It links no gRPC runtime (the admitted envelope lacks the gRPC runtime transitive libraries,
+# T030-GAP-02 / T031-GAP-01); it adds exactly one declared entry to the T012 runtime-target
+# inventory above. The generated Protocol Buffers headers are system includes so third-party and
+# generated-header warnings are suppressed while the X-COM warning-as-error policy still governs
+# every T031-owned source line.
+add_library(xverse_xcom_tool_gateway STATIC src/tool_gateway.cpp)
+add_library(xverse::xcom_tool_gateway ALIAS xverse_xcom_tool_gateway)
+target_include_directories(
+  xverse_xcom_tool_gateway
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_include_directories(
+  xverse_xcom_tool_gateway
+  SYSTEM PUBLIC
+    "$<BUILD_INTERFACE:${xcom_t030_generated_dir}>"
+    "$<BUILD_INTERFACE:${xcom_t030_protobuf_include}>"
+)
+target_link_libraries(
+  xverse_xcom_tool_gateway
+  PUBLIC
+    xverse::xcom_observation
+    xverse::xcom_stimulation_actions
+    xverse::xcom_stimulation_guard
+    xverse::xcom_stimulation_journal
+    xverse::xcom_validation_session
+    xverse::xcom_tool_gateway_proto
+)
+target_compile_features(xverse_xcom_tool_gateway PUBLIC cxx_std_20)
+add_dependencies(xverse_xcom_tool_gateway xverse_xcom_tool_gateway_proto_generated)
+xverse_xcom_apply_runtime_rules(xverse_xcom_tool_gateway)
+set_target_properties(
+  xverse_xcom_tool_gateway
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
   if(NOT DEFINED ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} OR "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
@@ -902,6 +943,63 @@ if(BUILD_TESTING)
     gtest_discover_tests(
       xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
       PROPERTIES LABELS "t030-${tool_gateway_kind}"
+    )
+  endforeach()
+
+  # T031 bounded local-IPC-only gateway tests. Registration is additive: no existing target, test
+  # name, label, command, or expected value changes and no existing discovery count is reduced.
+  # Each suite uses one hyphenated `t031-<kind>` label (CMake 3.22 label workaround) and links only
+  # the additive gateway runtime library, GTest, and the preserved platform libraries. The negative
+  # suite receives the committed T031 header and source as build-time read-only definitions for its
+  # bounded forbidden-API scan; the local-IPC suite receives a bounded build-tree scratch directory.
+  # Neither path is printed into public evidence.
+  foreach(
+    gateway_kind
+    IN ITEMS
+      session
+      bounds
+      lifecycle
+      local_ipc
+      negative
+      logging
+  )
+    string(REPLACE "_" "-" gateway_label "${gateway_kind}")
+    add_executable(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway/gateway_${gateway_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway"
+    )
+    target_include_directories(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      SYSTEM PRIVATE
+        "${xcom_t030_generated_dir}"
+        "${xcom_t030_protobuf_include}"
+    )
+    target_compile_definitions(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      PRIVATE
+        "XCOM_T031_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/tool_gateway.hpp\""
+        "XCOM_T031_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/tool_gateway.cpp\""
+        "XCOM_T031_SCRATCH_DIR=\"t031-scratch\""
+        "XCOM_T031_CMAKE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt\""
+    )
+    target_link_libraries(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      PRIVATE
+        xverse::xcom_tool_gateway
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_gateway_${gateway_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_gateway_${gateway_kind}_tests
+      PROPERTIES
+        LABELS "t031-${gateway_label}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     )
   endforeach()
 

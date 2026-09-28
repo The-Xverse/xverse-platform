@@ -185,3 +185,115 @@ endpoint digest for this record's target links (`T030-L-0228`/`T030-L-0229`) and
 DeepSeek internal review and the trusted measures (unit, static analysis, whole-system integration,
 validation, and inherited conformance) re-run on the repaired candidate; external Codex acceptance
 remains separate.
+
+---
+
+# T031 review index — bounded local-IPC-only gateway candidate
+
+Candidate: T031 on baseline `4dded2317f895978cce0331ae88e34ac28b3a609` (accepted T030 versioned contract), queue
+`xcom-t030-t034-20260928`. The T020 and T030 indexes above are retained as historical predecessor evidence and are
+not rewritten.
+
+This section records the T031 **plan-stage** work products. The implementation, its local verification, and the
+separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the trusted
+target-repository integration measure, and the delivery package are separate gates; none is claimed complete by this
+index, and external review and acceptance are deferred until the ordered backlog `xcom-t030-t034-20260928` completes.
+
+## Declared T031 plan-stage work products
+
+- `docs/engineering/xcom/t031/requirements.md` — 5 stakeholder and 21 software requirements (`T031-STK-001`…`-005`,
+  `T031-SR-001`…`-021`) with accepted system anchors, the recorded gRPC-runtime-envelope decision (`T031-SR-021`),
+  and the REF-002 disposition (`unchanged`, empty `promoted`).
+- `docs/engineering/xcom/t031/architecture.md` — trust boundaries `T31-XB-1`…`-010`, components
+  `T31-CMP-{CONFIG,SESSION,OPS,IPC,LOG,TESTS,BUILD,WP}`, and the negative-case map.
+- `docs/engineering/xcom/t031/detailed-design.md` — the gateway interface, the ten-operation mapping onto the
+  accepted T025–T029 and T021–T024 boundaries, the bounded method-name-addressed local-IPC framing, the
+  deadline/flow-control/cleanup design, and the six test suites.
+- `docs/engineering/xcom/t031/unit-specifications.md` — 21 unit specifications and the 24-case index
+  (`T31-TS-001`…`T31-TS-024`).
+- `docs/engineering/xcom/t031/verification-plan.md` — `CHK-01`…`CHK-22`, `NEG-01`…`NEG-10`, evidence retention,
+  exit criteria, and the T-CORE slice evidence mapping.
+
+## Declared T031 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T031`, capability `007`, accepted baseline
+  `4dded2317f895978cce0331ae88e34ac28b3a609`.
+- `engineering/requirements/T031-STK-00{1..5}.json` and `engineering/requirements/T031-SR-0{01..21}.json`.
+- `engineering/architecture/components/T031-SR-0{01..21}-CMP.json`.
+- `engineering/unit-specifications/T031-SR-0{01..21}-U.json`.
+- `engineering/validation/scenarios/T031-VS-ACCUMULATED.json` — 24 `t031-` cases validating `T031-SR-001`…`-021`.
+
+## Declared T031 implementation change set (expected at the implementation stage)
+
+- `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` (new) and `src/xverse/xcom/src/tool_gateway.cpp` (new) —
+  the bounded local-IPC-only gateway session (`XCOM-DU-020`, `XCOM-CMP-010`).
+- `src/xverse/xcom/CMakeLists.txt` (shared) — additive `xverse_xcom_tool_gateway` runtime library (one declared
+  `XVERSE_XCOM_RUNTIME_TARGETS` addition) and six additive `t031-<kind>` test targets; no existing target, label,
+  command, or value changes.
+- `tests/xcom/tool_gateway/gateway_support.hpp` and the six `gateway_<kind>_tests.cpp` suites.
+- `docs/engineering/xcom/t009/architecture-model.{json,md}` and `docs/engineering/xcom/t010/unit-design.{json,md}` —
+  required planned→established path-status reconciliation for the now-present `tool_gateway.hpp`/`.cpp` paths
+  (status field only).
+- `engineering/trace/links.json`, `engineering/verification/measures/*.json`, and inherited
+  `engineering/stage-results/*.json` digest refresh; `engineering/project.json` current-task pointer; the T031
+  checkbox line in `specs/007-xcom-core/tasks.md`; `reports/xcom-queue/t031-package.json`;
+  `docs/engineering/xcom/t031/{implementation.md,internal-review.json}`.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this index does
+  not claim they passed.
+- **L-T031-1 (admitted offline inputs).** The Phase 7 runner requires `XVERSE_XCOM_TOOLCHAIN`,
+  `XVERSE_XCOM_PACKAGE_MANIFEST`, and `XVERSE_XCOM_T025_TEST_TOOLCHAIN` (or the documented A-1 cache seed). If the
+  gate process environment does not carry them, the configure fails closed before any T031 target builds. This is an
+  external environment prerequisite, not a T031 defect.
+- **L-T031-2 (gRPC runtime out of envelope).** The admitted prefix provides the gRPC generation tools but not the
+  gRPC runtime transitive libraries; T031 records the delegated decision (`T031-GAP-01`) and realizes the accepted
+  message/method contract over bounded host-protected `AF_UNIX` local-IPC framing. No new dependency is added and no
+  gRPC-runtime link is claimed.
+- **L-T031-3 (gateway-side proof only).** T031 proves the gateway-side absence of a TCP listener; the
+  separate-process client and the end-to-end `SC-011` demonstration are T032.
+- **L-T031-4 (deferred external review).** External Codex review and explicit user acceptance remain pending; the
+  reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+## T031 implementation-stage record (candidate)
+
+The implementation stage realized the plan in the working tree on the same baseline. The bounded
+local-IPC-only gateway is authored in `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` and
+`src/xverse/xcom/src/tool_gateway.cpp`; `src/xverse/xcom/CMakeLists.txt` adds one runtime-target
+(`xverse_xcom_tool_gateway`) and six additive `t031-<kind>` suites
+(`tests/xcom/tool_gateway/gateway_{session,bounds,lifecycle,local_ipc,negative,logging}_tests.cpp` plus
+`gateway_support.hpp`). The T009/T010 planned→established path-status reconciliation was applied.
+`docs/engineering/xcom/t031/implementation.md` records the change set, generated-code provenance
+(digests equal the accepted T030 record byte-for-byte), the executed commands and observed results, the
+requirement-to-case table, maintenance notes, and limitations.
+
+Local verification observed `ctest -N -L t031-` = `Total Tests: 24` and `ctest -L t031-` =
+`100% tests passed, 0 tests failed out of 24`; the T007–T010 register validators pass; and
+`git diff --check` is clean. The separate internal DeepSeek review, recorded in
+`docs/engineering/xcom/t031/internal-review.json`, reports verdict `pass` with no blocking findings.
+`reports/xcom-queue/t031-package.json` carries the per-file SHA-256 package record with
+`external_review: deferred_until_backlog_completion`. The trusted target-repository assembly-based
+integration measure, external Codex review, and explicit user acceptance run separately by the workflow
+gates and are not claimed by this index.
+
+## T031 repair-stage record (successor)
+
+The reviewed predecessor candidate (run `01M3MYT7KWWX3MJXTTDS4FJG48`, reviewed candidate commit
+`e7817beba8a9b4f6cd1aa7d49307e4b8034195e4`) passed implementation verification, the independent internal
+review, the review gate, packaging, and candidate sealing, but the trusted unit gate then failed before
+running the test command with `unit specification: missing unit_cases`. The trusted engineering inventory
+treats an empty `unit_cases` list as absent, so the three governance/build unit records
+`T031-SR-017-U`, `T031-SR-019-U`, and `T031-SR-020-U` failed closed.
+
+This successor repair keeps the original reviewed candidate as its seed and changes only the three
+records plus their disclosure and the dependent digest refresh: each of the three records now declares one
+contributory unit case that reuses an already-discovered `t031-` GoogleTest case, with its `expected` text
+stating the case contributes behavioural context only and the requirement is checked by its named
+inspection (the accepted T030 mechanism). No unit case ID is new, so the declared T031 discovery still
+equals the 24 executed `t031-` cases; the gateway, its tests, the accepted requirements, the trace
+identity, and the original review are unchanged. `docs/engineering/xcom/t031/unit-specifications.md`
+discloses the three contributory cases, and `docs/engineering/xcom/t031/implementation.md` §13 records the
+closure with fresh, current evidence. The original internal review is preserved as historical evidence; a
+fresh independent DeepSeek review and the trusted measures cover this successor, and T039/T041 acceptance
+remains separate.

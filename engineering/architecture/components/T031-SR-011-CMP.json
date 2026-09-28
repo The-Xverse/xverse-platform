@@ -1,0 +1,26 @@
+{
+  "concurrency": "bounded single-owner session state; endpoint poll serialized by its caller",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-011-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "When a tool submits a stimulation action, the gateway **shall** route all four allowed actions through the accepted T027 pre-emission guard, T026 journal, and T028 action path; an accepted item **shall** carry persistent synthetic provenance, and a rejected or failed request **shall** emit zero normal-route items."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "accepted guard/journal/action-path composition",
+  "title": "T031-SR-011 allocation"
+}

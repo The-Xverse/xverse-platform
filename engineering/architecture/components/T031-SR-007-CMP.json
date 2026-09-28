@@ -1,0 +1,26 @@
+{
+  "concurrency": "internally synchronized bounded flow-control window",
+  "dependencies": [
+    "accepted T007-T030 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and gateway test process",
+  "errors": [
+    "declared fail-closed gateway rejection",
+    "build or configuration failure"
+  ],
+  "id": "T031-SR-007-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/tool_gateway.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t031/requirements.md",
+  "responsibilities": [
+    "If a session's bounded in-flight queue or request rate is exhausted, the gateway **shall** reject deterministically, record a visible counter, grow no unbounded memory, and **shall not** block the normal data plane without bound."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "per-session flow-control window and counters",
+  "title": "T031-SR-007 allocation"
+}
