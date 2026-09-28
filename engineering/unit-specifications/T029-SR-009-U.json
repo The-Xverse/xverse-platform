@@ -14,7 +14,7 @@
   "invariants": [
     "For each of the four action kinds, the durable intent record **shall** be present and non-empty inside the single emitter invocation, and the emitter **shall** be invoked exactly once per authorized emission and never before the intent is durable."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,6 +22,7 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp",
     "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
   ],
   "state": "bounded task-owned state",
@@ -38,6 +39,12 @@
     {
       "expected": "journal-before-emission ordering observation; CHK-10, NEG-13.",
       "id": "XcomStimulationMatrixJournalRecovery.JournalIntentPrecedesSingleEmission",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.ImmediateControl",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"
     }

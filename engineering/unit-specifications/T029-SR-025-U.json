@@ -14,7 +14,7 @@
   "invariants": [
     "The T029 candidate **shall** satisfy the deterministic Fabro gate for a test task: the six named work products exist, at least one `tests/` path changes, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T029 checkbox is marked complete **only** in the implementation stage, and the inherited `engineering/trace/links.json` and `engineering/stage-results/*.json` provenance digests are refreshed when the shared `src/xverse/xcom/CMakeLists.txt` digest changes."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,6 +22,7 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
+    "docs/engineering/xcom/t029/requirements.md",
     "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
   ],
   "state": "bounded task-owned state",
@@ -36,7 +37,7 @@
   "title": "T029-SR-025 unit verification",
   "unit_cases": [
     {
-      "expected": "`xcom_feature_gate.py verify T029 <baseline>`; `git diff --check`; CHK-24, NEG-37.",
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
       "id": "XcomStimulationMatrixConcurrency.ConcurrentLeaseSingleWinnerAndCompletion",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"

@@ -586,6 +586,8 @@ struct EmulationLease {
 struct PendingAction {
   /// \brief Request identity.
   std::uint64_t request_id{0};
+  /// \brief Exact guard authorization to release if journal admission later fails.
+  std::uint64_t authorization_token{0};
   /// \brief Declared stimulation action.
   StimulationAction action{StimulationAction::InjectSignal};
   /// \brief Declared clock domain of `scheduled_at`.
@@ -877,6 +879,9 @@ public:
   /// \brief Atomically reserves emission for the exact owning request.
   /// A reserved slot cannot be reused until finish_emission, even if released meanwhile.
   [[nodiscard]] bool reserve_emission(const EndpointGeneration &key, std::uint64_t request_id);
+  /// \brief Ends the exact request's emission reservation under the lease mutex.
+  /// \param key Session, endpoint generation, and plan bound to the lease.
+  /// \param request_id Owning request; another owner's reservation is unchanged.
   void finish_emission(const EndpointGeneration &key, std::uint64_t request_id) noexcept;
 
   /// \brief Returns the state of the lease with the exact key.
@@ -1102,11 +1107,13 @@ private:
   /// \brief Journals the intent durably and emits once; called with the mutex released.
   /// \param intent Bounded intent.
   /// \param payload Call-scoped payload view.
+  /// \param observed_domain Domain containing the observed completion timestamp.
   /// \param observed_at Observed time recorded with the outcome.
   /// \return The journal status of the durable intent/outcome pair and the host emission status.
   [[nodiscard]] EmissionAttempt journal_and_emit(std::unique_lock<std::mutex> &lock,
                                                  const StimulationIntent &intent,
                                                  std::span<const std::byte> payload,
+                                                 ClockDomainId observed_domain,
                                                  Timestamp observed_at);
 
   /// \brief Classifies a journal/emission result into a bounded status and updates the counters.
@@ -1130,6 +1137,9 @@ private:
   /// \brief Releases every held lease; call only while holding the mutex.
   /// \return The number of released leases.
   std::size_t release_all_locked();
+
+  /// \brief Releases this request's held lease without touching another owner's lease.
+  void release_held_lease_locked(const EndpointGeneration &key, std::uint64_t request_id);
 
   /// \brief Expires every held lease; call only while holding the mutex.
   /// \return The number of expired leases.

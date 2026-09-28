@@ -14,7 +14,7 @@
   "invariants": [
     "The guard's bounded values (`StimulationPolicy`, `StimulationRequest`, `SchemaKey`, `ServiceOwner`, `ResolvedTime`, `GuardDiagnostic`, `GuardSnapshot`) **shall** carry no payload, value body, address, free-form text, or unbounded member; the declared allowed-schema table **shall** be bounded by a declared maximum; a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size; and the absence of a payload-bearing member **shall** be established by declaration inspection."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,6 +22,7 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
+    "docs/engineering/xcom/t027/requirements.md",
     "tests/xcom/stimulation_guard/unit_tests.cpp"
   ],
   "state": "bounded task-owned state",
@@ -36,7 +37,7 @@
   "title": "T027-SR-004 unit verification",
   "unit_cases": [
     {
-      "expected": "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05.",
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
       "id": "XcomStimulationGuardUnit.GuardActionInteractionDirectionTable",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"

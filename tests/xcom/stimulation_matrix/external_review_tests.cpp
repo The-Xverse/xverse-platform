@@ -242,3 +242,84 @@ TEST(ExternalReview, MalformedCapacityFailsClosedWithoutProcessTermination) {
   EXPECT_EQ(f.open_path(p, t::make_policy(p), config),
             v::GuardStatus::RejectedConfiguration);
 }
+
+TEST(ExternalReview, KnownQueuedDuplicateDoesNotConsumeQuota) {
+  t::MatrixFixture f;
+  const auto p = t::make_permit();
+  ASSERT_EQ(f.open_journal(), v::JournalStatus::Ok);
+  ASSERT_EQ(f.open_path(p, t::make_policy(p, 2), t::make_config()), v::GuardStatus::Ok);
+  v::ActionDiagnostic d;
+  ASSERT_EQ(f.path->execute(t::make_request(p, 1), v::LifecycleState::active,
+                            t::in_window(), {}, d), v::ActionStatus::Emitted);
+  EXPECT_EQ(f.path->execute(t::make_request(p, 1, v::StimulationAction::InjectSignal,
+                                            false, 60), v::LifecycleState::active,
+                            t::in_window(), {}, d), v::ActionStatus::RejectedConfiguration);
+  EXPECT_EQ(f.path->execute(t::make_request(p, 2), v::LifecycleState::active,
+                            t::in_window(), {}, d), v::ActionStatus::Emitted);
+}
+
+TEST(ExternalReview, QueuedIntentFailureReleasesOnlyItsReservation) {
+  t::MatrixFixture f;
+  const auto p = t::make_permit();
+  ASSERT_EQ(f.open_journal(), v::JournalStatus::Ok);
+  ASSERT_EQ(f.open_path(p, t::make_policy(p, 2), t::make_config()), v::GuardStatus::Ok);
+  v::ActionDiagnostic d;
+  ASSERT_EQ(f.path->execute(t::make_request(p, 1, v::StimulationAction::EmulateService,
+                                            false, 60), v::LifecycleState::active,
+                            t::in_window(), {}, d), v::ActionStatus::Queued);
+  ASSERT_EQ(f.path->execute(t::make_request(p, 2, v::StimulationAction::InjectSignal),
+                            v::LifecycleState::active, t::in_window(), {}, d),
+            v::ActionStatus::Emitted);
+  f.storage.append_fault = t::StorageFault::WriteFailed;
+  f.storage.append_fault_on = f.storage.append_calls + 1U;
+  ASSERT_EQ(f.path->drain({60, t::kDomain, v::LifecycleState::active}).failed, 1U);
+  EXPECT_EQ(f.registry.snapshot().active, 0U);
+  EXPECT_EQ(f.path->execute(t::make_request(p, 3, v::StimulationAction::EmulateService),
+                            v::LifecycleState::active, t::in_window(), {}, d),
+            v::ActionStatus::Emitted);
+  EXPECT_EQ(f.emitter.calls.load(), 2U);
+}
+
+TEST(ExternalReview, RecoveryDuringCallbackCannotResolveActiveIntent) {
+  t::FaultStorage storage;
+  v::StimulationJournal journal;
+  ASSERT_EQ(journal.open(storage, t::default_journal_config()), v::JournalStatus::Ok);
+  const auto callback = [&](const v::StimulationIntent &intent) {
+    EXPECT_EQ(journal.recover().status, v::JournalStatus::RejectedConfiguration);
+    EXPECT_EQ(journal.open(storage, t::default_journal_config()),
+              v::JournalStatus::RejectedConfiguration);
+    v::StimulationOutcome early;
+    early.kind = v::OutcomeKind::Unknown;
+    early.clock_domain = t::kDomain;
+    EXPECT_EQ(journal.resolve(intent.request_id, early),
+              v::JournalStatus::RejectedConfiguration);
+    early.kind = v::OutcomeKind::Delivered;
+    return early;
+  };
+  v::StimulationOutcome out;
+  EXPECT_EQ(journal.journal_then_emit(intent_for_probe(), callback, out), v::JournalStatus::Ok);
+  EXPECT_EQ(journal.snapshot().outcomes, 1U);
+  EXPECT_EQ(journal.recover().status, v::JournalStatus::Ok);
+  EXPECT_EQ(journal.snapshot().outcomes, 1U);
+}
+
+TEST(ExternalReview, MappedOutcomeUsesResolvedClockDomain) {
+  t::MatrixFixture f;
+  const auto p = t::make_permit();
+  ASSERT_EQ(f.open_journal(), v::JournalStatus::Ok);
+  ASSERT_EQ(f.open_path(p, t::make_policy(p), t::make_config()), v::GuardStatus::Ok);
+  v::ActionDiagnostic d;
+  ASSERT_EQ(f.path->execute(t::make_request(p, 1, v::StimulationAction::InjectSignal,
+                                            false, 60, t::kForeignDomain),
+                            v::LifecycleState::active, t::in_window(), {}, d),
+            v::ActionStatus::Queued);
+  ASSERT_EQ(f.path->drain({50, t::kDomain, v::LifecycleState::active}).drained, 1U);
+  const auto intents = f.journal.recovered_intents();
+  const auto outcomes = f.journal.recovered_outcomes();
+  ASSERT_EQ(intents.size(), 1U);
+  ASSERT_EQ(outcomes.size(), 1U);
+  EXPECT_EQ(intents[0].clock_domain, t::kForeignDomain);
+  EXPECT_EQ(intents[0].scheduled_at, 60);
+  EXPECT_EQ(outcomes[0].clock_domain, t::kDomain);
+  EXPECT_EQ(outcomes[0].observed_at, 50);
+}

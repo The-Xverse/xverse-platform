@@ -3,6 +3,7 @@
     "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13."
   ],
   "applicability": "T026 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T026-SR-006",
   "level": "software",
   "parents": [
@@ -17,5 +18,6 @@
   "statement": "After the callback returns an explicit outcome, the journal **shall** durably append and sync an outcome frame; if the outcome append or sync fails, the API **shall** report `EvidenceIncomplete` and **shall** not report success, and a recovery scan **shall** surface the intent as an orphan until an explicit resolution outcome is written.",
   "status": "accepted",
   "title": "T026 requirement 006",
-  "verification_intent": "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13."
+  "verification_intent": "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13.",
+  "verification_mode": "behavioral"
 }

@@ -461,7 +461,8 @@ public:
   /// \return The recovery summary; a torn trailing frame is discarded, an intent with no
   ///         outcome is reported as an orphan, and a durable journal that exceeds a declared
   ///         retained-record or byte bound fails closed with `CapacityExhausted` and presents
-  ///         no over-bound index. Does not otherwise mutate durable state.
+  ///         no over-bound index. Returns `RejectedConfiguration` without scanning while an
+  ///         emission callback owns an in-flight intent. Does not otherwise mutate durable state.
   /// \unitspec{T026-U-JOURNAL}
   [[nodiscard]] RecoveryReport recover();
 
@@ -624,6 +625,9 @@ private:
   /// \brief Bounded index of complete retained frames, in durable order.
   /// \unitspec{T026-U-JOURNAL}
   std::vector<IndexEntry> index_{};
+  /// \brief Active callbacks whose durable intents must not be reconstructed as resolvable orphans.
+  /// \unitspec{T026-U-JOURNAL}
+  std::size_t active_callbacks_{0U};
   /// \brief Durable byte count of the complete retained records.
   /// \unitspec{T026-U-JOURNAL}
   std::size_t retained_bytes_{0U};

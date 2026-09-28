@@ -486,9 +486,10 @@ void StimulationActionPath::queue_locked(const PendingAction &pending) {
 StimulationActionPath::EmissionAttempt
 StimulationActionPath::journal_and_emit(std::unique_lock<std::mutex> &lock,
                                         const StimulationIntent &intent,
-                                        std::span<const std::byte> payload, Timestamp observed_at) {
+                                        std::span<const std::byte> payload,
+                                        ClockDomainId observed_domain, Timestamp observed_at) {
   EmissionAttempt attempt;
-  const auto seam = [this, &lock, payload, observed_at, &attempt](
+  const auto seam = [this, &lock, payload, observed_domain, observed_at, &attempt](
                         const StimulationIntent &emitted) -> StimulationOutcome {
     attempt.emission_started = true;
     lock.unlock();
@@ -500,7 +501,7 @@ StimulationActionPath::journal_and_emit(std::unique_lock<std::mutex> &lock,
     outcome.request_id = emitted.request_id;
     outcome.kind = outcome_kind_for(attempt.emission);
     outcome.reason = Result::Ok;
-    outcome.clock_domain = emitted.clock_domain;
+    outcome.clock_domain = observed_domain;
     outcome.observed_at = observed_at;
     return outcome;
   };
@@ -576,6 +577,20 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
     out.status = ActionStatus::CapacityExhausted;
     return ActionStatus::CapacityExhausted;
   }
+  // Retained request identities are durable keys. Reject a known duplicate before it can
+  // consume a guard reservation or enter the pending queue.
+  for (const PendingAction &pending : pending_) {
+    if (pending.request_id == request.request_id) {
+      out.status = ActionStatus::RejectedConfiguration;
+      return out.status;
+    }
+  }
+  for (const StimulationIntent &retained : journal_.recovered_intents()) {
+    if (retained.request_id == request.request_id) {
+      out.status = ActionStatus::RejectedConfiguration;
+      return out.status;
+    }
+  }
   EndpointGeneration key{};
   if (request.action == StimulationAction::EmulateService) {
     key = lease_key_for(request);
@@ -595,7 +610,6 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   }
   // Step 6: evaluate the accepted guard exactly once, before any lease is acquired.
   GuardDiagnostic guard_out;
-  const auto guard_checkpoint = guard_.checkpoint();
   const GuardOutcome decision = guard_.authorize(request, session_state, resolved_time, guard_out);
   if (decision != GuardOutcome::Authorized) {
     out.guard_reason = guard_out.reason;
@@ -608,6 +622,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
     ++failed_;
     return ActionStatus::Failed;
   }
+  const std::uint64_t authorization_token = guard_.authorization_token();
   // Step 7: atomically acquire the exclusive lease for an authorized emulation action. Acquisition
   // is unconditional: a concurrently held generation is rejected by the registry's own conflict
   // classification, so a second owner never emits under a lease it does not own.
@@ -615,7 +630,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
     const LeaseStatus lease = registry_.acquire(key, request.request_id, resolved_time.domain,
                                                 resolved_time.value, permit_.valid_until());
     if (lease != LeaseStatus::Ok) {
-      guard_.restore_authorization(guard_checkpoint);
+      guard_.rollback_authorization(authorization_token);
       out.lease_status = lease;
       out.status = ActionStatus::LeaseConflict;
       ++lease_conflicts_;
@@ -627,6 +642,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   if (!request.immediate) {
     PendingAction pending;
     pending.request_id = request.request_id;
+    pending.authorization_token = authorization_token;
     pending.action = request.action;
     pending.domain = resolved_time.domain;
     // A foreign clock cannot be ordered against permit-domain completion. The supplied
@@ -643,7 +659,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   const StimulationIntent intent = intent_for(request);
   const bool emulation = request.action == StimulationAction::EmulateService;
   if (emulation && !registry_.reserve_emission(key, request.request_id)) {
-    guard_.restore_authorization(guard_checkpoint);
+    guard_.rollback_authorization(authorization_token);
     (void)registry_.release(key, request.request_id);
     held_leases_.pop_back();
     out.status = ActionStatus::LeaseConflict;
@@ -652,7 +668,8 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   }
   EmissionAttempt attempt;
   try {
-    attempt = journal_and_emit(lock, intent, payload, resolved_time.value);
+    attempt = journal_and_emit(lock, intent, payload, resolved_time.domain,
+                               resolved_time.value);
   } catch (...) {
     if (emulation) {
       registry_.finish_emission(key, request.request_id);
@@ -668,7 +685,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   if (!lock.owns_lock()) {
     lock.lock();
   } else {
-    guard_.restore_authorization(guard_checkpoint);
+    guard_.rollback_authorization(authorization_token);
     if (request.action == StimulationAction::EmulateService) {
       (void)registry_.release(key, request.request_id);
       held_leases_.pop_back();
@@ -703,6 +720,8 @@ ActionStatus StimulationActionPath::emit_pending_locked(std::unique_lock<std::mu
   const EndpointGeneration key = emulation ? lease_key_for(pending.request) : EndpointGeneration{};
   if (emulation) {
     if (!registry_.reserve_emission(key, pending.request_id)) {
+      guard_.rollback_authorization(pending.authorization_token);
+      release_held_lease_locked(key, pending.request_id);
       ++cancelled_;
       return ActionStatus::Cancelled;
     }
@@ -710,7 +729,7 @@ ActionStatus StimulationActionPath::emit_pending_locked(std::unique_lock<std::mu
   const StimulationIntent intent = intent_for(pending.request);
   EmissionAttempt attempt;
   try {
-    attempt = journal_and_emit(lock, intent, {}, now);
+    attempt = journal_and_emit(lock, intent, {}, pending.domain, now);
   } catch (...) {
     if (emulation) {
       registry_.finish_emission(key, pending.request_id);
@@ -726,6 +745,12 @@ ActionStatus StimulationActionPath::emit_pending_locked(std::unique_lock<std::mu
   if (!lock.owns_lock()) {
     lock.lock();
   }
+  if (!attempt.emission_started) {
+    guard_.rollback_authorization(pending.authorization_token);
+    if (emulation) {
+      release_held_lease_locked(key, pending.request_id);
+    }
+  }
   return classify_locked(attempt, pending.request_id);
 }
 
@@ -734,6 +759,17 @@ std::size_t StimulationActionPath::cancel_all_locked() {
   pending_.clear();
   cancelled_ += count;
   return count;
+}
+
+void StimulationActionPath::release_held_lease_locked(const EndpointGeneration &key,
+                                                       std::uint64_t request_id) {
+  for (auto entry = held_leases_.begin(); entry != held_leases_.end(); ++entry) {
+    if (entry->key == key && entry->request_id == request_id) {
+      (void)registry_.release(key, request_id);
+      held_leases_.erase(entry);
+      return;
+    }
+  }
 }
 
 std::size_t StimulationActionPath::release_all_locked() {

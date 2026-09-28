@@ -27,7 +27,7 @@ the governance checks are the deterministic gate and the T007–T010 register va
 From the repository root:
 
 ```sh
-python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T027 bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f
+python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_feature_gate.py verify T027 bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f
 ```
 
 For T027 this gate requires:

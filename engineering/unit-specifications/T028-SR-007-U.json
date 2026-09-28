@@ -14,7 +14,7 @@
   "invariants": [
     "For `InjectSignal`, `InjectMessage`, and `InvokeService`, an authorized request **shall** journal its payload-free intent through the accepted T026 journal before emission, invoke the emission seam exactly once, record an explicit outcome, and return `ActionStatus::Emitted` only when the journal reports `Ok` **and** the host emission reports `EmissionStatus::Delivered`; when the intent is durable but the outcome is not, the action path **shall** return `ActionStatus::EvidenceIncomplete` and **shall never** report `Emitted`; when the intent and outcome are durable but the host reports `Rejected` or `Unavailable`, the action path **shall** return the distinct non-success `ActionStatus::EmissionRejected`/`EmissionUnavailable` and **shall never** report `Emitted` (`T028-STK-002`)."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],

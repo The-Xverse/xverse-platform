@@ -136,7 +136,7 @@ The closed action→interaction→direction table is `InjectSignal`↔`signal_st
 ## 4. Deterministic gate and build evidence
 
 ```sh
-python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T027 bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f
+python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_feature_gate.py verify T027 bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f
 ```
 
 The gate's configure reuses the `build/fabro-t027` cache seeded (A-1) with the previously admitted

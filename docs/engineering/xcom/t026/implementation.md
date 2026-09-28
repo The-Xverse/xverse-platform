@@ -117,7 +117,7 @@ digest (`canonical_digest` over header+payload). All integers are little-endian.
 ## 4. Deterministic gate and build evidence
 
 ```sh
-python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T026 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d
+python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_feature_gate.py verify T026 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d
 ```
 
 Observed result (implementation stage): `ok`, with the six T026 work products present, the T026

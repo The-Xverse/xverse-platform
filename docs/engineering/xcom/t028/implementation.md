@@ -159,7 +159,7 @@ released, quarantined, or expired lease is retained as a bounded tombstone and n
 ## 4. Deterministic gate and build evidence
 
 ```sh
-python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T028 c518c5e4fcb2055666db25cb62018769e7f56ae4
+python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_feature_gate.py verify T028 c518c5e4fcb2055666db25cb62018769e7f56ae4
 ```
 
 The gate's configure reuses the `build/fabro-t028` cache seeded (A-1) with the previously admitted

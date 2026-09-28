@@ -3,6 +3,7 @@
     "fault-injected short append and sync failure with boundary restoration; CHK-11, NEG-12, NEG-14."
   ],
   "applicability": "T026 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T026-SR-009",
   "level": "software",
   "parents": [
@@ -17,5 +18,6 @@
   "statement": "If a storage append reports fewer bytes than requested (partial write) or a transient write/sync failure, the journal **shall** fail closed: it **shall** attempt to restore the last complete frame boundary (truncate to the last known-good offset) and, if it cannot, **shall** mark the journal unusable for further appends and report `PartialWrite`/`WriteFailed`; it **shall** never count a partial frame as a retained record.",
   "status": "accepted",
   "title": "T026 requirement 009",
-  "verification_intent": "fault-injected short append and sync failure with boundary restoration; CHK-11, NEG-12, NEG-14."
+  "verification_intent": "fault-injected short append and sync failure with boundary restoration; CHK-11, NEG-12, NEG-14.",
+  "verification_mode": "behavioral"
 }

@@ -14,7 +14,7 @@
   "invariants": [
     "Opening an existing journal **shall** scan every complete frame, rebuild the bounded index, and report a deterministic recovery summary (complete intents, outcomes, orphan intents, discarded trailing bytes, retained records, retained bytes); every intent without an outcome **shall** be reported as an orphan and classified `EvidenceIncomplete`, never as delivered. Orphan accounting **shall** be one-to-one: each durable outcome resolves at most one intent, so an intent that shares a request identity with a resolved intent but has no outcome of its own **shall** still be reported as an orphan. When the durable content already exceeds the declared retained-record or byte bound, the open **shall** fail closed (`CapacityExhausted`) **before** reading more than the declared byte bound, **shall** present no over-bound index (`retained_records`/`retained_bytes` and `recovered_intents()` remain within the declared bounds), and **shall** refuse further appends."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],

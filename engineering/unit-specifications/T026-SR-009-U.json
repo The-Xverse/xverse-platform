@@ -14,7 +14,7 @@
   "invariants": [
     "If a storage append reports fewer bytes than requested (partial write) or a transient write/sync failure, the journal **shall** fail closed: it **shall** attempt to restore the last complete frame boundary (truncate to the last known-good offset) and, if it cannot, **shall** mark the journal unusable for further appends and report `PartialWrite`/`WriteFailed`; it **shall** never count a partial frame as a retained record."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],

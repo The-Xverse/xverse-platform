@@ -14,7 +14,7 @@
   "invariants": [
     "A record whose encoded frame exceeds the declared maximum record size **shall** be rejected (`RecordTooLarge`) with no append, and a bounded target/tool tag that is empty, longer than the accepted `Tag` maximum, or non-printable **shall** be rejected (`RejectedConfiguration`) with no append. The same bounded-tag contract **shall** hold on recovery: a complete frame whose declared target/tool length exceeds `Tag::max_length`, or whose tag bytes are empty, NUL-containing, or non-printable, **shall** stop the scan with `CorruptRecord`, **shall** yield no recovered value, and **shall** not manufacture a false orphan."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],

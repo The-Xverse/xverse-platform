@@ -605,14 +605,12 @@ public:
   [[nodiscard]] GuardStatus status() const;
 
 private:
-  struct AuthorizationCheckpoint {
-    std::size_t actions_authorized{0};
-    std::size_t window_actions{0};
-    std::uint64_t evaluations{0};
-    std::vector<std::uint64_t> loop_window{};
+  struct AuthorizationEntry {
+    std::uint64_t token{0};
+    std::uint64_t request_id{0};
   };
-  [[nodiscard]] AuthorizationCheckpoint checkpoint() const;
-  void restore_authorization(const AuthorizationCheckpoint &checkpoint);
+  [[nodiscard]] std::uint64_t authorization_token() const;
+  void rollback_authorization(std::uint64_t token);
   /// \brief Serializes `open`, the checks, the tallies, and the loop window.
   mutable std::mutex mutex_{};
   /// \brief Whether a valid permit/policy pair is bound.
@@ -627,6 +625,10 @@ private:
   std::size_t window_actions_{0};
   /// \brief Bounded loop-detection window of authorized request identities.
   std::vector<std::uint64_t> loop_window_{};
+  /// \brief Bounded committed authorizations, identified independently of request IDs.
+  std::vector<AuthorizationEntry> authorizations_{};
+  /// \brief Monotone token; never reused during one open session.
+  std::uint64_t next_authorization_token_{0U};
   /// \brief Total `authorize` calls performed while open.
   std::uint64_t evaluations_{0};
   /// \brief `Rejected` outcomes.
@@ -649,6 +651,7 @@ static_assert(!std::is_constructible_v<StimulationRequest, std::vector<std::uint
               "StimulationRequest must not accept a payload byte container");
 static_assert(!std::is_constructible_v<StimulationPolicy, std::string_view>,
               "StimulationPolicy must be payload-free");
+static_assert(sizeof(StimulationPolicy) <= 512U, "StimulationPolicy must stay bounded");
 static_assert(sizeof(SchemaKey) <= 128U, "SchemaKey must stay bounded");
 static_assert(sizeof(ServiceOwner) <= 128U, "ServiceOwner must stay bounded");
 static_assert(sizeof(StimulationRequest) <= 512U, "StimulationRequest must stay bounded");

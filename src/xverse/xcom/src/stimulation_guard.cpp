@@ -176,6 +176,9 @@ GuardStatus StimulationGuard::open(const Permit &permit, const StimulationPolicy
   window_actions_ = 0U;
   loop_window_.clear();
   loop_window_.reserve(policy.loop_window);
+  authorizations_.clear();
+  authorizations_.reserve(policy.max_actions_per_session);
+  next_authorization_token_ = 0U;
   evaluations_ = 0U;
   rejections_ = 0U;
   failures_ = 0U;
@@ -319,6 +322,7 @@ GuardOutcome StimulationGuard::authorize(const StimulationRequest &request,
   // Authorize and commit once, atomically with the checks under the guard mutex.
   ++evaluations_;
   ++actions_authorized_;
+  authorizations_.push_back({++next_authorization_token_, request.request_id});
   ++window_actions_;
   if (window_actions_ >= policy_.action_window) {
     window_actions_ = 0U;
@@ -350,18 +354,29 @@ GuardSnapshot StimulationGuard::snapshot() const {
   return result;
 }
 
-StimulationGuard::AuthorizationCheckpoint StimulationGuard::checkpoint() const {
+std::uint64_t StimulationGuard::authorization_token() const {
   std::lock_guard<std::mutex> lock(mutex_);
-  return {actions_authorized_, window_actions_, evaluations_, loop_window_};
+  return authorizations_.empty() ? 0U : authorizations_.back().token;
 }
 
-void StimulationGuard::restore_authorization(const AuthorizationCheckpoint &checkpoint) {
+void StimulationGuard::rollback_authorization(std::uint64_t token) {
   std::lock_guard<std::mutex> lock(mutex_);
-  actions_authorized_ = checkpoint.actions_authorized;
-  window_actions_ = checkpoint.window_actions;
-  evaluations_ = checkpoint.evaluations;
-  // The checkpoint was copied before authorization, and the vector already has bounded capacity.
-  loop_window_ = checkpoint.loop_window;
+  for (auto entry = authorizations_.begin(); entry != authorizations_.end(); ++entry) {
+    if (entry->token != token) {
+      continue;
+    }
+    authorizations_.erase(entry);
+    --actions_authorized_;
+    --evaluations_;
+    window_actions_ = authorizations_.size() % policy_.action_window;
+    loop_window_.clear();
+    const std::size_t start = authorizations_.size() > policy_.loop_window
+                                  ? authorizations_.size() - policy_.loop_window : 0U;
+    for (std::size_t index = start; index < authorizations_.size(); ++index) {
+      loop_window_.push_back(authorizations_[index].request_id);
+    }
+    return;
+  }
 }
 
 bool StimulationGuard::is_open() const {

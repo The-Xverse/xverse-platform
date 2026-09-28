@@ -27,7 +27,7 @@ checks are the deterministic gate and the T007–T010 register validators.
 From the repository root:
 
 ```sh
-python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T029 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9
+python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_feature_gate.py verify T029 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9
 ```
 
 For T029 this gate requires:

@@ -14,7 +14,7 @@
   "invariants": [
     "The slice **shall** provide one shared, bounded, payload-free owned fixture in `tests/xcom/stimulation_matrix/test_support.hpp` that composes an in-process accepted `Permit` and session, an accepted `StimulationPolicy`, an accepted `StimulationJournal` over an in-test fault-injectable `Storage` seam, an accepted `ServiceEmulationRegistry`, an accepted `StimulationActionPath`, a recording/fault-injectable `ActionEmitter`, and a bounded bridge that builds a `CommunicationItem` for the accepted provider/observation boundary; every bound, table, and injected fault **shall** be finite and declared, and the fixture **shall** retain no payload byte."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,6 +22,7 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
+    "docs/engineering/xcom/t029/requirements.md",
     "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
   ],
   "state": "bounded task-owned state",
@@ -36,7 +37,7 @@
   "title": "T029-SR-003 unit verification",
   "unit_cases": [
     {
-      "expected": "fixture declaration inspection plus the build; CHK-05, CHK-20, NEG-03.",
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
       "id": "XcomStimulationMatrixPermitAction.MismatchMatrixQuotaExhaustion",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"

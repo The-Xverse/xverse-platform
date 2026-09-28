@@ -3,9 +3,11 @@
     "conflict matrix and the bounded concurrent-race case; CHK-11, CHK-18, NEG-11, NEG-29."
   ],
   "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T028-SR-010",
   "level": "software",
   "parents": [
+    "XCOM-SYS-FR-014",
     "XCOM-SYS-FR-034"
   ],
   "revision": "1",
@@ -17,5 +19,6 @@
   "statement": "Lease acquisition **shall** be an atomic check-then-insert under one lease-table mutex; a conflicting second owner for the same endpoint generation or the same `(endpoint, session)` **shall** be rejected (`LeaseStatus::Conflict`) with no mutation, and a concurrent race **shall** produce exactly one winner and one conflicted loser.",
   "status": "accepted",
   "title": "T028 requirement 010",
-  "verification_intent": "conflict matrix and the bounded concurrent-race case; CHK-11, CHK-18, NEG-11, NEG-29."
+  "verification_intent": "conflict matrix and the bounded concurrent-race case; CHK-11, CHK-18, NEG-11, NEG-29.",
+  "verification_mode": "behavioral"
 }

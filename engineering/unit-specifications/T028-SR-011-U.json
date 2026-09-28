@@ -14,7 +14,7 @@
   "invariants": [
     "A held lease **shall** be releasable by its exact owner and **shall** be releasable by lifecycle completion; a release or quarantine by a non-owner, an unknown lease, or an already-released lease **shall** fail closed (`LeaseStatus::NotFound` / `NotHeld` / `AlreadyReleased`) with no mutation; on expiry, revocation, or disconnect the lease **shall** be released or quarantined without ambiguous ownership."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,7 +22,8 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
-    "tests/xcom/stimulation_actions/lease_tests.cpp"
+    "tests/xcom/stimulation_actions/lease_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
   ],
   "state": "bounded task-owned state",
   "static_checks": [
@@ -44,6 +45,12 @@
     {
       "expected": "release/quarantine/expiry matrix; CHK-12, NEG-12, NEG-13.",
       "id": "XcomStimulationActionsLease.LeaseGenerationSupersessionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.QuarantinedLeaseCannotAuthorizeQueuedEmission",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"
     }

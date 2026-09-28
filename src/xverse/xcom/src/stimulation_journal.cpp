@@ -788,6 +788,9 @@ JournalStatus StimulationJournal::open(Storage &storage, const JournalConfig &co
     return JournalStatus::RejectedConfiguration;
   }
   std::lock_guard<std::mutex> lock(mutex_);
+  if (active_callbacks_ != 0U) {
+    return JournalStatus::RejectedConfiguration;
+  }
   owned_storage_.reset();
   return bind_and_scan_locked(storage, config);
 }
@@ -797,18 +800,21 @@ JournalStatus StimulationJournal::open_local_file(const std::string &path,
   if (path.empty() || !config_is_legal(config)) {
     return JournalStatus::RejectedConfiguration;
   }
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (active_callbacks_ != 0U) {
+    return JournalStatus::RejectedConfiguration;
+  }
   auto storage = std::make_unique<LocalFileStorage>(path);
   if (!storage->is_open()) {
     return JournalStatus::WriteFailed;
   }
-  std::lock_guard<std::mutex> lock(mutex_);
   owned_storage_ = std::move(storage);
   return bind_and_scan_locked(*owned_storage_, config);
 }
 
 RecoveryReport StimulationJournal::recover() {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!opened_ || storage_ == nullptr) {
+  if (!opened_ || storage_ == nullptr || active_callbacks_ != 0U) {
     RecoveryReport report;
     report.status = JournalStatus::RejectedConfiguration;
     last_report_ = report;
@@ -911,6 +917,7 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
     if (append_status != JournalStatus::Ok) {
       return append_status;
     }
+    ++active_callbacks_;
   }
 
   // A throwing host callback is intentionally not caught: its exception propagates after the
@@ -921,6 +928,7 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
     produced = emit(intent);
   } catch (...) {
     std::lock_guard<std::mutex> lock(mutex_);
+    --active_callbacks_;
     for (IndexEntry &entry : index_) {
       if (!entry.is_outcome && entry.request_id == intent.request_id) {
         entry.in_flight = false;
@@ -935,6 +943,7 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
   // own scan later rejects), so the durable journal stays decodable and the intent is orphaned.
   if (!outcome_kind_in_vocabulary(produced.kind)) {
     std::lock_guard<std::mutex> lock(mutex_);
+    --active_callbacks_;
     for (IndexEntry &entry : index_) {
       if (!entry.is_outcome && entry.request_id == intent.request_id) {
         entry.in_flight = false;
@@ -945,9 +954,23 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
   }
   out = produced;
 
-  const std::vector<std::uint8_t> outcome_frame = encode_outcome_frame(produced);
+  std::vector<std::uint8_t> outcome_frame;
+  try {
+    outcome_frame = encode_outcome_frame(produced);
+  } catch (...) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    --active_callbacks_;
+    for (IndexEntry &entry : index_) {
+      if (!entry.is_outcome && entry.request_id == intent.request_id) {
+        entry.in_flight = false;
+        break;
+      }
+    }
+    throw;
+  }
   {
     std::lock_guard<std::mutex> lock(mutex_);
+    --active_callbacks_;
     for (IndexEntry &entry : index_) {
       if (!entry.is_outcome && entry.request_id == intent.request_id) {
         entry.in_flight = false;

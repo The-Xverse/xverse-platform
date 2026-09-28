@@ -3,10 +3,12 @@
     "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35."
   ],
   "applicability": "T027 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T027-SR-012",
   "level": "software",
   "parents": [
-    "XCOM-SYS-FR-020"
+    "XCOM-SYS-FR-020",
+    "XCOM-SYS-FR-033"
   ],
   "revision": "1",
   "schema_version": 1,
@@ -17,5 +19,6 @@
   "statement": "For a scheduled request, the guard **shall** require a valid declared clock domain and a caller-resolved time expressed in the permit validity domain; when the resolution is absent, unmapped, or outside the declared tolerance the guard **shall** return `Failed` (`TimeUnmapped`) and allow no emission; when the resolved time is outside the half-open permit validity interval the guard **shall** return `Rejected` (`TimeOutOfWindow`); an immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; the guard **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation or I/O.",
   "status": "accepted",
   "title": "T027 requirement 012",
-  "verification_intent": "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35."
+  "verification_intent": "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35.",
+  "verification_mode": "behavioral"
 }

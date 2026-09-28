@@ -3,6 +3,7 @@
     "loop-bound and lineage-eviction matrix; CHK-08, NEG-09, NEG-10."
   ],
   "applicability": "T029 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T029-SR-007",
   "level": "software",
   "parents": [
@@ -17,5 +18,6 @@
   "statement": "When the matrix exercises loop bounds, a request whose causal parent is already retained in the accepted guard loop window **or** in the action-path emission-time lineage window **shall** be `Rejected`/`LoopBound` with zero emission and zero journal; `causation_id == 0` **shall never** be a loop rejection; and the lineage window **shall never** exceed its declared depth and **shall** evict the oldest identity.",
   "status": "accepted",
   "title": "T029 requirement 007",
-  "verification_intent": "loop-bound and lineage-eviction matrix; CHK-08, NEG-09, NEG-10."
+  "verification_intent": "loop-bound and lineage-eviction matrix; CHK-08, NEG-09, NEG-10.",
+  "verification_mode": "behavioral"
 }

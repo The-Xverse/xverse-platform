@@ -14,7 +14,7 @@
   "invariants": [
     "For a scheduled request, the guard **shall** require a valid declared clock domain and a caller-resolved time expressed in the permit validity domain; when the resolution is absent, unmapped, or outside the declared tolerance the guard **shall** return `Failed` (`TimeUnmapped`) and allow no emission; when the resolved time is outside the half-open permit validity interval the guard **shall** return `Rejected` (`TimeOutOfWindow`); an immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; the guard **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation or I/O."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],

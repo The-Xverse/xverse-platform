@@ -3,10 +3,12 @@
     "injected outcome failure, restart recovery, and completion orphan matrix; CHK-11, CHK-14, NEG-16, NEG-17."
   ],
   "applicability": "T029 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T029-SR-011",
   "level": "software",
   "parents": [
-    "XCOM-SYS-FR-021"
+    "XCOM-SYS-FR-021",
+    "XCOM-SYS-SC-007"
   ],
   "revision": "1",
   "schema_version": 1,
@@ -17,5 +19,6 @@
   "statement": "When a durable intent cannot obtain a durable outcome, the action **shall** be surfaced as `ActionStatus::EvidenceIncomplete` and **shall never** be reported as `Emitted`; a restart over the same durable bytes **shall** recover the exact intent identity and classify it as an explicit orphan; and `mark_evidence_incomplete`/`close` **shall** report the orphan and **shall never** return `Closed` while it exists.",
   "status": "accepted",
   "title": "T029 requirement 011",
-  "verification_intent": "injected outcome failure, restart recovery, and completion orphan matrix; CHK-11, CHK-14, NEG-16, NEG-17."
+  "verification_intent": "injected outcome failure, restart recovery, and completion orphan matrix; CHK-11, CHK-14, NEG-16, NEG-17.",
+  "verification_mode": "behavioral"
 }

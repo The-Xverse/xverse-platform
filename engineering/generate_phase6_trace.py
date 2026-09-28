@@ -25,6 +25,28 @@ FALLBACK_TS = {
     28: {1: 1, 2: 18, 21: 18, 22: 18, 23: 3, 24: 20},
     29: {1: 1, 2: 3, 3: 3, 22: 3, 23: 3, 24: 1, 25: 20},
 }
+CONFORMANCE_REQUIREMENTS = {f"T0{task}-SR-{number:03}"
+                            for task, numbers in FALLBACK_TS.items() for number in numbers}
+REPAIR_CASE_REQUIREMENTS = {
+    "ExternalReview.ImmediateControl": "T029-SR-009",
+    "ExternalReview.ScheduledActionCannotEmitAtPermitExpiry": "T028-SR-016",
+    "ExternalReview.CloseAndClosingDrainRespectExclusivePermitEnd": "T028-SR-016",
+    "ExternalReview.MappedScheduledActionCanDrain": "T028-SR-014",
+    "ExternalReview.ReplacedLeaseCannotAuthorizeOldQueuedRequest": "T028-SR-009",
+    "ExternalReview.QuarantinedLeaseCannotAuthorizeQueuedEmission": "T028-SR-011",
+    "ExternalReview.EmissionReservationBlocksReplacementUntilFinished": "T028-SR-010",
+    "ExternalReview.DuplicateRejectionDoesNotConsumeQuota": "T028-SR-017",
+    "ExternalReview.FailedIntentDoesNotKeepEmulationLease": "T028-SR-017",
+    "ExternalReview.InFlightResolutionCannotProduceTwoOutcomes": "T026-SR-014",
+    "ExternalReview.ThrownCallbackLeavesOneResolvableOrphan": "T026-SR-007",
+    "ExternalReview.LegalLateToleranceDoesNotOverflow": "T028-SR-016",
+    "ExternalReview.CloseWithMaximumLateToleranceDoesNotOverflow": "T028-SR-016",
+    "ExternalReview.MalformedCapacityFailsClosedWithoutProcessTermination": "T028-SR-005",
+    "ExternalReview.KnownQueuedDuplicateDoesNotConsumeQuota": "T028-SR-017",
+    "ExternalReview.QueuedIntentFailureReleasesOnlyItsReservation": "T028-SR-017",
+    "ExternalReview.RecoveryDuringCallbackCannotResolveActiveIntent": "T026-SR-014",
+    "ExternalReview.MappedOutcomeUsesResolvedClockDomain": "T028-SR-014",
+}
 
 
 def write(path: Path, value: dict) -> None:
@@ -107,6 +129,8 @@ def system_record(anchor: str, spec: str) -> dict:
 
 def main() -> None:
     selected = set(json.loads((ENG / "verification/measures/unit.json").read_text())["test_ids"])
+    if not set(REPAIR_CASE_REQUIREMENTS).issubset(selected):
+        raise ValueError("the selected unit measure omits a repair regression")
     validation_ids = json.loads((ENG / "verification/measures/validation.json").read_text())["test_ids"]
     spec = (ROOT / "specs/007-xcom-core/spec.md").read_text(encoding="utf-8")
     trace_path = ENG / "trace/links.json"
@@ -145,14 +169,16 @@ def main() -> None:
             verification = re.search(r"- Verification intent:\s*(.*?)(?=\n- \*\*|\n### |\n## |\Z)",
                                      block, re.DOTALL)
             intent = " ".join(verification.group(1).split()) if verification else statement
-            anchor_match = re.search(r"XCOM-SYS-(?:FR|SC)-\d{3}", block)
-            if not anchor_match:
+            declared_anchors = sorted(set(re.findall(r"XCOM-SYS-(?:FR|SC)-\d{3}", block)))
+            if not declared_anchors:
                 raise ValueError(f"missing system anchor for {requirement_id}")
-            anchor = anchor_match.group()
-            anchors.add(anchor)
+            anchors.update(declared_anchors)
             pairs = []
             for unit_id in sorted(mapping[requirement_id]):
                 pairs.extend(cases.get(unit_id, []))
+            pairs.extend((case, "tests/xcom/stimulation_matrix/external_review_tests.cpp")
+                         for case, owner in REPAIR_CASE_REQUIREMENTS.items()
+                         if owner == requirement_id)
             if not pairs:
                 raise ValueError(f"no discovered unit case for {requirement_id}")
             pairs = list(dict.fromkeys(pairs))
@@ -161,14 +187,17 @@ def main() -> None:
             code = (pairs[0][1] if task == 29 else
                     f"src/xverse/xcom/src/{TASK_FOLDERS[task]}.cpp")
             source_doc = f"docs/engineering/xcom/t0{task}/requirements.md"
+            conformance = requirement_id in CONFORMANCE_REQUIREMENTS
             write(ENG / "requirements" / f"{requirement_id}.json", {
                 "schema_version": 1, "id": requirement_id, "revision": "1",
                 "level": "software", "title": f"{task_id} requirement {number:03}",
-                "statement": statement, "status": "accepted", "parents": [anchor],
+                "statement": statement, "status": "accepted", "parents": declared_anchors,
                 "source": {"kind": "capability_007_task",
                            "reference": f"{source_doc} {requirement_id}"},
                 "applicability": f"{task_id} bounded stimulation candidate",
                 "verification_intent": intent, "acceptance_criteria": [intent],
+                "verification_mode": "conformance" if conformance else "behavioral",
+                "conformance_check_id": requirement_id if conformance else None,
             })
             write(ENG / "architecture/components" / f"{component_id}.json", {
                 "schema_version": 1, "id": component_id, "revision": "1",
@@ -189,23 +218,34 @@ def main() -> None:
                 "state": "bounded task-owned state",
                 "errors": ["test assertion failure"], "invariants": [statement],
                 "concurrency": "bounded deterministic test execution",
-                "source_paths": sorted({path for _, path in pairs}),
+                "source_paths": sorted({path for _, path in pairs} |
+                                       ({source_doc} if conformance else set())),
                 "unit_cases": [{"id": case, "precondition": "declared bounded fixture",
                                 "stimulus": "execute the documented task case",
-                                "expected": intent} for case, _ in pairs],
+                                "expected": ("Contributing behavioral context only; the requirement is checked "
+                                             "by its separate conformance inspection."
+                                             if conformance else
+                                             "The named repair regression passes its asserted boundary."
+                                             if case in REPAIR_CASE_REQUIREMENTS else intent)}
+                               for case, _ in pairs],
                 "static_checks": [{"id": f"{requirement_id}-STATIC",
                                    "tool": "cppcheck and warning-as-error C++ build",
                                    "rule": "task source compiles under the accepted X-COM profile",
                                    "expected": "no static-analysis or compiler error"}],
-                "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+                "note": ("Unit cases are contributory only. The exact requirement is verified "
+                         "by the named conformance inspection and its trusted evidence."
+                         if conformance else "Cases verify the documented behavior."),
             })
-            link(links, "refines", requirement_id, anchor)
+            for anchor in declared_anchors:
+                link(links, "refines", requirement_id, anchor)
             link(links, "allocated_to", requirement_id, component_id)
             link(links, "decomposes_to", component_id, unit_id)
             link(links, "implemented_by", requirement_id, code, digest(code))
             link(links, "implemented_by", unit_id, code, digest(code))
             link(links, "verified_by", requirement_id, "unit")
             link(links, "verified_by", requirement_id, "integration")
+            if conformance:
+                link(links, "verified_by", requirement_id, "conformance")
             link(links, "verified_by", unit_id, "unit")
             link(links, "analyzed_by", unit_id, "static_analysis")
             link(links, "validates", scenario_id, requirement_id)
@@ -213,6 +253,13 @@ def main() -> None:
         path = ENG / "requirements" / f"{anchor}.json"
         if not path.exists():
             write(path, system_record(anchor, spec))
+    write(ENG / "verification/measures/conformance.json", {
+        "schema_version": 1, "id": "conformance", "revision": "1", "kind": "conformance",
+        "title": "Phase 6 source, documentation, governance, and gate conformance",
+        "expected": "every named inspection passes against this candidate",
+        "test_ids": sorted(CONFORMANCE_REQUIREMENTS),
+        "command": ["python3", "engineering/check_phase6_conformance.py"],
+    })
     # Refresh inherited code endpoint hashes only for changed files; source identity is preserved.
     for item in links[:original_count]:
         if item["relation"] == "implemented_by":

@@ -3,10 +3,12 @@
     "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27."
   ],
   "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
   "id": "T028-SR-017",
   "level": "software",
   "parents": [
-    "XCOM-SYS-FR-019"
+    "XCOM-SYS-FR-019",
+    "XCOM-SYS-FR-034"
   ],
   "revision": "1",
   "schema_version": 1,
@@ -17,5 +19,6 @@
   "statement": "If any precondition, guard, lease, journal, late-policy, or completion decision declines, the action path **shall** mutate no accepted guard state, no lease-table entry, no pending-queue entry, no lineage entry, and no durable journal record in the declined dimension, **shall** return an explicit bounded status, and **shall** emit no normal-route item; a declined action **shall never** return `Emitted`.",
   "status": "accepted",
   "title": "T028 requirement 017",
-  "verification_intent": "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27."
+  "verification_intent": "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27.",
+  "verification_mode": "behavioral"
 }

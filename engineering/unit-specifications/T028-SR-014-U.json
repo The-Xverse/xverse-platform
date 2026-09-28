@@ -14,7 +14,7 @@
   "invariants": [
     "An authorized scheduled request **shall** be placed in a bounded pending queue ordered by the declared `OrderingRule`; `drain` **shall** complete due pending actions within a bounded step budget under the declared `LateItemPolicy`; a full queue **shall** fail closed (`ActionStatus::CapacityExhausted`) with no emission and no journal; a request that becomes late **shall** be rejected or discarded as declared, with zero emission."
   ],
-  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "note": "Cases verify the documented behavior.",
   "outputs": [
     "declared action, journal, guard, or test result"
   ],
@@ -22,7 +22,8 @@
   "revision": "1",
   "schema_version": 1,
   "source_paths": [
-    "tests/xcom/stimulation_actions/lifecycle_tests.cpp"
+    "tests/xcom/stimulation_actions/lifecycle_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
   ],
   "state": "bounded task-owned state",
   "static_checks": [
@@ -44,6 +45,18 @@
     {
       "expected": "queue-bound, ordering, and late-policy cases; CHK-15, NEG-17, NEG-18.",
       "id": "XcomStimulationActionsLifecycle.LifecycleLateItemPolicyMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.MappedScheduledActionCanDrain",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.MappedOutcomeUsesResolvedClockDomain",
       "precondition": "declared bounded fixture",
       "stimulus": "execute the documented task case"
     }
