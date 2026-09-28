@@ -88,7 +88,7 @@ and predecessor regression evidence retained.
 
 ## Phase 7: External-tool gateway and conformance (US4)
 
-- [ ] T030 Define the versioned gRPC/Protocol Buffers tool API under
+- [x] T030 Define the versioned gRPC/Protocol Buffers tool API under
   `proto/xverse/xcom/v1/tool_gateway.proto` with additive evolution rules.
 - [ ] T031 Implement a local-IPC-only gateway with no TCP listener, bounded messages/streams, deadlines,
   flow control, safe logs, and disconnect cleanup.

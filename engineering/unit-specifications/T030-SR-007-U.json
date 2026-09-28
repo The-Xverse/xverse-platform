@@ -1,0 +1,45 @@
+{
+  "component_id": "T030-SR-007-CMP",
+  "concurrency": "read-only static descriptor; single-threaded test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T030-SR-007-U",
+  "inputs": [
+    "generated tool-gateway descriptor and bounded test-local constants"
+  ],
+  "interfaces": [
+    "proto/xverse/xcom/v1/tool_gateway.proto"
+  ],
+  "invariants": [
+    "When a tool acquires, uses, or releases a service-emulation lease, the contract **shall** bind the exact session, endpoint, generation, and plan identity and **shall** expose the exclusive lease state."
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "declared descriptor or round-trip assertion result"
+  ],
+  "purpose": "When a tool acquires, uses, or releases a service-emulation lease, the contract **shall** bind the exact session, endpoint, generation, and plan identity and **shall** expose the exclusive lease state.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/tool_gateway/contract_tests.cpp"
+  ],
+  "state": "immutable versioned contract artifact or bounded test-local descriptor view",
+  "static_checks": [
+    {
+      "expected": "no generation, static-analysis, or compiler error",
+      "id": "T030-SR-007-STATIC",
+      "rule": "the schema generates and the test source compiles under the accepted X-COM profile",
+      "tool": "admitted protoc generation and warning-as-error C++ build"
+    }
+  ],
+  "title": "T030-SR-007 unit verification",
+  "unit_cases": [
+    {
+      "expected": "The asserted contract property holds.",
+      "id": "XcomToolGatewayContract.ServiceEmulationLeaseContract",
+      "precondition": "generated tool-gateway descriptor",
+      "stimulus": "open the generated FileDescriptor or crafted bounded wire buffer"
+    }
+  ]
+}

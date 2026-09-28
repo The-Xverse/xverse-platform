@@ -19,6 +19,7 @@ set(
   xverse_xcom_stimulation_journal
   xverse_xcom_stimulation_guard
   xverse_xcom_stimulation_actions
+  xverse_xcom_tool_gateway_proto
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -549,6 +550,101 @@ set_target_properties(
     CXX_EXTENSIONS OFF
 )
 
+# T030's single versioned external-tool contract. The committed
+# proto/xverse/xcom/v1/tool_gateway.proto is the source of truth; the admitted protoc 3.12.4 and
+# grpc_cpp_plugin 1.30.2 generate the Protocol Buffers messages (compiled) and the gRPC stubs
+# (generated for provenance, not compiled or linked because the admitted envelope lacks the gRPC
+# runtime transitive libraries, T030-GAP-02). The generation runs offline with the admitted prefix
+# library directory on the child library path only; no ambient path or network is discovered. This
+# is one declared addition to the T012 runtime-target inventory above.
+set(
+  xcom_t030_proto_root
+  "${PROJECT_SOURCE_DIR}/proto"
+)
+set(
+  xcom_t030_proto_source
+  "${xcom_t030_proto_root}/xverse/xcom/v1/tool_gateway.proto"
+)
+set(
+  xcom_t030_generated_dir
+  "${CMAKE_CURRENT_BINARY_DIR}/t030-proto-gen"
+)
+set(
+  xcom_t030_pb_header
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/tool_gateway.pb.h"
+)
+set(
+  xcom_t030_pb_source
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/tool_gateway.pb.cc"
+)
+set(
+  xcom_t030_grpc_header
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/tool_gateway.grpc.pb.h"
+)
+set(
+  xcom_t030_grpc_source
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/tool_gateway.grpc.pb.cc"
+)
+set(
+  xcom_t030_protobuf_include
+  "${XVERSE_XCOM_TOOLCHAIN}/usr/include"
+)
+set(
+  xcom_t030_toolchain_lib
+  "${XVERSE_XCOM_TOOLCHAIN}/usr/lib/x86_64-linux-gnu"
+)
+
+add_custom_command(
+  OUTPUT
+    "${xcom_t030_pb_source}"
+    "${xcom_t030_pb_header}"
+    "${xcom_t030_grpc_source}"
+    "${xcom_t030_grpc_header}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${xcom_t030_generated_dir}"
+  COMMAND
+    ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${xcom_t030_toolchain_lib}"
+    "$<TARGET_FILE:protobuf::protoc>"
+    "-I${xcom_t030_proto_root}"
+    "--cpp_out=${xcom_t030_generated_dir}"
+    "--grpc_out=${xcom_t030_generated_dir}"
+    "--plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>"
+    "xverse/xcom/v1/tool_gateway.proto"
+  DEPENDS "${xcom_t030_proto_source}"
+  COMMENT "T030: generating the versioned tool-gateway Protocol Buffers and gRPC artifacts"
+  VERBATIM
+)
+
+# The generated Protocol Buffers message code only. Only the admitted libprotobuf is linked; the
+# gRPC stubs are deliberately not compiled or linked (T030-GAP-02). The admitted protobuf headers
+# and the generated headers are system includes: third-party and generated-header warnings are
+# suppressed while the X-COM warning-as-error policy still governs every T030-owned source line.
+add_library(xverse_xcom_tool_gateway_proto STATIC "${xcom_t030_pb_source}")
+add_library(xverse::xcom_tool_gateway_proto ALIAS xverse_xcom_tool_gateway_proto)
+target_include_directories(
+  xverse_xcom_tool_gateway_proto
+  SYSTEM PRIVATE
+    "${xcom_t030_generated_dir}"
+    "${xcom_t030_protobuf_include}"
+)
+target_link_libraries(xverse_xcom_tool_gateway_proto PRIVATE protobuf::libprotobuf)
+target_compile_features(xverse_xcom_tool_gateway_proto PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_tool_gateway_proto)
+set_target_properties(
+  xverse_xcom_tool_gateway_proto
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+add_custom_target(
+  xverse_xcom_tool_gateway_proto_generated
+  DEPENDS
+    "${xcom_t030_pb_header}"
+    "${xcom_t030_pb_source}"
+    "${xcom_t030_grpc_header}"
+    "${xcom_t030_grpc_source}"
+)
+
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
   if(NOT DEFINED ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} OR "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
@@ -760,6 +856,52 @@ if(BUILD_TESTING)
     gtest_discover_tests(
       xverse_xcom_stimulation_matrix_${matrix_kind}_tests
       PROPERTIES LABELS "t029-${matrix_label}"
+    )
+  endforeach()
+
+  # T030 generated-contract tests. Registration is additive: no existing target, test name, label,
+  # command, or expected value changes and no existing discovery count is reduced. Each suite uses
+  # one hyphenated `t030-<kind>` label (CMake 3.22 label workaround) and links only the generated
+  # Protocol Buffers message library, GTest, and the standard threads library. The admitted protobuf
+  # and generated headers are system includes; the provenance suite receives the build-tree generated
+  # header paths as read-only compile definitions and never prints them into public evidence.
+  add_dependencies(
+    xverse_xcom_tool_gateway_proto
+    xverse_xcom_tool_gateway_proto_generated
+  )
+  foreach(tool_gateway_kind IN ITEMS contract evolution negative provenance)
+    add_executable(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway/${tool_gateway_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway"
+    )
+    target_include_directories(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      SYSTEM PRIVATE
+        "${xcom_t030_generated_dir}"
+        "${xcom_t030_protobuf_include}"
+    )
+    target_compile_definitions(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      PRIVATE
+        "XCOM_T030_PB_HEADER_PATH=\"${xcom_t030_pb_header}\""
+        "XCOM_T030_GRPC_HEADER_PATH=\"${xcom_t030_grpc_header}\""
+    )
+    target_link_libraries(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      PRIVATE
+        xverse::xcom_tool_gateway_proto
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_tool_gateway_${tool_gateway_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_tool_gateway_${tool_gateway_kind}_tests
+      PROPERTIES LABELS "t030-${tool_gateway_kind}"
     )
   endforeach()
 

@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "task_id": "T030",
+  "baseline_revision": "80c236638e160c5e991e5a537e29d407e7462dc6",
+  "candidate": "working tree on the baseline (uncommitted successor candidate; HEAD == baseline; reviewed predecessor checkpoint 01a8a97165725dcd8c7c8e4799d547fbe62f194e)",
+  "stage": "internal_review",
+  "review_type": "separate internal DeepSeek read-only review of the repaired successor candidate",
+  "verdict": "pass",
+  "external_review": "deferred_until_backlog_completion",
+  "reviewer": {
+    "provider": "deepseek",
+    "backend": "api",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "pinned by the queue workflow",
+    "independence": "a fresh pinned read-only pass over the repaired candidate; the reviewer did not author the reviewed change in this pass and inspected the predecessor checkpoint, every tracked change, and every new file"
+  },
+  "method": "read-only inspection of the repaired successor candidate plus independent re-execution of every deterministic check in the admitted offline build: the trusted unit, validation, integration-content, and static-analysis measures, the inherited Phase 6 conformance at the pinned baseline, offline generated-code provenance regeneration, the public-safety scan, the T007-T010 register validators, the strict whole-system integration traceability simulation, and exact endpoint and stage-artifact hash verification; no production code or test was edited in this stage",
+  "reviewed_at": "2026-09-28T20:23:26.172366+00:00",
+  "scope": [
+    "the single versioned contract proto/xverse/xcom/v1/tool_gateway.proto",
+    "the additive src/xverse/xcom/CMakeLists.txt generation, library, and t030 test wiring",
+    "the tests/xcom/tool_gateway generated-contract suites and bounded helpers",
+    "the T030 work products, engineering requirement/component/unit/validation records, trace links, measures, and inherited provenance refresh",
+    "the repaired engineering/trace/links.json whole-system integration edges T030-L-0251..T030-L-0257",
+    "the required T009/T010 planned-to-established path-status reconciliation"
+  ],
+  "checks": [
+    {
+      "id": "REV-01",
+      "check": "baseline, boundary, and reviewed-path exactness",
+      "observation": "git rev-parse HEAD equals the recorded baseline 80c236638e160c5e991e5a537e29d407e7462dc6; the union of tracked changes and untracked files excluding this record and reports/xcom-queue/t030-package.json is exactly the 106 reviewed_paths; every path is inside the T030 declared boundary plus the required T009/T010 path-status reconciliation and inherited provenance refresh; git diff --check is clean",
+      "result": "pass"
+    },
+    {
+      "id": "REV-02",
+      "check": "contract identity and additive-evolution rules",
+      "observation": "proto/xverse/xcom/v1/tool_gateway.proto declares syntax proto3 and package xverse.xcom.v1, declares the reserved band 1000-1999 on every message, places no live field inside any reserved band, and pins field numbers/names in the committed test manifest; T30-TS-012/013/021 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-03",
+      "check": "service and message surface",
+      "observation": "one ToolGateway service with exactly the ten declared methods in declared order with the declared request/response pairing and the single server-streaming ReadObservations flag; every required message and enum present with a zero *_UNSPECIFIED value; T30-TS-001/002/003 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-04",
+      "check": "forward and backward compatibility",
+      "observation": "a higher-numbered additive field (41), a crafted unknown tag (900), and an unmapped enum value (99) survive a proto3 parse/serialize round trip and are not dropped or remapped; T30-TS-014/015/016 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-05",
+      "check": "domain neutrality and bounds",
+      "observation": "no field name contains a transport/address/port/socket/DNS/TLS/credential/export fragment; every message with a bytes field also declares a size-bound field; no submission/lease/revoke/arm message lacks a session/permit identity and no bypass_permit field exists; T30-TS-017/018/019 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-06",
+      "check": "version negotiation and rejection",
+      "observation": "ProtocolVersion major/minor and GatewayCapabilities field manifest are asserted; the test-local fail-closed predicate accepts major 1 and rejects 0, 2, 3..16 and 0xFFFFFFFF without depending on an absent field; T30-TS-004/020 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-07",
+      "check": "declared bounds",
+      "observation": "max_message_bytes, max_concurrent_streams, max_deadline_millis, max_observation_queue, observation record/queue bounds, payload_bound, and lease_millis/deadline_millis are explicit fields asserted against the descriptor; T30-TS-011/018 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-08",
+      "check": "generated-code provenance",
+      "observation": "the offline admitted build regenerated all four outputs and their digests equal the implementation.md section 5 record (pb.h 80e886ea..., pb.cc bcff5426..., grpc.pb.h be80b0c7..., grpc.pb.cc 474b4f1c...); the committed proto digest equals the section 3 record (cbb65f90...); the generated header carries PROTOBUF_VERSION 3012004; T30-TS-022/023/024 pass",
+      "result": "pass"
+    },
+    {
+      "id": "REV-09",
+      "check": "additive build wiring",
+      "observation": "exactly one XVERSE_XCOM_RUNTIME_TARGETS addition (xverse_xcom_tool_gateway_proto) and four additive t030-<kind> test targets in src/xverse/xcom/CMakeLists.txt; no existing target, test name, label, command, or expected value changed; the CTest discovery counts are preserved",
+      "result": "pass"
+    },
+    {
+      "id": "REV-10",
+      "check": "executed measures",
+      "observation": "trusted unit measure exit 0 (t030-contract 11, t030-evolution 5, t030-negative 5, t030-provenance 3 = 24, plus preserved suites); trusted validation measure exit 0 (150 passed, 24 subtests); trusted integration-content measure exit 0 (full CTest 429/429, preserved subset t0(2[6-9]|3[0-4])- 123/123, t030- 24, pytest 150 passed); trusted static_analysis measure cppcheck exit 0",
+      "result": "pass"
+    },
+    {
+      "id": "REV-11",
+      "check": "inherited Phase 6 conformance",
+      "observation": "no Phase 6-owned path (T026-T029 docs, stimulation_* source/tests, T026-T029 requirement/component/unit/validation records, phase6 conformance files) is changed by the candidate; engineering/run_phase6_conformance.py at the pinned baseline reports 26 conformance inspections passed",
+      "result": "pass"
+    },
+    {
+      "id": "REV-12",
+      "check": "offline, local-only, dependency safety",
+      "observation": "the test sources include only GTest, the admitted Protocol Buffers headers, and the C++ standard library; no network/socket/resolver/TLS/dynamic-load/subprocess/legacy call is present; the generated gRPC stubs are generated for provenance and never compiled or linked; no new admitted dependency",
+      "result": "pass"
+    },
+    {
+      "id": "REV-13",
+      "check": "public safety",
+      "observation": "no credential, private address, real payload, or absolute host path appears in any T030-owned file (schema, tests, work products, records, CMake wiring); host paths remain only in inherited engineering/stage-results records, where they are pre-existing baseline content",
+      "result": "pass"
+    },
+    {
+      "id": "REV-14",
+      "check": "governance and traceability",
+      "observation": "the T007-T010 validators (task ownership, requirements traceability, architecture contracts, unit design) all pass; the trusted trace validator accepts 1361 links / 411 artifacts with no stale endpoint revision; links.json adds exactly the declared T030 links and modifies only the inherited T020-L-046 digest; implemented_by digests match current file SHA-256 for all 40 T030 links",
+      "result": "pass"
+    },
+    {
+      "id": "REV-15",
+      "check": "repaired whole-system integration trace (T030-SR-011/014/015/017/018/019/020)",
+      "observation": "links.json adds the seven additive verified_by -> integration edges T030-L-0251..T030-L-0257 for exactly the seven exposed requirements, each targeting the trusted whole-system integration measure engineering/verification/measures/integration.json (kind integration, revision 1) whose declared test_ids are the 24 executed XcomToolGateway{Contract,Evolution,Negative,Provenance}.* cases; a strict matrix simulation over all 150 accepted system/software requirements with the trusted policy (require_system_traceability, required_scope_task_ids [T030]) now reports zero gaps for integration_tests and integration_test_ids",
+      "result": "pass"
+    },
+    {
+      "id": "REV-16",
+      "check": "trace-only repair and endpoint/stage-artifact hashes",
+      "observation": "the repair changes no requirement text, acceptance criterion, contract byte, production source, test, verification measure, or test_ids list; implementation.md (T030-L-0228/0229) and requirements.md (T030-L-0225/0226) endpoint digests are exact; the declared refresh of the links.json digest (be8546e7...) in engineering/stage-results/{documentation,integration,internal-review}.json and of the reports/review-index.md digest (07eb4c28...) in {documentation,internal-review}.json all match the current files",
+      "result": "pass"
+    },
+    {
+      "id": "REV-17",
+      "check": "task-specific challenge: named behaviour and scope",
+      "observation": "T030 is contract-only: local-only transport, TCP-listener absence, flow control, disconnect cleanup, separate-process behaviour, and provider isolation are correctly left to T031/T032/T033/T034 as disclosed limitations (T030-GAP-01/04); version rejection is proven at the contract/predicate level only (T030-GAP-03); each passing test asserts the named task behaviour against the generated descriptor or generated source rather than a placeholder",
+      "result": "pass"
+    }
+  ],
+  "findings": [],
+  "observations": [
+    {
+      "id": "OBS-01",
+      "severity": "informational",
+      "evidence": "engineering/trace/links.json T030-L-0251..T030-L-0257",
+      "observation": "Five of the seven repaired requirements (T030-SR-015/017/018/019/020) are verified by build/discovery, source inspection, public-safety scan, register validators, and the deterministic gate rather than by a dedicated asserting CTest case; their integration edge therefore resolves to the whole-measure 24-case test set rather than to a narrower case. This matches the accepted T026-T029 whole-system trace convention and the trace schema, which derives integration_test_ids from the verified_by -> integration measure.",
+      "required_correction": "none for this candidate; the per-requirement case granularity could be sharpened when T031+ add asserting cases",
+      "closure_test": "strict matrix simulation reports integration_tests and integration_test_ids for every accepted T030 software requirement"
+    },
+    {
+      "id": "OBS-02",
+      "severity": "informational",
+      "evidence": "engineering/stage-results/*.json (inherited)",
+      "observation": "Several inherited T020/T026-T029 stage-result artifact digests (e.g. engineering/project.json, engineering/verification/measures/integration.json, T026-T029 requirement records) were already stale relative to the current files at the accepted baseline; the repair refreshed exactly the digests it declares (links.json and review-index.md) and they now match. The remaining entries are historical snapshots and are not validated by the trusted delivery (which validates only the freshly generated phase7-t030-* stage results).",
+      "required_correction": "none for this candidate",
+      "closure_test": "the declared refreshed stage-artifact digests equal the current file SHA-256 values"
+    },
+    {
+      "id": "OBS-03",
+      "severity": "informational",
+      "evidence": "docs/engineering/xcom/t030/implementation.md:56-63",
+      "observation": "The illustrative schema in detailed-design.md section 3 omitted the reserved band on seven small messages while normative section 3.2 rule 2 requires it on every message; the implementation applies the normative rule and discloses the deviation, and the pinned field manifest is unchanged. Honest and additive.",
+      "required_correction": "none for this candidate",
+      "closure_test": "T30-TS-012 asserts the reserved band on every message; T30-TS-013 pins the unchanged manifest"
+    },
+    {
+      "id": "OBS-04",
+      "severity": "informational",
+      "evidence": "engineering/project.json",
+      "observation": "The candidate removes the forward-looking protected glob proto/** because the baseline contained no proto/ files and T030 authors the versioned contract; the change is documented in the project decision rule and changes no validator outcome.",
+      "required_correction": "none for this candidate",
+      "closure_test": "no validator consumes protected_paths; the T007-T010 validators pass"
+    }
+  ],
+  "limitations": [
+    "Contract-only: no deployed service, transport, IPC, compatibility, or production-readiness claim (T030-GAP-01).",
+    "gRPC stubs are generated for provenance and are not compiled or linked; the runtime envelope is T031 (T030-GAP-02).",
+    "Version rejection is proven at the contract/predicate level only; the server-side predicate is T031/T034 (T030-GAP-03).",
+    "No separate-process proof and no runtime no-TCP-listener demonstration; those are T032 (T030-GAP-04).",
+    "Generated C++ is not Doxygen-documented (T030-GAP-05) and the helpers are not the T033 reusable suite (T030-GAP-06).",
+    "The trusted target-repository assembly-based integration measure (assembled pinned platform, committed candidate), external Codex review, and user acceptance run separately by the workflow gates and are not claimed by this review."
+  ],
+  "reviewed_paths": [
+    "docs/engineering/xcom/t009/architecture-model.json",
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t030/architecture.md",
+    "docs/engineering/xcom/t030/detailed-design.md",
+    "docs/engineering/xcom/t030/implementation.md",
+    "docs/engineering/xcom/t030/requirements.md",
+    "docs/engineering/xcom/t030/unit-specifications.md",
+    "docs/engineering/xcom/t030/verification-plan.md",
+    "engineering/architecture/components/T030-SR-001-CMP.json",
+    "engineering/architecture/components/T030-SR-002-CMP.json",
+    "engineering/architecture/components/T030-SR-003-CMP.json",
+    "engineering/architecture/components/T030-SR-004-CMP.json",
+    "engineering/architecture/components/T030-SR-005-CMP.json",
+    "engineering/architecture/components/T030-SR-006-CMP.json",
+    "engineering/architecture/components/T030-SR-007-CMP.json",
+    "engineering/architecture/components/T030-SR-008-CMP.json",
+    "engineering/architecture/components/T030-SR-009-CMP.json",
+    "engineering/architecture/components/T030-SR-010-CMP.json",
+    "engineering/architecture/components/T030-SR-011-CMP.json",
+    "engineering/architecture/components/T030-SR-012-CMP.json",
+    "engineering/architecture/components/T030-SR-013-CMP.json",
+    "engineering/architecture/components/T030-SR-014-CMP.json",
+    "engineering/architecture/components/T030-SR-015-CMP.json",
+    "engineering/architecture/components/T030-SR-016-CMP.json",
+    "engineering/architecture/components/T030-SR-017-CMP.json",
+    "engineering/architecture/components/T030-SR-018-CMP.json",
+    "engineering/architecture/components/T030-SR-019-CMP.json",
+    "engineering/architecture/components/T030-SR-020-CMP.json",
+    "engineering/project.json",
+    "engineering/requirements/T030-SR-001.json",
+    "engineering/requirements/T030-SR-002.json",
+    "engineering/requirements/T030-SR-003.json",
+    "engineering/requirements/T030-SR-004.json",
+    "engineering/requirements/T030-SR-005.json",
+    "engineering/requirements/T030-SR-006.json",
+    "engineering/requirements/T030-SR-007.json",
+    "engineering/requirements/T030-SR-008.json",
+    "engineering/requirements/T030-SR-009.json",
+    "engineering/requirements/T030-SR-010.json",
+    "engineering/requirements/T030-SR-011.json",
+    "engineering/requirements/T030-SR-012.json",
+    "engineering/requirements/T030-SR-013.json",
+    "engineering/requirements/T030-SR-014.json",
+    "engineering/requirements/T030-SR-015.json",
+    "engineering/requirements/T030-SR-016.json",
+    "engineering/requirements/T030-SR-017.json",
+    "engineering/requirements/T030-SR-018.json",
+    "engineering/requirements/T030-SR-019.json",
+    "engineering/requirements/T030-SR-020.json",
+    "engineering/requirements/T030-STK-001.json",
+    "engineering/requirements/T030-STK-002.json",
+    "engineering/requirements/T030-STK-003.json",
+    "engineering/requirements/T030-STK-004.json",
+    "engineering/requirements/T030-STK-005.json",
+    "engineering/requirements/XCOM-SYS-FR-011.json",
+    "engineering/requirements/XCOM-SYS-FR-012.json",
+    "engineering/requirements/XCOM-SYS-FR-013.json",
+    "engineering/requirements/XCOM-SYS-FR-015.json",
+    "engineering/requirements/XCOM-SYS-FR-022.json",
+    "engineering/requirements/XCOM-SYS-FR-023.json",
+    "engineering/requirements/XCOM-SYS-FR-032.json",
+    "engineering/stage-results/codex-repair-implementation.json",
+    "engineering/stage-results/codex-repair-integration.json",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/stage-results/sol-conformance-implementation.json",
+    "engineering/stage-results/sol-conformance-integration.json",
+    "engineering/stage-results/sol-successor-implementation.json",
+    "engineering/stage-results/sol-successor-integration.json",
+    "engineering/trace/links.json",
+    "engineering/unit-specifications/T030-SR-001-U.json",
+    "engineering/unit-specifications/T030-SR-002-U.json",
+    "engineering/unit-specifications/T030-SR-003-U.json",
+    "engineering/unit-specifications/T030-SR-004-U.json",
+    "engineering/unit-specifications/T030-SR-005-U.json",
+    "engineering/unit-specifications/T030-SR-006-U.json",
+    "engineering/unit-specifications/T030-SR-007-U.json",
+    "engineering/unit-specifications/T030-SR-008-U.json",
+    "engineering/unit-specifications/T030-SR-009-U.json",
+    "engineering/unit-specifications/T030-SR-010-U.json",
+    "engineering/unit-specifications/T030-SR-011-U.json",
+    "engineering/unit-specifications/T030-SR-012-U.json",
+    "engineering/unit-specifications/T030-SR-013-U.json",
+    "engineering/unit-specifications/T030-SR-014-U.json",
+    "engineering/unit-specifications/T030-SR-015-U.json",
+    "engineering/unit-specifications/T030-SR-016-U.json",
+    "engineering/unit-specifications/T030-SR-017-U.json",
+    "engineering/unit-specifications/T030-SR-018-U.json",
+    "engineering/unit-specifications/T030-SR-019-U.json",
+    "engineering/unit-specifications/T030-SR-020-U.json",
+    "engineering/validation/scenarios/T030-VS-ACCUMULATED.json",
+    "engineering/verification/measures/integration.json",
+    "engineering/verification/measures/unit.json",
+    "engineering/verification/measures/validation.json",
+    "proto/xverse/xcom/v1/tool_gateway.proto",
+    "reports/review-index.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "tests/xcom/tool_gateway/contract_support.hpp",
+    "tests/xcom/tool_gateway/contract_tests.cpp",
+    "tests/xcom/tool_gateway/evolution_tests.cpp",
+    "tests/xcom/tool_gateway/negative_tests.cpp",
+    "tests/xcom/tool_gateway/provenance_tests.cpp"
+  ],
+  "notes": "Fresh pinned DeepSeek Flash read-only internal review of the repaired successor candidate on baseline 80c236638e160c5e991e5a537e29d407e7462dc6. Verdict pass with no blocking findings. The repair adds exactly seven truthful additive whole-system integration edges (T030-L-0251..T030-L-0257) for the seven requirements strict delivery exposed, refreshing only the implementation.md endpoint digest and the declared inherited links.json/review-index.md stage-artifact digests; no contract byte, measure, test, requirement, or test_ids list changed. Every trusted measure re-run here (unit, validation, integration content, static analysis), the inherited Phase 6 conformance, the register validators, the provenance regeneration, and the strict whole-system traceability simulation pass. Four informational observations are recorded; none requires repair. No production code or test was edited in this stage, and no user acceptance or platform-main delivery is inferred."
+}

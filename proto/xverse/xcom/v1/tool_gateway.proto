@@ -1,0 +1,428 @@
+// Versioned X-COM external-tool gateway contract (v1).
+//
+// This is the single, versioned, provider-neutral source of the capability-007 external-tool API
+// (accepted XCOM-XLC-002 external-rpc contract, accepted XCOM-DU-019 tool gateway Protocol Buffers
+// API). It defines the wire contract only: the gateway session, the synthetic client, and every
+// transport runtime are separate tasks (T031+).
+//
+// Additive evolution rules (normative):
+//   1. The package name and every published field number and name are immutable once published.
+//   2. A removed or renamed field's number and name MUST be reserved in the same change before reuse.
+//   3. Only additive fields, messages, enums, enum values, and methods may be added in v1.
+//   4. No published field may change type, label, or number; no enum value number may be reused.
+//   5. An unknown field and an unmapped enum value MUST survive a proto3 round trip unchanged.
+//   6. An unsupported protocol major version MUST be rejected fail-closed; a higher minor is additive.
+//   7. No address, port, socket, DNS, TLS, credential, dashboard, storage, query-presentation, or
+//      export primitive may become a core field.
+//   8. Every enforced bound is an explicit field; no implicit or unbounded value is allowed.
+//   9. The reserved band 1000-1999 in every message is for future additive fields below 1000.
+
+syntax = "proto3";
+
+package xverse.xcom.v1;
+
+// ---------------------------------------------------------------------------
+// Version negotiation
+// ---------------------------------------------------------------------------
+
+// Declared protocol identity. An unsupported major is rejected fail-closed; a higher minor is
+// accepted additively. Rejection must not depend on an absent field.
+message ProtocolVersion {
+  uint32 major = 1;
+  uint32 minor = 2;
+  reserved 1000 to 1999;
+}
+
+// One bounded, provider-neutral gateway capability identity.
+message Capability {
+  string id = 1;
+  uint32 revision = 2;
+  reserved 1000 to 1999;
+}
+
+// Bounded negotiated capability record. Every enforced bound is an explicit field.
+message GatewayCapabilities {
+  ProtocolVersion protocol = 1;
+  repeated Capability capabilities = 2;
+  uint32 max_message_bytes = 3;
+  uint32 max_concurrent_streams = 4;
+  uint64 max_deadline_millis = 5;
+  uint32 max_observation_queue = 6;
+  reserved 1000 to 1999;
+}
+
+// Empty version-inspection request (bounded, no fields in v1).
+message QueryVersionRequest {
+  reserved 1000 to 1999;
+}
+
+// Version-inspection response carrying the negotiated protocol and bounded capabilities.
+message QueryVersionResponse {
+  ProtocolVersion protocol = 1;
+  GatewayCapabilities capabilities = 2;
+  Diagnostic diagnostic = 3;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostics
+// ---------------------------------------------------------------------------
+
+// Deterministic diagnostic severity, consistent with the accepted T-CORE diagnostic vocabulary.
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_INFO = 1;
+  SEVERITY_WARNING = 2;
+  SEVERITY_ERROR = 3;
+}
+
+// Deterministic diagnostic record: stable code, severity, phase, affected identity, reason, and
+// correction. It carries no free-form payload.
+message Diagnostic {
+  string code = 1;
+  Severity severity = 2;
+  string phase = 3;
+  string identity = 4;
+  string reason = 5;
+  string correction = 6;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Observation
+// ---------------------------------------------------------------------------
+
+// Explicit payload-view state. Metadata-only records carry no payload bytes.
+enum PayloadState {
+  PAYLOAD_STATE_UNSPECIFIED = 0;
+  PAYLOAD_METADATA_ONLY = 1;
+  PAYLOAD_VIEW_ALLOWED = 2;
+  PAYLOAD_REDACTED = 3;
+  PAYLOAD_TRUNCATED = 4;
+}
+
+// Bounded observation filter over logical identities only.
+message ObservationFilter {
+  string origin_kind = 1;
+  string contract_id = 2;
+  string route_id = 3;
+  string clock_domain = 4;
+  string outcome = 5;
+  reserved 1000 to 1999;
+}
+
+// Logical, transport-free identity carried by an observation record.
+message Identity {
+  string origin_kind = 1;
+  string tool_id = 2;
+  string permit_id = 3;
+  string session_id = 4;
+  string plan_digest = 5;
+  string request_id = 6;
+  string correlation_id = 7;
+  uint64 causation_id = 8;
+  reserved 1000 to 1999;
+}
+
+// Bounded observation record. The payload view is explicit and opt-in; metadata-only records carry
+// no payload bytes, and any payload view is bounded by payload_bytes.
+message ObservationRecord {
+  Identity identity = 1;
+  string route_id = 2;
+  string contract_id = 3;
+  string clock_domain = 4;
+  uint64 sequence = 5;
+  string outcome = 6;
+  PayloadState payload_state = 7;
+  bytes payload_view = 8;
+  uint32 payload_bytes = 9;
+  reserved 1000 to 1999;
+}
+
+// Open a bounded observation stream with an explicit deadline and record bounds.
+message OpenObservationRequest {
+  string tap_id = 1;
+  ObservationFilter filter = 2;
+  uint32 max_records = 3;
+  uint32 max_record_bytes = 4;
+  bool allow_payload_view = 5;
+  uint64 deadline_millis = 6;
+  reserved 1000 to 1999;
+}
+
+// Grant a bounded observation stream.
+message OpenObservationResponse {
+  string stream_id = 1;
+  uint32 granted_max_records = 2;
+  uint32 granted_max_record_bytes = 3;
+  Diagnostic diagnostic = 4;
+  reserved 1000 to 1999;
+}
+
+// Read up to a bounded number of records before an explicit deadline.
+message ReadObservationsRequest {
+  string stream_id = 1;
+  uint32 max_records = 2;
+  uint64 deadline_millis = 3;
+  reserved 1000 to 1999;
+}
+
+// Close an observation stream by logical stream identity.
+message CloseObservationRequest {
+  string stream_id = 1;
+  reserved 1000 to 1999;
+}
+
+// Bounded close result: delivered and dropped counters plus a diagnostic.
+message CloseObservationResponse {
+  uint64 delivered = 1;
+  uint64 dropped = 2;
+  Diagnostic diagnostic = 3;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Validation session
+// ---------------------------------------------------------------------------
+
+// Bounded validation-session state, including an explicit evidence-incomplete terminal state.
+enum SessionState {
+  SESSION_STATE_UNSPECIFIED = 0;
+  SESSION_DECLARED = 1;
+  SESSION_ARMED = 2;
+  SESSION_CLOSED = 3;
+  SESSION_REVOKED = 4;
+  SESSION_EXPIRED = 5;
+  SESSION_EVIDENCE_INCOMPLETE = 6;
+}
+
+// Arm a validation session. The exact permit, session, plan, graph, protocol, and validity bound are
+// carried in the request; no field bypasses the permit.
+message ArmSessionRequest {
+  string permit_id = 1;
+  string session_id = 2;
+  string plan_digest = 3;
+  string graph_digest = 4;
+  ProtocolVersion protocol = 5;
+  uint64 validity_millis = 6;
+  uint64 deadline_millis = 7;
+  reserved 1000 to 1999;
+}
+
+// Arm result: bounded session state plus a diagnostic.
+message ArmSessionResponse {
+  SessionState state = 1;
+  Diagnostic diagnostic = 2;
+  reserved 1000 to 1999;
+}
+
+// Revoke a validation session by logical session identity.
+message RevokeSessionRequest {
+  string session_id = 1;
+  string reason_code = 2;
+  reserved 1000 to 1999;
+}
+
+// Revoke result: bounded session state plus a diagnostic.
+message RevokeSessionResponse {
+  SessionState state = 1;
+  Diagnostic diagnostic = 2;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Stimulation submission
+// ---------------------------------------------------------------------------
+
+// The four allowed stimulation actions.
+enum StimulationActionKind {
+  STIMULATION_ACTION_UNSPECIFIED = 0;
+  STIMULATION_ACTION_INJECT_SIGNAL = 1;
+  STIMULATION_ACTION_INJECT_MESSAGE = 2;
+  STIMULATION_ACTION_INVOKE_SERVICE = 3;
+  STIMULATION_ACTION_EMULATE_SERVICE = 4;
+}
+
+// Interaction kind of the stimulated exchange.
+enum InteractionKind {
+  INTERACTION_KIND_UNSPECIFIED = 0;
+  INTERACTION_KIND_SIGNAL = 1;
+  INTERACTION_KIND_MESSAGE = 2;
+  INTERACTION_KIND_REQUEST = 3;
+  INTERACTION_KIND_RESPONSE = 4;
+}
+
+// Direction of the stimulated interaction.
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_INBOUND = 1;
+  DIRECTION_OUTBOUND = 2;
+  DIRECTION_BIDIRECTIONAL = 3;
+}
+
+// Bounded stimulation action identity and correlation/causation lineage.
+message StimulationAction {
+  StimulationActionKind kind = 1;
+  string action_id = 2;
+  string correlation_id = 3;
+  uint64 causation_id = 4;
+  reserved 1000 to 1999;
+}
+
+// Bounded schedule mode.
+enum ScheduleMode {
+  SCHEDULE_MODE_UNSPECIFIED = 0;
+  SCHEDULE_IMMEDIATE = 1;
+  SCHEDULE_SCHEDULED = 2;
+}
+
+// Bounded schedule with an explicit clock domain, due time, tolerance, ordering, and late policy.
+message Schedule {
+  ScheduleMode mode = 1;
+  string clock_domain = 2;
+  uint64 due_nanos = 3;
+  uint64 tolerance_nanos = 4;
+  string ordering_rule = 5;
+  string late_policy = 6;
+  reserved 1000 to 1999;
+}
+
+// Submit one bounded stimulation action. The request binds the session, endpoint, contract,
+// interaction, direction, schedule, deadline, and an explicit payload size bound.
+message SubmitStimulationRequest {
+  string session_id = 1;
+  string request_id = 2;
+  StimulationAction action = 3;
+  string target_endpoint = 4;
+  string contract_id = 5;
+  InteractionKind interaction = 6;
+  Direction direction = 7;
+  Schedule schedule = 8;
+  bytes payload = 9;
+  uint32 payload_bytes = 10;
+  uint64 deadline_millis = 11;
+  reserved 1000 to 1999;
+}
+
+// Bounded stimulation outcome kinds, including an explicit evidence-incomplete state.
+enum StimulationOutcomeKind {
+  STIMULATION_OUTCOME_UNSPECIFIED = 0;
+  STIMULATION_OUTCOME_EMITTED = 1;
+  STIMULATION_OUTCOME_REJECTED = 2;
+  STIMULATION_OUTCOME_FAILED = 3;
+  STIMULATION_OUTCOME_QUEUED = 4;
+  STIMULATION_OUTCOME_EVIDENCE_INCOMPLETE = 5;
+}
+
+// Bounded stimulation outcome with identity lineage.
+message StimulationOutcome {
+  StimulationOutcomeKind kind = 1;
+  string request_id = 2;
+  string correlation_id = 3;
+  uint64 causation_id = 4;
+  reserved 1000 to 1999;
+}
+
+// Submit result: request identity, bounded outcome, and a diagnostic.
+message SubmitStimulationResponse {
+  string request_id = 1;
+  StimulationOutcome outcome = 2;
+  Diagnostic diagnostic = 3;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Service-emulation lease
+// ---------------------------------------------------------------------------
+
+// Exclusive service-emulation lease state.
+enum LeaseState {
+  LEASE_STATE_UNSPECIFIED = 0;
+  LEASE_ACTIVE = 1;
+  LEASE_RELEASED = 2;
+  LEASE_QUARANTINED = 3;
+  LEASE_EXPIRED = 4;
+  LEASE_CONFLICT = 5;
+}
+
+// Acquire an exclusive service-emulation lease bound to the exact session, endpoint identity,
+// endpoint generation, and plan digest, with explicit lease and deadline bounds.
+message AcquireLeaseRequest {
+  string session_id = 1;
+  string endpoint_id = 2;
+  uint64 endpoint_generation = 3;
+  string plan_digest = 4;
+  uint64 lease_millis = 5;
+  uint64 deadline_millis = 6;
+  reserved 1000 to 1999;
+}
+
+// Acquire result: lease identity, exclusive lease state, and a diagnostic.
+message AcquireLeaseResponse {
+  string lease_id = 1;
+  LeaseState state = 2;
+  Diagnostic diagnostic = 3;
+  reserved 1000 to 1999;
+}
+
+// Release an exclusive service-emulation lease by logical session and lease identity.
+message ReleaseLeaseRequest {
+  string session_id = 1;
+  string lease_id = 2;
+  string reason_code = 3;
+  reserved 1000 to 1999;
+}
+
+// Release result: exclusive lease state plus a diagnostic.
+message ReleaseLeaseResponse {
+  LeaseState state = 1;
+  Diagnostic diagnostic = 2;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Session query
+// ---------------------------------------------------------------------------
+
+// Declared finite session counters, including an evidence-incomplete count.
+message SessionCounters {
+  uint64 requests_received = 1;
+  uint64 requests_authorized = 2;
+  uint64 requests_rejected = 3;
+  uint64 emitted = 4;
+  uint64 evidence_incomplete = 5;
+  reserved 1000 to 1999;
+}
+
+// Query a bounded session outcome by logical session identity.
+message QuerySessionRequest {
+  string session_id = 1;
+  reserved 1000 to 1999;
+}
+
+// Query result: bounded session state, finite counters, and a diagnostic.
+message QuerySessionResponse {
+  SessionState state = 1;
+  SessionCounters counters = 2;
+  Diagnostic diagnostic = 3;
+  reserved 1000 to 1999;
+}
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
+// Versioned external-tool gateway surface. Every method is bounded; observation reads stream
+// server-side. No method exposes a transport, address, dashboard, storage, or export primitive.
+service ToolGateway {
+  rpc QueryVersion(QueryVersionRequest) returns (QueryVersionResponse);
+  rpc OpenObservation(OpenObservationRequest) returns (OpenObservationResponse);
+  rpc ReadObservations(ReadObservationsRequest) returns (stream ObservationRecord);
+  rpc CloseObservation(CloseObservationRequest) returns (CloseObservationResponse);
+  rpc ArmSession(ArmSessionRequest) returns (ArmSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc SubmitStimulation(SubmitStimulationRequest) returns (SubmitStimulationResponse);
+  rpc AcquireLease(AcquireLeaseRequest) returns (AcquireLeaseResponse);
+  rpc ReleaseLease(ReleaseLeaseRequest) returns (ReleaseLeaseResponse);
+  rpc QuerySession(QuerySessionRequest) returns (QuerySessionResponse);
+}

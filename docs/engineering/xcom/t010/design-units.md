@@ -1306,7 +1306,7 @@ Overflow policies: `fail-closed`, `reject`
 
 **Artifact paths:**
 
-- `proto/xverse/xcom/v1/tool_gateway.proto` (planned)
+- `proto/xverse/xcom/v1/tool_gateway.proto` (established)
 
 **Ownership / lifetime.**
 
@@ -1370,7 +1370,7 @@ Overflow policies: `fail-closed`
 
 - `src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp` (planned)
 - `src/xverse/xcom/src/tool_gateway.cpp` (planned)
-- `tests/xcom/tool_gateway/` (planned)
+- `tests/xcom/tool_gateway/` (established)
 
 **Ownership / lifetime.**
 
@@ -1442,7 +1442,7 @@ Overflow policies: `fail-closed`, `reject`
 **Artifact paths:**
 
 - `src/xverse/xcom/fixtures/synthetic_tool.cpp` (planned)
-- `tests/xcom/tool_gateway/` (planned)
+- `tests/xcom/tool_gateway/` (established)
 
 **Ownership / lifetime.**
 

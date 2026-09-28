@@ -1,0 +1,45 @@
+{
+  "component_id": "T030-SR-017-CMP",
+  "concurrency": "read-only static descriptor; single-threaded test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T030-SR-017-U",
+  "inputs": [
+    "generated tool-gateway descriptor and bounded test-local constants"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/contract_support.hpp"
+  ],
+  "invariants": [
+    "The tests **shall** be offline and local-only using only the C++ standard library, GTest, and the admitted Protocol Buffers runtime, with no network, socket, resolver, TLS, ambient/secret, dynamic-load, subprocess, or legacy access and no new admitted dependency."
+  ],
+  "note": "Unit cases are contributory only; the exact requirement is verified by its named inspection and the trusted evidence.",
+  "outputs": [
+    "declared descriptor or round-trip assertion result"
+  ],
+  "purpose": "The tests **shall** be offline and local-only using only the C++ standard library, GTest, and the admitted Protocol Buffers runtime, with no network, socket, resolver, TLS, ambient/secret, dynamic-load, subprocess, or legacy access and no new admitted dependency.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t030/requirements.md"
+  ],
+  "state": "immutable versioned contract artifact or bounded test-local descriptor view",
+  "static_checks": [
+    {
+      "expected": "no generation, static-analysis, or compiler error",
+      "id": "T030-SR-017-STATIC",
+      "rule": "the schema generates and the test source compiles under the accepted X-COM profile",
+      "tool": "admitted protoc generation and warning-as-error C++ build"
+    }
+  ],
+  "title": "T030-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its named inspection. Context: the test source performs no prohibited host or network call.",
+      "id": "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+      "precondition": "the committed contract and its generated artifacts are built",
+      "stimulus": "run the named contributory contract case and the requirement inspection"
+    }
+  ]
+}

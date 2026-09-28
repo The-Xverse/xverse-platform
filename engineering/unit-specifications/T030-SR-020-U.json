@@ -1,0 +1,45 @@
+{
+  "component_id": "T030-SR-020-CMP",
+  "concurrency": "read-only static descriptor; single-threaded test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T030-SR-020-U",
+  "inputs": [
+    "generated tool-gateway descriptor and bounded test-local constants"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t030/verification-plan.md"
+  ],
+  "invariants": [
+    "The T030 candidate **shall** satisfy the deterministic Phase 7 gate with the contract and at least one `tests/` path changed, the `t030-` discovery green, a clean diff, and the checkbox marked complete only in the implementation stage."
+  ],
+  "note": "Unit cases are contributory only; the exact requirement is verified by its named inspection and the trusted evidence.",
+  "outputs": [
+    "declared descriptor or round-trip assertion result"
+  ],
+  "purpose": "The T030 candidate **shall** satisfy the deterministic Phase 7 gate with the contract and at least one `tests/` path changed, the `t030-` discovery green, a clean diff, and the checkbox marked complete only in the implementation stage.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t030/requirements.md"
+  ],
+  "state": "immutable versioned contract artifact or bounded test-local descriptor view",
+  "static_checks": [
+    {
+      "expected": "no generation, static-analysis, or compiler error",
+      "id": "T030-SR-020-STATIC",
+      "rule": "the schema generates and the test source compiles under the accepted X-COM profile",
+      "tool": "admitted protoc generation and warning-as-error C++ build"
+    }
+  ],
+  "title": "T030-SR-020 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its named inspection. Context: the deterministic gate inspects the same committed contract revision.",
+      "id": "XcomToolGatewayContract.PackageSyntaxVersioned",
+      "precondition": "the committed contract and its generated artifacts are built",
+      "stimulus": "run the named contributory contract case and the requirement inspection"
+    }
+  ]
+}
