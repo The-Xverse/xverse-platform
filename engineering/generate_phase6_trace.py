@@ -258,7 +258,7 @@ def main() -> None:
         "title": "Phase 6 source, documentation, governance, and gate conformance",
         "expected": "every named inspection passes against this candidate",
         "test_ids": sorted(CONFORMANCE_REQUIREMENTS),
-        "command": ["python3", "engineering/check_phase6_conformance.py"],
+        "command": ["python3", "engineering/run_phase6_conformance.py"],
     })
     # Refresh inherited code endpoint hashes only for changed files; source identity is preserved.
     for item in links[:original_count]:

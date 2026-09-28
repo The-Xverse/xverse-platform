@@ -183,32 +183,43 @@ tag). Maximum = `44 + 111 + 126 = 281` bytes.
    release, and return `WriteFailed` (or `PartialWrite` for a short append) — **`emit` is not invoked**.
    `EvidenceIncomplete` is not returned here; it is reserved for step 5, where the intent is durable and
    only its outcome is missing.
-4. Release the mutex. Invoke `emit` exactly once; capture the returned `StimulationOutcome`. Validate
+4. Mark the durable intent as callback-owned independently of the recovered index, release the mutex,
+   and invoke `emit` exactly once. While any callback owns an intent, `recover`, `open`, and
+   `open_local_file` return `RejectedConfiguration` without scanning, rebinding, or creating a file;
+   `resolve` refuses an in-flight intent. Capture the returned `StimulationOutcome`. Validate
    its `kind` against the closed `1..5` vocabulary before encoding: an out-of-vocabulary kind returns
    `RejectedConfiguration` without appending the outcome (the emission callback has already run, so the
    durable intent remains as an orphan) and is never exposed through `out`.
-5. Under the mutex: check the outcome bound, append the outcome frame, and `sync`. On failure return
+5. Under the mutex: release callback ownership, check the outcome bound, append the outcome frame,
+   and `sync`. On failure return
    `EvidenceIncomplete` (the intent remains durable and becomes an orphan); never return `Ok`.
 6. Return `Ok` only when both frames are durable.
 
 A callback that throws a host exception propagates unmodified after the durable intent; the intent is an
 orphan, and the exception is not converted to `Ok` (the caller observes its own exception; recovery
-classifies the durable intent `EvidenceIncomplete` for that request).
+classifies the durable intent `EvidenceIncomplete` for that request). Callback ownership is also
+released on exception or an invalid returned outcome kind, so later recovery and explicit resolution
+may process the orphan exactly once.
 
 ### 5.2 `resolve(request_id, outcome)`
 
 Validates `outcome.kind` against the closed `1..5` vocabulary before any mutation: an out-of-vocabulary
 kind is `RejectedConfiguration` with no append (vocabulary validation precedes the reference check).
-Otherwise it appends exactly one explicit outcome for an intent that still has no outcome of its own.
+Otherwise it appends exactly one explicit outcome for an intent that still has no outcome of its own
+and is not owned by an in-flight emission callback. An in-flight intent returns
+`RejectedConfiguration` without an append.
 `NotFound` when no intent matches; `AlreadyResolved` when every retained intent carrying the identity
 already has a distinct outcome (one-to-one resolution); `CapacityExhausted`/`WriteFailed` as above. An
 `Unknown` resolution stays `Unknown`.
 
 ### 5.3 `open` / `open_local_file` / `recover` / `snapshot`
 
-`open(Storage&, config)` validates the config, performs one recovery scan, and stores the report.
+`open(Storage&, config)` validates the config, then performs one recovery scan and stores the report.
 `open_local_file(path, config)` rejects an empty path, opens the file, and then behaves as `open`.
-`recover()` re-runs the scan and returns the report. `snapshot()` returns the bounded counters without a
+Both reject an active emission callback before rebinding; `open_local_file` creates no file in that
+case. `recover()` refuses to scan while a callback owns a durable intent and returns
+`RejectedConfiguration`; otherwise it re-runs the scan and returns the report.
+`snapshot()` returns the bounded counters without a
 scan. Neither `recover` nor `snapshot` mutates durable state.
 
 ## 6. Expected-value tables

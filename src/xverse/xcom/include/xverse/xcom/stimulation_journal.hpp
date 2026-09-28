@@ -438,8 +438,9 @@ public:
   /// \brief Opens the journal over a host storage seam and performs one recovery scan.
   /// \param storage Host storage; non-owning and must outlive the journal.
   /// \param config Bounded configuration.
-  /// \return `JournalStatus::RejectedConfiguration` for an invalid configuration (no
-  ///         mutation), otherwise the recovery scan status (`Ok`, `CorruptRecord`,
+  /// \return `JournalStatus::RejectedConfiguration` for an invalid configuration or while
+  ///         an in-flight emission callback owns a durable intent (no scan or rebinding);
+  ///         otherwise the recovery scan status (`Ok`, `CorruptRecord`,
   ///         `PartialWrite`, `WriteFailed`, or `CapacityExhausted` when the durable journal
   ///         already exceeds a declared retained-record or byte bound).
   /// \pre `storage` outlives the journal.
@@ -450,8 +451,9 @@ public:
   /// \brief Opens the journal over a host-supplied local file path.
   /// \param path Local file path; must be non-empty.
   /// \param config Bounded configuration.
-  /// \return `JournalStatus::RejectedConfiguration` for an empty path or an invalid
-  ///         configuration (no file created or mutated), `JournalStatus::WriteFailed` when
+  /// \return `JournalStatus::RejectedConfiguration` for an empty path, an invalid
+  ///         configuration, or while an in-flight emission callback owns a durable intent
+  ///         (no file created, scan, or rebinding); `JournalStatus::WriteFailed` when
   ///         the file cannot be opened, otherwise the recovery scan status.
   /// \pre the parent directory of `path` exists; the journal creates no directory.
   /// \unitspec{T026-U-JOURNAL}
@@ -520,8 +522,9 @@ public:
   /// \param outcome Explicit bounded outcome; its `request_id` is bound to `request_id` and its
   ///                `kind` MUST be one of the closed `OutcomeKind` enumerators.
   /// \return `JournalStatus::RejectedConfiguration` when `outcome.kind` is outside the closed
-  ///         `OutcomeKind` vocabulary (no append); `JournalStatus::NotFound` when no intent
-  ///         matches; `JournalStatus::AlreadyResolved` when every retained intent carrying the
+  ///         `OutcomeKind` vocabulary or the matching intent has an in-flight emission callback
+  ///         (no append); `JournalStatus::NotFound` when no intent matches;
+  ///         `JournalStatus::AlreadyResolved` when every retained intent carrying the
   ///         identity already has a distinct outcome; `JournalStatus::CapacityExhausted` or a
   ///         write status on failure; `JournalStatus::Ok` when the outcome is durable and
   ///         resolves exactly one still-unresolved intent. An explicit `Unknown` resolution

@@ -119,7 +119,7 @@ Stable names and precedence are provided for every vocabulary by `*_name` helper
 | --- | --- | --- |
 | `EndpointGeneration` | `SessionId session`, `Tag endpoint`, `Generation generation`, `PlanDigest plan_digest` | the exact lease key; value equality over every field |
 | `EmulationLease` | `EndpointGeneration key`, `std::uint64_t request_id`, `ClockDomainId domain`, `Timestamp acquired_at`, `Timestamp expires_at`, `LeaseState state` | a bounded lease value; `expires_at >= acquired_at` |
-| `PendingAction` | `std::uint64_t request_id`, `StimulationAction action`, `ClockDomainId domain`, `Timestamp scheduled_at`, `bool immediate` | a bounded queued descriptor; `request_id` non-zero |
+| `PendingAction` | `std::uint64_t request_id`, `authorization_token`, `StimulationAction action`, `ClockDomainId domain`, `Timestamp scheduled_at`, `bool immediate`, retained bounded `StimulationRequest request` | a bounded queued descriptor; `request_id` non-zero and the guard token identifies this request's reservation |
 | `SyntheticStimulationItem` | `OriginKind origin`, `StimulationIntent intent` | `origin` is always `OriginKind::validation_tool`; payload-free |
 
 ### 3.6 `ActionDiagnostic`, `ActionPathSnapshot`, `LeaseSnapshot`, `CompletionReport`, `CompletionRequest`
@@ -202,6 +202,13 @@ runs.
    state, lease table, pending queue, lineage window, and durable journal are unchanged in the declined
    dimension. A guard decline acquires no lease, so the lease table (including its acquisition and release
    accounting) is byte-identical.
+
+An authorized request carries a unique guard token while queued. If a later journal admission fails
+before emission, the action path removes only that token's quota/loop accounting and releases only
+that request's held emulation lease. Other successful or still-pending authorizations retain their
+accounting. A request identity already in the pending queue or retained journal is rejected before
+authorization. Outcome timestamps carry the resolved completion domain; the intent retains the
+request's original domain and scheduled timestamp.
 
 ### 4.4 `drain(request)` → `CompletionReport`
 

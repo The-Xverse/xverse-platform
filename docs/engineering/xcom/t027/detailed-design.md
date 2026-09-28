@@ -170,7 +170,8 @@ numeric locator). `GuardSnapshot` is defined in §4.4.
    mutated.
 3. Validate policy consistency with the permit: `plan_digest`, `interface_tag`, `target`, and
    `validity_domain` must match the immutable permit. A mismatch is `RejectedConfiguration`.
-4. Store a copy of the permit and the policy, reset the tallies and loop window to zero, set `open = true`,
+4. Store a copy of the permit and the policy, reset the tallies, loop window, and bounded
+   request-authorization ledger to zero, set `open = true`,
    and return `Ok`.
 
 ### 4.2 `authorize(request, session_state, resolved_time, out)` → `GuardOutcome`

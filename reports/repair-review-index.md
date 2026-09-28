@@ -1,24 +1,9 @@
-# T026–T029 Codex repair candidate
+# T026–T029 Codex Sol conformance repair candidate
 
-The successor repairs R-01–R-07 in the runtime and regression tests. R-08 has 93
-Phase 6 software requirement records, 19 declared system anchors, scoped
-components, unit specifications, validation scenarios, and links generated from
-the task work products by `engineering/generate_phase6_trace.py`. The original
-T020 records remain historical and are excluded by the strict Phase 6 policy.
+This exact successor addresses Astra review findings R-08a and R-08b after the prior runtime repair for R-04–R-06. The trusted delivery policy now includes the authoritative T026–T028 documents, task JSON evidence, task packages, and all declared task source and tests in its material digest. A trusted checkout check requires the candidate commit to equal clean HEAD before any measure or delivery decision. External verifier and target-assembly helper hashes are pinned in the trusted policy.
 
-The trace generator uses documented requirement-to-test mappings where present.
-For 26 requirements without such a mapping, its explicit fallback table selects
-contributing cases; each also has a distinct conformance inspection. These inspect
-source, configuration, work products, and task history for the stated requirement.
-The checks include bounded pattern scans, so independent content review remains
-required. The source work products, changed-path inventory, and stage records
-must be reviewed alongside the trusted unit, validation, static, conformance,
-and pinned target-repository integration evidence.
+The conformance runner first executes negative controls for private-path leakage and missing method documentation, then checks 26 scoped requirements. The content inventory includes task work products, source, tests, JSON review evidence, package manifests, and stage records. T026 public methods are checked individually for their in-flight callback contract, including `open` and `open_local_file`; T027/T028 method blocks and design descriptions are checked by declaration. Historical original review JSON is preserved outside the candidate in the repair evidence archive, and the candidate copies use repository-relative paths.
 
-The previous negative matrix had no current-scope rows and 99 gaps. The earlier
-successor matrix had 109 current-scope rows and no structural gaps in a dry probe.
-This successor adds the missing ancestry and conformance evidence. Its exact
-committed state requires trusted measures and delivery before independent review.
+The 93 Phase 6 software requirement records, 19 declared system anchors, scoped components, unit specifications, validation scenarios, and trace links are generated from the task work products by `engineering/generate_phase6_trace.py`. The T020 records remain historical and outside this delivery policy. The fallback mapping for 26 requirements is contributory test context and has separate named conformance inspections. Pattern-based conformance requires independent content review.
 
-This is a candidate. Independent review, user acceptance, and the subsequent
-approved-artifact merge into `xverse-platform/main` remain separate steps.
+The exact committed state requires trusted conformance, static, unit, validation, and pinned target-repository integration measures plus strict delivery. This remains a candidate pending independent Astra review, user acceptance, and merge of approved artifacts into `xverse-platform/main`.

@@ -46,7 +46,7 @@
     {
       "id": "T029-IR2-C03",
       "name": "Deterministic verify gate",
-      "method": "`python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T029 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9` (configure, build under the inherited warning-as-error rule, discovery, full `ctest --parallel 4`, `git diff --check`).",
+      "method": "`python3 x-verse_fabric/automation/xcom_feature_gate.py verify T029 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9` (configure, build under the inherited warning-as-error rule, discovery, full `ctest --parallel 4`, `git diff --check`).",
       "result": "pass: `{\"ok\": true, \"task_id\": \"T029\", \"changed_paths\": 20, \"checks\": [\"ctest:387\"]}`; exit 0 and `git diff --check <baseline> --` is clean."
     },
     {
@@ -162,7 +162,7 @@
     {
       "id": "T029-IR2-OBS-05",
       "severity": "informational",
-      "observation": "`docs/engineering/xcom/t029/verification-plan.md` line 30 records the deterministic gate command with the environment-specific absolute tool path `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py`. This is identical to the established convention in the accepted T007/T008/T009/T010/T012-T028 verification plans, so it is a repository-wide recording convention rather than a T029-introduced leak.",
+      "observation": "`docs/engineering/xcom/t029/verification-plan.md` line 30 records the deterministic gate command with the environment-specific absolute tool path `x-verse_fabric/automation/xcom_feature_gate.py`. This is identical to the established convention in the accepted T007/T008/T009/T010/T012-T028 verification plans, so it is a repository-wide recording convention rather than a T029-introduced leak.",
       "evidence": "docs/engineering/xcom/t029/verification-plan.md:30 (cf. docs/engineering/xcom/t027/verification-plan.md:30)",
       "assessment": "CHK-21/NEG-35 remain satisfied for T029 in substance (no credential, private address, real payload, or product-specific host path was introduced); the tool path is the framework's own gate location. Recorded so the public-evidence intent in requirements.md §7/§6 is not over-read."
     },

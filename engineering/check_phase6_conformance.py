@@ -42,6 +42,18 @@ ALLOWED_PUBLIC_INCLUDES = {
          "stimulation_actions.hpp", "stimulation_guard.hpp",
          "stimulation_journal.hpp", "validation_session.hpp"},
 }
+PUBLIC_METHODS = {
+    26: ("open", "open_local_file", "recover", "last_recovery", "snapshot",
+         "recovered_intents", "recovered_outcomes", "journal_then_emit", "resolve"),
+    27: ("open", "authorize", "snapshot", "is_open", "status"),
+    28: ("reserve_emission", "finish_emission", "execute", "drain", "close",
+         "revoke", "expire", "mark_evidence_incomplete", "snapshot"),
+}
+CONTENT_PATTERN = re.compile(
+    r"(?:AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|"
+    r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|"
+    r"172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b|/" r"home/[^/\s]+/)"
+)
 
 
 def require(condition: bool, detail: str) -> None:
@@ -60,6 +72,51 @@ def owned_paths(task: int) -> list[Path]:
     name = TASK_FILES[task][0]
     return [ROOT / f"src/xverse/xcom/include/xverse/xcom/{name}.hpp",
             ROOT / f"src/xverse/xcom/src/{name}.cpp"]
+
+
+def content_paths(task: int) -> list[Path]:
+    """Inventory scoped source, tests, work products, and current task evidence."""
+    docs = ROOT / f"docs/engineering/xcom/t0{task}"
+    tests = ROOT / "tests/xcom" / TASK_FILES[task][0]
+    paths = set(owned_paths(task))
+    for folder in (docs, tests):
+        paths.update(path for path in folder.rglob("*") if path.is_file())
+    paths.add(ROOT / f"reports/xcom-queue/t0{task}-package.json")
+    for group in ("requirements", "architecture/components", "unit-specifications",
+                  "validation/scenarios"):
+        paths.update((ROOT / "engineering" / group).glob(f"T0{task}-*.json"))
+    if task == 29:
+        paths.update((ROOT / "engineering").glob("*phase6*.py"))
+        paths.update((ROOT / "engineering/verification/measures").glob("*.json"))
+        paths.add(ROOT / "engineering/trace/links.json")
+        paths.add(ROOT / "reports/repair-review-index.md")
+        for path in (ROOT / "engineering/stage-results").glob("*.json"):
+            if json.loads(path.read_text(encoding="utf-8")).get("task_id") == "T029":
+                paths.add(path)
+    return sorted(paths)
+
+
+def scan_content(paths: list[Path]) -> None:
+    require(paths and all(path.is_file() for path in paths), "declared content inventory is absent")
+    for path in paths:
+        require(not CONTENT_PATTERN.search(path.read_text(encoding="utf-8")),
+                f"public-content pattern in {path.relative_to(ROOT)}")
+
+
+def method_documentation(header: str, symbol: str) -> str:
+    declarations = list(re.finditer(
+        rf"(?m)^[ \t]*(?:\[\[nodiscard\]\][ \t]*)?[^/;\n]*\b{re.escape(symbol)}[ \t]*\(",
+        header,
+    ))
+    require(declarations, f"public declaration {symbol} is absent")
+    blocks = []
+    for declaration in declarations:
+        leading = header[:declaration.start()]
+        block = re.search(r"(?:(?:[ \t]*///[^\n]*\n)+)$", leading)
+        require(block is not None and "\\brief" in block.group(),
+                f"public declaration {symbol} lacks its own Doxygen block")
+        blocks.append(block.group())
+    return "\n".join(blocks)
 
 
 def original_changes(task: int) -> dict[str, str]:
@@ -124,13 +181,10 @@ def inspect(task: int, number: int, kind: str) -> str:
                 "prohibited ambient, network, process, or dynamic-load call found")
         return f"{len(paths)} task-owned files scanned for prohibited host operations"
     if kind == "content":
-        reviewed = paths + sorted((ROOT / f"docs/engineering/xcom/t0{task}").glob("*.md"))
-        text = "\n".join(path.read_text(encoding="utf-8") for path in reviewed)
-        require(not re.search(r"(?:AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|"
-                              r"\b(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\.\d{1,3}\b|"
-                              r"/home/[^/\s]+/)", text),
-                "credential, private address, or absolute host path pattern found")
-        return f"{len(reviewed)} owned source/work-product files pattern-scanned; independent content review remains required"
+        reviewed = content_paths(task)
+        scan_content(reviewed)
+        return (f"{len(reviewed)} scoped source, test, work-product, and evidence files scanned; "
+                "independent content review remains required")
     if kind == "documentation":
         header = sources[0]
         require(f"\\brief T0{task}" in header and "\\ingroup xcom_stim" in header,
@@ -139,10 +193,17 @@ def inspect(task: int, number: int, kind: str) -> str:
                 "repository Doxygen configuration changed")
         for marker in ("\\ownership", "\\lifetime", "\\thread_safety", "\\failure"):
             require(marker in header, f"missing declaration contract marker {marker}")
-        if task == 28:
-            require(re.search(r"/// \\brief[^\n]+\n(?:.*\n){0,3}\s*void finish_emission", header),
-                    "new public emission method lacks Doxygen contract")
-        return "task header contract markers and unchanged Doxyfile inspected"
+        for symbol in PUBLIC_METHODS[task]:
+            block = method_documentation(header, symbol)
+            if task == 26 and symbol in ("open", "open_local_file", "recover", "resolve"):
+                require("in-flight" in block, f"{symbol} omits the active-callback contract")
+        if task == 26:
+            design = (ROOT / "docs/engineering/xcom/t026/detailed-design.md").read_text()
+            require("in-flight emission callback" in design and
+                    "without scanning, rebinding, or creating a file" in design,
+                    "journal detailed design omits active-callback recovery contract")
+        return (f"{len(PUBLIC_METHODS[task])} public method Doxygen blocks, task header contract, "
+                "and unchanged Doxyfile inspected")
     if kind == "governance":
         for predecessor in ("t007", "t008", "t009"):
             require(not git("diff", "--name-only", BASELINES[26], "HEAD", "--",

@@ -49,13 +49,13 @@
     {
       "id": "T026-IR6-C03",
       "name": "Deterministic gate, build discovery, and focused case execution",
-      "method": "ran `python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T026 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d`; `ctest --test-dir build/fabro-t026 -N -R T026Journal`; `ctest --test-dir build/fabro-t026 -R T026Journal`",
+      "method": "ran `python3 x-verse_fabric/automation/xcom_feature_gate.py verify T026 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d`; `ctest --test-dir build/fabro-t026 -N -R T026Journal`; `ctest --test-dir build/fabro-t026 -R T026Journal`",
       "result": "pass: the gate reports `{\"ok\": true, \"task_id\": \"T026\", \"changed_paths\": 22, \"checks\": [\"ctest:324\"]}` (full suite 324/324 through the gate, up from the baseline 306 by exactly the 18 T026 cases); the focused run is `100% tests passed, 0 tests failed out of 18` across the five executables with labels `t026-unit` (5), `t026-negative` (3), `t026-recovery` (5), `t026-failure` (3), `t026-concurrency` (2)."
     },
     {
       "id": "T026-IR6-C04",
       "name": "Register, model, and inherited-stage validators",
-      "method": "ran `python3 scripts/validate_xcom_task_ownership.py --verify`, `python3 scripts/validate_xcom_requirements_traceability.py --verify`, `python3 scripts/validate_xcom_architecture_contracts.py --verify`, `python3 scripts/validate_xcom_unit_design.py --verify`, and `python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t026-reviewed-flash/audit_delivery_inputs.py`",
+      "method": "ran `python3 scripts/validate_xcom_task_ownership.py --verify`, `python3 scripts/validate_xcom_requirements_traceability.py --verify`, `python3 scripts/validate_xcom_architecture_contracts.py --verify`, `python3 scripts/validate_xcom_unit_design.py --verify`, and `python3 x-verse_fabric/.fabro/workflows/xcom-t026-reviewed-flash/audit_delivery_inputs.py`",
       "result": "pass: all four register/model validators exit 0 and report `validation passed`; the delivery-inputs audit returns `{\"ok\": true, \"stage_results\": 8}` (validate_project + validate_trace + validate_stage over all eight inherited stage records). The measure orchestrators (`validate_xcom_core_types.py`, `validate_xcom_endpoint_route_lifecycle.py`, `validate_xcom_observation.py`, `validate_xcom_provider_loopback.py`) fail closed with `SESN_CANDIDATE_REVISION is unset`; that is a candidate-state/harness precondition owned by later delivery gates, not a T026 defect, and this review does not claim they passed."
     },
     {
@@ -122,7 +122,7 @@
       "id": "T026-IR6-C15",
       "name": "Offline/local-only, dependency, public-safety, governance, and maturity honesty",
       "method": "read the header includes and the CMake link line; scanned the changed source/header/tests/work products for forbidden APIs and vocabulary; read the recorded maturity and REF-002 disposition",
-      "result": "pass: the unit includes only C++ standard headers plus POSIX local-file headers plus `validation_session.hpp` (hpp:34-46; cpp:15-28) and links only `xverse::xcom_validation_session`; no network/socket/resolver/TLS, ambient/secret, dynamic-load, subprocess, env-derived path, or legacy access (forbidden-API scan clean); no new third-party dependency and no redefined identity/digest type; no committed secret or private deployment value; the only absolute path is the repository-owned `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py` command, matching the established T007-T024 work-product convention; the scratch path is build-time test-local and never printed; no maturity is promoted and no user acceptance is claimed."
+      "result": "pass: the unit includes only C++ standard headers plus POSIX local-file headers plus `validation_session.hpp` (hpp:34-46; cpp:15-28) and links only `xverse::xcom_validation_session`; no network/socket/resolver/TLS, ambient/secret, dynamic-load, subprocess, env-derived path, or legacy access (forbidden-API scan clean); no new third-party dependency and no redefined identity/digest type; no committed secret or private deployment value; the only absolute path is the repository-owned `x-verse_fabric/automation/xcom_feature_gate.py` command, matching the established T007-T024 work-product convention; the scratch path is build-time test-local and never printed; no maturity is promoted and no user acceptance is claimed."
     },
     {
       "id": "T026-IR6-C16",

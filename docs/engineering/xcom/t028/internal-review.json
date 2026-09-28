@@ -48,13 +48,13 @@
     {
       "id": "T028-IR6-C03",
       "name": "Deterministic gate, discovery, and focused execution",
-      "method": "`python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T028 c518c5e4fcb2055666db25cb62018769e7f56ae4`; `cmake --build build/fabro-t028`; `ctest --test-dir build/fabro-t028 -N`; `ctest --test-dir build/fabro-t028 -N -L t028`; `ctest --test-dir build/fabro-t028 -L t028 --output-on-failure`.",
+      "method": "`python3 x-verse_fabric/automation/xcom_feature_gate.py verify T028 c518c5e4fcb2055666db25cb62018769e7f56ae4`; `cmake --build build/fabro-t028`; `ctest --test-dir build/fabro-t028 -N`; `ctest --test-dir build/fabro-t028 -N -L t028`; `ctest --test-dir build/fabro-t028 -L t028 --output-on-failure`.",
       "result": "pass: the deterministic gate returns `{\"ok\": true, \"task_id\": \"T028\", \"changed_paths\": 22, \"checks\": [\"ctest:367\"]}`; the five t028-* suites discover and run 22/22 green (action 5, lease 5, lifecycle 7, negative 3, concurrency 2) with `100% tests passed`; the incremental build is up to date and warning-free under the inherited `-Werror` rule."
     },
     {
       "id": "T028-IR6-C04",
       "name": "Register validators, provenance refresh, and traceability consistency",
-      "method": "ran `scripts/validate_xcom_task_ownership.py --verify`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, `validate_xcom_unit_design.py --verify`, and `python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t028-reviewed-flash/audit_delivery_inputs.py`; recomputed the declared content hashes; inspected `engineering/trace/links.json` and the four `engineering/stage-results/*.json`.",
+      "method": "ran `scripts/validate_xcom_task_ownership.py --verify`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, `validate_xcom_unit_design.py --verify`, and `python3 x-verse_fabric/.fabro/workflows/xcom-t028-reviewed-flash/audit_delivery_inputs.py`; recomputed the declared content hashes; inspected `engineering/trace/links.json` and the four `engineering/stage-results/*.json`.",
       "result": "pass: every register validator exits 0 and the delivery-inputs audit returns `{\"ok\": true, \"stage_results\": 8}`. The refreshed provenance is content-correct: `sha256(src/xverse/xcom/CMakeLists.txt) = 74b538b8...e22fe` equals the `T020-L-046` `target_revision` in `links.json` and the `CMakeLists.txt` artifact digest in `implementation.json`; `sha256(engineering/trace/links.json) = e3c5ba9c...dbb3` equals the declared digest in `documentation.json`, `integration.json`, and `internal-review.json`. T028 requirement/CHK/NEG/TS traceability is carried inside the T028 work products exactly as for the accepted T026/T027 tasks (no `T028-*` entry is expected in the legacy `links.json`). REF-002 is not promoted."
     },
     {
