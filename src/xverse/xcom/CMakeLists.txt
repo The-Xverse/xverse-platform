@@ -18,6 +18,7 @@ set(
   xverse_xcom_activation_plan
   xverse_xcom_stimulation_journal
   xverse_xcom_stimulation_guard
+  xverse_xcom_stimulation_actions
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -501,6 +502,34 @@ set_target_properties(
     CXX_EXTENSIONS OFF
 )
 
+# T028's guarded action path and exclusive generation-bound service-emulation lease. It links
+# only the standard library plus the accepted T025 in-process validation-session contract, the
+# accepted T026 journal, the accepted T027 guard, and the accepted T-CORE origin vocabulary,
+# which it consumes read-only; it adds no third-party dependency and redefines no identity,
+# digest, diagnostic, interaction, origin, or action type.
+add_library(xverse_xcom_stimulation_actions STATIC src/stimulation_actions.cpp)
+add_library(xverse::xcom_stimulation_actions ALIAS xverse_xcom_stimulation_actions)
+target_include_directories(
+  xverse_xcom_stimulation_actions PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(
+  xverse_xcom_stimulation_actions
+  PUBLIC
+    xverse::xcom_stimulation_guard
+    xverse::xcom_stimulation_journal
+    xverse::xcom_validation_session
+    xverse::xcom_core_types
+)
+target_compile_features(xverse_xcom_stimulation_actions PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_actions)
+set_target_properties(
+  xverse_xcom_stimulation_actions
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 # T019's bounded C++ decoder for the canonical activation-plan v1 artifact. It links only the
 # standard library and the already-admitted nlohmann/json header; the third-party JSON type is an
 # implementation detail and does not appear in the public header.
@@ -639,6 +668,46 @@ if(BUILD_TESTING)
     gtest_discover_tests(
       xverse_xcom_stimulation_guard_${guard_kind}_tests
       PROPERTIES LABELS "t027-${guard_kind}"
+    )
+  endforeach()
+
+  # T028 guarded action-path and exclusive service-emulation lease tests. Registration is
+  # additive: no existing target, test name, label, command, or expected value changes. Each
+  # suite uses one hyphenated `t028-<kind>` label (CMake 3.22 label workaround). The negative
+  # suite receives the committed public header and implementation source as build-time
+  # read-only paths for its bounded declaration inspection; it never prints the paths into
+  # public evidence. The action path performs no file I/O, so no scratch directory is required.
+  foreach(
+    action_kind
+    IN ITEMS
+      action
+      lease
+      lifecycle
+      negative
+      concurrency
+  )
+    add_executable(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_actions/${action_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_actions
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PRIVATE
+        "XCOM_T028_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/stimulation_actions.hpp\""
+        "XCOM_T028_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/stimulation_actions.cpp\""
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_actions_${action_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PROPERTIES LABELS "t028-${action_kind}"
     )
   endforeach()
 

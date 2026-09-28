@@ -67,7 +67,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 - [X] T027 Implement the fail-closed pre-emission guard for schema, target, direction, action, time, quota,
   loop, service ownership, permit/session identity, revocation, and expiry; rejection must not mutate
   operational state or emit a normal-route item.
-- [ ] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
+- [X] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
   service emulation, plus drain, close, revoke, expiry, and evidence-incomplete lifecycle completion.
 - [ ] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
   failure/recovery, zero emission after every rejection, persistent synthetic provenance, unmapped clocks,

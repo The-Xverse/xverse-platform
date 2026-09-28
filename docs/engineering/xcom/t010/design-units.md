@@ -1235,9 +1235,9 @@ Overflow policies: `reject`, `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp` (planned)
-- `src/xverse/xcom/src/stimulation_actions.cpp` (planned)
-- `tests/xcom/stimulation_actions/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp` (established)
+- `src/xverse/xcom/src/stimulation_actions.cpp` (established)
+- `tests/xcom/stimulation_actions/` (established)
 
 **Ownership / lifetime.**
 
