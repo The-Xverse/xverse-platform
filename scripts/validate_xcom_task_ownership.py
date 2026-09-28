@@ -145,25 +145,17 @@ SORTED_SLICE_ARRAYS = (
 RECON_FIELDS = ["status", "revision", "reason"]
 RECON_STATUSES = ("accepted", "delivered", "unreconciled", "allocated", "deferred")
 
-# T012-T016 and T021-T024 were delivered as reviewed terminal candidates in the ordered
-# backlog xcom-t011-t016-t021-t024; their capability task checkboxes are complete at exactly
-# these candidate revisions.  They are still awaiting external review and explicit user
-# acceptance, so they are recorded ``delivered`` -- neither ``accepted`` (no acceptance
-# record exists) nor the former ``unreconciled`` (the old checkbox-open reason is now false).
-# Every ``delivered`` entry must carry a non-empty pending-acceptance reason and exactly the
-# pinned revision below; a missing, malformed, or divergent value fails closed.
-DELIVERED_TASKS = {
-    "T012": "863f11ac990c1ce178a0f9d8eb2489e4a5243fe7",
-    "T013": "93cd5f81a2dfbf2231a0b18cfe19dfe43edfbe59",
-    "T014": "8aaa9eb29ffb349538552d709d4e6f37011b3e65",
-    "T015": "44d2001d48dd42dc9ed489a40d2a5f908b734501",
-    "T016": "8e3c4cf6a127e094cd1aecaee2b46024c7c9bcda",
-    "T021": "7be8b9718e42e58bb1a05a486ff62e520f94567c",
-    "T022": "d455c70816eb784066740427a70df9235cd1287d",
-    "T023": "76cdd9a533e5c4a3d5c6f583a4eff7724c18f5d6",
-    "T024": "d50bb48f45e422b8a7018710b1ac50cdadbcf8ed",
+# T011-T016/T021-T024 were explicitly accepted together after terminal review R-01.
+# Their acceptance decision binds the complete successor, not the intermediate
+# per-task delivery commits. Keep the accepted T025 decision bound separately.
+DELIVERED_TASKS = {}
+ACCEPTED_TASKS = {
+    **{task: "2f08355c418a20eb00cbea18506f85bf2ea883b7" for task in (
+        "T011", "T012", "T013", "T014", "T015", "T016",
+        "T021", "T022", "T023", "T024",
+    )},
+    "T025": "4b01586b438a8587d231ee8828d896c206c06a96",
 }
-ACCEPTED_TASKS = {"T025": "4b01586b438a8587d231ee8828d896c206c06a96"}
 ALLOCATED_TASKS = [
     task for task in CONSUMING_TASKS
     if task not in DELIVERED_TASKS and task not in ACCEPTED_TASKS
@@ -799,6 +791,8 @@ def _check_gates(model: dict, findings: Findings) -> None:
                         EXIT_GATE,
                         f"{task} is labelled accepted without a recorded 40-hex revision",
                     )
+                if not str(entry.get("reason", "")).strip():
+                    findings.add(EXIT_GATE, f"{task} is accepted without a decision reason")
             if status == "delivered":
                 revision = entry.get("revision")
                 if not isinstance(revision, str) or not BASELINE_SHA_RE.fullmatch(revision):
@@ -1173,8 +1167,7 @@ def _negative_fixtures(base: dict) -> list[tuple[str, int, dict]]:
     _normalise_arrays(model)
     fixtures.append(("NEG-20", EXIT_PATHS, model))
 
-    # NEG-21..NEG-25 exercise the ``delivered`` reconciliation state introduced for the
-    # R-01 governance repair.  Each must fail closed with GATE_INVALID.
+    # NEG-21..NEG-25 exercise the accepted successor state. Each fails closed.
     model = _copy(base)
     _slice(model, "T-CORE")["reconciliation"]["T012"]["revision"] = None
     _normalise_arrays(model)
@@ -1198,7 +1191,7 @@ def _negative_fixtures(base: dict) -> list[tuple[str, int, dict]]:
     fixtures.append(("NEG-24", EXIT_GATE, model))
 
     model = _copy(base)
-    _slice(model, "T-CORE")["reconciliation"]["T012"]["status"] = "accepted"
+    _slice(model, "T-CORE")["reconciliation"]["T012"]["status"] = "delivered"
     _normalise_arrays(model)
     fixtures.append(("NEG-25", EXIT_GATE, model))
 

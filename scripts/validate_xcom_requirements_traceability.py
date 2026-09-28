@@ -1145,6 +1145,13 @@ def _check_maturity(
                     f"requirement {identifier} is covered by unreconciled or delivered source "
                     f"and must be partial with a recorded reason",
                 )
+        if (status and status.get("status") == "accepted" and maturity == "partial"
+                and not (requirement.get("reconciliation") or "").strip()):
+            findings.add(
+                EXIT_MATURITY,
+                f"partial requirement {identifier} owned by an accepted task must retain "
+                "its recorded limitation",
+            )
         if status and status.get("status") == "accepted" and maturity == "implemented":
             revision = status.get("revision")
             bound = any(
@@ -1177,9 +1184,9 @@ def _check_reconciliation_dependency(ownership: object, findings: Findings) -> N
     """Fail closed when the T007 reconciliation dependency is unavailable.
 
     ``_check_maturity`` reconciles T012-T016/T021-T024 coverage against
-    ``docs/engineering/xcom/task-ownership.json``.  Those tasks are recorded
-    ``delivered`` (reviewed terminal candidates awaiting external acceptance), so a
-    requirement they own must stay ``partial`` with a recorded reason.  A missing,
+    ``docs/engineering/xcom/task-ownership.json``.  Those tasks are now recorded
+    ``accepted`` at an exact revision, while partial requirements they own retain
+    a recorded limitation. A missing,
     unreadable, or malformed ownership register must be a hard failure; it must not
     silently skip that check.
     """
@@ -1599,7 +1606,7 @@ def _negative_fixtures(
     _normalise(register, matrix)
     fixtures.append(("NEG-16", EXIT_MATURITY, register, matrix))
 
-    # NEG-17: drop the delivered/unreconciled reason of a source-present requirement.
+    # NEG-17: drop the limitation of a partial requirement owned by an accepted task.
     register = _copy(base_register)
     matrix = _copy(base_matrix)
     _req(register, "XCOM-SW-CORE-001")["reconciliation"] = None

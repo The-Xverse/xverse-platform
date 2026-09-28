@@ -29,7 +29,7 @@ Review 015 evaluated T026–T041 after the user retired SESN from future work.
 | A09 | BLOCKER | Open implementation prerequisite | T025 has no accepted successor in the current baseline. T026 remains blocked until T025 passes exact-candidate verification, separate review, and explicit user acceptance. |
 | A10 | MAJOR | Resolved in tasks | T026 now defines bounded durability/failure semantics; T027 provides the pre-emission guard before T028 action paths; T029 covers journal, rejection, lifecycle, and concurrency behavior. |
 | A11 | MAJOR | Resolved for workflow | T039–T041 now require separate read-only review, a repository-owned exact-candidate bundle, and explicit user acceptance. |
-| A12 | MINOR | Resolved for delivery; external acceptance pending | T012–T016 and T021–T024 were delivered as reviewed terminal candidates at exact revisions and their task checkboxes in `tasks.md` are complete; the T007 ownership register now records each as `delivered` with its exact candidate revision and a pending-acceptance reason. They are not user-accepted: reconciliation to accepted revisions and explicit user acceptance remain pending external review (terminal review R-01, 2026-09-27). |
+| A12 | MINOR | Accepted at exact successor revision | The user accepted T011–T016 and T021–T024 on 2026-09-28 after external review closed R-01. Their checked task entries and the T007 ownership register now bind acceptance to `2f08355c418a20eb00cbea18506f85bf2ea883b7`; the decision does not promote whole-capability or production maturity. |
 
 ## 2026-09-27 terminal review R-01 repair
 
@@ -54,6 +54,15 @@ test that pins this repaired state. The accepted predecessor work products T008,
 their historical open-checkbox language byte-unchanged; that language is superseded for the current state
 by this dated successor note, not rewritten. The repaired successor candidate still requires its own
 external Codex review and explicit user acceptance before any task in this range closes.
+
+## 2026-09-28 user acceptance
+
+The user accepted the externally reviewed successor `2f08355c418a20eb00cbea18506f85bf2ea883b7`.
+`docs/engineering/xcom/t011-t024-acceptance-decision.md` records the bounded decision. The T007
+ownership register and deterministic projection now mark exactly T011–T016 and T021–T024 accepted at
+that revision. The preceding R-01 repair text remains historical evidence of the pre-acceptance state;
+it is superseded for current task status by this dated decision. Requirements still marked `partial`
+retain their existing capability-level limitations; task acceptance alone does not promote them.
 
 ## Requirement coverage
 
