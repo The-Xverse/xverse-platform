@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "task_id": "T027",
+  "baseline_revision": "bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f",
+  "reviewer": "deepseek-v4-flash-read-only (fresh independent internal review, review revision 4)",
+  "review_type": "internal_read_only_independent",
+  "review_subject": "Fresh, separate read-only DeepSeek review of the repaired T027 fail-closed pre-emission guard candidate over baseline bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f. Re-derives the exact 22-path candidate inventory (17 code/work-product paths plus the 5 repaired inherited provenance records), re-runs the deterministic verify gate (changed_paths 22, ctest:345) and the five t027-* CTest suites (21/21), re-runs the four T007-T010 validators and the inherited trace/stage audit, reads the production unit, the five test suites, and all six work products, and compiles and runs an independent out-of-repo probe that challenges the rank-1 malformed-action closure, the realized time-policy precedence, zero-mutation on rejection, the closed guard, quota, and loop behaviour. Does not edit production code or tests.",
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t027/architecture.md",
+    "docs/engineering/xcom/t027/detailed-design.md",
+    "docs/engineering/xcom/t027/implementation.md",
+    "docs/engineering/xcom/t027/requirements.md",
+    "docs/engineering/xcom/t027/unit-specifications.md",
+    "docs/engineering/xcom/t027/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp",
+    "src/xverse/xcom/src/stimulation_guard.cpp",
+    "tests/xcom/stimulation_guard/concurrency_tests.cpp",
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp",
+    "tests/xcom/stimulation_guard/negative_tests.cpp",
+    "tests/xcom/stimulation_guard/time_tests.cpp",
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T027-IR4-C01",
+      "name": "Baseline binding and exact 22-path candidate inventory",
+      "method": "ran `git rev-parse bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f`, `git rev-parse HEAD`, `git diff --name-only <baseline> --`, and `git ls-files --others --exclude-standard`, then recomputed the candidate union minus the generated review/package records exactly as the deterministic gate does",
+      "result": "pass: baseline and HEAD both resolve to the exact 40-hex revision; the recomputed candidate union is exactly the 22 paths in `reviewed_paths`; the review record `docs/engineering/xcom/t027/internal-review.json` and `reports/xcom-queue/t027-package.json` are the only generated exclusions. Relative to the prior review revision (17 paths) this candidate adds the five repaired inherited provenance records (`engineering/trace/links.json` and the four `engineering/stage-results/*.json`), matching the verify gate's `changed_paths: 22`."
+    },
+    {
+      "id": "T027-IR4-C02",
+      "name": "Scope boundary, later-task absence, and accepted-substrate preservation",
+      "method": "`git diff <baseline> -- specs/007-xcom-core/tasks.md docs/engineering/xcom/t010/ src/xverse/xcom/CMakeLists.txt engineering/trace/links.json engineering/stage-results/`; `git diff --check <baseline> --`; filesystem check for T028 artifacts",
+      "result": "pass: the only capability-ledger change is the single T027 checkbox `- [ ]` -> `- [X]` (specs/007-xcom-core/tasks.md:67); T028-T041 remain `- [ ]`; the T010 change is exactly the three XCOM-DU-017 artifact-path status values `planned` -> `established` in unit-design.json plus the regenerated deterministic projection in design-units.md; `stimulation_actions.hpp/.cpp` (T028) are absent; the CMake change is additive (one runtime-target inventory entry, one library target, five additive test executables; the only other delta is one removed blank line between two existing `target_compile_definitions`/`add_executable` blocks) and no existing target/test/label/command/expected value is altered; no T025/T026 byte, `xdl/`, `proto/`, `src/xverse_xdl/`, `cmake/*.cmake`, or root `CMakeLists.txt` change; `git diff --check` is clean."
+    },
+    {
+      "id": "T027-IR4-C03",
+      "name": "Inherited provenance repair: T020-L-046 and every affected stage artifact hash",
+      "method": "recomputed `sha256(src/xverse/xcom/CMakeLists.txt)` and `sha256(engineering/trace/links.json)`; compared against `engineering/trace/links.json:371` (T020-L-046 `target_revision`), `engineering/stage-results/implementation.json:43`, `engineering/stage-results/documentation.json:43`, `engineering/stage-results/integration.json:18`, and `engineering/stage-results/internal-review.json:38`; iterated every `implemented_by` trace link and every stage-result artifact and recomputed its declared digest; ran `audit_delivery_inputs.py`",
+      "result": "pass: `sha256(src/xverse/xcom/CMakeLists.txt) == 4fe086f1c15c60ce8cde5152877885a2c6d62fc05f0ba0671efb113f559d63e3` and inherited link `T020-L-046` (implemented_by, target `src/xverse/xcom/CMakeLists.txt`) now carries exactly that value (engineering/trace/links.json:366-371), replacing the stale `56bc4a87...`; `sha256(engineering/trace/links.json) == 7b81254aedad8a698059b0ae1260d9d46c4eb5e0358d5c1deacdfeda8c7dc9e1` and that value is identically declared as the `links.json` artifact digest in documentation.json, integration.json, and internal-review.json, replacing the stale `f6cce8c6...`. A full iteration found 0 stale stage artifacts and 0 stale `implemented_by` target hashes; the deterministic trace+stage audit reports `{\"ok\": true, \"stage_results\": 8}`. The earlier `stale endpoint revision in T020-L-046` delivery failure is repaired."
+    },
+    {
+      "id": "T027-IR4-C04",
+      "name": "Deterministic gate, discovery, and focused execution (independent re-run)",
+      "method": "`python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T027 bbfaccda474d5c77d17d22906b8ecfc8b5b4f78f`; `cmake --build build/fabro-t027 --parallel 4`; `ctest --test-dir build/fabro-t027 -N -L t027`; `ctest --test-dir build/fabro-t027 -L t027 --output-on-failure --parallel 4`",
+      "result": "pass: the gate reports `{\"ok\": true, \"task_id\": \"T027\", \"changed_paths\": 22, \"checks\": [\"ctest:345\"]}`; the build is up to date with no warnings under the `-Werror` contract; discovery matches 21 `t027-*` cases (t027-unit 5, t027-mismatch 7, t027-time 3, t027-negative 3, t027-concurrency 3) and all 21 pass."
+    },
+    {
+      "id": "T027-IR4-C05",
+      "name": "Register, traceability, architecture, unit-design, and Doxygen validators",
+      "method": "ran scripts/validate_xcom_task_ownership.py --verify, validate_xcom_requirements_traceability.py --verify, validate_xcom_architecture_contracts.py --verify, validate_xcom_unit_design.py --verify, and the inherited audit_delivery_inputs.py",
+      "result": "pass: all four validators exit 0 with their respective 'validation passed' lines and the inherited audit reports 8 stage results; REF-002 remains unchanged with an empty promoted list and no requirement is promoted."
+    },
+    {
+      "id": "T027-IR4-C06",
+      "name": "Closed vocabularies, precedence, totality, and stable names",
+      "method": "read stimulation_guard.hpp (GuardReason lines 139-174, outcome_of lines 200-210, stable-name helpers) and stimulation_guard.cpp; ran T27-TS-003; independent probe of reason rank/name/outcome totality",
+      "result": "pass: GuardReason is closed with declaration index == precedence rank 0..16 (`precedence_rank`), stable `reason_name`/`outcome_name`/`guard_status_name`, and a total `outcome_of` (None->Authorized, NotOpen/TimeUnmapped->Failed, else Rejected); the closed action/interaction/direction table pairs each StimulationAction with exactly one interaction and direction bit. The realized evaluation order binds the declared reachable checks (rank 1 malformed action binds before rank 2 identity, etc.)."
+    },
+    {
+      "id": "T027-IR4-C07",
+      "name": "Fail-closed coverage of every required dimension",
+      "method": "read stimulation_guard.cpp authorize (lines 186-333) against the required dimensions; ran T27-TS-006..T27-TS-015; independent probe",
+      "result": "pass: schema (rank 6, SchemaMismatch -> T27-TS-008), target/interface (rank 9, TargetMismatch -> T27-TS-008), direction (rank 7, DirectionMismatch -> T27-TS-002/009), interaction (rank 8, InteractionMismatch), action (rank 10 defined-not-allowed -> ActionMismatch; rank 1 zero/composite/undefined -> RejectedConfiguration -> T27-TS-009), time (ranks 14-15 -> T27-TS-013/014/015), quota (rank 12 per-session and per-window -> T27-TS-011), loop (rank 13 -> T27-TS-012), service ownership (rank 11 -> T27-TS-010), permit/session/plan identity (rank 2 -> T27-TS-006), revocation (rank 3 -> T27-TS-007), and expiry (rank 4 -> T27-TS-007) are each realized and covered; every non-`active` state yields NotActive and only `active` continues."
+    },
+    {
+      "id": "T027-IR4-C08",
+      "name": "Failure atomicity: zero mutation and zero emission on every rejection/failure",
+      "method": "read the `reject`/`fail` lambdas (stimulation_guard.cpp:197-210), the closed-guard branch (191-195), and the commit path (319-332); ran T27-TS-004/T27-TS-016/T27-TS-017/T27-TS-020; independent probe",
+      "result": "pass: only `Authorized` advances `actions_authorized_`, `window_actions_`, and the loop window; `Rejected`/`Failed` advance only the observable `evaluations_`/`rejections_`/`failures_` counters and set the output diagnostic, so no action tally, window tally, loop entry, permit, or policy byte changes; a closed guard returns `Failed`/`NotOpen` before touching any counter and `snapshot()` returns the default value; the comment-stripped header and source expose no emission/callback/route/injection/invocation/emulation/lease vocabulary (T27-TS-016 declaration inspection); the independent probe observed an operationally identical snapshot across every rejection family. No normal-route item is emitted because the guard exposes no emission entry point."
+    },
+    {
+      "id": "T027-IR4-C09",
+      "name": "Bounded resources and open validation",
+      "method": "read guard_policy_is_valid (stimulation_guard.cpp:71-128), ranks 12-13, and the commit path; ran T27-TS-005/T27-TS-011/T27-TS-012/T27-TS-018",
+      "result": "pass: every declared bound is validated at open (schema table <= kGuardMaxSchemas=16, loop_window <= kGuardMaxLoopWindow=64, budgets <= 4096, window <= session, interaction/direction bits within 0x0F, finite zero/over-max rejected); loop_window_ is reserved to policy.loop_window, never grows past its declared depth, and evicts the oldest entry; per-session and per-window exhaustion is QuotaExhausted with no mutation; a rejected re-open closes an already-open guard (SR-021, T27-TS-018)."
+    },
+    {
+      "id": "T027-IR4-C10",
+      "name": "Determinism and bounded concurrency",
+      "method": "read concurrency_tests.cpp and the per-guard mutex; ran T27-TS-019/T27-TS-020; independent 4-thread probe of concurrent authorizations against one guard with a declared quota",
+      "result": "pass: one per-guard mutex serializes `open`, the checks, the tallies, and the loop window, and no callback is invoked; three repeated runs of four independent guards reproduce the single-threaded golden sequence and snapshot; concurrent rejections of one guard leave the operational snapshot unchanged; XcomStimulationGuardConcurrency.GuardConcurrentAuthorizationWithinQuota observes exactly the declared quota of Authorized and no over-quota commit."
+    },
+    {
+      "id": "T027-IR4-C11",
+      "name": "Pre-emission time policy and clock safety",
+      "method": "read ranks 14-15 (stimulation_guard.cpp:309-317) and the includes/link line; ran T27-TS-013/T27-TS-014/T27-TS-015; independent probe of the combined unmapped-and-out-of-window input",
+      "result": "pass: a non-`Ok` resolution or a domain differing from the permit validity domain is `Failed`/`TimeUnmapped`; a resolved value outside [valid_from, valid_until) is `Rejected`/`TimeOutOfWindow`; an immediate request is labeled and interpreted in the validity domain; an immediate request with a non-validity clock domain or a scheduled request with an invalid domain is `RejectedConfiguration`; the guard calls no TimeAuthority and compares no raw mismatched clocks. The realized precedence between the two time reasons is recorded as non-blocking observation T027-IR4-OBS-01."
+    },
+    {
+      "id": "T027-IR4-C12",
+      "name": "Bounded payload-free values, offline safety, and compatibility",
+      "method": "read every value declaration and the compile-time rules (stimulation_guard.hpp:629-648 and negative_tests.cpp:33-45); read includes/link lines; scanned the changed source/tests and work products for host paths, credentials, and private values; checked T025/T026 bytes are preserved",
+      "result": "pass: every value type exposes no payload/address/free-form member; the header static_asserts and the negative-test compile-time rules bound each value; the unit includes only the C++ standard library plus validation_session.hpp/contract.hpp/result.hpp and links xverse::xcom_validation_session + xverse::xcom_core_types; no accepted identity/digest/interaction/direction type is redefined, no new dependency is added, and no T025/T026 byte changes; the header and five suites contain no absolute host path, credential, or private value (the workflow-infrastructure absolute path retained in the plan-stage command tables matches the established T007-T026 convention and is not artifact content)."
+    },
+    {
+      "id": "T027-IR4-C13",
+      "name": "Independent out-of-repo probe",
+      "method": "compiled /tmp/t027probe/probe.cpp with `g++ -std=c++20 -Wall -Wextra -Wpedantic -Werror` against the built xverse_xcom_stimulation_guard/validation_session/core_types archives and ran it",
+      "result": "pass with one recorded observation: the probe confirmed the realized time order (a request whose resolution is non-`Ok`/foreign-domain and whose value is outside the window returns `Failed`/`TimeUnmapped`, not `TimeOutOfWindow`), which matches detailed-design §4.2 step 13 and §5.5 but not the blanket 'declaration order is evaluation order' claim for the 14/15 pair; recorded as T027-IR4-OBS-01. All other probed properties (malformed-action closure, zero mutation, closed guard, quota, loop) match the declared behaviour."
+    },
+    {
+      "id": "T027-IR4-C14",
+      "name": "Restart/recovery, maturity honesty, and six work products",
+      "method": "read all six T027 work products (requirements.md, architecture.md, detailed-design.md, unit-specifications.md, verification-plan.md, implementation.md) and the maturity record",
+      "result": "pass: restart/recovery is out of scope for this guard (in-memory, session-scoped, one declared writer) and durable journaling is T026; every T027-SR-001..022 maps to at least one named check in verification-plan.md; XCOM-SW-STIM-004 is recorded implemented and XCOM-SW-STIM-005/-006 partial with the lease/end-to-end loop/scheduling portions deferred to T028/T029; REF-002 stays unchanged with an empty promoted list; no later task behavior (injection/invocation/emulation/lease/drain/close/route) is present; the six required work products are present and non-trivial."
+    }
+  ],
+  "findings": [],
+  "non_blocking_observations": [
+    {
+      "id": "T027-IR4-OBS-01",
+      "severity": "informational",
+      "observation": "For the `TimeOutOfWindow`/`TimeUnmapped` pair, the blanket claim that `GuardReason` declaration order is the realized evaluation/precedence order is inaccurate. The declaration ranks `TimeOutOfWindow` 14 and `TimeUnmapped` 15 (stimulation_guard.hpp:134 and :169/:171; detailed-design.md:77 and the table rows :96-:97; restated in implementation.md:97-103 'evaluates the checks in rank order'). The realized evaluation instead checks the resolution precondition first (stimulation_guard.cpp:309-313) and only then the window (314-317), so a request that is simultaneously unmapped/foreign-domain and out-of-window returns `Failed`/`TimeUnmapped` (rank 15), not `TimeOutOfWindow` (rank 14). An independent out-of-repo probe confirmed this at stimulation_guard.cpp:310-316.",
+      "required_correction": "Recommended (documentation/declaration alignment only, not a code change): state in `GuardReason` and detailed-design.md §3.3 that the two time reasons are mutually exclusive by the resolution precondition and that `TimeUnmapped` is evaluated before `TimeOutOfWindow`, so the enum declaration order is diagnostic and not the realized order for this pair. If instead the realized order is intended to follow the rank strictly, the code and the T27-TS-003 precedence vector would need the pair reordered.",
+      "closure_test": "A focused case asserting that a request with `resolution != Ok` (or a foreign domain) and a value outside [valid_from, valid_until) deterministically returns `Failed`/`TimeUnmapped`, plus an aligned declaration-order statement in the header and detailed-design.",
+      "assessment": "No fail-closed, safety, mutation, emission, determinism, or compatibility impact: both reasons are non-`Authorized`, neither mutates operational state or emits, the realized order matches the normative algorithm in detailed-design.md §4.2 step 13 and the §5.5 rows, and the same input always yields the same reason. This is a documentation/declaration-precision note only, consistent with the informational handling of earlier documentation observations; it does not weaken any expected value or block acceptance."
+    },
+    {
+      "id": "T027-IR4-OBS-02",
+      "severity": "informational",
+      "observation": "The historical T026 records `reports/xcom-queue/t026-package.json` and `docs/engineering/xcom/t026/internal-review.json` still cite the pre-T027 SHA-256 of `src/xverse/xcom/CMakeLists.txt` (56bc4a87...) and the pre-repair SHA-256 of `engineering/trace/links.json` (f6cce8c6...).",
+      "assessment": "No stale-provenance impact: these are T026-revision evidence records whose declared digests are accurate for the T026 candidate they bind, they are not trace endpoints or stage artifacts, and they are not validated by the trace/stage validators or by the candidate material digest (the trusted policy's `material_paths` excludes `reports/xcom-queue/**` and `engineering/stage-results/**`). They must not be rewritten, as that would falsify historical evidence. Recorded for transparency only."
+    }
+  ],
+  "candidate_file_sha256": {
+    "docs/engineering/xcom/t010/design-units.md": "b8ddd7a90a1c9b4ac8e88fd2323f4fbb057141a6817491915714f9130dcaa92d",
+    "docs/engineering/xcom/t010/unit-design.json": "5fa6af253ebc061ac13ca6f8bfbf2fd0c4c27c22e22c63ba067086f878c59275",
+    "docs/engineering/xcom/t027/architecture.md": "75e220e1a773a31f2d2912586032527526fd2c150158c6826ea2a713101e161b",
+    "docs/engineering/xcom/t027/detailed-design.md": "b9fb2aee51d3aeb13d5468376241e7aa3f9d40d87582a1e1a78f394f94fbd4af",
+    "docs/engineering/xcom/t027/implementation.md": "4444a927af33a313ac2c5131976ab0db8bb3bad6a261fe21e58bebfe62ae146d",
+    "docs/engineering/xcom/t027/requirements.md": "6663cb9c4d761c86034affb7c5249d987745db675e23439af9e6d5cc5bdcdb8c",
+    "docs/engineering/xcom/t027/unit-specifications.md": "34678d4e9281e6b0bf35dba8ffe1c5c1592654ad5fbf35e61d58ee0aa9337405",
+    "docs/engineering/xcom/t027/verification-plan.md": "062c1e4f0498e5d02774bad257ee4f3bcd6afbf822cb5a2c9249932406227710",
+    "engineering/stage-results/documentation.json": "512c1216a8ba7b96b92c589742bd6d281225ab29d82b98262c72bc8bed87c468",
+    "engineering/stage-results/implementation.json": "80df2734409dba79c87b150b00a1e206fa4443600bef26f092594ebdfcb1be61",
+    "engineering/stage-results/integration.json": "f73eeb7374a6759c22a92ef71ec45ac993b50d3f5f659462c370e54e06a6e9a8",
+    "engineering/stage-results/internal-review.json": "aff32eead38fc97e422a56992f4f3172219f2c3f5e924a5f547f0638944bee44",
+    "engineering/trace/links.json": "7b81254aedad8a698059b0ae1260d9d46c4eb5e0358d5c1deacdfeda8c7dc9e1",
+    "specs/007-xcom-core/tasks.md": "65d4a0bf705aecb7b4c01e1224b7640774b59c1c3842d58de40720f320c20090",
+    "src/xverse/xcom/CMakeLists.txt": "4fe086f1c15c60ce8cde5152877885a2c6d62fc05f0ba0671efb113f559d63e3",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp": "54c72c81ca08d77ac34b2a0bf00902b38f035ad041b1fc8acf1cf3cb91c4c7ad",
+    "src/xverse/xcom/src/stimulation_guard.cpp": "38ad7f9b4311ffbd3e71cb447fbff7c8ee7b5f30e12ddbbabd89e4c27546caf4",
+    "tests/xcom/stimulation_guard/concurrency_tests.cpp": "fd406180ddeaa47eb9876a06ba37af26e7a1291085a41cd7dc6bef6831931eef",
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp": "0db5f08faa2821350f05c4c1a9c77dc5fb9fa350bc1e467e6ec3ca4b1f664140",
+    "tests/xcom/stimulation_guard/negative_tests.cpp": "5cc07c443c4e6945c9e403c518afb6ec28ada88cc3f8d852d811b0c6c198f0be",
+    "tests/xcom/stimulation_guard/time_tests.cpp": "e138ae296b1495573218d9f3e128340801c604596d47c74e16439f404b16df6d",
+    "tests/xcom/stimulation_guard/unit_tests.cpp": "75a747eb4df05835f4ddebc23d51f461e68b729fb7b27f910f0e04554c552176"
+  },
+  "summary": "Verdict pass. The repaired T027 candidate is well-scoped, additive, offline, deterministic, and compatible: the exact 22-path inventory is inside the T027 boundary (one new production unit, five additive test executables, shared build wiring, six work products, the single T027 checkbox, the required mechanical T010 XCOM-DU-017 status projection, and the five repaired inherited provenance records); the deterministic gate re-run reports ok with changed_paths 22 and ctest:345; the 21 focused cases pass; the four T007-T010 validators pass; no later task (T028+) is implemented; T025/T026 bytes, existing targets, and existing tests are preserved; rejection is non-mutating and the guard exposes no emission surface; and concurrent authorization is bounded by the per-guard mutex. The strict-delivery failure is repaired: inherited trace link T020-L-046 now carries the exact candidate SHA-256 of src/xverse/xcom/CMakeLists.txt and every affected stage artifact and trace endpoint hash matches the actual candidate bytes (audit ok, 8 stage results). The prior blocking finding T027-IR2-F01 remains closed and the rank-1 malformed-action closure is confirmed. Two informational observations remain with no fail-closed, safety, mutation, emission, determinism, compatibility, or traceability impact: the TimeOutOfWindow/TimeUnmapped declaration-versus-evaluation order precision note, and the intentional retention of historical T026-revision hashes in the T026 evidence records. This review does not accept or integrate the candidate; external Codex review and user acceptance remain deferred until the backlog completes."
+}

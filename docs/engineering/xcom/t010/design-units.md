@@ -1167,9 +1167,9 @@ Overflow policies: `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` (planned)
-- `src/xverse/xcom/src/stimulation_guard.cpp` (planned)
-- `tests/xcom/stimulation_guard/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` (established)
+- `src/xverse/xcom/src/stimulation_guard.cpp` (established)
+- `tests/xcom/stimulation_guard/` (established)
 
 **Ownership / lifetime.**
 
