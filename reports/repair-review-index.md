@@ -7,7 +7,7 @@ the task work products by `engineering/generate_phase6_trace.py`. The original
 T020 records remain historical and are excluded by the strict Phase 6 policy.
 
 The trace generator uses documented requirement-to-test mappings where present.
-For 21 requirements without such a mapping, its explicit fallback table selects
+For 26 requirements without such a mapping, its explicit fallback table selects
 contributing cases. Those cases alone do not establish governance or documentation
 obligations. The source work products, changed-path inventory, and stage records
 must be reviewed alongside the trusted unit, validation, static, and pinned
