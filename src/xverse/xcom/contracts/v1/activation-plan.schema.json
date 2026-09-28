@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/xcom/activation-plan/v1/schema.json",
+  "title": "Canonical X-COM activation plan v1",
+  "description": "Closed canonical activation plan compiled from an already normalized and validated XDL graph. Unknown fields fail closed. A plan with any unresolved identity, schema, capability, time, ownership, or policy input is inspectable but cannot activate.",
+  "type": "object",
+  "required": [
+    "planVersion",
+    "digest",
+    "generator",
+    "provenance",
+    "contracts",
+    "endpoints",
+    "routes",
+    "providers",
+    "policies",
+    "observationPoints",
+    "stimulation",
+    "clockDomains",
+    "activationOrder",
+    "diagnostics",
+    "status",
+    "inputResolution"
+  ],
+  "properties": {
+    "planVersion": {"const": "1"},
+    "digest": {"$ref": "#/$defs/digest"},
+    "generator": {"$ref": "#/$defs/generator"},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "contracts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/contract"}},
+    "endpoints": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/endpoint"}},
+    "routes": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/route"}},
+    "providers": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/provider"}},
+    "policies": {"$ref": "#/$defs/policies"},
+    "observationPoints": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/observationPoint"}},
+    "stimulation": {"$ref": "#/$defs/stimulation"},
+    "clockDomains": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/clockDomain"}},
+    "activationOrder": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "diagnostics": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/diagnostic"}},
+    "status": {"enum": ["inspectable", "activatable"]},
+    "inputResolution": {"$ref": "#/$defs/inputResolution"}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "activatable"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "inputResolution": {
+            "properties": {
+              "identity": {"const": "resolved"},
+              "schema": {"const": "resolved"},
+              "capability": {"const": "resolved"},
+              "time": {"const": "resolved"},
+              "ownership": {"const": "resolved"},
+              "policy": {"const": "resolved"}
+            },
+            "required": ["identity", "schema", "capability", "time", "ownership", "policy"]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 127
+    },
+    "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$",
+      "minLength": 1
+    },
+    "digest": {
+      "type": "object",
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": {"enum": ["sha256"]},
+        "value": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "generator": {
+      "type": "object",
+      "required": ["task", "version"],
+      "properties": {
+        "task": {"type": "string", "pattern": "^T[0-9]{3}$"},
+        "version": {"$ref": "#/$defs/version"}
+      },
+      "additionalProperties": false
+    },
+    "resourceRef": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name", "sourceDigest"],
+      "properties": {
+        "apiVersion": {"$ref": "#/$defs/apiVersion"},
+        "kind": {"enum": ["Component", "Deployment", "Scenario"]},
+        "namespace": {"$ref": "#/$defs/identifier"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "version": {"$ref": "#/$defs/version"},
+        "sourceDigest": {"$ref": "#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["generatedAt", "graphDigest", "resources"],
+      "properties": {
+        "generatedAt": {"type": "string", "format": "date-time"},
+        "graphDigest": {"$ref": "#/$defs/digest"},
+        "resources": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/resourceRef"}}
+      },
+      "additionalProperties": false
+    },
+    "contract": {
+      "type": "object",
+      "required": ["contractId", "schemaId", "schemaVersion"],
+      "properties": {
+        "contractId": {"$ref": "#/$defs/identifier"},
+        "schemaId": {"$ref": "#/$defs/identifier"},
+        "schemaVersion": {"$ref": "#/$defs/version"}
+      },
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["endpointId", "role"],
+      "properties": {
+        "endpointId": {"$ref": "#/$defs/identifier"},
+        "role": {"enum": ["initiator", "responder", "observer", "tool"]}
+      },
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "required": ["routeId", "from", "to", "contractId"],
+      "properties": {
+        "routeId": {"$ref": "#/$defs/identifier"},
+        "from": {"$ref": "#/$defs/identifier"},
+        "to": {"$ref": "#/$defs/identifier"},
+        "contractId": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "provider": {
+      "type": "object",
+      "required": ["providerId", "capabilities", "requiredCapabilities"],
+      "properties": {
+        "providerId": {"$ref": "#/$defs/identifier"},
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "required": ["ordering", "reliability", "deadlineMs", "retry", "queueDepth", "overflow", "backpressure"],
+      "properties": {
+        "ordering": {"enum": ["fifo", "priority", "unordered"]},
+        "reliability": {"enum": ["at-most-once", "at-least-once", "exactly-once", "best-effort"]},
+        "deadlineMs": {"type": "integer", "minimum": 0, "maximum": 600000},
+        "retry": {"type": "integer", "minimum": 0, "maximum": 64},
+        "queueDepth": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "overflow": {"enum": ["drop-oldest", "drop-newest", "coalesce", "lossless-backpressure", "reject", "fail-closed"]},
+        "backpressure": {"enum": ["fail-closed", "reject", "lossless-backpressure"]}
+      },
+      "additionalProperties": false
+    },
+    "observationPoint": {
+      "type": "object",
+      "required": ["tapId", "routeId", "payloadAccess", "validityEffect"],
+      "properties": {
+        "tapId": {"$ref": "#/$defs/identifier"},
+        "routeId": {"$ref": "#/$defs/identifier"},
+        "payloadAccess": {"enum": ["metadata-only", "allow-listed"]},
+        "validityEffect": {"enum": ["none", "degrade-on-loss", "invalidate-on-loss"]}
+      },
+      "additionalProperties": false
+    },
+    "stimulation": {
+      "type": "object",
+      "required": ["actions", "permitPolicyRefs"],
+      "properties": {
+        "actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "permitPolicyRefs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "clockDomain": {
+      "type": "object",
+      "required": ["clockDomainId", "source"],
+      "properties": {
+        "clockDomainId": {"$ref": "#/$defs/identifier"},
+        "source": {"enum": ["monotonic", "local-validation-clock", "unmapped"]}
+      },
+      "additionalProperties": false
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "severity", "targetId"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^XCOM-[A-Z0-9-]{3,64}$"},
+        "severity": {"enum": ["error", "warning", "info"]},
+        "targetId": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "inputResolution": {
+      "type": "object",
+      "required": ["identity", "schema", "capability", "time", "ownership", "policy"],
+      "properties": {
+        "identity": {"enum": ["resolved", "unresolved"]},
+        "schema": {"enum": ["resolved", "unresolved"]},
+        "capability": {"enum": ["resolved", "unresolved"]},
+        "time": {"enum": ["resolved", "unresolved"]},
+        "ownership": {"enum": ["resolved", "unresolved"]},
+        "policy": {"enum": ["resolved", "unresolved"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

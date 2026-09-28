@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1",
+  "kind": "flow-policy",
+  "target": {
+    "apiVersion": "xverse.io/xdl/v1alpha1",
+    "kind": "Component",
+    "namespace": "xcom",
+    "name": "plant-a"
+  },
+  "policy": {
+    "ordering": "fifo",
+    "reliability": "at-most-once",
+    "deadlineMs": 100,
+    "retry": 0,
+    "queueDepth": 64,
+    "overflow": "reject",
+    "observationPoints": ["tap-ctrl", "tap-plant"]
+  }
+}

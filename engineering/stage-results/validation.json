@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "attempt_id": "1",
+  "role": "validation",
+  "status": "complete",
+  "inputs": [
+    "engineering/validation/scenarios/",
+    "engineering/verification/measures/validation.json",
+    "docs/engineering/xcom/t020/verification-plan.md"
+  ],
+  "artifacts": [
+    {
+      "path": "engineering/validation/scenarios/T020-VS-01.json",
+      "sha256": "8b8f5dc48b4e7eeaf2c6441b639f211cb2ab715d1c27eae704db93bc51f8c7da"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-02.json",
+      "sha256": "94be08bd5fb9df19a6d79ac74afbb137d85a1b21f63e57715ce651996817517c"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-03.json",
+      "sha256": "c4d24f1371745c1f6b7a8b7598a4aff522b0a2ad14b1893282d92dafcb2a7b95"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-04.json",
+      "sha256": "657cd4e6f7f9a44ea123e7534ee94a00bcf37f70156cec3c2b67b01733c21a69"
+    },
+    {
+      "path": "engineering/validation/scenarios/T020-VS-05.json",
+      "sha256": "ba6a45e7e61ad1a7cc0e0819f26ff8eaf53bad196e5b92dd681a97f6b36b05eb"
+    },
+    {
+      "path": "engineering/verification/measures/validation.json",
+      "sha256": "66a286db91aafc477f73ca713e323f8aae111f09f4b1148158a2258cfc15c66a"
+    }
+  ],
+  "assumptions": [
+    "Validation scenarios reference pytest cases discovered by `python3 -m pytest -v` in the candidate checkout; the T020 subset is the module under tests/xcom/activation_plan/ and one repository bound-derivation case.",
+    "The validation measure has not been run by this stage; its outcome is recorded by the trusted validation gate."
+  ],
+  "findings": [],
+  "blockers": [],
+  "notes": "Recorded five intended-use validation scenarios covering ordering equivalence, fail-closed rejection, pinned goldens, declared bounds, and candidate purity/traceability.",
+  "model": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash",
+    "observed_model": "deepseek-v4-flash"
+  }
+}

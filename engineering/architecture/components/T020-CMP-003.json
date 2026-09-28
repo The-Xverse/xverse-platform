@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "T020-CMP-003",
+  "revision": "1",
+  "title": "Drift verification component",
+  "responsibilities": [
+    "Execute the drift verification over the accepted decoder and normative plan/Profile schemas.",
+    "Prove that no declared table, constant, or golden can drift silently from the committed schema or contract."
+  ],
+  "state_ownership": "none; the component holds no state and owns no runtime resource",
+  "interfaces": [
+    "xverse::xcom activation-plan decode API (read-only, T019)",
+    "src/xverse/xcom/contracts/v1/activation-plan.schema.json (read-only, T017)",
+    "xdl/profiles/xcom-v0.1.schema.json (read-only, T017)",
+    "committed T017 plan fixtures (read-only)"
+  ],
+  "concurrency": "offline-single-threaded; one test process, no thread, no mutable shared state",
+  "errors": [
+    "GoogleTest assertion failure on a table or golden mismatch"
+  ],
+  "dependencies": [
+    "xverse::xcom_activation_plan (T019)",
+    "GTest/gmock admitted prefix"
+  ],
+  "deployment": "repository-local test process; no runtime deployment and no activation",
+  "rationale": "The XCOM-XLC-001 cross-language schema is guarded where it is consumed; drift is never resolved in favour of the implementation."
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "task_id": "T010",
+  "baseline_revision": "abb81681e0d844edaecbaf2843f1c2a7deb1e40f",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 6,
+  "review_checkpoint": "01M3GQVWSDP7XH84GCP92R02CF",
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t010/architecture.md",
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/detailed-design.md",
+    "docs/engineering/xcom/t010/implementation.md",
+    "docs/engineering/xcom/t010/requirements.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t010/unit-specifications.md",
+    "docs/engineering/xcom/t010/verification-plan.md",
+    "docs/engineering/xcom/task-ownership.json",
+    "docs/engineering/xcom/task-ownership.md",
+    "scripts/validate_xcom_unit_design.py",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "R6-CHK-01",
+      "name": "Reviewed inventory equals the baseline diff and the work-product boundary holds",
+      "method": "git rev-parse <baseline>; git diff --name-only <baseline> --; git diff --check <baseline> --; git diff for tasks.md and the two ownership files; git ls-files --others --exclude-standard; git diff --name-only <baseline> -- Doxyfile scripts/check_doxygen.py",
+      "result": "pass: the baseline resolves and the tracked diff is exactly the twelve reviewed paths (+10159/-1). git diff --check is clean. No src/, tests/, xdl/, or proto/ path appears and Doxyfile/scripts/check_doxygen.py are untouched (0 lines). The only tasks.md hunk flips the single T010 checkbox `[ ]` to `[X]` (line 29); the ownership hunks only add scripts/validate_xcom_unit_design.py to the T-ENABLER exclusive set in both the JSON model and its md projection. No other task is marked complete or implemented. The only untracked path is docs/engineering/xcom/t010/internal-review.json (this record), excluded from reviewed_paths."
+    },
+    {
+      "id": "R6-CHK-02",
+      "name": "Validator modes, self-test inventory, and deterministic output",
+      "method": "python3 -m py_compile; --verify; --check-human; --self-test; two --verify runs piped to sha256sum; enumerate _negative_fixtures",
+      "result": "pass: py_compile exit 0; --verify and --check-human exit 0 with 'X-COM unit-design validation passed'; --self-test exits 0 and reports the positive fixture plus 63 in-loop fixtures (declared NEG-01..NEG-46 plus NEG-05b/18b/19b/24b/33b/34b, NEG-08b..NEG-08m, NEG-09b) and the separately handled NEG-38/NEG-40 = 65 rejected cases, with no duplicate fixture name. The two --verify runs are byte-identical (sha256 f1426a71c0a714a3b5f305e22d77e0c9726c86066f3cf395dfe7167e13d978ce). The stored unit-design.json bytes equal serialize(model) (canonical) and design-units.md is the exact projection."
+    },
+    {
+      "id": "R6-CHK-03",
+      "name": "T010-IR-07 closure: mandatory per-unit scalars are rejected when absent",
+      "method": "imported run_checks; for XCOM-DU-026 (non-cpp) and XCOM-DU-006 (cpp) deleted each of family/kind/language/scope/maturity in an isolated model copy and asserted the exit class and message; repeated with a null value",
+      "result": "pass: all ten deletions return IDENTITY_INVALID (3) and the IDENTITY message names the field ('<unit>: missing mandatory field <field>'). Setting any of the five scalars to null also returns IDENTITY_INVALID (3) ('unknown <field> token None'). This closes the exact mutation the failing review recorded (previously kind/scope on any unit and family/language on a non-cpp unit returned exit 0; family/language on cpp units and maturity were only incidental DOXYGEN/GOVERNANCE hits). No existing check is weakened: the loop reports a missing value instead of skipping the vocabulary test, and name/responsibility remain separately required."
+    },
+    {
+      "id": "R6-CHK-04",
+      "name": "T010-IR-07 fixtures are isolating and load-bearing",
+      "method": "enumerated _negative_fixtures and ran each of NEG-08b..NEG-08k against the repaired code and against a reconstructed pre-repair _check_identity that restores the 'if value is not None' guard; neutralised _check_identity and re-ran --self-test (DET-04)",
+      "result": "pass: NEG-08b..NEG-08f delete family/kind/language/scope/maturity from XCOM-DU-026 and NEG-08g..NEG-08k from XCOM-DU-006; each is declared EXIT_IDENTITY and each returned 3 under the repaired code. Under the reconstructed pre-repair predicate, nine of the ten returned exit 0 and the remaining four (NEG-08f maturity, NEG-08g/08i cpp family/language, NEG-08k maturity) returned only the incidental governance/doxygen classes (9/8), never IDENTITY (3). This isolates the new branch as the enforcement. Neutralising _check_identity makes --self-test exit 9, so the strengthened predicate is load-bearing (DET-04)."
+    },
+    {
+      "id": "R6-CHK-05",
+      "name": "T010-IR-08 closure: artifact-path presence and planned_evidence non-emptiness are rejected",
+      "method": "imported run_checks; set XCOM-DU-002 artifact_paths=[{\"status\": \"established\"}]; separately set planned_evidence=[] and deleted planned_evidence; asserted exit class and message",
+      "result": "pass: the status-only artifact entry returns IDENTITY_INVALID (3) ('XCOM-DU-002: every artifact path entry must carry a non-empty string path'); planned_evidence=[] and deleted planned_evidence each return IDENTITY_INVALID (3) ('XCOM-DU-002: planned_evidence must be a non-empty string array'). All three previously returned exit 0. This matches detailed-design.md line 84 ({path, status} per entry) and line 100 (planned_evidence non-empty), and the declared class in §12.1 line 439 (missing mandatory field / no artifact path → IDENTITY_INVALID 3)."
+    },
+    {
+      "id": "R6-CHK-06",
+      "name": "T010-IR-08 fixtures are isolating and load-bearing",
+      "method": "enumerated the fixtures NEG-08l, NEG-08m, NEG-09b and ran them against the repaired code and against the reconstructed pre-repair _check_identity",
+      "result": "pass: NEG-08l (planned_evidence=[]), NEG-08m (deleted planned_evidence), and NEG-09b (path-less artifact entry) are declared EXIT_IDENTITY and each returned 3 under the repaired code. All three returned exit 0 under the reconstructed pre-repair predicate, confirming the new branch (and not a neighbouring check) is the enforcing path and that the fixtures are isolating."
+    },
+    {
+      "id": "R6-CHK-07",
+      "name": "Declared error classes are consistent across validator, design, and plan",
+      "method": "read _check_identity (lines 740-784), _check_binding (1376-1404), _check_paths (1407-1425), the §12.1 exit-class table, requirements.md T010-SR-002, and verification-plan.md §4/§7",
+      "result": "pass: an absent/null mandatory scalar, a status-only artifact entry, and an empty/deleted planned_evidence are all reported as IDENTITY_INVALID (3). detailed-design.md line 439 assigns 'missing mandatory field, or a unit with no artifact path' to IDENTITY_INVALID (3); the §12.2 pseudocode (line 464) lists the family/kind/language/scope/maturity check; requirements.md lines 350-355 require a missing mandatory field to fail; verification-plan.md §4 declares NEG-08b..NEG-08m and NEG-09b at exit 3. No class is renumbered and no accepted class changed."
+    },
+    {
+      "id": "R6-CHK-08",
+      "name": "Verification-plan and implementation record are reconciled to the enforced contract",
+      "method": "read verification-plan.md CHK-03 (line 62), §4 rows NEG-08/NEG-08b..m/NEG-09b (lines 94-100), the isolating-fixture note (lines 143-147), §7 traceability T010-SR-002 (line 202), and implementation.md revision-4 items 8-10 with §5.3",
+      "result": "pass: CHK-03 now requires every entry to carry a non-empty string path and planned_evidence to be a non-empty string array, and states an absent/null scalar is IDENTITY_INVALID. §4 declares NEG-08b..08f (non-cpp XCOM-DU-026), NEG-08g..08k (cpp XCOM-DU-006), NEG-08l/m, NEG-09b, all exit 3, and the note explains the additive isolation without renumbering NEG-01..NEG-46. Traceability for T010-SR-002 lists NEG-08b..NEG-08m and NEG-09b. implementation.md items 8-10 and §5.3 (commands 43-53) record the same mutation closures and the DET-04 probe. The plan/record text matches the code paths I exercised; no stale pre-repair claim remains."
+    },
+    {
+      "id": "R6-CHK-09",
+      "name": "Unit design, ownership, lifetime, thread safety, failure semantics, bounds, Doxygen, and traceability content",
+      "method": "parsed unit-design.json; ran --verify; inspected XCOM-DU-008/006/016/013 and the thread/family histograms; checked every unit's planned_evidence and artifact-path entries; confirmed the positive fixture",
+      "result": "pass: 30 units (CORE 8, ENB 5, GW 3, INTG 4, OBS 2, STIM 5, XDL 3) and 14 invariants equal counts; every unit declares a closed ownership/lifetime model with a rationale, a closed thread-safety model, >= 1 configured finite bound, and a closed condition-to-outcome map. Non-empty shared_state occurs only on the six internally-synchronized, three externally-synchronized, and one message-passing units; XCOM-DU-008 is single-thread-owner with shared_state [] and synchronization null (T010-IR-05 closure intact). XCOM-DU-016 declares evidence-incomplete and XCOM-DU-013 a bounded per-tap queue. All 19 cpp units declare required=true with equal element counts; the model covers all 11 first-proof components and the register requirements. Every unit has a non-empty planned_evidence array and every artifact entry has a non-empty path. No unit declares unbounded or unconfigured state."
+    },
+    {
+      "id": "R6-CHK-10",
+      "name": "Governance, hash, and traceability claims are accurate",
+      "method": "recomputed sha256/size for all eleven recorded artifacts and compared with implementation.md §5; parsed ref002, invariants, and the implemented units; verified the accepted T025 merge commit; ran the T007 ownership validator (--verify/--check-human/--self-test)",
+      "result": "pass: every recomputed hash equals implementation.md §5 (requirements bf0fad94…, architecture 315d0f20…, detailed-design 7b091025…, unit-specifications 935ae046…, verification-plan 8677231a…, unit-design 0b5e446c… 106655 bytes, design-units afb49dd8… 68839 bytes, validator 4342ce2c…, task-ownership.json 65797ca1…, task-ownership.md c11a6b27…, tasks.md 8629abe2…). ref002.disposition is 'unchanged' with an empty promoted set and the three Doxygen gaps remain 'allocated'. The only implemented units are XCOM-DU-014/015 bound to the accepted T025 merge 4b01586b438a8587d231ee8828d896c206c06a96 (a real commit object). The T007 ownership validator exits 0 for --verify, --check-human, and --self-test, so the added T-ENABLER path did not break the upstream register."
+    },
+    {
+      "id": "R6-CHK-11",
+      "name": "Deterministic review gate agrees with this inventory",
+      "method": "python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T010 <baseline>; code inspection of the review() inventory comparison",
+      "result": "pass: the feature gate reports {\"ok\": true, \"task_id\": \"T010\", \"changed_paths\": 12, \"checks\": []}. reviewed_paths is the unique twelve-entry set produced by git diff --name-only <baseline> --, exactly what the deterministic review gate compares, and excludes the untracked review record; verdict is 'pass' with an empty findings list, so every applicable finding from the failing review is closed."
+    }
+  ],
+  "findings": []
+}

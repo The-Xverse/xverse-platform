@@ -19,23 +19,23 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 ## Phase 2: Repository-owned engineering baseline
 
-- [ ] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
+- [X] T007 Establish separate, bounded task ownership for the C++ core, XDL compiler, observation,
   stimulation, integration/evidence, and independent-review work; bind every slice to its exact baseline
   and authorization.
-- [ ] T008 Maintain and review stakeholder/system/software requirements and bidirectional
+- [X] T008 Maintain and review stakeholder/system/software requirements and bidirectional
   requirement/design/code/test/measure traceability.
-- [ ] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
+- [X] T009 Maintain and review architecture, boundaries, component/sequence diagrams, and cross-language
   contracts.
-- [ ] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
+- [X] T010 Maintain and review unit design, ownership, lifetime, thread-safety, failure semantics, bounds,
   and Doxygen plan.
 - [X] T011 Pin and admit the compiler, build, `nlohmann/json`, gRPC/Protocol Buffers, static-analysis,
   sanitizer, and Doxygen environment with licenses, hashes, generated-code provenance, and a
   reproducible/offline strategy.
 
-**Reconciliation (2026-09-27):** T007–T010 remain open at capability level. The implemented build,
-core, lifecycle, provider, observation, and T025 slices have bounded work-product sets, but the missing
-T017–T020 activation-plan slice has no corresponding ownership, requirements, architecture, or unit-design
-package. T011 is complete based on the locked build foundation and retained offline-admission evidence.
+**Status (2026-09-28):** The earlier reconciliation found T007–T010 open before the activation-plan
+slice existed. The accepted T007–T010/T017–T020 successor now closes those tasks at the revision in
+`docs/engineering/xcom/t007-t020-acceptance-decision.md`. T011 is accepted with the remaining
+T011–T016/T021–T024 scope at the revision in `docs/engineering/xcom/t011-t024-acceptance-decision.md`.
 
 ## Phase 3: Core communication foundation (US1)
 
@@ -48,14 +48,15 @@ package. T011 is complete based on the locked build foundation and retained offl
 
 ## Phase 4: XDL-derived activation plan (US1)
 
-- [ ] T017 Define and validate `io.xverse.xcom` Profile v0.1 and the canonical activation-plan v1
+- [X] T017 Define and validate `io.xverse.xcom` Profile v0.1 and the canonical activation-plan v1
   schema and digest/provenance contract.
-- [ ] T018 Implement deterministic Profile-aware plan compilation in `src/xverse_xdl/xcom_plan.py`.
-- [ ] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
-- [ ] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
+- [X] T018 Implement deterministic Profile-aware plan compilation in `src/xverse_xdl/xcom_plan.py`.
+- [X] T019 Implement bounded C++ plan decoding and independent version/digest/capability checks.
+- [X] T020 Add ordering-equivalence, malformed-plan, drift, bound, and regression tests.
 
-**Reconciliation (2026-09-27):** T017–T020 are not implemented. The Profile schema, Python compiler,
-C++ decoder, and plan test suite are absent. This reconciliation does not authorize their implementation.
+**Status (2026-09-28):** The accepted T017–T020 successor supplies the Profile schema, Python compiler,
+C++ decoder, plan tests, and associated work products. The earlier absence finding applies only to the
+2026-09-27 reconciliation baseline.
 
 ## Phase 5: Observation boundary (US2)
 
@@ -65,8 +66,9 @@ C++ decoder, and plan test suite are absent. This reconciliation does not author
 - [X] T024 Test metadata-only zero-payload behavior, controlled payload views, redaction/truncation state,
   ordering, saturation, degraded validity, and safe detach.
 
-**Reconciliation (2026-09-27):** T021–T024 are complete based on the implemented observation boundary,
-tests, traceability, exact-candidate feature-019 evidence, and the accepted T025 predecessor regression.
+**Status (2026-09-28):** T021–T024 are accepted at the exact revision recorded in
+`docs/engineering/xcom/t011-t024-acceptance-decision.md`, with observation source, tests, work products,
+and predecessor regression evidence retained.
 
 ## Phase 6: Validation stimulation boundary (US3)
 

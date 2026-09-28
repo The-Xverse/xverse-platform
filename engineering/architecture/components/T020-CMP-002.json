@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-CMP-002",
+  "revision": "1",
+  "title": "Malformed-plan fail-closed verification component",
+  "responsibilities": [
+    "Execute the malformed-plan verification over the accepted decoder.",
+    "Prove structural fail-closed rejection and the absence of a decoded value on every malformed defect."
+  ],
+  "state_ownership": "none; the component holds no state and owns no runtime resource",
+  "interfaces": [
+    "xverse::xcom activation-plan decode API (read-only, T019)",
+    "committed T017 plan fixtures (read-only)"
+  ],
+  "concurrency": "offline-single-threaded; one test process, no thread, no mutable shared state",
+  "errors": [
+    "GoogleTest assertion failure on an accepted defect, a wrong code/target, or a returned value on a breach"
+  ],
+  "dependencies": [
+    "xverse::xcom_activation_plan (T019)",
+    "GTest/gmock admitted prefix"
+  ],
+  "deployment": "repository-local test process; no runtime deployment and no activation",
+  "rationale": "The accepted fail-closed plan boundary is exercised where it is consumed; no decoder or schema is created by T020."
+}

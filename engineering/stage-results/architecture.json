@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "attempt_id": "1",
+  "role": "architecture",
+  "status": "complete",
+  "inputs": [
+    "docs/engineering/xcom/t020/architecture.md",
+    "docs/engineering/xcom/t009/architecture-model.json",
+    "docs/engineering/xcom/t020/requirements.md"
+  ],
+  "artifacts": [
+    {
+      "path": "engineering/architecture/components/T020-CMP-001.json",
+      "sha256": "a7d1e8f39b08338513f8fb67b1b24a91fb583f8fcbce6dd486da0e2839510334"
+    },
+    {
+      "path": "engineering/architecture/components/T020-CMP-002.json",
+      "sha256": "459ac1ac735ea85260611644f355387960fdd103c038dca12dceab3d51e5410e"
+    },
+    {
+      "path": "engineering/architecture/components/T020-CMP-003.json",
+      "sha256": "5cc848acc8d280ec64c5ce806bb716d59beb7bb90c4b40612d0f7d9443bad425"
+    },
+    {
+      "path": "engineering/architecture/components/T020-CMP-004.json",
+      "sha256": "8fe80a9d3c1c9e0faaeb028a38f8aae4e850b0f40b06e89361d0479b36aab774"
+    },
+    {
+      "path": "engineering/architecture/components/T020-CMP-005.json",
+      "sha256": "3e75e8a9aeb2737da6110650a930e900e226893f809ca3874bab9129497b28de"
+    }
+  ],
+  "assumptions": [
+    "The accepted T009 components XCOM-CMP-003/XCOM-CMP-004 and boundary XCOM-XB-003 are consumed read-only; the T020 components model the verification-only decomposition and create no production component."
+  ],
+  "findings": [],
+  "blockers": [],
+  "notes": "Decomposed the T020 verification boundary into five components, one per unit (ordering-equivalence/cross-language, malformed fail-closed, drift, bound-matrix, and regression/governance verification); no dependency direction is reversed.",
+  "model": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash",
+    "observed_model": "deepseek-v4-flash"
+  }
+}

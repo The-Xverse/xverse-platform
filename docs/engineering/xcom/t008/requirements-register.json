@@ -1,0 +1,2196 @@
+{
+  "schema_version": 1,
+  "task_id": "T008",
+  "capability": "007-xcom-core",
+  "baseline_revision": "957a60723f99c3a31efba1cbd137c454c4acb462",
+  "candidate_revision_rule": "Every candidate records its own exact revision and the exact accepted predecessor revision it derives from; acceptance is per candidate and is never inherited from a sibling or inferred from source presence.",
+  "levels": [
+    "stakeholder",
+    "system",
+    "software"
+  ],
+  "maturity_vocabulary": [
+    "allocated",
+    "conflicting",
+    "deferred",
+    "implemented",
+    "needs_clarification",
+    "partial",
+    "superseded"
+  ],
+  "id_scheme": {
+    "XCOM-STK-": "stakeholder",
+    "XCOM-SYS-FR-": "system",
+    "XCOM-SYS-SC-": "system",
+    "XCOM-SW-CORE-": "software",
+    "XCOM-SW-GW-": "software",
+    "XCOM-SW-XDL-": "software",
+    "XCOM-SW-OBS-": "software",
+    "XCOM-SW-STIM-": "software",
+    "XCOM-SW-INTG-": "software",
+    "XCOM-SW-ENB-": "software"
+  },
+  "authorization_records": [
+    "ACC001",
+    "ACC002",
+    "ACC003",
+    "ACC004",
+    "ACC005",
+    "ACC006",
+    "ACC007",
+    "ACC008",
+    "ACC009",
+    "ACC010",
+    "ACC011",
+    "ACC012",
+    "ACC013",
+    "ACC014",
+    "ACC015",
+    "ADR-0018",
+    "ADR-0019",
+    "ADR-0020"
+  ],
+  "counts": {
+    "stakeholder": 8,
+    "system": 46,
+    "software": 37,
+    "XCOM-STK": 8,
+    "XCOM-SYS-FR": 35,
+    "XCOM-SYS-SC": 11,
+    "XCOM-SW-CORE": 10,
+    "XCOM-SW-GW": 3,
+    "XCOM-SW-XDL": 3,
+    "XCOM-SW-OBS": 5,
+    "XCOM-SW-STIM": 9,
+    "XCOM-SW-INTG": 3,
+    "XCOM-SW-ENB": 4
+  },
+  "requirements": [
+    {
+      "id": "XCOM-STK-001",
+      "level": "stakeholder",
+      "title": "Stable logical-interface communication",
+      "statement": "Capability 007 must provide a stable, domain-neutral logical-interface communication contract whose items exchange every declared interaction family and fail closed before traffic flows when identity, direction, schema, or provider capability is incompatible.",
+      "source_anchors": [
+        "US1",
+        "SC-001",
+        "SC-002"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-002",
+      "level": "stakeholder",
+      "title": "Non-perturbing bounded observation",
+      "statement": "Capability 007 must expose a versioned, filterable observation boundary that does not perturb normal delivery, order, or timing, keeps queues bounded, and supports metadata-only operation by default with controlled payload views.",
+      "source_anchors": [
+        "US2",
+        "SC-003",
+        "SC-004",
+        "SC-005"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-003",
+      "level": "stakeholder",
+      "title": "Safe bounded stimulation",
+      "statement": "Capability 007 must expose a stimulation boundary that is disabled by default, permit-bound, validated and journaled before emission, and that emits zero normal-route items for every missing, expired, mismatched, looping, conflicting, or over-quota request.",
+      "source_anchors": [
+        "US3",
+        "SC-006",
+        "SC-007"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-004",
+      "level": "stakeholder",
+      "title": "Replaceable provider and tool boundary",
+      "statement": "Capability 007 must keep providers, external tools, and service emulation behind versioned provider-neutral contracts with explicit endpoint ownership and issued handles, so a second provider can replace the first without changing unrelated routes.",
+      "source_anchors": [
+        "US4"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-005",
+      "level": "stakeholder",
+      "title": "Deterministic bounded failure behaviour",
+      "statement": "Capability 007 must make queueing, ordering, reliability, deadline, overflow, retry, backpressure, diagnostics, and lifecycle failure explicit, bounded, deterministic, and restricted to declared provider capabilities without silently upgrading guarantees.",
+      "source_anchors": [
+        "FR-007",
+        "FR-010",
+        "FR-013",
+        "FR-025"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-006",
+      "level": "stakeholder",
+      "title": "XDL-derived configuration and identity separation",
+      "statement": "Capability 007 must derive logical interfaces, endpoints, schemas, deployments, and policy from the exact normalized XDL graph, keep logical identity separate from physical realization, and carry X-COM policy only through the versioned io.xverse.xcom Profile.",
+      "source_anchors": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-031"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-007",
+      "level": "stakeholder",
+      "title": "Public-safe reproducible traced delivery",
+      "statement": "Capability 007 must deliver reproducible, public-safe, fully traced evidence: no credentials, private addresses, unrestricted payloads, proprietary excerpts, legacy execution, or external peers; every requirement traces to design, code, test, and measure; REF-002 dispositions are explicit and never promoted.",
+      "source_anchors": [
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-035",
+        "SC-009",
+        "SC-010"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-STK-008",
+      "level": "stakeholder",
+      "title": "Local-only external tool access",
+      "statement": "Capability 007 must provide the initial tool access through one local-only, out-of-process, host-protected gateway with a separate-process synthetic client, no TCP listener, bounded deadlines, and the exact validation permit.",
+      "source_anchors": [
+        "FR-032",
+        "SC-011"
+      ],
+      "refines": [],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Applies across all capability-007 interaction, observation, stimulation, provider, and gateway families.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "stakeholder coverage CHK-05 and requirement-side closure CHK-09; matrix refines links.",
+      "acceptance_criteria": [
+        "Every system requirement refining this stakeholder requirement preserves its accepted intent."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-001",
+      "level": "software",
+      "title": "Contract and logical-identity model",
+      "statement": "Derive versioned logical interfaces, endpoints, schemas, deployments, and policy references from the exact normalized XDL graph and keep logical interface identity separate from provider, protocol, address, and physical realization.",
+      "source_anchors": [
+        "FR-002",
+        "FR-003"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-002",
+        "XCOM-SYS-FR-003"
+      ],
+      "family": "CORE",
+      "owning_task": "T012",
+      "applicability": "Bounded to the CORE family and its owning task T012.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T012 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-002 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-002",
+      "level": "software",
+      "title": "Typed interaction and item identity",
+      "statement": "Provide typed signal/state, message/event, and service request/response interactions whose items carry contract version, logical interface and endpoint, schema version, origin, timestamp and clock domain, correlation/causation, and route/provider.",
+      "source_anchors": [
+        "FR-004",
+        "FR-005"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-004",
+        "XCOM-SYS-FR-005"
+      ],
+      "family": "CORE",
+      "owning_task": "T013",
+      "applicability": "Bounded to the CORE family and its owning task T013.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T013 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-004 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-003",
+      "level": "software",
+      "title": "Fail-closed binding and activation",
+      "statement": "Reject incompatible identity, direction, schema, interaction kind, provider capability, or declared policy before any traffic flows.",
+      "source_anchors": [
+        "FR-006"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-006"
+      ],
+      "family": "CORE",
+      "owning_task": "T013",
+      "applicability": "Bounded to the CORE family and its owning task T013.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T013 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-006 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-004",
+      "level": "software",
+      "title": "Bounded delivery policy",
+      "statement": "Make queueing, ordering, reliability, deadline, overflow, retry, and backpressure explicit and bounded within supported provider capabilities, without silently upgrading delivery or timing guarantees.",
+      "source_anchors": [
+        "FR-007",
+        "FR-008"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-007",
+        "XCOM-SYS-FR-008"
+      ],
+      "family": "CORE",
+      "owning_task": "T014",
+      "applicability": "Bounded to the CORE family and its owning task T014.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T014 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-007 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-005",
+      "level": "software",
+      "title": "Endpoint/route lifecycle and issued handles",
+      "statement": "Own provider registration and endpoint/route lifecycle explicitly so only exact issued handles mutate, close, or replace resources, repeats are idempotent or rejected, and restart reconciliation never infers ownership from names or addresses.",
+      "source_anchors": [
+        "FR-009",
+        "FR-010"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-009",
+        "XCOM-SYS-FR-010"
+      ],
+      "family": "CORE",
+      "owning_task": "T014",
+      "applicability": "Bounded to the CORE family and its owning task T014.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T014 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-009 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-006",
+      "level": "software",
+      "title": "Stable deterministic diagnostics",
+      "statement": "Emit stable diagnostic codes including severity, phase, affected identity, reason, and correction with deterministic ordering.",
+      "source_anchors": [
+        "FR-025"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-025"
+      ],
+      "family": "CORE",
+      "owning_task": "T015",
+      "applicability": "Bounded to the CORE family and its owning task T015.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T015 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-025 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-007",
+      "level": "software",
+      "title": "Owned loopback provider and domain-neutral local runtime",
+      "statement": "Provide the owned loopback provider and synthetic tooling with no network discovery, ambient configuration, secrets, legacy-repository access, or legacy/network execution.",
+      "source_anchors": [
+        "FR-001",
+        "FR-026",
+        "FR-028"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-001",
+        "XCOM-SYS-FR-026",
+        "XCOM-SYS-FR-028"
+      ],
+      "family": "CORE",
+      "owning_task": "T015",
+      "applicability": "Bounded to the CORE family and its owning task T015.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T015 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-001 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-008",
+      "level": "software",
+      "title": "Controlled fault-hook boundary",
+      "statement": "Expose only controlled fault hooks and embed no domain-specific fault semantics.",
+      "source_anchors": [
+        "FR-024"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-024"
+      ],
+      "family": "CORE",
+      "owning_task": "T016",
+      "applicability": "Bounded to the CORE family and its owning task T016.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T016 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-024 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-009",
+      "level": "software",
+      "title": "Loopback conformance and negative-case suite",
+      "statement": "Exchange all four interaction families over owned loopback and reject at least twenty malformed, incompatible, over-capacity, or unauthorized cases with stable diagnostics.",
+      "source_anchors": [
+        "SC-001"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-001"
+      ],
+      "family": "CORE",
+      "owning_task": "T016",
+      "applicability": "Bounded to the CORE family and its owning task T016.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T016 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-001 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-CORE-010",
+      "level": "software",
+      "title": "Deterministic diagnostic ordering guarantee",
+      "statement": "Guarantee byte-stable diagnostic ordering across equivalent normalized inputs.",
+      "source_anchors": [
+        "FR-025"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-025"
+      ],
+      "family": "CORE",
+      "owning_task": "T012",
+      "applicability": "Bounded to the CORE family and its owning task T012.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T012 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-025 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-ENB-001",
+      "level": "software",
+      "title": "Repository-owned requirement register and bidirectional traceability",
+      "statement": "Maintain the canonical three-level requirement register and the bidirectional requirement/design/code/test/measure traceability matrix with an offline validator.",
+      "source_anchors": [
+        "FR-030"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-030"
+      ],
+      "family": "ENB",
+      "owning_task": "T008",
+      "applicability": "Bounded to the ENB family and its owning task T008.",
+      "maturity": "partial",
+      "reconciliation": null,
+      "verification_intent": "T008 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-030 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-ENB-002",
+      "level": "software",
+      "title": "REF-002 disposition accounting without promotion",
+      "statement": "Account for all twenty REF-002 communication IDs XVE-SYS-0139-0158 with their accepted disposition and owning capability, and never report a deferred or allocated target as implemented.",
+      "source_anchors": [
+        "FR-035"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-035"
+      ],
+      "family": "ENB",
+      "owning_task": "T008",
+      "applicability": "Bounded to the ENB family and its owning task T008.",
+      "maturity": "partial",
+      "reconciliation": null,
+      "verification_intent": "T008 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-035 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-ENB-003",
+      "level": "software",
+      "title": "Separate review preserved before acceptance",
+      "statement": "Keep the independent read-only review and the explicit user acceptance as separate gates with no unresolved BLOCKER or MAJOR finding before acceptance.",
+      "source_anchors": [
+        "SC-010"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-010"
+      ],
+      "family": "ENB",
+      "owning_task": "T039",
+      "applicability": "Bounded to the ENB family and its owning task T039.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T039 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-010 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-ENB-004",
+      "level": "software",
+      "title": "Pinned, admitted, reproducible build environment",
+      "statement": "Pin and admit the compiler, build, JSON, gRPC/Protocol Buffers, static-analysis, sanitizer, and Doxygen environment with licenses, hashes, generated-code provenance, and a reproducible/offline strategy.",
+      "source_anchors": [
+        "FR-029",
+        "FR-030"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-029",
+        "XCOM-SYS-FR-030"
+      ],
+      "family": "ENB",
+      "owning_task": "T011",
+      "applicability": "Bounded to the ENB family and its owning task T011.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T011 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-029 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-GW-001",
+      "level": "software",
+      "title": "Versioned provider-neutral tool API",
+      "statement": "Define the versioned gRPC/Protocol Buffers tool API with additive evolution so no dashboard, product, test language, or transport protocol becomes a core primitive.",
+      "source_anchors": [
+        "FR-022"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-022"
+      ],
+      "family": "GW",
+      "owning_task": "T030",
+      "applicability": "Bounded to the GW family and its owning task T030.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T030 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-022 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-GW-002",
+      "level": "software",
+      "title": "Local-IPC-only bounded gateway",
+      "statement": "Expose one local-only out-of-process gateway with no TCP listener, host-protected IPC, bounded messages/streams, deadlines, flow control, safe logs, and the exact permit.",
+      "source_anchors": [
+        "FR-032"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-032"
+      ],
+      "family": "GW",
+      "owning_task": "T031",
+      "applicability": "Bounded to the GW family and its owning task T031.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T031 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-032 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-GW-003",
+      "level": "software",
+      "title": "Separate-process synthetic client conformance",
+      "statement": "Prove with a separate-process synthetic client that observation and every allowed stimulation action work through a host-protected local endpoint with no TCP listener and zero items from invalid or expired sessions.",
+      "source_anchors": [
+        "SC-011"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-011"
+      ],
+      "family": "GW",
+      "owning_task": "T032",
+      "applicability": "Bounded to the GW family and its owning task T032.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T032 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-011 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-INTG-001",
+      "level": "software",
+      "title": "Public-safe evidence and logs",
+      "statement": "Exclude credentials, private addresses, unrestricted payloads, proprietary source excerpts, and sensitive deployment values from every retained evidence artifact and log.",
+      "source_anchors": [
+        "FR-027"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-027"
+      ],
+      "family": "INTG",
+      "owning_task": "T035",
+      "applicability": "Bounded to the INTG family and its owning task T035.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T035 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-027 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-INTG-002",
+      "level": "software",
+      "title": "Doxygen documentation and traceability validation",
+      "statement": "Generate warning-free Doxygen for every public C/C++ interface and changed unit and validate that every requirement traces to design units and automated evidence.",
+      "source_anchors": [
+        "FR-029",
+        "SC-009"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-029",
+        "XCOM-SYS-SC-009"
+      ],
+      "family": "INTG",
+      "owning_task": "T037",
+      "applicability": "Bounded to the INTG family and its owning task T037.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T037 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-029 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-INTG-003",
+      "level": "software",
+      "title": "Controlled benchmark evidence",
+      "statement": "Record disabled-tap versus same-baseline throughput and latency with uncertainty and environment data and explicit non-production limitations.",
+      "source_anchors": [
+        "SC-008"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-008"
+      ],
+      "family": "INTG",
+      "owning_task": "T036",
+      "applicability": "Bounded to the INTG family and its owning task T036.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T036 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-008 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-OBS-001",
+      "level": "software",
+      "title": "Versioned filterable observation boundary",
+      "statement": "Expose a versioned, filterable observation boundary at declared logical route points without a provider-specific sniffer interface.",
+      "source_anchors": [
+        "FR-011"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-011"
+      ],
+      "family": "OBS",
+      "owning_task": "T021",
+      "applicability": "Bounded to the OBS family and its owning task T021.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T021 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-011 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-OBS-002",
+      "level": "software",
+      "title": "Metadata-only and controlled payload views",
+      "statement": "Operate metadata-only by default with zero payload bytes, require an explicit allow policy for payload views, and report redaction, truncation, decoding, and schema status.",
+      "source_anchors": [
+        "FR-012",
+        "SC-003"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-012",
+        "XCOM-SYS-SC-003"
+      ],
+      "family": "OBS",
+      "owning_task": "T022",
+      "applicability": "Bounded to the OBS family and its owning task T022.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T022 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-012 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-OBS-003",
+      "level": "software",
+      "title": "Bounded observation queues and counters",
+      "statement": "Keep every observation queue within its configured bound and reflect every dropped or coalesced item in counters and validation status under a declared policy.",
+      "source_anchors": [
+        "FR-013",
+        "SC-004"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-013",
+        "XCOM-SYS-SC-004"
+      ],
+      "family": "OBS",
+      "owning_task": "T022",
+      "applicability": "Bounded to the OBS family and its owning task T022.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T022 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-013 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-OBS-004",
+      "level": "software",
+      "title": "Observer isolation and safe detach",
+      "statement": "Ensure observer attach, failure, and detach never change normal delivery, routing, ordering, or timing semantics in the owned deterministic fixture.",
+      "source_anchors": [
+        "FR-014",
+        "SC-005"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-014",
+        "XCOM-SYS-SC-005"
+      ],
+      "family": "OBS",
+      "owning_task": "T023",
+      "applicability": "Bounded to the OBS family and its owning task T023.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T023 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-014 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-OBS-005",
+      "level": "software",
+      "title": "Normalized records for Argus consumers",
+      "statement": "Publish normalized observation records for Argus and third-party consumers while owning no dashboard rendering, long-term storage, or query presentation.",
+      "source_anchors": [
+        "FR-023"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-023"
+      ],
+      "family": "OBS",
+      "owning_task": "T024",
+      "applicability": "Bounded to the OBS family and its owning task T024.",
+      "maturity": "partial",
+      "reconciliation": "source present in the baseline but the capability task checkbox is open and no accepted exact-candidate revision is recorded (analysis A12; review 016 XCOM-NOSESN-08)",
+      "verification_intent": "T024 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-023 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-001",
+      "level": "software",
+      "title": "Common bounded stimulation boundary",
+      "statement": "Expose a common stimulation boundary for injecting declared signals/messages, invoking services, and emulating explicitly allowed service endpoints within bounded limits.",
+      "source_anchors": [
+        "FR-015"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-015"
+      ],
+      "family": "STIM",
+      "owning_task": "T025",
+      "applicability": "Bounded to the STIM family and its owning task T025.",
+      "maturity": "implemented",
+      "reconciliation": null,
+      "verification_intent": "T025 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-015 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-002",
+      "level": "software",
+      "title": "Single-session permit disabled by default",
+      "statement": "Keep stimulation disabled by default and require one validation permit bound to the exact XDL graph, scenario, deployment, interfaces, actions, validity interval, and resource/rate limits.",
+      "source_anchors": [
+        "FR-016"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-016"
+      ],
+      "family": "STIM",
+      "owning_task": "T025",
+      "applicability": "Bounded to the STIM family and its owning task T025.",
+      "maturity": "implemented",
+      "reconciliation": null,
+      "verification_intent": "T025 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-016 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-003",
+      "level": "software",
+      "title": "Persistent synthetic provenance",
+      "statement": "Classify every injected item visibly as synthetic or tool-originated and preserve tool, session, request, correlation, and causal identity through routing, observation, and restart.",
+      "source_anchors": [
+        "FR-017",
+        "SC-006"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-017",
+        "XCOM-SYS-SC-006"
+      ],
+      "family": "STIM",
+      "owning_task": "T026",
+      "applicability": "Bounded to the STIM family and its owning task T026.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T026 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-017 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-004",
+      "level": "software",
+      "title": "Fail-closed pre-emission validation",
+      "statement": "Validate every injected item against its declared interaction, direction, schema, target, session scope, and quota before it can enter a route.",
+      "source_anchors": [
+        "FR-018"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-018"
+      ],
+      "family": "STIM",
+      "owning_task": "T027",
+      "applicability": "Bounded to the STIM family and its owning task T027.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T027 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-018 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-005",
+      "level": "software",
+      "title": "Loop bounding and conflict rejection",
+      "statement": "Detect or bound prohibited reinjection loops and reject ambiguous or conflicting service emulation.",
+      "source_anchors": [
+        "FR-019"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-019"
+      ],
+      "family": "STIM",
+      "owning_task": "T028",
+      "applicability": "Bounded to the STIM family and its owning task T028.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T028 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-019 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-006",
+      "level": "software",
+      "title": "Scheduling, clock authority, and tolerance",
+      "statement": "Declare a clock domain, ordering rule, late-item policy, and reproducibility limits for scheduled stimulation, label immediate injection as such, and fail or invalidate before emission when clock domains cannot be mapped within tolerance.",
+      "source_anchors": [
+        "FR-020",
+        "FR-033"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-020",
+        "XCOM-SYS-FR-033"
+      ],
+      "family": "STIM",
+      "owning_task": "T028",
+      "applicability": "Bounded to the STIM family and its owning task T028.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T028 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-020 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-007",
+      "level": "software",
+      "title": "Journal-before-emission intent and outcome",
+      "statement": "Durably journal stimulation intent before emission, followed by an outcome, and keep every incomplete outcome explicit without converting it to success.",
+      "source_anchors": [
+        "FR-021"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-021"
+      ],
+      "family": "STIM",
+      "owning_task": "T026",
+      "applicability": "Bounded to the STIM family and its owning task T026.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T026 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-021 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-008",
+      "level": "software",
+      "title": "Exclusive service-emulation lease",
+      "statement": "Atomically acquire an exclusive lease bound to the exact session and endpoint generation and release or quarantine it on conflict, expiry, revocation, or disconnect without ambiguous ownership.",
+      "source_anchors": [
+        "FR-034"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-034"
+      ],
+      "family": "STIM",
+      "owning_task": "T028",
+      "applicability": "Bounded to the STIM family and its owning task T028.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T028 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-034 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-STIM-009",
+      "level": "software",
+      "title": "Owned action conformance and lifecycle completion",
+      "statement": "Demonstrate signal injection, message injection, service invocation, and bounded service emulation with owned fixtures plus drain, close, revoke, expiry, and evidence-incomplete lifecycle completion.",
+      "source_anchors": [
+        "SC-007"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-007"
+      ],
+      "family": "STIM",
+      "owning_task": "T029",
+      "applicability": "Bounded to the STIM family and its owning task T029.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T029 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-007 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-XDL-001",
+      "level": "software",
+      "title": "io.xverse.xcom Profile v0.1 and activation-plan v1 schema",
+      "statement": "Define and validate the versioned io.xverse.xcom Profile v0.1 payload and the canonical activation-plan v1 schema with its digest/provenance contract on existing XDL extension points.",
+      "source_anchors": [
+        "FR-031",
+        "FR-002"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-031",
+        "XCOM-SYS-FR-002"
+      ],
+      "family": "XDL",
+      "owning_task": "T017",
+      "applicability": "Bounded to the XDL family and its owning task T017.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T017 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-031 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-XDL-002",
+      "level": "software",
+      "title": "Deterministic Profile-aware plan compilation",
+      "statement": "Compile the exact normalized XDL graph plus Profile deterministically into the digest-bound activation plan without introducing a competing configuration language.",
+      "source_anchors": [
+        "FR-002"
+      ],
+      "refines": [
+        "XCOM-SYS-FR-002"
+      ],
+      "family": "XDL",
+      "owning_task": "T018",
+      "applicability": "Bounded to the XDL family and its owning task T018.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T018 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to FR-002 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SW-XDL-003",
+      "level": "software",
+      "title": "Bounded plan decoding and ordering equivalence",
+      "statement": "Decode the activation plan under explicit bounds with independent version, digest, and capability checks, and prove equivalent normalized inputs produce byte-identical plans and diagnostic ordering regardless of source document order.",
+      "source_anchors": [
+        "SC-002"
+      ],
+      "refines": [
+        "XCOM-SYS-SC-002"
+      ],
+      "family": "XDL",
+      "owning_task": "T019",
+      "applicability": "Bounded to the XDL family and its owning task T019.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "T019 unit/contract tests plus the T008 matrix links and verification-plan checks.",
+      "acceptance_criteria": [
+        "Traces to SC-002 and is verified by its declared test and measure."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-001",
+      "level": "system",
+      "title": "FR-001 X-COM MUST remain domain-neutral; automotive diagnostics and bus semantics MUST be supplied through profiles, providers, or tool adapters.",
+      "statement": "X-COM MUST remain domain-neutral; automotive diagnostics and bus semantics MUST be supplied through profiles, providers, or tool adapters.",
+      "source_anchors": [
+        "FR-001"
+      ],
+      "refines": [
+        "XCOM-STK-006"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-001 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-002",
+      "level": "system",
+      "title": "FR-002 X-COM MUST derive logical interfaces, endpoints, schemas, deployments, scenarios, and policy references from the exact normalized XDL graph; it MUST NOT introduce a competing topology or configuration language.",
+      "statement": "X-COM MUST derive logical interfaces, endpoints, schemas, deployments, scenarios, and policy references from the exact normalized XDL graph; it MUST NOT introduce a competing topology or configuration language.",
+      "source_anchors": [
+        "FR-002"
+      ],
+      "refines": [
+        "XCOM-STK-006"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-002 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-003",
+      "level": "system",
+      "title": "FR-003 X-COM MUST distinguish logical interface identity from provider, protocol, address, and physical realization.",
+      "statement": "X-COM MUST distinguish logical interface identity from provider, protocol, address, and physical realization.",
+      "source_anchors": [
+        "FR-003"
+      ],
+      "refines": [
+        "XCOM-STK-006"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-003 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-004",
+      "level": "system",
+      "title": "FR-004 X-COM MUST support typed signal/state updates, messages/events, and service request/response interactions with explicit semantic differences.",
+      "statement": "X-COM MUST support typed signal/state updates, messages/events, and service request/response interactions with explicit semantic differences.",
+      "source_anchors": [
+        "FR-004"
+      ],
+      "refines": [
+        "XCOM-STK-001"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-004 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-005",
+      "level": "system",
+      "title": "FR-005 Every communication item MUST identify contract version, logical interface and endpoint, schema/version, origin, timestamp and clock domain, correlation/causation, and route/provider.",
+      "statement": "Every communication item MUST identify contract version, logical interface and endpoint, schema/version, origin, timestamp and clock domain, correlation/causation, and route/provider.",
+      "source_anchors": [
+        "FR-005"
+      ],
+      "refines": [
+        "XCOM-STK-001"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-005 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-006",
+      "level": "system",
+      "title": "FR-006 Binding and activation MUST fail before traffic flows when identity, direction, schema, interaction kind, provider capability, or declared policy is incompatible.",
+      "statement": "Binding and activation MUST fail before traffic flows when identity, direction, schema, interaction kind, provider capability, or declared policy is incompatible.",
+      "source_anchors": [
+        "FR-006"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-006 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-007",
+      "level": "system",
+      "title": "FR-007 Queueing, ordering, reliability, deadline, overflow, retry, and backpressure behavior MUST be explicit, bounded, and restricted to supported provider capabilities.",
+      "statement": "Queueing, ordering, reliability, deadline, overflow, retry, and backpressure behavior MUST be explicit, bounded, and restricted to supported provider capabilities.",
+      "source_anchors": [
+        "FR-007"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-007 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-008",
+      "level": "system",
+      "title": "FR-008 X-COM MUST NOT silently upgrade delivery guarantees or claim timing/network fidelity that the selected provider and environment have not demonstrated.",
+      "statement": "X-COM MUST NOT silently upgrade delivery guarantees or claim timing/network fidelity that the selected provider and environment have not demonstrated.",
+      "source_anchors": [
+        "FR-008"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-008 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-009",
+      "level": "system",
+      "title": "FR-009 Provider registration and endpoint ownership MUST be explicit; only exact issued handles may mutate, close, or replace active resources.",
+      "statement": "Provider registration and endpoint ownership MUST be explicit; only exact issued handles may mutate, close, or replace active resources.",
+      "source_anchors": [
+        "FR-009"
+      ],
+      "refines": [
+        "XCOM-STK-004"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-009 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-010",
+      "level": "system",
+      "title": "FR-010 Provider and endpoint lifecycle operations MUST be idempotent or reject unsafe repeats, and restart reconciliation MUST not infer ownership from names or addresses.",
+      "statement": "Provider and endpoint lifecycle operations MUST be idempotent or reject unsafe repeats, and restart reconciliation MUST not infer ownership from names or addresses.",
+      "source_anchors": [
+        "FR-010"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-010 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-011",
+      "level": "system",
+      "title": "FR-011 X-COM MUST expose a versioned, filterable observation boundary at declared logical route points without requiring a provider-specific sniffer interface.",
+      "statement": "X-COM MUST expose a versioned, filterable observation boundary at declared logical route points without requiring a provider-specific sniffer interface.",
+      "source_anchors": [
+        "FR-011"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-011 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-012",
+      "level": "system",
+      "title": "FR-012 Observation MUST support metadata-only operation by default; payload views require an explicit allow policy and MUST report redaction, truncation, decoding, and schema status.",
+      "statement": "Observation MUST support metadata-only operation by default; payload views require an explicit allow policy and MUST report redaction, truncation, decoding, and schema status.",
+      "source_anchors": [
+        "FR-012"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-012 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-013",
+      "level": "system",
+      "title": "FR-013 Observation queues MUST be bounded. Slow observers MUST use a declared drop, coalesce, or lossless-validation policy with counters and an observable effect on test validity.",
+      "statement": "Observation queues MUST be bounded. Slow observers MUST use a declared drop, coalesce, or lossless-validation policy with counters and an observable effect on test validity.",
+      "source_anchors": [
+        "FR-013"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-013 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-014",
+      "level": "system",
+      "title": "FR-014 Observer attachment, failure, and detachment MUST NOT silently change normal delivery, routing, ordering, or timing semantics.",
+      "statement": "Observer attachment, failure, and detachment MUST NOT silently change normal delivery, routing, ordering, or timing semantics.",
+      "source_anchors": [
+        "FR-014"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-014 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-015",
+      "level": "system",
+      "title": "FR-015 X-COM MUST expose a common stimulation boundary for injecting declared signals/messages, invoking services, and emulating explicitly allowed service endpoints.",
+      "statement": "X-COM MUST expose a common stimulation boundary for injecting declared signals/messages, invoking services, and emulating explicitly allowed service endpoints.",
+      "source_anchors": [
+        "FR-015"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-015 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-016",
+      "level": "system",
+      "title": "FR-016 Stimulation MUST be disabled by default and require a single-session permit bound to the exact XDL graph, scenario, deployment/environment, interfaces, actions, validity interval, and resource/rate limits.",
+      "statement": "Stimulation MUST be disabled by default and require a single-session permit bound to the exact XDL graph, scenario, deployment/environment, interfaces, actions, validity interval, and resource/rate limits.",
+      "source_anchors": [
+        "FR-016"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-016 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-017",
+      "level": "system",
+      "title": "FR-017 Every injected item MUST remain visibly classified as synthetic or tool-originated and preserve tool, session, request, correlation, and causal identity through routing and observation.",
+      "statement": "Every injected item MUST remain visibly classified as synthetic or tool-originated and preserve tool, session, request, correlation, and causal identity through routing and observation.",
+      "source_anchors": [
+        "FR-017"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-017 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-018",
+      "level": "system",
+      "title": "FR-018 X-COM MUST validate an injected item against its declared interaction, direction, schema, target, session scope, and quota before it can enter a route.",
+      "statement": "X-COM MUST validate an injected item against its declared interaction, direction, schema, target, session scope, and quota before it can enter a route.",
+      "source_anchors": [
+        "FR-018"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-018 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-019",
+      "level": "system",
+      "title": "FR-019 X-COM MUST detect or bound prohibited reinjection loops and MUST reject ambiguous or conflicting service emulation.",
+      "statement": "X-COM MUST detect or bound prohibited reinjection loops and MUST reject ambiguous or conflicting service emulation.",
+      "source_anchors": [
+        "FR-019"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-019 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-020",
+      "level": "system",
+      "title": "FR-020 Scheduled stimulation MUST declare a clock domain, ordering rule, late-item policy, and reproducibility limits; immediate injection MUST be labeled as such.",
+      "statement": "Scheduled stimulation MUST declare a clock domain, ordering rule, late-item policy, and reproducibility limits; immediate injection MUST be labeled as such.",
+      "source_anchors": [
+        "FR-020"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-020 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-021",
+      "level": "system",
+      "title": "FR-021 Stimulation intent MUST be durably journaled before emission and followed by an outcome; an incomplete outcome MUST remain explicit and MUST NOT be converted into success.",
+      "statement": "Stimulation intent MUST be durably journaled before emission and followed by an outcome; an incomplete outcome MUST remain explicit and MUST NOT be converted into success.",
+      "source_anchors": [
+        "FR-021"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-021 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-022",
+      "level": "system",
+      "title": "FR-022 External tools MUST use versioned provider-neutral contracts. No dashboard, diagnostic product, test language, or transport protocol may become a core primitive.",
+      "statement": "External tools MUST use versioned provider-neutral contracts. No dashboard, diagnostic product, test language, or transport protocol may become a core primitive.",
+      "source_anchors": [
+        "FR-022"
+      ],
+      "refines": [
+        "XCOM-STK-004"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-022 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-023",
+      "level": "system",
+      "title": "FR-023 X-COM MUST publish normalized observation records suitable for Argus and third-party consumers; X-COM MUST NOT own dashboard rendering, long-term storage, or query presentation.",
+      "statement": "X-COM MUST publish normalized observation records suitable for Argus and third-party consumers; X-COM MUST NOT own dashboard rendering, long-term storage, or query presentation.",
+      "source_anchors": [
+        "FR-023"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-023 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-024",
+      "level": "system",
+      "title": "FR-024 Fault campaigns and mutation policy belong to the Faults subsystem; X-COM MAY expose controlled hooks but MUST NOT embed domain-specific fault semantics.",
+      "statement": "Fault campaigns and mutation policy belong to the Faults subsystem; X-COM MAY expose controlled hooks but MUST NOT embed domain-specific fault semantics.",
+      "source_anchors": [
+        "FR-024"
+      ],
+      "refines": [
+        "XCOM-STK-004"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-024 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-025",
+      "level": "system",
+      "title": "FR-025 Diagnostic codes MUST be stable and include severity, phase, affected identity, reason, correction, and deterministic ordering.",
+      "statement": "Diagnostic codes MUST be stable and include severity, phase, affected identity, reason, correction, and deterministic ordering.",
+      "source_anchors": [
+        "FR-025"
+      ],
+      "refines": [
+        "XCOM-STK-005"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-025 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-026",
+      "level": "system",
+      "title": "FR-026 Normal data-plane use MUST not require network discovery, ambient configuration, secrets, or access to a legacy repository.",
+      "statement": "Normal data-plane use MUST not require network discovery, ambient configuration, secrets, or access to a legacy repository.",
+      "source_anchors": [
+        "FR-026"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-026 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-027",
+      "level": "system",
+      "title": "FR-027 Public evidence and logs MUST exclude credentials, private addresses, unrestricted payloads, proprietary source excerpts, and sensitive deployment values.",
+      "statement": "Public evidence and logs MUST exclude credentials, private addresses, unrestricted payloads, proprietary source excerpts, and sensitive deployment values.",
+      "source_anchors": [
+        "FR-027"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-027 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-028",
+      "level": "system",
+      "title": "FR-028 The initial proof MUST use owned loopback providers and synthetic tools only; it MUST NOT execute or adapt a legacy component or contact an external network peer.",
+      "statement": "The initial proof MUST use owned loopback providers and synthetic tools only; it MUST NOT execute or adapt a legacy component or contact an external network peer.",
+      "source_anchors": [
+        "FR-028"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-028 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-029",
+      "level": "system",
+      "title": "FR-029 The implementation MUST provide useful Doxygen documentation for every public C/C++ interface and changed unit, including ownership, thread-safety, failure, and lifetime contracts.",
+      "statement": "The implementation MUST provide useful Doxygen documentation for every public C/C++ interface and changed unit, including ownership, thread-safety, failure, and lifetime contracts.",
+      "source_anchors": [
+        "FR-029"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-029 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-030",
+      "level": "system",
+      "title": "FR-030 The capability MUST include requirements-to-design-to-code-to-test traceability, unit/contract/integration/performance evidence, and a separate architecture review before acceptance.",
+      "statement": "The capability MUST include requirements-to-design-to-code-to-test traceability, unit/contract/integration/performance evidence, and a separate architecture review before acceptance.",
+      "source_anchors": [
+        "FR-030"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-030 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-031",
+      "level": "system",
+      "title": "FR-031 X-COM-specific interaction, provider, observation, and stimulation policy MUST use a versioned `io.xverse.xcom` Profile payload on existing XDL extension points and MUST be compiled into the digest-bound activation plan.",
+      "statement": "X-COM-specific interaction, provider, observation, and stimulation policy MUST use a versioned `io.xverse.xcom` Profile payload on existing XDL extension points and MUST be compiled into the digest-bound activation plan.",
+      "source_anchors": [
+        "FR-031"
+      ],
+      "refines": [
+        "XCOM-STK-006"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-031 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-032",
+      "level": "system",
+      "title": "FR-032 The initial proof MUST provide one local-only, out-of-process tool gateway and a synthetic client in a separate process. It MUST expose no TCP listener, use host-protected local IPC, enforce request/stream deadlines and bounds, and still require the exact validation permit.",
+      "statement": "The initial proof MUST provide one local-only, out-of-process tool gateway and a synthetic client in a separate process. It MUST expose no TCP listener, use host-protected local IPC, enforce request/stream deadlines and bounds, and still require the exact validation permit.",
+      "source_anchors": [
+        "FR-032"
+      ],
+      "refines": [
+        "XCOM-STK-008"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-032 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-033",
+      "level": "system",
+      "title": "FR-033 Scheduled stimulation MUST use an explicit time-authority interface. When source and execution clock domains cannot be mapped within a declared tolerance, the request MUST fail or be marked invalid before emission according to the declared policy.",
+      "statement": "Scheduled stimulation MUST use an explicit time-authority interface. When source and execution clock domains cannot be mapped within a declared tolerance, the request MUST fail or be marked invalid before emission according to the declared policy.",
+      "source_anchors": [
+        "FR-033"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-033 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-034",
+      "level": "system",
+      "title": "FR-034 Service emulation MUST atomically acquire an exclusive lease bound to the exact validation session and endpoint generation; conflicts, expiry, revocation, and disconnect MUST release or quarantine the lease without leaving ambiguous ownership.",
+      "statement": "Service emulation MUST atomically acquire an exclusive lease bound to the exact validation session and endpoint generation; conflicts, expiry, revocation, and disconnect MUST release or quarantine the lease without leaving ambiguous ownership.",
+      "source_anchors": [
+        "FR-034"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-034 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-FR-035",
+      "level": "system",
+      "title": "FR-035 Capability 007 MUST account for all REF-002 communication requirements XVE-SYS-0139–0158 and every identified shared requirement through an explicit disposition and owning capability; a deferred or allocated target MUST NOT be reported as implemented.",
+      "statement": "Capability 007 MUST account for all REF-002 communication requirements XVE-SYS-0139–0158 and every identified shared requirement through an explicit disposition and owning capability; a deferred or allocated target MUST NOT be reported as implemented.",
+      "source_anchors": [
+        "FR-035"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 functional requirement without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system functional coverage CHK-03; refinement CHK-05/CHK-06.",
+      "acceptance_criteria": [
+        "The accepted FR-035 intent is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-001",
+      "level": "system",
+      "title": "SC-001 Owned loopback tests exchange all four interaction families and reject at least twenty malformed, incompatible, over-capacity, or unauthorized cases with stable diagnostics.",
+      "statement": "Owned loopback tests exchange all four interaction families and reject at least twenty malformed, incompatible, over-capacity, or unauthorized cases with stable diagnostics.",
+      "source_anchors": [
+        "SC-001"
+      ],
+      "refines": [
+        "XCOM-STK-001"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-001 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-002",
+      "level": "system",
+      "title": "SC-002 Equivalent normalized XDL inputs produce byte-identical binding plans and diagnostic ordering regardless of source document order.",
+      "statement": "Equivalent normalized XDL inputs produce byte-identical binding plans and diagnostic ordering regardless of source document order.",
+      "source_anchors": [
+        "SC-002"
+      ],
+      "refines": [
+        "XCOM-STK-001"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-002 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-003",
+      "level": "system",
+      "title": "SC-003 Metadata-only observation exposes zero payload bytes and 100% of emitted observation records identify origin, logical contract, clock domain, route, and outcome.",
+      "statement": "Metadata-only observation exposes zero payload bytes and 100% of emitted observation records identify origin, logical contract, clock domain, route, and outcome.",
+      "source_anchors": [
+        "SC-003"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-003 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-004",
+      "level": "system",
+      "title": "SC-004 Under saturation tests, every queue remains within its configured bound and every dropped or coalesced item is reflected in counters and validation status.",
+      "statement": "Under saturation tests, every queue remains within its configured bound and every dropped or coalesced item is reflected in counters and validation status.",
+      "source_anchors": [
+        "SC-004"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-004 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-005",
+      "level": "system",
+      "title": "SC-005 Removing, blocking, or crashing a best-effort observer does not change the normal-route item count, order, or delivery outcomes in the owned deterministic fixture.",
+      "statement": "Removing, blocking, or crashing a best-effort observer does not change the normal-route item count, order, or delivery outcomes in the owned deterministic fixture.",
+      "source_anchors": [
+        "SC-005"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-005 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-006",
+      "level": "system",
+      "title": "SC-006 All accepted stimulation items carry synthetic provenance; all missing, expired, mismatched, looping, conflicting, or over-quota requests emit zero normal-route items.",
+      "statement": "All accepted stimulation items carry synthetic provenance; all missing, expired, mismatched, looping, conflicting, or over-quota requests emit zero normal-route items.",
+      "source_anchors": [
+        "SC-006"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-006 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-007",
+      "level": "system",
+      "title": "SC-007 The initial implementation demonstrates at least one signal injection, message injection, service invocation, and bounded service emulation using only owned fixtures.",
+      "statement": "The initial implementation demonstrates at least one signal injection, message injection, service invocation, and bounded service emulation using only owned fixtures.",
+      "source_anchors": [
+        "SC-007"
+      ],
+      "refines": [
+        "XCOM-STK-003"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-007 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-008",
+      "level": "system",
+      "title": "SC-008 With taps disabled, the benchmark records no more than 2% median throughput regression and no more than 2% median latency regression against the same owned loopback baseline; results must include uncertainty and environment data and are not production claims.",
+      "statement": "With taps disabled, the benchmark records no more than 2% median throughput regression and no more than 2% median latency regression against the same owned loopback baseline; results must include uncertainty and environment data and are not production claims.",
+      "source_anchors": [
+        "SC-008"
+      ],
+      "refines": [
+        "XCOM-STK-002"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-008 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-009",
+      "level": "system",
+      "title": "SC-009 Every requirement traces to design units and automated evidence, and public interfaces generate warning-free Doxygen output.",
+      "statement": "Every requirement traces to design units and automated evidence, and public interfaces generate warning-free Doxygen output.",
+      "source_anchors": [
+        "SC-009"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-009 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-010",
+      "level": "system",
+      "title": "SC-010 A separate review has no unresolved BLOCKER or MAJOR finding before human acceptance.",
+      "statement": "A separate review has no unresolved BLOCKER or MAJOR finding before human acceptance.",
+      "source_anchors": [
+        "SC-010"
+      ],
+      "refines": [
+        "XCOM-STK-007"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-010 outcome is preserved and refined by at least one software requirement."
+      ]
+    },
+    {
+      "id": "XCOM-SYS-SC-011",
+      "level": "system",
+      "title": "SC-011 A synthetic client in a separate process observes traffic and completes every allowed stimulation action through a host-protected local endpoint, while tests prove no TCP listener exists and invalid/expired sessions emit zero items.",
+      "statement": "A synthetic client in a separate process observes traffic and completes every allowed stimulation action through a host-protected local endpoint, while tests prove no TCP listener exists and invalid/expired sessions emit zero items.",
+      "source_anchors": [
+        "SC-011"
+      ],
+      "refines": [
+        "XCOM-STK-008"
+      ],
+      "family": "-",
+      "owning_task": "T008",
+      "applicability": "Mirrors the accepted capability-007 success criterion without change.",
+      "maturity": "allocated",
+      "reconciliation": null,
+      "verification_intent": "system success-criterion coverage CHK-04; refinement CHK-06.",
+      "acceptance_criteria": [
+        "The accepted SC-011 outcome is preserved and refined by at least one software requirement."
+      ]
+    }
+  ],
+  "ref002_dispositions": [
+    {
+      "id": "XVE-SYS-0139",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-004",
+        "XCOM-SYS-FR-005"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0140",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-011"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0141",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "protocol/provider capabilities",
+      "covers": [],
+      "reason": "Deferred to protocol/provider capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0142",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-002"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0143",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "registry/reconfiguration capabilities",
+      "covers": [],
+      "reason": "Deferred to registry/reconfiguration capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0144",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "Security/deployment capabilities",
+      "covers": [],
+      "reason": "Deferred to Security/deployment capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0145",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-003"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0146",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-005"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0147",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-007"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0148",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "record/replay, edge/cloud, and Argus adapters",
+      "covers": [],
+      "reason": "Deferred to record/replay, edge/cloud, and Argus adapters; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0149",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-025"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0150",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "record/replay, edge/cloud, and Argus adapters",
+      "covers": [],
+      "reason": "Deferred to record/replay, edge/cloud, and Argus adapters; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0151",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "record/replay, edge/cloud, and Argus adapters",
+      "covers": [],
+      "reason": "Deferred to record/replay, edge/cloud, and Argus adapters; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0152",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-009"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0153",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "Security/deployment capabilities",
+      "covers": [],
+      "reason": "Deferred to Security/deployment capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0154",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-010"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0155",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "Security/deployment capabilities",
+      "covers": [],
+      "reason": "Deferred to Security/deployment capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0156",
+      "disposition": "allocated",
+      "maturity": "architectural-target",
+      "owner": "",
+      "covers": [
+        "XCOM-SYS-FR-006"
+      ],
+      "reason": "Allocated to the first X-COM prototype; remains architectural-target until implemented source and exact-candidate evidence pass review."
+    },
+    {
+      "id": "XVE-SYS-0157",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "registry/reconfiguration capabilities",
+      "covers": [],
+      "reason": "Deferred to registry/reconfiguration capabilities; capability 007 records but does not implement it."
+    },
+    {
+      "id": "XVE-SYS-0158",
+      "disposition": "deferred",
+      "maturity": "architectural-target",
+      "owner": "Faults/Runtime recovery",
+      "covers": [],
+      "reason": "Deferred to Faults/Runtime recovery; capability 007 records but does not implement it."
+    }
+  ]
+}

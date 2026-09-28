@@ -12,8 +12,10 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -229,12 +231,181 @@ using namespace xverse::xcom;
   return expect(valid.load(), "concurrent immutable reads differed");
 }
 
+/** @return true when every declared policy value round-trips with its exact external text. */
+[[nodiscard]] bool test_flow_policy_table() {
+  constexpr std::array<OrderingPolicy, 3U> orderings{OrderingPolicy::fifo, OrderingPolicy::priority,
+                                                     OrderingPolicy::unordered};
+  constexpr std::array<std::string_view, 3U> ordering_text{"fifo", "priority", "unordered"};
+  constexpr std::array<ReliabilityPolicy, 4U> reliabilities{
+      ReliabilityPolicy::at_most_once, ReliabilityPolicy::at_least_once,
+      ReliabilityPolicy::exactly_once, ReliabilityPolicy::best_effort};
+  constexpr std::array<std::string_view, 4U> reliability_text{"at-most-once", "at-least-once",
+                                                               "exactly-once", "best-effort"};
+  constexpr std::array<OverflowPolicy, 6U> overflows{
+      OverflowPolicy::drop_oldest, OverflowPolicy::drop_newest, OverflowPolicy::coalesce,
+      OverflowPolicy::lossless_backpressure, OverflowPolicy::reject, OverflowPolicy::fail_closed};
+  constexpr std::array<std::string_view, 6U> overflow_text{"drop-oldest",  "drop-newest",
+                                                           "coalesce",     "lossless-backpressure",
+                                                           "reject",       "fail-closed"};
+
+  for (std::size_t ordering_index = 0U; ordering_index < orderings.size(); ++ordering_index) {
+    for (std::size_t reliability_index = 0U; reliability_index < reliabilities.size();
+         ++reliability_index) {
+      for (std::size_t overflow_index = 0U; overflow_index < overflows.size(); ++overflow_index) {
+        const FlowPolicyInput input{orderings[ordering_index], reliabilities[reliability_index],
+                                    overflows[overflow_index], 1000, 3, 8};
+        const auto result = FlowPolicy::create(input);
+        if (!expect(result.has_value() && result.value() != nullptr &&
+                        result.diagnostics() == nullptr,
+                    "declared policy combination was rejected")) {
+          return false;
+        }
+        const FlowPolicy& policy = *result.value();
+        if (!expect(policy.ordering() == orderings[ordering_index] &&
+                        policy.reliability() == reliabilities[reliability_index] &&
+                        policy.overflow() == overflows[overflow_index] &&
+                        policy.deadline_ms() == 1000 && policy.retry() == 3 &&
+                        policy.queue_depth() == 8,
+                    "declared policy did not round-trip exactly")) {
+          return false;
+        }
+        if (!expect(to_string(policy.ordering()) == ordering_text[ordering_index] &&
+                        to_string(policy.reliability()) == reliability_text[reliability_index] &&
+                        to_string(policy.overflow()) == overflow_text[overflow_index],
+                    "policy external text differs from the declared vocabulary")) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+/** @return true when each numeric policy bound is accepted and its neighbour is rejected. */
+[[nodiscard]] bool test_flow_policy_boundaries() {
+  const auto accepted = [](const std::int64_t deadline, const std::int64_t retry,
+                           const std::int64_t depth) {
+    const auto result = FlowPolicy::create({OrderingPolicy::unordered,
+                                            ReliabilityPolicy::best_effort, OverflowPolicy::reject,
+                                            deadline, retry, depth});
+    return result.has_value() && result.value() != nullptr && result.diagnostics() == nullptr;
+  };
+  if (!expect(accepted(0, 0, 1), "minimum policy bounds were rejected") ||
+      !expect(accepted(FlowPolicy::kMaximumDeadlineMs, FlowPolicy::kMaximumRetry,
+                       FlowPolicy::kMaximumQueueDepth),
+              "maximum policy bounds were rejected")) {
+    return false;
+  }
+
+  struct BoundCase final {
+    std::int64_t deadline;   /**< Candidate deadline in milliseconds. */
+    std::int64_t retry;      /**< Candidate retry count. */
+    std::int64_t depth;      /**< Candidate queue depth. */
+    std::string_view field;  /**< Expected affected field name. */
+  };
+  constexpr std::array<BoundCase, 6U> rejected{{
+      {-1, 0, 1, "deadline_ms"},
+      {FlowPolicy::kMaximumDeadlineMs + 1, 0, 1, "deadline_ms"},
+      {0, -1, 1, "retry"},
+      {0, FlowPolicy::kMaximumRetry + 1, 1, "retry"},
+      {0, 0, 0, "queue_depth"},
+      {0, 0, FlowPolicy::kMaximumQueueDepth + 1, "queue_depth"},
+  }};
+  for (const BoundCase& entry : rejected) {
+    const auto result = FlowPolicy::create(
+        {OrderingPolicy::fifo, ReliabilityPolicy::at_most_once, OverflowPolicy::drop_oldest,
+         entry.deadline, entry.retry, entry.depth});
+    if (!expect(!result.has_value() && result.value() == nullptr &&
+                    result.diagnostics() != nullptr,
+                "out-of-range policy bound was accepted") ||
+        !expect(result.diagnostics()->size() == 1U, "policy bound failure count differs")) {
+      return false;
+    }
+    const Diagnostic& diagnostic = result.diagnostics()->values().front();
+    if (!expect(diagnostic.code() == DiagnosticCode::invalid_policy &&
+                    diagnostic.phase() == ValidationPhase::policy &&
+                    diagnostic.affected_identity() == entry.field,
+                "policy bound diagnostic differs")) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** @return true when policy copies are stable and equivalent invalid inputs serialize identically. */
+[[nodiscard]] bool test_flow_policy_immutability_and_determinism() {
+  static_assert(std::is_copy_constructible_v<FlowPolicy>);
+  static_assert(!std::is_copy_assignable_v<FlowPolicy>);
+  static_assert(std::is_nothrow_copy_constructible_v<FlowPolicy>);
+  static_assert(noexcept(FlowPolicy::create(FlowPolicyInput{})));
+
+  const auto result = FlowPolicy::create(
+      {OrderingPolicy::priority, ReliabilityPolicy::exactly_once, OverflowPolicy::coalesce, 250, 4,
+       16});
+  if (!expect(result.has_value(), "policy immutability fixture was rejected")) {
+    return false;
+  }
+  const FlowPolicy source = *result.value();
+  const FlowPolicy copied(source);
+  if (!expect(source == copied && source.deadline_ms() == 250 && copied.queue_depth() == 16,
+              "policy copy changed the source or its declared fields")) {
+    return false;
+  }
+
+  const auto weaker = FlowPolicy::create(
+      {OrderingPolicy::priority, ReliabilityPolicy::at_least_once, OverflowPolicy::coalesce, 250, 4,
+       16});
+  const auto stronger = FlowPolicy::create(
+      {OrderingPolicy::priority, ReliabilityPolicy::exactly_once, OverflowPolicy::coalesce, 250, 4,
+       16});
+  if (!expect(weaker.has_value() && stronger.has_value(), "no-upgrade fixtures were rejected") ||
+      !expect(*weaker.value() != *stronger.value(),
+              "distinct reliability declarations compared equal")) {
+    return false;
+  }
+
+  constexpr std::array<DiagnosticInput, 5U> forward{{
+      {DiagnosticCode::invalid_policy, DiagnosticSeverity::error, ValidationPhase::policy,
+       "ordering", "ordering policy is outside the declared vocabulary",
+       "use one declared ordering policy"},
+      {DiagnosticCode::invalid_policy, DiagnosticSeverity::error, ValidationPhase::policy,
+       "overflow", "overflow policy is outside the declared vocabulary",
+       "use one declared overflow policy"},
+      {DiagnosticCode::invalid_policy, DiagnosticSeverity::error, ValidationPhase::policy,
+       "deadline_ms", "deadline is outside the declared range",
+       "use a deadline between 0 and 600000 milliseconds"},
+      {DiagnosticCode::invalid_policy, DiagnosticSeverity::error, ValidationPhase::policy, "retry",
+       "retry is outside the declared range", "use a retry count between 0 and 64"},
+      {DiagnosticCode::invalid_policy, DiagnosticSeverity::error, ValidationPhase::policy,
+       "queue_depth", "queue depth is outside the declared range",
+       "use a finite queue depth between 1 and 65536"},
+  }};
+  std::array<DiagnosticInput, forward.size()> reverse{};
+  for (std::size_t index = 0U; index < forward.size(); ++index) {
+    reverse[index] = forward[forward.size() - 1U - index];
+  }
+  const auto forward_set = DiagnosticSet::create_from_inputs(forward);
+  const auto reverse_set = DiagnosticSet::create_from_inputs(reverse);
+  const auto rejected = FlowPolicy::create(
+      {static_cast<OrderingPolicy>(255), ReliabilityPolicy::best_effort,
+       static_cast<OverflowPolicy>(255), -1, 65, 0});
+  return expect(forward_set.has_value() && reverse_set.has_value(),
+                "policy diagnostic set was rejected") &&
+         expect(forward_set->serialize() == reverse_set->serialize(),
+                "reordered policy diagnostics serialized differently") &&
+         expect(rejected.diagnostics() != nullptr &&
+                    forward_set->serialize() == rejected.diagnostics()->serialize(),
+                "policy diagnostic sequence is not order independent");
+}
+
 }  // namespace
 
 /** @return Zero when every unit fixture passes, otherwise one. */
 int main() {
   const bool passed = test_interaction_table() && test_complete_item_after_source_destruction() &&
                       test_exact_diagnostic_set() && test_rvalue_source_invariants() &&
-                      test_concurrent_const_reads();
+                      test_concurrent_const_reads() && test_flow_policy_table() &&
+                      test_flow_policy_boundaries() &&
+                      test_flow_policy_immutability_and_determinism();
   return passed ? 0 : 1;
 }

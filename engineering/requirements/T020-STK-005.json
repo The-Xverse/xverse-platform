@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "T020-STK-005",
+  "revision": "1",
+  "level": "stakeholder",
+  "title": "Accepted behaviour is pinned and governance is preserved",
+  "statement": "T020 must pin the accepted behaviour of the derived-plan chain and preserve the accepted architecture, ADRs, REF-002 dispositions, safety boundaries, failure semantics, one-way dependency direction, domain neutrality, ownership, and dependency order, without implementing or changing another task or weakening an existing requirement, schema, contract, or test.",
+  "source": {
+    "kind": "capability_007_specification",
+    "reference": "docs/engineering/xcom/t020/requirements.md T020-STK-005; ACC013-ACC015; ADR-0018, ADR-0020"
+  },
+  "applicability": "X-Verse capability 007 governance and T007 T-XDL ownership slice.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Refined by T020-SR-005, T020-SR-006, and T020-SR-007; verified by the T20Regression CTest cases and the T020 pytest governance/traceability cases.",
+  "acceptance_criteria": [
+    "AC-1: the T020 regression suite pins the committed fixtures' decode, recorded and recomputed digests, canonical digested bytes, the 16 required members, the DecodeLimits defaults, the closed decode-code vocabulary, and the SHA-256 known answers.",
+    "AC-2: the candidate changes only the T020-owned and declared shared paths; no production source or existing test is edited or weakened.",
+    "AC-3: the C++ suites and the Python module are offline and pure, add no admitted dependency, and import no legacy artifact.",
+    "AC-4: REF-002 disposition is unchanged with an empty promoted set and no deferred/allocated target is reported as implemented.",
+    "AC-5: no acceptance, review, or integration claim is recorded by this candidate; the T007 ownership validator still passes."
+  ]
+}

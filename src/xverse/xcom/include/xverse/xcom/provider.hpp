@@ -102,6 +102,12 @@ enum class ProviderOutcome {
   queued_items_remain,
   /** Provider and lifecycle state cannot be reconciled safely. */
   interrupted_resource,
+  /**
+   * A route generation declared a bounded FlowPolicy whose non-capability dimensions (a non-`reject`
+   * overflow, a nonzero deadline, or a nonzero retry) the selected provider does not implement; the
+   * request is rejected fail-closed before any provider dispatch and no record is mutated.
+   */
+  unsupported_policy,
 };
 
 /**
@@ -702,6 +708,17 @@ class ProviderComposition final {
    * @param destination_handle Exact current validated or active destination endpoint handle.
    * @param requirements Requested capabilities and finite limits.
    * @return Prepared provider-route handle or a stable outcome with no partial preparation.
+   *
+   * When @p route_spec declares one bounded `FlowPolicy` (`RouteSpec::has_policy()`), the requested
+   * delivery and ordering claims must exactly equal the claims that declaration requires
+   * (`best_effort`/`at_least_once` and `unordered`/`fifo`); an unmappable declared claim
+   * (`at_most_once`, `exactly_once`, `priority`) or a contradicting request rejects with
+   * `unsupported_delivery`/`unsupported_ordering`, a non-`reject` overflow or a nonzero deadline/retry
+   * rejects with `unsupported_policy`, and a requested queue capacity above the declared `queue_depth`
+   * rejects with `queue_limit_exceeded`. Every rejection occurs before any provider dispatch. A route
+   * declared through the three-argument `RouteSpec::create` carries no policy and is unaffected.
+   * @failure Rejected preparation never mutates a registry slot, registered provider, prepared route,
+   * queue, or lifecycle record, and never issues a partial or unexpected handle.
    */
   [[nodiscard]] ProviderResult<ProviderRouteHandle> prepare_route(
       const LifecycleController& lifecycle, const RouteSpec& route_spec,

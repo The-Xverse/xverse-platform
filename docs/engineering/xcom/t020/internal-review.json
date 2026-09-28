@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "task_id": "T020",
+  "baseline_revision": "1e289bfe6234553df94eb25065371f7d423fad88",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 4,
+  "supersedes_review_revision": 3,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t020/architecture.md",
+    "docs/engineering/xcom/t020/detailed-design.md",
+    "docs/engineering/xcom/t020/implementation.md",
+    "docs/engineering/xcom/t020/requirements.md",
+    "docs/engineering/xcom/t020/unit-specifications.md",
+    "docs/engineering/xcom/t020/verification-plan.md",
+    "engineering/architecture/components/T020-CMP-001.json",
+    "engineering/architecture/components/T020-CMP-002.json",
+    "engineering/architecture/components/T020-CMP-003.json",
+    "engineering/architecture/components/T020-CMP-004.json",
+    "engineering/architecture/components/T020-CMP-005.json",
+    "engineering/project.json",
+    "engineering/requirements/T020-SR-001.json",
+    "engineering/requirements/T020-SR-002.json",
+    "engineering/requirements/T020-SR-003.json",
+    "engineering/requirements/T020-SR-004.json",
+    "engineering/requirements/T020-SR-005.json",
+    "engineering/requirements/T020-SR-006.json",
+    "engineering/requirements/T020-SR-007.json",
+    "engineering/requirements/T020-STK-001.json",
+    "engineering/requirements/T020-STK-002.json",
+    "engineering/requirements/T020-STK-003.json",
+    "engineering/requirements/T020-STK-004.json",
+    "engineering/requirements/T020-STK-005.json",
+    "engineering/requirements/XCOM-SYS-FR-002.json",
+    "engineering/requirements/XCOM-SYS-FR-006.json",
+    "engineering/requirements/XCOM-SYS-FR-007.json",
+    "engineering/requirements/XCOM-SYS-FR-030.json",
+    "engineering/requirements/XCOM-SYS-FR-031.json",
+    "engineering/requirements/XCOM-SYS-SC-002.json",
+    "engineering/stage-results/architecture.json",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/stage-results/requirements.json",
+    "engineering/stage-results/validation.json",
+    "engineering/stage-results/verification-design.json",
+    "engineering/trace/links.json",
+    "engineering/unit-specifications/T020-U-01.json",
+    "engineering/unit-specifications/T020-U-02.json",
+    "engineering/unit-specifications/T020-U-03.json",
+    "engineering/unit-specifications/T020-U-04.json",
+    "engineering/unit-specifications/T020-U-05.json",
+    "engineering/validation/scenarios/T020-VS-01.json",
+    "engineering/validation/scenarios/T020-VS-02.json",
+    "engineering/validation/scenarios/T020-VS-03.json",
+    "engineering/validation/scenarios/T020-VS-04.json",
+    "engineering/validation/scenarios/T020-VS-05.json",
+    "engineering/verification/measures/integration.json",
+    "engineering/verification/measures/static_analysis.json",
+    "engineering/verification/measures/unit.json",
+    "engineering/verification/measures/validation.json",
+    "reports/review-index.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "tests/xcom/activation_plan/t020_bound_matrix_tests.cpp",
+    "tests/xcom/activation_plan/t020_drift_tests.cpp",
+    "tests/xcom/activation_plan/t020_malformed_plan_tests.cpp",
+    "tests/xcom/activation_plan/t020_ordering_equivalence_tests.cpp",
+    "tests/xcom/activation_plan/t020_regression_tests.cpp",
+    "tests/xcom/activation_plan/t020_support.hpp",
+    "tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py"
+  ],
+  "checks": [
+    {
+      "id": "T020-R4-CHK-01",
+      "name": "Exact candidate inventory and baseline binding",
+      "method": "ran `git rev-parse 1e289bf...`, `git diff --name-only 1e289bf... --`, `git diff --check 1e289bf... --`, `git status --porcelain`, and `git ls-files --others --exclude-standard`",
+      "result": "pass: the baseline resolves to the exact SHA; `git diff --name-only` returns exactly the 63 unique paths in `reviewed_paths` (the 15 T020 implementation paths plus the 48 staged engineering/stage-result records); `git diff --check` is clean (exit 0). The only untracked path is this review record, excluded per the review-gate inventory rule; no package manifest is present. No prohibited path under `src/xverse/xcom/include/**`, `src/xverse/xcom/src/**`, `src/xverse_xdl/**`, `scripts/**`, `proto/**`, `xdl/**`, `tests/test_xcom_plan.py`, `tests/xcom/activation_plan/decoder_*.cpp`, `tests/xcom/activation_plan/fixtures/**`, or `docs/engineering/xcom/t017/`-`t019/` appears."
+    },
+    {
+      "id": "T020-R4-CHK-02",
+      "name": "Closure of T020-IR-003 (no out-of-scope T025 test change)",
+      "method": "read the prior failing review (revision 3); ran `git diff 1e289bfe6234553df94eb25065371f7d423fad88 -- src/xverse/xcom/CMakeLists.txt`; grepped the changed file for `RUN_SERIAL`/`xcom_observation_disabled_benchmark`; ran `ctest --test-dir build/fabro-t020 --show-only=json-v1` and filtered the benchmark properties",
+      "result": "pass: the only CMakeLists hunk is the new T020 `foreach` block registering the five `t020-<kind>` targets; no hunk touches `xcom_observation_disabled_benchmark`. The changed file contains no `RUN_SERIAL` token. `ctest --show-only=json-v1` reports the benchmark's properties as `LABELS = [\"observation\",\"performance\"]` only, with no `RUN_SERIAL` and no in-file comment, i.e. the baseline registration."
+    },
+    {
+      "id": "T020-R4-CHK-03",
+      "name": "Closure of T020-IR-004 (scope/traceability statements match the diff)",
+      "method": "grepped the T020 work products for the previously false strings and read `requirements.md` lines 120-133, `detailed-design.md` lines 53-63 and 275-283, `verification-plan.md` lines 106-115 and 408-435, and `implementation.md` sections 2, 10.2-10.4",
+      "result": "pass: `requirements.md` line 130 now states the shared build-path edit is \"new CTest targets and labels only; the pre-existing `xcom_observation_disabled_benchmark` registration is unchanged\"; `detailed-design.md` line 61-63 states \"The T019/T025 target wiring is unchanged (including the pre-existing ... registration; rev 4 reverted the out-of-scope rev-3 property change)\"; `verification-plan.md` line 115 states the T017/T018 Python and T019 decoder tests and every other CTest target are unchanged; `implementation.md` section 10.2 records the rev-4 revert to the baseline registration and section 10.4 C20/C20b confirm it. All of these agree with `git diff ... -- src/xverse/xcom/CMakeLists.txt` and the CTest property dump. No remaining statement asserts a retained `RUN_SERIAL` change."
+    },
+    {
+      "id": "T020-R4-CHK-04",
+      "name": "Requirement source, allocation, and unit links",
+      "method": "ran `engineering-checks project` and `engineering-checks trace`; read all 18 requirement records, 5 components, 5 unit specifications, 4 measures, and 5 validation scenarios; inspected `engineering/trace/links.json`",
+      "result": "pass: `engineering-checks project` = `{\"ok\": true, \"project_id\": \"xverse-platform\"}` and `engineering-checks trace` = `{\"artifacts\": 37, \"links\": 97, \"ok\": true}`. Every accepted software requirement (T020-SR-001..007) carries a `capability_007_task` source and refines at least one accepted stakeholder and system requirement; each is `allocated_to` a component and `implemented_by` an actual test/CMake path. Each system requirement (XCOM-SYS-FR-002/006/007/030/031, SC-002) cites the accepted T008 register/spec and is allocated and verified. Each of the five units has an owning component (`decomposes_to`), `implemented_by`, `verified_by`, and `analyzed_by`."
+    },
+    {
+      "id": "T020-R4-CHK-05",
+      "name": "Actual code paths and implemented_by hashes",
+      "method": "recomputed the SHA-256 of every `implemented_by` target and matched the declared `target_revision`; confirmed each target file exists",
+      "result": "pass: all `implemented_by` endpoints resolve to existing files whose recomputed SHA-256 equals the declared revision (0 mismatches), including the five C++ test sources, `src/xverse/xcom/CMakeLists.txt`, and `docs/engineering/xcom/t020/requirements.md`. No link targets a planned-but-absent file."
+    },
+    {
+      "id": "T020-R4-CHK-06",
+      "name": "Exact CTest unit IDs and pytest IDs",
+      "method": "ran `ctest --test-dir build/fabro-t020 -N`, `-N -L t020`, and `-N -L t020-<kind>`; ran `python3 -m pytest --collect-only -q`; compared the declared measure IDs to the discovered IDs",
+      "result": "pass: `ctest -N` = 246 total and `-N -L t020` = 52; the unit measure's 52 `test_ids` equal, one-for-one, the union of the 52 `unit_cases` IDs and the 52 CTest-discovered `T20*` names (no extra, no missing). Per-kind selectors select 8/14/9/11/10. The validation measure's 8 `test_ids` equal the sorted union of the five scenarios' `test_ids` and are all present in the 136 pytest-collected tests. `ctest -L t020 --output-on-failure` = `100% tests passed, 0 tests failed out of 52`; the T020 pytest module = `7 passed`."
+    },
+    {
+      "id": "T020-R4-CHK-07",
+      "name": "Validation scenarios and planned trusted evidence",
+      "method": "read the five scenario records and the four measure records; checked every `executed_as` link and the trusted policy",
+      "result": "pass: each of T020-VS-01..05 declares intended use, expected result, exact runnable pytest node-id fragments, and the requirement IDs it `validates`; every scenario has a `validates` link. The four measures declare explicit argv commands identical to the trusted policy, and every `executed_as` target is a `pending_trusted_gate` evidence path with `target_revision = pending_trusted_gate`, correctly distinguishing a planned measure from a recorded pass. The stage results (integration/validation) state the measures have not been run by those stages."
+    },
+    {
+      "id": "T020-R4-CHK-08",
+      "name": "No candidate-local check is mislabelled integration",
+      "method": "read `engineering/verification/measures/integration.json`, `unit.json`, the integration stage result, and `reports/review-index.md` L-A3; inspected the trusted policy `system_integration` block",
+      "result": "pass: the integration measure is defined solely by the trusted policy `system_integration` contract (mode `target_repository`, target_id `xverse-platform`, target_repository `/home/jefferson/xverse-t020-system-integration-01m3h0`, target_revision `1e289bfe6234553df94eb25065371f7d423fad88`, assembly_command `automation/assemble_xcom_target.py`). Its `test_ids` are whole-system pytest/CTest IDs discoverable only in the assembled checkout; the unit and validation measures are explicitly labelled candidate-local. No candidate-local check is reported as integration."
+    },
+    {
+      "id": "T020-R4-CHK-09",
+      "name": "Trusted target-repository policy names the isolated checkout and pinned revision",
+      "method": "read `/home/jefferson/x-verse_fabric/automation/trusted/xcom-t020-integration-policy.json` and compared it to the integration measure, the integration stage result, and `engineering/project.json`",
+      "result": "pass: the policy `system_integration` names the isolated checkout `/home/jefferson/xverse-t020-system-integration-01m3h0` at pinned revision `1e289bfe6234553df94eb25065371f7d423fad88`, matching `engineering/project.json` `authority.baseline_revision` and the integration measure's `command_runs`. `require_git_revision` and `require_system_traceability` are true and the required roles/measures match the engineering records."
+    },
+    {
+      "id": "T020-R4-CHK-10",
+      "name": "Stage-result integrity and role coverage",
+      "method": "recomputed every artifact hash in `engineering/stage-results/*.json`; ran `engineering-checks stage` on the new record; checked role coverage against the policy `required_roles`",
+      "result": "pass: all eight stage results (requirements, architecture, verification_design, implementation, integration, validation, documentation, internal_review) parse, are `status: complete` with empty blockers, and every declared artifact hash equals the on-disk file. `engineering-checks stage engineering/stage-results/internal-review.json` = `{\"ok\": true, \"role\": \"internal_review\"}`. The observed role set equals the policy `required_roles`."
+    },
+    {
+      "id": "T020-R4-CHK-11",
+      "name": "Task boundary and predecessor preservation",
+      "method": "compared the changed set against the protected paths in `engineering/project.json` and `docs/engineering/xcom/tasks.md`; read the `specs/007-xcom-core/tasks.md` diff",
+      "result": "pass: the only `tasks.md` change is the T020 checkbox line; no `src/xverse/xcom/{include,src}` production source, `src/xverse_xdl/**`, `scripts/**`, `xdl/**`, `proto/**`, `tests/xcom/activation_plan/decoder_*.cpp`, fixture, or `docs/engineering/xcom/t017/`-`t019/`-`t025/` path is changed. The changed set is exactly the 15 T020 implementation paths plus the 48 staged engineering records. No later task's artifact is modified."
+    },
+    {
+      "id": "T020-R4-CHK-12",
+      "name": "Public safety and deterministic gate results",
+      "method": "ran the completed deterministic gates `xcom_feature_gate.py verify T020 1e289bf...`, `engineering-checks project`, and `engineering-checks trace`; scanned the changed T020 work products for secret markers",
+      "result": "pass: the deterministic project and trace gates pass with 37 artifacts and 97 links; the implementation-stage verify gate result was `changed_paths`/`ctest:246` with `pytest` passing (T020 suite `52/52`, module `7 passed`). No changed work product contains a credential, secret marker, or private-address content. The pre-existing host-timing T025 benchmark remains a recorded external dependency (review-index L-A2/L-6), not a T020 artifact, and is not modified."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Fresh (revision 4) read-only internal review on baseline 1e289bfe6234553df94eb25065371f7d423fad88 after the rev-4 repair and the system-prep engineering overlay. This review supersedes revision 3 (which failed on T020-IR-003/T020-IR-004) and covers exactly the 63-path baseline diff, including the engineering project, requirement, architecture, unit, measure, scenario, trace, and stage-result records added for this accumulated candidate.",
+    "T020-IR-003 is closed: `xcom_observation_disabled_benchmark` keeps its baseline `PROPERTIES LABELS \"performance;observation\"` registration with no `RUN_SERIAL` property, and the only `src/xverse/xcom/CMakeLists.txt` hunk is the T020 `foreach` block. T020-IR-004 is closed: every previously false scope/traceability statement in the T020 work products now matches the actual diff.",
+    "The T020 test package remains sound: the five C++ suites and the Python module are offline, pure, bounded, and deterministic; every negative case asserts the declared outcome, stable code, target, and the absence of a decoded plan; no T017/T018/T019 source, fixture, schema, contract, or test is changed. The engineering records declare only test IDs the trusted commands actually discover and label no candidate-local check as integration.",
+    "External Codex review and explicit user acceptance remain deferred until the xcom-t007-t010-t017-t020 backlog completes; this review claims no measure pass, integration, or production readiness. No implementation, test, accepted predecessor work, trusted policy, or checker was edited during this read-only review. The trusted whole-system integration measure remains environment-blocked pending the admitted offline inputs (review-index L-A1) and is recorded as planned, not passed."
+  ]
+}

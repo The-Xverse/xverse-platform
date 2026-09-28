@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "task_id": "T015",
+  "baseline_revision": "8aaa9eb29ffb349538552d709d4e6f37011b3e65",
+  "candidate_state": "working-tree candidate over the authorized baseline; exactly 12 tracked/untracked candidate paths. The generated internal-review.json and reports/xcom-queue/t015-package.json are excluded from the candidate inventory by the deterministic gate. The reviewed candidate commit 3b14db56d0286dfa6e9f5d7264d27529151522f3 matches this tree for all 14 reviewed checkpoint paths.",
+  "stage": "internal_review",
+  "reviewer": "DeepSeek Flash internal review (fresh separate read-only pass; not external Codex review and not user acceptance)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t015/architecture.md",
+    "docs/engineering/xcom/t015/detailed-design.md",
+    "docs/engineering/xcom/t015/implementation.md",
+    "docs/engineering/xcom/t015/requirements.md",
+    "docs/engineering/xcom/t015/unit-specifications.md",
+    "docs/engineering/xcom/t015/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+    "src/xverse/xcom/src/provider.cpp",
+    "tests/xcom/provider_loopback/negative_tests.cpp",
+    "tests/xcom/provider_loopback/test_support.hpp",
+    "tests/xcom/provider_loopback/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "IR-01-inventory-and-scope",
+      "method": "Recompute the deterministic candidate inventory exactly as xcom_feature_gate.candidate_paths: set(git diff --name-only 8aaa9eb29ffb349538552d709d4e6f37011b3e65 --) union set(git ls-files --others --exclude-standard), minus the two generated gate records.",
+      "result": "pass",
+      "observed": "Exactly 12 paths: two T015 production files (provider.hpp, provider.cpp), three provider-loopback test sources (test_support.hpp, unit_tests.cpp, negative_tests.cpp), the one-line tasks.md T015 checkbox, and the six T015 work products. No CMakeLists.txt/.cmake, root build file, xdl/, proto/, src/xverse_xdl/, loopback_provider.{hpp,cpp}, endpoint_route_lifecycle.{hpp,cpp}, contract.hpp, diagnostic.hpp, observation.hpp, core_types.hpp, item.hpp, value.hpp, result.hpp, or another task's path. No later task (T016/T021-T024) implemented."
+    },
+    {
+      "id": "IR-02-task-ledger-stage-rule",
+      "method": "git diff 8aaa9eb29ffb349538552d709d4e6f37011b3e65 -- specs/007-xcom-core/tasks.md; read the T015/T016/T017-T024 entries.",
+      "result": "pass",
+      "observed": "The only capability-document change is the T015 line: '- [ ] T015 ...' -> '- [X] T015 ...' (tasks.md:40). T016 (line 41) and T021-T024 (lines 54-57) remain '- [ ]'. The T015 checkbox is marked complete only in this implementation-stage candidate, as T015-SR-023 requires."
+    },
+    {
+      "id": "IR-03-public-api-additivity",
+      "method": "Read provider.hpp enum region and prepare_route documentation; compare against baseline.",
+      "result": "pass",
+      "observed": "ProviderOutcome gains exactly one appended value unsupported_policy (provider.hpp:110) with ownership/lifetime/thread-safety/failure intent in the file's Doxygen; the enumerator is appended after interrupted_resource with no explicit values, so every pre-existing outcome's relative order and implicit value is unchanged. The prepare_route contract documentation (provider.hpp:708-721) is additive. No remove/rename of any descriptor, capability, aggregate, virtual, or signature."
+    },
+    {
+      "id": "IR-04-declared-policy-matching-exactness",
+      "method": "Read provider.cpp declared_delivery_claim (71-92) and declared_ordering_claim (96-110) and the matching block (513-541).",
+      "result": "pass",
+      "observed": "Exact total mappings: best_effort->best_effort and at_least_once->reliable; unordered->unordered and fifo->per_route_fifo. at_most_once/exactly_once and priority return false (no substitution). The admitted vocabulary is exactly {best_effort, reliable} x {unordered, per_route_fifo} (provider.hpp:30-43), so the mappings are total and exact; the requested delivery/ordering must equal the mapped claim, so neither strengthening nor weakening is accepted. An invalid (out-of-vocabulary) requested value can never equal the mapped claim and therefore fails closed."
+    },
+    {
+      "id": "IR-05-non-capability-dimensions-and-precedence",
+      "method": "Read the matching block order; read detailed-design.md section 4.2-4.3; run test_declared_policy_dimension_rejection.",
+      "result": "pass",
+      "observed": "Precedence is exactly unsupported_delivery, then unsupported_ordering, then unsupported_policy (overflow != reject OR deadline_ms > 0 OR retry > 0), then queue_limit_exceeded (queue_depth < requested capacity), all before the unchanged baseline capability/limit checks (provider.cpp:542-561) and before dispatch (provider.cpp:565). FlowPolicy::create (T013) bounds deadline_ms to 0..600000 and retry to 0..64 (contract.hpp:280-285), so the '> 0' comparisons are sufficient and a negative unreachable. Five non-reject overflow values plus deadline=100 and retry=1 are exercised (negative_tests.cpp:1446-1499)."
+    },
+    {
+      "id": "IR-06-failure-atomicity-and-no-dispatch",
+      "method": "Read prepare_route 486-579; run test_declared_policy_claim_rejection, test_declared_policy_dimension_rejection, test_declared_policy_queue_depth_rejection, test_declared_policy_rejection_precedes_dispatch.",
+      "result": "pass",
+      "observed": "Every declared-policy rejection returns without_value before the only dispatch site selected->prepare(binding) (provider.cpp:565) and before any composition mutation. The matching reads only the locally retained immutable RouteSpec copy and the caller's requirements; it touches no composition generation, registry slot, prepared route, queue, or lifecycle record. Tests assert IndependentProvider prepare_calls()==0/activate_calls()==0 (and submit_calls()==0 where measured) and byte-identical route/source/destination lifecycle snapshots before and after; the queue-depth case proves no dispatch by a compliant re-preparation that succeeds with provider route generation 1 (negative_tests.cpp:1540-1543)."
+    },
+    {
+      "id": "IR-07-concurrency-and-locking",
+      "method": "Read the registry lock scope (provider.cpp:486-498) and the matching block; run test_policy_bound_concurrent_submit_receive repeatedly.",
+      "result": "pass",
+      "observed": "The registry mutex is released before the matching block, which reads only immutable retained declarations and local copies; no provider or registry callback runs under a lock. test_policy_bound_concurrent_submit_receive (unit_tests.cpp:634-768) runs 4 producers and 2 consumers over a policy-bound loopback route (24 items, capacity 8), observes real overlap, and asserts each accepted item is received exactly once with the queue drained. The unit executable passed repeatedly with no invalid outcome. The matching adds no queue, retry, or thread."
+    },
+    {
+      "id": "IR-08-unbound-route-additivity",
+      "method": "Read the has_policy() guard (provider.cpp:516-518) and test_unbound_route_additivity (unit_tests.cpp:607-631); diff the baseline path.",
+      "result": "pass",
+      "observed": "The new block is entirely guarded by retained_route.value()->has_policy(); an unbound (three-argument RouteSpec::create) route skips it and its outcome sequence is byte-identical to the baseline (steps 6/7 and the baseline checks 542-561 are unchanged). The test proves !has_policy()/policy()==nullptr and that prepare and activate are unchanged. No existing provider/observation caller or test changes."
+    },
+    {
+      "id": "IR-09-bounds",
+      "method": "Read the matching block; cross-check FlowPolicy and descriptor bounds (contract.hpp:280-285; provider.cpp:26-30).",
+      "result": "pass",
+      "observed": "The declared queue_depth (1..65536) is compared as queue_depth < static_cast<std::int64_t>(requirements.queue_capacity); queue_capacity is independently bounded by the baseline checks (nonzero and <= descriptor maximum_queue_items() <= 32, provider.cpp:557-561), so the cast is safe. The declared policy is never reinterpreted as provider or registry capacity. The block allocates nothing and adds no unbounded queue, retry, or depth."
+    },
+    {
+      "id": "IR-10-diagnostic-stability",
+      "method": "Read to_string (113-147), provider_diagnostic_code (149-183), provider_diagnostic_message (185-221); run test_exact_provider_diagnostics; scan for code collisions.",
+      "result": "pass",
+      "observed": "Exactly one new outcome maps to unsupported-policy / XCOM-PROV-E030 / 'declared route policy is not supported by the selected provider' (provider.cpp:133,169,206-207). XCOM-PROV-E030 is unclaimed: the only other provider codes are E010-E029 (provider.cpp:160-180). All three switches are exhaustive with no default. The expected-diagnostic table gains exactly one row (negative_tests.cpp:1319-1321); no existing row changed."
+    },
+    {
+      "id": "IR-11-lifecycle-restart-and-recovery",
+      "method": "Read the matching block and implementation.md T015-LIM-05; run test_stale_handle_after_recreation and test_interrupted_reconciliation.",
+      "result": "pass",
+      "observed": "Declared-policy matching is a preparation-time decision and does not alter the reconciliation path; a handle from a previous composition/provider instance is still rejected by opaque identity. The in-process-only restart limitation is recorded as T015-LIM-05 and is not overstated."
+    },
+    {
+      "id": "IR-12-provider-ownership-and-replaceability",
+      "method": "Read ProviderComposition registration/retention and the matching dispatch; run the existing independent-provider and external-consumer cases.",
+      "result": "pass",
+      "observed": "Registration retains a non-owning pointer to an explicitly supplied, identity-checked provider and issues a strictly advancing generation; the matching selects that same retained provider/descriptor and dispatches only after every check. A second independently implemented CommunicationProvider composes, registers, prepares, activates, and exchanges through the same boundary; the external consumer target compiles and runs against the public interface unchanged."
+    },
+    {
+      "id": "IR-13-forbidden-api-and-public-safety",
+      "method": "Include and forbidden-token scan of the five changed source/test files and the six work products; inspect for host-specific absolute paths.",
+      "result": "pass",
+      "observed": "The changed files include only C++ standard-library headers plus repository headers; no socket/network/resolver/TLS, ambient/secret lookup, filesystem, process/subprocess, dynamic-load, or legacy access, and no discovery or default provider. No credential, private address, unrestricted payload, proprietary excerpt, environment-specific host path, or sensitive deployment value. Diagnostic text is fixed and non-sensitive; the only non-repository absolute path is the workflow gate tool recorded in implementation.md, matching the accepted T009-T014 records."
+    },
+    {
+      "id": "IR-14-traceability-and-governance-registers",
+      "method": "python3 scripts/validate_xcom_task_ownership.py --verify/--check-human; validate_xcom_requirements_traceability.py --verify; validate_xcom_architecture_contracts.py --verify; validate_xcom_unit_design.py --verify; inspect REF-002 disposition.",
+      "result": "pass",
+      "observed": "All four validators pass unchanged (exit 0). requirements.md T015-SR-001..-023 and T015-STK-001..-005 each map to at least one named CHK/NEG in verification-plan.md and one unit in unit-specifications.md; every planned test named in unit-specifications.md section 5 exists in the candidate with the matching name. The REF-002 disposition stays unchanged with an empty promoted set; no accepted requirement, ADR, contract, schema, or register is rewritten."
+    },
+    {
+      "id": "IR-15-tests-are-discriminating",
+      "method": "Read the new unit/negative cases and confirm they fail without the change; confirm no existing case removed/renamed.",
+      "result": "pass",
+      "observed": "The positive case proves a supported declaration (best_effort/fifo, reject, deadline/retry 0, queue_depth>=requested) prepares, activates, retains the queue bound, and round-trips an owned item; the all-families case proves the matching restricts no interaction kind; the depth-bound case proves equality and below-capacity both prepare. Negatively, an at_most_once/exactly_once or priority declaration, a contradicting request, a provider advertising fewer bits, a non-reject overflow, a nonzero deadline/retry, and an under-sized declared depth each reject with the exact stable outcome. The at_most_once/priority/overflow cases would incorrectly return prepared if the block were absent, so the tests are discriminating rather than tautological; every rejection asserts zero dispatch and no lifecycle mutation. No '- bool test_...' line is deleted anywhere in the test diff."
+    },
+    {
+      "id": "IR-16-work-products-and-candidate-binding",
+      "method": "Read the six t015 work products; recompute SHA-256 of the artifacts listed in implementation.md section 4.3 and compare with the package record and the checkpoint.",
+      "result": "pass",
+      "observed": "The five plan documents and implementation.md exist, identify T015 and the baseline, and agree on scope, matching, mapping, bounds, and boundary. Every SHA-256 recorded in implementation.md section 4.3 matches the current bytes exactly, and the package record's per-file SHA-256 matches too. The change is confined to the declared T015-owned surface. Reviewed candidate commit 3b14db56 covers the exact 14 checkpoint paths."
+    },
+    {
+      "id": "IR-17-deterministic-build-and-test-gate",
+      "method": "cmake --build build/fabro-t015; ctest --test-dir build/fabro-t015 -N; ctest --test-dir build/fabro-t015 --output-on-failure --parallel 4; ctest -R 'xcom_provider_loopback|xcom_observation_integration'; git diff --check <baseline> --; strings on the built executables.",
+      "result": "pass",
+      "observed": "The tree is built from the candidate bytes (the compiled provider.cpp.o is newer than the source, and the built executables embed XCOM-PROV-E030 and unsupported-policy). ctest -N reports Total Tests: 248 (unchanged, because the new cases are added inside existing executables); the full run reports '100% tests passed, 0 tests failed out of 248'; the four provider-loopback/observation-integration targets all pass; git diff --check is empty."
+    }
+  ],
+  "findings": [],
+  "limitations": [
+    "Prototype control-plane/data-plane libraries only: no runtime, transport, timing, network, compatibility, or production-readiness claim. Not externally reviewed and not user-accepted (T041).",
+    "Declared-policy matching is a preparation-time decision only; deadline, retry, and non-reject overflow are rejected as unsupported rather than implemented (T015-LIM-03).",
+    "Verification-strength note (non-blocking, already disclosed): the accepted verification plan CHK-08 requires only a best_effort/fifo positive preparation path, which is covered. The at_least_once->reliable positive mapping is verified by inspection and by the NEG-16 rejection case where the provider advertises no reliable bit; no executed case prepares a successful at_least_once route, so a future weakening of that mapping target would not be caught by the current suite. A positive at_least_once case may be added additively in the T016 matrix.",
+    "Documentation note (non-blocking): implementation.md section 4.3 describes internal-review.json and t015-package.json as bound by the package record's per-file SHA-256, whereas the deterministic package action excludes both generated records from its per-file files map (they are bound by the trusted checkpoint's review_sha256/package_sha256 instead); the substantive per-file hashes it does record all match.",
+    "Strict declaration-level Doxygen, executed sanitizer/static-analysis/benchmark evidence, the consolidated T016 matrix, and integration/delivery remain with T011/T016/T035-T040."
+  ],
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "reviewed_revision_note": "Fresh read-only review of the working-tree candidate over the authorized baseline, independently re-run after candidate preparation found the trusted T015 integration policy retaining T014's target revision. The corrected policy target_revision now equals the authorized baseline. Missing, stale, mismatched, skipped, or failed evidence cannot support acceptance; any successor candidate must repeat every affected check. This review is internal-only and is neither external Codex review nor user acceptance."
+}

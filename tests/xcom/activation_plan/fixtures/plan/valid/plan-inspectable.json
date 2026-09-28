@@ -1,0 +1,105 @@
+{
+  "planVersion": "1",
+  "digest": {
+    "algorithm": "sha256",
+    "value": "98c13f81e6945485e5ac74bbd0f44b271ca05b68c47a2ac5cc55c964c3030d3f"
+  },
+  "generator": {
+    "task": "T018",
+    "version": "0.1.0"
+  },
+  "provenance": {
+    "generatedAt": "1970-01-01T00:00:00Z",
+    "graphDigest": {
+      "algorithm": "sha256",
+      "value": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "resources": [
+      {
+        "apiVersion": "xverse.io/xdl/v1alpha1",
+        "kind": "Component",
+        "namespace": "xcom",
+        "name": "controller-a",
+        "version": "0.1.0",
+        "sourceDigest": {
+          "algorithm": "sha256",
+          "value": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      },
+      {
+        "apiVersion": "xverse.io/xdl/v1alpha1",
+        "kind": "Component",
+        "namespace": "xcom",
+        "name": "plant-a",
+        "version": "0.1.0",
+        "sourceDigest": {
+          "algorithm": "sha256",
+          "value": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "contractId": "contract-ctrl",
+      "schemaId": "xcom.control.v1",
+      "schemaVersion": "1.0.0"
+    }
+  ],
+  "endpoints": [
+    {"endpointId": "controller-a", "role": "initiator"},
+    {"endpointId": "plant-a", "role": "responder"}
+  ],
+  "routes": [
+    {
+      "routeId": "route-ctrl",
+      "from": "controller-a",
+      "to": "plant-a",
+      "contractId": "contract-ctrl"
+    }
+  ],
+  "providers": [
+    {
+      "providerId": "loopback-provider",
+      "capabilities": ["message"],
+      "requiredCapabilities": ["message"]
+    }
+  ],
+  "policies": {
+    "ordering": "fifo",
+    "reliability": "at-most-once",
+    "deadlineMs": 100,
+    "retry": 0,
+    "queueDepth": 64,
+    "overflow": "reject",
+    "backpressure": "fail-closed"
+  },
+  "observationPoints": [
+    {
+      "tapId": "tap-ctrl",
+      "routeId": "route-ctrl",
+      "payloadAccess": "metadata-only",
+      "validityEffect": "none"
+    }
+  ],
+  "stimulation": {
+    "actions": ["inject-message"],
+    "permitPolicyRefs": ["local-permit"]
+  },
+  "clockDomains": [
+    {"clockDomainId": "clock-monotonic", "source": "monotonic"}
+  ],
+  "activationOrder": ["controller-a", "plant-a"],
+  "diagnostics": [
+    {"code": "XCOM-PLAN-OK", "severity": "info", "targetId": "route-ctrl"}
+  ],
+  "status": "inspectable",
+  "inputResolution": {
+    "identity": "resolved",
+    "schema": "resolved",
+    "capability": "resolved",
+    "time": "unresolved",
+    "ownership": "resolved",
+    "policy": "resolved"
+  }
+}

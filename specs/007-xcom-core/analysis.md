@@ -29,8 +29,41 @@ Review 015 evaluated T026–T041 after the user retired SESN from future work.
 | A09 | BLOCKER | Resolved 2026-09-27 | The bounded T025 successor passed exact-candidate verification and separate review, was explicitly accepted, and was merged into `main` as `4b01586b438a8587d231ee8828d896c206c06a96`. This closes only T025. |
 | A10 | MAJOR | Resolved in tasks | T026 now defines bounded durability/failure semantics; T027 provides the pre-emission guard before T028 action paths; T029 covers journal, rejection, lifecycle, and concurrency behavior. |
 | A11 | MAJOR | Resolved for workflow | T039–T041 now require separate read-only review, a repository-owned exact-candidate bundle, and explicit user acceptance. |
-| A12 | MINOR | Resolved 2026-09-27 | Review 017 reconciles exact source, tests, work products, acceptance, and predecessor-regression evidence: T011–T016 and T021–T024 are complete; T007–T010 remain partial/open. |
-| A13 | MAJOR | Open planned work | T017–T020 are not implemented: the X-COM Profile schema, Python activation-plan compiler, bounded C++ decoder, and plan tests are absent. Digest fields in existing lifecycle types do not establish this slice. |
+| A12 | MINOR | Accepted at exact successor revision | The user accepted T011–T016 and T021–T024 on 2026-09-28 after external review closed R-01. Their checked task entries and the T007 ownership register now bind acceptance to `2f08355c418a20eb00cbea18506f85bf2ea883b7`; the decision does not promote whole-capability or production maturity. |
+| A13 | MAJOR | Resolved by accepted successor | Review 017 correctly identified T017–T020 as absent at its 2026-09-27 baseline. The later accepted T007–T010/T017–T020 successor adds the Profile schema, Python compiler, C++ decoder, tests, and work products; its decision is `docs/engineering/xcom/t007-t020-acceptance-decision.md`. |
+
+## 2026-09-27 terminal review R-01 repair
+
+Terminal review R-01 observed that the final T011–T016/T021–T024 candidate checked T012–T016 and
+T021–T024 complete in `tasks.md` while the ownership register still recorded each as `unreconciled`
+"because the capability task checkbox is open", and A12 still asserted that those task checkboxes
+required reconciliation. The literal checkbox-open reason is now false.
+
+The repair replaces the false reason with a `delivered` reconciliation state in
+`docs/engineering/xcom/task-ownership.json` and its deterministic projection
+`docs/engineering/xcom/task-ownership.md`. Each of the nine tasks records its exact reviewed terminal
+candidate revision and states that external Codex review and explicit user acceptance remain pending.
+A12 is disposed above. The register validator (`scripts/validate_xcom_task_ownership.py`) pins the
+delivered set and fails closed on a missing, malformed, or divergent revision or an empty reason, and
+`scripts/validate_xcom_requirements_traceability.py` still requires a requirement owned by a delivered
+task to stay `partial` with a recorded reason.
+
+This is a governance-record repair only. No task is marked accepted, no requirement, component, or unit
+maturity is promoted, no REF-002 disposition changes, and no production semantics, contract, schema, or
+existing test expectation is altered. The only test-tree addition is a new offline governance regression
+test that pins this repaired state. The accepted predecessor work products T008, T009, and T010 retain
+their historical open-checkbox language byte-unchanged; that language is superseded for the current state
+by this dated successor note, not rewritten. The repaired successor candidate still requires its own
+external Codex review and explicit user acceptance before any task in this range closes.
+
+## 2026-09-28 user acceptance
+
+The user accepted the externally reviewed successor `2f08355c418a20eb00cbea18506f85bf2ea883b7`.
+`docs/engineering/xcom/t011-t024-acceptance-decision.md` records the bounded decision. The T007
+ownership register and deterministic projection now mark exactly T011–T016 and T021–T024 accepted at
+that revision. The preceding R-01 repair text remains historical evidence of the pre-acceptance state;
+it is superseded for current task status by this dated decision. Requirements still marked `partial`
+retain their existing capability-level limitations; task acceptance alone does not promote them.
 
 ## Requirement coverage
 
@@ -67,7 +100,6 @@ negative, deterministic, saturation, separate-process, performance, documentatio
 
 ## Readiness
 
-The technical design remains accepted and T025 is accepted. Review 017 reconciles the earlier task
-state: T011–T016 and T021–T024 are complete, T007–T010 remain partial/open, and T017–T020 remain
-unimplemented. This documentation reconciliation authorizes no implementation. T026 and every other open
-task require their own applicable authorization and gates before work begins.
+The technical design and T025 remain accepted. Review 017 records the state at its earlier baseline;
+the later accepted successors close T007–T020 and T021–T024 at their exact revisions. The capability
+remains partial. T026 and every other open task require their own applicable authorization and gates.

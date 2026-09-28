@@ -1,0 +1,146 @@
+{
+  "id": "T020-U-02",
+  "component_id": "T020-CMP-002",
+  "title": "Malformed-plan suite",
+  "purpose": "Systematically inject structural and closed-shape defects and assert the declared fail-closed outcome, code, target, and the absence of a decoded plan as a distinct family from the T019 NEG-D* set.",
+  "interfaces": [
+    "t20::expect_error helper",
+    "decode_activation_plan (T019)"
+  ],
+  "inputs": [
+    "the committed fixture mutated at declared offsets",
+    "bounded inline malformed documents"
+  ],
+  "outputs": [
+    "declared outcome, code, and absent plan"
+  ],
+  "state": "static-immutable test source",
+  "errors": [
+    "assertion failure if a defect is accepted or a value is returned"
+  ],
+  "invariants": [
+    "no malformed case returns a plan",
+    "no T019 case is edited or weakened"
+  ],
+  "concurrency": "offline-single-threaded",
+  "source_paths": [
+    "tests/xcom/activation_plan/t020_malformed_plan_tests.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "T20MalformedPlan.TruncatedDocumentsAreRejected",
+      "case": "T20-MAL-01",
+      "precondition": "the fixture body truncated at several byte offsets",
+      "stimulus": "decode each truncation",
+      "expected": "rejected XCOM-DECODE-INPUT at xcom-plan with no plan (T20-MAL-01)"
+    },
+    {
+      "id": "T20MalformedPlan.UnbalancedDelimitersAreRejected",
+      "case": "T20-MAL-02",
+      "precondition": "a body with a dropped/duplicated closing brace or bracket",
+      "stimulus": "decode the unbalanced document",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-02)"
+    },
+    {
+      "id": "T20MalformedPlan.TrailingContentIsRejected",
+      "case": "T20-MAL-03",
+      "precondition": "a body with appended {}, trailing text, or a second document",
+      "stimulus": "decode the trailing content",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-03)"
+    },
+    {
+      "id": "T20MalformedPlan.DuplicateMembersAtEachLevelAreRejected",
+      "case": "T20-MAL-04",
+      "precondition": "a repeated member at top level, provenance, policies, and endpoints[]",
+      "stimulus": "decode each duplicate-member document",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-04)"
+    },
+    {
+      "id": "T20MalformedPlan.NonObjectRootsAreRejected",
+      "case": "T20-MAL-05",
+      "precondition": "[] , 42, true, null, and \"plan\" roots",
+      "stimulus": "decode each non-object root",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-05)"
+    },
+    {
+      "id": "T20MalformedPlan.WrongJsonTypesAreRejected",
+      "case": "T20-MAL-06",
+      "precondition": "a collection as an object and scalars as arrays",
+      "stimulus": "decode each wrong-typed document",
+      "expected": "rejected XCOM-DECODE-SHAPE at the affected object with no plan (T20-MAL-06)"
+    },
+    {
+      "id": "T20MalformedPlan.NullWhereObjectOrArrayRequiredIsRejected",
+      "case": "T20-MAL-07",
+      "precondition": "null for policies, provenance, contracts, inputResolution",
+      "stimulus": "decode each null member",
+      "expected": "rejected XCOM-DECODE-SHAPE at the affected object with no plan (T20-MAL-07)"
+    },
+    {
+      "id": "T20MalformedPlan.MissingRequiredMembersAreRejected",
+      "case": "T20-MAL-08",
+      "precondition": "each of the 16 required members dropped in turn",
+      "stimulus": "decode each dropped-member document",
+      "expected": "rejected XCOM-DECODE-SHAPE at xcom-plan with no plan (T20-MAL-08)"
+    },
+    {
+      "id": "T20MalformedPlan.UnknownNestedMembersAreRejected",
+      "case": "T20-MAL-09",
+      "precondition": "one unknown member in each nested object location",
+      "stimulus": "decode each unknown-member document",
+      "expected": "rejected XCOM-DECODE-SHAPE at the affected object with no plan (T20-MAL-09)"
+    },
+    {
+      "id": "T20MalformedPlan.InvalidUtf8IsRejected",
+      "case": "T20-MAL-10",
+      "precondition": "a lone 0xFF byte inside a string value",
+      "stimulus": "decode the invalid-UTF-8 document",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-10)"
+    },
+    {
+      "id": "T20MalformedPlan.EmptyAndWhitespaceOnlyDocumentsAreRejected",
+      "case": "T20-MAL-11",
+      "precondition": "an empty and a whitespace-only document",
+      "stimulus": "decode both",
+      "expected": "rejected XCOM-DECODE-INPUT with no plan (T20-MAL-11)"
+    },
+    {
+      "id": "T20MalformedPlan.OverNestedDocumentsFailClosed",
+      "case": "T20-MAL-12",
+      "precondition": "a document nested above the default max_depth",
+      "stimulus": "decode the over-nested document",
+      "expected": "failed XCOM-DECODE-BOUND with no plan (T20-MAL-12)"
+    },
+    {
+      "id": "T20MalformedPlan.MalformedPlansNeverReturnADecodedValue",
+      "case": "T20-MAL-13",
+      "precondition": "every malformed-plan vector in the suite",
+      "stimulus": "re-run the aggregate guard over each outcome",
+      "expected": "no case returns a plan and none reports accepted (T20-MAL-13)"
+    },
+    {
+      "id": "T20MalformedPlan.MalformedMutationsRemainDistinctFromT019Cases",
+      "case": "T20-MAL-14",
+      "precondition": "the T019 decoder_negative_tests.cpp file hash and tokens",
+      "stimulus": "inspect the read-only T019 file",
+      "expected": "distinct T20-MAL family; T019 file SHA-256 and NEG-D* tokens unchanged (T20-MAL-14)"
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "T020-SC-CPPCHECK",
+      "tool": "cppcheck (trusted policy measures.static_analysis)",
+      "rule": "cppcheck --error-exitcode=1 --quiet --std=c++20 --language=c++ --suppress=invalidLifetime src/xverse/xcom/src/activation_plan.cpp reports no error/portability defect in the consumed T019 decoder source built into the T020 suites",
+      "expected": "cppcheck exits 0"
+    },
+    {
+      "id": "T020-SC-WARNINGS",
+      "tool": "GNU g++ 11.4.0 via CMake target xverse_xcom_activation_plan_t020_<kind>_tests with xverse_xcom_apply_warnings",
+      "rule": "the T020 test target compiles under the project strict warning flags with no warning and no error",
+      "expected": "build succeeds with no warning-as-error"
+    }
+  ],
+  "note": "The T019 distinctness guard reads the T019 negative-test file read-only and pins its SHA-256.",
+  "schema_version": 1,
+  "revision": "1"
+}

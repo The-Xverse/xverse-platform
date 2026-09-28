@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "task_id": "T018",
+  "baseline_revision": "56506d2c9cb71791cba06a1cc418fcadee72e0fa",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 1,
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t018/architecture.md",
+    "docs/engineering/xcom/t018/detailed-design.md",
+    "docs/engineering/xcom/t018/implementation.md",
+    "docs/engineering/xcom/t018/requirements.md",
+    "docs/engineering/xcom/t018/unit-specifications.md",
+    "docs/engineering/xcom/t018/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse_xdl/xcom_plan.py",
+    "tests/test_xcom_plan.py"
+  ],
+  "checks": [
+    {
+      "id": "T018-CHK-01",
+      "name": "Exact candidate inventory, baseline binding, and authorization boundary",
+      "method": "ran `git rev-parse 56506d2c9cb71791cba06a1cc418fcadee72e0fa`, `git diff --name-only 56506d2c... --`, `git diff --stat`, and `git diff --check`; compared the 9-path set against requirements.md §2.4/§2.1 and the T007 `T-XDL` exclusive list (`docs/engineering/xcom/task-ownership.json`); checked `git status --short` for carried-over records",
+      "result": "pass: the baseline SHA resolves and `git rev-parse` prints it; `git diff --name-only` returns exactly the 9 reviewed paths, all inside the declared T018 authorized set (`docs/engineering/xcom/t018/`, `src/xverse_xdl/xcom_plan.py`, `tests/test_xcom_plan.py`, and the shared `specs/007-xcom-core/tasks.md`). `git diff --check` is clean. No `reports/xcom-queue/t018-package.json` or other package manifest is present in the diff or untracked, and this review record is the only untracked addition, which the review gate excludes. `src/xverse_xdl/__init__.py` and every other `src/xverse_xdl/**` file are untouched; no `src/xverse/xcom/**`, `proto/**`, `cmake/**`, `Doxyfile`, `xdl/**`, `scripts/**`, or `tests/xcom/activation_plan/**` path appears."
+    },
+    {
+      "id": "T018-CHK-02",
+      "name": "No later backlog task implemented accidentally",
+      "method": "read `specs/007-xcom-core/tasks.md` phase 4; diffed `tasks.md`; grepped the changed set for T019 decoder paths (`src/xverse/xcom/include/**`, `src/xverse/xcom/src/**`), `proto/`, CMake, `Doxyfile`, and T020 suite locations",
+      "result": "pass: the only `tasks.md` change is `- [ ] T018` → `- [X] T018` (1 insertion, 1 deletion). T019/T020 remain `- [ ]`. The diff contains no bounded C++ decoder header/source, no `proto/xverse/xcom/v1/tool_gateway.proto`, no CMake/CTest target, and no ordering/malformed/drift/bound/regression suite; the compiler is a new Python module only, so no later task's exclusive artifact is pre-empted. `tests/test_xcom_plan.py` is the declared `T018-U-10` path, not a T020 suite."
+    },
+    {
+      "id": "T018-CHK-03",
+      "name": "Failure atomicity and rejected-operation side effects",
+      "method": "read `compile_plan`/`load_normalized_graph`/`_index_profiles`/`_derive_*`/`_check_entity_caps`/`_build_diagnostics`; exercised every declared negative case (`test_compiler_negatives`, `test_unresolved_family_matrix`, `test_declared_bounds_enforced`); probed input immutability after success, after a rejected call, and after mutating a returned plan; checked the digest self-check path (`xcom_plan.py:1436-1438`)",
+      "result": "pass: the plan value is composed only after every derivation and every bound check, and the digest self-check runs before return, so a rejected (`XCOM-PLAN-INPUT`/`DUPLICATE`/`IDENTITY`/`PROFILE`/`CONTRACT`/`POLICY`) or failed (`XCOM-PLAN-BOUND`/`UNKNOWN`) call raises `XcomPlanError` with a stable code and returns no partial plan. Probes confirmed the caller's graph is byte-identical (`json.dumps(sort_keys=True)`) after both a successful and a rejected compilation, that mutating the returned plan does not affect the input, and that no plan member shares a mutable nested object with the input graph. There is no ambient state, file, or buffer to roll back."
+    },
+    {
+      "id": "T018-CHK-04",
+      "name": "Bounded input and compiled-entity resources (fail-closed overflow)",
+      "method": "read `CompileLimits`, `_measure_shape`, `compile_plan_text` byte bound, `_check_entity_caps`, and `_build_diagnostics`; probed an over-cap graph for every compiled collection (`max_endpoints`, `max_routes`, `max_providers`, `max_observation_points`, `max_clock_domains`, `max_diagnostics`) and the input bounds (`max_bytes`, `max_depth`, `max_nodes`, `max_resources`)",
+      "result": "pass: input bytes are measured before parse (`xcom_plan.py:451-452`), depth/nodes after the resource walk (`:430-434`), and resource count before identity validation (`:403-404`); each derived collection is checked by `_check_entity_caps` (`:1342-1359`) before composition, and the de-duplicated, ordered diagnostic list is checked against `max_diagnostics` (`:1178-1179`). Independent probes drove each cap over its limit and each returned `XCOM-PLAN-BOUND` with no plan; a non-positive `CompileLimits` value is rejected at construction with `XCOM-PLAN-INPUT` (`:274-276`), so `max_routes=0` correctly yields `XCOM-PLAN-INPUT` as the test asserts. Overflow policy is `fail-closed` throughout."
+    },
+    {
+      "id": "T018-CHK-05",
+      "name": "Restart/recovery, concurrency, determinism, and offline purity",
+      "method": "read the module for module-level mutable state and imports; ran 8 threads x 50 `compile_plan` calls and compared digests; read `test_compiler_is_offline_and_pure`; inspected `_index_profiles`/`_derive_*` sort keys and `_canonical_resource`",
+      "result": "pass: the compiler holds no persistent state (only frozen constants and per-call locals; `_State` is a local accumulator), so restart/recovery is trivial and concurrency is safe. The 400 concurrent compilations all produced the identical digest with no exceptions. The AST test asserts imports are limited to `__future__/hashlib/json/math/re/collections/dataclasses/typing`, and source inspection found no `open`, socket, subprocess, or network use. Every collection is sorted by its declared key, diagnostics by `(code, targetId)`, `generation time` is explicit or the fixed sentinel, and resource/payload ordering is normalized for the provenance digests, so semantically equivalent admitted inputs are byte-identical (DET-01/02/03)."
+    },
+    {
+      "id": "T018-CHK-06",
+      "name": "Canonicalization, digest, and provenance compatibility with the T017 contract",
+      "method": "read `canonical_plan_bytes`, `_normalize_numbers`, `compute_digest`, `plan_matches_digest`, `_graph_digest`, `_provenance_resources`; ran the T017 reference validator `scripts/validate_xcom_plan.py` cross-checks (`test_compiled_plan_passes_t017_schema_ordering_and_digest`, `test_compiler_digest_agrees_with_t017_reference`) and `python3 scripts/validate_xcom_plan.py --verify`",
+      "result": "pass: `canonical_plan_bytes` reproduces the T017 rule exactly (`sort_keys=True`, `separators=(\",\",\":\")`, `ensure_ascii=False`, `allow_nan=False`, integral-float normalization), the digest is `sha256(b\"xverse.xcom.activation-plan.v1\\x00\" + canonical_bytes(plan without top-level digest))` with domain separation, and the recorded `{algorithm:\"sha256\", value}` equals the recomputed value. The compiler digest and canonical bytes equal the independent T017 validator reference for every compiled plan, and `validate_plan_structure`/`check_digest` return no findings; `--verify` exits 0 unchanged (`digestVectors=2`). `provenance.resources` is ordered/unique with per-resource `sourceDigest`, an empty contributing set is rejected (`NEG-C26`), and non-plain-semver revisions omit the optional `version` rather than rewrite it."
+    },
+    {
+      "id": "T018-CHK-07",
+      "name": "Test adequacy versus required behavior, and adversarial boundary challenge",
+      "method": "read `tests/test_xcom_plan.py` and `verification-plan.md`; ran `python3 -m pytest -q` (129 passed, 24 subtests) and `python3 -m pytest -q tests/test_xcom_plan.py` (16 passed); independently probed two adversarial classes not exercised by the shipped tests: (a) two different-kind Profile payloads sharing one attachment pointer, then reversed; (b) out-of-domain and non-scalar `policy` values; (c) a directly constructed `GraphView` with an over-bound resource",
+      "result": "pass: the 16 tests exercise both the normal path and the declared negative/control behavior, not only the happy path - 20 `NEG-C` rejected/failed cases, six single-family `inspectable` controls, byte-identical determinism under resource/member/payload reordering, integral-number normalization, five bound probes, two schema/profile drift guards, and an offline-purity AST check; every asserted plan is also independently validated and digest-checked by the T017 validator. Adversarial probes were resolved as non-defects against admitted input: (a) the same-pointer multi-payload shape cannot be produced by the accepted normalizer, which emits at most one payload per (extension container, namespace) (`src/xverse_xdl/normalize.py:26-36`, `src/xverse_xdl/semantics.py:64-74`), so payload pointers are unique and the pointer sort is total; (b) out-of-domain or mistyped payload values are rejected before normalization by XDL semantic validation of each extension payload against the locally supplied Profile schema (`XDL-SEMANTIC-EXTENSION-SCHEMA`, `src/xverse_xdl/semantics.py:585-645`), so the compiler's member-set re-validation is defense-in-depth and T018-SR-002 is scoped to member sets by the accepted design (§2.3/§5.1); (c) `GraphView` idempotency bypassing re-measurement is the explicit detailed-design decision (§4.1 step 1, unit-specifications §4), with the derived-entity caps still applied. The verification-plan/test identifier agreement test keeps the plan table and the module in sync."
+    },
+    {
+      "id": "T018-CHK-08",
+      "name": "Traceability, REF-002 non-promotion, governance, and public safety",
+      "method": "read requirements/architecture/detailed-design/unit-specifications/verification-plan/implementation records; ran `validate_xcom_task_ownership.py --verify`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, `validate_xcom_unit_design.py --verify`; compared the two implementation.md artifact sha256 values against the working tree; grepped the changed set for credentials, private addresses, absolute host paths, and key markers",
+      "result": "pass: requirement/unit/design/test/evidence identifiers link bidirectionally (requirements.md §10, unit-specifications.md §14, detailed-design.md §13, verification-plan.md §7/§9, implementation.md §5), every `T018-SR` maps to >=1 unit and every unit to >=1 requirement. T007 and T008 validators exit 0. `implementation.md` records `ref002_disposition = \"unchanged\"` with an empty promoted set and promotes no `XVE-SYS-0139`-`0158` or shared target. Both recorded artifact sha256 values match the working tree exactly (`xcom_plan.py a0e1365...`, `test_xcom_plan.py f94c8a1...`). The `validate_xcom_architecture_contracts.py` (exit 12) and `validate_xcom_unit_design.py` (exit 13) `PATH_INVALID` findings are the disclosed pre-existing deliverable-vs-planned-path defect that already fired at the baseline for the T017 paths; T018 adds its own two legitimately created planned paths to the same class and edits no T009/T010 artifact, exactly as implementation.md §6 rows 7-8 state. Public safety: the compiler and tests contain no credential, private address, absolute host path, or private-key marker; the only absolute-host-path string in the diff is the documented deterministic-gate invocation that requirements.md §2.4 and verification-plan.md §2 explicitly carve out as workflow infrastructure."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Read-only internal review conducted on baseline 56506d2c9cb71791cba06a1cc418fcadee72e0fa after the implementation stage. No production code, test, or work product was edited.",
+    "Reviewed paths are exactly `git diff --name-only 56506d2c9cb71791cba06a1cc418fcadee72e0fa --` (9 paths); this untracked review record and any workflow-regenerated package manifest are excluded.",
+    "External Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes; this review claims no user acceptance and no integration."
+  ]
+}

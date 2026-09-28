@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "task_id": "T007",
+  "baseline_revision": "923a6db65aafbcdbf33a1461e93622777e902deb",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 5,
+  "supersedes": "revision-4; this revision is an independent, freshly executed read-only pass over the same hash-verified revision-2 candidate and corrects the review record's inventory to exactly the baseline tracked diff (the revision-4 record listed the untracked queue package, which the deterministic review gate rejects)",
+  "resume_context": {
+    "run_id": "01M3G4RKH43309TDP4JTJBQR49",
+    "checkpoint_manifest_sha256": "00275e4a9127bdc8b684435269687d198746f2fa043d0bd5d7e4ac76b794baeb",
+    "note": "The run/checkpoint identity is external workflow infrastructure and is not a repository file; it is recorded for provenance only. The reviewed artifact hashes were recomputed from the working tree and match implementation.md revision 2 exactly."
+  },
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t007/architecture.md",
+    "docs/engineering/xcom/t007/detailed-design.md",
+    "docs/engineering/xcom/t007/implementation.md",
+    "docs/engineering/xcom/t007/requirements.md",
+    "docs/engineering/xcom/t007/unit-specifications.md",
+    "docs/engineering/xcom/t007/verification-plan.md",
+    "docs/engineering/xcom/task-ownership.json",
+    "docs/engineering/xcom/task-ownership.md",
+    "scripts/validate_xcom_task_ownership.py",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "R5-CHK-01",
+      "name": "Resume identity and artifact hash binding",
+      "method": "recomputed sha256 of the register, projection, and validator; compared against implementation.md revision 2 and against every file hash in the queue package; verified the baseline resolves",
+      "result": "pass: task-ownership.json = 977595a5c77e1625b1fb905b2d1bd937c77f803a5b6c81065bd6dd007ba2be81, task-ownership.md = 7e83642e8cf21c1c2be176c09faf3f289e7c56fffa7bc0ccd9140e8e30201464, validate_xcom_task_ownership.py = 181747c9d118b12f10aec058d6e800505f3bebabf5597e0d4d128112b7c43250; all match implementation.md sec.4 revision 2 and all 10 queue-package file hashes match (0 mismatches); git rev-parse 923a6db65aafbcdbf33a1461e93622777e902deb prints the baseline."
+    },
+    {
+      "id": "R5-CHK-02",
+      "name": "Exact baseline diff inventory and docs-only boundary",
+      "method": "git diff --name-only <baseline> --, git diff --check <baseline> --, and inspection of every changed path",
+      "result": "pass: exactly 10 tracked changed paths, none under src/, tests/, or xdl/; git diff --check exits 0; the only functional tracked change outside the T007 work products is the single T007 checkbox at specs/007-xcom-core/tasks.md line 22. The internal-review.json and reports/ records are untracked and correctly excluded from reviewed_paths."
+    },
+    {
+      "id": "R5-CHK-03",
+      "name": "No later task (T008-T041) implemented accidentally",
+      "method": "scanned the changed-path set, docs/engineering/xcom/, and reports/xcom-queue/ for later-task artifacts; checked the capability task checkboxes",
+      "result": "pass: no docs/engineering/xcom/t008+ directory, no reports/xcom-queue/<t008+>-package.json, and no src/, tests/, xdl/, proto/, or build artifact for a later slice; T008-T024 and T026-T041 remain unchecked; T025 is the only other checked task and is the previously accepted predecessor. scripts/validate_xcom_task_ownership.py is T007's own declared validator (detailed-design.md sec.2), not a later-task deliverable."
+    },
+    {
+      "id": "R5-CHK-04",
+      "name": "Validator nominal modes",
+      "method": "python3 scripts/validate_xcom_task_ownership.py --verify | --check-human | --self-test",
+      "result": "pass: --verify exit 0; --check-human exit 0; --self-test exit 0 with the positive fixture passing, NEG-01..NEG-20 rejected at their declared classes, and DET-02 rejected at DETERMINISM_INVALID (exit 9). Interpreter recorded as Python 3.13.13."
+    },
+    {
+      "id": "R5-CHK-05",
+      "name": "Every negative fixture reaches its declared check for the intended reason",
+      "method": "executed each fixture from scripts/validate_xcom_task_ownership.py _negative_fixtures and inspected the emitted diagnostics, not only the exit class",
+      "result": "pass: NEG-08 by 'slice T-CORE claims shared path CMakeLists.txt as exclusive'; NEG-09 by 'dependency graph contains a cycle'; NEG-10/14/15/16 by the REQUIRED_ORDER_PAIRS reachability messages; NEG-11/12/13/17 by the declared gate messages; NEG-18 by directory-prefix overlap; NEG-19 by the per-task reservation messages; NEG-20 by the T-ENABLER reservation of reports/xcom-queue/t007-package.json; NEG-01..NEG-07 by their schema/slice/assignment/binding messages. Each fixture's lowest exit equals the declared class."
+    },
+    {
+      "id": "R5-CHK-06",
+      "name": "Checks are load-bearing (independent neutralisation probes)",
+      "method": "built isolated /tmp mirrors of the validator, neutralised one check branch at a time at source level, and re-ran --self-test; also separately disabled _reachable",
+      "result": "pass: making _reachable always true lets NEG-10/14/15/16 return OK and the self-test exits 8; disabling the shared-claimed-exclusive check lets NEG-08 return OK; disabling cycle detection lets NEG-09 return OK; reducing _patterns_overlap to exact equality lets NEG-18 return OK; disabling _check_per_task_ownership lets NEG-20 return OK; injecting the top-level minimum prohibitions back lets NEG-17 return OK. Confirmed non-load-bearing (no fixture depends on them), disclosed in OBS-03/OBS-04: the explicit empty-exclusive guard (NEG-19 is still rejected by _check_per_task_ownership) and the paths_shared-subset and required-shared-substring branches (no dedicated fixture)."
+    },
+    {
+      "id": "R5-CHK-07",
+      "name": "Failure atomicity and rejected-operation side effects",
+      "method": "ran --verify on a mutated register and on an over-bound register in isolated mirrors and captured stdout, stderr, exit status, and filesystem state",
+      "result": "pass: a rejected run writes nothing to stdout (the OK line is printed only on exit 0) and reports classified diagnostics on stderr only, with the numerically lowest applicable exit class (a mutated baseline produced BINDING_INVALID 5 and DETERMINISM_INVALID 9 and returned 5); an over-bound register returned IO_ERROR 11 with empty stdout. The validator only reads (no open-for-write, mkdir, subprocess, socket, thread, eval, or exec); a rejected run has no partial-success output and leaves the tree unchanged."
+    },
+    {
+      "id": "R5-CHK-08",
+      "name": "Bounded resources, offline, restart/recovery, and concurrency",
+      "method": "source inspection of scripts/validate_xcom_task_ownership.py plus the over-bound probe",
+      "result": "pass: imports are only argparse/json/re/sys/pathlib ('subprocess' appears only in the module docstring); every read is a repository-relative bounded read (1 MiB per file via _read_bounded and MAX_FILE_BYTES, 4 MiB total via MAX_TOTAL_BYTES in main); single-threaded; no network or shell. The tool is stateless, so restart/recovery has no persisted state to reconcile and re-running reproduces the same exit and output. The <=60 s wall-clock bound (BND-05) is a documented property of a small bounded in-repo input, not an enforced timeout; the enforced bounds are the 1 MiB/4 MiB input caps."
+    },
+    {
+      "id": "R5-CHK-09",
+      "name": "Determinism of serialization, projection, and output",
+      "method": "serialize(model) compared to the on-disk JSON bytes; project_markdown(model) compared to task-ownership.md; two --verify runs and two --self-test runs compared byte-for-byte",
+      "result": "pass: serialize equals the on-disk JSON bytes; the Markdown projection matches byte-for-byte; repeated --verify and --self-test runs produce identical stdout/stderr and exit status."
+    },
+    {
+      "id": "R5-CHK-10",
+      "name": "Assignment, binding, and reconciliation content",
+      "method": "--verify plus independent recomputation of the assignment union and cross-read against requirements.md sec.5-6 and architecture.md sec.3-6",
+      "result": "pass: the slice set equals the six slices plus T-ENABLER in declared order; task_assignment covers T007-T041 (35 tasks, no gap or duplicate; T007 recorded as the producing token T-PRODUCING, T008-T041 singly assigned); owning_tasks matches task_assignment for every slice; every slice baseline equals the run baseline and cites at least one resolvable record; T012-T016 and T021-T024 are unreconciled with the open-checkbox reason; T025 is accepted at 4b01586b438a8587d231ee8828d896c206c06a96 (implementation cc9044ab28d0ae9b4df8447072f68b73b3db184a); all remaining tasks are allocated."
+    },
+    {
+      "id": "R5-CHK-11",
+      "name": "Path ownership, per-task reservation, and shared paths",
+      "method": "--verify, plus an independent recomputation of exclusive-pattern overlap and per-task reservation",
+      "result": "pass: every slice declares a non-empty exclusive set; independent directory-prefix comparison finds zero cross-slice exclusive overlaps; the exclusive set and the shared set are disjoint; each task T007-T041 has its docs/engineering/xcom/<task>/ directory and reports/xcom-queue/<task>-package.json reserved to exactly one slice (T007's to T-ENABLER, whose only dependency T007 precedes it); paths_shared is a subset of shared_paths; shared_paths names the root and X-COM build files and the capability specifications."
+    },
+    {
+      "id": "R5-CHK-12",
+      "name": "Dependency graph, ordering, and cycle freedom",
+      "method": "--verify plus independent recomputation of REQUIRED_ORDER_PAIRS reachability and declared-vs-direct edge consistency",
+      "result": "pass: the graph is acyclic; T007 -> T-ENABLER -> T-CORE -> {T-XDL, T-OBS, T-STIM} -> T-INTG -> T-REVIEW holds by reachability; T-ENABLER also precedes T-INTG directly; T025 -> T026 holds; each slice's declared dependencies equal its direct incoming edges."
+    },
+    {
+      "id": "R5-CHK-13",
+      "name": "Traceability across requirements/architecture/design/units/checks/evidence",
+      "method": "cross-read requirements.md sec.5-6,10, architecture.md sec.9, detailed-design.md sec.10, unit-specifications.md sec.4, verification-plan.md sec.7, and implementation.md sec.5; programmatic check that every T007-SR-### appears in each downstream document",
+      "result": "pass: T007-STK-001..007 and T007-SR-001..014 each map to units, checks, and named evidence with no orphan requirement or unit (all 14 SRs appear in architecture.md, detailed-design.md, unit-specifications.md, verification-plan.md, and implementation.md; STK-001..007 appear as an explicit range in architecture.md sec.9 and via the requirements sec.10 index); slice/task tables in architecture.md sec.3, detailed-design.md sec.6, and the register agree; REF-002 disposition is unchanged with no allocated target promoted."
+    },
+    {
+      "id": "R5-CHK-14",
+      "name": "Public-safety scan and prohibited content",
+      "method": "ran _scan_public_safety over the register and projection; grepped the diff for credentials, private addresses, private-key markers, and absolute host paths",
+      "result": "pass: the mechanical scan reports no prohibited class in the register or projection; the register, projection, and validator output carry no credential, private address, key marker, or payload. Two T007 work-product documents (verification-plan.md sec.2 and architecture.md sec.7) echo the external deterministic-gate invocation path; T007-SR-014 scopes that path as external workflow infrastructure, and it is absent from the register, projection, validator output, and evidence (see OBS-05)."
+    },
+    {
+      "id": "R5-CHK-15",
+      "name": "Passing behavior tested beyond the normal path and compatibility",
+      "method": "confirmed the self-test exercises failure/rejection paths (NEG-01..NEG-20, DET-02) rather than only the nominal case; confirmed the candidate changes no code, protocol, or accepted artifact",
+      "result": "pass: the deterministically passing --self-test is driven by 20 injected-defect fixtures plus a tampered-projection fixture, each bound to a declared exit class and inspected diagnostics, so the tests exercise rejected/atomic/boundary behavior, not only the happy path. The candidate is documentation/governance only: no src/, tests/, or xdl/ path changed, no docs/adr/** (accepted ADR) changed, and no accepted requirement or test weakened, so there is no compatibility or runtime-behavior impact."
+    },
+    {
+      "id": "R5-CHK-16",
+      "name": "No unresolved finding from this pass",
+      "method": "separate read-only pass over the exact candidate revision; no production code or test was edited by this review",
+      "result": "pass: no BLOCKER, MAJOR, or MINOR finding remains that would weaken the accepted requirements or the docs-only boundary; the residual observations below are non-blocking wording/coverage items and do not change the verdict."
+    }
+  ],
+  "findings": [],
+  "observations": [
+    {
+      "id": "OBS-01",
+      "severity": "non-blocking",
+      "statement": "requirements.md STK-001 AC-2 and T007-SR-003 state that every task T007-T041 is assigned to exactly one slice or the enabler group, whereas detailed-design.md sec.6, unit-specifications.md, verification-plan.md CHK-03, and the validator assign T008-T041 and record T007 as the producing task under the token T-PRODUCING (enforced at validate_xcom_task_ownership.py:459-463 and :622). The substantive intent (no gap, no double ownership, a single accountable owner) holds; only the requirements wording spans T007.",
+      "evidence": "docs/engineering/xcom/t007/requirements.md:152,297-298; docs/engineering/xcom/t007/detailed-design.md:205-206; docs/engineering/xcom/task-ownership.json:735",
+      "disposition": "accepted as a wording-level residual; it does not weaken an acceptance criterion and does not require repair for this checkpoint."
+    },
+    {
+      "id": "OBS-02",
+      "severity": "non-blocking",
+      "statement": "verification-plan.md sec.1 and unit-specifications.md sec.2 name Python 3.11 while implementation.md sec.4 records Python 3.13.13. The validator uses only 3.11-compatible syntax and standard modules, so the label is conservative, not wrong.",
+      "evidence": "docs/engineering/xcom/t007/verification-plan.md:14; docs/engineering/xcom/t007/unit-specifications.md:19; docs/engineering/xcom/t007/implementation.md:61",
+      "disposition": "accepted as a documentation residual."
+    },
+    {
+      "id": "OBS-03",
+      "severity": "non-blocking",
+      "statement": "The explicit empty-exclusive guard in _check_paths is redundant with _check_per_task_ownership: neutralising it alone (source-level probe) leaves every fixture passing because NEG-19 is still rejected by the per-task reservation check. This is deliberate defence in depth and no fixture passes for the wrong reason.",
+      "evidence": "scripts/validate_xcom_task_ownership.py:565-569, 601-637; probe S2 in R5-CHK-06",
+      "disposition": "disclosed in implementation.md sec.7 (Probe D); accepted."
+    },
+    {
+      "id": "OBS-04",
+      "severity": "non-blocking",
+      "statement": "No self-test fixture isolates the paths_shared-subset branch (validator lines 592-597) or the required-shared-substring branch (lines 551-556); neutralising either leaves every fixture's result unchanged. Both behaviours are implemented and the subset branch was exercised by adversarial probe in the prior pass, so the behaviour exists; only automated fixture coverage is absent. The declared negative-case set NEG-01..NEG-20 does not include either branch.",
+      "evidence": "scripts/validate_xcom_task_ownership.py:551-556, 592-597; probes S3 and S5 in R5-CHK-06",
+      "disposition": "accepted as residual coverage; requirements.md sec.2.4 labels NEG-08 'undeclared shared path', which the implemented fixture covers as the adjacent sub-case of the same CHK-08 family."
+    },
+    {
+      "id": "OBS-05",
+      "severity": "non-blocking",
+      "statement": "verification-plan.md sec.2 and architecture.md sec.7 contain the absolute path of the external deterministic gate (/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py). T007-SR-014 explicitly scopes this documented invocation path as external workflow infrastructure rather than register content, and the path is absent from the register, projection, validator output, and evidence; the public-safety scan is therefore clean.",
+      "evidence": "docs/engineering/xcom/t007/verification-plan.md:26; docs/engineering/xcom/t007/architecture.md:153; docs/engineering/xcom/t007/requirements.md:438-444",
+      "disposition": "accepted as scoped-out by T007-SR-014; the repository's public-safety rule applies to register/evidence content, which is clean."
+    },
+    {
+      "id": "OBS-06",
+      "severity": "non-blocking",
+      "statement": "The <=60 s wall-clock bound (BND-05) is a documented property of a small bounded in-repo input, not an enforced timeout; the enforced bounds are the 1 MiB per-file and 4 MiB total input caps.",
+      "evidence": "scripts/validate_xcom_task_ownership.py:59-60,1213-1220; docs/engineering/xcom/t007/verification-plan.md:120",
+      "disposition": "accepted; no runtime or availability claim is made."
+    }
+  ],
+  "summary": "The hash-verified revision-2 candidate over baseline 923a6db65aafbcdbf33a1461e93622777e902deb satisfies the T007 requirements and is accepted by this fresh independent read-only pass. The resume is hash-verified: the register, projection, and validator hashes match the implementation.md revision-2 record exactly and every queue-package file hash matches the working tree. The ownership register is complete and machine-checkable: exactly the six bounded slices plus the T-ENABLER group in declared order, every task T007-T041 singly accounted for, every slice bound to the exact baseline and to a resolvable authorization record, exclusive path ownership disjoint under directory-prefix semantics with each task's review/acceptance/queue artifacts reserved to one slice, an acyclic dependency graph whose declared precedence pairs are enforced by reachability, the minimum global prohibitions enforced at both top level and per slice, and honest reconciliation (T012-T016/T021-T024 unreconciled, T025 accepted at the recorded merge, the remainder allocated). I independently confirmed the nominal modes exit 0, the artifact hashes match, serialization and the Markdown projection are byte-stable, every fixture reaches its declared class for the intended reason, the ordering, shared-claimed-exclusive, prefix-overlap, cycle, per-task-reservation, and top-level-prohibition checks are load-bearing under neutralisation, rejected runs are atomic with no partial-success output and no side effects, an over-bound input returns IO_ERROR 11, and the tool is offline, single-threaded, bounded, and stateless. The candidate is documentation/governance only: no src/, tests/, or xdl/ path changed, no accepted ADR or requirement rewritten, and no later task T008-T041 implemented. The six residual observations above are non-blocking wording/coverage items that do not weaken any acceptance criterion or the docs-only boundary. Verdict: pass; external Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes. No production code, test, or XDL asset was modified by this review."
+}

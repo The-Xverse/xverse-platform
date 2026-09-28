@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "task_id": "T019",
+  "baseline_revision": "199de0baa1f50e1d429527b6d6525a6e5d8cf7cf",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 4,
+  "supersedes_revision": 3,
+  "prior_verdict": "fail",
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "cmake/XComOfflineDependencies.cmake",
+    "docs/engineering/xcom/t019/architecture.md",
+    "docs/engineering/xcom/t019/detailed-design.md",
+    "docs/engineering/xcom/t019/implementation.md",
+    "docs/engineering/xcom/t019/requirements.md",
+    "docs/engineering/xcom/t019/unit-specifications.md",
+    "docs/engineering/xcom/t019/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "src/xverse/xcom/include/xverse/xcom/activation_plan.hpp",
+    "src/xverse/xcom/src/activation_plan.cpp",
+    "tests/xcom/activation_plan/decoder_negative_tests.cpp",
+    "tests/xcom/activation_plan/decoder_unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T019-R4-CHK-01",
+      "name": "Exact candidate inventory, baseline binding, and authorization boundary",
+      "method": "ran `git rev-parse 199de0b...`, `git diff --name-only 199de0b... --`, `git diff --check`, `git status --short`; ran `python3 scripts/validate_xcom_task_ownership.py`; read requirements.md SEC.2.4 and verification-plan.md SEC.2.2",
+      "result": "pass: the baseline resolves; `git diff --name-only` returns exactly the 13 reviewed paths and reviewed_paths equals that diff; `git diff --check` is clean (exit 0); task-ownership validation passes. No `src/xverse_xdl/**`, `proto/**`, `xdl/**`, `Doxyfile`, T017/T018 artifact, or undeclared path appears. A scan of every changed path for `/home/`, `/tmp/`, Windows drive paths, and the operator name found no absolute host path or private detail."
+    },
+    {
+      "id": "T019-R4-CHK-02",
+      "name": "No later backlog task implemented accidentally",
+      "method": "diffed specs/007-xcom-core/tasks.md; inspected the CMake diff and the changed-path set for T020/T021-T041, proto/, Doxyfile, xverse_xdl/, and gateway/journal/session/observation/stimulation units",
+      "result": "pass: the only tasks.md change is the T019 checkbox line (line 49, '-' -> '[X]'); T020 and every later task remain unchecked. The candidate adds only the `xverse_xcom_activation_plan` STATIC library plus its two `t019`-labelled CTest targets (CMakeLists.txt lines 124-145 and 357-380). No ordering-equivalence/malformed/drift/bound/regression suite (T020), proto/, Doxyfile, or runtime unit is added."
+    },
+    {
+      "id": "T019-R4-CHK-03",
+      "name": "Bounded parse, bounded resources, fail-closed overflow",
+      "method": "read BoundedSax/check_bounds/add_value/begin_container/parse_bounded/build_model; ran `ctest -L t019` and inspected NegD19, NegD20, NegD21, BoundLimitsInvalid, Decode.LimitsValidationBounds",
+      "result": "pass: byte (5 MiB), depth (100), node (100000), string (4096), and per-collection entity caps (contracts/endpoints/routes/providers/observationPoints/clockDomains/diagnostics/activationOrder/provenance resources) are enforced; an over-bound input is `failed`/`XCOM-DECODE-BOUND` with no engaged plan, and an invalid DecodeLimits member is `failed`/`XCOM-DECODE-UNKNOWN` before parse (parse_bounded lines 595-599). Non-finite or out-of-int64/uint64-range numeric tokens are `rejected`/`XCOM-DECODE-INPUT` (lines 437-453). The DOM, node/string bookkeeping, and canonical buffer are all bounded by the admitted input caps; no allocation is unbounded and no I/O is performed."
+    },
+    {
+      "id": "T019-R4-CHK-04",
+      "name": "Independent canonicalization/digest and cross-language compatibility with the accepted producer",
+      "method": "compiled the decoder into a read-only probe under /tmp and ran a 131-case differential check against the accepted T017 `validate_plan_structure`+`check_digest` over resealed structural mutations of the committed fixture (enums, patterns, ranges, ordering, payloads); decoded both committed fixtures and the six nested-digest mutations",
+      "result": "pass: both committed fixtures decode `accepted` and recompute to their recorded digests. The only accept/reject divergence is the deliberate T019 stricter capability closure (a provider whose requiredCapabilities are not declared is rejected as XCOM-DECODE-CAPABILITY while the T017 structure+digest pair does not cover cross-references); no false rejection of a schema-valid plan and no digest/canonicalization divergence was found. The canonical body is member-ordered and whitespace-free and recomputes the domain-separated SHA-256 over the top-level-digest-removed region (lines 1400-1428). In-tree SHA-256 matches published known answers."
+    },
+    {
+      "id": "T019-R4-CHK-05",
+      "name": "Failure atomicity, rejected-operation side effects, restart/recovery, concurrency",
+      "method": "read decode_activation_plan/result_from_error/build_model/BytesResult; ran the full negative suite and confirmed each case leaves `plan` disengaged; inspected the value type for synchronization/global state",
+      "result": "pass: every non-accepted result is constructed by result_from_error (lines 90-95), which never engages DecodeResult.plan; the fixed pipeline order (limits -> parse -> shape -> version -> digest -> capability/reference/status -> entity caps -> accepted) means the first failing step determines code/target and no later step runs. build_model writes to a local ActivationPlan and is moved into the result only on success (lines 1469-1477), so a failed decode cannot leak a partial or mutated value. The unit retains no state between calls, so restart/recovery and rejected-operation persistence are not applicable, and ActivationPlan is a plain aggregate with no lock, no virtual function, and no aliasing of the input buffer (shareable read-only)."
+    },
+    {
+      "id": "T019-R4-CHK-06",
+      "name": "Closed shape/vocabulary/pattern enforcement including the repaired nested digest sub-schema (prior finding T019-IR-006)",
+      "method": "read require_digest/require_digest_members/check_digest_shape/validate_shape and the digest step; probed provenance.graphDigest and provenance.resources[].sourceDigest mutations directly; ran the declared negative suite",
+      "result": "pass: require_digest (src/xverse/xcom/src/activation_plan.cpp lines 708-719) now enforces the closed `$defs/digest` sub-schema (algorithm == \"sha256\", value =~ ^[0-9a-f]{64}$, object closed) after the structural string check, and check_digest_shape (lines 800-802) applies it to provenance.graphDigest (line 851) and every provenance.resources[].sourceDigest (line 877). Direct probes return `rejected`/`XCOM-DECODE-SHAPE`/`provenance`/no-plan for algorithm \"md5\", value \"abc\", 64-uppercase-hex, and 63-hex, each of which the accepted T017 validator rejects. The top-level recorded digest is structurally checked at shape and its algorithm/hex classified as `XCOM-DECODE-DIGEST` at the digest step, so NEG-D10 is unchanged. The prior medium finding T019-IR-006 is closed."
+    },
+    {
+      "id": "T019-R4-CHK-07",
+      "name": "Tests exercise the required behavior rather than only the normal path",
+      "method": "read both decoder test sources; mapped NEG-D01..NEG-D22/BND/DET to assertions; ran `ctest -L t019` (38/38) and the full `ctest` suite (194/194); ran `python3 -m pytest -q` (129 passed / 24 subtests)",
+      "result": "pass: every declared negative family asserts the outcome, the stable code, the affected identifier or xcom-plan, and the absence of an engaged plan (expect_error, decoder_negative_tests.cpp lines 49-65). Input/parse (NegD01-03, NegD21), shape/vocabulary/pattern/order (NegD04-D08, NegD08DigestPattern, NegD17, NegD18), version/digest (NegD09-D12, NegD22), capability/reference/status (NegD13-D16), and bound (NegD19, NegD20, BoundLimitsInvalid) cases are present, with the digest cases deliberately un-resealed to isolate the defect and the shape/closure cases resealed to isolate a single later check. Positive, determinism (Decode.ReorderedDocumentSameDigestAndResult, Decode.IntegralNumberVariantSharesCanonicalBytes), canonicalization, immutability, and schema-drift tests are present. Results: `ctest` 194/194, `-L t019` 38/38, pytest 129 passed."
+    },
+    {
+      "id": "T019-R4-CHK-08",
+      "name": "Traceability, dependency admission, and public safety",
+      "method": "read all six work products and the implementation record; compared requirement/unit/design/test links; reviewed the shared cmake/XComOfflineDependencies.cmake and src/xverse/xcom/CMakeLists.txt edits against the A-1 authorization in requirements.md SEC.2.4/SEC.9 A-1 and verification-plan.md SEC.2.4; scanned the T019 work products for absolute host paths",
+      "result": "pass: requirement (T019-STK/SR) <-> design unit (T019-U-01..U-08) <-> artifact <-> test links are bidirectional and consistent across requirements.md SEC.10, detailed-design.md SEC.14, unit-specifications.md SEC.12, verification-plan.md SEC.9, and implementation.md SEC.3. The decoder includes only the C++20 standard library and the admitted nlohmann/json header (activation_plan.cpp lines 14-27) and links only nlohmann_json::nlohmann_json; REF-002 is `unchanged` with an empty promoted set. The explicit-cache fallback and the conditional prefix-derived LD_LIBRARY_PATH entry are authorized and the hash-verified preflight still runs unchanged (cmake/XComOfflineDependencies.cmake lines 31-84). No retained work product carries an absolute host path."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Read-only internal review rev 4 on baseline 199de0baa1f50e1d429527b6d6525a6e5d8cf7cf. No production code, test, or work product was modified during this pass; the differential probe was compiled under /tmp only.",
+    "Prior finding T019-IR-006 (medium, nested digest sub-schema not enforced) is verified closed by T019-R4-CHK-06: require_digest now enforces algorithm==\"sha256\" and value=~^[0-9a-f]{64}$ for provenance.graphDigest and every provenance.resources[].sourceDigest, the declaration-order fault is bound to XCOM-DECODE-SHAPE/provenance/no-plan, and Decode.SchemaDriftGuard plus NegD08DigestPattern bind the behavior to PLAN_SCHEMA.",
+    "Objective results: full `ctest` 194/194 pass; `ctest -L t019` 38/38; `pytest` 129 passed / 24 subtests; `git diff --check` clean (exit 0); `scripts/validate_xcom_task_ownership.py` passes.",
+    "Reviewed paths equal `git diff --name-only 199de0b... --` exactly (13 paths). The untracked docs/engineering/xcom/t019/internal-review.json and the workflow-regenerated reports/xcom-queue/t019-package.json are excluded per the review-gate inventory rule.",
+    "Advisory (non-blocking, does not affect the delivered artifact or admission): in the unset LD_LIBRARY_PATH case the A-1 fallback yields a trailing empty path component (`<prefix>/usr/lib/x86_64-linux-gnu:`), which the dynamic loader can interpret as the configure-time current directory (cmake/XComOfflineDependencies.cmake lines 63-67). The added explicit directory is still derived only from the admitted prefix and the hash-verified preflight is unchanged; a future hardening pass could emit the directory alone when the variable is empty.",
+    "Declared limitation L-3 is accepted, not a finding: provenance.generatedAt is required to be a string but its RFC 3339 `date-time` format is not re-validated, so the decoder accepts one schema-annotation-only divergence that the T017 validator rejects via FormatChecker. The T019 requirements enumerate patterns (identifier/version/digest/diagnostic) and closed vocabularies but do not name a date-time format; the deviation is bounded, explicitly declared in implementation.md SEC.6 L-3, and binds no accepted capability-007 requirement.",
+    "Advisory (non-blocking): Decode.SchemaDriftGuard asserts the required-member set, additionalProperties, the status enum, selected minItems, the inputResolution arity, deadlineMs maximum, and the digest sub-schema, but does not exhaustively assert every remaining enum (role, ordering, reliability, overflow, backpressure, payloadAccess, validityEffect, source, severity, resourceRef.kind) and pattern. The decoder's behavior for those values was independently confirmed to match PLAN_SCHEMA by the differential check in T019-R4-CHK-04; a later pass may extend the guard to assert the full table.",
+    "The malformed-plan/drift/bound negative cases in decoder_negative_tests.cpp are T019's own unit-level proofs of its declared checks (verification-plan.md SEC.3/SEC.7) and do not implement T020's broader ordering-equivalence/malformed-plan/drift/bound/regression suite; T020 remains unchecked and no T020 source is present.",
+    "External Codex review remains deferred until the xcom-t007-t010-t017-t020 backlog completes; this review claims no user acceptance and no integration."
+  ]
+}

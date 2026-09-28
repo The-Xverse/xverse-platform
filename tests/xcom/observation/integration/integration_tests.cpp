@@ -8,7 +8,10 @@
  * @failure Failed expectations are printed and produce a nonzero process result.
  * @par Traceability
  * Verifies XCOM-OBS-001 through XCOM-OBS-008 at the provider integration boundary. Core-only policy,
- * handle, and record behavior remains covered by tests/xcom/observation/core/unit_tests.cpp.
+ * handle, and record behavior remains covered by tests/xcom/observation/core/unit_tests.cpp. T024 adds
+ * the route-level observation acceptance matrix of docs/engineering/xcom/t024/verification-plan.md:
+ * four-family route FIFO and observer neutrality, and route saturation, degraded validity, and safe
+ * detach over the owned loopback composition (XCOM-SW-OBS-003/-004, FR-013, FR-014, SC-004, SC-005).
  */
 
 #include "test_support.hpp"
@@ -35,6 +38,25 @@ using xverse::xcom::observation_test::make_tap_spec;
     std::cerr << "observation integration failure: " << message << '\n';
   }
   return condition;
+}
+
+/**
+ * @brief Build one named observation policy through the accepted validated factory.
+ * @ownership Owns the validated policy it returns; all inputs are borrowed for the call.
+ * @lifetime The returned policy is an independent value.
+ * @thread_safety `noexcept` and pure; concurrent calls are safe.
+ * @failure Reports the first violated invariant through the caller's assertion; an invalid input would
+ * be a fixture defect, so the accepted factory result is dereferenced after construction.
+ */
+[[nodiscard]] ObservationTapSpec make_named_tap_spec(
+    const ObservationFilterInput& filter, const ObservationPayloadMode payload_mode,
+    const std::size_t maximum_payload_bytes, const std::size_t record_capacity,
+    const ObservationOverflowPolicy overflow_policy, const std::string_view tap_id,
+    const ObservationValidityEffect validity_effect = ObservationValidityEffect::none) {
+  const auto spec = ObservationTapSpec::create(
+      {kObservationContractVersion, tap_id, filter, payload_mode, maximum_payload_bytes,
+       record_capacity, overflow_policy, validity_effect});
+  return *spec;
 }
 
 /** Verify policy-bounded records and normalized accepted/rejected provider outcomes. */
@@ -137,7 +159,7 @@ using xverse::xcom::observation_test::make_tap_spec;
       wrong_origin_filter, ObservationPayloadMode::metadata_only, 0U, 1U,
       ObservationOverflowPolicy::drop_newest));
   const auto unsupported = ObservationTapSpec::create(
-      {"2.0.0", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+      {"2.0.0", "tap.integration", {}, ObservationPayloadMode::metadata_only, 0U, 1U,
        ObservationOverflowPolicy::drop_newest});
   Scenario scenario("filtered", InteractionKind::message_event, 1U, &hub);
   const auto item = scenario.item(1U);
@@ -408,6 +430,361 @@ using xverse::xcom::observation_test::make_tap_spec;
   return true;
 }
 
+/** Verify a disconnected and a stale observer leave the bounded loopback route unchanged. */
+[[nodiscard]] bool test_synthetic_sink_route_isolation_counters() {
+  ObservationHub hub;
+  const auto attached = hub.attach(make_tap_spec(
+      {}, ObservationPayloadMode::metadata_only, 0U, 8U,
+      ObservationOverflowPolicy::drop_newest));
+  Scenario scenario("sink-isolation", InteractionKind::message_event, 4U, &hub);
+  if (!expect(attached.handle.has_value() && scenario.ready(), "route isolation fixture setup")) {
+    return false;
+  }
+  SyntheticObservationSink sink(hub, *attached.handle);
+  sink.disconnect();
+  const auto first = scenario.item(1U);
+  if (!expect(first.has_value() &&
+                  scenario.composition()
+                          .submit(scenario.provider_handle(), *first.value(), scenario.lifecycle())
+                          .outcome() == ProviderOutcome::accepted,
+              "disconnected observer blocks submission")) {
+    return false;
+  }
+  const auto disconnected = sink.pull();
+  const auto route_after_disconnect = scenario.composition().route_state(scenario.provider_handle());
+  const auto tap_after_disconnect = hub.snapshot(*attached.handle);
+  if (!expect(disconnected.status.outcome == ObservationOutcome::sink_disconnected &&
+                  sink.counters().disconnected == 1U,
+              "disconnected counter visible") ||
+      !expect(route_after_disconnect.has_value() &&
+                  route_after_disconnect.value()->queued_items() == 1U,
+              "disconnected observer changed the route") ||
+      !expect(tap_after_disconnect.has_value() && tap_after_disconnect->queued == 1U,
+              "disconnected observer consumed a retained record")) {
+    return false;
+  }
+  const auto reconnected = sink.connect();
+  const auto detached = hub.detach(*attached.handle);
+  const auto second = scenario.item(2U);
+  if (!expect(reconnected.succeeded() && detached.succeeded() && second.has_value() &&
+                  scenario.composition()
+                          .submit(scenario.provider_handle(), *second.value(), scenario.lifecycle())
+                          .outcome() == ProviderOutcome::accepted,
+              "route accepts after observer removal")) {
+    return false;
+  }
+  const auto failed = sink.pull();
+  const auto stale_snapshot = hub.snapshot(*attached.handle);
+  const auto route_after_removal = scenario.composition().route_state(scenario.provider_handle());
+  if (!expect(failed.status.outcome == ObservationOutcome::invalid_tap_handle &&
+                  sink.counters().failed == 1U && !stale_snapshot.has_value(),
+              "stale observer fails safely") ||
+      !expect(route_after_removal.has_value() &&
+                  route_after_removal.value()->queued_items() == 2U,
+              "observer removal changed the route count")) {
+    return false;
+  }
+  for (unsigned int sequence = 1U; sequence <= 2U; ++sequence) {
+    const auto received =
+        scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+    if (!expect(received.has_value() &&
+                    received.value()->timestamp().nanoseconds() ==
+                        static_cast<std::int64_t>(sequence),
+                "observer failure reordered the route")) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * @brief Prove four-family route FIFO and observer neutrality across the owned loopback.
+ * @details Realizes T24-TS-008 (`ordering`, `safe-detach` route): T024-SR-007, T024-SR-014;
+ * XCOM-SW-OBS-004; FR-013, FR-014, SC-004, SC-005.
+ * @return true only when every route ordering and neutrality assertion holds.
+ */
+[[nodiscard]] bool test_observation_route_ordering_neutrality_matrix() {
+  constexpr std::array<InteractionKind, 4U> kinds{
+      InteractionKind::signal_state_update, InteractionKind::message_event,
+      InteractionKind::service_request, InteractionKind::service_response};
+  constexpr std::array<std::string_view, 4U> suffixes{"t024.f0", "t024.f1", "t024.f2", "t024.f3"};
+  bool valid = true;
+  for (std::size_t index = 0U; index < kinds.size(); ++index) {
+    ObservationHub hub;
+    const auto scenario = std::make_unique<Scenario>(suffixes[index], kinds[index], 8U, &hub);
+    ObservationFilterInput filter{};
+    filter.route_id = scenario->route_id();
+    const auto tap = hub.attach(make_named_tap_spec(
+        filter, ObservationPayloadMode::metadata_only, 0U, 16U,
+        ObservationOverflowPolicy::drop_newest, "tap.t024.route.family"));
+    if (!expect(scenario->ready() && tap.handle.has_value(), "T024 route family setup")) {
+      return false;
+    }
+    for (unsigned int sequence = 1U; sequence <= 3U; ++sequence) {
+      const auto item = scenario->item(sequence);
+      valid = expect(item.has_value() &&
+                         scenario->composition()
+                                 .submit(scenario->provider_handle(), *item.value(),
+                                         scenario->lifecycle())
+                                 .outcome() == ProviderOutcome::accepted,
+                     "T024 route family submission") &&
+              valid;
+    }
+    const auto route = scenario->composition().route_state(scenario->provider_handle());
+    valid = expect(route.has_value() && route.value()->queued_items() == 3U,
+                   "T024 route family item count") &&
+            valid;
+    for (unsigned int sequence = 1U; sequence <= 3U; ++sequence) {
+      // The provider-boundary observation event declares no producer sequence, so the route-level
+      // FIFO order is asserted through the observation timestamp the provider drives from the item.
+      const auto pulled = hub.poll(*tap.handle);
+      valid = expect(pulled.record.has_value() && !pulled.record->sequence().has_value() &&
+                         pulled.record->observation_timestamp().nanoseconds() ==
+                             static_cast<std::int64_t>(sequence),
+                     "T024 route family tap FIFO order") &&
+              valid;
+    }
+    for (unsigned int sequence = 1U; sequence <= 3U; ++sequence) {
+      const auto received =
+          scenario->composition().receive(scenario->provider_handle(), scenario->lifecycle());
+      valid = expect(received.has_value() &&
+                         received.value()->timestamp().nanoseconds() ==
+                             static_cast<std::int64_t>(sequence),
+                     "T024 route family per_route_fifo order") &&
+              valid;
+    }
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_named_tap_spec(
+        {}, ObservationPayloadMode::metadata_only, 0U, 8U,
+        ObservationOverflowPolicy::drop_newest, "tap.t024.block"));
+    Scenario scenario("t024.block", InteractionKind::message_event, 8U, &hub);
+    if (!expect(tap.handle.has_value() && scenario.ready(), "T024 blocking observer setup")) {
+      return false;
+    }
+    SyntheticObservationSink sink(hub, *tap.handle);
+    for (unsigned int sequence = 1U; sequence <= 4U; ++sequence) {
+      const auto item = scenario.item(sequence);
+      valid = expect(item.has_value() &&
+                         scenario.composition()
+                                 .submit(scenario.provider_handle(), *item.value(),
+                                         scenario.lifecycle())
+                                 .outcome() == ProviderOutcome::accepted,
+                     "T024 blocking observer submission") &&
+              valid;
+    }
+    const auto route = scenario.composition().route_state(scenario.provider_handle());
+    const auto snapshot = hub.snapshot(*tap.handle);
+    const SyntheticSinkCounters counters = sink.counters();
+    valid = expect(route.has_value() && route.value()->queued_items() == 4U,
+                   "T024 blocking observer leaves the route count") &&
+            expect(snapshot.has_value() && snapshot->queued == 4U && snapshot->accepted == 4U,
+                   "T024 blocking observer retains within bound") &&
+            expect(counters.pulled == 0U && counters.empty == 0U && counters.disconnected == 0U &&
+                       counters.failed == 0U,
+                   "T024 blocking observer sink stays idle") &&
+            valid;
+    for (unsigned int sequence = 1U; sequence <= 4U; ++sequence) {
+      const auto received =
+          scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+      valid = expect(received.has_value() &&
+                         received.value()->timestamp().nanoseconds() ==
+                             static_cast<std::int64_t>(sequence),
+                     "T024 blocking observer per_route_fifo order") &&
+              valid;
+    }
+
+    const auto detached = hub.detach(*tap.handle);
+    valid = expect(detached.succeeded(), "T024 observer removal accepted") && valid;
+    for (unsigned int sequence = 5U; sequence <= 6U; ++sequence) {
+      const auto item = scenario.item(sequence);
+      valid = expect(item.has_value() &&
+                         scenario.composition()
+                                 .submit(scenario.provider_handle(), *item.value(),
+                                         scenario.lifecycle())
+                                 .outcome() == ProviderOutcome::accepted,
+                     "T024 route accepts after observer removal") &&
+              valid;
+    }
+    const auto stale = hub.poll(*tap.handle);
+    valid = expect(stale.status.outcome == ObservationOutcome::invalid_tap_handle,
+                   "T024 detached handle no longer authenticates") &&
+            valid;
+    for (unsigned int sequence = 5U; sequence <= 6U; ++sequence) {
+      const auto received =
+          scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+      valid = expect(received.has_value() &&
+                         received.value()->timestamp().nanoseconds() ==
+                             static_cast<std::int64_t>(sequence),
+                     "T024 route order continues after removal") &&
+              valid;
+    }
+
+    SyntheticObservationSink failed_sink(hub, *tap.handle);
+    const auto item = scenario.item(7U);
+    valid = expect(item.has_value() &&
+                       scenario.composition()
+                               .submit(scenario.provider_handle(), *item.value(),
+                                       scenario.lifecycle())
+                               .outcome() == ProviderOutcome::accepted,
+                   "T024 pre-failure submission") &&
+            valid;
+    const auto route_before = scenario.composition().route_state(scenario.provider_handle());
+    const auto failed = failed_sink.pull();
+    const auto route_after = scenario.composition().route_state(scenario.provider_handle());
+    valid = expect(failed.status.outcome == ObservationOutcome::invalid_tap_handle &&
+                       failed_sink.counters().failed == 1U,
+                   "T024 failed observer is counted") &&
+            expect(route_before.has_value() && route_after.has_value() &&
+                       route_before.value()->queued_items() == route_after.value()->queued_items() &&
+                       route_after.value()->queued_items() == 1U,
+                   "T024 failed observer leaves the route count") &&
+            valid;
+    const auto received =
+        scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+    valid = expect(received.has_value() && received.value()->timestamp().nanoseconds() == 7,
+                   "T024 route order unchanged after observer failure") &&
+            valid;
+  }
+  return valid;
+}
+
+/**
+ * @brief Prove route-level saturation loss counters, degraded validity, and safe detach.
+ * @details Realizes T24-TS-009 (`saturation`, `degraded-validity`, `safe-detach` route):
+ * T024-SR-010, T024-SR-013, T024-SR-014; XCOM-SW-OBS-003/-004; FR-013, FR-014, SC-004, SC-005.
+ * @return true only when every route saturation and detach assertion holds.
+ */
+[[nodiscard]] bool test_observation_route_saturation_safe_detach_matrix() {
+  bool valid = true;
+  {
+    ObservationHub hub;
+    const auto drop = hub.attach(make_named_tap_spec(
+        {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+        ObservationOverflowPolicy::drop_newest, "tap.t024.route.drop"));
+    const auto aux = hub.attach(make_named_tap_spec(
+        {}, ObservationPayloadMode::metadata_only, 0U, 4U,
+        ObservationOverflowPolicy::drop_newest, "tap.t024.route.aux"));
+    Scenario scenario("t024.sat", InteractionKind::message_event, 8U, &hub);
+    if (!expect(drop.handle.has_value() && aux.handle.has_value() && scenario.ready(),
+                "T024 route saturation setup")) {
+      return false;
+    }
+    for (unsigned int sequence = 1U; sequence <= 4U; ++sequence) {
+      const auto item = scenario.item(sequence);
+      valid = expect(item.has_value() &&
+                         scenario.composition()
+                                 .submit(scenario.provider_handle(), *item.value(),
+                                         scenario.lifecycle())
+                                 .outcome() == ProviderOutcome::accepted,
+                     "T024 route saturation submission") &&
+              valid;
+    }
+    const auto drop_snapshot = hub.snapshot(*drop.handle);
+    const auto aux_snapshot = hub.snapshot(*aux.handle);
+    const auto route = scenario.composition().route_state(scenario.provider_handle());
+    valid = expect(drop_snapshot.has_value() && drop_snapshot->accepted == 1U &&
+                       drop_snapshot->dropped == 3U && drop_snapshot->queued == 1U,
+                   "T024 route drop saturation counters") &&
+            expect(aux_snapshot.has_value() && aux_snapshot->accepted == 4U &&
+                       aux_snapshot->queued == 4U,
+                   "T024 route saturation leaves the unrelated tap") &&
+            expect(route.has_value() && route.value()->queued_items() == 4U,
+                   "T024 route count unaffected by tap saturation") &&
+            valid;
+    const auto detached = hub.detach(*drop.handle);
+    const auto aux_after = hub.snapshot(*aux.handle);
+    const auto route_after = scenario.composition().route_state(scenario.provider_handle());
+    const auto stale = hub.poll(*drop.handle);
+    valid = expect(detached.succeeded(), "T024 route detach accepted") &&
+            expect(aux_after.has_value() && aux_after->queued == 4U && aux_after->accepted == 4U,
+                   "T024 route detach leaves the unrelated tap") &&
+            expect(route_after.has_value() && route_after.value()->queued_items() == 4U,
+                   "T024 route detach leaves the route count") &&
+            expect(stale.status.outcome == ObservationOutcome::invalid_tap_handle,
+                   "T024 detached route handle rejected") &&
+            valid;
+    for (unsigned int sequence = 1U; sequence <= 4U; ++sequence) {
+      const auto received =
+          scenario.composition().receive(scenario.provider_handle(), scenario.lifecycle());
+      valid = expect(received.has_value() &&
+                         received.value()->timestamp().nanoseconds() ==
+                             static_cast<std::int64_t>(sequence),
+                     "T024 route per_route_fifo order after detach") &&
+              valid;
+    }
+  }
+
+  {
+    ObservationHub hub;
+    const auto tap = hub.attach(make_named_tap_spec(
+        {}, ObservationPayloadMode::metadata_only, 0U, 1U,
+        ObservationOverflowPolicy::lossless_validation, "tap.t024.route.lossless"));
+    Scenario scenario("t024.lossless", InteractionKind::service_request, 8U, &hub);
+    const auto first = scenario.item(1U);
+    const auto second = scenario.item(2U);
+    if (!expect(tap.handle.has_value() && scenario.ready() && first.has_value() &&
+                    second.has_value(),
+                "T024 route lossless setup")) {
+      return false;
+    }
+    const ProviderStatus accepted = scenario.composition().submit(
+        scenario.provider_handle(), *first.value(), scenario.lifecycle());
+    const ProviderStatus blocked = scenario.composition().submit(
+        scenario.provider_handle(), *second.value(), scenario.lifecycle());
+    const auto route_blocked = scenario.composition().route_state(scenario.provider_handle());
+    const auto degraded = hub.snapshot(*tap.handle);
+    valid = expect(accepted.outcome() == ProviderOutcome::accepted &&
+                       blocked.outcome() == ProviderOutcome::observation_backpressure &&
+                       blocked.diagnostic_code() == "XCOM-PROV-E029",
+                   "T024 route lossless stable backpressure") &&
+            expect(route_blocked.has_value() && route_blocked.value()->queued_items() == 1U,
+                   "T024 route lossless rejection before mutation") &&
+            expect(degraded.has_value() && degraded->experiment_validity_degraded &&
+                       degraded->backpressure_rejections == 1U,
+                   "T024 route lossless degraded validity") &&
+            valid;
+    const auto drained = hub.poll(*tap.handle);
+    const auto acknowledged = hub.acknowledge(*tap.handle);
+    const ProviderStatus recovered = scenario.composition().submit(
+        scenario.provider_handle(), *second.value(), scenario.lifecycle());
+    const auto route_recovered = scenario.composition().route_state(scenario.provider_handle());
+    valid = expect(drained.record.has_value() && acknowledged.succeeded(),
+                   "T024 route lossless drain and acknowledge") &&
+            expect(recovered.outcome() == ProviderOutcome::accepted &&
+                       route_recovered.has_value() &&
+                       route_recovered.value()->queued_items() == 2U,
+                   "T024 route lossless capacity recovery") &&
+            valid;
+
+    const auto third = scenario.item(3U);
+    if (!expect(third.has_value(), "T024 route claimed-detach item")) {
+      return false;
+    }
+    static_cast<void>(hub.poll(*tap.handle));
+    auto held = hub.reserve(*third.value());
+    const auto busy = hub.detach(*tap.handle);
+    const auto route_held = scenario.composition().route_state(scenario.provider_handle());
+    const auto cancelled = hub.cancel(std::move(*held.reservation));
+    const auto detached = hub.detach(*tap.handle);
+    const auto route_after = scenario.composition().route_state(scenario.provider_handle());
+    valid = expect(held.status.succeeded() && held.reservation.has_value(),
+                   "T024 route claimed-detach holds capacity") &&
+            expect(busy.outcome == ObservationOutcome::tap_busy,
+                   "T024 route claimed detach is busy") &&
+            expect(route_held.has_value() && route_held.value()->queued_items() == 2U,
+                   "T024 route claimed detach leaves the route count") &&
+            expect(cancelled.succeeded() && detached.succeeded(),
+                   "T024 route detach succeeds after release") &&
+            expect(route_after.has_value() && route_after.value()->queued_items() == 2U,
+                   "T024 route detach leaves the route count") &&
+            valid;
+  }
+  return valid;
+}
+
 }  // namespace
 
 /** @return Zero only when every integration fixture passes. */
@@ -418,6 +795,9 @@ int main() {
                       test_best_effort_isolation() &&
                       test_lossless_pre_dispatch_reservation() &&
                       test_shared_hub_competing_reservation() &&
-                      test_concurrent_publication();
+                      test_concurrent_publication() &&
+                      test_synthetic_sink_route_isolation_counters() &&
+                      test_observation_route_ordering_neutrality_matrix() &&
+                      test_observation_route_saturation_safe_detach_matrix();
   return passed ? 0 : 1;
 }

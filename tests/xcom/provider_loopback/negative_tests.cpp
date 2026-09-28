@@ -19,6 +19,7 @@
 namespace {
 
 using namespace xverse::xcom;
+using xverse::xcom::test::PolicyRouteFixture;
 using xverse::xcom::test::Scenario;
 constexpr std::string_view kDigest =
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -1315,6 +1316,9 @@ enum class ActivationMismatch {
                          "XCOM-PROV-E016", "delivery capability unsupported"},
       ExpectedDiagnostic{ProviderOutcome::unsupported_ordering, "unsupported-ordering",
                          "XCOM-PROV-E017", "ordering capability unsupported"},
+      ExpectedDiagnostic{ProviderOutcome::unsupported_policy, "unsupported-policy",
+                         "XCOM-PROV-E030",
+                         "declared route policy is not supported by the selected provider"},
       ExpectedDiagnostic{ProviderOutcome::payload_limit_exceeded,
                          "payload-limit-exceeded", "XCOM-PROV-E018",
                          "payload limit exceeded"},
@@ -1355,6 +1359,255 @@ enum class ActivationMismatch {
   return true;
 }
 
+/** Verify an unmappable or contradicting declared delivery/ordering claim fails closed. */
+[[nodiscard]] bool test_declared_policy_claim_rejection() {
+  struct ClaimCase final {
+    ReliabilityPolicy reliability;
+    OrderingPolicy ordering;
+    DeliveryCapability provided_delivery;
+    OrderingCapability provided_ordering;
+    DeliveryCapability requested_delivery;
+    OrderingCapability requested_ordering;
+    ProviderOutcome expected;
+  };
+  const std::array cases{
+      ClaimCase{ReliabilityPolicy::at_most_once, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_delivery},
+      ClaimCase{ReliabilityPolicy::exactly_once, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_delivery},
+      ClaimCase{ReliabilityPolicy::best_effort, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::reliable, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_delivery},
+      ClaimCase{ReliabilityPolicy::best_effort, OrderingPolicy::priority,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_ordering},
+      ClaimCase{ReliabilityPolicy::best_effort, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::best_effort, OrderingCapability::unordered,
+                ProviderOutcome::unsupported_ordering},
+      ClaimCase{ReliabilityPolicy::at_least_once, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                DeliveryCapability::reliable, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_delivery},
+      ClaimCase{ReliabilityPolicy::best_effort, OrderingPolicy::fifo,
+                DeliveryCapability::best_effort, OrderingCapability::unordered,
+                DeliveryCapability::best_effort, OrderingCapability::per_route_fifo,
+                ProviderOutcome::unsupported_ordering},
+  };
+  std::uint64_t instance = 30001U;
+  std::size_t case_index = 0U;
+  for (const auto& item : cases) {
+    const auto provider_descriptor =
+        test::claim_descriptor("provider.policy.claim", item.provided_delivery,
+                               item.provided_ordering, 1U, 1U);
+    test::IndependentProvider provider(provider_descriptor, instance++);
+    PolicyRouteFixture::Declaration declaration;
+    declaration.policy = {item.ordering, item.reliability, OverflowPolicy::reject, 0, 0, 1};
+    declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                                item.requested_delivery, item.requested_ordering, 16U, 1U};
+    PolicyRouteFixture fixture(provider, declaration,
+                              "policy.claim." + std::to_string(case_index));
+    if (!expect(fixture.ready(), "declared claim fixture setup failed")) {
+      return false;
+    }
+    const auto route_before = fixture.lifecycle().route_snapshot(fixture.route_handle());
+    const auto source_before = fixture.lifecycle().endpoint_snapshot(fixture.source_handle());
+    const auto destination_before =
+        fixture.lifecycle().endpoint_snapshot(fixture.destination_handle());
+    const auto rejected = fixture.prepare();
+    if (!expect(rejected.outcome() == item.expected && !rejected.has_value(),
+                "declared claim rejection outcome differs") ||
+        !expect(provider.prepare_calls() == 0U && provider.activate_calls() == 0U &&
+                    provider.submit_calls() == 0U,
+                "declared claim rejection reached provider dispatch") ||
+        !expect(same_lifecycle_observation(
+                    route_before, fixture.lifecycle().route_snapshot(fixture.route_handle())) &&
+                    same_lifecycle_observation(
+                        source_before,
+                        fixture.lifecycle().endpoint_snapshot(fixture.source_handle())) &&
+                    same_lifecycle_observation(
+                        destination_before,
+                        fixture.lifecycle().endpoint_snapshot(fixture.destination_handle())),
+                "declared claim rejection mutated lifecycle state")) {
+      return false;
+    }
+    ++case_index;
+  }
+  return true;
+}
+
+/** Verify a non-capability declared dimension fails closed with the new stable outcome. */
+[[nodiscard]] bool test_declared_policy_dimension_rejection() {
+  struct DimensionCase final {
+    OverflowPolicy overflow;
+    std::int64_t deadline_ms;
+    std::int64_t retry;
+  };
+  const std::array cases{
+      DimensionCase{OverflowPolicy::drop_oldest, 0, 0},
+      DimensionCase{OverflowPolicy::drop_newest, 0, 0},
+      DimensionCase{OverflowPolicy::coalesce, 0, 0},
+      DimensionCase{OverflowPolicy::lossless_backpressure, 0, 0},
+      DimensionCase{OverflowPolicy::fail_closed, 0, 0},
+      DimensionCase{OverflowPolicy::reject, 100, 0},
+      DimensionCase{OverflowPolicy::reject, 0, 1},
+  };
+  std::uint64_t instance = 31001U;
+  std::size_t case_index = 0U;
+  for (const auto& item : cases) {
+    const auto provider_descriptor =
+        test::claim_descriptor("provider.policy.dimension", DeliveryCapability::best_effort,
+                               OrderingCapability::per_route_fifo, 1U, 1U);
+    test::IndependentProvider provider(provider_descriptor, instance++);
+    PolicyRouteFixture::Declaration declaration;
+    declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort, item.overflow,
+                          item.deadline_ms, item.retry, 1};
+    declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                                DeliveryCapability::best_effort,
+                                OrderingCapability::per_route_fifo, 16U, 1U};
+    PolicyRouteFixture fixture(provider, declaration,
+                              "policy.dimension." + std::to_string(case_index));
+    if (!expect(fixture.ready(), "declared dimension fixture setup failed")) {
+      return false;
+    }
+    const auto route_before = fixture.lifecycle().route_snapshot(fixture.route_handle());
+    const auto rejected = fixture.prepare();
+    if (!expect(rejected.outcome() == ProviderOutcome::unsupported_policy &&
+                    !rejected.has_value(),
+                "declared dimension rejection outcome differs") ||
+        !expect(to_string(rejected.outcome()) == "unsupported-policy" &&
+                    provider_diagnostic_code(rejected.outcome()) == "XCOM-PROV-E030" &&
+                    provider_diagnostic_message(rejected.outcome()) ==
+                        "declared route policy is not supported by the selected provider",
+                "declared dimension diagnostic bytes differ") ||
+        !expect(provider.prepare_calls() == 0U && provider.activate_calls() == 0U,
+                "declared dimension rejection reached provider dispatch") ||
+        !expect(same_lifecycle_observation(
+                    route_before, fixture.lifecycle().route_snapshot(fixture.route_handle())),
+                "declared dimension rejection mutated lifecycle state")) {
+      return false;
+    }
+    ++case_index;
+  }
+  return true;
+}
+
+/** Verify a declared queue depth below the requested capacity fails closed before dispatch. */
+[[nodiscard]] bool test_declared_policy_queue_depth_rejection() {
+  const auto provider_descriptor =
+      test::claim_descriptor("provider.policy.queue", DeliveryCapability::best_effort,
+                             OrderingCapability::per_route_fifo, 1U, 2U);
+  LoopbackProvider provider(provider_descriptor);
+  PolicyRouteFixture::Declaration declaration;
+  declaration.policy = {OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                        OverflowPolicy::reject, 0, 0, 1};
+  declaration.requirements = {"1.0.0", InteractionKind::message_event,
+                              DeliveryCapability::best_effort,
+                              OrderingCapability::per_route_fifo, 16U, 2U};
+  PolicyRouteFixture fixture(provider, declaration, "policy.queue");
+  if (!expect(fixture.ready(), "declared queue depth fixture setup failed")) {
+    return false;
+  }
+  const auto route_before = fixture.lifecycle().route_snapshot(fixture.route_handle());
+  const auto source_before = fixture.lifecycle().endpoint_snapshot(fixture.source_handle());
+  const auto destination_before =
+      fixture.lifecycle().endpoint_snapshot(fixture.destination_handle());
+  const auto rejected = fixture.prepare();
+  if (!expect(rejected.outcome() == ProviderOutcome::queue_limit_exceeded &&
+                  !rejected.has_value(),
+              "declared queue depth below capacity was accepted") ||
+      !expect(same_lifecycle_observation(
+                  route_before, fixture.lifecycle().route_snapshot(fixture.route_handle())) &&
+                  same_lifecycle_observation(
+                      source_before,
+                      fixture.lifecycle().endpoint_snapshot(fixture.source_handle())) &&
+                  same_lifecycle_observation(
+                      destination_before,
+                      fixture.lifecycle().endpoint_snapshot(fixture.destination_handle())),
+              "declared queue depth rejection mutated lifecycle state")) {
+    return false;
+  }
+  // No dispatch proof: a compliant re-preparation on the same exact route handle succeeds and still
+  // observes provider route generation 1, so the rejected call consumed no provider route resource.
+  auto compliant = fixture.requirements();
+  compliant.queue_capacity = 1U;
+  const auto prepared = fixture.prepare(compliant);
+  return expect(prepared.outcome() == ProviderOutcome::prepared && prepared.has_value() &&
+                    prepared.value()->provider_route_generation() == 1U,
+                "declared queue depth rejection reached the provider");
+}
+
+/** Verify every declared-policy rejection precedes dispatch and mutates no lifecycle record. */
+[[nodiscard]] bool test_declared_policy_rejection_precedes_dispatch() {
+  struct RejectionCase final {
+    FlowPolicyInput policy;
+    ProviderRouteRequirements requirements;
+    ProviderOutcome expected;
+  };
+  const std::array cases{
+      RejectionCase{{OrderingPolicy::fifo, ReliabilityPolicy::at_most_once,
+                     OverflowPolicy::reject, 0, 0, 1},
+                    {"1.0.0", InteractionKind::message_event, DeliveryCapability::best_effort,
+                     OrderingCapability::per_route_fifo, 16U, 1U},
+                    ProviderOutcome::unsupported_delivery},
+      RejectionCase{{OrderingPolicy::priority, ReliabilityPolicy::best_effort,
+                     OverflowPolicy::reject, 0, 0, 1},
+                    {"1.0.0", InteractionKind::message_event, DeliveryCapability::best_effort,
+                     OrderingCapability::per_route_fifo, 16U, 1U},
+                    ProviderOutcome::unsupported_ordering},
+      RejectionCase{{OrderingPolicy::fifo, ReliabilityPolicy::best_effort,
+                     OverflowPolicy::lossless_backpressure, 0, 0, 1},
+                    {"1.0.0", InteractionKind::message_event, DeliveryCapability::best_effort,
+                     OrderingCapability::per_route_fifo, 16U, 1U},
+                    ProviderOutcome::unsupported_policy},
+  };
+  std::uint64_t instance = 32001U;
+  std::size_t case_index = 0U;
+  for (const auto& item : cases) {
+    const auto provider_descriptor =
+        test::claim_descriptor("provider.policy.precedes", DeliveryCapability::best_effort,
+                               OrderingCapability::per_route_fifo, 1U, 1U);
+    test::IndependentProvider provider(provider_descriptor, instance++);
+    PolicyRouteFixture::Declaration declaration;
+    declaration.policy = item.policy;
+    declaration.requirements = item.requirements;
+    PolicyRouteFixture fixture(provider, declaration,
+                              "policy.precedes." + std::to_string(case_index));
+    if (!expect(fixture.ready(), "policy precedes fixture setup failed")) {
+      return false;
+    }
+    const auto route_before = fixture.lifecycle().route_snapshot(fixture.route_handle());
+    const auto source_before = fixture.lifecycle().endpoint_snapshot(fixture.source_handle());
+    const auto destination_before =
+        fixture.lifecycle().endpoint_snapshot(fixture.destination_handle());
+    const auto rejected = fixture.prepare();
+    if (!expect(rejected.outcome() == item.expected && !rejected.has_value(),
+                "policy precedes rejection outcome differs") ||
+        !expect(provider.prepare_calls() == 0U && provider.activate_calls() == 0U &&
+                    provider.submit_calls() == 0U,
+                "policy precedes rejection reached provider dispatch") ||
+        !expect(same_lifecycle_observation(
+                    route_before, fixture.lifecycle().route_snapshot(fixture.route_handle())) &&
+                    same_lifecycle_observation(
+                        source_before,
+                        fixture.lifecycle().endpoint_snapshot(fixture.source_handle())) &&
+                    same_lifecycle_observation(
+                        destination_before,
+                        fixture.lifecycle().endpoint_snapshot(fixture.destination_handle())),
+                "policy precedes rejection mutated lifecycle state")) {
+      return false;
+    }
+    ++case_index;
+  }
+  return true;
+}
+
 }  // namespace
 
 /** @return Zero when all provider-loopback negative checks pass. */
@@ -1366,6 +1619,10 @@ int main() {
       test_activation_rejection_matrix() && test_route_capacity_after_activation() &&
       test_fresh_submit_rejection_matrix() && test_submit_rejection() &&
       test_stale_handle_after_recreation() && test_interrupted_reconciliation() &&
-      test_foreign_composition_rejection() && test_exact_provider_diagnostics();
+      test_foreign_composition_rejection() && test_declared_policy_claim_rejection() &&
+      test_declared_policy_dimension_rejection() &&
+      test_declared_policy_queue_depth_rejection() &&
+      test_declared_policy_rejection_precedes_dispatch() &&
+      test_exact_provider_diagnostics();
   return passed ? 0 : 1;
 }

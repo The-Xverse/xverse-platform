@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "task_id": "T011",
+  "baseline_revision": "5050666bf38fc98920dc455a85a88c08c46a2133",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 3,
+  "predecessor_review": "internal-review.json rev 2 (verdict pass, 7 reviewed paths, 0 findings) and rev 1 (verdict fail; T011-IR-01/T011-IR-02 repair-closed)",
+  "external_review": "deferred_until_backlog_completion",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t011/architecture.md",
+    "docs/engineering/xcom/t011/detailed-design.md",
+    "docs/engineering/xcom/t011/implementation.md",
+    "docs/engineering/xcom/t011/requirements.md",
+    "docs/engineering/xcom/t011/unit-specifications.md",
+    "docs/engineering/xcom/t011/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "R3-CHK-01",
+      "name": "Reviewed inventory equals the baseline diff and the work-product boundary holds",
+      "method": "git rev-parse 5050666bf38fc98920dc455a85a88c08c46a2133; git diff --name-only/--numstat/--diff-filter=D/--check <baseline> --; git ls-files --others --exclude-standard",
+      "result": "pass: the baseline SHA resolves exactly (exit 0). git diff --name-only <baseline> -- is exactly the twelve reviewed paths (+1634/-13: six new T011 work products; the T011 implementation record and unit-specifications revisions; the four inherited T020 stage records; engineering/trace/links.json; and the one-line tasks.md checkbox). git diff --diff-filter=D reports no deletion and git diff --check is empty. No path under src/, tests/, xdl/, or proto/ appears, so the eleven admitted-foundation artifacts named in requirements.md §1/§7.2 (build-environment.md, dependency-lock.md, scripts/xcom_dependency_preflight.py, cmake/*.cmake, CMakeLists.txt, Doxyfile, scripts/check_doxygen.py) are unmodified by construction. The untracked set is exactly docs/engineering/xcom/t011/internal-review.json (this review) and reports/xcom-queue/t011-package.json (a stale carried-over manifest); both are excluded from reviewed_paths because the deterministic review/package actions regenerate them."
+    },
+    {
+      "id": "R3-CHK-02",
+      "name": "The three changed trace revisions match actual files and no relation or endpoint was removed",
+      "method": "structural comparison of 5050666:engineering/trace/links.json against the working tree (relation-id set, all per-link fields); sha256 sweep of every implemented_by hashed target; numbering of the changed target_revision fields",
+      "result": "pass: engineering/trace/links.json still declares 97 relations (T020-L-001..T020-L-097); the id set and every top-level key are byte-identical. Exactly three target_revision fields changed: T020-L-037 and T020-L-042 (implemented_by, source T020-U-02 / T020-SR-002, target tests/xcom/activation_plan/t020_malformed_plan_tests.cpp) now record 75046040c1f06655ba34bee851f7044cd4f8cef8190a30ff5850775dbddbde22, and T020-L-047 (implemented_by, source T020-SR-007, target docs/engineering/xcom/t020/requirements.md) now records 2e9ca0ef48d25aa4ca90ef5635557f7e9f6bd76161eb6a83aa315a6696c3967a. Both values equal sha256sum of the actual files. A sweep of all twelve hex-revision file targets in links.json found zero remaining mismatches; no relation, source, source_revision, target, or relation type changed (links.json diff is 3 insertions/3 deletions)."
+    },
+    {
+      "id": "R3-CHK-03",
+      "name": "The six changed stage artifacts (nine changed hash lines) match actual files and every stage record validates",
+      "method": "structural comparison of each 5050666:engineering/stage-results/*.json against the working tree; sha256sum of every referenced artifact; the unchanged core validate_stage over all eight stage records",
+      "result": "pass: only sha256 fields changed; no role, status, inputs, findings, blockers, notes, or model field changed. Six distinct artifacts were re-hashed across nine lines: documentation.json (4: docs/engineering/xcom/t020/requirements.md 2e9ca0ef..c3967a; verification-plan.md af04bbbd..a5efa5; implementation.md 5484618d..0f461f9a; engineering/trace/links.json fa0dd2f7..1c105dd8), implementation.json (3: tests/xcom/activation_plan/t020_support.hpp 0bae1f81..37b75da; t020_malformed_plan_tests.cpp 75046040..dbddbde22; docs/engineering/xcom/t020/implementation.md 5484618d..0f461f9a), integration.json (1: links.json), internal-review.json (1: links.json). Every recorded digest equals sha256sum of its actual file (0 mismatches over all eight stage-record artifact lists, 29 artifacts). This is the trace-repair cascade: refreshing links.json made the three self-references stale too."
+    },
+    {
+      "id": "R3-CHK-04",
+      "name": "No test was removed or modified and the inherited T020 relation endpoints are preserved",
+      "method": "git diff --name-only/--diff-filter=D; presence check of every tests/xcom/activation_plan/t020_* file; baseline-vs-working-tree target field comparison in links.json",
+      "result": "pass: no tests/ path appears in the baseline diff and no file was deleted. All six T020 test sources remain (t020_ordering_equivalence_tests.cpp, t020_malformed_plan_tests.cpp, t020_drift_tests.cpp, t020_bound_matrix_tests.cpp, t020_regression_tests.cpp, t020_support.hpp) plus the .py helper; tests/xcom/activation_plan/t020_support.hpp and t020_malformed_plan_tests.cpp are referenced but not modified (only their recorded digests were refreshed). Every relation still targets the same file/path as the baseline; only the digest strings moved."
+    },
+    {
+      "id": "R3-CHK-05",
+      "name": "The delivery-input audit passes on the repaired tree",
+      "method": "python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t011-checkpoint-flash/audit_delivery_inputs.py",
+      "result": "pass: exit 0 with {\"ok\": true, \"stage_results\": 8}; the unchanged core validate_project, validate_trace, and validate_stage accept the project record, the repaired trace, and every inherited T020 stage record. This audit is the deterministic gate that rejected the stale provenance before the repair and is the primary acceptance check for the repair."
+    },
+    {
+      "id": "R3-CHK-06",
+      "name": "Deterministic gate, admission self-test, and shared register validators reproduce green at rev 3",
+      "method": "python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T011 <baseline>; python3 scripts/xcom_dependency_preflight.py --self-test; python3 scripts/validate_xcom_task_ownership.py --verify and --check-human; python3 scripts/validate_xcom_requirements_traceability.py --verify; python3 scripts/validate_xcom_architecture_contracts.py --verify; python3 scripts/validate_xcom_unit_design.py --verify",
+      "result": "pass: the gate reports {\"ok\": true, \"task_id\": \"T011\", \"changed_paths\": 12, \"checks\": []} with exit 0, and changed_paths (12) equals the reviewed_paths set. The self-test reports 'Ran 39 tests ... OK'. All four register validators exit 0 ('X-COM task-ownership/requirements-traceability/architecture-contracts/unit-design ... passed'); --verify and --check-human are the two supported modes and both pass. The repair disturbed no T007-T010 register."
+    },
+    {
+      "id": "R3-CHK-07",
+      "name": "The T011 checkpoint intent remains intact across the expanded diff",
+      "method": "git diff <baseline> -- specs/007-xcom-core/tasks.md docs/engineering/xcom/t011/; comparison against the reviewed candidate commit e68e798c",
+      "result": "pass: tasks.md has a single hunk that flips only the T011 checkbox '[ ]'->'[X]' (line 31); T012-T016, T021-T024, T026-T034, T036-T041 remain unchecked and the already-accepted T017-T020/T025 marks are unchanged. The five plan-stage T011 work products (requirements, architecture, detailed-design, unit-specifications, verification-plan) are byte-identical to the reviewed candidate commit; the only T011 work product touched by this repair is implementation.md (added §3.3 and revised the Revision field to 3), which records the provenance correction without weakening any requirement, check, contract, boundary, gap, or REF-002 disposition. No later feature (T012+) artifact appears in the diff."
+    },
+    {
+      "id": "R3-CHK-08",
+      "name": "Environment pinning is coherent between documentation and the checker",
+      "method": "import scripts/xcom_dependency_preflight.py and dump PACKAGE_LOCK; compare each record against docs/engineering/xcom/dependency-lock.md rows; read CMakeLists.txt/XComWarnings.cmake/XComOfflineDependencies.cmake",
+      "result": "pass: the compiled-in lock is exactly 12 records and each (filename, size, SHA-256, package, exact version, source, license) is identical to the dependency-lock.md table. The build envelope is enforced, not just described: CMakeLists.txt line 10 rejects a non-Ninja generator, line 14 sets C++20 with CMAKE_CXX_STANDARD_REQUIRED ON, line 19 requires BUILD_TESTING, and the warning-rejection probe is EXCLUDE_FROM_ALL and must fail; Doxyfile sets WARN_AS_ERROR = YES with WARN_IF_UNDOCUMENTED/WARN_NO_PARAMDOC = NO (open gap T011-GAP-01, honestly recorded)."
+    },
+    {
+      "id": "R3-CHK-09",
+      "name": "License record is present, primary, and consistent",
+      "method": "read dependency-lock.md license column and the checker lock license field",
+      "result": "pass: each of the twelve records carries a primary license (nlohmann/json MIT; protobuf BSD-3-Clause; grpc Apache-2.0; llvm-toolchain-14 Apache-2.0 WITH LLVM-exception; clang-tidy metapackage GPL-2.0-or-later) that matches the checker's license field, and the document states it identifies the primary upstream/binary license, defers to Debian copyright records for packaging/bundled material, and disclaims legal advice. No license is claimed as verified beyond what the lock records."
+    },
+    {
+      "id": "R3-CHK-10",
+      "name": "Generated-code provenance is recorded and bound",
+      "method": "read dependency-lock.md §'Admitted component and generated-code provenance' and architecture.md §4.4; compare against the checker's protobuf-compiler and protobuf-compiler-grpc lock entries",
+      "result": "pass: the record pins protobuf-compiler_3.12.4-1ubuntu7.22.04.6_amd64.deb / a124cc30..b61ce7 and protobuf-compiler-grpc_1.30.2-3build6_amd64.deb / 79debaed..305331, both equal to the checker lock, and requires every future generated-code output to record the generator provenance, input schema identity, and generation command. The grpc_cpp_plugin no-version-flag statement is recorded rather than inferred."
+    },
+    {
+      "id": "R3-CHK-11",
+      "name": "Offline reproducibility claims hold under source inspection",
+      "method": "grep the checker import block; read cmake/XComOfflineDependencies.cmake; grep CMakeLists.txt",
+      "result": "pass: the checker imports only argparse, hashlib, json, os, re, shlex, shutil, stat, subprocess, sys, tempfile, unittest and stdlib typing/dataclass/enum/pathlib/mock helpers -- no socket, urllib, requests, http, or threading, so no resolver/client is present (NEG-31/NEG-33). XComOfflineDependencies.cmake requires both explicit environment inputs, invokes the hash-verified preflight under a 120 s timeout, disables CMAKE_FIND_PACKAGE_NO_[SYSTEM_]PACKAGE_REGISTRY and FETCHCONTENT_FULLY_DISCONNECTED, and resolves imported targets only beneath the admitted prefix. The repository lock is usable repeatedly without an ambient/latest resolution."
+    },
+    {
+      "id": "R3-CHK-12",
+      "name": "Public safety and the absolute-path disclosure are honest",
+      "method": "grep -rnE '/home/|/tmp/|/var/|/opt/|password|secret|api[_-]?key|token|PRIVATE KEY' docs/engineering/xcom/t011/*.md; read implementation.md §6",
+      "result": "pass: no credential, private address, unrestricted payload, proprietary excerpt, or sensitive deployment value appears. The only absolute paths are workflow-automation invocations: /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py (the deterministic gate, retained exactly as in the accepted T009/T010 records and disclosed in §6) and, added by the repair, /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t011-checkpoint-flash/audit_delivery_inputs.py at implementation.md lines 119/162. Both are public workflow tool paths in the same automation tree, of the same class the T009/T010 records already retain; §6's disclosure of the gate path remains substantively correct and no anti-sensitive-data rule is breached. A host prefix, package manifest, temporary extraction, or private-store path is still absent."
+    },
+    {
+      "id": "R3-CHK-13",
+      "name": "Requirement coverage and requirement-to-unit traceability are total and mutually consistent",
+      "method": "programmatic extraction of T011-STK-###/T011-SR-### from requirements.md §3-§4, requirements.md §10, verification-plan.md §8, and unit-specifications.md §5; set and per-row comparison",
+      "result": "pass: declared = 18 (5 STK + 13 SR); requirements.md §10 = 18, verification-plan.md §8 = 18, unit-specifications.md §5 = 18, with zero missing and zero extra in each direction and byte-equal per-requirement check lists across the two indices. The rev-1 findings remain closed: T011-STK-001 binds T011-U-A06/A07/A08, T011-STK-003 binds A01/A04, and T011-SR-006 binds A06 on both the §3/§4 requirement line and the §5 row."
+    },
+    {
+      "id": "R3-CHK-14",
+      "name": "Scope is bounded and register reconciliation is non-weakening",
+      "method": "git diff --name-only; read the T-ENABLER slice of docs/engineering/xcom/task-ownership.json and the validate_xcom_task_ownership constants; run the validators",
+      "result": "pass: the diff touches no src/, tests/, xdl/, or proto/ path and no admitted-foundation artifact owned by T-INTG or the shared build paths. T011 stays 'allocated' (CONSUMING_TASKS includes T008-T041; T011 is in neither UNRECONCILED_TASKS nor ACCEPTED_TASKS), and its artifacts are already covered by the T-ENABLER exclusive entries docs/engineering/xcom/t011/ and reports/xcom-queue/t011-package.json, so the honest reconciliation is a re-validation with no textual change (implementation.md §3.1 D-01). The five engineering/ rows are inherited T020 delivery records whose provenance digests were stale in the baseline; the candidate authors none of that content, so no accepted ADR, requirement, contract, test, or T008/T009/T010 register is modified and the REF-002 disposition stays 'unchanged' with no promotion."
+    },
+    {
+      "id": "R3-CHK-15",
+      "name": "Artifact identity claims and the implementation record are accurate for the reviewed candidate",
+      "method": "sha256sum/wc -c of the six §4.4 artifacts; re-ran the §4.1 commands; compared §3/§3.3 with the 12-path gate output",
+      "result": "pass: all six §4.4 SHA-256 values and byte sizes equal the on-disk bytes (requirements 9e2d8da0/27808; architecture d30a122e/15354; detailed-design ad021bb8/15015; unit-specifications e3d236b7/16665; verification-plan 01c0f960/13646; tasks.md 59f95a5c/8026). §3 lists exactly the twelve changed paths, §3.3 R-6 records the expanded rev-3 inventory and the two untracked entries, and the commands reproduce (self-test 39 OK; four validators exit 0; gate changed_paths 12). §4.1 rows 8/14/15 are explicitly framed by §3.3 as the earlier rev-2 candidate's evidence: they carry the rev-2 seven-path count and the rev-2 untracked note, and the rev-3 inventory is stated in §3/§3.3 R-6. This is the same historical-evidence treatment the rev-2 review applied to the carried-over manifest, so it is a documented, superseded observation rather than an unclosed defect; §4.4 identity and §7/§8 maturity claims are all accurate at rev 3."
+    }
+  ],
+  "findings": [],
+  "notes": "This is review revision 3 of T011 on the authorized baseline, covering the repaired candidate in which the inherited stale T020 provenance was corrected. The repair is confined to provenance digests: three engineering/trace/links.json target_revision fields and nine sha256 fields across four inherited T020 stage records, with no relation, endpoint, test, source, or accepted artifact changed. All changed digests equal the actual file hashes, the delivery-input audit and the deterministic gate pass, and the T011 work products' intent is intact. External review and user acceptance remain deferred; this review is not acceptance."
+}

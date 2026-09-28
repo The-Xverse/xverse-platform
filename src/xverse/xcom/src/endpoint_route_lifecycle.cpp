@@ -169,16 +169,32 @@ Result<EndpointSpec> EndpointSpec::create(const EndpointSpecInput& input,
 RouteSpec::RouteSpec(const Identity& route_id,
                      const detail::FixedText<EndpointSpec::kPlanDigestBytes>& digest,
                      const Identity& provider_id, const EndpointSpec& source,
-                     const EndpointSpec& destination) noexcept
+                     const EndpointSpec& destination, const FlowPolicy* policy) noexcept
     : route_id_(route_id),
       plan_digest_(digest),
       provider_id_(provider_id),
       source_endpoint_id_(source.endpoint_id()),
       destination_endpoint_id_(destination.endpoint_id()),
-      contract_(source.contract()) {}
+      contract_(source.contract()) {
+  if (policy != nullptr) {
+    policy_.emplace(*policy);
+  }
+}
 
 Result<RouteSpec> RouteSpec::create(const RouteSpecInput& input, const EndpointSpec& source,
                                     const EndpointSpec& destination) noexcept {
+  return create_impl(input, source, destination, nullptr);
+}
+
+Result<RouteSpec> RouteSpec::create(const RouteSpecInput& input, const EndpointSpec& source,
+                                    const EndpointSpec& destination,
+                                    const FlowPolicy& policy) noexcept {
+  return create_impl(input, source, destination, &policy);
+}
+
+Result<RouteSpec> RouteSpec::create_impl(const RouteSpecInput& input, const EndpointSpec& source,
+                                         const EndpointSpec& destination,
+                                         const FlowPolicy* policy) noexcept {
   const auto route_id = Identity::create(input.route_id);
   if (!route_id.has_value()) {
     return failure<RouteSpec>(DiagnosticCode::required_field,
@@ -216,7 +232,7 @@ Result<RouteSpec> RouteSpec::create(const RouteSpecInput& input, const EndpointS
   detail::FixedText<EndpointSpec::kPlanDigestBytes> digest;
   static_cast<void>(digest.assign(input.plan_digest));
   return Result<RouteSpec>::success(
-      RouteSpec(*route_id, digest, *provider_id, source, destination));
+      RouteSpec(*route_id, digest, *provider_id, source, destination, policy));
 }
 
 Result<LifecycleConfiguration> LifecycleConfiguration::create(
@@ -254,9 +270,13 @@ RouteHandle::RouteHandle(const std::uint64_t controller_id, const Identity& iden
 
 LifecycleSnapshot::LifecycleSnapshot(const ResourceKind kind, const Identity& identity,
                                      const std::string_view digest,
-                                     const std::uint64_t generation,
-                                     const LifecycleState state) noexcept
-    : kind_(kind), identity_(identity), generation_(generation), state_(state) {
+                                     const std::uint64_t generation, const LifecycleState state,
+                                     const bool policy_bound) noexcept
+    : kind_(kind),
+      identity_(identity),
+      generation_(generation),
+      state_(state),
+      policy_bound_(policy_bound) {
   static_cast<void>(plan_digest_.assign(digest));
 }
 
@@ -420,7 +440,7 @@ Result<LifecycleSnapshot> LifecycleController::endpoint_snapshot(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::route_snapshot(
@@ -432,7 +452,7 @@ Result<LifecycleSnapshot> LifecycleController::route_snapshot(
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, record->spec.route_id(), record->spec.plan_digest(),
-                        record->generation, record->state));
+                        record->generation, record->state, record->spec.has_policy()));
 }
 
 Result<EndpointSpec> LifecycleController::endpoint_declaration(
@@ -455,6 +475,22 @@ Result<RouteSpec> LifecycleController::route_declaration(
   return Result<RouteSpec>::success(record->spec);
 }
 
+Result<FlowPolicy> LifecycleController::route_policy(const RouteHandle& handle) const noexcept {
+  const std::lock_guard lock(mutex_);
+  const RouteRecord* record = authenticate_route(handle);
+  if (record == nullptr) {
+    return invalid_handle<FlowPolicy>(handle);
+  }
+  const FlowPolicy* policy = record->spec.policy();
+  if (policy == nullptr) {
+    return failure<FlowPolicy>(DiagnosticCode::required_field,
+                              ValidationPhase::route_declaration, record->spec.route_id().value(),
+                              "route generation declares no bounded flow policy",
+                              "declare the route with an exact validated flow policy");
+  }
+  return Result<FlowPolicy>::success(*policy);
+}
+
 Result<LifecycleSnapshot> LifecycleController::validate_endpoint(
     const EndpointHandle& handle) noexcept {
   const std::lock_guard lock(mutex_);
@@ -473,7 +509,7 @@ Result<LifecycleSnapshot> LifecycleController::validate_endpoint(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::activate_endpoint(
@@ -494,7 +530,7 @@ Result<LifecycleSnapshot> LifecycleController::activate_endpoint(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::drain_endpoint(
@@ -522,7 +558,7 @@ Result<LifecycleSnapshot> LifecycleController::drain_endpoint(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::fail_endpoint(
@@ -544,7 +580,7 @@ Result<LifecycleSnapshot> LifecycleController::fail_endpoint(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::close_endpoint(
@@ -572,7 +608,7 @@ Result<LifecycleSnapshot> LifecycleController::close_endpoint(
   }
   return Result<LifecycleSnapshot>::success(LifecycleSnapshot(
       ResourceKind::endpoint, record->spec.endpoint_id(), record->spec.plan_digest(),
-      record->generation, record->state));
+      record->generation, record->state, false));
 }
 
 Result<LifecycleSnapshot> LifecycleController::validate_route(
@@ -624,7 +660,7 @@ Result<LifecycleSnapshot> LifecycleController::validate_route(
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, route->spec.route_id(), route->spec.plan_digest(),
-                        route->generation, route->state));
+                        route->generation, route->state, route->spec.has_policy()));
 }
 
 Result<LifecycleSnapshot> LifecycleController::activate_route(
@@ -674,7 +710,7 @@ Result<LifecycleSnapshot> LifecycleController::activate_route(
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, route->spec.route_id(), route->spec.plan_digest(),
-                        route->generation, route->state));
+                        route->generation, route->state, route->spec.has_policy()));
 }
 
 Result<LifecycleSnapshot> LifecycleController::drain_route(const RouteHandle& handle) noexcept {
@@ -694,7 +730,7 @@ Result<LifecycleSnapshot> LifecycleController::drain_route(const RouteHandle& ha
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, record->spec.route_id(), record->spec.plan_digest(),
-                        record->generation, record->state));
+                        record->generation, record->state, record->spec.has_policy()));
 }
 
 Result<LifecycleSnapshot> LifecycleController::fail_route(const RouteHandle& handle) noexcept {
@@ -715,7 +751,7 @@ Result<LifecycleSnapshot> LifecycleController::fail_route(const RouteHandle& han
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, record->spec.route_id(), record->spec.plan_digest(),
-                        record->generation, record->state));
+                        record->generation, record->state, record->spec.has_policy()));
 }
 
 Result<LifecycleSnapshot> LifecycleController::close_route(const RouteHandle& handle) noexcept {
@@ -735,7 +771,7 @@ Result<LifecycleSnapshot> LifecycleController::close_route(const RouteHandle& ha
   }
   return Result<LifecycleSnapshot>::success(
       LifecycleSnapshot(ResourceKind::route, record->spec.route_id(), record->spec.plan_digest(),
-                        record->generation, record->state));
+                        record->generation, record->state, record->spec.has_policy()));
 }
 
 }  // namespace xverse::xcom

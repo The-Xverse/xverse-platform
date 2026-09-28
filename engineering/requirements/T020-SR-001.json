@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-001",
+  "revision": "1",
+  "level": "software",
+  "title": "Ordering-equivalence suite",
+  "statement": "The T020 candidate must add an ordering-equivalence suite that proves, in both the C++ decoder and the Python reference, that equivalent plan representations produce one canonical body and digest; that the declared per-collection ordering, unique-key, and duplicate-free activationOrder rules hold; and that diagnostics are ordered deterministically across equivalent inputs.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-001"
+  },
+  "applicability": "tests/xcom/activation_plan/t020_ordering_equivalence_tests.cpp and tests/xcom/activation_plan/test_xcom_plan_ordering_equivalence.py",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-001",
+    "XCOM-SYS-FR-002",
+    "XCOM-SYS-SC-002"
+  ],
+  "verification_intent": "CTest cases T20OrderingEquivalence.* and the T020 pytest ordering cases; trusted unit and integration measures.",
+  "acceptance_criteria": [
+    "Canonical bytes and digests are equal across member-order, whitespace, and integral-number variants in both languages.",
+    "Each identity-bearing collection is asserted in declared key order and a reversed collection is rejected XCOM-DECODE-SHAPE.",
+    "The decoded diagnostics and outcome are identical across equivalent inputs."
+  ]
+}

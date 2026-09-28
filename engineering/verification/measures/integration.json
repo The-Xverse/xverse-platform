@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "integration",
+  "revision": "1",
+  "kind": "integration",
+  "title": "Whole-system integration: assembled X-Verse checkout at the pinned revision, full CTest and pytest",
+  "expected": "pass",
+  "test_ids": [
+    "tests/test_m3_catalog_runtime.py::CatalogTests::test_derives_exact_entry_and_deterministic_plan",
+    "tests/test_m3_catalog_runtime.py::LifecycleTests::test_fixture_start_observe_stop_and_idempotency",
+    "tests/test_xcom_plan.py::test_compiled_plan_passes_t017_schema_ordering_and_digest",
+    "tests/xcom/activation_plan/test_activation_plan_schema.py::test_valid_plan_accepted",
+    "tests/xcom/activation_plan/test_digest_contract.py::test_canonical_bytes_and_digest_are_key_order_stable",
+    "xcom_observation_integration",
+    "xcom_provider_loopback_external_consumer"
+  ],
+  "command": [
+    "python3",
+    "/home/jefferson/x-verse_fabric/automation/run_xcom_system_tests.py",
+    "integration"
+  ],
+  "command_runs": "the trusted policy assembles the candidate into the isolated X-Verse checkout /home/jefferson/xverse-t020-system-integration-01m3h0 at pinned revision 1e289bfe6234553df94eb25065371f7d423fad88, then runs the full CTest and pytest suites there",
+  "discovery_check": "100% tests passed",
+  "note": "Whole-system integration is defined only by the trusted policy system_integration contract; no candidate-local check is reported as integration."
+}

@@ -1,0 +1,109 @@
+{
+  "id": "T020-U-03",
+  "component_id": "T020-CMP-003",
+  "title": "Drift suite",
+  "purpose": "Assert the decoder's declared member, enum, pattern, ordering-key, minimum, and numeric-range tables equal the committed plan schema, the closed $defs/digest sub-schema equals the embedded-digest rule, and the plan version, domain separator, fixture goldens, and Profile forms are pinned.",
+  "interfaces": [
+    "t20::plan_schema / t20::profile_schema / t20::probe_enum helpers",
+    "decode_activation_plan (T019)"
+  ],
+  "inputs": [
+    "activation-plan.schema.json (read-only)",
+    "xdl/profiles/xcom-v0.1.schema.json (read-only)"
+  ],
+  "outputs": [
+    "table/golden equality assertions"
+  ],
+  "state": "static-immutable test source",
+  "errors": [
+    "assertion failure on a table or golden mismatch"
+  ],
+  "invariants": [
+    "drift is never resolved in favour of the implementation"
+  ],
+  "concurrency": "offline-single-threaded",
+  "source_paths": [
+    "tests/xcom/activation_plan/t020_drift_tests.cpp"
+  ],
+  "unit_cases": [
+    {
+      "id": "T20Drift.RequiredMemberTableMatchesSchema",
+      "case": "T20-DRF-01",
+      "precondition": "the committed activation-plan.schema.json",
+      "stimulus": "compare the decoder's required-member set and closed-object flags",
+      "expected": "sorted 16-member set, additionalProperties==false, closed $defs equal the schema (T20-DRF-01)"
+    },
+    {
+      "id": "T20Drift.ClosedEnumTablesMatchSchema",
+      "case": "T20-DRF-02",
+      "precondition": "every closed enum in the schema",
+      "stimulus": "probe each member and one out-of-vocabulary token",
+      "expected": "decoder vocabulary equals each schema enum (T20-DRF-02)"
+    },
+    {
+      "id": "T20Drift.PatternTablesMatchSchema",
+      "case": "T20-DRF-03",
+      "precondition": "the identifier/version/digest/generator/diagnostic patterns",
+      "stimulus": "probe a conforming and a non-conforming value per pattern",
+      "expected": "patterns equal the schema; non-conforming rejected XCOM-DECODE-SHAPE (T20-DRF-03)"
+    },
+    {
+      "id": "T20Drift.CollectionKeysAndMinimumsMatchSchema",
+      "case": "T20-DRF-04",
+      "precondition": "the declared collection ordering keys, uniqueItems, and minItems",
+      "stimulus": "compare the decoder tables with the schema",
+      "expected": "keys/uniqueness/minimums equal the schema (T20-DRF-04)"
+    },
+    {
+      "id": "T20Drift.NumericRangesMatchSchema",
+      "case": "T20-DRF-05",
+      "precondition": "deadlineMs 0..600000, retry 0..64, queueDepth 1..65536",
+      "stimulus": "probe bounds and non-integer values",
+      "expected": "ranges equal the schema; out-of-range/non-integer rejected XCOM-DECODE-SHAPE (T20-DRF-05)"
+    },
+    {
+      "id": "T20Drift.EmbeddedDigestSubSchemaMatchesDecoder",
+      "case": "T20-DRF-06",
+      "precondition": "the closed $defs/digest sub-schema for every embedded digest",
+      "stimulus": "compare with the decoder rule and violate a digest",
+      "expected": "sub-schema equals the embedded-digest rule; violation rejected XCOM-DECODE-SHAPE (T20-DRF-06)"
+    },
+    {
+      "id": "T20Drift.PlanVersionConstMatchesDecoder",
+      "case": "T20-DRF-07",
+      "precondition": "planVersion const in the schema",
+      "stimulus": "probe \"1\" and a non-\"1\" value",
+      "expected": "const equals \"1\"; other value rejected XCOM-DECODE-VERSION (T20-DRF-07)"
+    },
+    {
+      "id": "T20Drift.DomainSeparatorAndGoldenDigestsAreStable",
+      "case": "T20-DRF-08",
+      "precondition": "the domain separator and the two committed fixtures",
+      "stimulus": "compare recorded/recomputed digests and canonical-body hashes with the goldens",
+      "expected": "all equal the pinned golden values (T20-DRF-08)"
+    },
+    {
+      "id": "T20Drift.ProfileFormVocabularyIsTheAcceptedFiveForms",
+      "case": "T20-DRF-09",
+      "precondition": "the committed Profile schema xcom-v0.1.schema.json",
+      "stimulus": "enumerate the declared form kinds",
+      "expected": "exactly the accepted five forms; no sixth (T20-DRF-09)"
+    }
+  ],
+  "static_checks": [
+    {
+      "id": "T020-SC-CPPCHECK",
+      "tool": "cppcheck (trusted policy measures.static_analysis)",
+      "rule": "cppcheck --error-exitcode=1 --quiet --std=c++20 --language=c++ --suppress=invalidLifetime src/xverse/xcom/src/activation_plan.cpp reports no error/portability defect in the consumed T019 decoder source built into the T020 suites",
+      "expected": "cppcheck exits 0"
+    },
+    {
+      "id": "T020-SC-WARNINGS",
+      "tool": "GNU g++ 11.4.0 via CMake target xverse_xcom_activation_plan_t020_<kind>_tests with xverse_xcom_apply_warnings",
+      "rule": "the T020 test target compiles under the project strict warning flags with no warning and no error",
+      "expected": "build succeeds with no warning-as-error"
+    }
+  ],
+  "schema_version": 1,
+  "revision": "1"
+}

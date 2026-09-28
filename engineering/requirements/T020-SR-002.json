@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-002",
+  "revision": "1",
+  "level": "software",
+  "title": "Malformed-plan suite",
+  "statement": "The T020 candidate must add a malformed-plan suite that systematically injects structural and closed-shape defects and asserts the declared fail-closed outcome, stable code, affected identifier, and the absence of a decoded plan, as a distinct family from the T019 NEG-D* set.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-002"
+  },
+  "applicability": "tests/xcom/activation_plan/t020_malformed_plan_tests.cpp",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-002",
+    "XCOM-SYS-FR-006"
+  ],
+  "verification_intent": "CTest cases T20MalformedPlan.*; trusted unit measure.",
+  "acceptance_criteria": [
+    "Every T20-MAL-* case asserts rejected or failed with its declared code and no plan.",
+    "No malformed case reports accepted.",
+    "No T019 test is edited."
+  ]
+}

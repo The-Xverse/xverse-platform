@@ -1,0 +1,1364 @@
+{
+  "schema_version": 1,
+  "task_id": "T009",
+  "capability": "007-xcom-core",
+  "baseline_revision": "209084b11a211273f815980f753ba728e1251a09",
+  "candidate_revision_rule": "Every candidate records its own exact revision and the exact accepted predecessor revision it derives from; acceptance is per candidate and is never inherited from a sibling or inferred from source presence.",
+  "layer_vocabulary": [
+    "boundary",
+    "build-time",
+    "data-plane",
+    "derived-artifact",
+    "downstream",
+    "edge",
+    "external",
+    "test-fixture",
+    "xdl-input"
+  ],
+  "language_vocabulary": [
+    "cpp",
+    "external",
+    "json",
+    "protobuf",
+    "python"
+  ],
+  "boundary_kind_vocabulary": [
+    "artifact",
+    "data",
+    "in-process",
+    "ipc",
+    "language",
+    "realization",
+    "trust"
+  ],
+  "contract_kind_vocabulary": [
+    "cross-language-schema",
+    "external-rpc",
+    "in-process-cpp",
+    "schema"
+  ],
+  "diagram_kind_vocabulary": [
+    "component",
+    "sequence"
+  ],
+  "maturity_vocabulary": [
+    "allocated",
+    "conflicting",
+    "deferred",
+    "implemented",
+    "needs_clarification",
+    "partial",
+    "superseded"
+  ],
+  "invariant_kind_vocabulary": [
+    "architecture",
+    "data-model",
+    "dependency",
+    "neutrality",
+    "safety"
+  ],
+  "direction_vocabulary": [
+    "bidirectional",
+    "one-way",
+    "request-response",
+    "stream"
+  ],
+  "authorization_vocabulary": [
+    "exact-handle-required",
+    "none",
+    "plan-digest-bound",
+    "tap-policy-required",
+    "validation-permit-required"
+  ],
+  "adr_vocabulary": [
+    "ADR-0016",
+    "ADR-0018",
+    "ADR-0019",
+    "ADR-0020"
+  ],
+  "authorization_records": [
+    "ACC001",
+    "ACC002",
+    "ACC003",
+    "ACC004",
+    "ACC005",
+    "ACC006",
+    "ACC007",
+    "ACC008",
+    "ACC009",
+    "ACC010",
+    "ACC011",
+    "ACC012",
+    "ACC013",
+    "ACC014",
+    "ACC015",
+    "ADR-0018",
+    "ADR-0019",
+    "ADR-0020"
+  ],
+  "ref002": {
+    "disposition": "unchanged",
+    "promoted": [],
+    "source": "specs/007-xcom-core/reference-traceability.md"
+  },
+  "counts": {
+    "components": 13,
+    "boundaries": 11,
+    "contracts": 6,
+    "diagrams": 5,
+    "invariants": 15
+  },
+  "components": [
+    {
+      "id": "XCOM-CMP-001",
+      "name": "Normalized XDL input",
+      "layer": "xdl-input",
+      "language": "python",
+      "scope": "first-proof",
+      "responsibility": "Hold the accepted normalized XDL model and v1alpha1 schemas that the X-COM profile compiler reads as its domain-neutral input.",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T018"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Capability-004 accepted loader/schema interface used read-only; no capability-007 runtime or acceptance claim.",
+      "artifact_paths": [
+        {
+          "path": "xdl/metamodel/NORMALIZED_MODEL.md",
+          "status": "established"
+        },
+        {
+          "path": "xdl/schemas/v1alpha1/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-001",
+        "XCOM-SYS-FR-001"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Read-only normalization input; XDL remains the canonical language."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-002",
+      "name": "X-COM Profile and plan compiler",
+      "layer": "build-time",
+      "language": "python",
+      "scope": "first-proof",
+      "responsibility": "Validate the io.xverse.xcom Profile and deterministically compile the Profile-aware canonical activation plan.",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T017",
+        "T018"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "src/xverse_xdl/xcom_plan.py",
+          "status": "established"
+        },
+        {
+          "path": "tests/test_xcom_plan.py",
+          "status": "established"
+        },
+        {
+          "path": "xdl/profiles/xcom-v0.1.schema.json",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-002",
+        "XCOM-SYS-FR-031"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Python confined to build time; deterministic, side-effect-free output."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-003",
+      "name": "Canonical activation plan",
+      "layer": "derived-artifact",
+      "language": "json",
+      "scope": "first-proof",
+      "responsibility": "Carry the versioned, digest-bound activation plan produced by the compiler and decoded by the C++ core.",
+      "owning_slice": "T-XDL",
+      "owning_tasks": [
+        "T017",
+        "T019"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/contracts/v1/activation-plan.schema.json",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-XDL-002",
+        "XCOM-SYS-SC-002"
+      ],
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Digest-bound; additive evolution only; no competing schema language."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-004",
+      "name": "Core value, contract, and diagnostic types",
+      "layer": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Provide the immutable, domain-neutral contract, item, origin, time, correlation, diagnostic, and policy value types.",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T013"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline source present; T013 checkbox open; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/contract.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/item.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/result.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/value.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/contract.cpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/diagnostic.cpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/item.cpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/value.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/core_types/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-001",
+        "XCOM-SYS-FR-003"
+      ],
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Domain-neutral immutable value types; no domain primitive."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-005",
+      "name": "Endpoint and route lifecycle",
+      "layer": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Own the bounded endpoint and route lifecycle with exact generation-bound ownership handles.",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T014"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline source present; T014 checkbox open; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/endpoint_route_lifecycle/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-002",
+        "XCOM-SYS-FR-009"
+      ],
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Exact generation-bound handles; finite queues with declared overflow."
+      ],
+      "intra_layer": true
+    },
+    {
+      "id": "XCOM-CMP-006",
+      "name": "Provider boundary and composition",
+      "layer": "data-plane",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Declare the provider contract and compose providers explicitly without implicit discovery.",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T015"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline source present; T015 checkbox open; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/provider.cpp",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-003",
+        "XCOM-SYS-FR-010"
+      ],
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Explicit provider composition; replaceable provider boundary."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-007",
+      "name": "Owned loopback provider",
+      "layer": "test-fixture",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Provide the owned synthetic loopback provider that realizes a route without any legacy asset.",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T015",
+        "T016"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline source present; T015/T016 checkboxes open; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/loopback_provider.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/provider_loopback/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-CORE-004",
+        "XCOM-SYS-FR-008"
+      ],
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Owned synthetic provider; proves replaceability; no legacy asset."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-008",
+      "name": "Observation boundary",
+      "layer": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Expose immutable observation records, bounded taps, and a payload policy without perturbing normal delivery.",
+      "owning_slice": "T-OBS",
+      "owning_tasks": [
+        "T021",
+        "T022",
+        "T023"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline source present; T021/T022/T023 checkboxes open; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/observation.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/observation/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-OBS-001",
+        "XCOM-SYS-FR-011"
+      ],
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Metadata-only default; bounded best-effort taps; lossless mode explicit."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-009",
+      "name": "Validation stimulation session",
+      "layer": "boundary",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Own the explicit time-authority interface, local validation permit/session lifecycle, and the fail-closed pre-emission guard.",
+      "owning_slice": "T-STIM",
+      "owning_tasks": [
+        "T025"
+      ],
+      "maturity": "implemented",
+      "accepted_revision": "4b01586b438a8587d231ee8828d896c206c06a96",
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+          "status": "established"
+        },
+        {
+          "path": "src/xverse/xcom/src/validation_session.cpp",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/validation_session/",
+          "status": "established"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-STIM-001",
+        "XCOM-SYS-FR-015"
+      ],
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Exact validation permit; rejection emits zero normal-route items."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-010",
+      "name": "Local tool gateway",
+      "layer": "edge",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Serve the versioned local-IPC-only tool gateway with bounded messages and no TCP listener.",
+      "owning_slice": "T-CORE",
+      "owning_tasks": [
+        "T030",
+        "T031",
+        "T032"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "proto/xverse/xcom/v1/tool_gateway.proto",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+          "status": "planned"
+        },
+        {
+          "path": "src/xverse/xcom/src/tool_gateway.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/tool_gateway/",
+          "status": "planned"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-GW-001",
+        "XCOM-SYS-FR-032"
+      ],
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Local IPC only; no TCP listener; transport never replaces the permit."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-011",
+      "name": "Synthetic sink and tools",
+      "layer": "test-fixture",
+      "language": "cpp",
+      "scope": "first-proof",
+      "responsibility": "Provide the synthetic observation sink and separate-process tool client used for conformance without a legacy asset.",
+      "owning_slice": "T-OBS",
+      "owning_tasks": [
+        "T023",
+        "T032",
+        "T033"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null,
+      "reconciliation": "Baseline integration fixture present while T023 is open; remaining tool paths allocated to T032/T033; no accepted exact-candidate revision (analysis A12).",
+      "artifact_paths": [
+        {
+          "path": "src/xverse/xcom/fixtures/synthetic_tool.cpp",
+          "status": "planned"
+        },
+        {
+          "path": "tests/xcom/observation/integration/",
+          "status": "established"
+        },
+        {
+          "path": "tests/xcom/tool_gateway/",
+          "status": "planned"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-OBS-005",
+        "XCOM-SYS-FR-023"
+      ],
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Synthetic only; no real bus, ECU, or legacy binary."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-012",
+      "name": "External validation tool",
+      "layer": "external",
+      "language": "external",
+      "scope": "later",
+      "responsibility": "Represent the out-of-process external validation tool reached only through the local tool gateway.",
+      "owning_slice": "external",
+      "owning_tasks": [],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "n/a",
+          "status": "planned"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-GW-002",
+        "XCOM-SYS-FR-022"
+      ],
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Out of process; not owned by this repository; reached over local IPC only."
+      ],
+      "intra_layer": false
+    },
+    {
+      "id": "XCOM-CMP-013",
+      "name": "Argus observation adapter",
+      "layer": "downstream",
+      "language": "external",
+      "scope": "later",
+      "responsibility": "Consume normalized observation records so Argus can own dashboards and telemetry presentation.",
+      "owning_slice": "downstream",
+      "owning_tasks": [],
+      "maturity": "allocated",
+      "accepted_revision": null,
+      "reconciliation": null,
+      "artifact_paths": [
+        {
+          "path": "src/xverse/argus/",
+          "status": "planned"
+        }
+      ],
+      "requirement_links": [
+        "XCOM-SW-INTG-001",
+        "XCOM-SYS-FR-023"
+      ],
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "constraints": [
+        "Downstream consumer; Argus owns presentation; no reverse dependency."
+      ],
+      "intra_layer": false
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "XCOM-XB-001",
+      "name": "Normalized XDL to profile compiler",
+      "kind": "data",
+      "from_component": "XCOM-CMP-001",
+      "to_component": "XCOM-CMP-002",
+      "from_language": "python",
+      "to_language": "python",
+      "direction": "one-way",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-005",
+      "authorization": "none",
+      "safety": [
+        "Read-only normalization input; no runtime mutation."
+      ],
+      "failure_semantics": "An unreadable or invalid normalized input fails closed before compilation.",
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-002",
+      "name": "Compiler to canonical activation plan",
+      "kind": "artifact",
+      "from_component": "XCOM-CMP-002",
+      "to_component": "XCOM-CMP-003",
+      "from_language": "python",
+      "to_language": "json",
+      "direction": "one-way",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-001",
+      "authorization": "none",
+      "safety": [
+        "Deterministic, digest-bound artifact with no side effects."
+      ],
+      "failure_semantics": "A non-deterministic or invalid plan is rejected before publication.",
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-003",
+      "name": "Activation plan to core decoder",
+      "kind": "language",
+      "from_component": "XCOM-CMP-003",
+      "to_component": "XCOM-CMP-004",
+      "from_language": "json",
+      "to_language": "cpp",
+      "direction": "one-way",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-001",
+      "authorization": "plan-digest-bound",
+      "safety": [
+        "Unresolved identity, schema, capability, time, or ownership fails closed before activation."
+      ],
+      "failure_semantics": "A digest or schema mismatch yields a bounded diagnostic and no activation.",
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-004",
+      "name": "Core to provider composition",
+      "kind": "in-process",
+      "from_component": "XCOM-CMP-004",
+      "to_component": "XCOM-CMP-006",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "bidirectional",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-004",
+      "authorization": "exact-handle-required",
+      "safety": [
+        "Exact generation-bound handle required; no ambient ownership."
+      ],
+      "failure_semantics": "A stale or foreign handle is rejected without mutating the route.",
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-005",
+      "name": "Core to observation boundary",
+      "kind": "in-process",
+      "from_component": "XCOM-CMP-004",
+      "to_component": "XCOM-CMP-008",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "one-way",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-003",
+      "authorization": "tap-policy-required",
+      "safety": [
+        "Metadata-only by default; observer failure does not change normal delivery."
+      ],
+      "failure_semantics": "A slow or failed observer is isolated and never perturbs delivery.",
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-006",
+      "name": "Observation boundary to Argus adapter",
+      "kind": "trust",
+      "from_component": "XCOM-CMP-008",
+      "to_component": "XCOM-CMP-013",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "one-way",
+      "scope": "later",
+      "contract": "XCOM-XLC-003",
+      "authorization": "none",
+      "safety": [
+        "Metadata-only downstream view; payload exposure remains policy-gated."
+      ],
+      "failure_semantics": "A disconnected downstream consumer is isolated; delivery is unaffected.",
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-007",
+      "name": "Validation session to core interface",
+      "kind": "in-process",
+      "from_component": "XCOM-CMP-009",
+      "to_component": "XCOM-CMP-004",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "bidirectional",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-006",
+      "authorization": "validation-permit-required",
+      "safety": [
+        "Fail-closed pre-emission guard; rejection emits zero normal-route items."
+      ],
+      "failure_semantics": "An unpermitted, expired, or revoked session emits no normal-route item.",
+      "maturity": "implemented",
+      "accepted_revision": "4b01586b438a8587d231ee8828d896c206c06a96"
+    },
+    {
+      "id": "XCOM-XB-008",
+      "name": "Local gateway to external validation tool",
+      "kind": "ipc",
+      "from_component": "XCOM-CMP-010",
+      "to_component": "XCOM-CMP-012",
+      "from_language": "protobuf",
+      "to_language": "external",
+      "direction": "bidirectional",
+      "scope": "later",
+      "contract": "XCOM-XLC-002",
+      "authorization": "validation-permit-required",
+      "safety": [
+        "Local IPC only; no TCP listener; transport access is not stimulation authorization."
+      ],
+      "failure_semantics": "A remote or unauthenticated peer cannot connect; the gateway fails closed.",
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-009",
+      "name": "Loopback provider realization",
+      "kind": "realization",
+      "from_component": "XCOM-CMP-007",
+      "to_component": "XCOM-CMP-004",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "bidirectional",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-004",
+      "authorization": "exact-handle-required",
+      "safety": [
+        "Owned synthetic realization only; no legacy asset or physical bus."
+      ],
+      "failure_semantics": "A failed synthetic provider is contained to its own route.",
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-010",
+      "name": "Synthetic client to local gateway",
+      "kind": "ipc",
+      "from_component": "XCOM-CMP-011",
+      "to_component": "XCOM-CMP-010",
+      "from_language": "protobuf",
+      "to_language": "cpp",
+      "direction": "bidirectional",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-002",
+      "authorization": "validation-permit-required",
+      "safety": [
+        "Local IPC only; no TCP listener; the transport never substitutes for the permit."
+      ],
+      "failure_semantics": "A synthetic client error is reported without changing unrelated routes.",
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XB-011",
+      "name": "Observation boundary to synthetic sink",
+      "kind": "trust",
+      "from_component": "XCOM-CMP-008",
+      "to_component": "XCOM-CMP-011",
+      "from_language": "cpp",
+      "to_language": "cpp",
+      "direction": "one-way",
+      "scope": "first-proof",
+      "contract": "XCOM-XLC-003",
+      "authorization": "none",
+      "safety": [
+        "Metadata-only observation of synthetic tools; bounded payload policy."
+      ],
+      "failure_semantics": "A sink or tap failure is isolated and does not change delivery.",
+      "maturity": "partial",
+      "accepted_revision": null
+    }
+  ],
+  "contracts": [
+    {
+      "id": "XCOM-XLC-001",
+      "name": "Canonical activation plan",
+      "kind": "cross-language-schema",
+      "producer_components": [
+        "XCOM-CMP-002"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-003",
+        "XCOM-CMP-004"
+      ],
+      "endpoint_languages": [
+        "cpp",
+        "json",
+        "python"
+      ],
+      "version": "v1",
+      "canonical_artifact": "src/xverse/xcom/contracts/v1/activation-plan.schema.json",
+      "encoding": "json",
+      "unknown_field_policy": "fail-closed",
+      "evolution_rule": "Additive optional fields only; the schema version is bumped for any breaking change; unknown fields fail closed.",
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XLC-002",
+      "name": "Local tool gateway",
+      "kind": "external-rpc",
+      "producer_components": [
+        "XCOM-CMP-010"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-011",
+        "XCOM-CMP-012"
+      ],
+      "endpoint_languages": [
+        "cpp",
+        "external",
+        "protobuf"
+      ],
+      "version": "v1",
+      "canonical_artifact": "proto/xverse/xcom/v1/tool_gateway.proto",
+      "encoding": "protobuf",
+      "unknown_field_policy": "fail-closed",
+      "evolution_rule": "Additive field numbers only; reserved removed numbers and names; explicit protocol version negotiation.",
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "maturity": "allocated",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XLC-003",
+      "name": "Observation record",
+      "kind": "in-process-cpp",
+      "producer_components": [
+        "XCOM-CMP-008"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-011",
+        "XCOM-CMP-013"
+      ],
+      "endpoint_languages": [
+        "cpp"
+      ],
+      "version": "v1",
+      "canonical_artifact": "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+      "encoding": "in-process",
+      "unknown_field_policy": "n/a",
+      "evolution_rule": "Additive optional fields with defaulted accessors; no removal of an existing field.",
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XLC-004",
+      "name": "Provider contract",
+      "kind": "in-process-cpp",
+      "producer_components": [
+        "XCOM-CMP-006"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-007"
+      ],
+      "endpoint_languages": [
+        "cpp"
+      ],
+      "version": "v1",
+      "canonical_artifact": "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+      "encoding": "in-process",
+      "unknown_field_policy": "n/a",
+      "evolution_rule": "Additive methods with defaulted behaviour; no removal of an existing method.",
+      "governing_adrs": [
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XLC-005",
+      "name": "XDL resource and Profile input",
+      "kind": "schema",
+      "producer_components": [
+        "XCOM-CMP-001"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-002"
+      ],
+      "endpoint_languages": [
+        "python"
+      ],
+      "version": "v1alpha1",
+      "canonical_artifact": "xdl/schemas/v1alpha1/xdl.schema.json",
+      "encoding": "yaml",
+      "unknown_field_policy": "fail-closed",
+      "evolution_rule": "Additive optional fields only; a new version is published for a breaking change.",
+      "governing_adrs": [
+        "ADR-0016",
+        "ADR-0018",
+        "ADR-0020"
+      ],
+      "maturity": "partial",
+      "accepted_revision": null
+    },
+    {
+      "id": "XCOM-XLC-006",
+      "name": "Validation stimulation and time",
+      "kind": "in-process-cpp",
+      "producer_components": [
+        "XCOM-CMP-009"
+      ],
+      "consumer_components": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-010"
+      ],
+      "endpoint_languages": [
+        "cpp"
+      ],
+      "version": "v1",
+      "canonical_artifact": "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+      "encoding": "in-process",
+      "unknown_field_policy": "fail-closed",
+      "evolution_rule": "Additive optional fields only; permit and session identity semantics are not changed additively.",
+      "governing_adrs": [
+        "ADR-0019",
+        "ADR-0020"
+      ],
+      "maturity": "implemented",
+      "accepted_revision": "4b01586b438a8587d231ee8828d896c206c06a96"
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "XCOM-DGM-001",
+      "kind": "component",
+      "title": "X-COM first-proof component view",
+      "user_story": "-",
+      "participants": [
+        "XCOM-CMP-001",
+        "XCOM-CMP-002",
+        "XCOM-CMP-003",
+        "XCOM-CMP-004",
+        "XCOM-CMP-005",
+        "XCOM-CMP-006",
+        "XCOM-CMP-007",
+        "XCOM-CMP-008",
+        "XCOM-CMP-009",
+        "XCOM-CMP-010",
+        "XCOM-CMP-011",
+        "XCOM-CMP-012",
+        "XCOM-CMP-013"
+      ],
+      "steps": []
+    },
+    {
+      "id": "XCOM-DGM-002",
+      "kind": "sequence",
+      "title": "Plan compilation to activation sequence",
+      "user_story": "US1",
+      "participants": [
+        "XCOM-CMP-001",
+        "XCOM-CMP-002",
+        "XCOM-CMP-003",
+        "XCOM-CMP-004",
+        "XCOM-CMP-005",
+        "XCOM-CMP-006",
+        "XCOM-CMP-007"
+      ],
+      "steps": [
+        {
+          "from": "XCOM-CMP-001",
+          "to": "XCOM-CMP-002",
+          "boundary": "XCOM-XB-001",
+          "note": "Normalized XDL resource is read by the profile compiler."
+        },
+        {
+          "from": "XCOM-CMP-002",
+          "to": "XCOM-CMP-003",
+          "boundary": "XCOM-XB-002",
+          "note": "The compiler emits the canonical activation plan."
+        },
+        {
+          "from": "XCOM-CMP-003",
+          "to": "XCOM-CMP-004",
+          "boundary": "XCOM-XB-003",
+          "note": "The core decodes and validates the plan digest."
+        },
+        {
+          "from": "XCOM-CMP-004",
+          "to": "XCOM-CMP-006",
+          "boundary": "XCOM-XB-004",
+          "note": "The core composes a provider through the provider contract."
+        },
+        {
+          "from": "XCOM-CMP-007",
+          "to": "XCOM-CMP-004",
+          "boundary": "XCOM-XB-009",
+          "note": "The owned loopback provider realizes the route."
+        }
+      ]
+    },
+    {
+      "id": "XCOM-DGM-003",
+      "kind": "sequence",
+      "title": "Observation and downstream sequence",
+      "user_story": "US2",
+      "participants": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-008",
+        "XCOM-CMP-011",
+        "XCOM-CMP-013"
+      ],
+      "steps": [
+        {
+          "from": "XCOM-CMP-004",
+          "to": "XCOM-CMP-008",
+          "boundary": "XCOM-XB-005",
+          "note": "Observation taps the normal route as metadata."
+        },
+        {
+          "from": "XCOM-CMP-008",
+          "to": "XCOM-CMP-011",
+          "boundary": "XCOM-XB-011",
+          "note": "The synthetic sink consumes metadata-only records."
+        },
+        {
+          "from": "XCOM-CMP-008",
+          "to": "XCOM-CMP-013",
+          "boundary": "XCOM-XB-006",
+          "note": "Argus receives the normalized observation record."
+        }
+      ]
+    },
+    {
+      "id": "XCOM-DGM-004",
+      "kind": "sequence",
+      "title": "Validation stimulation sequence",
+      "user_story": "US3",
+      "participants": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-008",
+        "XCOM-CMP-009"
+      ],
+      "steps": [
+        {
+          "from": "XCOM-CMP-009",
+          "to": "XCOM-CMP-004",
+          "boundary": "XCOM-XB-007",
+          "note": "A permitted validation session emits a guarded item."
+        },
+        {
+          "from": "XCOM-CMP-004",
+          "to": "XCOM-CMP-008",
+          "boundary": "XCOM-XB-005",
+          "note": "The guarded emission is observed as metadata."
+        }
+      ]
+    },
+    {
+      "id": "XCOM-DGM-005",
+      "kind": "sequence",
+      "title": "Local tool gateway and external tool sequence",
+      "user_story": "US4",
+      "participants": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-006",
+        "XCOM-CMP-007",
+        "XCOM-CMP-010",
+        "XCOM-CMP-011",
+        "XCOM-CMP-012"
+      ],
+      "steps": [
+        {
+          "from": "XCOM-CMP-011",
+          "to": "XCOM-CMP-010",
+          "boundary": "XCOM-XB-010",
+          "note": "The synthetic client invokes the local gateway."
+        },
+        {
+          "from": "XCOM-CMP-010",
+          "to": "XCOM-CMP-012",
+          "boundary": "XCOM-XB-008",
+          "note": "The gateway invokes the external validation tool over local IPC."
+        },
+        {
+          "from": "XCOM-CMP-004",
+          "to": "XCOM-CMP-006",
+          "boundary": "XCOM-XB-004",
+          "note": "The core resolves the provider through the provider contract."
+        },
+        {
+          "from": "XCOM-CMP-007",
+          "to": "XCOM-CMP-004",
+          "boundary": "XCOM-XB-009",
+          "note": "The owned loopback provider realizes the invoked route."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "id": "XCOM-INV-01",
+      "kind": "data-model",
+      "statement": "Logical identity never depends on a provider address or a handle.",
+      "applies_to": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-007"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 1",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-02",
+      "kind": "data-model",
+      "statement": "No endpoint, route, tap, or session is mutable without its exact issued handle.",
+      "applies_to": [
+        "XCOM-CMP-005"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 2",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-03",
+      "kind": "data-model",
+      "statement": "Synthetic origin survives routing and observation.",
+      "applies_to": [
+        "XCOM-CMP-009",
+        "XCOM-CMP-011"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 3",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-04",
+      "kind": "data-model",
+      "statement": "At most one permitted service-emulation owner exists per endpoint and session.",
+      "applies_to": [
+        "XCOM-CMP-009"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 4",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-05",
+      "kind": "data-model",
+      "statement": "All queues and quotas are finite with declared overflow behaviour.",
+      "applies_to": [
+        "XCOM-CMP-005",
+        "XCOM-CMP-008"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 5",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-06",
+      "kind": "data-model",
+      "statement": "Metadata-only observation contains no payload bytes.",
+      "applies_to": [
+        "XCOM-CMP-008",
+        "XCOM-XB-005"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 6",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-07",
+      "kind": "data-model",
+      "statement": "Every activation and stimulation decision is bound to the exact plan digest.",
+      "applies_to": [
+        "XCOM-CMP-003",
+        "XCOM-CMP-009"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 7",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-08",
+      "kind": "safety",
+      "statement": "Local tool transport access never replaces validation-permit checks.",
+      "applies_to": [
+        "XCOM-CMP-010",
+        "XCOM-XB-008"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 8; spec FR-032",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-09",
+      "kind": "data-model",
+      "statement": "Scheduled requests never compare or order unmapped clock domains.",
+      "applies_to": [
+        "XCOM-CMP-009"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 9; spec FR-033",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-10",
+      "kind": "data-model",
+      "statement": "One endpoint generation has at most one active service-emulation lease.",
+      "applies_to": [
+        "XCOM-CMP-005",
+        "XCOM-CMP-009"
+      ],
+      "source": "specs/007-xcom-core/data-model.md invariant 10",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-11",
+      "kind": "dependency",
+      "statement": "Dependencies flow one-way from blueprints to domain profiles to XDL/platform APIs to runtime abstractions.",
+      "applies_to": [
+        "XCOM-CMP-002",
+        "XCOM-CMP-004"
+      ],
+      "source": "constitution art. VIII; ADR-0018",
+      "enforcement": "CHK-08"
+    },
+    {
+      "id": "XCOM-INV-12",
+      "kind": "neutrality",
+      "statement": "Core components contain no domain-specific primitive.",
+      "applies_to": [
+        "XCOM-CMP-004",
+        "XCOM-CMP-006"
+      ],
+      "source": "constitution art. II; spec FR-001",
+      "enforcement": "CHK-08"
+    },
+    {
+      "id": "XCOM-INV-13",
+      "kind": "safety",
+      "statement": "The first proof exposes no TCP listener except the host-protected local tool gateway.",
+      "applies_to": [
+        "XCOM-CMP-010",
+        "XCOM-XB-008"
+      ],
+      "source": "spec FR-028 and FR-032; specs/007-xcom-core/contracts/tool-gateway.md",
+      "enforcement": "CHK-09"
+    },
+    {
+      "id": "XCOM-INV-14",
+      "kind": "architecture",
+      "statement": "Python is confined to the xdl-input and build-time layers; the data plane is C++.",
+      "applies_to": [
+        "XCOM-CMP-001",
+        "XCOM-CMP-002",
+        "XCOM-CMP-004"
+      ],
+      "source": "plan Technical Context; AGENTS implementation-language directive",
+      "enforcement": "CHK-08"
+    },
+    {
+      "id": "XCOM-INV-15",
+      "kind": "safety",
+      "statement": "The first proof executes no legacy workload and contacts no external network peer.",
+      "applies_to": [
+        "XCOM-CMP-010",
+        "XCOM-CMP-012"
+      ],
+      "source": "spec FR-028; ADR-0018",
+      "enforcement": "CHK-09"
+    }
+  ]
+}

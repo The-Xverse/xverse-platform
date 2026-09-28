@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "T020-CMP-001",
+  "revision": "1",
+  "title": "Ordering-equivalence and cross-language verification component",
+  "responsibilities": [
+    "Execute the T020 ordering-equivalence verification and the Python cross-language leg over the accepted plan chain.",
+    "Prove canonical-byte and domain-separated-digest identity across equivalent plan representations."
+  ],
+  "state_ownership": "none; the component holds no state and owns no runtime resource",
+  "interfaces": [
+    "xverse::xcom activation-plan decode API (read-only, T019)",
+    "xverse_xdl.xcom_plan compiler (read-only, T018)",
+    "scripts/validate_xcom_plan.py validator (read-only, T017)",
+    "committed T017 plan fixtures (read-only)"
+  ],
+  "concurrency": "offline-single-threaded; one test process, no thread, no mutable shared state",
+  "errors": [
+    "GoogleTest assertion failure or pytest failure on an unexpected outcome, code, canonical byte, or digest"
+  ],
+  "dependencies": [
+    "xverse::xcom_activation_plan (T019)",
+    "GTest/gmock admitted prefix",
+    "Python 3.11+ standard library, xverse_xdl.xcom_plan, scripts/validate_xcom_plan.py"
+  ],
+  "deployment": "repository-local test process; no runtime deployment and no activation",
+  "rationale": "The accepted T009 boundary XCOM-XB-003 (plan to core decoder, carrying XCOM-XLC-001) is consumed read-only; T020 proves the equivalence property there without creating a new component."
+}

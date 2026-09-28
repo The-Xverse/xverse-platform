@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "T020-STK-003",
+  "revision": "1",
+  "level": "stakeholder",
+  "title": "Silent drift is detected and prevented",
+  "statement": "T020 must guard the decoder's declared member, vocabulary, pattern, ordering-key, and numeric-range tables against the committed normative plan schema; guard the plan-version constant, the closed digest sub-schema, the canonical-body/digest rule, and the anchored T017 fixtures against silent change; and detect drift fail-closed.",
+  "source": {
+    "kind": "capability_007_specification",
+    "reference": "specs/007-xcom-core/spec.md FR-031, SC-002; docs/engineering/xcom/t020/requirements.md T020-STK-003"
+  },
+  "applicability": "X-Verse capability 007 Profile/plan schema and digest contract.",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [],
+  "verification_intent": "Refined by T020-SR-003; verified by the T20Drift CTest cases and the T020 pytest fixture-digest case.",
+  "acceptance_criteria": [
+    "AC-1: the decoder's declared tables are asserted equal to the committed activation-plan.schema.json for the 16 required members, every closed enum, the patterns, the collection keys, the minItems minimums, and the numeric ranges.",
+    "AC-2: the closed $defs/digest sub-schema is asserted equal to the decoder's embedded-digest rule and a violated embedded digest is rejected.",
+    "AC-3: the plan-version const, the domain separator, and each committed fixture's canonical body/digest are pinned against golden values."
+  ]
+}

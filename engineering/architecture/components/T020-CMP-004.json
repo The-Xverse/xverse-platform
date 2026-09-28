@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-CMP-004",
+  "revision": "1",
+  "title": "Bound-matrix verification component",
+  "responsibilities": [
+    "Execute the bound-matrix verification of every declared DecodeLimits member.",
+    "Prove accept at the bound and fail-closed over it, including every limit below 1."
+  ],
+  "state_ownership": "none; the component holds no state and owns no runtime resource",
+  "interfaces": [
+    "xverse::xcom activation-plan decode API (read-only, T019)",
+    "declared DecodeLimits caps (T019)"
+  ],
+  "concurrency": "offline-single-threaded; one test process, no thread, no mutable shared state",
+  "errors": [
+    "GoogleTest assertion failure on an accepted breach or a returned value"
+  ],
+  "dependencies": [
+    "xverse::xcom_activation_plan (T019)",
+    "GTest/gmock admitted prefix"
+  ],
+  "deployment": "repository-local test process; no runtime deployment and no activation",
+  "rationale": "The declared bounded-overflow contract is exercised with small bounded vectors and adjusted caps; no production numeric value is fixed."
+}

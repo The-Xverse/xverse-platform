@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "task_id": "T013",
+  "baseline_revision": "863f11ac990c1ce178a0f9d8eb2489e4a5243fe7",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 2,
+  "external_review": "deferred_until_backlog_completion",
+  "checkpoint_repair": {
+    "predecessor_run_id": "01M3HW3NABN4Y64ETJ3AWYFRXM",
+    "prior_reviewed_paths": 7,
+    "reason": "The prior internal review and carried package covered only the seven tracked source/test paths and omitted the six untracked T013 work-product documents, so the reviewed workspace could not be sealed against the terminal worktree.",
+    "successor_reviewed_paths": 13,
+    "disposition": "successor review covers the exact union of the baseline diff and the untracked candidate files, excluding this review record and reports/xcom-queue/t013-package.json"
+  },
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t013/architecture.md",
+    "docs/engineering/xcom/t013/detailed-design.md",
+    "docs/engineering/xcom/t013/implementation.md",
+    "docs/engineering/xcom/t013/requirements.md",
+    "docs/engineering/xcom/t013/unit-specifications.md",
+    "docs/engineering/xcom/t013/verification-plan.md",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/include/xverse/xcom/contract.hpp",
+    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+    "src/xverse/xcom/src/contract.cpp",
+    "src/xverse/xcom/src/diagnostic.cpp",
+    "tests/xcom/core_types/negative_tests.cpp",
+    "tests/xcom/core_types/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T013-RV2-01",
+      "name": "Baseline identity, exact 13-path inventory, and diff hygiene",
+      "method": "ran `git rev-parse 863f11ac990c1ce178a0f9d8eb2489e4a5243fe7`, `git rev-parse HEAD`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, `git diff --stat <baseline> --`, and `git diff --check <baseline> --`; recomputed the gate inventory as `tracked | (untracked - generated)`",
+      "result": "pass: HEAD equals the baseline SHA. The tracked diff is exactly seven paths (specs/007-xcom-core/tasks.md, both contract files, both diagnostic files, both core-type test files) at +592/-10; untracked `git ls-files --others --exclude-standard` returns eight paths (the six T013 work products, this review record, and reports/xcom-queue/t013-package.json). Removing the two generated records yields exactly the 13 reviewed paths in `reviewed_paths`, matching the deterministic gate. `git diff --check` prints nothing (exit 0)."
+    },
+    {
+      "id": "T013-RV2-02",
+      "name": "Authorized scope: only the immutable core value/contract/diagnostic slice changed",
+      "method": "classified every reviewed path by role; read `specs/007-xcom-core/tasks.md:38` and the T013 task entry against requirements.md section 2 and implementation.md section 3",
+      "result": "pass: tasks.md:38 flips only `- [ ] T013` to `- [X] T013` (one line). The only implementation change is the immutable FlowPolicy declaration value plus its invalid_policy/policy diagnostic code and phase. No xdl/, proto/, src/xverse_xdl/, .cmake, root CMakeLists.txt, or src/xverse/xcom/CMakeLists.txt path appears; no endpoint/route lifecycle, provider, loopback, observation, stimulation, validation-session, gateway, or compatibility path is present, so no later task was implemented accidentally."
+    },
+    {
+      "id": "T013-RV2-03",
+      "name": "Work-product completeness and mutual consistency of the six omitted documents",
+      "method": "read requirements.md, architecture.md, detailed-design.md, unit-specifications.md, verification-plan.md, and implementation.md in full; cross-checked implementation.md section 4.3 SHA-256 and byte counts against `sha256sum`/`wc -c`; compared requirements.md section 7.1, verification-plan.md section 2, and unit-specifications.md section 5 against the gate and the built artefacts",
+      "result": "pass: all six documents exist and are internally consistent. The five plan-stage document SHA-256 values and byte counts recorded in implementation.md:182-192 equal the actual current bytes exactly (requirements 12ae8161.../29105, architecture 2244c8f4.../13790, detailed-design c23d4eed.../13959, unit-specifications cf2fd6b4.../13489, verification-plan 55ee45c2.../15060), so the document evidence is candidate-current. verification-plan.md:34 matches the gate's required six-work-product list; requirements.md:284-300 describes the same changed-path set that the gate computes; unit-specifications.md:146-154 asserts no new CTest target and an unchanged discovered count."
+    },
+    {
+      "id": "T013-RV2-04",
+      "name": "Accepted Profile flow-policy vocabulary and ranges are mirrored exactly",
+      "method": "read `xdl/profiles/xcom-v0.1.schema.json` `$defs/flowPolicy` and compared field-by-field with contract.hpp:52-104 (enumerations), contract.hpp:281-285 (bounds), and contract.cpp:202-244 (`to_string` text)",
+      "result": "pass: ordering {fifo, priority, unordered}, reliability {at-most-once, at-least-once, exactly-once, best-effort}, and overflow {drop-oldest, drop-newest, coalesce, lossless-backpressure, reject, fail-closed} match the Profile enums verbatim through the `to_string` external text; deadlineMs 0-600000, retry 0-64, and queueDepth 1-65536 match the inclusive Profile minimum/maximum exactly. No value the Profile rejects is accepted and no Profile value is missing (T013-SR-007)."
+    },
+    {
+      "id": "T013-RV2-05",
+      "name": "Immutability, value and ownership semantics, and thread safety",
+      "method": "read contract.hpp:278-345 (FlowPolicy), result.hpp, the `static_assert`s in unit_tests.cpp:337-340, and the baseline `test_concurrent_const_reads`",
+      "result": "pass: FlowPolicy exposes const accessors only, defaults a `noexcept` copy constructor, deletes copy assignment, holds six trivially copyable value members, and shares no mutable state, so concurrent const reads are safe. The test asserts copy-constructible, not copy-assignable, nothrow copy-constructible, `noexcept(FlowPolicy::create(...))`, and copy invariance. `Result<T>` (result.hpp) holds exactly one value or one non-empty DiagnosticSet and deletes assignment, so a returned accessor cannot be invalidated (T013-SR-010)."
+    },
+    {
+      "id": "T013-RV2-06",
+      "name": "Failure atomicity and rejected-operation side effects",
+      "method": "read contract.cpp:277-310 (FlowPolicy::create), contract.cpp:26-55 (DiagnosticAccumulator), and the new negative tests",
+      "result": "pass: create validates all six fields into a call-local accumulator and only constructs a FlowPolicy after the `diagnostics.empty()` guard, so a rejected declaration yields `Result<FlowPolicy>::failure(*set)` with a non-empty sorted DiagnosticSet and constructs no value. The input is taken by `const&` and only read; no allocation, I/O, or caller-state mutation occurs; no factory overload supplies a default, and `operator==` compares every declared field, so a weaker declaration is never silently upgraded (T013-SR-005/006). The negative tests assert `!has_value()`, `value() == nullptr`, `diagnostics() != nullptr`, and an exact per-case diagnostic count."
+    },
+    {
+      "id": "T013-RV2-07",
+      "name": "Diagnostic bounds and compatibility of existing codes, phases, and ordering",
+      "method": "read diagnostic.hpp:24-126 and diagnostic.hpp:226, diagnostic.cpp:33-77 (known_code/known_phase), diagnostic.cpp:147-213 (`to_string`), and the contract.cpp accumulator signature change; grepped the tree for `XCOM-TYPE-E006` and for switches over DiagnosticCode/ValidationPhase",
+      "result": "pass: DiagnosticCode::invalid_policy (diagnostic.hpp:39) and ValidationPhase::policy (diagnostic.hpp:56) are appended after every existing enumerator, so no existing enumerator value, code text, phase text, ordering key, or bound changes. `XCOM-TYPE-E006` is 14 bytes and unique (existing `XCOM-LIFE-E006` has different full text); `policy` is 6 bytes, within the unchanged kMaximumPhaseBytes = 23 (diagnostic.hpp:116). kMaximumCodeBytes = 14, kMaximumDiagnostics = 32, and kMaximumTextBytes = 256 are unchanged; the eight existing phases and the TYPE-E001..E005 / LIFE-E006..E013 code set are intact. The only exhaustive switches over these enums both cover the new values, so `-Wswitch -Werror` remains clean."
+    },
+    {
+      "id": "T013-RV2-08",
+      "name": "Determinism and byte-stable diagnostic ordering",
+      "method": "read diagnostic.cpp:242-298 (Diagnostic::create, DiagnosticSet::create_from_inputs, sort_initialized), negative_tests.cpp:416-443, and unit_tests.cpp:336-396",
+      "result": "pass: diagnostics sort by the escaped `phase|severity|code|affected_identity|reason|correction` key independent of insertion order. `test_flow_policy_exact_diagnostics` asserts the exact two- and three-violation byte sequences; `test_flow_policy_immutability_and_determinism` feeds the same five invalid_policy inputs forward and reverse and asserts byte-identical `serialize()` plus equality with the actual `FlowPolicy::create` failure (T013-SR-008/009)."
+    },
+    {
+      "id": "T013-RV2-09",
+      "name": "Correlation and time behaviour unchanged and free of cross-clock inference",
+      "method": "inspected item.hpp:65-71, item.hpp:124-131, item.hpp:198-201 and value.hpp Timestamp; compared against requirements.md T013-SR-012 and detailed-design.md section 3.2",
+      "result": "pass: item.hpp is unmodified by the candidate and retains one signed Timestamp magnitude plus one explicit clock-domain Identity, with no cross-domain ordering or comparison API; Accessors return the magnitude without inference. requirements.md T013-SR-012 and detailed-design.md section 3.2 describe exactly this behaviour, and NEG-19 records the absence of any cross-clock API."
+    },
+    {
+      "id": "T013-RV2-10",
+      "name": "Policy validation precedence, bounded diagnostics, and finite resources",
+      "method": "read contract.cpp:277-310 and contract.cpp:52, cross-checked the fixed validation order and the accumulator capacity against detailed-design.md section 4.3/section 7 and requirements.md T013-SR-011",
+      "result": "pass: create validates in the fixed order ordering, reliability, overflow, deadline_ms, retry, queue_depth, emitting at most one invalid_policy diagnostic per field (at most six). The accumulator is `std::array<DiagnosticInput, 6U>` (contract.cpp:52), so the maximum write index is 5 and no out-of-bounds write is reachable at this revision. deadline_ms/retry/queue_depth are finite declared ranges; no unbounded queue, quota, retry, or depth exists. The declaration type enforces nothing at runtime (T013-LIM-03), which is the intended declaration-only scope."
+    },
+    {
+      "id": "T013-RV2-11",
+      "name": "Tests exercise required behaviour; no existing test removed, renamed, or weakened",
+      "method": "read every added case in unit_tests.cpp:235-409 and negative_tests.cpp:358-451; diffed both files against the baseline; compared `ctest -N`; rebuilt and ran the executables and the full suite",
+      "result": "pass: `test_flow_policy_table` round-trips all 72 declared enum combinations with exact external text; `test_flow_policy_boundaries` accepts each minimum and maximum and rejects each one-step neighbour with one invalid_policy diagnostic; `test_flow_policy_rejections` covers one unknown enum per vocabulary and each out-of-range numeric field; `test_flow_policy_immutability_and_determinism` covers copy invariance, no-upgrade, and order independence; `test_flow_policy_exact_diagnostics` asserts exact failure bytes. Both test files are purely additive (zero removed lines); existing functions and the main conjunctions are preserved and only extended. `ctest --test-dir build/fabro-t013 -N` reports 248 tests (baseline count), and the full run reports `100% tests passed, 0 tests failed out of 248`."
+    },
+    {
+      "id": "T013-RV2-12",
+      "name": "Work-product traceability, REF-002 disposition, and the recorded attribution anomaly",
+      "method": "read requirements.md sections 3-6, 8, 10; architecture.md section 9; unit-specifications.md sections 5-6; verification-plan.md sections 4-5, 8; implementation.md sections 3-5; inspected the unchanged t008/t010 registers referenced by the anomaly",
+      "result": "pass: every T013-STK/T013-SR requirement maps to at least one named CHK/NEG check and to a unit/test case across the plan and implementation records. REF-002 disposition stays `unchanged` with an empty promoted list. The T008/T010 attribution anomaly (XCOM-SW-CORE-001/-006/-010 and XCOM-DU-002 assigned to other tasks by the registers while tasks.md/XCOM-CMP-004 assign the core contract/diagnostic/policy types to T013) is recorded in requirements.md section 7.3/section 8.2 and implementation.md section 7 and is not rewritten (T013-GAP-01)."
+    },
+    {
+      "id": "T013-RV2-13",
+      "name": "Offline, dependency, and public-safety posture including the six new documents",
+      "method": "scanned all six changed source/test files and the six work-product documents and this review record for network/socket/resolver, ambient/secret, filesystem, process/subprocess, dynamic-load, and legacy access, and for credentials, private addresses, unrestricted payloads, or sensitive values; checked includes; grepped the new documents for absolute host paths",
+      "result": "pass: the change uses only the C++ standard library (`<cstdint>`, `<array>`, `<span>`, `<string_view>`, `<type_traits>`, etc.); no network, ambient, filesystem, process, thread, dependency, or legacy access is introduced in the candidate paths. The only absolute paths in the six documents are the workflow's own deterministic-gate tool invocation `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py` in verification-plan.md:29 and implementation.md:143/235; this is the workflow tool path, not a credential, private address, payload, or sensitive deployment value, and it is consistent with the accepted T007-T012 records (recorded as a non-blocking observation in `notes`). No credential, private source excerpt, or sensitive deployment value is present in any reviewed path."
+    },
+    {
+      "id": "T013-RV2-14",
+      "name": "Deterministic gate and governance validators replay at the candidate revision",
+      "method": "ran `validate_xcom_task_ownership.py --verify`, `--check-human`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, and `validate_xcom_unit_design.py --verify`; rebuilt and ran `ctest --test-dir build/fabro-t013`; rechecked `git diff --check`",
+      "result": "pass: all five governance validators report success and exit 0 with the shared T007-T010 artifacts unchanged in substance. `cmake --build build/fabro-t013` reports `ninja: no work to do`, the three core-type executables (`xcom_core_types_unit`, `xcom_core_types_negative`, `xcom_core_types_external_consumer`) all pass, and the full suite reports `100% tests passed, 0 tests failed out of 248`. `git diff --check` is clean."
+    },
+    {
+      "id": "T013-RV2-15",
+      "name": "Checkpoint-repair closure: successor inventory equals the intended reviewed workspace",
+      "method": "compared the successor `reviewed_paths` against the union of `git diff --name-only <baseline> --` and `git ls-files --others --exclude-standard` minus this review record and reports/xcom-queue/t013-package.json; inspected the trusted checkpoint manifest note",
+      "result": "pass: `reviewed_paths` is exactly the 13-path union, with no duplicates and no extra or missing entry. The reviewed workspace now equals the intended 15-path checkpoint set (13 candidate paths plus this review record and the regenerated package record), so the omission that failed the prior terminal sealing is closed; the carried package record is regenerated by the package action to record the same 13 changed paths."
+    }
+  ],
+  "findings": [],
+  "notes": [
+    "Read-only internal review, revision 2, of the T013 successor candidate on baseline 863f11ac990c1ce178a0f9d8eb2489e4a5243fe7, replacing revision 1 whose seven-path inventory omitted the six untracked T013 work-product documents. No production code, test, work product, or accepted artifact was modified in this pass; the only file written is this review record. Build/tests were executed read-only against the existing git-ignored build/fabro-t013 tree.",
+    "`reviewed_paths` equals the union of `git diff --name-only 863f11ac990c1ce178a0f9d8eb2489e4a5243fe7 --` (7 paths) and `git ls-files --others --exclude-standard` (8 paths) minus this review record and reports/xcom-queue/t013-package.json, i.e. exactly 13 paths. This is a superset of the seven paths in the prior internal review; the intersection is unchanged and this review is therefore a strict extension, not a replacement of reviewed content.",
+    {
+      "id": "T013-ADV2-01",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "`DiagnosticAccumulator::add` appends with an unchecked `inputs_[size_++]` into a fixed six-slot array; the safety margin is exactly zero because the policy path can legitimately emit all six diagnostics.",
+      "evidence": "src/xverse/xcom/src/contract.cpp:39 writes `inputs_[size_++]` with no capacity guard, and src/xverse/xcom/src/contract.cpp:52 declares `std::array<DiagnosticInput, 6U> inputs_{}`. `FlowPolicy::create` (src/xverse/xcom/src/contract.cpp:277-307) can emit exactly six diagnostics (three vocabulary checks plus three range checks), so the maximum write index is 5 and no overflow is reachable at this revision; the same holds for the six-call `CommunicationContract::create` (src/xverse/xcom/src/contract.cpp:246-259).",
+      "required_correction": "If a later slice adds a seventh policy field or another contract validator, raise the array capacity or add an explicit `size_ < inputs_.size()` guard before the write, in that owning task's pass; T013 must not be changed for this observation.",
+      "closure_test": "Static inspection that the accumulator capacity is greater than or equal to the maximum number of add/validate call sites on every path that constructs it; the unmutated T013 candidate must still build warning-clean and pass `ctest --test-dir build/fabro-t013 --output-on-failure` with 248/248."
+    },
+    {
+      "id": "T013-ADV2-02",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "`FlowPolicy::create` dereferences the `std::optional<DiagnosticSet>` returned by `DiagnosticSet::create_from_inputs` without a null check, which is safe only because the internally generated inputs are guaranteed valid.",
+      "evidence": "src/xverse/xcom/src/contract.cpp:304-306 does `const auto set = DiagnosticSet::create_from_inputs(diagnostics.inputs()); return Result<FlowPolicy>::failure(*set);`. `create_from_inputs` (src/xverse/xcom/src/diagnostic.cpp:269-285) returns `std::nullopt` only for an empty/over-capacity span or an invalid input; the six fixed policy inputs use short bounded text and known code/phase, so it always yields a value here. The identical pattern already exists in the baseline `CommunicationContract::create` (src/xverse/xcom/src/contract.cpp:261-264).",
+      "required_correction": "None required for T013, consistent with the accepted baseline pattern and unreachable. If a later hardening pass adopts defensive optional handling, apply it uniformly to both factories in that owning task.",
+      "closure_test": "Inspection that every reachable diagnostic-input path stays within kMaximumDiagnostics and uses valid bounded text so create_from_inputs cannot return an empty optional; T013's negative tests already exercise the failure branch and pass."
+    },
+    {
+      "id": "T013-ADV2-03",
+      "severity": "LOW",
+      "blocking": false,
+      "summary": "implementation.md records the implementation-time gate output `changed_paths: 7`, which is the tracked-diff count only; the updated gate now counts the six untracked work products as well and reports 13.",
+      "evidence": "docs/engineering/xcom/t013/implementation.md:143 records `{\"ok\": true, \"task_id\": \"T013\", \"changed_paths\": 7, ...}`, and implementation.md:145-148 explains that the five frozen plan work products were still untracked at that point. The document is explicitly self-describing about the exclusion and does not claim seven is the full candidate inventory.",
+      "required_correction": "None required for T013. The successor package/review actions recompute the changed-path set as 13 (13 candidate paths plus this review record and the package record in the sealed checkpoint), which supersedes the historical count; this review records the discrepancy rather than editing the frozen implementation record.",
+      "closure_test": "Confirm `reports/xcom-queue/t013-package.json` lists the same 13 `changed_paths` as this review and that the checkpoint manifest seals 15 paths; the historical command-17 line remains evidence of the implementation-time gate."
+    },
+    "Public-safety convention observed and accepted: the workflow's own deterministic-gate tool path `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py` appears in verification-plan.md:29 and implementation.md:143,235. It is the workflow tool path (not a credential, private address, payload, or sensitive deployment value) and is used identically in the accepted T007-T012 work products; it is recorded here rather than treated as a blocking finding under T013-SR-014.",
+    "Scope confirmation: T013 implements only its own immutable FlowPolicy declaration value and the invalid_policy/policy diagnostic code and phase. The pre-existing value, result, item, origin, time, correlation, contract, and diagnostic sources are baseline (recorded in git at the baseline SHA) and are re-verified unchanged, not newly implemented or referenced beyond consumption.",
+    "Limitations accepted, not findings: the policy is a declaration/validation value only (queueing, backpressure, deadline, and retry are neither enforced nor measured) and executed sanitizer/static-analysis/Doxygen evidence remains T035-T037's (T013-LIM-01..03). External Codex review and explicit user acceptance remain deferred until the xcom-t011-t016-t021-t024 backlog completes.",
+    "Context isolation: this is a repository-owned internal read-only review executed on the same host toolchain as the implementation work, not an external or independent-organization review; it claims no external independence, no runtime/production readiness, and no user acceptance."
+  ],
+  "reviewed_configuration": {
+    "cmake": "3.22.1",
+    "generator": "Ninja",
+    "cxx_standard": 20,
+    "cxx_extensions": "OFF",
+    "warning_options": [
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror"
+    ],
+    "sanitizers": [],
+    "ctest_total": 248,
+    "baseline_ctest_total": 248,
+    "core_type_checks": [
+      "xverse_xcom_core_types_unit_tests",
+      "xverse_xcom_core_types_negative_tests",
+      "xverse_xcom_core_types_consumer"
+    ]
+  }
+}

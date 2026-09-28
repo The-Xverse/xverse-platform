@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-004",
+  "revision": "1",
+  "level": "software",
+  "title": "Bound-matrix suite",
+  "statement": "The T020 candidate must add a bound-matrix suite that exercises each declared DecodeLimits member at, below, and above its value; asserts the declared failed/rejected classification with no decoded value on a breach; and asserts a limit below 1 is failed XCOM-DECODE-UNKNOWN.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-004"
+  },
+  "applicability": "tests/xcom/activation_plan/t020_bound_matrix_tests.cpp",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-004",
+    "XCOM-SYS-FR-007"
+  ],
+  "verification_intent": "CTest cases T20BoundMatrix.*; trusted unit measure.",
+  "acceptance_criteria": [
+    "For each of the 13 DecodeLimits members an accepting and a failing case exists.",
+    "An over-length string is rejected XCOM-DECODE-SHAPE.",
+    "Every zero limit is failed XCOM-DECODE-UNKNOWN and no breach returns a plan."
+  ]
+}

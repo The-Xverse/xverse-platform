@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "static_analysis",
+  "revision": "1",
+  "kind": "static_analysis",
+  "title": "Static analysis of the consumed decoder source (cppcheck)",
+  "expected": "pass",
+  "test_ids": [],
+  "command": [
+    "cppcheck",
+    "--error-exitcode=1",
+    "--quiet",
+    "--std=c++20",
+    "--language=c++",
+    "--suppress=invalidLifetime",
+    "src/xverse/xcom/src/activation_plan.cpp"
+  ],
+  "command_runs": "cppcheck over the T019 decoder source consumed by the T020 suites",
+  "discovery_check": "none (non-test measure)",
+  "note": "The trusted policy static_analysis measure; it does not carry discovered test IDs."
+}

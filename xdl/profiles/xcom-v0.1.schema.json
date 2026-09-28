@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/profiles/xcom/v0.1/schema.json",
+  "title": "io.xverse.xcom Profile v0.1",
+  "description": "Closed, versioned X-COM policy payload attached at existing XDL extension points and selected by a Profile resource schemaRef. One closed kind discriminator selects exactly one of five permitted payload forms. The payload carries no provider address, credential, validation permit, live handle, or tool session.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "target", "policy"],
+  "properties": {
+    "schemaVersion": {"const": "0.1"},
+    "kind": {"$ref": "#/$defs/kind"},
+    "target": {"$ref": "#/$defs/target"},
+    "policy": {"type": "object"}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "interface-policy"}}, "required": ["kind"]},
+      "then": {"properties": {"policy": {"$ref": "#/$defs/interfacePolicy"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "flow-policy"}}, "required": ["kind"]},
+      "then": {"properties": {"policy": {"$ref": "#/$defs/flowPolicy"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "network-provider"}}, "required": ["kind"]},
+      "then": {"properties": {"policy": {"$ref": "#/$defs/networkProviderPolicy"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "observation-policy"}}, "required": ["kind"]},
+      "then": {"properties": {"policy": {"$ref": "#/$defs/observationPolicy"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "validation-policy"}}, "required": ["kind"]},
+      "then": {"properties": {"policy": {"$ref": "#/$defs/validationPolicy"}}}
+    }
+  ],
+  "$defs": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "interface-policy",
+        "flow-policy",
+        "network-provider",
+        "observation-policy",
+        "validation-policy"
+      ]
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 127
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 127
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"enum": ["Component", "Deployment", "Scenario"]},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "version": {"$ref": "#/$defs/version"}
+      },
+      "additionalProperties": false
+    },
+    "interfacePolicy": {
+      "type": "object",
+      "required": ["interactionKind", "schemaId", "schemaVersion", "encoding", "semanticCompatibility"],
+      "properties": {
+        "interactionKind": {"enum": ["signal", "message", "service"]},
+        "schemaId": {"$ref": "#/$defs/identifier"},
+        "schemaVersion": {"$ref": "#/$defs/version"},
+        "encoding": {"$ref": "#/$defs/identifier"},
+        "semanticCompatibility": {"enum": ["exact", "backward-compatible", "forward-compatible", "none"]}
+      },
+      "additionalProperties": false
+    },
+    "flowPolicy": {
+      "type": "object",
+      "required": ["ordering", "reliability", "deadlineMs", "retry", "queueDepth", "overflow", "observationPoints"],
+      "properties": {
+        "ordering": {"enum": ["fifo", "priority", "unordered"]},
+        "reliability": {"enum": ["at-most-once", "at-least-once", "exactly-once", "best-effort"]},
+        "deadlineMs": {"type": "integer", "minimum": 0, "maximum": 600000},
+        "retry": {"type": "integer", "minimum": 0, "maximum": 64},
+        "queueDepth": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "overflow": {"enum": ["drop-oldest", "drop-newest", "coalesce", "lossless-backpressure", "reject", "fail-closed"]},
+        "observationPoints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "networkProviderPolicy": {
+      "type": "object",
+      "required": ["requiredCapabilities", "fidelity", "limitations"],
+      "properties": {
+        "requiredCapabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "fidelity": {"enum": ["exact", "bounded", "declared"]},
+        "limitations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 200}
+        }
+      },
+      "additionalProperties": false
+    },
+    "observationPolicy": {
+      "type": "object",
+      "required": ["filters", "payloadAccess", "bounds", "validityEffect"],
+      "properties": {
+        "filters": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "payloadAccess": {"enum": ["metadata-only", "allow-listed"]},
+        "allowList": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "bounds": {
+          "type": "object",
+          "required": ["maxPayloadBytes", "maxRateHz"],
+          "properties": {
+            "maxPayloadBytes": {"type": "integer", "minimum": 0, "maximum": 1048576},
+            "maxRateHz": {"type": "integer", "minimum": 0, "maximum": 100000}
+          },
+          "additionalProperties": false
+        },
+        "validityEffect": {"enum": ["none", "degrade-on-loss", "invalidate-on-loss"]}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"payloadAccess": {"const": "allow-listed"}}, "required": ["payloadAccess"]},
+          "then": {"required": ["allowList"]}
+        }
+      ]
+    },
+    "validationPolicy": {
+      "type": "object",
+      "required": ["allowedActions", "injectionPoints", "serviceEmulation", "timePolicy", "quotas", "permitPolicyRef"],
+      "properties": {
+        "allowedActions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "injectionPoints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "serviceEmulation": {"type": "boolean"},
+        "timePolicy": {"enum": ["local-validation-clock", "unmapped"]},
+        "quotas": {
+          "type": "object",
+          "required": ["maxActions", "maxRateHz"],
+          "properties": {
+            "maxActions": {"type": "integer", "minimum": 0, "maximum": 100000},
+            "maxRateHz": {"type": "integer", "minimum": 0, "maximum": 100000}
+          },
+          "additionalProperties": false
+        },
+        "permitPolicyRef": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"serviceEmulation": {"const": true}}, "required": ["serviceEmulation"]},
+          "then": {"required": ["permitPolicyRef"]}
+        }
+      ]
+    }
+  }
+}

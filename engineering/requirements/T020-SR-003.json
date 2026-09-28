@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "T020-SR-003",
+  "revision": "1",
+  "level": "software",
+  "title": "Drift suite",
+  "statement": "The T020 candidate must add a drift suite that asserts the decoder's declared member, enum, pattern, ordering-key, and numeric-range tables equal the committed plan schema; that the closed $defs/digest sub-schema equals the decoder's embedded-digest rule; and that the plan-version const, the domain separator, and the committed fixtures' canonical body/digest are pinned against golden values.",
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "specs/007-xcom-core/tasks.md T020; docs/engineering/xcom/t020/requirements.md T020-SR-003"
+  },
+  "applicability": "tests/xcom/activation_plan/t020_drift_tests.cpp",
+  "status": "accepted",
+  "assumptions": [],
+  "parents": [
+    "T020-STK-003",
+    "XCOM-SYS-FR-031"
+  ],
+  "verification_intent": "CTest cases T20Drift.*; trusted unit measure.",
+  "acceptance_criteria": [
+    "Every declared table is asserted equal to the schema.",
+    "A violated embedded digest is rejected XCOM-DECODE-SHAPE.",
+    "A pinned golden value mismatch fails the suite and the Profile form vocabulary is the accepted five forms."
+  ]
+}
