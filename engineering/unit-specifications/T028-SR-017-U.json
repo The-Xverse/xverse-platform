@@ -1,0 +1,83 @@
+{
+  "component_id": "T028-SR-017-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-017-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "If any precondition, guard, lease, journal, late-policy, or completion decision declines, the action path **shall** mutate no accepted guard state, no lease-table entry, no pending-queue entry, no lineage entry, and no durable journal record in the declined dimension, **shall** return an explicit bounded status, and **shall** emit no normal-route item; a declined action **shall never** return `Emitted`."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "If any precondition, guard, lease, journal, late-policy, or completion decision declines, the action path **shall** mutate no accepted guard state, no lease-table entry, no pending-queue entry, no lineage entry, and no durable journal record in the declined dimension, **shall** return an explicit bounded status, and **shall** emit no normal-route item; a declined action **shall never** return `Emitted`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp",
+    "tests/xcom/stimulation_actions/negative_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-017-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27.",
+      "id": "XcomStimulationActionsAction.ActionPathGuardDecisionMapping",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27.",
+      "id": "XcomStimulationActionsNegative.ActionPathDeclineZeroMutationAndZeroEmission",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison and no-emission inspection; CHK-21, NEG-25, NEG-26, NEG-27.",
+      "id": "XcomStimulationActionsNegative.ActionPathClosedAndCapacityReject",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.DuplicateRejectionDoesNotConsumeQuota",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.FailedIntentDoesNotKeepEmulationLease",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.KnownQueuedDuplicateDoesNotConsumeQuota",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.QueuedIntentFailureReleasesOnlyItsReservation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

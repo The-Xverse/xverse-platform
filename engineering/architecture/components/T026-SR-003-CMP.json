@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-003-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "An intent record **shall** carry exactly the bounded metadata {permit id, session id, plan digest, request id, correlation id, causation id, action mask, bounded target tag, bounded tool tag, quota cost, clock domain, scheduled timestamp, immediate flag} and an outcome record **shall** carry exactly {request id, closed outcome kind, bounded diagnostic code, clock domain, observed timestamp}; the header **shall** expose no payload, value, address, free-form text, or unbounded member; a compile-time rule **shall** reject construction of either record from a payload byte container or free-form text and **shall** bound the record size; and the absence of a payload-bearing member **shall** be established by declaration inspection. The closed `OutcomeKind` vocabulary **shall** be validated on the public write path: a `journal_then_emit` callback result or a `resolve` outcome whose `kind` is outside the vocabulary **shall** be rejected (`RejectedConfiguration`) without appending that outcome."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-003 allocation"
+}

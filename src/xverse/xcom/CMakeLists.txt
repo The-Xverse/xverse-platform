@@ -16,6 +16,9 @@ set(
   xverse_xcom_provider_loopback
   xverse_xcom_validation_session
   xverse_xcom_activation_plan
+  xverse_xcom_stimulation_journal
+  xverse_xcom_stimulation_guard
+  xverse_xcom_stimulation_actions
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -457,6 +460,76 @@ target_include_directories(
 target_compile_features(xverse_xcom_validation_session PUBLIC cxx_std_20)
 xverse_xcom_apply_runtime_rules(xverse_xcom_validation_session)
 
+# T026's bounded durable stimulation intent/outcome journal. It links only the standard
+# library and the accepted T025 in-process validation-session contract, which it consumes
+# read-only; it adds no third-party dependency and no new identity/digest vocabulary.
+add_library(xverse_xcom_stimulation_journal STATIC src/stimulation_journal.cpp)
+add_library(xverse::xcom_stimulation_journal ALIAS xverse_xcom_stimulation_journal)
+target_include_directories(
+  xverse_xcom_stimulation_journal PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(xverse_xcom_stimulation_journal PUBLIC xverse::xcom_validation_session)
+target_compile_features(xverse_xcom_stimulation_journal PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_journal)
+set_target_properties(
+  xverse_xcom_stimulation_journal
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+# T027's fail-closed pre-emission guard. It links only the standard library plus the accepted
+# T025 in-process validation-session contract and the accepted T-CORE interaction vocabulary,
+# which it consumes read-only; it adds no third-party dependency and redefines no identity,
+# digest, diagnostic, interaction, or direction type.
+add_library(xverse_xcom_stimulation_guard STATIC src/stimulation_guard.cpp)
+add_library(xverse::xcom_stimulation_guard ALIAS xverse_xcom_stimulation_guard)
+target_include_directories(
+  xverse_xcom_stimulation_guard PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(
+  xverse_xcom_stimulation_guard
+  PUBLIC xverse::xcom_validation_session xverse::xcom_core_types
+)
+target_compile_features(xverse_xcom_stimulation_guard PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_guard)
+set_target_properties(
+  xverse_xcom_stimulation_guard
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+# T028's guarded action path and exclusive generation-bound service-emulation lease. It links
+# only the standard library plus the accepted T025 in-process validation-session contract, the
+# accepted T026 journal, the accepted T027 guard, and the accepted T-CORE origin vocabulary,
+# which it consumes read-only; it adds no third-party dependency and redefines no identity,
+# digest, diagnostic, interaction, origin, or action type.
+add_library(xverse_xcom_stimulation_actions STATIC src/stimulation_actions.cpp)
+add_library(xverse::xcom_stimulation_actions ALIAS xverse_xcom_stimulation_actions)
+target_include_directories(
+  xverse_xcom_stimulation_actions PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(
+  xverse_xcom_stimulation_actions
+  PUBLIC
+    xverse::xcom_stimulation_guard
+    xverse::xcom_stimulation_journal
+    xverse::xcom_validation_session
+    xverse::xcom_core_types
+)
+target_compile_features(xverse_xcom_stimulation_actions PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_actions)
+set_target_properties(
+  xverse_xcom_stimulation_actions
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 # T019's bounded C++ decoder for the canonical activation-plan v1 artifact. It links only the
 # standard library and the already-admitted nlohmann/json header; the third-party JSON type is an
 # implementation detail and does not appear in the public header.
@@ -520,12 +593,181 @@ if(BUILD_TESTING)
     )
   endforeach()
 
+  # T026 bounded durable stimulation intent/outcome journal tests. Registration is additive:
+  # no existing target, test name, label, command, or expected value changes. Each suite uses
+  # one hyphenated `t026-<kind>` label (CMake 3.22 label workaround). The recovery suite
+  # receives a bounded test-local scratch directory as a build-time path; it never prints it
+  # into public evidence.
+  foreach(
+    journal_kind
+    IN ITEMS
+      unit
+      negative
+      recovery
+      failure
+      concurrency
+  )
+    add_executable(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_journal/${journal_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_journal
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PRIVATE
+        "XCOM_T026_SCRATCH_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/t026-scratch\""
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_journal_${journal_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PROPERTIES LABELS "t026-${journal_kind}"
+    )
+  endforeach()
+
+  # T027 fail-closed pre-emission guard tests. Registration is additive: no existing target,
+  # test name, label, command, or expected value changes. Each suite uses one hyphenated
+  # `t027-<kind>` label (CMake 3.22 label workaround). The negative suite receives the committed
+  # public guard header as a build-time read-only path for its bounded declaration inspection;
+  # it never prints the path into public evidence. The guard performs no file I/O, so no scratch
+  # directory is required.
+  foreach(
+    guard_kind
+    IN ITEMS
+      unit
+      mismatch
+      time
+      negative
+      concurrency
+  )
+    add_executable(
+      xverse_xcom_stimulation_guard_${guard_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_guard/${guard_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_guard_${guard_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_guard
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_guard_${guard_kind}_tests
+      PRIVATE
+        "XCOM_T027_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/stimulation_guard.hpp\""
+        "XCOM_T027_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/stimulation_guard.cpp\""
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_guard_${guard_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_guard_${guard_kind}_tests
+      PROPERTIES LABELS "t027-${guard_kind}"
+    )
+  endforeach()
+
+  # T028 guarded action-path and exclusive service-emulation lease tests. Registration is
+  # additive: no existing target, test name, label, command, or expected value changes. Each
+  # suite uses one hyphenated `t028-<kind>` label (CMake 3.22 label workaround). The negative
+  # suite receives the committed public header and implementation source as build-time
+  # read-only paths for its bounded declaration inspection; it never prints the paths into
+  # public evidence. The action path performs no file I/O, so no scratch directory is required.
+  foreach(
+    action_kind
+    IN ITEMS
+      action
+      lease
+      lifecycle
+      negative
+      concurrency
+  )
+    add_executable(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_actions/${action_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_actions
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PRIVATE
+        "XCOM_T028_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/stimulation_actions.hpp\""
+        "XCOM_T028_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/stimulation_actions.cpp\""
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_actions_${action_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_actions_${action_kind}_tests
+      PROPERTIES LABELS "t028-${action_kind}"
+    )
+  endforeach()
+
+  # T029 complete stimulation verification matrix tests. Registration is additive: no existing
+  # target, test name, label, command, or expected value changes, and no runtime-target inventory
+  # entry is added. Each suite uses one hyphenated `t029-<kind>` label (CMake 3.22 label
+  # workaround). The committed T028 and T-OBS/provider headers are supplied as build-time
+  # read-only definitions for the bounded declaration inspection; the paths are never printed
+  # into public evidence. The matrix is offline and in-test storage only, so no scratch
+  # directory is required.
+  foreach(
+    matrix_kind
+    IN ITEMS
+      permit_action_matrix
+      journal_recovery
+      zero_emission
+      provenance
+      lease_drain
+      concurrency
+      external_review
+  )
+    string(REPLACE "_" "-" matrix_label "${matrix_kind}")
+    add_executable(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_matrix/${matrix_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_matrix"
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE
+        "XCOM_T029_ACTIONS_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/stimulation_actions.hpp\""
+        "XCOM_T029_ACTIONS_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/stimulation_actions.cpp\""
+        "XCOM_T029_OBSERVATION_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/observation.hpp\""
+        "XCOM_T029_PROVIDER_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/provider.hpp\""
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_actions
+        xverse::xcom_observation
+        xverse::xcom_provider_loopback
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_matrix_${matrix_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PROPERTIES LABELS "t029-${matrix_label}"
+    )
+  endforeach()
+
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(
     xverse_xcom_provider_loopback
     PUBLIC XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK=1
   )
-
   add_executable(
     xverse_xcom_core_types_unit_tests
     "${PROJECT_SOURCE_DIR}/tests/xcom/core_types/unit_tests.cpp"

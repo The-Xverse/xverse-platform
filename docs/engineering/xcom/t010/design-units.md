@@ -1098,9 +1098,9 @@ Overflow policies: `reject`, `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/stimulation_journal.hpp` (planned)
-- `src/xverse/xcom/src/stimulation_journal.cpp` (planned)
-- `tests/xcom/stimulation_journal/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/stimulation_journal.hpp` (established)
+- `src/xverse/xcom/src/stimulation_journal.cpp` (established)
+- `tests/xcom/stimulation_journal/` (established)
 
 **Ownership / lifetime.**
 
@@ -1167,9 +1167,9 @@ Overflow policies: `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` (planned)
-- `src/xverse/xcom/src/stimulation_guard.cpp` (planned)
-- `tests/xcom/stimulation_guard/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` (established)
+- `src/xverse/xcom/src/stimulation_guard.cpp` (established)
+- `tests/xcom/stimulation_guard/` (established)
 
 **Ownership / lifetime.**
 
@@ -1235,9 +1235,9 @@ Overflow policies: `reject`, `fail-closed`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp` (planned)
-- `src/xverse/xcom/src/stimulation_actions.cpp` (planned)
-- `tests/xcom/stimulation_actions/` (planned)
+- `src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp` (established)
+- `src/xverse/xcom/src/stimulation_actions.cpp` (established)
+- `tests/xcom/stimulation_actions/` (established)
 
 **Ownership / lifetime.**
 

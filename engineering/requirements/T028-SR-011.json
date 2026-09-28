@@ -1,0 +1,23 @@
+{
+  "acceptance_criteria": [
+    "release/quarantine/expiry matrix; CHK-12, NEG-12, NEG-13."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T028-SR-011",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-034"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-011"
+  },
+  "statement": "A held lease **shall** be releasable by its exact owner and **shall** be releasable by lifecycle completion; a release or quarantine by a non-owner, an unknown lease, or an already-released lease **shall** fail closed (`LeaseStatus::NotFound` / `NotHeld` / `AlreadyReleased`) with no mutation; on expiry, revocation, or disconnect the lease **shall** be released or quarantined without ambiguous ownership.",
+  "status": "accepted",
+  "title": "T028 requirement 011",
+  "verification_intent": "release/quarantine/expiry matrix; CHK-12, NEG-12, NEG-13.",
+  "verification_mode": "behavioral"
+}

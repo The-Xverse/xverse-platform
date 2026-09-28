@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-022-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "The guard **shall** evaluate and return its decision without calling any emission, routing, injection, invocation, emulation, or lease entry point, and its public surface **shall** expose no such entry point; the guard **shall** be the only T027 production surface that produces a decision and **shall** produce no side effect outside its own bounded tallies."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-022 allocation"
+}

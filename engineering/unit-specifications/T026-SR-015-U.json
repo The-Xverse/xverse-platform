@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-015-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-015-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "Across a close/reopen cycle the recovered intent **shall** preserve permit id, session id, plan digest, request id, correlation id, causation id, action mask, target, tool, quota cost, clock domain, and scheduled timestamp exactly (`XCOM-SW-STIM-003` journal half)."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Across a close/reopen cycle the recovered intent **shall** preserve permit id, session id, plan digest, request id, correlation id, causation id, action mask, target, tool, quota cost, clock domain, and scheduled timestamp exactly (`XCOM-SW-STIM-003` journal half).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/recovery_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-015-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "restart provenance round-trip matrix; CHK-16, NEG-23, NEG-24.",
+      "id": "T026JournalRecovery.test_journal_provenance_roundtrip_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

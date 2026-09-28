@@ -1,0 +1,46 @@
+{
+  "component_id": "T026-SR-018-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-018-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal **shall** be local-only and offline: it **shall** access only a host-provided local file path or an injected storage seam, perform no network/socket/resolver/TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, and add no domain-specific primitive."
+  ],
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal **shall** be local-only and offline: it **shall** access only a host-provided local file path or an injected storage seam, perform no network/socket/resolver/TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, and add no domain-specific primitive.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t026/requirements.md",
+    "tests/xcom/stimulation_journal/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-018-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-018 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
+      "id": "T026JournalConcurrency.test_journal_bounded_deterministic_concurrency",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

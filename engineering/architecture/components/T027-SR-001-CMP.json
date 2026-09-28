@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-001-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "The guard **shall** be a new, additive C++20 unit at `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` and `src/xverse/xcom/src/stimulation_guard.cpp`, exposed through one new runtime target `xverse_xcom_stimulation_guard` added to the T012 `XVERSE_XCOM_RUNTIME_TARGETS` inventory and routed through the inherited warning-as-error rule; it **shall** change no existing production header, source, or target behavior, and every existing test case, target, label, command, and expected value **shall** be preserved unchanged."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-001 allocation"
+}

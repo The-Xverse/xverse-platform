@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-022-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "The slice **shall** be local-only and offline beyond the test-local fault-injectable journal storage seam and a bounded optional test-local scratch path for the restart case; it **shall** perform no network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy repository/binary access, **shall** retain or log no payload byte, and **shall** add no domain-specific primitive."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-022 allocation"
+}

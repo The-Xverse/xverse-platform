@@ -1,0 +1,46 @@
+{
+  "component_id": "T027-SR-017-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-017-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "Committed source, tests, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value."
+  ],
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Committed source, tests, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t027/requirements.md",
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-017-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
+      "id": "XcomStimulationGuardUnit.GuardClosedVocabularyAndPrecedence",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

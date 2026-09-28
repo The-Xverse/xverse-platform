@@ -1,0 +1,64 @@
+{
+  "component_id": "T026-SR-014-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-014-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "For an orphan intent, the journal **shall** allow appending exactly one explicit resolution outcome with a bounded kind (including `Unknown`) that references the original request id; a repeated or unknown-resolution request **shall** be rejected without mutation, an `OutcomeKind` outside the closed vocabulary **shall** be rejected (`RejectedConfiguration`) without appending, and an explicit `Unknown` resolution **shall** never be relabelled delivered."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "For an orphan intent, the journal **shall** allow appending exactly one explicit resolution outcome with a bounded kind (including `Unknown`) that references the original request id; a repeated or unknown-resolution request **shall** be rejected without mutation, an `OutcomeKind` outside the closed vocabulary **shall** be rejected (`RejectedConfiguration`) without appending, and an explicit `Unknown` resolution **shall** never be relabelled delivered.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/negative_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-014-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-014 unit verification",
+  "unit_cases": [
+    {
+      "expected": "resolution, out-of-vocabulary, and duplicate/unknown-reference cases; CHK-15, NEG-21, NEG-22, NEG-32.",
+      "id": "T026JournalNegative.test_journal_resolution_reference_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "resolution, out-of-vocabulary, and duplicate/unknown-reference cases; CHK-15, NEG-21, NEG-22, NEG-32.",
+      "id": "T026JournalNegative.test_journal_callback_contract_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.InFlightResolutionCannotProduceTwoOutcomes",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.RecoveryDuringCallbackCannotResolveActiveIntent",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

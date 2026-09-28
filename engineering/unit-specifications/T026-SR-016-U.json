@@ -1,0 +1,57 @@
+{
+  "component_id": "T026-SR-016-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-016-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal status vocabulary **shall** be closed, enumerable, and deterministically ordered; the same operation sequence **shall** produce the same primary status, the same frame bytes, and the same recovery summary across repeated bounded runs, and a failure **shall** leave the retained count, retained bytes, and index unchanged except for a declared boundary restoration."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal status vocabulary **shall** be closed, enumerable, and deterministically ordered; the same operation sequence **shall** produce the same primary status, the same frame bytes, and the same recovery summary across repeated bounded runs, and a failure **shall** leave the retained count, retained bytes, and index unchanged except for a declared boundary restoration.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-016-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-016 unit verification",
+  "unit_cases": [
+    {
+      "expected": "repeated-run byte equality and no-mutation checks; CHK-17, NEG-25.",
+      "id": "T026JournalUnit.test_journal_frame_layout_and_roundtrip",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "repeated-run byte equality and no-mutation checks; CHK-17, NEG-25.",
+      "id": "T026JournalUnit.test_journal_status_determinism_and_no_mutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "repeated-run byte equality and no-mutation checks; CHK-17, NEG-25.",
+      "id": "T026JournalUnit.test_journal_snapshot_and_capacity_accounting",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

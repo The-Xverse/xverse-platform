@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-013-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-013-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp"
+  ],
+  "invariants": [
+    "Every emitted descriptor **shall** carry `OriginKind::validation_tool` and the exact tool, permit, session, plan, request, correlation, and causal identity of the authorized request, for each of the four action kinds."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Every emitted descriptor **shall** carry `OriginKind::validation_tool` and the exact tool, permit, session, plan, request, correlation, and causal identity of the authorized request, for each of the four action kinds.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-013-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-013 unit verification",
+  "unit_cases": [
+    {
+      "expected": "descriptor classification and identity matrix; CHK-13, NEG-21.",
+      "id": "XcomStimulationMatrixProvenance.ProvenanceDescriptorCarriesSyntheticIdentity",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "descriptor classification and identity matrix; CHK-13, NEG-21.",
+      "id": "XcomStimulationMatrixProvenance.ProvenanceNeverRelabelled",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

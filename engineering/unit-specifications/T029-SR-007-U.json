@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-007-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-007-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "When the matrix exercises loop bounds, a request whose causal parent is already retained in the accepted guard loop window **or** in the action-path emission-time lineage window **shall** be `Rejected`/`LoopBound` with zero emission and zero journal; `causation_id == 0` **shall never** be a loop rejection; and the lineage window **shall never** exceed its declared depth and **shall** evict the oldest identity."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the matrix exercises loop bounds, a request whose causal parent is already retained in the accepted guard loop window **or** in the action-path emission-time lineage window **shall** be `Rejected`/`LoopBound` with zero emission and zero journal; `causation_id == 0` **shall never** be a loop rejection; and the lineage window **shall never** exceed its declared depth and **shall** evict the oldest identity.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-007-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-007 unit verification",
+  "unit_cases": [
+    {
+      "expected": "loop-bound and lineage-eviction matrix; CHK-08, NEG-09, NEG-10.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixLoopBoundAndLineage",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

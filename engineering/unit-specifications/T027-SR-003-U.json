@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-003-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-003-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** expose closed, enumerable, deterministically ordered vocabularies: a stimulation-action vocabulary (inject signal / inject message / invoke service / emulate service) with a defined-bit mask and stable names; a closed `GuardOutcome` (`Authorized`, `Rejected`, `Failed`); a closed `GuardReason` naming each failing check; and a closed guard-status vocabulary for the open/precondition boundary. A `GuardReason` or `GuardOutcome` **shall** never be a catch-all, and stable precedence **shall** be declared."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** expose closed, enumerable, deterministically ordered vocabularies: a stimulation-action vocabulary (inject signal / inject message / invoke service / emulate service) with a defined-bit mask and stable names; a closed `GuardOutcome` (`Authorized`, `Rejected`, `Failed`); a closed `GuardReason` naming each failing check; and a closed guard-status vocabulary for the open/precondition boundary. A `GuardReason` or `GuardOutcome` **shall** never be a catch-all, and stable precedence **shall** be declared.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-003-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-003 unit verification",
+  "unit_cases": [
+    {
+      "expected": "vocabulary inspection and determinism cases; CHK-17, NEG-28.",
+      "id": "XcomStimulationGuardUnit.GuardClosedVocabularyAndPrecedence",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

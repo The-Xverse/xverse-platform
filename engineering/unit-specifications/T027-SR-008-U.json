@@ -1,0 +1,52 @@
+{
+  "component_id": "T027-SR-008-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-008-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "A request carrying a zero, composite, or out-of-vocabulary stimulation action **shall** be rejected as malformed (`RejectedConfiguration`); a request carrying a defined action not declared allowed by the session policy **shall** be rejected (`ActionMismatch`); in every case with no mutation and no emission."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A request carrying a zero, composite, or out-of-vocabulary stimulation action **shall** be rejected as malformed (`RejectedConfiguration`); a request carrying a defined action not declared allowed by the session policy **shall** be rejected (`ActionMismatch`); in every case with no mutation and no emission.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp",
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-008-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-008 unit verification",
+  "unit_cases": [
+    {
+      "expected": "action matrix; CHK-09, NEG-04, NEG-15.",
+      "id": "XcomStimulationGuardUnit.GuardActionInteractionDirectionTable",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "action matrix; CHK-09, NEG-04, NEG-15.",
+      "id": "XcomStimulationGuardMismatch.GuardActionDirectionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

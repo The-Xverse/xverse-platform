@@ -1,0 +1,58 @@
+{
+  "component_id": "T027-SR-021-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-021-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "A guard constructed from an invalid, zero, or inconsistent declared policy (a zero/over-maximum bound, an inconsistent plan digest / interface / target / validity domain versus the bound permit, or an over-full schema table) **shall** fail closed at open with `RejectedConfiguration`, **shall** authorize no request, and **shall** mutate no external state."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A guard constructed from an invalid, zero, or inconsistent declared policy (a zero/over-maximum bound, an inconsistent plan digest / interface / target / validity domain versus the bound permit, or an over-full schema table) **shall** fail closed at open with `RejectedConfiguration`, **shall** authorize no request, and **shall** mutate no external state.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/negative_tests.cpp",
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-021-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-021 unit verification",
+  "unit_cases": [
+    {
+      "expected": "policy/open boundary cases; CHK-06, CHK-18, NEG-19, NEG-33.",
+      "id": "XcomStimulationGuardUnit.GuardAuthorizesNominalRequestAndSnapshot",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "policy/open boundary cases; CHK-06, CHK-18, NEG-19, NEG-33.",
+      "id": "XcomStimulationGuardUnit.GuardPolicyValidationMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "policy/open boundary cases; CHK-06, CHK-18, NEG-19, NEG-33.",
+      "id": "XcomStimulationGuardNegative.GuardBoundsConfigMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

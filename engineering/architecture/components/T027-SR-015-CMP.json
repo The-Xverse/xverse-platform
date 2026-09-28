@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-015-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "The guard **shall** serialize evaluation and commit under one per-guard mutex, **shall** invoke no host callback, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent evaluations of one guard **shall** commit a deterministic total order and **shall never** exceed the declared quota or loop-window bounds or mutate state on a rejection."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-015 allocation"
+}

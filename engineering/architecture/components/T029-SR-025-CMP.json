@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-025-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "The T029 candidate **shall** satisfy the deterministic Fabro gate for a test task: the six named work products exist, at least one `tests/` path changes, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T029 checkbox is marked complete **only** in the implementation stage, and the inherited `engineering/trace/links.json` and `engineering/stage-results/*.json` provenance digests are refreshed when the shared `src/xverse/xcom/CMakeLists.txt` digest changes."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-025 allocation"
+}

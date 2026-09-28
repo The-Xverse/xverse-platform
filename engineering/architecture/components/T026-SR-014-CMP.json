@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-014-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "For an orphan intent, the journal **shall** allow appending exactly one explicit resolution outcome with a bounded kind (including `Unknown`) that references the original request id; a repeated or unknown-resolution request **shall** be rejected without mutation, an `OutcomeKind` outside the closed vocabulary **shall** be rejected (`RejectedConfiguration`) without appending, and an explicit `Unknown` resolution **shall** never be relabelled delivered."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-014 allocation"
+}

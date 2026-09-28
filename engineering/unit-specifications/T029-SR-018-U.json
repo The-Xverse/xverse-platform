@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-018-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-018-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "invariants": [
+    "The matrix **shall** prove the declared scheduled ordering rule, the bounded drain step budget, and both late-item policies: a due action drains in declared order, at most `max_drain_steps` pending actions complete per call, a full queue fails closed, and a late action under either policy emits nothing."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The matrix **shall** prove the declared scheduled ordering rule, the bounded drain step budget, and both late-item policies: a due action drains in declared order, at most `max_drain_steps` pending actions complete per call, a full queue fails closed, and a late action under either policy emits nothing.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-018-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-018 unit verification",
+  "unit_cases": [
+    {
+      "expected": "ordering/drain-budget/late-policy matrix; CHK-18, NEG-27, NEG-28.",
+      "id": "XcomStimulationMatrixLeaseDrain.DrainOrderingLatePolicyAndImmediateLabel",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

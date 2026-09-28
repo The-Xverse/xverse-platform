@@ -1,0 +1,9 @@
+# T026–T029 Codex Sol conformance repair candidate
+
+This exact successor addresses Astra review findings R-08a and R-08b after the prior runtime repair for R-04–R-06. The trusted delivery policy now includes the authoritative T026–T028 documents, task JSON evidence, task packages, and all declared task source and tests in its material digest. A trusted checkout check requires the candidate commit to equal clean HEAD before any measure or delivery decision. External verifier and target-assembly helper hashes are pinned in the trusted policy.
+
+The conformance runner first executes negative controls for private-path leakage and missing method documentation, then checks 26 scoped requirements. The content inventory includes task work products, source, tests, JSON review evidence, package manifests, and stage records. T026 public methods are checked individually for their in-flight callback contract, including `open` and `open_local_file`; T027/T028 method blocks and design descriptions are checked by declaration. Historical original review JSON is preserved outside the candidate in the repair evidence archive, and the candidate copies use repository-relative paths.
+
+The 93 Phase 6 software requirement records, 19 declared system anchors, scoped components, unit specifications, validation scenarios, and trace links are generated from the task work products by `engineering/generate_phase6_trace.py`. The T020 records remain historical and outside this delivery policy. The fallback mapping for 26 requirements is contributory test context and has separate named conformance inspections. Pattern-based conformance requires independent content review.
+
+The exact committed state requires trusted conformance, static, unit, validation, and pinned target-repository integration measures plus strict delivery. This remains a candidate pending independent Astra review, user acceptance, and merge of approved artifacts into `xverse-platform/main`.

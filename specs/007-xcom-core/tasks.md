@@ -74,15 +74,15 @@ and predecessor regression evidence retained.
 
 - [X] T025 Implement the explicit time-authority interface, local validation permit
   validation/consumption, and bounded session lifecycle.
-- [ ] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
+- [X] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
   unrestricted payload logs, including journal-before-emission ordering, atomic/partial-write behavior,
   finite capacity and retention, disk-full/I/O failure, restart recovery, and evidence-incomplete outcomes.
-- [ ] T027 Implement the fail-closed pre-emission guard for schema, target, direction, action, time, quota,
+- [X] T027 Implement the fail-closed pre-emission guard for schema, target, direction, action, time, quota,
   loop, service ownership, permit/session identity, revocation, and expiry; rejection must not mutate
   operational state or emit a normal-route item.
-- [ ] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
+- [X] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
   service emulation, plus drain, close, revoke, expiry, and evidence-incomplete lifecycle completion.
-- [ ] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
+- [X] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
   failure/recovery, zero emission after every rejection, persistent synthetic provenance, unmapped clocks,
   quotas, loop bounds, lease conflicts, drain/terminal behavior, and deterministic concurrency.
 

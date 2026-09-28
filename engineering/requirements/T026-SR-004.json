@@ -1,0 +1,23 @@
+{
+  "acceptance_criteria": [
+    "record-size and tag-validity boundary cases plus a crafted digest-valid out-of-contract recovery frame; CHK-06, NEG-04, NEG-05, NEG-31."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T026-SR-004",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-007"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-004"
+  },
+  "statement": "A record whose encoded frame exceeds the declared maximum record size **shall** be rejected (`RecordTooLarge`) with no append, and a bounded target/tool tag that is empty, longer than the accepted `Tag` maximum, or non-printable **shall** be rejected (`RejectedConfiguration`) with no append. The same bounded-tag contract **shall** hold on recovery: a complete frame whose declared target/tool length exceeds `Tag::max_length`, or whose tag bytes are empty, NUL-containing, or non-printable, **shall** stop the scan with `CorruptRecord`, **shall** yield no recovered value, and **shall** not manufacture a false orphan.",
+  "status": "accepted",
+  "title": "T026 requirement 004",
+  "verification_intent": "record-size and tag-validity boundary cases plus a crafted digest-valid out-of-contract recovery frame; CHK-06, NEG-04, NEG-05, NEG-31.",
+  "verification_mode": "behavioral"
+}

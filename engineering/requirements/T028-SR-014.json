@@ -1,0 +1,23 @@
+{
+  "acceptance_criteria": [
+    "queue-bound, ordering, and late-policy cases; CHK-15, NEG-17, NEG-18."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T028-SR-014",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-020"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-014"
+  },
+  "statement": "An authorized scheduled request **shall** be placed in a bounded pending queue ordered by the declared `OrderingRule`; `drain` **shall** complete due pending actions within a bounded step budget under the declared `LateItemPolicy`; a full queue **shall** fail closed (`ActionStatus::CapacityExhausted`) with no emission and no journal; a request that becomes late **shall** be rejected or discarded as declared, with zero emission.",
+  "status": "accepted",
+  "title": "T028 requirement 014",
+  "verification_intent": "queue-bound, ordering, and late-policy cases; CHK-15, NEG-17, NEG-18.",
+  "verification_mode": "behavioral"
+}

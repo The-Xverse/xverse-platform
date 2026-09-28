@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T028-SR-004",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-027",
+    "XCOM-SYS-FR-034"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-004"
+  },
+  "statement": "The unit's bounded values (`ActionPathConfig`, `EndpointGeneration`, `EmulationLease`, `LeaseSnapshot`, `PendingAction`, `SyntheticStimulationItem`, `ActionDiagnostic`, `ActionPathSnapshot`, `CompletionReport`) **shall** carry no payload, value body, address, free-form text, or unbounded member; a declared per-action payload view **shall** be forwarded to the emission seam only and **shall** be retained, journaled, or logged by nothing; the pending queue, lease table, and lineage window **shall** be bounded by declared maxima; and a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size.",
+  "status": "accepted",
+  "title": "T028 requirement 004",
+  "verification_intent": "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05.",
+  "verification_mode": "behavioral"
+}

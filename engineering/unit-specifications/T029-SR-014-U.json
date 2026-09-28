@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-014-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-014-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp"
+  ],
+  "invariants": [
+    "When a stimulus classified `OriginKind::validation_tool` is submitted through the accepted provider route and retained by the accepted observation tap, the retained record **shall** preserve the synthetic classification and the exact correlation and causation identity, and **shall** not relabel, drop, or infer provenance."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When a stimulus classified `OriginKind::validation_tool` is submitted through the accepted provider route and retained by the accepted observation tap, the retained record **shall** preserve the synthetic classification and the exact correlation and causation identity, and **shall** not relabel, drop, or infer provenance.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-014-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-014 unit verification",
+  "unit_cases": [
+    {
+      "expected": "routed/observed provenance preservation; CHK-13, NEG-22.",
+      "id": "XcomStimulationMatrixProvenance.ProvenanceSurvivesRoutingAndObservation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "routed/observed provenance preservation; CHK-13, NEG-22.",
+      "id": "XcomStimulationMatrixProvenance.ProvenanceNeverRelabelled",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

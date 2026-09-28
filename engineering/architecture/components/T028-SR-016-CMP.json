@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-016-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "`drain` **shall** complete due pending actions in deterministic order within the bounded step budget; `close` **shall** drain then release every held lease; `revoke` and `expire` **shall** cancel every pending action with zero emission and release or quarantine every held lease; `mark_evidence_incomplete` **shall** surface every intent without a durable outcome explicitly; each completion operation **shall** return a bounded, deterministic `CompletionReport`; and a due, previously authorized pending action that cannot be completed (a failed intent append or a non-delivered host emission) **shall** be surfaced in that report (`CompletionReport.failed`) and **shall never** be reported as a clean `Drained`/`Closed` while a due action was dropped without a durable intent."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-016 allocation"
+}

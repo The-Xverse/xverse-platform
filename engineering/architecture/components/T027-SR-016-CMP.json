@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-016-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "The guard **shall** be local-only and offline: it **shall** perform no file, network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, **shall** own no I/O boundary, and **shall** add no domain-specific primitive."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-016 allocation"
+}

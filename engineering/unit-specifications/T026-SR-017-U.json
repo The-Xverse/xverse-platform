@@ -1,0 +1,51 @@
+{
+  "component_id": "T026-SR-017-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-017-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal **shall** declare single-writer serialization under one per-journal mutex, **shall** invoke no host callback while holding that mutex, and the tests **shall** use only a bounded, finite thread count and iteration count with no wall-clock verdict; two independent journals driven in parallel **shall** each produce the single-threaded golden byte stream."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal **shall** declare single-writer serialization under one per-journal mutex, **shall** invoke no host callback while holding that mutex, and the tests **shall** use only a bounded, finite thread count and iteration count with no wall-clock verdict; two independent journals driven in parallel **shall** each produce the single-threaded golden byte stream.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-017-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "callback-outside-lock probe and bounded deterministic-concurrency check; CHK-17, CHK-18, NEG-26.",
+      "id": "T026JournalConcurrency.test_journal_bounded_deterministic_concurrency",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "callback-outside-lock probe and bounded deterministic-concurrency check; CHK-17, CHK-18, NEG-26.",
+      "id": "T026JournalConcurrency.test_journal_callback_outside_lock_probe",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

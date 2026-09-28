@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-016-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-016-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** be local-only and offline: it **shall** perform no file, network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, **shall** own no I/O boundary, and **shall** add no domain-specific primitive."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** be local-only and offline: it **shall** perform no file, network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, **shall** own no I/O boundary, and **shall** add no domain-specific primitive.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/time_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-016-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-016 unit verification",
+  "unit_cases": [
+    {
+      "expected": "forbidden-API source scan, no-I/O inspection, and the offline build; CHK-19, NEG-30.",
+      "id": "XcomStimulationGuardTime.GuardUnmappedClockFailsClosed",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

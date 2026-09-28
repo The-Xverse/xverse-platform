@@ -1,0 +1,23 @@
+{
+  "acceptance_criteria": [
+    "null-callback, out-of-vocabulary-return, and throwing-callback cases; CHK-09, NEG-09, NEG-10, NEG-32."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T026-SR-007",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-021"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-007"
+  },
+  "statement": "If the emission callback is absent (null) the request **shall** be rejected (`RejectedConfiguration`) before any intent is written; if the callback returns an outcome whose `kind` is outside the closed `OutcomeKind` vocabulary the invalid outcome **shall not** be appended and the call **shall** report `RejectedConfiguration`, leaving the durable intent an explicit orphan; and if the callback throws a host exception the journal **shall** contain a durable intent with no outcome, the host exception **shall** propagate unmodified, recovery **shall** classify that intent `EvidenceIncomplete`, and the call **shall never** report `Ok`.",
+  "status": "accepted",
+  "title": "T026 requirement 007",
+  "verification_intent": "null-callback, out-of-vocabulary-return, and throwing-callback cases; CHK-09, NEG-09, NEG-10, NEG-32.",
+  "verification_mode": "behavioral"
+}

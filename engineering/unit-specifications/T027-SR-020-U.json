@@ -1,0 +1,46 @@
+{
+  "component_id": "T027-SR-020-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-020-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The T027 candidate **shall** satisfy the deterministic Fabro gate for an implementation task: the six named work products exist, at least one `src/xverse/xcom/` path and at least one `tests/` path change, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T027 checkbox is marked complete **only** in the implementation stage."
+  ],
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The T027 candidate **shall** satisfy the deterministic Fabro gate for an implementation task: the six named work products exist, at least one `src/xverse/xcom/` path and at least one `tests/` path change, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T027 checkbox is marked complete **only** in the implementation stage.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t027/requirements.md",
+    "tests/xcom/stimulation_guard/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-020-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-020 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
+      "id": "XcomStimulationGuardConcurrency.GuardConcurrentRejectionNoMutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "component_id": "T027-SR-013-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-013-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "If an evaluation returns `Rejected` or `Failed`, the guard **shall** leave its action tally, window tally, loop-detection window, bound permit, and bound policy unchanged, **shall** return an explicit reason, and **shall** expose no emission, callback, route, provider, item, or lease path; a rejected or failed evaluation **shall never** report `Authorized`."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "If an evaluation returns `Rejected` or `Failed`, the guard **shall** leave its action tally, window tally, loop-detection window, bound permit, and bound policy unchanged, **shall** return an explicit reason, and **shall** expose no emission, callback, route, provider, item, or lease path; a rejected or failed evaluation **shall never** report `Authorized`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/concurrency_tests.cpp",
+    "tests/xcom/stimulation_guard/negative_tests.cpp",
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-013-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-013 unit verification",
+  "unit_cases": [
+    {
+      "expected": "zero-mutation snapshot comparison, no-emission surface inspection, and closed-guard cases; CHK-14, CHK-15, CHK-21, NEG-26, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardUnit.GuardAuthorizesNominalRequestAndSnapshot",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison, no-emission surface inspection, and closed-guard cases; CHK-14, CHK-15, CHK-21, NEG-26, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardUnit.GuardStatusDeterminismAndNoMutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison, no-emission surface inspection, and closed-guard cases; CHK-14, CHK-15, CHK-21, NEG-26, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardNegative.GuardRejectionZeroMutationAndNoEmission",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison, no-emission surface inspection, and closed-guard cases; CHK-14, CHK-15, CHK-21, NEG-26, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardNegative.GuardClosedGuardRejects",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "zero-mutation snapshot comparison, no-emission surface inspection, and closed-guard cases; CHK-14, CHK-15, CHK-21, NEG-26, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardConcurrency.GuardConcurrentRejectionNoMutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

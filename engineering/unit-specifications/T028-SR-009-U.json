@@ -1,0 +1,58 @@
+{
+  "component_id": "T028-SR-009-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-009-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "A service-emulation request **shall** acquire an exclusive lease bound to the exact session identity, endpoint identity, endpoint generation, and plan digest before emission; a missing, foreign, or mismatched identity **shall** be rejected (`LeaseStatus::SessionMismatch` / `GenerationMismatch` / `PlanMismatch`) with no mutation and no emission."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A service-emulation request **shall** acquire an exclusive lease bound to the exact session identity, endpoint identity, endpoint generation, and plan digest before emission; a missing, foreign, or mismatched identity **shall** be rejected (`LeaseStatus::SessionMismatch` / `GenerationMismatch` / `PlanMismatch`) with no mutation and no emission.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/lease_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-009-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-009 unit verification",
+  "unit_cases": [
+    {
+      "expected": "lease identity/binding matrix; CHK-10, NEG-09, NEG-10.",
+      "id": "XcomStimulationActionsLease.LeaseAcquireIdentityBindingMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "lease identity/binding matrix; CHK-10, NEG-09, NEG-10.",
+      "id": "XcomStimulationActionsLease.LeaseGenerationSupersessionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.ReplacedLeaseCannotAuthorizeOldQueuedRequest",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

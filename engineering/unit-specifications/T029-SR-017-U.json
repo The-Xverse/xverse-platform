@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-017-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-017-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "invariants": [
+    "An elapsed lease in a declared domain **shall** become inactive and **shall** no longer authorize or conflict-block, and a value in a foreign domain **shall never** be compared or ordered (`XCOM-INV-09`)."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "An elapsed lease in a declared domain **shall** become inactive and **shall** no longer authorize or conflict-block, and a value in a foreign domain **shall never** be compared or ordered (`XCOM-INV-09`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-017-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "lease-expiry and cross-domain matrix; CHK-09, CHK-17, NEG-12, NEG-26.",
+      "id": "XcomStimulationMatrixLeaseDrain.LeaseConflictMatrixEndToEnd",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

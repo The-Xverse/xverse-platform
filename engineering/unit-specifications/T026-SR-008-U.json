@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-008-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-008-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "Every record **shall** be written as one frame with a fixed header (magic, format version, kind, declared payload length, payload digest), the canonical payload, and a trailing frame digest computed with the accepted `canonical_digest`; a frame **shall** be considered complete only when its declared length is present and both digests match."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Every record **shall** be written as one frame with a fixed header (magic, format version, kind, declared payload length, payload digest), the canonical payload, and a trailing frame digest computed with the accepted `canonical_digest`; a frame **shall** be considered complete only when its declared length is present and both digests match.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-008-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-008 unit verification",
+  "unit_cases": [
+    {
+      "expected": "exact frame-layout table and digest-mismatch cases; CHK-10, NEG-11, NEG-12.",
+      "id": "T026JournalUnit.test_journal_frame_layout_and_roundtrip",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

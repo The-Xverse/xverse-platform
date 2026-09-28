@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "lease-expiry and unmapped-domain cases; CHK-13, NEG-14, NEG-23."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T028-SR-012",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-033",
+    "XCOM-SYS-FR-034"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-012"
+  },
+  "statement": "An elapsed lease (a caller-supplied `now >= expires_at` in the lease's declared clock domain) **shall** become inactive and **shall** no longer authorize or conflict-block; the action path **shall** compare only values in one declared domain and **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation.",
+  "status": "accepted",
+  "title": "T028 requirement 012",
+  "verification_intent": "lease-expiry and unmapped-domain cases; CHK-13, NEG-14, NEG-23.",
+  "verification_mode": "behavioral"
+}

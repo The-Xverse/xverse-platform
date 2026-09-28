@@ -1,0 +1,46 @@
+{
+  "component_id": "T026-SR-002-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-002-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal **shall** depend only on the C++ standard library plus the accepted T025 `validation_session.hpp` in-process contract (`XCOM-XLC-006`); it **shall** add no admitted dependency, no Protocol Buffers/gRPC, and no new diagnostic, digest, or identity vocabulary where an accepted one exists."
+  ],
+  "note": "Unit cases are contributory only. The exact requirement is verified by the named conformance inspection and its trusted evidence.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal **shall** depend only on the C++ standard library plus the accepted T025 `validation_session.hpp` in-process contract (`XCOM-XLC-006`); it **shall** add no admitted dependency, no Protocol Buffers/gRPC, and no new diagnostic, digest, or identity vocabulary where an accepted one exists.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t026/requirements.md",
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-002-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-002 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its separate conformance inspection.",
+      "id": "T026JournalUnit.test_journal_record_size_and_tag_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

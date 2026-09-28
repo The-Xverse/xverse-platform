@@ -1,0 +1,57 @@
+{
+  "component_id": "T027-SR-015-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-015-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** serialize evaluation and commit under one per-guard mutex, **shall** invoke no host callback, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent evaluations of one guard **shall** commit a deterministic total order and **shall never** exceed the declared quota or loop-window bounds or mutate state on a rejection."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** serialize evaluation and commit under one per-guard mutex, **shall** invoke no host callback, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent evaluations of one guard **shall** commit a deterministic total order and **shall never** exceed the declared quota or loop-window bounds or mutate state on a rejection.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-015-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "bounded deterministic-concurrency and concurrent-rejection cases; CHK-18, NEG-29, NEG-36.",
+      "id": "XcomStimulationGuardConcurrency.GuardBoundedDeterministicConcurrency",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "bounded deterministic-concurrency and concurrent-rejection cases; CHK-18, NEG-29, NEG-36.",
+      "id": "XcomStimulationGuardConcurrency.GuardConcurrentAuthorizationWithinQuota",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "bounded deterministic-concurrency and concurrent-rejection cases; CHK-18, NEG-29, NEG-36.",
+      "id": "XcomStimulationGuardConcurrency.GuardConcurrentRejectionNoMutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-021-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-021-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
+  ],
+  "invariants": [
+    "The slice **shall** be deterministic: the same bounded operation sequence **shall** produce the same action status, lease state, completion outcome, and snapshot across repeated runs and builds, and the accepted closed vocabularies **shall** be exercised with their stable names/ranks."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The slice **shall** be deterministic: the same bounded operation sequence **shall** produce the same action status, lease state, completion outcome, and snapshot across repeated runs and builds, and the accepted closed vocabularies **shall** be exercised with their stable names/ranks.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-021-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-021 unit verification",
+  "unit_cases": [
+    {
+      "expected": "repeated-run equality and vocabulary-stability cases; CHK-16, CHK-19, NEG-31, NEG-33.",
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentQuotaEmissionDeterminism",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

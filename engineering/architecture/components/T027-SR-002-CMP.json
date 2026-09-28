@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-002-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "The guard **shall** depend only on the C++ standard library, the accepted T025 `validation_session.hpp` in-process contract (`XCOM-XLC-006`), and the accepted T-CORE `contract.hpp`/`result.hpp` interaction and diagnostic vocabulary; it **shall** add no admitted dependency, no Protocol Buffers/gRPC, and **shall** redefine no identity, digest, diagnostic, or interaction vocabulary where an accepted one exists."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-002 allocation"
+}

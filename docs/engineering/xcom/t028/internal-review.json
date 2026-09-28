@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "task_id": "T028",
+  "baseline_revision": "c518c5e4fcb2055666db25cb62018769e7f56ae4",
+  "reviewer": "deepseek-v4-flash (fresh read-only internal review, review revision 6)",
+  "review_type": "internal_read_only_independent",
+  "review_subject": "Fresh, separate read-only review of the repaired T028 guarded action path and exclusive generation-bound service-emulation lease over baseline c518c5e4fcb2055666db25cb62018769e7f56ae4. Re-derives the exact 22-path candidate inventory, re-runs the deterministic verify gate and the five t028-* CTest suites, re-runs the four repository register validators and the delivery-inputs audit, re-reads the production unit, the five test suites, and the work products, and compiles and runs an independent out-of-repo probe (/tmp/t028_probe6.cpp) that re-challenges the outcome-append failure case, distinct orphan counting, guard-decline side effects, lease exclusivity, journal-before-emission ordering, bounded queueing, and revoke/expire. Does not edit production code or tests.",
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t028/architecture.md",
+    "docs/engineering/xcom/t028/detailed-design.md",
+    "docs/engineering/xcom/t028/implementation.md",
+    "docs/engineering/xcom/t028/requirements.md",
+    "docs/engineering/xcom/t028/unit-specifications.md",
+    "docs/engineering/xcom/t028/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp",
+    "src/xverse/xcom/src/stimulation_actions.cpp",
+    "tests/xcom/stimulation_actions/action_tests.cpp",
+    "tests/xcom/stimulation_actions/concurrency_tests.cpp",
+    "tests/xcom/stimulation_actions/lease_tests.cpp",
+    "tests/xcom/stimulation_actions/lifecycle_tests.cpp",
+    "tests/xcom/stimulation_actions/negative_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T028-IR6-C01",
+      "name": "Baseline binding and exact 22-path candidate inventory",
+      "method": "`git rev-parse c518c5e4fcb2055666db25cb62018769e7f56ae4`; recomputed the candidate union of `git diff --name-only <baseline> --` and `git ls-files --others --exclude-standard`, minus `docs/engineering/xcom/t028/internal-review.json` and `reports/xcom-queue/t028-package.json`.",
+      "result": "pass: the recomputed inventory is exactly the 22 paths in `reviewed_paths` (9 tracked changes, 13 new files) and matches the deterministic verify gate's `changed_paths: 22`. The generated review record and the carried-over package manifest are excluded as instructed."
+    },
+    {
+      "id": "T028-IR6-C02",
+      "name": "Scope boundary, additivity, and no later-task implementation",
+      "method": "`git diff <baseline> -- specs/007-xcom-core/tasks.md docs/engineering/xcom/t010/ src/xverse/xcom/CMakeLists.txt engineering/trace/links.json engineering/stage-results/`; `git diff --check <baseline> --`; a path scan of the changed/new files for `proto`, `gateway`, `grpc`, `socket`, `xdl`, `src/xverse_xdl`; a marker scan of the new source for `T029`/`T030`/`T031`.",
+      "result": "pass: the only capability-ledger change is the single T028 checkbox (`- [ ] T028` -> `- [X] T028`); T029-T041 remain unchecked. `git diff --stat` is 9 tracked files, 81 insertions, 12 deletions; `src/xverse/xcom/CMakeLists.txt` is purely additive (one runtime target `xverse_xcom_stimulation_actions` plus five additive `t028-*` test executables). The T010 change is the three `XCOM-DU-018` artifact-path status values `planned` -> `established` plus the regenerated projection. `links.json` refreshes only the `T020-L-046` CMakeLists `target_revision`; the four stage-result records refresh only their own content digests. No `proto/`, `xdl/`, `src/xverse_xdl/`, gateway/IPC/transport, or later-task artifact is present; the only `T030` mention is an explanatory ownership comment. `git diff --check` is clean."
+    },
+    {
+      "id": "T028-IR6-C03",
+      "name": "Deterministic gate, discovery, and focused execution",
+      "method": "`python3 x-verse_fabric/automation/xcom_feature_gate.py verify T028 c518c5e4fcb2055666db25cb62018769e7f56ae4`; `cmake --build build/fabro-t028`; `ctest --test-dir build/fabro-t028 -N`; `ctest --test-dir build/fabro-t028 -N -L t028`; `ctest --test-dir build/fabro-t028 -L t028 --output-on-failure`.",
+      "result": "pass: the deterministic gate returns `{\"ok\": true, \"task_id\": \"T028\", \"changed_paths\": 22, \"checks\": [\"ctest:367\"]}`; the five t028-* suites discover and run 22/22 green (action 5, lease 5, lifecycle 7, negative 3, concurrency 2) with `100% tests passed`; the incremental build is up to date and warning-free under the inherited `-Werror` rule."
+    },
+    {
+      "id": "T028-IR6-C04",
+      "name": "Register validators, provenance refresh, and traceability consistency",
+      "method": "ran `scripts/validate_xcom_task_ownership.py --verify`, `validate_xcom_requirements_traceability.py --verify`, `validate_xcom_architecture_contracts.py --verify`, `validate_xcom_unit_design.py --verify`, and `python3 x-verse_fabric/.fabro/workflows/xcom-t028-reviewed-flash/audit_delivery_inputs.py`; recomputed the declared content hashes; inspected `engineering/trace/links.json` and the four `engineering/stage-results/*.json`.",
+      "result": "pass: every register validator exits 0 and the delivery-inputs audit returns `{\"ok\": true, \"stage_results\": 8}`. The refreshed provenance is content-correct: `sha256(src/xverse/xcom/CMakeLists.txt) = 74b538b8...e22fe` equals the `T020-L-046` `target_revision` in `links.json` and the `CMakeLists.txt` artifact digest in `implementation.json`; `sha256(engineering/trace/links.json) = e3c5ba9c...dbb3` equals the declared digest in `documentation.json`, `integration.json`, and `internal-review.json`. T028 requirement/CHK/NEG/TS traceability is carried inside the T028 work products exactly as for the accepted T026/T027 tasks (no `T028-*` entry is expected in the legacy `links.json`). REF-002 is not promoted."
+    },
+    {
+      "id": "T028-IR6-C05",
+      "name": "Failure atomicity: a guard decline acquires no lease and emits/journals nothing",
+      "method": "read `execute` (src/xverse/xcom/src/stimulation_actions.cpp:489-588) and `ServiceEmulationRegistry::precheck` (:175-207); read `ActionPathDeclineZeroMutationAndZeroEmission` (tests/xcom/stimulation_actions/negative_tests.cpp:320-501); ran `ctest -R XcomStimulationActionsNegative` and probe P4.",
+      "result": "pass: the non-mutating `precheck` classifies the emulation precondition at step 4 (:524-531) before the guard is evaluated at step 6 (:540-551); the exclusive lease is acquired only at step 7 for an authorized action (:555-565). `T28-TS-016` asserts the whole lease table (including acquisition/release accounting) and the journal bytes are unchanged for every decline family, including the emulation quota decline at negative_tests.cpp:453-480. Independent probe P4 confirmed `registry.snapshot()` and `journal.snapshot()` are byte-identical and `emitter.calls == 0` for a guard-declined emulation."
+    },
+    {
+      "id": "T028-IR6-C06",
+      "name": "Second owner cannot emit under a held exclusive lease",
+      "method": "read the unconditional post-guard acquisition (:555-565) and the registry conflict classification (:139-157); ran `ctest -R XcomStimulationActionsLease.LeaseGenerationSupersessionMatrix` and `XcomStimulationActionsConcurrency.LeaseConcurrentRaceSingleWinner`; ran probe P5.",
+      "result": "pass: a second owner for one held endpoint generation is `LeaseConflict`/`Conflict`, the emitter is not called, and `acquisitions == 1`. Probe P5 reproduced one winner and one `Conflict`; the four-thread race in `T28-TS-020` yields exactly one winner, `active == 1`, `acquisitions == 1`, and `conflicts == 63`."
+    },
+    {
+      "id": "T028-IR6-C07",
+      "name": "Journal-before-emission ordering and explicit non-delivery outcomes",
+      "method": "read `journal_and_emit`/`classify_locked` (:431-487); ran `ctest -R XcomStimulationActionsAction.ActionPathExecutesNominalActionKinds`; ran probe P6.",
+      "result": "pass: the accepted journal appends the intent frame before the single seam call (:450) and only a durable `Delivered` outcome maps to `Emitted` (:460-462); a durable `Rejected`/`Unavailable` maps to `EmissionRejected`/`EmissionUnavailable` with `emitted == 0` (:464-469); a durable intent without a durable outcome maps to `ActionStatus::EvidenceIncomplete` (:470-472). `T28-TS-001` records `durable_before_emit` inside the emitter callback, and probe P6 recovered exactly one durable intent with the expected `request_id`."
+    },
+    {
+      "id": "T028-IR6-C08",
+      "name": "Drain/close/revoke/expire/mark_evidence_incomplete lifecycle",
+      "method": "read `drain` (:660-746), `close` (:748-828), `revoke` (:830-843), `expire` (:845-858), and `mark_evidence_incomplete` (:860-873); ran `ctest -R XcomStimulationActionsLifecycle.LifecycleDrainCloseRevokeExpire`; ran probe P8.",
+      "result": "pass: `drain`/`close` cancel terminal pending work with zero emission; `close` drains due work, cancels the rest, and releases every held lease; `revoke` cancels and releases; `expire` cancels and expires; a foreign completion domain mutates nothing (:663-665, :751-753). Probe P8 confirmed `revoke` leaves the lease `Released` with `released_leases == 1` and `expire` leaves it `Expired`."
+    },
+    {
+      "id": "T028-IR6-C09",
+      "name": "Closure of T028-IR5-F01: a drain-time durable intent without a durable outcome forces EvidenceIncomplete",
+      "method": "read the drain loop (:702-730) and final outcome (:731-744); read the closure case tests/xcom/stimulation_actions/lifecycle_tests.cpp:500-529; compiled and ran independent probe P1 against the built archives.",
+      "result": "pass: the drain loop now records the action in `report.evidence_incomplete` (:723-724) and, when the queue is empty, assigns `report.evidence_incomplete = incomplete_count()` (the authoritative orphan count) and returns `EvidenceIncomplete` when `report.evidence_incomplete > 0U || report.failed > 0U` (:736-740) — symmetric with `close` (:820-826). Closure test lifecycle_tests.cpp:500-528 uses `FaultStorage{2}` (intent append Ok, outcome append WriteFailed) on a queued due action and asserts `outcome == EvidenceIncomplete`, `outcome != Drained`, `drained == 0`, `evidence_incomplete == 1`, and equality with `journal.snapshot().orphan_intents == 1`. Independent probe P1 reproduced exactly that: `EvidenceIncomplete`, `drained == 0`, `evidence_incomplete == 1`, `orphan_intents == 1`, `emitter.calls == 1`. The `FaultStorage{1}` intent-append-failure case (lifecycle_tests.cpp:473-498) is retained. T028-IR5-F01 is closed."
+    },
+    {
+      "id": "T028-IR6-C10",
+      "name": "Closure of T028-IR5-F02: close counts each distinct drain-time orphan once",
+      "method": "read the close loop (:790-816) and final accumulation (:818-827); read the closure case lifecycle_tests.cpp:531-555; compiled and ran independent probes P2 (one orphan) and P3 (two orphans).",
+      "result": "pass: `close` now assigns `report.evidence_incomplete = incomplete_count()` (:822) rather than adding the loop increment to it, so a drain-time orphan is reported once and the outcome remains `EvidenceIncomplete` when the count is non-zero (:824-826). Closure test lifecycle_tests.cpp:531-554 asserts `evidence_incomplete == 1 == journal.snapshot().orphan_intents`. Probe P2 returned `evidence_incomplete == 1`; probe P3 with two due actions whose outcome appends both fail returned `orphan_intents == 2` and `evidence_incomplete == 2` (no double count of 4). T028-IR5-F02 is closed."
+    },
+    {
+      "id": "T028-IR6-C11",
+      "name": "Closure of T028-IR5-F03: CHK-04 discovery equals the actual candidate case count",
+      "method": "read `docs/engineering/xcom/t028/verification-plan.md:89` against `:165` and `docs/engineering/xcom/t028/implementation.md:27`; ran `ctest --test-dir build/fabro-t028 -N -L t028`.",
+      "result": "pass: CHK-04 now states the five executables discover 22 cases (the 20 declared test units plus `LifecycleTerminalEvidenceIncompleteNeverClosed` and `LifecycleNonActiveCompletionFailsClosed`), consistent with verification-plan.md:165 ('T028 adds 22 cases'), implementation.md:27, and unit-specifications.md:18-22; `ctest -N -L t028` reports exactly 22. T028-IR5-F03 is closed."
+    },
+    {
+      "id": "T028-IR6-C12",
+      "name": "Terminal and non-active completion fail closed",
+      "method": "read the terminal branches of `drain` (:667-689) and `close` (:755-777) and the non-active, non-terminal branches (:693-701, :781-789); ran `ctest -R XcomStimulationActionsLifecycle.LifecycleTerminalEvidenceIncompleteNeverClosed` and `.LifecycleNonActiveCompletionFailsClosed`.",
+      "result": "pass: a `closed` terminal request whose journal holds an orphan intent returns `EvidenceIncomplete` (:685-686, :773-774) and is covered by `T28-TS-014` (lifecycle_tests.cpp:558-605); a terminal completion with no orphan still returns the matching terminal outcome (lifecycle_tests.cpp:606-618). A `declared`/`armed` completion cancels every pending action with zero emission and returns `None` (or `EvidenceIncomplete` with an orphan), never `Drained`/`Closed`, leaving the lease table unchanged (:693-701, :781-789; lifecycle_tests.cpp:621-661). Review-revision-4 findings are closed."
+    },
+    {
+      "id": "T028-IR6-C13",
+      "name": "Bounded resources, payload-free surface, and offline/public-safe declarations",
+      "method": "read `ActionPathConfig` and the size/constructibility `static_assert` rules (stimulation_actions.hpp:1185-1217), `config_is_legal` (:327-346), `advance_lineage_locked`, `queue_locked`, and `held_leases_`; ran `ctest -R XcomStimulationActionsNegative.ActionPathPayloadFreeDeclarationInspection`; scanned the changed files.",
+      "result": "pass with observations: `pending_` and `lineage_` are bounded by declared maxima (:323-324, :416-419, :517-520) and the payload is call-scoped and never retained (:433-451); the unit links only accepted targets (`stimulation_guard`, `stimulation_journal`, `validation_session`, `core_types`) and performs no file/network/ambient/subprocess access; every new public declaration carries the Doxygen attribute set; no credential, private address, or environment-specific absolute path is committed. See non-blocking observations OBS-01/OBS-03 for the bounded held-lease set and OBS-05 for the implementation.md repair log."
+    },
+    {
+      "id": "T028-IR6-C14",
+      "name": "Concurrency and determinism",
+      "method": "read the mutex discipline and the unlock-around-emission seam (:581-583, :617-620); ran `ctest -R XcomStimulationActionsConcurrency` and the three-run determinism case `XcomStimulationActionsAction.ActionPathVocabularyAndDeterminism`.",
+      "result": "pass: the emitter is invoked exactly once outside every lock; the declared guard quota holds under four threads with one lease-race winner; the closed vocabularies are stable and three repeated runs are identical. No new race was found in the reviewed paths."
+    },
+    {
+      "id": "T028-IR6-C15",
+      "name": "Inherited provenance repair and generated-artifact boundary",
+      "method": "compared the tracked `links.json`/stage-result digests to the actual content hashes; inspected `reports/xcom-queue/t028-package.json` (untracked, generated) and `docs/engineering/xcom/t028/internal-review.json` (generated by this review); ran the delivery-inputs audit.",
+      "result": "pass: the inherited provenance refresh described in implementation.md:365-374 is content-correct and `audit_delivery_inputs` returns `ok` with 8 stage results. The T028 package manifest is a generated artifact regenerated by the downstream `package` node and is intentionally excluded from `reviewed_paths`; the review record itself is likewise excluded per the gate contract."
+    }
+  ],
+  "findings": [],
+  "closed_findings": [
+    {
+      "id": "T028-IR5-F01",
+      "severity": "high",
+      "disposition": "closed",
+      "closure_evidence": "`drain` now assigns the authoritative orphan count and returns `EvidenceIncomplete` whenever `evidence_incomplete > 0 || failed > 0` (src/xverse/xcom/src/stimulation_actions.cpp:731-740); the closure case tests/xcom/stimulation_actions/lifecycle_tests.cpp:500-529 forces a drain-time outcome-append failure; independent probe P1 returned `EvidenceIncomplete`, `drained == 0`, `evidence_incomplete == 1`, `orphan_intents == 1`.",
+      "closure_test": "XcomStimulationActionsLifecycle.LifecycleEvidenceIncompleteCompletion (lifecycle_tests.cpp:500-529)"
+    },
+    {
+      "id": "T028-IR5-F02",
+      "severity": "low",
+      "disposition": "closed",
+      "closure_evidence": "`close` now assigns `report.evidence_incomplete = incomplete_count()` (src/xverse/xcom/src/stimulation_actions.cpp:820-827); the closure case tests/xcom/stimulation_actions/lifecycle_tests.cpp:531-555 asserts `evidence_incomplete == 1 == orphan_intents`; independent probe P3 with two drain-time orphans returned `evidence_incomplete == 2` (no double count).",
+      "closure_test": "XcomStimulationActionsLifecycle.LifecycleEvidenceIncompleteCompletion (lifecycle_tests.cpp:531-555)"
+    },
+    {
+      "id": "T028-IR5-F03",
+      "severity": "low",
+      "disposition": "closed",
+      "closure_evidence": "CHK-04 now states 22 discovered cases (docs/engineering/xcom/t028/verification-plan.md:89), consistent with verification-plan.md:165, implementation.md:27, and unit-specifications.md:18-22; `ctest -N -L t028` reports exactly 22.",
+      "closure_test": "ctest --test-dir build/fabro-t028 -N -L t028"
+    }
+  ],
+  "non_blocking_observations": [
+    {
+      "id": "T028-IR6-OBS-01",
+      "severity": "informational",
+      "observation": "Re-opening an already-open `StimulationActionPath` via the public `open()` clears `held_leases_` (stimulation_actions.cpp:362) without releasing the corresponding registry leases. A later emulation for the same endpoint generation is then permanently `LeaseConflict` because the orphan `Active` lease is no longer tracked by the path, and repeated re-open cycles could consume the bounded registry capacity.",
+      "assessment": "Not reachable through the declared single-open-per-path lifetime (unit-specifications.md:146); the accepted design does not define re-open lease semantics. Recorded for the bounded-resource traceability of `XCOM-DU-018`."
+    },
+    {
+      "id": "T028-IR6-OBS-02",
+      "severity": "informational",
+      "observation": "`drain`/`close` on a non-active, non-terminal (`declared`/`armed`) state cancel every pending action but leave the lease table unchanged (stimulation_actions.cpp:693-701, :781-789), which matches detailed-design.md:215-218 but is not stated in the public `close` header comment (stimulation_actions.hpp:1013) that generically says \"releases every held lease\".",
+      "assessment": "Design-consistent and fail-closed; only a minor header/design wording gap, not a behavioural defect."
+    },
+    {
+      "id": "T028-IR6-OBS-03",
+      "severity": "informational",
+      "observation": "`held_leases_` is an unbounded `std::vector` that grows on every successful `acquire` and is only cleared by the path's own `release_all_locked`/`expire_all_locked`; external release of a path-owned lease followed by re-acquisition of the same endpoint generation could append a duplicate `HeldLease`.",
+      "assessment": "Not reachable through the action path's own API (`execute` never releases). Recorded for the bounded-resource traceability of `XCOM-DU-018`."
+    },
+    {
+      "id": "T028-IR6-OBS-04",
+      "severity": "informational",
+      "observation": "`EmissionAttempt.emission` defaults to `EmissionStatus::Delivered` and `execute` copies it into `ActionDiagnostic.emission_status` even when the journal fails before invoking the seam (for example a `WriteFailed` intent append), so the diagnostic can read `Delivered` while `status == JournalFailed`.",
+      "assessment": "The header documents `emission_status` as meaningful only when a callback ran, and `status`/`journal_status` are authoritative. No fail-closed impact; a discriminating default would be clearer."
+    },
+    {
+      "id": "T028-IR6-OBS-05",
+      "severity": "informational",
+      "observation": "`docs/engineering/xcom/t028/implementation.md` §7 records the IR2 and IR4 repair passes (§7.9, §7.10) but has no narrative entry for the IR5 repair. The corrected drain/close completion semantics are nevertheless fully captured in the authoritative work products: `detailed-design.md` §4.4 step 5 and §5.5, `verification-plan.md` CHK-16, and `unit-specifications.md` T28-TS-013/T28-TS-014, and are exercised by the closure tests.",
+      "assessment": "The requirement, design, verification, and unit work products are consistent with the code and tests, so traceability is intact; this is a narrative-completeness gap in one work product, not a behavioural or traceability defect. Recorded for work-product maintenance. A future pass may add an IR5 repair-log entry to implementation.md §7."
+    }
+  ],
+  "summary": "Verdict pass. The repaired candidate is well-scoped, additive, offline, deterministic, and linear over baseline c518c5e4fcb2055666db25cb62018769e7f56ae4; the deterministic verify gate reports changed_paths 22 and ctest:367, the five t028-* suites run 22/22, the four register validators and the delivery-inputs audit pass, and the inherited provenance hashes are content-correct (`CMakeLists.txt` 74b538b8...e22fe and `links.json` e3c5ba9c...dbb3). The three prior review-revision-5 findings are independently confirmed closed by code, documentation, and dedicated closure tests, and were re-challenged by an independent out-of-repo probe: T028-IR5-F01 (drain now returns `EvidenceIncomplete` for a durable intent lacking a durable outcome; probe P1), T028-IR5-F02 (`close` reports each distinct orphan once; probes P2/P3), and T028-IR5-F03 (CHK-04 discovery is now 22, matching `ctest -N -L t028`). No open finding remains; the prior review-revision-2 and review-revision-4 completion findings also remain closed. This review is read-only and does not accept or integrate the candidate; the generated package manifest is regenerated by the downstream package node, and external review and user acceptance remain deferred until the backlog completes. Recommended model and reasoning effort for the next step: deepseek-v4-flash at high reasoning effort for the deterministic `package` gate, which is mechanical; external review and user acceptance remain separate, and T028 stays active in the ordered backlog."
+}

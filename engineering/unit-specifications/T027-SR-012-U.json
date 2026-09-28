@@ -1,0 +1,57 @@
+{
+  "component_id": "T027-SR-012-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-012-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "For a scheduled request, the guard **shall** require a valid declared clock domain and a caller-resolved time expressed in the permit validity domain; when the resolution is absent, unmapped, or outside the declared tolerance the guard **shall** return `Failed` (`TimeUnmapped`) and allow no emission; when the resolved time is outside the half-open permit validity interval the guard **shall** return `Rejected` (`TimeOutOfWindow`); an immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; the guard **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation or I/O."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "For a scheduled request, the guard **shall** require a valid declared clock domain and a caller-resolved time expressed in the permit validity domain; when the resolution is absent, unmapped, or outside the declared tolerance the guard **shall** return `Failed` (`TimeUnmapped`) and allow no emission; when the resolved time is outside the half-open permit validity interval the guard **shall** return `Rejected` (`TimeOutOfWindow`); an immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; the guard **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation or I/O.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/time_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-012-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-012 unit verification",
+  "unit_cases": [
+    {
+      "expected": "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35.",
+      "id": "XcomStimulationGuardTime.GuardScheduledTimeWindowMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35.",
+      "id": "XcomStimulationGuardTime.GuardUnmappedClockFailsClosed",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "time-window, unmapped-clock, and immediate-labeling cases; CHK-13, CHK-19, NEG-22, NEG-23, NEG-24, NEG-25, NEG-35.",
+      "id": "XcomStimulationGuardTime.GuardImmediateLabelingMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

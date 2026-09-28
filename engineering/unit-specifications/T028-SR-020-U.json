@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-020-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-020-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "The unit **shall** be local-only and offline: it **shall** perform no file, network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, **shall** own no I/O boundary, **shall** retain or log no payload byte, and **shall** add no domain-specific primitive."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The unit **shall** be local-only and offline: it **shall** perform no file, network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, **shall** own no I/O boundary, **shall** retain or log no payload byte, and **shall** add no domain-specific primitive.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/negative_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-020-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-020 unit verification",
+  "unit_cases": [
+    {
+      "expected": "forbidden-API source scan, no-I/O and no-payload-retention inspection, and the offline build; CHK-19, CHK-20, NEG-30.",
+      "id": "XcomStimulationActionsNegative.ActionPathPayloadFreeDeclarationInspection",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

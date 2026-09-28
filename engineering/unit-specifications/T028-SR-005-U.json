@@ -1,0 +1,65 @@
+{
+  "component_id": "T028-SR-005-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-005-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "When the action path executes a request, it **shall** first validate its own bounded preconditions (open guard, non-zero declared bounds, pending-queue and lease capacity where applicable, valid session state read-only from the accepted T025 session); a failed precondition **shall** return the matching `ActionStatus` and **shall** mutate no accepted guard state, lease, queue, lineage, or journal record."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the action path executes a request, it **shall** first validate its own bounded preconditions (open guard, non-zero declared bounds, pending-queue and lease capacity where applicable, valid session state read-only from the accepted T025 session); a failed precondition **shall** return the matching `ActionStatus` and **shall** mutate no accepted guard state, lease, queue, lineage, or journal record.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp",
+    "tests/xcom/stimulation_actions/negative_tests.cpp",
+    "tests/xcom/stimulation_matrix/external_review_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-005-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-005 unit verification",
+  "unit_cases": [
+    {
+      "expected": "precondition/configuration matrix; CHK-06, CHK-18, NEG-33, NEG-34.",
+      "id": "XcomStimulationActionsAction.ActionPathGuardDecisionMapping",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "precondition/configuration matrix; CHK-06, CHK-18, NEG-33, NEG-34.",
+      "id": "XcomStimulationActionsAction.ActionPathConfigAndPreconditionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "precondition/configuration matrix; CHK-06, CHK-18, NEG-33, NEG-34.",
+      "id": "XcomStimulationActionsNegative.ActionPathClosedAndCapacityReject",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "The named repair regression passes its asserted boundary.",
+      "id": "ExternalReview.MalformedCapacityFailsClosedWithoutProcessTermination",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

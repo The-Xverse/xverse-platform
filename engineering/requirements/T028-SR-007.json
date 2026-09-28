@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T028-SR-007",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-019",
+    "XCOM-SYS-FR-021"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-007"
+  },
+  "statement": "For `InjectSignal`, `InjectMessage`, and `InvokeService`, an authorized request **shall** journal its payload-free intent through the accepted T026 journal before emission, invoke the emission seam exactly once, record an explicit outcome, and return `ActionStatus::Emitted` only when the journal reports `Ok` **and** the host emission reports `EmissionStatus::Delivered`; when the intent is durable but the outcome is not, the action path **shall** return `ActionStatus::EvidenceIncomplete` and **shall never** report `Emitted`; when the intent and outcome are durable but the host reports `Rejected` or `Unavailable`, the action path **shall** return the distinct non-success `ActionStatus::EmissionRejected`/`EmissionUnavailable` and **shall never** report `Emitted` (`T028-STK-002`).",
+  "status": "accepted",
+  "title": "T028 requirement 007",
+  "verification_intent": "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25.",
+  "verification_mode": "behavioral"
+}

@@ -1,0 +1,51 @@
+{
+  "component_id": "T027-SR-014-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-014-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The same operation sequence **shall** produce the same decision, the same primary reason, the same diagnostic detail, and the same snapshot across repeated bounded runs and builds; precedence **shall** be stable so that a request failing more than one check always reports the same declared first check."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The same operation sequence **shall** produce the same decision, the same primary reason, the same diagnostic detail, and the same snapshot across repeated bounded runs and builds; precedence **shall** be stable so that a request failing more than one check always reports the same declared first check.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-014-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-014 unit verification",
+  "unit_cases": [
+    {
+      "expected": "repeated-run equality and precedence cases; CHK-17, NEG-28.",
+      "id": "XcomStimulationGuardUnit.GuardClosedVocabularyAndPrecedence",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "repeated-run equality and precedence cases; CHK-17, NEG-28.",
+      "id": "XcomStimulationGuardUnit.GuardStatusDeterminismAndNoMutation",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

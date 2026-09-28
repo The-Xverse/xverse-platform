@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-011-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-011-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "invariants": [
+    "When a durable intent cannot obtain a durable outcome, the action **shall** be surfaced as `ActionStatus::EvidenceIncomplete` and **shall never** be reported as `Emitted`; a restart over the same durable bytes **shall** recover the exact intent identity and classify it as an explicit orphan; and `mark_evidence_incomplete`/`close` **shall** report the orphan and **shall never** return `Closed` while it exists."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When a durable intent cannot obtain a durable outcome, the action **shall** be surfaced as `ActionStatus::EvidenceIncomplete` and **shall never** be reported as `Emitted`; a restart over the same durable bytes **shall** recover the exact intent identity and classify it as an explicit orphan; and `mark_evidence_incomplete`/`close` **shall** report the orphan and **shall never** return `Closed` while it exists.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-011-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-011 unit verification",
+  "unit_cases": [
+    {
+      "expected": "injected outcome failure, restart recovery, and completion orphan matrix; CHK-11, CHK-14, NEG-16, NEG-17.",
+      "id": "XcomStimulationMatrixJournalRecovery.JournalOutcomeFailureIsEvidenceIncomplete",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "injected outcome failure, restart recovery, and completion orphan matrix; CHK-11, CHK-14, NEG-16, NEG-17.",
+      "id": "XcomStimulationMatrixJournalRecovery.JournalRestartRecoversExactIdentity",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

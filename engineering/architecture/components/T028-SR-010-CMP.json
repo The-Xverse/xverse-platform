@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-010-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "Lease acquisition **shall** be an atomic check-then-insert under one lease-table mutex; a conflicting second owner for the same endpoint generation or the same `(endpoint, session)` **shall** be rejected (`LeaseStatus::Conflict`) with no mutation, and a concurrent race **shall** produce exactly one winner and one conflicted loser."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-010 allocation"
+}

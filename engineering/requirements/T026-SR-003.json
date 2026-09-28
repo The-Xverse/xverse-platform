@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "field inspection, a non-vacuous compile-time negative assertion that a payload-accepting constructor or an unbounded record fails to compile, and write-path vocabulary cases; CHK-05, CHK-20, NEG-03, NEG-32."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "conformance_check_id": null,
+  "id": "T026-SR-003",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-021",
+    "XCOM-SYS-FR-027"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-003"
+  },
+  "statement": "An intent record **shall** carry exactly the bounded metadata {permit id, session id, plan digest, request id, correlation id, causation id, action mask, bounded target tag, bounded tool tag, quota cost, clock domain, scheduled timestamp, immediate flag} and an outcome record **shall** carry exactly {request id, closed outcome kind, bounded diagnostic code, clock domain, observed timestamp}; the header **shall** expose no payload, value, address, free-form text, or unbounded member; a compile-time rule **shall** reject construction of either record from a payload byte container or free-form text and **shall** bound the record size; and the absence of a payload-bearing member **shall** be established by declaration inspection. The closed `OutcomeKind` vocabulary **shall** be validated on the public write path: a `journal_then_emit` callback result or a `resolve` outcome whose `kind` is outside the vocabulary **shall** be rejected (`RejectedConfiguration`) without appending that outcome.",
+  "status": "accepted",
+  "title": "T026 requirement 003",
+  "verification_intent": "field inspection, a non-vacuous compile-time negative assertion that a payload-accepting constructor or an unbounded record fails to compile, and write-path vocabulary cases; CHK-05, CHK-20, NEG-03, NEG-32.",
+  "verification_mode": "behavioral"
+}

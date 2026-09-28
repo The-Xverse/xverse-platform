@@ -1,0 +1,52 @@
+{
+  "component_id": "T029-SR-015-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-015-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "invariants": [
+    "After a journal restart over the same durable bytes, the recovered intent identity **shall** equal the identity of the emitted descriptor, and a filter constrained to `OriginKind::validation_tool` **shall** match every retained synthetic record and no other origin."
+  ],
+  "note": "Cases verify the documented behavior.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "After a journal restart over the same durable bytes, the recovered intent identity **shall** equal the identity of the emitted descriptor, and a filter constrained to `OriginKind::validation_tool` **shall** match every retained synthetic record and no other origin.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp",
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-015-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "restart identity equality and origin filter; CHK-13, NEG-23.",
+      "id": "XcomStimulationMatrixJournalRecovery.JournalRestartRecoversExactIdentity",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "restart identity equality and origin filter; CHK-13, NEG-23.",
+      "id": "XcomStimulationMatrixProvenance.ProvenanceSurvivesJournalRestart",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

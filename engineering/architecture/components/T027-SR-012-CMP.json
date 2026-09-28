@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-012-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "For a scheduled request, the guard **shall** require a valid declared clock domain and a caller-resolved time expressed in the permit validity domain; when the resolution is absent, unmapped, or outside the declared tolerance the guard **shall** return `Failed` (`TimeUnmapped`) and allow no emission; when the resolved time is outside the half-open permit validity interval the guard **shall** return `Rejected` (`TimeOutOfWindow`); an immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; the guard **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation or I/O."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-012 allocation"
+}
