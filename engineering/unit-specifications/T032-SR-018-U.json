@@ -1,0 +1,47 @@
+{
+  "component_id": "T032-SR-018-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-018-U",
+  "inputs": [
+    "the T007\u2013T010 registers, the status-only path reconciliation, and the work products"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t032/requirements.md"
+  ],
+  "invariants": [
+    "registers unchanged in substance; REF-002 unchanged with an empty promoted list; XCOM-SW-GW-003 implemented, T033\u2013T041 allocated"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the validator verdict and the recorded maturity"
+  ],
+  "purpose": "T032 **shall** reconcile with the T007 ownership register, the T008 register, the T009 architecture model, and the T010 unit design without rewriting or weakening them; **shall** keep the register REF-002 disposition `unchanged` with an empty `promoted` list; and **shall** record honestly that `XCOM-SW-GW-003` is implemented for the conformance-client slice by T032 while T033\u2013T041 remain allocated. The planned\u2192established path-status reconciliation for the now-present `src/xverse/xcom/fixtures/synthetic_tool.cpp` path is a status-only change.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "docs/engineering/xcom/t032/requirements.md"
+  ],
+  "state": "registers reconciled with a status-only path transition; REF-002 unchanged",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-018-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-018 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its named changed-path/inspection check. Context: the additively built synthetic-client fixture and its t032 suites compile and dispatch the committed generated operation surface.",
+      "id": "XcomSyntheticClientContract.ClientOperationTableMatchesGeneratedDescriptor",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

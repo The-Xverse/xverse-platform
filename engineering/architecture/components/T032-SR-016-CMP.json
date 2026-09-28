@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-016-CMP",
+  "interfaces": [
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "Build wiring **shall** be additive: one new fixture executable and additive `t032-<kind>`-labelled test executables registered in `src/xverse/xcom/CMakeLists.txt`, with any inventory change declared explicitly and no existing target, test name, label, command, or expected value changed."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "additive fixture executable and t032 test inventory; runtime-target inventory unchanged",
+  "title": "T032-SR-016 allocation"
+}

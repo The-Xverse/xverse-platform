@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-003-CMP",
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_support.hpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "When the T032 tests exercise the client, the client **shall** run as its own OS process launched with an explicit bounded argument vector and a scrubbed admitted environment, and **shall not** require an ambient value, a legacy binary, a subprocess of a production workload, or an external peer."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one owned fixture process per case with a bounded argv and a scrubbed environment",
+  "title": "T032-SR-003 allocation"
+}

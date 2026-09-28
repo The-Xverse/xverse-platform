@@ -1441,7 +1441,7 @@ Overflow policies: `fail-closed`, `reject`
 
 **Artifact paths:**
 
-- `src/xverse/xcom/fixtures/synthetic_tool.cpp` (planned)
+- `src/xverse/xcom/fixtures/synthetic_tool.cpp` (established)
 - `tests/xcom/tool_gateway/` (established)
 
 **Ownership / lifetime.**

@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-021-CMP",
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "The client source **shall** carry the Doxygen file block and public-element tags that the accepted `XCOM-DU-021` requires (group `xcom_gw`, file block, ownership/lifetime/thread-safety/failure tags), and the T032 hand-written public seam **shall** be documented; generated Protocol Buffers documentation remains `DOX-GAP-02`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "documented hand-written synthetic-client seam",
+  "title": "T032-SR-021 allocation"
+}

@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
   "project_id": "xverse-platform",
-  "title": "T031 bounded local-IPC-only X-COM tool gateway",
+  "title": "T032 separate-process X-COM synthetic client and generated-client contract tests",
   "scope": {
     "users": [
       "X-Verse platform engineer",
-      "X-COM gateway reviewer"
+      "X-COM gateway conformance reviewer"
     ],
-    "intended_use": "Implement the bounded local-IPC-only capability-007 tool gateway that realizes the accepted T030 Protocol Buffers message and method contract, enforces exact validation permits, deadlines, flow control, host-protected no-TCP local IPC, deterministic disconnect/expiry cleanup, and safe payload-free logs, and prove it with additive t031-labelled gateway tests.",
+    "intended_use": "Implement the capability-007 separate-process synthetic tool client that exercises the accepted T030 generated message and method contract and the accepted T031 bounded local-IPC-only gateway for observation and every allowed stimulation action, proving a host-protected no-TCP local endpoint, zero items from invalid or expired sessions, explicit client bounds, deterministic failure semantics, and generated-message fidelity with additive t032-labelled tests.",
     "boundaries": [
-      "Bounded capability-007 prototype scope: one gateway interface, one additive gateway runtime library, and additive offline gateway tests.",
-      "No TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, separate process, subprocess, compiled/linked gRPC runtime, or production workload.",
-      "T031 changes are limited to the new gateway header/source, the additive build wiring, the new tests, the T031 work products, the engineering records, the status-only T009/T010 path reconciliation, and the inherited provenance refresh."
+      "Bounded capability-007 prototype scope: one synthetic-client fixture executable and additive offline synthetic-client tests.",
+      "No TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, compiled/linked gRPC runtime, or change to the accepted T030 contract or T031 gateway.",
+      "T032 changes are limited to the new synthetic-client fixture, the additive build wiring, the new tests, the T032 work products, the engineering records, the status-only T009/T010 path reconciliation for the fixture path, and the inherited provenance refresh."
     ],
     "success_criteria": [
-      "Every accepted T031 software requirement is traced to the applicable X-Verse system anchor, component, unit, code, unit/integration/validation tests and measured evidence.",
-      "The six additive gateway suites and the preserved platform suites pass in the offline admitted build.",
+      "Every accepted T032 software requirement is traced to the applicable X-Verse system anchor, component, unit, code, unit/integration/validation tests and measured evidence.",
+      "The five additive synthetic-client suites and the preserved platform suites pass in the offline admitted build.",
       "Independent review and strict delivery validation bind the exact candidate before acceptance."
     ]
   },
@@ -28,35 +28,39 @@
     "xverse-platform"
   ],
   "reliability": {
-    "basis": "Deterministic offline gateway tests over the accepted in-process boundaries plus the preserved platform suites, in the admitted X-COM build envelope."
+    "basis": "Deterministic offline separate-process synthetic-client tests over the accepted T031 gateway and in-process T021-T029 boundaries plus the preserved platform suites, in the admitted X-COM build envelope."
   },
   "assurance_profile": "engineered",
   "authority": {
     "baseline_status": "accepted",
-    "baseline_revision": "4dded2317f895978cce0331ae88e34ac28b3a609",
+    "baseline_revision": "e6197c67868213ffb6523d8bf62ed4c2c4e3b0af",
     "protected_paths": [
       "src/xverse_xdl/**",
       "scripts/**",
       "xdl/**",
       "Doxyfile",
       "proto/xverse/xcom/v1/tool_gateway.proto",
+      "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+      "src/xverse/xcom/src/tool_gateway.cpp",
       "tests/xcom/activation_plan/**",
       "docs/engineering/xcom/t017/**",
       "docs/engineering/xcom/t018/**",
       "docs/engineering/xcom/t019/**",
       "docs/engineering/xcom/t025/**",
-      "docs/engineering/xcom/t030/**"
+      "docs/engineering/xcom/t030/**",
+      "docs/engineering/xcom/t031/**"
     ],
-    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design, or the accepted T030 contract is resolved in favour of the accepted source; material gaps are recorded, not guessed. The new src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp and src/xverse/xcom/src/tool_gateway.cpp paths are accepted planned T-CORE paths and did not exist at the baseline, so authoring them changes no accepted predecessor byte."
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design, the accepted T030 contract, or the accepted T031 gateway is resolved in favour of the accepted source; material gaps are recorded, not guessed. The new src/xverse/xcom/fixtures/synthetic_tool.cpp path is an accepted planned T-CORE path (XCOM-DU-021/XCOM-CMP-011) and did not exist at the baseline, so authoring it changes no accepted predecessor byte."
   },
   "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "Trusted policy requires explicit unit, static, validation, and target-repository integration measures for the T031 gateway slice.",
+  "verification_profile_note": "Trusted policy requires explicit unit, static, validation, and target-repository integration measures for the T032 synthetic-client slice.",
   "feature": {
-    "task_id": "T031",
+    "task_id": "T032",
     "capability": "007",
     "queue_id": "xcom-t030-t034-20260928",
     "predecessors": [
-      "T030"
+      "T030",
+      "T031"
     ],
     "queued_run": null
   }

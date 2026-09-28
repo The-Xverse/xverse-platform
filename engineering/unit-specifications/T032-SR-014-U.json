@@ -1,0 +1,47 @@
+{
+  "component_id": "T032-SR-014-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-014-U",
+  "inputs": [
+    "fixed client arguments and fixed gateway fixtures"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_observation_tests.cpp"
+  ],
+  "invariants": [
+    "the exchange is deterministic and bounded; no ambient wall-clock, randomness, or environment dependence"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the repeatability verdict"
+  ],
+  "purpose": "The synthetic-client exchange **shall** be deterministic and bounded under fixed inputs; no verdict **shall** depend on ambient wall-clock time, randomness, or environment.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_observation_tests.cpp"
+  ],
+  "state": "one deterministic bounded exchange per case",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-014-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-014 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientObservation.ClientProcessQueryVersion",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

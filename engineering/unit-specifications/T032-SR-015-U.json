@@ -1,0 +1,53 @@
+{
+  "component_id": "T032-SR-015-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-015-U",
+  "inputs": [
+    "generated request messages, including one with an unknown field"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_contract_tests.cpp"
+  ],
+  "invariants": [
+    "a generated message round-trips unchanged; an unknown field survives the round trip"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the round-trip and unknown-field verdicts"
+  ],
+  "purpose": "The generated-client contract tests **shall** prove that the generated request messages round-trip through the client unchanged and that an unknown field survives a client round trip.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_contract_tests.cpp"
+  ],
+  "state": "generated message fidelity through the client exchange",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-015-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientContract.GeneratedRequestRoundTripsThroughClient",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientContract.UnknownFieldSurvivesClientRoundTrip",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

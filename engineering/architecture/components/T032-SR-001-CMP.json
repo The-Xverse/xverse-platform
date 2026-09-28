@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-001-CMP",
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "The synthetic client **shall** be defined once by `src/xverse/xcom/fixtures/synthetic_tool.cpp` (executable `xverse_xcom_synthetic_client`), realizing the accepted `XCOM-XLC-002` generated message contract without introducing a competing contract, RPC definition, or configuration language."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one committed synthetic-client fixture over the generated messages",
+  "title": "T032-SR-001 allocation"
+}

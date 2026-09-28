@@ -1003,6 +1003,84 @@ if(BUILD_TESTING)
     )
   endforeach()
 
+  # T032 separate-process synthetic-client fixture and generated-client contract tests.
+  # Registration is additive: one fixture executable (not a runtime library, so
+  # XVERSE_XCOM_RUNTIME_TARGETS is unchanged) and five `t032-<kind>` test executables. No existing
+  # target, test name, label, command, or expected value changes and no existing discovery count is
+  # reduced. The client fixture path, the committed client source path, and the bounded build-tree
+  # scratch directory are supplied as build-time definitions only and are never printed into public
+  # evidence. Each suite uses one hyphenated `t032-<kind>` label (CMake 3.22 label workaround).
+  add_executable(
+    xverse_xcom_synthetic_client
+    "${PROJECT_SOURCE_DIR}/src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  )
+  target_include_directories(
+    xverse_xcom_synthetic_client
+    SYSTEM PRIVATE
+      "${xcom_t030_generated_dir}"
+      "${xcom_t030_protobuf_include}"
+  )
+  target_link_libraries(
+    xverse_xcom_synthetic_client
+    PRIVATE xverse::xcom_tool_gateway
+  )
+  xverse_xcom_apply_runtime_rules(xverse_xcom_synthetic_client)
+  add_dependencies(
+    xverse_xcom_synthetic_client
+    xverse_xcom_tool_gateway_proto_generated
+  )
+
+  foreach(
+    synthetic_kind
+    IN ITEMS
+      observation
+      stimulation
+      contract
+      negative
+      bounds
+  )
+    add_executable(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway/synthetic_client_${synthetic_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway"
+    )
+    target_include_directories(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      SYSTEM PRIVATE
+        "${xcom_t030_generated_dir}"
+        "${xcom_t030_protobuf_include}"
+    )
+    target_compile_definitions(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      PRIVATE
+        "XCOM_T032_SYNTHETIC_CLIENT_PATH=\"$<TARGET_FILE:xverse_xcom_synthetic_client>\""
+        "XCOM_T032_CLIENT_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/fixtures/synthetic_tool.cpp\""
+        "XCOM_T032_SCRATCH_DIR=\"${CMAKE_BINARY_DIR}/t032-scratch\""
+    )
+    target_link_libraries(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      PRIVATE
+        xverse::xcom_tool_gateway
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_synthetic_client_${synthetic_kind}_tests)
+    add_dependencies(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      xverse_xcom_synthetic_client
+    )
+    gtest_discover_tests(
+      xverse_xcom_synthetic_client_${synthetic_kind}_tests
+      PROPERTIES
+        LABELS "t032-${synthetic_kind}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+  endforeach()
+
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(
     xverse_xcom_provider_loopback

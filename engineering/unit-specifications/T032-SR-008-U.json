@@ -1,0 +1,47 @@
+{
+  "component_id": "T032-SR-008-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-008-U",
+  "inputs": [
+    "acquire/release requests and the accepted lease registry"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_stimulation_tests.cpp"
+  ],
+  "invariants": [
+    "the lease is exclusive and generation-bound; release is observed without ambiguous ownership"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the lease state observed by the client"
+  ],
+  "purpose": "When the client acquires or releases a service-emulation lease, the gateway **shall** delegate to the accepted T028 exclusive generation-bound lease and the client **shall** observe the resulting lease state.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_stimulation_tests.cpp"
+  ],
+  "state": "one exclusive generation-bound lease acquired and released per case",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-008-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-008 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientStimulation.ClientAcquiresAndReleasesLease",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

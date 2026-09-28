@@ -1,0 +1,53 @@
+{
+  "component_id": "T032-SR-003-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-003-U",
+  "inputs": [
+    "the fixture executable path, the bounded argv, and the scrubbed admitted environment"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_support.hpp"
+  ],
+  "invariants": [
+    "no ambient/secret value, legacy binary, production workload, or external peer is used"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the bounded child exit status and captured result lines"
+  ],
+  "purpose": "When the T032 tests exercise the client, the client **shall** run as its own OS process launched with an explicit bounded argument vector and a scrubbed admitted environment, and **shall not** require an ambient value, a legacy binary, a subprocess of a production workload, or an external peer.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_support.hpp"
+  ],
+  "state": "one owned fixture process per case with a bounded argv and a scrubbed environment",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-003-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-003 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientObservation.ClientProcessQueryVersion",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientNegative.ClientForbiddenApiScan",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

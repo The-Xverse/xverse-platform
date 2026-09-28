@@ -1,0 +1,53 @@
+{
+  "component_id": "T032-SR-009-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-009-U",
+  "inputs": [
+    "an invalid/substituted permit and an expired session"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "invariants": [
+    "an invalid or expired session emits zero normal-route items; transport access does not authorize"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the emitted-item count and the reported outcome"
+  ],
+  "purpose": "If a client submission targets an invalid or expired session, the gateway **shall** emit zero normal-route items and the client **shall** report a non-success outcome.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "state": "one invalid and one expired session case, each with zero emitted items",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-009-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-009 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientNegative.InvalidSessionEmitsZeroItems",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientNegative.ExpiredSessionEmitsZeroItems",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "component_id": "T032-SR-010-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-010-U",
+  "inputs": [
+    "the declared protocol major and the production compatibility predicate"
+  ],
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "invariants": [
+    "any other major is rejected before any other operation and emits no item"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the rejection verdict and the emission count"
+  ],
+  "purpose": "When the client negotiates an unsupported protocol major, the gateway **shall** reject the session fail-closed before any other operation and emit no item.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "state": "one fail-closed unsupported-major negotiation per case",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-010-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-010 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientNegative.UnsupportedMajorFailsClosed",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

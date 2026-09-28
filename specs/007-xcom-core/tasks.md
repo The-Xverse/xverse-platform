@@ -92,7 +92,7 @@ and predecessor regression evidence retained.
   `proto/xverse/xcom/v1/tool_gateway.proto` with additive evolution rules.
 - [x] T031 Implement a local-IPC-only gateway with no TCP listener, bounded messages/streams, deadlines,
   flow control, safe logs, and disconnect cleanup.
-- [ ] T032 Implement a separate-process synthetic client and generated-client contract tests for
+- [X] T032 Implement a separate-process synthetic client and generated-client contract tests for
   observation and every allowed stimulation action.
 - [ ] T033 Build reusable provider, observer, stimulation-tool, and gateway contract suites.
 - [ ] T034 Add a second minimal synthetic provider implementation to prove replaceability and version

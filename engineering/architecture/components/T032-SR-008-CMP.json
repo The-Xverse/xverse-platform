@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-008-CMP",
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_stimulation_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "When the client acquires or releases a service-emulation lease, the gateway **shall** delegate to the accepted T028 exclusive generation-bound lease and the client **shall** observe the resulting lease state."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one exclusive generation-bound lease acquired and released per case",
+  "title": "T032-SR-008 allocation"
+}

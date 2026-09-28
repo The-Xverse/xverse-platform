@@ -1,0 +1,53 @@
+{
+  "component_id": "T032-SR-017-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-017-U",
+  "inputs": [
+    "the admitted envelope fact and the client operation table"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "invariants": [
+    "no admitted dependency is added; no gRPC runtime link is claimed; T032-GAP-01 is recorded"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the recorded envelope decision and the forbidden-API scan verdict"
+  ],
+  "purpose": "Because the T011 admitted envelope cannot link the gRPC runtime (`T030-GAP-02`, `T031-GAP-01`), the client **shall** realize the accepted generated message and method contract over the bounded, host-protected local-IPC framing bound 1:1 to the T030 generated method names; it **shall** add no admitted dependency and **shall not** claim a linked gRPC runtime. The deferred gRPC transport runtime **shall** be recorded as an explicit gap (`T032-GAP-01`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "state": "one generated-message method table bound 1:1 to the accepted local-IPC framing",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-017-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-017 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientContract.ClientOperationTableMatchesGeneratedDescriptor",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientNegative.ClientForbiddenApiScan",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

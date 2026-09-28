@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-007-CMP",
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_stimulation_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "When the client submits each of the four allowed stimulation actions, the gateway **shall** route it through the accepted T027 pre-emission guard, T026 journal, and T028 action path, the client **shall** observe an emitted outcome, and the accepted item **shall** carry persistent synthetic provenance."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one guarded stimulation submission per allowed action",
+  "title": "T032-SR-007 allocation"
+}

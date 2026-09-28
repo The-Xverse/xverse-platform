@@ -297,3 +297,141 @@ discloses the three contributory cases, and `docs/engineering/xcom/t031/implemen
 closure with fresh, current evidence. The original internal review is preserved as historical evidence; a
 fresh independent DeepSeek review and the trusted measures cover this successor, and T039/T041 acceptance
 remains separate.
+
+# T032 review index — separate-process synthetic client and generated-client contract tests candidate
+
+Candidate: T032 on baseline `e6197c67868213ffb6523d8bf62ed4c2c4e3b0af` (accepted T031 bounded local-IPC-only gateway),
+queue `xcom-t030-t034-20260928`. The T020, T030, and T031 indexes above are retained as historical predecessor
+evidence and are not rewritten.
+
+This section records the T032 **plan-stage** work products. The implementation, its local verification, and the
+separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the trusted
+target-repository integration measure, and the delivery package are separate gates; none is claimed complete by this
+index, and external review and acceptance are deferred until the ordered backlog `xcom-t030-t034-20260928` completes.
+
+## Declared T032 plan-stage work products
+
+- `docs/engineering/xcom/t032/requirements.md` — 5 stakeholder and 21 software requirements (`T032-STK-001`…`-005`,
+  `T032-SR-001`…`-021`) with accepted system anchors, the recorded gRPC-runtime-envelope decision (`T032-SR-017`),
+  and the REF-002 disposition (`unchanged`, empty `promoted`).
+- `docs/engineering/xcom/t032/architecture.md` — trust boundaries `T32-XB-1`…`-010`, components
+  `T32-CMP-{CLIENT,TRANSPORT,SERVER,LAUNCH,TESTS,BUILD,WP}`, and the negative-case map.
+- `docs/engineering/xcom/t032/detailed-design.md` — the synthetic-client interface, the exercise mapping onto the
+  accepted T030 generated messages and T031 gateway, the bounded method-name-addressed local-IPC framing reuse, the
+  separate-process launch, the bounds/deadline/failure design, and the five test suites.
+- `docs/engineering/xcom/t032/unit-specifications.md` — 21 unit specifications and the 22-case index
+  (`T32-TS-001`…`T32-TS-022`).
+- `docs/engineering/xcom/t032/verification-plan.md` — `CHK-01`…`CHK-22`, `NEG-01`…`NEG-10`, evidence retention,
+  exit criteria, and the T-CORE slice evidence mapping.
+
+## Declared T032 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T032`, capability `007`, accepted baseline
+  `e6197c67868213ffb6523d8bf62ed4c2c4e3b0af`.
+- `engineering/requirements/T032-STK-00{1..5}.json` and `engineering/requirements/T032-SR-0{01..21}.json`.
+- `engineering/architecture/components/T032-SR-0{01..21}-CMP.json`.
+- `engineering/unit-specifications/T032-SR-0{01..21}-U.json`.
+- `engineering/validation/scenarios/T032-VS-ACCUMULATED.json` — 22 `t032-` cases validating `T032-SR-001`…`-021`.
+
+## Declared T032 implementation change set (expected at the implementation stage)
+
+- `src/xverse/xcom/fixtures/synthetic_tool.cpp` (new) — the separate-process synthetic tool client
+  (`xverse_xcom_synthetic_client`, `XCOM-DU-021`, `XCOM-CMP-011`).
+- `src/xverse/xcom/CMakeLists.txt` (shared) — additive `xverse_xcom_synthetic_client` fixture executable and five
+  additive `t032-<kind>` test targets; the runtime-target inventory is unchanged and no existing target, label,
+  command, or value changes.
+- `tests/xcom/tool_gateway/synthetic_client_support.hpp` and the five
+  `synthetic_client_{observation,stimulation,contract,negative,bounds}_tests.cpp` suites.
+- `docs/engineering/xcom/t009/architecture-model.{json,md}` and
+  `docs/engineering/xcom/t010/{unit-design.json,design-units.md}` —
+  required planned→established path-status reconciliation for the now-present
+  `src/xverse/xcom/fixtures/synthetic_tool.cpp` path (status field only).
+- `engineering/trace/links.json`, `engineering/verification/measures/*.json`, and inherited
+  `engineering/stage-results/*.json` digest refresh; `engineering/project.json` current-task pointer; the T032
+  checkbox line in `specs/007-xcom-core/tasks.md`; `reports/xcom-queue/t032-package.json`;
+  `docs/engineering/xcom/t032/{implementation.md,internal-review.json}`.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this index does
+  not claim they passed.
+- **L-T032-1 (admitted offline inputs).** The Phase 7 runner requires `XVERSE_XCOM_TOOLCHAIN`,
+  `XVERSE_XCOM_PACKAGE_MANIFEST`, and `XVERSE_XCOM_T025_TEST_TOOLCHAIN` (or the documented A-1 cache seed). If the
+  gate process environment does not carry them, the configure fails closed before any T032 target builds. This is an
+  external environment prerequisite, not a T032 defect.
+- **L-T032-2 (gRPC runtime out of envelope).** The admitted prefix provides the gRPC generation tools but not the
+  gRPC runtime transitive libraries; T032 records its own decision (`T032-GAP-01`) and realizes the accepted generated
+  message/method contract over the accepted bounded host-protected `AF_UNIX` framing. No new dependency is added and
+  no gRPC-runtime link is claimed.
+- **L-T032-3 (owned separate-process proof only).** T032 proves conformance with an owned, self-built separate-process
+  synthetic client over an owned local endpoint; it makes no remote-tool or third-party-client compatibility claim.
+- **L-T032-4 (deferred external review).** External Codex review and explicit user acceptance remain pending; the
+  reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+The implementation-stage record, its local verification, and the separate internal DeepSeek review follow in their own
+stages and are not claimed by this plan-stage section.
+
+## T032 implementation-stage candidate (separate-process synthetic client)
+
+### Candidate identity
+
+- Task `T032` (capability `007`, slice `T-CORE`/GW) on accepted baseline
+  `e6197c67868213ffb6523d8bf62ed4c2c4e3b0af`; pinned stage model `deepseek-v4-flash`.
+- The candidate implements the accepted `XCOM-DU-021` separate-process synthetic tool client
+  (`src/xverse/xcom/fixtures/synthetic_tool.cpp`, executable `xverse_xcom_synthetic_client`) and its five
+  additive `t032-<kind>` generated-client contract suites, over the accepted T030 generated message/method
+  contract and the accepted T031 host-protected `AF_UNIX` local-IPC gateway.
+
+### Implementation change set
+
+- `src/xverse/xcom/fixtures/synthetic_tool.cpp` (new) — the bounded separate-process client.
+- `src/xverse/xcom/CMakeLists.txt` (additive) — the fixture executable and five `t032-<kind>` test targets; the
+  runtime-target inventory is unchanged and no existing target, label, command, or value changes.
+- `tests/xcom/tool_gateway/synthetic_client_support.hpp` and the five
+  `synthetic_client_{observation,stimulation,contract,negative,bounds}_tests.cpp` suites (22 cases,
+  `T32-TS-001`…`T32-TS-022`).
+- `docs/engineering/xcom/t009/architecture-model.json`, `docs/engineering/xcom/t010/unit-design.json`, and
+  `docs/engineering/xcom/t010/design-units.md` — planned→established path status only for
+  `src/xverse/xcom/fixtures/synthetic_tool.cpp`.
+- T032 engineering requirement/component/unit/validation records (plan stage), `engineering/trace/links.json`,
+  `engineering/verification/measures/{unit,integration,validation}.json`, inherited
+  `engineering/stage-results/*.json` digest refresh, `engineering/project.json`, the T032 checkbox line in
+  `specs/007-xcom-core/tasks.md`, and `docs/engineering/xcom/t032/implementation.md`.
+
+### Local verification (candidate working tree)
+
+- `ctest -L t032-` — `100% tests passed, 0 tests failed out of 22` (5 observation, 5 stimulation, 4 contract,
+  5 negative, 3 bounds).
+- `ctest -L "t0(20|2[6-9]|3[0-4])-"` — `100% tests passed, 0 tests failed out of 221`; full discovery `475`.
+- `ctest -R xcom_build_contract` — `100% tests passed, 0 tests failed out of 1`.
+- T007–T010 register validators pass; `git diff --check` is clean.
+
+### Review state
+
+A separate read-only DeepSeek internal review covers every tracked and untracked candidate file and is recorded
+in `docs/engineering/xcom/t032/internal-review.json`. External Codex review and explicit user acceptance remain
+T039/T041 and are deferred until the ordered backlog `xcom-t030-t034-20260928` completes; no acceptance or
+integration is claimed by this index.
+
+## T032 trace-repair-stage record (successor)
+
+The reviewed predecessor candidate (checkpoint commit `9c5f6d2837562a2bbcb1bbcd375ee1385c198970`, baseline
+`e6197c67868213ffb6523d8bf62ed4c2c4e3b0af`) passed scope, checkpoint, unit, static-analysis, target-repository
+integration, validation, and inherited Phase 6 conformance, and its separate DeepSeek review recorded a passing
+verdict. Strict delivery then found exactly five incomplete stakeholder trace rows: `T032-STK-001` through
+`T032-STK-005` each lacked a refining software requirement and an executed validation scenario in
+`traceability-matrix.json`.
+
+This successor keeps the reviewed candidate as its seed and adds only the missing `refines` links in
+`engineering/trace/links.json` (`T032-L-0258`…`T032-L-0281`, 24 links), disclosed with their statement-level
+justification in `docs/engineering/xcom/t032/requirements.md` §5.1 and closed with exact evidence in
+`docs/engineering/xcom/t032/implementation.md` §13. The successor also refreshes the four `implemented_by`
+endpoint digests that pin `requirements.md` and `implementation.md`. The resulting `engineering/trace/links.json`
+carries 1928 links and SHA-256
+`66a1b17c9c63427e098bdc281a8b3323e86f11f405a8b000ea72ba73d27aac83`; `validate_trace` passes. Every T032 software
+requirement now refines the stakeholder requirement whose statement it actually satisfies, so each stakeholder row
+inherits `T032-VS-ACCUMULATED` — whose 22 cases are exactly those selected and executed by the trusted validation
+measure — plus its refining software requirements. No requirement, component, unit, validation case, test, measure,
+register, or accepted predecessor byte changes; no trace checker is weakened. The original internal review is
+preserved as historical evidence; a fresh independent DeepSeek review and every trusted measure cover this successor,
+and T039/T041 acceptance remains separate.

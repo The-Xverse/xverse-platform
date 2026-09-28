@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-011-CMP",
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "The client **shall** declare and enforce every client bound \u2014 maximum message size, per-request deadline, and transport timeout \u2014 as an explicit configuration value, and **no** bound **shall** be implicit or unbounded."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "three explicit client bounds with fail-closed over-bound handling",
+  "title": "T032-SR-011 allocation"
+}

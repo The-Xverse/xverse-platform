@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-010-CMP",
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "When the client negotiates an unsupported protocol major, the gateway **shall** reject the session fail-closed before any other operation and emit no item."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one fail-closed unsupported-major negotiation per case",
+  "title": "T032-SR-010 allocation"
+}

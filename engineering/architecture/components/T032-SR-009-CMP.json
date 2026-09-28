@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "dependencies": [
+    "accepted T007-T031 registers and design",
+    "T011 admitted offline envelope",
+    "T030 generated tool-gateway messages",
+    "accepted T031 local-IPC gateway interface",
+    "accepted T021-T029 in-process boundaries"
+  ],
+  "deployment": "offline build and separate-process synthetic-client test run",
+  "errors": [
+    "declared fail-closed client rejection",
+    "build or configuration failure"
+  ],
+  "id": "T032-SR-009-CMP",
+  "interfaces": [
+    "tests/xcom/tool_gateway/synthetic_client_negative_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t032/requirements.md",
+  "responsibilities": [
+    "If a client submission targets an invalid or expired session, the gateway **shall** emit zero normal-route items and the client **shall** report a non-success outcome."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one invalid and one expired session case, each with zero emitted items",
+  "title": "T032-SR-009 allocation"
+}

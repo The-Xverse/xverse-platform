@@ -1,9 +1,26 @@
 {
-  "schema_version": 1,
-  "task_id": "T020",
+  "artifacts": [
+    {
+      "path": "reports/review-index.md",
+      "sha256": "8329eed082dd3ff495f1aa33ccbd55001bb29d7ed65c3b2c5284a7ed24fd55b5"
+    },
+    {
+      "path": "engineering/project.json",
+      "sha256": "ad4cb0a7aa5ea2061e2870c59cc9e442842020effc33d91867db5fc6acf95df3"
+    },
+    {
+      "path": "engineering/trace/links.json",
+      "sha256": "66a1b17c9c63427e098bdc281a8b3323e86f11f405a8b000ea72ba73d27aac83"
+    }
+  ],
+  "assumptions": [
+    "The separate read-only review is bound to baseline revision 1e289bfe6234553df94eb25065371f7d423fad88 and verdicts the exact baseline diff named in docs/engineering/xcom/t020/internal-review.json reviewed_paths; this stage record certifies only the project, trace, and review-index artifacts it hashes.",
+    "T020-IR-003 and T020-IR-004 are closed in the workspace: xcom_observation_disabled_benchmark carries no RUN_SERIAL property and its registration is byte-identical to baseline, and every T020 scope/traceability statement in the work products matches the actual diff.",
+    "The trusted measures (unit, whole-system integration, validation, static_analysis) and the delivery package remain later gates; this review records no measure pass."
+  ],
   "attempt_id": "1",
-  "role": "internal_review",
-  "status": "complete",
+  "blockers": [],
+  "findings": [],
   "inputs": [
     "docs/engineering/xcom/t020/requirements.md",
     "docs/engineering/xcom/t020/architecture.md",
@@ -24,32 +41,15 @@
     "src/xverse/xcom/CMakeLists.txt",
     "/home/jefferson/x-verse_fabric/automation/trusted/xcom-t020-integration-policy.json"
   ],
-  "artifacts": [
-    {
-      "path": "reports/review-index.md",
-      "sha256": "b78d3fd75db75b9117e91376b520fbfd6e9e4d4b15b00e5cd6a983ec4b17d934"
-    },
-    {
-      "path": "engineering/project.json",
-      "sha256": "ad4cb0a7aa5ea2061e2870c59cc9e442842020effc33d91867db5fc6acf95df3"
-    },
-    {
-      "path": "engineering/trace/links.json",
-      "sha256": "32ce16a717ca8f59ee05bfdb7f89c2c6ebff16006ab10f5cde41c35444f429a7"
-    }
-  ],
-  "assumptions": [
-    "The separate read-only review is bound to baseline revision 1e289bfe6234553df94eb25065371f7d423fad88 and verdicts the exact baseline diff named in docs/engineering/xcom/t020/internal-review.json reviewed_paths; this stage record certifies only the project, trace, and review-index artifacts it hashes.",
-    "T020-IR-003 and T020-IR-004 are closed in the workspace: xcom_observation_disabled_benchmark carries no RUN_SERIAL property and its registration is byte-identical to baseline, and every T020 scope/traceability statement in the work products matches the actual diff.",
-    "The trusted measures (unit, whole-system integration, validation, static_analysis) and the delivery package remain later gates; this review records no measure pass."
-  ],
-  "findings": [],
-  "blockers": [],
-  "notes": "Independent pinned DeepSeek Flash read-only internal review on baseline 1e289bfe6234553df94eb25065371f7d423fad88. Verdict pass with no findings: T020-IR-003/T020-IR-004 are closed, every accepted software requirement retains source, allocation, unit, code, exact-test-ID, validation, and planned-evidence links, no candidate-local check is labelled integration, and the trusted target-repository policy names the isolated checkout /home/jefferson/xverse-t020-system-integration-01m3h0 at pinned revision 1e289bfe6234553df94eb25065371f7d423fad88. No implementation, test, accepted predecessor work, trusted policy, or checker was changed.",
   "model": {
-    "provider": "deepseek",
     "backend": "api",
-    "requested_model": "deepseek-v4-flash",
-    "observed_model": "deepseek-v4-flash"
-  }
+    "observed_model": "deepseek-v4-flash",
+    "provider": "deepseek",
+    "requested_model": "deepseek-v4-flash"
+  },
+  "notes": "Independent pinned DeepSeek Flash read-only internal review on baseline 1e289bfe6234553df94eb25065371f7d423fad88. Verdict pass with no findings: T020-IR-003/T020-IR-004 are closed, every accepted software requirement retains source, allocation, unit, code, exact-test-ID, validation, and planned-evidence links, no candidate-local check is labelled integration, and the trusted target-repository policy names the isolated checkout /home/jefferson/xverse-t020-system-integration-01m3h0 at pinned revision 1e289bfe6234553df94eb25065371f7d423fad88. No implementation, test, accepted predecessor work, trusted policy, or checker was changed.",
+  "role": "internal_review",
+  "schema_version": 1,
+  "status": "complete",
+  "task_id": "T020"
 }

@@ -1,0 +1,59 @@
+{
+  "component_id": "T032-SR-011-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-011-U",
+  "inputs": [
+    "`SyntheticClientConfig` (maximum message size, request deadline, transport timeout)"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "invariants": [
+    "every client bound is explicit; an over-bound message/deadline or exhausted timeout is fail-closed"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the declared-bound inventory and the over-bound/timeout verdicts"
+  ],
+  "purpose": "The client **shall** declare and enforce every client bound \u2014 maximum message size, per-request deadline, and transport timeout \u2014 as an explicit configuration value, and **no** bound **shall** be implicit or unbounded.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "state": "three explicit client bounds with fail-closed over-bound handling",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-011-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-011 unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientBounds.MessageSizeBoundEnforced",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientBounds.DeadlineBoundEnforced",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    },
+    {
+      "expected": "pass",
+      "id": "XcomSyntheticClientBounds.TransportTimeoutBounded",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "component_id": "T032-SR-019-CMP",
+  "concurrency": "single declared user per case; one owned client process at a time, bounded wait",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed client rejection"
+  ],
+  "id": "T032-SR-019-U",
+  "inputs": [
+    "the candidate revision and the Phase 7 gate"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t032/requirements.md"
+  ],
+  "invariants": [
+    "the gate passes with a t032-labelled discovered case; the checkbox is implementation-stage only"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the gate verdict"
+  ],
+  "purpose": "The T032 candidate **shall** satisfy the deterministic Phase 7 gate: the five plan work products and the implementation record exist; at least one `tests/` path changes; the Phase 7 runner's unit configure/build and `t032-`-labelled discovery pass; `git diff --check` is clean; and the T032 checkbox is marked complete **only** in the implementation stage.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t032/requirements.md",
+    "docs/engineering/xcom/t032/requirements.md"
+  ],
+  "state": "deterministic gate over the exact candidate revision",
+  "static_checks": [
+    {
+      "expected": "no compiler or static-analysis error",
+      "id": "T032-SR-019-STATIC",
+      "rule": "the synthetic-client fixture and its tests compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T032-SR-019 unit verification",
+  "unit_cases": [
+    {
+      "expected": "Contributing behavioral context only; the requirement is checked by its named Phase 7 gate check. Context: the bounded client deadline path exercises the same configure/build/discover flow the gate validates.",
+      "id": "XcomSyntheticClientBounds.DeadlineBoundEnforced",
+      "precondition": "bounded gateway fixture, host-protected AF_UNIX scratch endpoint, and explicit client limits",
+      "stimulus": "run the named synthetic-client case over the bounded separate-process exchange"
+    }
+  ]
+}
