@@ -711,6 +711,57 @@ if(BUILD_TESTING)
     )
   endforeach()
 
+  # T029 complete stimulation verification matrix tests. Registration is additive: no existing
+  # target, test name, label, command, or expected value changes, and no runtime-target inventory
+  # entry is added. Each suite uses one hyphenated `t029-<kind>` label (CMake 3.22 label
+  # workaround). The committed T028 and T-OBS/provider headers are supplied as build-time
+  # read-only definitions for the bounded declaration inspection; the paths are never printed
+  # into public evidence. The matrix is offline and in-test storage only, so no scratch
+  # directory is required.
+  foreach(
+    matrix_kind
+    IN ITEMS
+      permit_action_matrix
+      journal_recovery
+      zero_emission
+      provenance
+      lease_drain
+      concurrency
+  )
+    string(REPLACE "_" "-" matrix_label "${matrix_kind}")
+    add_executable(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_matrix/${matrix_kind}_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_matrix"
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE
+        "XCOM_T029_ACTIONS_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/stimulation_actions.hpp\""
+        "XCOM_T029_ACTIONS_SOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/src/stimulation_actions.cpp\""
+        "XCOM_T029_OBSERVATION_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/observation.hpp\""
+        "XCOM_T029_PROVIDER_HEADER_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/include/xverse/xcom/provider.hpp\""
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_actions
+        xverse::xcom_observation
+        xverse::xcom_provider_loopback
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_matrix_${matrix_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_matrix_${matrix_kind}_tests
+      PROPERTIES LABELS "t029-${matrix_label}"
+    )
+  endforeach()
+
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(
     xverse_xcom_provider_loopback

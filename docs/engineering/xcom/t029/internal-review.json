@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "task_id": "T029",
+  "baseline_revision": "4d3985855ef7a62b68aa4c66d3b7df032b29f5e9",
+  "reviewer": "deepseek-v4-flash (fresh read-only internal review, review revision 2)",
+  "review_type": "internal_read_only_independent",
+  "review_subject": "Independent read-only review of the T029 complete stimulation verification matrix over baseline 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9. Re-derives the 20-path candidate inventory, re-runs the deterministic verify gate and the focused T029 CTest suites, re-reads all six T029 work products, the six suites, and the owned fixture, and cross-checks every asserted behaviour against the accepted T025/T026/T027/T028 production headers and sources (stimulation_actions.hpp/.cpp, stimulation_journal.hpp/.cpp) to confirm the tests exercise real fail-closed behaviour rather than tautologies. Does not edit production code, tests, or work products.",
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t029/architecture.md",
+    "docs/engineering/xcom/t029/detailed-design.md",
+    "docs/engineering/xcom/t029/implementation.md",
+    "docs/engineering/xcom/t029/requirements.md",
+    "docs/engineering/xcom/t029/unit-specifications.md",
+    "docs/engineering/xcom/t029/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp",
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp",
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp",
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp",
+    "tests/xcom/stimulation_matrix/provenance_tests.cpp",
+    "tests/xcom/stimulation_matrix/test_support.hpp",
+    "tests/xcom/stimulation_matrix/zero_emission_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T029-IR2-C01",
+      "name": "Baseline binding and exact 20-path candidate inventory",
+      "method": "`git rev-parse 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9`; recomputed the candidate union of `git diff --name-only <baseline> --` (7 paths) and `git ls-files --others --exclude-standard` (15 paths), minus `docs/engineering/xcom/t029/internal-review.json` and `reports/xcom-queue/t029-package.json`, then compared with `reviewed_paths`.",
+      "result": "pass: the recomputed inventory is exactly the 20 sorted paths in `reviewed_paths` and equals the deterministic verify gate's `changed_paths: 20`; the two generated paths (this review record and the regenerated package manifest) are correctly excluded."
+    },
+    {
+      "id": "T029-IR2-C02",
+      "name": "Scope boundary, additivity, and no accidental later task",
+      "method": "`git diff <baseline> -- specs/007-xcom-core/tasks.md src/xverse/xcom/CMakeLists.txt`; scanned every candidate path for `proto`, `xdl`, `src/xverse_xdl`, gateway, IPC, transport, and T030+ markers; inspected the CMake diff hunk by hunk.",
+      "result": "pass: the only changed production path is `src/xverse/xcom/CMakeLists.txt`, and the change is purely additive (one `foreach` block adding six test executables; no existing target, test name, label, command, or expected value is edited and no `XVERSE_XCOM_RUNTIME_TARGETS` line is touched). No production `.hpp`/`.cpp` changed, no existing test changed, and no `proto/`, `xdl/`, `src/xverse_xdl/`, gateway, or later-task artifact is present. The single capability change is `- [ ] T029` to `- [X] T029` in `tasks.md`."
+    },
+    {
+      "id": "T029-IR2-C03",
+      "name": "Deterministic verify gate",
+      "method": "`python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T029 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9` (configure, build under the inherited warning-as-error rule, discovery, full `ctest --parallel 4`, `git diff --check`).",
+      "result": "pass: `{\"ok\": true, \"task_id\": \"T029\", \"changed_paths\": 20, \"checks\": [\"ctest:387\"]}`; exit 0 and `git diff --check <baseline> --` is clean."
+    },
+    {
+      "id": "T029-IR2-C04",
+      "name": "Focused T029 execution and additive discovery",
+      "method": "`ctest --test-dir build/fabro-t029 -L t029 --output-on-failure`; `ctest --test-dir build/fabro-t029 -L t029-<kind> -N` per label.",
+      "result": "pass: `100% tests passed, 0 tests failed out of 20`, distributed `permit-action-matrix` 5, `journal-recovery` 5, `zero-emission` 1, `provenance` 4, `lease-drain` 3, `concurrency` 2. Every label is hyphenated as declared and no pre-existing label is altered."
+    },
+    {
+      "id": "T029-IR2-C05",
+      "name": "Full-suite additivity and T026-T029 preservation",
+      "method": "The gate's full `ctest --parallel 4`; `ctest --test-dir build/fabro-t029 -L \"t02[6789]\"`.",
+      "result": "pass: the full suite is `100% tests passed, 0 tests failed out of 387` (baseline `fabro-t028` discovered 367; +20 additive), and the preserved T026/T027/T028/T029 suites are `100% tests passed, 0 tests failed out of 81`; no existing test is weakened or skipped."
+    },
+    {
+      "id": "T029-IR2-C06",
+      "name": "Repository register validators",
+      "method": "`validate_xcom_task_ownership.py --verify`; `validate_xcom_requirements_traceability.py --verify`; `validate_xcom_architecture_contracts.py --verify`; `validate_xcom_unit_design.py --verify`.",
+      "result": "pass: all four report a passing result; no register file is in the candidate, so the shared T007-T010 artifacts are unchanged in substance."
+    },
+    {
+      "id": "T029-IR2-C07",
+      "name": "Provenance and recorded digest correctness",
+      "method": "Recomputed `sha256` of the six test sources, the fixture header, `CMakeLists.txt`, `links.json`, the four `engineering/stage-results/*.json`, `tasks.md`, and the six work products, and compared each against `implementation.md` §4 and the work-product digest prefixes.",
+      "result": "pass: every digest matches exactly (`CMakeLists.txt` cbf5db33...d1, `links.json` bdd285e8...1c, test sources 9f770a19/4475c4e2/7fc5d811/dc242473/e78111ad/490dc061/a1691cbe, work products ce370f17/bbd0ae3f/ea1b32f4/e0132a61/1ccb1403). `engineering/trace/links.json` `T020-L-046.target_revision` equals the new `CMakeLists.txt` digest, and the three `links.json` artifact digests in `documentation`/`integration`/`internal-review` all equal the new `links.json` digest; each stage-results diff changes only a `sha256` field."
+    },
+    {
+      "id": "T029-IR2-C08",
+      "name": "Permit/action mismatch matrix coverage (M-01..M-16)",
+      "method": "Re-ran `T29-TS-001`, `T29-TS-002`; re-read `permit_action_matrix_tests.cpp` against `detailed-design.md` §5.1 and cross-checked the preconditions and guard call site in `stimulation_actions.cpp:493-588`.",
+      "result": "pass: M-01 preconditions (`request_id == 0`, over-bound payload, undefined action), M-02..M-12 every request-evaluation guard reason with the exact `GuardReason` (`PermitMismatch`, `SchemaMismatch`, `DirectionMismatch`, `InteractionMismatch`, `TargetMismatch`, `ActionMismatch`, `OwnershipConflict`, `QuotaExhausted`, `LoopBound`, `TimeOutOfWindow`, `TimeUnmapped`), M-13..M-15 lifecycle preconditions (`NotActive`), and M-16 the directly evaluated closed guard (`Failed`/`NotOpen`) plus the inconsistent-open case. Every decline asserts zero emitter calls, an unchanged journal snapshot, and no lease mutation."
+    },
+    {
+      "id": "T029-IR2-C09",
+      "name": "Quota, loop/lineage, and clock matrix coverage (Q/L/C)",
+      "method": "Re-ran `T29-TS-003`, `T29-TS-004`, `T29-TS-005`; cross-checked `registry.precheck`/`expire_elapsed` and the guard/lineage logic in `stimulation_actions.cpp:406-429,508-513,590-603`.",
+      "result": "pass: Q-01 exact per-session budget commit and exhaustion, Q-02 per-window binding before the session budget; L-01/L-02 retained causal parent rejected with `causation_id == 0` never a loop, L-03 lineage eviction under the declared bound, L-04 the guard loop window; C-01 positive control, C-02..C-04 every non-`Ok` resolution failing closed, C-05 out-of-window rejection, C-06 declared-domain expiry with a foreign domain untouched. Declines assert zero emission and unchanged durable bytes."
+    },
+    {
+      "id": "T029-IR2-C10",
+      "name": "Journal ordering, failure atomicity, and restart/recovery (J-01..J-09)",
+      "method": "Re-ran `T29-TS-006`..`T29-TS-010`; re-read `journal_recovery_tests.cpp` and `FaultStorage` against `detailed-design.md` §5.5; cross-checked `StimulationJournal::journal_then_emit` and `append_frame_locked` boundary restoration in `stimulation_journal.cpp:734-770,863-947`.",
+      "result": "pass: J-01 the durable intent precedes the single emitter call for all four action kinds (`intent_durable_before_emit` and `retained_bytes >= kJournalMinRecordBytes` at the call), J-02/J-03 durable non-delivery maps to `EmissionRejected`/`EmissionUnavailable` and never `Emitted`, J-04/J-05 an injected intent append (`WriteFailed`) and short append (`PartialWrite`) or intent sync failure emit nothing and leave `storage.size() == 0` (the accepted journal truncates back to the known-good offset), J-06 outcome append/sync failure is `EvidenceIncomplete` with exactly one durable intent, J-07/J-10 over-capacity is `CapacityExhausted` with zero emission, and J-08 a fresh journal reopened over the same bytes recovers one orphan whose request id equals the emitted descriptor identity."
+    },
+    {
+      "id": "T029-IR2-C11",
+      "name": "Zero emission and non-mutation across every decline family (Z-01..Z-11)",
+      "method": "Re-ran `T29-TS-011`; re-read `zero_emission_tests.cpp` against `detailed-design.md` §5.6.",
+      "result": "pass: closed path, malformed request, over-bound payload, loop/lineage rejection, full pending queue, emulation-lease conflict, non-active session, guard rejection/failure, quota exhaustion, both late-item policies, and unmapped/out-of-tolerance time each record zero emitter calls and a zero durable byte delta, with the operational snapshot unchanged apart from the declared counters (e.g. Z-06 asserts a whole-registry snapshot equality because the action path uses the non-mutating `precheck`)."
+    },
+    {
+      "id": "T029-IR2-C12",
+      "name": "Persistent synthetic provenance (P-01..P-05)",
+      "method": "Re-ran `T29-TS-012`..`T29-TS-015`; re-read `provenance_tests.cpp` and `ObservationBridge`; cross-checked `intent_for` in `stimulation_actions.cpp:388-404` (origin forced to `OriginKind::validation_tool`).",
+      "result": "pass: P-01 every emitted descriptor carries `OriginKind::validation_tool` and the exact tool/permit/session/plan/request/correlation/causation identity for all four action kinds; P-02/P-03 the accepted provider route and observation tap preserve the synthetic origin and the exact correlation/causation identity and route/provider identity; P-04 the `validation_tool` filter matches the synthetic item and not a `replay` item; P-05 the restarted identity equals the emitted descriptor identity and a foreign-origin item never matches the synthetic filter. No path relabels or drops provenance."
+    },
+    {
+      "id": "T029-IR2-C13",
+      "name": "Lease exclusivity, drain/terminal completion, and bounded concurrency (L/D/K)",
+      "method": "Re-ran `T29-TS-016`..`T29-TS-020`; re-read `lease_drain_tests.cpp` and `concurrency_tests.cpp` against `detailed-design.md` §5.8/§5.9/§5.10; cross-checked `ServiceEmulationRegistry::acquire/release/quarantine/expire_elapsed` and `drain/close/revoke/expire/mark_evidence_incomplete`.",
+      "result": "pass: L-01..L-10 conflict, foreign plan/session/generation, capacity, malformed key, exact-owner/wrong-owner/already-released/unknown release, quarantine, declared-domain expiry, and a four-thread race yielding exactly one `Ok` and 63 `Conflict`s with `active == 1`; D-01..D-09 active/declared/armed drain, active close draining and releasing every lease, revoke, expire, mark-evidence-incomplete, an orphan forcing `EvidenceIncomplete` and never `Closed`, a clean close, ordered drain by `(scheduled_at, request_id)` within budget, both late policies emitting nothing, a surfaced drain-time intent failure, and explicit immediate labelling; K-01..K-03 four bounded threads never exceed quota 7 (7 emitted / 57 rejected / 7 emitter calls), and three repeated runs of both concurrency cases are byte-identical."
+    },
+    {
+      "id": "T029-IR2-C14",
+      "name": "Offline, dependency, payload, and public-safety conduct",
+      "method": "Forbidden-API/vocabulary scan of `tests/xcom/stimulation_matrix/` (network/socket/resolver/TLS/curl, `fopen`/streams/`std::filesystem`, `getenv`, `system`/`popen`/`fork`/`exec`/`dlopen`, `std::chrono`/`sleep*`/`time`/`rand`); include and CMake link inspection; scan for absolute host paths, credentials, and real payloads.",
+      "result": "pass: includes are limited to the standard library, GTest, and the accepted T025/T026/T027/T028 and T-CORE/T-OBS/provider headers; the six executables link only `xverse::xcom_stimulation_actions`, `xverse::xcom_observation`, `xverse::xcom_provider_loopback`, GTest, gmock, and `Threads::Threads`; no new admitted dependency and no redefined accepted vocabulary type; no network/socket/resolver/TLS, ambient/secret lookup, dynamic load, subprocess, production filesystem, wall-clock, or legacy access; no retained or logged payload byte. The fixture retains no payload (`make_request` passes `{}` and `RecordingEmitter` records only the call-scoped size)."
+    },
+    {
+      "id": "T029-IR2-C15",
+      "name": "Work-product completeness, Doxygen, stage rule, and maturity honesty",
+      "method": "Presence of the six `docs/engineering/xcom/t029/*.md`; `\\file`/`\\brief`/`\\ownership`/`\\lifetime`/`\\thread_safety`/`\\bounds`/`\\failure` scan of the seven test sources; inspection of the recorded maturity in `unit-specifications.md` and `implementation.md` §8; confirmation no register/REF-002 file is in the candidate.",
+      "result": "pass: all six work products exist and the T029 checkbox is marked complete only in the implementation stage; every test source and the fixture header carry all seven Doxygen file-block tags; `XCOM-SW-STIM-009` and `XCOM-SW-STIM-003` are recorded implemented by T029, `XCOM-SW-STIM-005`/`-006`/`-008` remain implemented, and T030-T041 remain allocated; no register changed, so the REF-002 disposition stays `unchanged` with an empty `promoted` list."
+    },
+    {
+      "id": "T029-IR2-C16",
+      "name": "Adversarial cross-check of asserted behaviour against accepted production",
+      "method": "Read `stimulation_actions.hpp`/`.cpp` and `stimulation_journal.hpp`/`.cpp` in full and traced each asserted status/count back to the implementation path (precondition order, guard-once call site, non-mutating `precheck`, journal-before-emission ordering, `append_frame_locked` truncate-on-failure, completion outcome derivation).",
+      "result": "pass: the tests assert real fail-closed behaviour of the accepted surfaces, not restated constants. The guard is evaluated once per request (`stimulation_actions.cpp:540`, no other `authorize` site); the lease is prechecked without mutation before the guard and acquired only after authorization (`:524,556`); the durable intent is committed before the seam and the outcome after (`stimulation_journal.cpp:909-945`); a failed append restores the prior offset (`append_frame_locked`); and every completion decline returns the exact declared `CompletionOutcome` (`:660-873`)."
+    }
+  ],
+  "findings": [],
+  "closed_findings": [],
+  "non_blocking_observations": [
+    {
+      "id": "T029-IR2-OBS-01",
+      "severity": "informational",
+      "observation": "The 'exactly one accepted guard evaluation per request' property is not asserted on the action path itself, because `StimulationActionPath` owns its `StimulationGuard` privately with no snapshot accessor. `T29-TS-001` proves the property on a directly constructed accepted guard (`guard.snapshot().evaluations` increments once per `authorize`) and relies on the source inspection that the action path calls `authorize` exactly once per request (`src/xverse/xcom/src/stimulation_actions.cpp:540`). Verification-plan CHK-15 is worded more strongly ('every mismatch row asserts exactly one accepted guard evaluation per submitted request') than the realized evidence.",
+      "evidence": "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp:181-196; src/xverse/xcom/src/stimulation_actions.cpp:540",
+      "assessment": "Honest and sufficient for the accepted surface, and explicitly recorded rather than over-claimed; not a behavioural defect. Recorded so CHK-15 is not over-read as an action-path-internal counter assertion."
+    },
+    {
+      "id": "T029-IR2-OBS-02",
+      "severity": "informational",
+      "observation": "A conflict-family lease decline through the registry (`Conflict`/`SessionMismatch`/`GenerationMismatch`/`PlanMismatch`) advances the declared registry `conflicts` counter, so `T29-TS-016` asserts the active set and acquisition count are unchanged plus the expected counter delta rather than whole-snapshot equality. Declines driven through the action path use the non-mutating `precheck`, so `T29-TS-016` and `T29-TS-011` Z-06 can assert whole-snapshot equality there.",
+      "evidence": "tests/xcom/stimulation_matrix/lease_drain_tests.cpp:82-97; src/xverse/xcom/src/stimulation_actions.cpp:143,524",
+      "assessment": "Matches the accepted registry semantics (counters are declared observability, not lease entries); no behavioural defect."
+    },
+    {
+      "id": "T029-IR2-OBS-03",
+      "severity": "informational",
+      "observation": "The routed/observed provenance proof projects the accepted T026 numeric intent identity onto the accepted T-CORE string identity vocabulary with a bounded test-local zero-padded decimal encoding, because no canonical production numeric-to-item projection is accepted yet.",
+      "evidence": "tests/xcom/stimulation_matrix/test_support.hpp:510-531,662-691",
+      "assessment": "Consistent with `T029-GAP-02`; the gateway/IPC provenance and any canonical projection remain T032/T033."
+    },
+    {
+      "id": "T029-IR2-OBS-04",
+      "severity": "informational",
+      "observation": "The additive CMake block declares four build-time read-only definitions (`XCOM_T029_ACTIONS_HEADER_PATH`, `XCOM_T029_ACTIONS_SOURCE_PATH`, `XCOM_T029_OBSERVATION_HEADER_PATH`, `XCOM_T029_PROVIDER_HEADER_PATH`) that no T029 source references, unlike the analogous T027/T028 definitions which their `negative_tests.cpp` files consume for a bounded declaration scan. The corresponding T029 checks (CHK-03/CHK-05/CHK-20, NEG-02/NEG-03) are documented as reviewer source inspections, so the definitions are vestigial rather than a missing executable check.",
+      "evidence": "src/xverse/xcom/CMakeLists.txt:742-747; tests/xcom/stimulation_matrix/ (no `XCOM_T029_` reference)",
+      "assessment": "Harmless dead build configuration: it compiles nothing and weakens no accepted check; the inclusion/fixture/payload checks are performed and recorded as inspections by T029-IR2-C14/C16. Noted for a possible tidy in a later task; no required correction for T029."
+    },
+    {
+      "id": "T029-IR2-OBS-05",
+      "severity": "informational",
+      "observation": "`docs/engineering/xcom/t029/verification-plan.md` line 30 records the deterministic gate command with the environment-specific absolute tool path `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py`. This is identical to the established convention in the accepted T007/T008/T009/T010/T012-T028 verification plans, so it is a repository-wide recording convention rather than a T029-introduced leak.",
+      "evidence": "docs/engineering/xcom/t029/verification-plan.md:30 (cf. docs/engineering/xcom/t027/verification-plan.md:30)",
+      "assessment": "CHK-21/NEG-35 remain satisfied for T029 in substance (no credential, private address, real payload, or product-specific host path was introduced); the tool path is the framework's own gate location. Recorded so the public-evidence intent in requirements.md §7/§6 is not over-read."
+    },
+    {
+      "id": "T029-IR2-OBS-06",
+      "severity": "informational",
+      "observation": "`T29-TS-020` performs 64 lease-race acquisitions plus 16 scheduled enqueues (80 bounded operations), while `architecture.md` §7 / `detailed-design.md` §7 state '<= 64 operations per case' and verification-plan CHK-16 repeats it. Each declared phase is at or below the per-thread/per-case declared bound and every resource remains strictly finite, so this is a wording imprecision in the stated per-case operation count rather than an unbounded or undeclared resource.",
+      "evidence": "tests/xcom/stimulation_matrix/concurrency_tests.cpp:120-184; docs/engineering/xcom/t029/architecture.md:242; docs/engineering/xcom/t029/detailed-design.md:294",
+      "assessment": "No behavioural or safety impact: threads (`kMaxThreads` 4), per-thread operations (`kMaxOperationsPerThread` 16), pending (64), drain (64), and leases (4) are all finite and declared. Noted for precision only."
+    }
+  ],
+  "summary": "Verdict pass. The T029 candidate is well-scoped, additive, test-only, offline, deterministic, and linear over baseline 4d3985855ef7a62b68aa4c66d3b7df032b29f5e9. The recomputed inventory is exactly the 20 paths in `reviewed_paths`; the deterministic gate reports `changed_paths: 20` and `ctest:387`; the six t029-* suites run 20/20 green (5/5/1/4/3/2 by label, discovery 367 -> 387); the full suite is 387/387 with the preserved T026-T029 suites at 81/81; the four register validators pass; and every recorded digest (tests, fixture, build file, `links.json`, stage results, work products) matches its file content. Reading the accepted T025-T028 production confirms the passing assertions exercise real fail-closed behaviour: single guard evaluation, non-mutating lease precheck, journal-before-emission with truncate-on-failure atomicity, restart-recovered orphan identity, exclusive single-winner lease races, and terminal completion that never reports an orphan as `Closed`. No production byte, existing test, accepted requirement, ADR, contract, or register is weakened, and no T030+ artifact is present. No blocking finding remains; six informational observations are recorded (guard-count evidence strength, conflict-counter semantics, test-local identity projection, vestigial T029 compile definitions, the inherited gate-command absolute path, and a per-case operation-count wording imprecision). This review is read-only and does not accept or integrate the candidate; external Codex review and user acceptance remain deferred until the ordered backlog xcom-t026-t029-20260928 completes."
+}

@@ -69,7 +69,7 @@ evidence bundle for explicit user acceptance before another feature begins.
   operational state or emit a normal-route item.
 - [X] T028 Implement guarded signal/message injection, service invocation, and exclusive generation-bound
   service emulation, plus drain, close, revoke, expiry, and evidence-incomplete lifecycle completion.
-- [ ] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
+- [X] T029 Test the complete permit/action mismatch matrix, journal-before-emission and journal
   failure/recovery, zero emission after every rejection, persistent synthetic provenance, unmapped clocks,
   quotas, loop bounds, lease conflicts, drain/terminal behavior, and deterministic concurrency.
 
