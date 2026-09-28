@@ -103,6 +103,12 @@ software and evidence bundle to the user for explicit acceptance; do not accept 
 automatically. The process is inspired by Automotive SPICE outcomes but must not claim certification or
 capability level.
 
+After explicit user acceptance of platform-targeted work, merge the exact accepted artifacts into
+`xverse-platform/main` and verify the assembled platform before reporting delivery complete. A queue or
+review branch alone is not the delivery destination. Preserve existing local files by resolving and
+testing the merge in an isolated worktree; exclude unaccepted candidate tasks from that merge. Record
+the resulting main commit and verification evidence.
+
 Preserve the existing Spec Kit, legacy immutability, public-safety, information-classification,
 execution-permit, dependency-admission, and user-acceptance gates. Historical SESN records remain evidence
 only for the exact revisions and claims they identify; do not rewrite or extrapolate them into current
