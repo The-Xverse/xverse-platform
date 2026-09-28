@@ -61,7 +61,7 @@ evidence bundle for explicit user acceptance before another feature begins.
 
 - [X] T025 Implement the explicit time-authority interface, local validation permit
   validation/consumption, and bounded session lifecycle.
-- [ ] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
+- [X] T026 Specify and implement bounded durable stimulation intent/outcome journaling without
   unrestricted payload logs, including journal-before-emission ordering, atomic/partial-write behavior,
   finite capacity and retention, disk-full/I/O failure, restart recovery, and evidence-incomplete outcomes.
 - [ ] T027 Implement the fail-closed pre-emission guard for schema, target, direction, action, time, quota,

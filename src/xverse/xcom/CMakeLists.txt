@@ -16,6 +16,7 @@ set(
   xverse_xcom_provider_loopback
   xverse_xcom_validation_session
   xverse_xcom_activation_plan
+  xverse_xcom_stimulation_journal
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -457,6 +458,25 @@ target_include_directories(
 target_compile_features(xverse_xcom_validation_session PUBLIC cxx_std_20)
 xverse_xcom_apply_runtime_rules(xverse_xcom_validation_session)
 
+# T026's bounded durable stimulation intent/outcome journal. It links only the standard
+# library and the accepted T025 in-process validation-session contract, which it consumes
+# read-only; it adds no third-party dependency and no new identity/digest vocabulary.
+add_library(xverse_xcom_stimulation_journal STATIC src/stimulation_journal.cpp)
+add_library(xverse::xcom_stimulation_journal ALIAS xverse_xcom_stimulation_journal)
+target_include_directories(
+  xverse_xcom_stimulation_journal PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_link_libraries(xverse_xcom_stimulation_journal PUBLIC xverse::xcom_validation_session)
+target_compile_features(xverse_xcom_stimulation_journal PUBLIC cxx_std_20)
+xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_journal)
+set_target_properties(
+  xverse_xcom_stimulation_journal
+  PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
 # T019's bounded C++ decoder for the canonical activation-plan v1 artifact. It links only the
 # standard library and the already-admitted nlohmann/json header; the third-party JSON type is an
 # implementation detail and does not appear in the public header.
@@ -517,6 +537,44 @@ if(BUILD_TESTING)
     gtest_discover_tests(
       xverse_xcom_validation_${test_kind}_tests
       PROPERTIES LABELS "t025;${test_kind}"
+    )
+  endforeach()
+
+  # T026 bounded durable stimulation intent/outcome journal tests. Registration is additive:
+  # no existing target, test name, label, command, or expected value changes. Each suite uses
+  # one hyphenated `t026-<kind>` label (CMake 3.22 label workaround). The recovery suite
+  # receives a bounded test-local scratch directory as a build-time path; it never prints it
+  # into public evidence.
+  foreach(
+    journal_kind
+    IN ITEMS
+      unit
+      negative
+      recovery
+      failure
+      concurrency
+  )
+    add_executable(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/stimulation_journal/${journal_kind}_tests.cpp"
+    )
+    target_link_libraries(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PRIVATE
+        xverse::xcom_stimulation_journal
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    target_compile_definitions(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PRIVATE
+        "XCOM_T026_SCRATCH_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/t026-scratch\""
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_stimulation_journal_${journal_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_stimulation_journal_${journal_kind}_tests
+      PROPERTIES LABELS "t026-${journal_kind}"
     )
   endforeach()
 

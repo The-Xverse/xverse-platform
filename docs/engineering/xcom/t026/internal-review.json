@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "task_id": "T026",
+  "baseline_revision": "1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d",
+  "reviewer": "deepseek-v4-flash-read-only",
+  "review_type": "internal_read_only",
+  "review_revision": 6,
+  "review_subject": "Fresh, separate read-only DeepSeek Flash review of the T026 bounded durable stimulation intent/outcome journal candidate over baseline 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d, after the strict-delivery provenance repair that re-bound the inherited trace endpoint T020-L-046 and the affected stage artifacts. Re-derives the exact 22-path candidate inventory (9 tracked changes + 13 candidate files, excluding the generated review record and package manifest), recomputes every inherited trace/stage hash against the actual candidate bytes, re-runs the deterministic gate and the focused CTest suites, reads the production unit, the five test suites, and all six work products, re-verifies closure of T026-IR3-F01/T026-IR3-F02 against exact line evidence, and runs an independent out-of-repo probe over ordering, atomic/partial writes, disk-full/I/O failure, bounds, recovery, orphan resolution, evidence-incomplete outcomes, concurrency, and the payload-free record surface. Does not edit production code or tests.",
+  "external_review": "deferred_until_backlog_completion",
+  "user_acceptance": "not_claimed (T041)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t026/architecture.md",
+    "docs/engineering/xcom/t026/detailed-design.md",
+    "docs/engineering/xcom/t026/implementation.md",
+    "docs/engineering/xcom/t026/requirements.md",
+    "docs/engineering/xcom/t026/unit-specifications.md",
+    "docs/engineering/xcom/t026/verification-plan.md",
+    "engineering/stage-results/documentation.json",
+    "engineering/stage-results/implementation.json",
+    "engineering/stage-results/integration.json",
+    "engineering/stage-results/internal-review.json",
+    "engineering/trace/links.json",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/CMakeLists.txt",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_journal.hpp",
+    "src/xverse/xcom/src/stimulation_journal.cpp",
+    "tests/xcom/stimulation_journal/concurrency_tests.cpp",
+    "tests/xcom/stimulation_journal/failure_tests.cpp",
+    "tests/xcom/stimulation_journal/negative_tests.cpp",
+    "tests/xcom/stimulation_journal/recovery_tests.cpp",
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "checks": [
+    {
+      "id": "T026-IR6-C01",
+      "name": "Baseline binding and exact candidate inventory",
+      "method": "ran `git rev-parse 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d`, `git diff --name-only <baseline> --`, `git ls-files --others --exclude-standard`, and recomputed `sorted((tracked | untracked) - {docs/engineering/xcom/t026/internal-review.json, reports/xcom-queue/t026-package.json})`",
+      "result": "pass: the baseline resolves to the exact 40-hex revision; the recomputed union is exactly the 22 paths in `reviewed_paths` (9 tracked changes plus 13 candidate files after excluding the generated T026 review record and the T026 package manifest). The 9 tracked changes are the T026 capability/source/build edits plus the 5 provenance-repair edits (`engineering/trace/links.json`, `engineering/stage-results/{implementation,documentation,integration,internal-review}.json`)."
+    },
+    {
+      "id": "T026-IR6-C02",
+      "name": "Scope boundary, later-task isolation, and accepted-substrate preservation",
+      "method": "read `specs/007-xcom-core/tasks.md`; `git diff <baseline> -- specs/007-xcom-core/tasks.md docs/engineering/xcom/t010/ src/xverse/xcom/CMakeLists.txt`; `git diff --stat <baseline> --`; scanned the changed paths for later-task vocabulary; ran `git diff --check <baseline> --`",
+      "result": "pass: the only capability-document change is the single T026 checkbox line (`- [ ] T026` -> `- [X] T026`); T027-T041 remain unchecked; the T010 change is exactly the three `XCOM-DU-016` artifact-path status values `planned`->`established` in `unit-design.json` plus the regenerated `design-units.md` projection; the `src/xverse/xcom/CMakeLists.txt` change is purely additive (58 added lines: one `XVERSE_XCOM_RUNTIME_TARGETS` entry, one `add_library`/alias/link block, and one additive test `foreach`); no T025 byte, guard/action/emulation/gateway/proto/xdl/lease/drain path, root `CMakeLists.txt`, or `cmake/*.cmake` changed; `git diff --check` is clean."
+    },
+    {
+      "id": "T026-IR6-C03",
+      "name": "Deterministic gate, build discovery, and focused case execution",
+      "method": "ran `python3 /home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py verify T026 1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d`; `ctest --test-dir build/fabro-t026 -N -R T026Journal`; `ctest --test-dir build/fabro-t026 -R T026Journal`",
+      "result": "pass: the gate reports `{\"ok\": true, \"task_id\": \"T026\", \"changed_paths\": 22, \"checks\": [\"ctest:324\"]}` (full suite 324/324 through the gate, up from the baseline 306 by exactly the 18 T026 cases); the focused run is `100% tests passed, 0 tests failed out of 18` across the five executables with labels `t026-unit` (5), `t026-negative` (3), `t026-recovery` (5), `t026-failure` (3), `t026-concurrency` (2)."
+    },
+    {
+      "id": "T026-IR6-C04",
+      "name": "Register, model, and inherited-stage validators",
+      "method": "ran `python3 scripts/validate_xcom_task_ownership.py --verify`, `python3 scripts/validate_xcom_requirements_traceability.py --verify`, `python3 scripts/validate_xcom_architecture_contracts.py --verify`, `python3 scripts/validate_xcom_unit_design.py --verify`, and `python3 /home/jefferson/x-verse_fabric/.fabro/workflows/xcom-t026-reviewed-flash/audit_delivery_inputs.py`",
+      "result": "pass: all four register/model validators exit 0 and report `validation passed`; the delivery-inputs audit returns `{\"ok\": true, \"stage_results\": 8}` (validate_project + validate_trace + validate_stage over all eight inherited stage records). The measure orchestrators (`validate_xcom_core_types.py`, `validate_xcom_endpoint_route_lifecycle.py`, `validate_xcom_observation.py`, `validate_xcom_provider_loopback.py`) fail closed with `SESN_CANDIDATE_REVISION is unset`; that is a candidate-state/harness precondition owned by later delivery gates, not a T026 defect, and this review does not claim they passed."
+    },
+    {
+      "id": "T026-IR6-C05",
+      "name": "Inherited provenance repair is consistent with the actual candidate bytes",
+      "method": "recomputed `sha256` of `src/xverse/xcom/CMakeLists.txt`, `engineering/trace/links.json`, and every artifact declared by the four modified stage records; cross-read `engineering/trace/links.json` T020-L-046 and `engineering/stage-results/{implementation,documentation,integration,internal-review}.json`; enumerated every trace link whose `target` is a changed/untracked candidate path",
+      "result": "pass: `sha256(src/xverse/xcom/CMakeLists.txt) == 56bc4a8722a4dd7ef661e3a628b61912d98371e50e9d5c409a3c5e4304772440` and the inherited link `T020-L-046` (`implemented_by`, target `src/xverse/xcom/CMakeLists.txt`) now carries exactly that `target_revision` (`links.json:365-372`); `sha256(engineering/trace/links.json) == f6cce8c68f5d4ab238f159f6752ed8e6947624345bba8bd509ff052021d90596` and that value is identically declared as the `links.json` artifact digest in `implementation.json`, `documentation.json`, `integration.json`, and `internal-review.json`; the `CMakeLists.txt` digest `56bc4a8722a4dd7ef661e3a628b61912d98371e50e9d5c409a3c5e4304772440` is symmetrically declared in `implementation.json`. No other trace link targets a changed path, and no stage record declares the digest of another modified stage record, so no second-order staleness remains. The earlier stale values (`8f6d0812...` for `CMakeLists.txt`, `5f066d8e...` for `links.json`) are fully replaced."
+    },
+    {
+      "id": "T026-IR6-C06",
+      "name": "Closure of T026-IR3-F01 from exact line evidence (intent-failure status wording)",
+      "method": "cross-read `detailed-design.md:182-185` (step 3), `:286-287` (§7 split rows), `:402-405` (T26-TS-012), `:461-463` (§14 rows) against `requirements.md:233-248` (T026-SR-005, wording at `:236-239`), `verification-plan.md:92` (CHK-07) and `:126` (NEG-07), `architecture.md:151-155` (§5 step 4), and `failure_tests.cpp:112-142`",
+      "result": "pass: no work product attributes `EvidenceIncomplete` to a failed intent append/sync. T026-SR-005 (`requirements.md:236-239`) returns `WriteFailed`/`PartialWrite` and reserves `EvidenceIncomplete` for a durable intent whose outcome is missing; `detailed-design.md:182-185` states `EvidenceIncomplete` is not returned at step 3; `:286-287` keep the pre-emission intent row (never `EvidenceIncomplete`) separate from the post-emission outcome row; `:402-405` states it for T26-TS-012; `:462` distinguishes both rows; CHK-07 (`verification-plan.md:92`) and NEG-07 (`:126`) assert the exact statuses, never `EvidenceIncomplete`; `failure_tests.cpp:112-142` asserts `WriteFailed` and `PartialWrite` with zero callback count. T026-IR3-F01 remains closed."
+    },
+    {
+      "id": "T026-IR6-C07",
+      "name": "Closure of T026-IR3-F02 from exact line evidence (per-case realized bounds)",
+      "method": "compared every per-case `Bounds` block in `unit-specifications.md:77,88-89,100-101,113-114,125,136-137,149-150,163-164,178-179,191-192,203-204,216-217,228-229,241-242,256-257,269-270,283-284,297-298` and the §22 summary (`:308-321`) against every `JournalConfig` literal, intent/record count, and iteration in the five suites (`unit_tests.cpp:129,156,168-175,210-216,230,242,251,304,330`; `negative_tests.cpp:105,127,146,169`; `recovery_tests.cpp:136,184,284,456,470,498,512`; `failure_tests.cpp:116,155,181,196`; `concurrency_tests.cpp:118,131,155`)",
+      "result": "pass: the §22 realized bounds match the tests - `max_retained_records` 0/1/2/4/8/16/64, `max_record_bytes` 0/154/155/157/320, `max_journal_bytes` 0/155/200/319/320/350/2048/4096/8192/16384, records per journal `<= 12 realized (T26-TS-017 writer)` (`:312`; T26-TS-015 realizes 8, T26-TS-017 realizes 12), and `<= 64 bounded journal operations per case (realized maximum 52 in T26-TS-015)` (`:319`; 13 x 4 = 52). The identical 52-operation metric is stated in `detailed-design.md:318` and `verification-plan.md:103` (CHK-18), and the prior `<= 10`/`<= 64 iterations` conflict is absent. T026-IR3-F02 remains closed; one non-blocking wording imprecision in the §15 block is recorded as T026-IR6-OBS-01."
+    },
+    {
+      "id": "T026-IR6-C08",
+      "name": "Journal-before-emission ordering and callback-outside-lock (challenge)",
+      "method": "read `journal_then_emit` (`stimulation_journal.cpp:863-947`), `append_frame_locked` (`cpp:734-770`), and the header contract (`hpp:488-515`); ran `T26-TS-012`/`T26-TS-016` and independent probe ordering/visibility cases",
+      "result": "pass: the intent frame is appended and synced under `mutex_` (cpp:874-913), the mutex is released at cpp:913, the callback is invoked exactly once at cpp:918, and only then is the outcome appended under the mutex (cpp:929-945). A callback-side `snapshot()`/`recovered_intents()` probe observes exactly one complete durable intent while running (probe: 1 intent visible inside the callback, no deadlock under a bounded wait), proving the lock is released; an intent append/sync/partial failure returns `WriteFailed`/`PartialWrite` with zero emissions and a restored boundary, and an outcome failure returns `EvidenceIncomplete` with exactly one recovered orphan."
+    },
+    {
+      "id": "T026-IR6-C09",
+      "name": "Atomic framing, torn-tail discard, corrupt-frame stop, and over-bound recovery (challenge)",
+      "method": "read `encode_frame`/`decode_intent_payload`/`scan_locked` (`stimulation_journal.cpp:170-188,244-282,584-732`); ran `T26-TS-009`/`T26-TS-010`/`T26-TS-017`/`T26-TS-018` and independent probe torn/corrupt/over-bound cases",
+      "result": "pass: a frame is complete only when `28 + declared + 16` bytes are present and both `canonical_digest` values match (cpp:646-674); a torn trailing frame is discarded with its byte count reported and the file truncated to the last good offset (probe: 40 discarded bytes, file truncated to 157); a corrupt complete frame stops the scan with `CorruptRecord` while preserving the preceding complete record and manufacturing no false orphan (probe: 1 intent retained, 223 defect bytes preserved); a durable journal over the byte or retained-record bound is refused before retaining, reports `CapacityExhausted`, presents no over-bound index (probe: <= 2 records, <= 320 bytes) and refuses later appends with zero emission."
+    },
+    {
+      "id": "T026-IR6-C10",
+      "name": "Atomic/partial writes, disk-full and I/O failure, boundary restoration, and unusable marking (challenge)",
+      "method": "read `append_frame_locked` (`stimulation_journal.cpp:734-770`) and `LocalFileStorage` (`cpp:391-502`); ran `T26-TS-012`/`T26-TS-013` and independent probe partial/sync cases",
+      "result": "pass: `append_frame_locked` appends, verifies the durable end advanced by exactly the frame size (partial-write detection at cpp:751-753), restores the last-good boundary on any non-`Ok` or failed `sync`, and marks the journal `unusable_` when restoration itself fails (cpp:754-765); no partial frame is ever counted or retained. `LocalFileStorage::append` returns `WriteFailed` on a `pwrite` error (including an ENOSPC/disk-full write) and `PartialWrite` on a short append (cpp:408-436), `sync()` maps `fsync` failure to `WriteFailed` (cpp:438-443). Probe: append failure and sync failure -> `WriteFailed` with 0 bytes and zero emissions; partial append -> `PartialWrite` with the boundary restored to 0."
+    },
+    {
+      "id": "T026-IR6-C11",
+      "name": "Outcome failure and evidence-incomplete outcomes (challenge)",
+      "method": "read `journal_then_emit` outcome path (`stimulation_journal.cpp:918-946`); ran `T26-TS-014` and independent probe outcome-failure case",
+      "result": "pass: an outcome append/sync failure returns `EvidenceIncomplete` (cpp:941-944), never `Ok`; the callback ran exactly once; the durable intent remains alone (probe: 157 bytes) and a reopen reports exactly one `EvidenceIncomplete` orphan with its request id. A throwing callback propagates unmodified and leaves the same single orphan (cpp:915-918); a callback-returned out-of-vocabulary kind is `RejectedConfiguration`, is not appended, is not exposed through `out`, and leaves the journal decodable (probe reopen `Ok`)."
+    },
+    {
+      "id": "T026-IR6-C12",
+      "name": "Bounded retention, rejection ordering, and byte preservation (challenge)",
+      "method": "read the capacity/identity checks (`stimulation_journal.cpp:866-904,930-936,955-1000`); ran `T26-TS-006`/`T26-TS-007` and independent probe capacity/duplicate/byte-bound cases",
+      "result": "pass: every rejection (null callback, invalid tag, duplicate retained `request_id`, over-size frame, out-of-vocabulary kind, capacity) is decided before the append and before the emission. Record-count and byte-bound exhaustion return `CapacityExhausted` with zero emissions and byte-for-byte preservation of complete records (probe: <= 1 record preserved, bytes unchanged); a repeated `request_id` is refused with `RejectedConfiguration`, no byte change and zero emissions; an outcome that alone would exceed the byte bound returns `EvidenceIncomplete` with the durable intent preserved as an orphan (probe: 157 bytes, 1 orphan)."
+    },
+    {
+      "id": "T026-IR6-C13",
+      "name": "Restart recovery, over-bound fail-closed, and one-to-one orphan resolution (challenge)",
+      "method": "read `scan_locked`/`orphan_count_locked`/`orphan_ids_locked`/`resolve` (`stimulation_journal.cpp:532-582,584-732,949-1006`); ran `T26-TS-009`/`T26-TS-011`/`T26-TS-017` and independent probe recovery/resolution cases",
+      "result": "pass: opening an existing journal scans every complete frame, rebuilds the bounded index, preserves complete intent/outcome pairs, and reports every intent without an outcome as an `EvidenceIncomplete` orphan; a crafted duplicate identity with one outcome leaves the unresolved intent an orphan and one resolution resolves exactly one intent before `AlreadyResolved`. Resolution of an unknown id is `NotFound`, an out-of-vocabulary kind is `RejectedConfiguration` before the reference check, and an explicit `Unknown` is never relabelled delivered (probe: `Unknown` outcome recovered unchanged). Reopening a durable journal that exceeds `max_journal_bytes` or `max_retained_records` fails closed with `CapacityExhausted`, presents no over-bound index, and refuses further appends with zero emission."
+    },
+    {
+      "id": "T026-IR6-C14",
+      "name": "Determinism, bounded concurrency, payload-free records, and vocabulary (challenge)",
+      "method": "read `concurrency_tests.cpp`, the compile-time rules (`hpp:261-276`; `unit_tests.cpp:184-200`), the record declarations (`hpp:182-259`), and the status/kind vocabulary (`hpp:95-142`; `cpp:325-381`); ran `T26-TS-004`/`T26-TS-015`/`T26-TS-016` and independent probe vocabulary/compile-time cases; compiled the probe with `-Wall -Wextra -Werror`",
+      "result": "pass: the status vocabulary is closed with stable names/ranks (rank == declaration index 0..9) and deterministic precedence; three repeated runs are byte-identical and four independent journals reproduce the single-threaded golden stream across three runs (<= 4 threads, 4 operations per journal, 52 operations total); the re-entrant callback probe completes under a bounded wait; neither record struct exposes a payload/text/address member (declaration inspection), the compile-time rule rejects a payload-container/text constructor and bounds `sizeof`, and the probe re-verified those assertions and the 155/281/22/66 byte constants."
+    },
+    {
+      "id": "T026-IR6-C15",
+      "name": "Offline/local-only, dependency, public-safety, governance, and maturity honesty",
+      "method": "read the header includes and the CMake link line; scanned the changed source/header/tests/work products for forbidden APIs and vocabulary; read the recorded maturity and REF-002 disposition",
+      "result": "pass: the unit includes only C++ standard headers plus POSIX local-file headers plus `validation_session.hpp` (hpp:34-46; cpp:15-28) and links only `xverse::xcom_validation_session`; no network/socket/resolver/TLS, ambient/secret, dynamic-load, subprocess, env-derived path, or legacy access (forbidden-API scan clean); no new third-party dependency and no redefined identity/digest type; no committed secret or private deployment value; the only absolute path is the repository-owned `/home/jefferson/x-verse_fabric/automation/xcom_feature_gate.py` command, matching the established T007-T024 work-product convention; the scratch path is build-time test-local and never printed; no maturity is promoted and no user acceptance is claimed."
+    },
+    {
+      "id": "T026-IR6-C16",
+      "name": "Independent out-of-repo probe",
+      "method": "wrote `/tmp/t026_review_probe.cpp`, compiled it with `g++ -std=c++20 -Wall -Wextra -Werror` against `libxverse_xcom_stimulation_journal.a` and `libxverse_xcom_validation_session.a`, and ran it",
+      "result": "pass: `T026 review probe: 115 checks, 0 failures` covering the configuration matrix, realized frame sizes and the little-endian magic, callback-side visibility of the durable intent with exactly one emission, `WriteFailed`/`PartialWrite` on intent append/partial/sync failure with zero emission and boundary restoration, `EvidenceIncomplete` plus one recovered orphan on outcome failure, record-count and byte-bound exhaustion with byte preservation, a refused duplicate `request_id`, out-of-vocabulary-kind rejection with a decodable journal, `NotFound`/`AlreadyResolved`/`Unknown`-stays-`Unknown` resolution, real-file torn-tail discard with truncation, `CorruptRecord` stop with the preceding record preserved, over-byte-bound and over-record-bound reopen fail-closed, the closed status vocabulary/precedence, and the payload-free bounded record surface."
+    },
+    {
+      "id": "T026-IR6-C17",
+      "name": "Traceability completeness",
+      "method": "cross-read the requirement index (`requirements.md` §5, §10; `verification-plan.md` §8), the unit traceability (`unit-specifications.md` §23, §25), the design traceability (`detailed-design.md` §13, §14, §10), and the architecture traceability (`architecture.md` §10, §11)",
+      "result": "pass: every `T026-SR-001`...`T026-SR-022` has at least one named check, every one of the eighteen cases maps to requirements, accepted software requirements, and design units, the negative cases NEG-01...NEG-33 map to realizing checks/cases, and `XCOM-SW-STIM-003` is recorded partial (journal/restart half) while `XCOM-SW-STIM-007` is implemented; no requirement is promoted and `ref002.disposition` stays `unchanged` with an empty `promoted` list."
+    }
+  ],
+  "findings": [],
+  "non_blocking_observations": [
+    {
+      "id": "T026-IR6-OBS-01",
+      "severity": "informational",
+      "observation": "`unit-specifications.md:216-217` (T26-TS-012 `Bounds`) reads `... ≤ 3 injected failure points; 1 intent`, while `failure_tests.cpp:112-142` exercises three separate `journal_then_emit` attempts, each constructing a distinct intent (`make_intent(1U)`, `make_intent(2U)`, `make_intent(3U)`), all of which roll back to zero retained records.",
+      "assessment": "The phrase is imprecise rather than a violated verification contract: it can be read as one intent per injected failure point, and no declared constant, offset, bound, expected value, check, requirement, or test expectation depends on it (each attempt is asserted only for status, zero emissions, and empty bytes). Corrected wording (`≤ 3 intents, one per injected failure point`) would improve the realized-bound summary, but this is recorded for maintainers rather than retained as a blocking finding."
+    },
+    {
+      "id": "T026-IR6-OBS-02",
+      "severity": "informational",
+      "observation": "`detailed-design.md:338` describes the production local-file storage as opened with `O_RDWR|O_CREAT|O_APPEND`, while `stimulation_journal.cpp:395` opens with `O_RDWR | O_CREAT` and performs the end-positioned append via `lseek(SEEK_END)` + `pwrite` (the unit source comment at `cpp:386-387` states the actual flags).",
+      "assessment": "This is an imprecise implementation note carried forward from the prior review, not a verification-contract violation: it is not a declared constant, offset, bound, or expected value, and the described behavior (append at the durable end, `fsync` sync, `ftruncate` restoration) is fully realized. It affects no requirement, check, negative case, test expectation, or observable behavior, so it is recorded here for maintainers rather than retained as a blocking finding."
+    }
+  ],
+  "summary": "Verdict pass. The provenance-repaired T026 candidate is well-scoped, additive, offline, and independently reproducible. The strict-delivery repair is consistent with the actual candidate bytes: inherited link T020-L-046 now carries the real `sha256(src/xverse/xcom/CMakeLists.txt)` = `56bc4a87...`, and the modified stage records declare the real `sha256(engineering/trace/links.json)` = `f6cce8c6...`; no second-order staleness remains and validate_trace/validate_stage pass. The deterministic gate reports `ok` with 22 changed paths and `ctest:324`; the 18 focused T026 cases pass with the five expected labels; the four register/model validators and the delivery-inputs audit pass; and an independent out-of-repo probe compiled under the repository warning policy reproduced ordering, failure statuses, atomicity, bounds, recovery, orphan accounting, and the payload-free surface (115/115 checks). All retained findings are closed from exact line evidence: T026-IR3-F01 (intent-failure status wording) and T026-IR3-F02 (per-case realized bounds, including the 52-operation and 12-record maxima) remain closed, and the earlier T026-IR2-05-* / T026-IR2-06-* / T026-IR4-* findings stay closed. No later task (T027-T041) is implemented, no accepted T025 byte or register is changed, and no maturity or user acceptance is claimed. Two non-blocking documentation observations (T026-IR6-OBS-01, T026-IR6-OBS-02) are recorded; neither is a verification-contract violation and no finding is retained."
+}
