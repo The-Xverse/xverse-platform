@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-023-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-023-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "Committed tests, fixtures, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Committed tests, fixtures, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-023-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-023 unit verification",
+  "unit_cases": [
+    {
+      "expected": "public-safety scan; CHK-21, NEG-35.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixQuotaExhaustion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

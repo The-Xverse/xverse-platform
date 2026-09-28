@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-019-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "The matrix **shall** prove the completion contract end-to-end: `drain`, `close`, `revoke`, `expire`, and `mark_evidence_incomplete` return the declared bounded outcomes; every pending action is drained or cancelled as declared; every held lease is released or quarantined; and a durable intent without a durable outcome forces `EvidenceIncomplete` and is never reported as `Closed`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-019 allocation"
+}

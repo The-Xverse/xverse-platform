@@ -1,0 +1,51 @@
+{
+  "component_id": "T028-SR-011-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-011-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "A held lease **shall** be releasable by its exact owner and **shall** be releasable by lifecycle completion; a release or quarantine by a non-owner, an unknown lease, or an already-released lease **shall** fail closed (`LeaseStatus::NotFound` / `NotHeld` / `AlreadyReleased`) with no mutation; on expiry, revocation, or disconnect the lease **shall** be released or quarantined without ambiguous ownership."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A held lease **shall** be releasable by its exact owner and **shall** be releasable by lifecycle completion; a release or quarantine by a non-owner, an unknown lease, or an already-released lease **shall** fail closed (`LeaseStatus::NotFound` / `NotHeld` / `AlreadyReleased`) with no mutation; on expiry, revocation, or disconnect the lease **shall** be released or quarantined without ambiguous ownership.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/lease_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-011-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-011 unit verification",
+  "unit_cases": [
+    {
+      "expected": "release/quarantine/expiry matrix; CHK-12, NEG-12, NEG-13.",
+      "id": "XcomStimulationActionsLease.LeaseReleaseQuarantineMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "release/quarantine/expiry matrix; CHK-12, NEG-12, NEG-13.",
+      "id": "XcomStimulationActionsLease.LeaseGenerationSupersessionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

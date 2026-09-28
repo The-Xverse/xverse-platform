@@ -1,0 +1,51 @@
+{
+  "component_id": "T028-SR-008-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-008-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "Every emitted item **shall** carry `OriginKind::validation_tool` together with the exact tool tag, permit identity, session identity, plan digest, request identity, correlation identity, and causal identity bound into the durable intent, and the action path **shall** expose no path that emits an item with a different or absent synthetic classification."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Every emitted item **shall** carry `OriginKind::validation_tool` together with the exact tool tag, permit identity, session identity, plan digest, request identity, correlation identity, and causal identity bound into the durable intent, and the action path **shall** expose no path that emits an item with a different or absent synthetic classification.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-008-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-008 unit verification",
+  "unit_cases": [
+    {
+      "expected": "synthetic-provenance field inspection and emission capture; CHK-09, NEG-08.",
+      "id": "XcomStimulationActionsAction.ActionPathExecutesNominalActionKinds",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "synthetic-provenance field inspection and emission capture; CHK-09, NEG-08.",
+      "id": "XcomStimulationActionsAction.ActionPathSyntheticProvenance",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

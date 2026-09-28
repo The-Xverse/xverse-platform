@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-003-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-003-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "The slice **shall** provide one shared, bounded, payload-free owned fixture in `tests/xcom/stimulation_matrix/test_support.hpp` that composes an in-process accepted `Permit` and session, an accepted `StimulationPolicy`, an accepted `StimulationJournal` over an in-test fault-injectable `Storage` seam, an accepted `ServiceEmulationRegistry`, an accepted `StimulationActionPath`, a recording/fault-injectable `ActionEmitter`, and a bounded bridge that builds a `CommunicationItem` for the accepted provider/observation boundary; every bound, table, and injected fault **shall** be finite and declared, and the fixture **shall** retain no payload byte."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The slice **shall** provide one shared, bounded, payload-free owned fixture in `tests/xcom/stimulation_matrix/test_support.hpp` that composes an in-process accepted `Permit` and session, an accepted `StimulationPolicy`, an accepted `StimulationJournal` over an in-test fault-injectable `Storage` seam, an accepted `ServiceEmulationRegistry`, an accepted `StimulationActionPath`, a recording/fault-injectable `ActionEmitter`, and a bounded bridge that builds a `CommunicationItem` for the accepted provider/observation boundary; every bound, table, and injected fault **shall** be finite and declared, and the fixture **shall** retain no payload byte.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-003-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-003 unit verification",
+  "unit_cases": [
+    {
+      "expected": "fixture declaration inspection plus the build; CHK-05, CHK-20, NEG-03.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixQuotaExhaustion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

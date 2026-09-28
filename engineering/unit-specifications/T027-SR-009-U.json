@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-009-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-009-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** enforce a finite declared per-session authorized-action budget and a finite declared per-window authorized-action budget; a request that would exceed either bound **shall** be rejected (`QuotaExhausted`) with no mutation and no emission, and the tally **shall** advance only on `Authorized`."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** enforce a finite declared per-session authorized-action budget and a finite declared per-window authorized-action budget; a request that would exceed either bound **shall** be rejected (`QuotaExhausted`) with no mutation and no emission, and the tally **shall** advance only on `Authorized`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-009-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-009 unit verification",
+  "unit_cases": [
+    {
+      "expected": "per-session and per-window boundary cases; CHK-10, NEG-16, NEG-17, NEG-36.",
+      "id": "XcomStimulationGuardMismatch.GuardQuotaMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

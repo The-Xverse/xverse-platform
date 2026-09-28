@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-007-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "If the emission callback is absent (null) the request **shall** be rejected (`RejectedConfiguration`) before any intent is written; if the callback returns an outcome whose `kind` is outside the closed `OutcomeKind` vocabulary the invalid outcome **shall not** be appended and the call **shall** report `RejectedConfiguration`, leaving the durable intent an explicit orphan; and if the callback throws a host exception the journal **shall** contain a durable intent with no outcome, the host exception **shall** propagate unmodified, recovery **shall** classify that intent `EvidenceIncomplete`, and the call **shall never** report `Ok`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-007 allocation"
+}

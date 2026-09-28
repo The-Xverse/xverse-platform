@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-017-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "If any precondition, guard, lease, journal, late-policy, or completion decision declines, the action path **shall** mutate no accepted guard state, no lease-table entry, no pending-queue entry, no lineage entry, and no durable journal record in the declined dimension, **shall** return an explicit bounded status, and **shall** emit no normal-route item; a declined action **shall never** return `Emitted`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-017 allocation"
+}

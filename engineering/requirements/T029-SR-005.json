@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "lifecycle-precondition matrix; CHK-06, NEG-06."
+  ],
+  "applicability": "T029 bounded stimulation candidate",
+  "id": "T029-SR-005",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-018"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t029/requirements.md T029-SR-005"
+  },
+  "statement": "When the matrix evaluates a lifecycle-state precondition, a `revoked`, `expired`, `declared`, `armed`, or `closing` session state **shall** decline at the action path with `ActionStatus::NotActive` before any emission or journal append, and a directly evaluated closed guard **shall** return `Failed`/`NotOpen`, with zero emission in both cases.",
+  "status": "accepted",
+  "title": "T029 requirement 005",
+  "verification_intent": "lifecycle-precondition matrix; CHK-06, NEG-06."
+}

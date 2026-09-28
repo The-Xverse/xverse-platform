@@ -1,0 +1,52 @@
+{
+  "component_id": "T029-SR-016-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-016-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "invariants": [
+    "When the matrix exercises the exclusive lease end-to-end, a second owner for one endpoint generation **shall** be rejected with zero emission; a foreign session, generation, or plan digest **shall** be rejected with the matching lease status and no mutation; a superseded generation **shall** neither authorize nor conflict-block; release, quarantine, and expiry **shall** relinquish ownership; and at most one active lease **shall** exist per endpoint generation (`XCOM-INV-04`, `XCOM-INV-10`)."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the matrix exercises the exclusive lease end-to-end, a second owner for one endpoint generation **shall** be rejected with zero emission; a foreign session, generation, or plan digest **shall** be rejected with the matching lease status and no mutation; a superseded generation **shall** neither authorize nor conflict-block; release, quarantine, and expiry **shall** relinquish ownership; and at most one active lease **shall** exist per endpoint generation (`XCOM-INV-04`, `XCOM-INV-10`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp",
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-016-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-016 unit verification",
+  "unit_cases": [
+    {
+      "expected": "end-to-end lease conflict/generation/release/quarantine/expiry matrix; CHK-08, CHK-17, NEG-24, NEG-25.",
+      "id": "XcomStimulationMatrixLeaseDrain.LeaseConflictMatrixEndToEnd",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "end-to-end lease conflict/generation/release/quarantine/expiry matrix; CHK-08, CHK-17, NEG-24, NEG-25.",
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentLeaseSingleWinnerAndCompletion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

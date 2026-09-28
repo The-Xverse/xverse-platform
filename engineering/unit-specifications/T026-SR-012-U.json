@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-012-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-012-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "A journal configuration with a zero or inconsistent bound (zero maximum record size, zero retained-record count, zero byte capacity, or a byte capacity smaller than one maximal record) **shall** be rejected (`RejectedConfiguration`) at open with no file mutation."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A journal configuration with a zero or inconsistent bound (zero maximum record size, zero retained-record count, zero byte capacity, or a byte capacity smaller than one maximal record) **shall** be rejected (`RejectedConfiguration`) at open with no file mutation.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-012-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-012 unit verification",
+  "unit_cases": [
+    {
+      "expected": "configuration boundary cases; CHK-06, NEG-19.",
+      "id": "T026JournalUnit.test_journal_config_validation_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "an ordering probe proving the durable intent precedes the callback and the callback count is exactly one on success and zero on intent failure, with the exact `WriteFailed`/`PartialWrite` status asserted, plus a repeated-request-identity rejection with zero emission; CHK-07, NEG-06, NEG-07, NEG-33."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "id": "T026-SR-005",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-021"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-005"
+  },
+  "statement": "When a host requests one stimulation emission, the journal **shall** first durably append and sync the intent frame; only after the append and sync succeed **shall** it invoke the host-supplied emission callback exactly once, and the callback **shall** be invoked **outside** the journal mutex; a failed intent append or sync **shall** return `WriteFailed` (or `PartialWrite` when fewer bytes than requested were appended) without invoking the callback at all. `EvidenceIncomplete` is reserved for the case where the intent is durable and only its outcome is missing, and **shall not** be returned for a failed intent append or sync. A retained intent's `request_id` is its durable unique key: a request whose `request_id` is already carried by a retained intent **shall** be rejected (`RejectedConfiguration`) before any append and before any emission, so no unresolved duplicate intent can exist.",
+  "status": "accepted",
+  "title": "T026 requirement 005",
+  "verification_intent": "an ordering probe proving the durable intent precedes the callback and the callback count is exactly one on success and zero on intent failure, with the exact `WriteFailed`/`PartialWrite` status asserted, plus a repeated-request-identity rejection with zero emission; CHK-07, NEG-06, NEG-07, NEG-33."
+}

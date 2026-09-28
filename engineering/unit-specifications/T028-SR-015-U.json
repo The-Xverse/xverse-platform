@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-015-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-015-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "An immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; a scheduled request whose clock domain cannot be resolved into the permit validity domain, or whose resolved time lies outside the declared tolerance, **shall** fail closed before emission and before journaling intent; the action path **shall** consume a caller-resolved time and **shall** call no time authority."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "An immediate request **shall** be explicitly labeled and interpreted in the permit validity domain; a scheduled request whose clock domain cannot be resolved into the permit validity domain, or whose resolved time lies outside the declared tolerance, **shall** fail closed before emission and before journaling intent; the action path **shall** consume a caller-resolved time and **shall** call no time authority.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/lifecycle_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-015-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-015 unit verification",
+  "unit_cases": [
+    {
+      "expected": "immediate-labeling and unmapped-tolerance cases; CHK-13, CHK-19, NEG-19, NEG-23, NEG-24.",
+      "id": "XcomStimulationActionsLifecycle.LifecycleImmediateAndUnmappedClock",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-004-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "The unit's bounded values (`ActionPathConfig`, `EndpointGeneration`, `EmulationLease`, `LeaseSnapshot`, `PendingAction`, `SyntheticStimulationItem`, `ActionDiagnostic`, `ActionPathSnapshot`, `CompletionReport`) **shall** carry no payload, value body, address, free-form text, or unbounded member; a declared per-action payload view **shall** be forwarded to the emission seam only and **shall** be retained, journaled, or logged by nothing; the pending queue, lease table, and lineage window **shall** be bounded by declared maxima; and a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-004 allocation"
+}

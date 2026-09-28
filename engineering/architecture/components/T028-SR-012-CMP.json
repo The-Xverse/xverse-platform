@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-012-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "An elapsed lease (a caller-supplied `now >= expires_at` in the lease's declared clock domain) **shall** become inactive and **shall** no longer authorize or conflict-block; the action path **shall** compare only values in one declared domain and **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-012 allocation"
+}

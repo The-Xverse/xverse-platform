@@ -1,0 +1,51 @@
+{
+  "component_id": "T028-SR-006-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-006-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "When the action path evaluates a request against the accepted T027 guard, only a `GuardOutcome::Authorized` decision **shall** proceed; a `Rejected` or `Failed` decision **shall** return the matching non-emitting `ActionStatus` with the guard reason preserved, **shall** append no journal record, and **shall** acquire no lease."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the action path evaluates a request against the accepted T027 guard, only a `GuardOutcome::Authorized` decision **shall** proceed; a `Rejected` or `Failed` decision **shall** return the matching non-emitting `ActionStatus` with the guard reason preserved, **shall** append no journal record, and **shall** acquire no lease.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-006-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-006 unit verification",
+  "unit_cases": [
+    {
+      "expected": "guard-decision mapping matrix; CHK-07, CHK-14, NEG-06, NEG-26, NEG-27.",
+      "id": "XcomStimulationActionsAction.ActionPathExecutesNominalActionKinds",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "guard-decision mapping matrix; CHK-07, CHK-14, NEG-06, NEG-26, NEG-27.",
+      "id": "XcomStimulationActionsAction.ActionPathGuardDecisionMapping",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

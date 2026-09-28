@@ -1,0 +1,51 @@
+{
+  "component_id": "T028-SR-014-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-014-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "An authorized scheduled request **shall** be placed in a bounded pending queue ordered by the declared `OrderingRule`; `drain` **shall** complete due pending actions within a bounded step budget under the declared `LateItemPolicy`; a full queue **shall** fail closed (`ActionStatus::CapacityExhausted`) with no emission and no journal; a request that becomes late **shall** be rejected or discarded as declared, with zero emission."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "An authorized scheduled request **shall** be placed in a bounded pending queue ordered by the declared `OrderingRule`; `drain` **shall** complete due pending actions within a bounded step budget under the declared `LateItemPolicy`; a full queue **shall** fail closed (`ActionStatus::CapacityExhausted`) with no emission and no journal; a request that becomes late **shall** be rejected or discarded as declared, with zero emission.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/lifecycle_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-014-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-014 unit verification",
+  "unit_cases": [
+    {
+      "expected": "queue-bound, ordering, and late-policy cases; CHK-15, NEG-17, NEG-18.",
+      "id": "XcomStimulationActionsLifecycle.LifecycleScheduledQueueAndOrdering",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "queue-bound, ordering, and late-policy cases; CHK-15, NEG-17, NEG-18.",
+      "id": "XcomStimulationActionsLifecycle.LifecycleLateItemPolicyMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

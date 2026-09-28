@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-004-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-004-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard's bounded values (`StimulationPolicy`, `StimulationRequest`, `SchemaKey`, `ServiceOwner`, `ResolvedTime`, `GuardDiagnostic`, `GuardSnapshot`) **shall** carry no payload, value body, address, free-form text, or unbounded member; the declared allowed-schema table **shall** be bounded by a declared maximum; a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size; and the absence of a payload-bearing member **shall** be established by declaration inspection."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard's bounded values (`StimulationPolicy`, `StimulationRequest`, `SchemaKey`, `ServiceOwner`, `ResolvedTime`, `GuardDiagnostic`, `GuardSnapshot`) **shall** carry no payload, value body, address, free-form text, or unbounded member; the declared allowed-schema table **shall** be bounded by a declared maximum; a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size; and the absence of a payload-bearing member **shall** be established by declaration inspection.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-004-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-004 unit verification",
+  "unit_cases": [
+    {
+      "expected": "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05.",
+      "id": "XcomStimulationGuardUnit.GuardActionInteractionDirectionTable",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

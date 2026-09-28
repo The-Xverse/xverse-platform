@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-006-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-006-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "After the callback returns an explicit outcome, the journal **shall** durably append and sync an outcome frame; if the outcome append or sync fails, the API **shall** report `EvidenceIncomplete` and **shall** not report success, and a recovery scan **shall** surface the intent as an orphan until an explicit resolution outcome is written."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "After the callback returns an explicit outcome, the journal **shall** durably append and sync an outcome frame; if the outcome append or sync fails, the API **shall** report `EvidenceIncomplete` and **shall** not report success, and a recovery scan **shall** surface the intent as an orphan until an explicit resolution outcome is written.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/failure_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-006-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-006 unit verification",
+  "unit_cases": [
+    {
+      "expected": "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13.",
+      "id": "T026JournalFailure.test_journal_outcome_write_failure_orphan",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

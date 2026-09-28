@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-012-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/zero_emission_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "If any precondition, guard, lease, quota, loop, late-policy, journal, or clock decision declines, the matrix **shall** observe zero emitter calls, byte-identical durable journal bytes, and an operational snapshot unchanged apart from the declared rejection/latency counters; a declined action **shall never** return `Emitted`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-012 allocation"
+}

@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-018-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-018-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal **shall** be local-only and offline: it **shall** access only a host-provided local file path or an injected storage seam, perform no network/socket/resolver/TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, and add no domain-specific primitive."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal **shall** be local-only and offline: it **shall** access only a host-provided local file path or an injected storage seam, perform no network/socket/resolver/TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, and add no domain-specific primitive.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-018-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-018 unit verification",
+  "unit_cases": [
+    {
+      "expected": "forbidden-API source scan, no-listener/no-network check, and the offline build; CHK-19, NEG-27.",
+      "id": "T026JournalConcurrency.test_journal_bounded_deterministic_concurrency",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

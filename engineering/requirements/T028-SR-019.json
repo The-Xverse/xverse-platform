@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "bounded deterministic-concurrency and concurrent-conflict cases; CHK-18, NEG-29, NEG-36."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "id": "T028-SR-019",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-014"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-019"
+  },
+  "statement": "The action path and lease **shall** serialize their state under one mutex each, **shall** invoke no host callback under a lock, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent action execution, lease acquisition, and completion **shall** commit a deterministic total order and **shall never** exceed the declared queue, lease, quota, or lineage bounds or mutate state on a decline.",
+  "status": "accepted",
+  "title": "T028 requirement 019",
+  "verification_intent": "bounded deterministic-concurrency and concurrent-conflict cases; CHK-18, NEG-29, NEG-36."
+}

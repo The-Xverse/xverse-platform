@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-024-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-024-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "The T028 candidate **shall** satisfy the deterministic Fabro gate for an implementation task: the six named work products exist, at least one `src/xverse/xcom/` path and at least one `tests/` path change, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T028 checkbox is marked complete **only** in the implementation stage."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The T028 candidate **shall** satisfy the deterministic Fabro gate for an implementation task: the six named work products exist, at least one `src/xverse/xcom/` path and at least one `tests/` path change, `cmake` configure, build, discovery, and the full `ctest` suite pass, and `git diff --check` is clean; the T028 checkbox is marked complete **only** in the implementation stage.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-024-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-024 unit verification",
+  "unit_cases": [
+    {
+      "expected": "`xcom_feature_gate.py verify T028 <baseline>`; `git diff --check`; CHK-24, NEG-32.",
+      "id": "XcomStimulationActionsConcurrency.LeaseConcurrentRaceSingleWinner",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "component_id": "T028-SR-010-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-010-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "Lease acquisition **shall** be an atomic check-then-insert under one lease-table mutex; a conflicting second owner for the same endpoint generation or the same `(endpoint, session)` **shall** be rejected (`LeaseStatus::Conflict`) with no mutation, and a concurrent race **shall** produce exactly one winner and one conflicted loser."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Lease acquisition **shall** be an atomic check-then-insert under one lease-table mutex; a conflicting second owner for the same endpoint generation or the same `(endpoint, session)` **shall** be rejected (`LeaseStatus::Conflict`) with no mutation, and a concurrent race **shall** produce exactly one winner and one conflicted loser.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/concurrency_tests.cpp",
+    "tests/xcom/stimulation_actions/lease_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-010-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-010 unit verification",
+  "unit_cases": [
+    {
+      "expected": "conflict matrix and the bounded concurrent-race case; CHK-11, CHK-18, NEG-11, NEG-29.",
+      "id": "XcomStimulationActionsLease.LeaseConflictAndCapacityMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "conflict matrix and the bounded concurrent-race case; CHK-11, CHK-18, NEG-11, NEG-29.",
+      "id": "XcomStimulationActionsConcurrency.LeaseConcurrentRaceSingleWinner",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

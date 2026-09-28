@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-008-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "When the matrix exercises clock resolution, an absent, unmapped, or out-of-tolerance resolved time **shall** fail closed before emission and before journaling intent; an immediate request **shall** be explicitly labeled; and the action path and lease registry **shall never** compare or order two raw mismatched clock domains and **shall** call no time authority."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-008 allocation"
+}

@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-005-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-005-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "When the matrix evaluates a lifecycle-state precondition, a `revoked`, `expired`, `declared`, `armed`, or `closing` session state **shall** decline at the action path with `ActionStatus::NotActive` before any emission or journal append, and a directly evaluated closed guard **shall** return `Failed`/`NotOpen`, with zero emission in both cases."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the matrix evaluates a lifecycle-state precondition, a `revoked`, `expired`, `declared`, `armed`, or `closing` session state **shall** decline at the action path with `ActionStatus::NotActive` before any emission or journal append, and a directly evaluated closed guard **shall** return `Failed`/`NotOpen`, with zero emission in both cases.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-005-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-005 unit verification",
+  "unit_cases": [
+    {
+      "expected": "lifecycle-precondition matrix; CHK-06, NEG-06.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixLifecycleAndClosedGuard",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

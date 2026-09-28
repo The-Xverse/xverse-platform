@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-005-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "When a host requests one stimulation emission, the journal **shall** first durably append and sync the intent frame; only after the append and sync succeed **shall** it invoke the host-supplied emission callback exactly once, and the callback **shall** be invoked **outside** the journal mutex; a failed intent append or sync **shall** return `WriteFailed` (or `PartialWrite` when fewer bytes than requested were appended) without invoking the callback at all. `EvidenceIncomplete` is reserved for the case where the intent is durable and only its outcome is missing, and **shall not** be returned for a failed intent append or sync. A retained intent's `request_id` is its durable unique key: a request whose `request_id` is already carried by a retained intent **shall** be rejected (`RejectedConfiguration`) before any append and before any emission, so no unresolved duplicate intent can exist."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-005 allocation"
+}

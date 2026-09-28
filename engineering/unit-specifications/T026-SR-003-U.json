@@ -1,0 +1,58 @@
+{
+  "component_id": "T026-SR-003-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-003-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "An intent record **shall** carry exactly the bounded metadata {permit id, session id, plan digest, request id, correlation id, causation id, action mask, bounded target tag, bounded tool tag, quota cost, clock domain, scheduled timestamp, immediate flag} and an outcome record **shall** carry exactly {request id, closed outcome kind, bounded diagnostic code, clock domain, observed timestamp}; the header **shall** expose no payload, value, address, free-form text, or unbounded member; a compile-time rule **shall** reject construction of either record from a payload byte container or free-form text and **shall** bound the record size; and the absence of a payload-bearing member **shall** be established by declaration inspection. The closed `OutcomeKind` vocabulary **shall** be validated on the public write path: a `journal_then_emit` callback result or a `resolve` outcome whose `kind` is outside the vocabulary **shall** be rejected (`RejectedConfiguration`) without appending that outcome."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "An intent record **shall** carry exactly the bounded metadata {permit id, session id, plan digest, request id, correlation id, causation id, action mask, bounded target tag, bounded tool tag, quota cost, clock domain, scheduled timestamp, immediate flag} and an outcome record **shall** carry exactly {request id, closed outcome kind, bounded diagnostic code, clock domain, observed timestamp}; the header **shall** expose no payload, value, address, free-form text, or unbounded member; a compile-time rule **shall** reject construction of either record from a payload byte container or free-form text and **shall** bound the record size; and the absence of a payload-bearing member **shall** be established by declaration inspection. The closed `OutcomeKind` vocabulary **shall** be validated on the public write path: a `journal_then_emit` callback result or a `resolve` outcome whose `kind` is outside the vocabulary **shall** be rejected (`RejectedConfiguration`) without appending that outcome.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/negative_tests.cpp",
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-003-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-003 unit verification",
+  "unit_cases": [
+    {
+      "expected": "field inspection, a non-vacuous compile-time negative assertion that a payload-accepting constructor or an unbounded record fails to compile, and write-path vocabulary cases; CHK-05, CHK-20, NEG-03, NEG-32.",
+      "id": "T026JournalUnit.test_journal_frame_layout_and_roundtrip",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "field inspection, a non-vacuous compile-time negative assertion that a payload-accepting constructor or an unbounded record fails to compile, and write-path vocabulary cases; CHK-05, CHK-20, NEG-03, NEG-32.",
+      "id": "T026JournalNegative.test_journal_resolution_reference_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "field inspection, a non-vacuous compile-time negative assertion that a payload-accepting constructor or an unbounded record fails to compile, and write-path vocabulary cases; CHK-05, CHK-20, NEG-03, NEG-32.",
+      "id": "T026JournalNegative.test_journal_callback_contract_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

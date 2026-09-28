@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-011-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "When a durable intent cannot obtain a durable outcome, the action **shall** be surfaced as `ActionStatus::EvidenceIncomplete` and **shall never** be reported as `Emitted`; a restart over the same durable bytes **shall** recover the exact intent identity and classify it as an explicit orphan; and `mark_evidence_incomplete`/`close` **shall** report the orphan and **shall never** return `Closed` while it exists."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-011 allocation"
+}

@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-011-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-011-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "For a service invocation or service-emulation request, the guard **shall** reject a missing, mismatched, or ambiguous declared service owner or endpoint generation (`OwnershipConflict`) with no mutation; it **shall** validate the declared ownership identity only and **shall** acquire, hold, release, drain, or quarantine no exclusive lease (that remains `XCOM-DU-018`/ T028)."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "For a service invocation or service-emulation request, the guard **shall** reject a missing, mismatched, or ambiguous declared service owner or endpoint generation (`OwnershipConflict`) with no mutation; it **shall** validate the declared ownership identity only and **shall** acquire, hold, release, drain, or quarantine no exclusive lease (that remains `XCOM-DU-018`/ T028).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-011-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-011 unit verification",
+  "unit_cases": [
+    {
+      "expected": "ownership declaration matrix; CHK-11, NEG-20, NEG-21.",
+      "id": "XcomStimulationGuardMismatch.GuardServiceOwnershipMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

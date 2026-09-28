@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-012-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-012-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "An elapsed lease (a caller-supplied `now >= expires_at` in the lease's declared clock domain) **shall** become inactive and **shall** no longer authorize or conflict-block; the action path **shall** compare only values in one declared domain and **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "An elapsed lease (a caller-supplied `now >= expires_at` in the lease's declared clock domain) **shall** become inactive and **shall** no longer authorize or conflict-block; the action path **shall** compare only values in one declared domain and **shall** never compare or order two raw mismatched clock domains (`XCOM-INV-09`) and **shall** perform no time-authority mutation.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/lease_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-012-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-012 unit verification",
+  "unit_cases": [
+    {
+      "expected": "lease-expiry and unmapped-domain cases; CHK-13, NEG-14, NEG-23.",
+      "id": "XcomStimulationActionsLease.LeaseExpiryAndDomainMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

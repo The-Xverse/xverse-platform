@@ -1,0 +1,52 @@
+{
+  "component_id": "T026-SR-004-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-004-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "A record whose encoded frame exceeds the declared maximum record size **shall** be rejected (`RecordTooLarge`) with no append, and a bounded target/tool tag that is empty, longer than the accepted `Tag` maximum, or non-printable **shall** be rejected (`RejectedConfiguration`) with no append. The same bounded-tag contract **shall** hold on recovery: a complete frame whose declared target/tool length exceeds `Tag::max_length`, or whose tag bytes are empty, NUL-containing, or non-printable, **shall** stop the scan with `CorruptRecord`, **shall** yield no recovered value, and **shall** not manufacture a false orphan."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "A record whose encoded frame exceeds the declared maximum record size **shall** be rejected (`RecordTooLarge`) with no append, and a bounded target/tool tag that is empty, longer than the accepted `Tag` maximum, or non-printable **shall** be rejected (`RejectedConfiguration`) with no append. The same bounded-tag contract **shall** hold on recovery: a complete frame whose declared target/tool length exceeds `Tag::max_length`, or whose tag bytes are empty, NUL-containing, or non-printable, **shall** stop the scan with `CorruptRecord`, **shall** yield no recovered value, and **shall** not manufacture a false orphan.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/recovery_tests.cpp",
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-004-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-004 unit verification",
+  "unit_cases": [
+    {
+      "expected": "record-size and tag-validity boundary cases plus a crafted digest-valid out-of-contract recovery frame; CHK-06, NEG-04, NEG-05, NEG-31.",
+      "id": "T026JournalUnit.test_journal_record_size_and_tag_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "record-size and tag-validity boundary cases plus a crafted digest-valid out-of-contract recovery frame; CHK-06, NEG-04, NEG-05, NEG-31.",
+      "id": "T026JournalRecovery.test_journal_over_long_recovered_tag_is_corrupt",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-006-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "After the callback returns an explicit outcome, the journal **shall** durably append and sync an outcome frame; if the outcome append or sync fails, the API **shall** report `EvidenceIncomplete` and **shall** not report success, and a recovery scan **shall** surface the intent as an orphan until an explicit resolution outcome is written."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-006 allocation"
+}

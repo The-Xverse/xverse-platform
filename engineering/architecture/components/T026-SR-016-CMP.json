@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-016-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "The journal status vocabulary **shall** be closed, enumerable, and deterministically ordered; the same operation sequence **shall** produce the same primary status, the same frame bytes, and the same recovery summary across repeated bounded runs, and a failure **shall** leave the retained count, retained bytes, and index unchanged except for a declared boundary restoration."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-016 allocation"
+}

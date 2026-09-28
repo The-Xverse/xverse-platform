@@ -1,0 +1,51 @@
+{
+  "component_id": "T027-SR-022-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-022-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** evaluate and return its decision without calling any emission, routing, injection, invocation, emulation, or lease entry point, and its public surface **shall** expose no such entry point; the guard **shall** be the only T027 production surface that produces a decision and **shall** produce no side effect outside its own bounded tallies."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** evaluate and return its decision without calling any emission, routing, injection, invocation, emulation, or lease entry point, and its public surface **shall** expose no such entry point; the guard **shall** be the only T027 production surface that produces a decision and **shall** produce no side effect outside its own bounded tallies.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/negative_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-022-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-022 unit verification",
+  "unit_cases": [
+    {
+      "expected": "declaration/surface inspection and the closed-guard case; CHK-15, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardNegative.GuardRejectionZeroMutationAndNoEmission",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "declaration/surface inspection and the closed-guard case; CHK-15, NEG-27, NEG-34.",
+      "id": "XcomStimulationGuardNegative.GuardClosedGuardRejects",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

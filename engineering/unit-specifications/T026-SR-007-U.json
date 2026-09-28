@@ -1,0 +1,51 @@
+{
+  "component_id": "T026-SR-007-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-007-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "If the emission callback is absent (null) the request **shall** be rejected (`RejectedConfiguration`) before any intent is written; if the callback returns an outcome whose `kind` is outside the closed `OutcomeKind` vocabulary the invalid outcome **shall not** be appended and the call **shall** report `RejectedConfiguration`, leaving the durable intent an explicit orphan; and if the callback throws a host exception the journal **shall** contain a durable intent with no outcome, the host exception **shall** propagate unmodified, recovery **shall** classify that intent `EvidenceIncomplete`, and the call **shall never** report `Ok`."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "If the emission callback is absent (null) the request **shall** be rejected (`RejectedConfiguration`) before any intent is written; if the callback returns an outcome whose `kind` is outside the closed `OutcomeKind` vocabulary the invalid outcome **shall not** be appended and the call **shall** report `RejectedConfiguration`, leaving the durable intent an explicit orphan; and if the callback throws a host exception the journal **shall** contain a durable intent with no outcome, the host exception **shall** propagate unmodified, recovery **shall** classify that intent `EvidenceIncomplete`, and the call **shall never** report `Ok`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/negative_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-007-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-007 unit verification",
+  "unit_cases": [
+    {
+      "expected": "null-callback, out-of-vocabulary-return, and throwing-callback cases; CHK-09, NEG-09, NEG-10, NEG-32.",
+      "id": "T026JournalNegative.test_journal_resolution_reference_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "null-callback, out-of-vocabulary-return, and throwing-callback cases; CHK-09, NEG-09, NEG-10, NEG-32.",
+      "id": "T026JournalNegative.test_journal_callback_contract_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-020-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-020-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
+  ],
+  "invariants": [
+    "The bounded deterministic-concurrency cases **shall** use at most four threads and a finite declared operation count, invoke no host callback under a lock, never exceed the declared queue, lease, quota, or lineage bounds, commit a deterministic total order, and produce identical statuses, states, outcomes, and snapshots across repeated runs; a lease race **shall** yield exactly one winner."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The bounded deterministic-concurrency cases **shall** use at most four threads and a finite declared operation count, invoke no host callback under a lock, never exceed the declared queue, lease, quota, or lineage bounds, commit a deterministic total order, and produce identical statuses, states, outcomes, and snapshots across repeated runs; a lease race **shall** yield exactly one winner.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-020-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-020 unit verification",
+  "unit_cases": [
+    {
+      "expected": "bounded deterministic-concurrency, quota, and single-winner cases; CHK-16, NEG-08, NEG-31, NEG-32.",
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentQuotaEmissionDeterminism",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "bounded deterministic-concurrency, quota, and single-winner cases; CHK-16, NEG-08, NEG-31, NEG-32.",
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentLeaseSingleWinnerAndCompletion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

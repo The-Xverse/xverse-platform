@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T027-SR-013-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t027/requirements.md",
+  "responsibilities": [
+    "If an evaluation returns `Rejected` or `Failed`, the guard **shall** leave its action tally, window tally, loop-detection window, bound permit, and bound policy unchanged, **shall** return an explicit reason, and **shall** expose no emission, callback, route, provider, item, or lease path; a rejected or failed evaluation **shall never** report `Authorized`."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T027-SR-013 allocation"
+}

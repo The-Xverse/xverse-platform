@@ -1,0 +1,64 @@
+{
+  "component_id": "T028-SR-007-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-007-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "For `InjectSignal`, `InjectMessage`, and `InvokeService`, an authorized request **shall** journal its payload-free intent through the accepted T026 journal before emission, invoke the emission seam exactly once, record an explicit outcome, and return `ActionStatus::Emitted` only when the journal reports `Ok` **and** the host emission reports `EmissionStatus::Delivered`; when the intent is durable but the outcome is not, the action path **shall** return `ActionStatus::EvidenceIncomplete` and **shall never** report `Emitted`; when the intent and outcome are durable but the host reports `Rejected` or `Unavailable`, the action path **shall** return the distinct non-success `ActionStatus::EmissionRejected`/`EmissionUnavailable` and **shall never** report `Emitted` (`T028-STK-002`)."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "For `InjectSignal`, `InjectMessage`, and `InvokeService`, an authorized request **shall** journal its payload-free intent through the accepted T026 journal before emission, invoke the emission seam exactly once, record an explicit outcome, and return `ActionStatus::Emitted` only when the journal reports `Ok` **and** the host emission reports `EmissionStatus::Delivered`; when the intent is durable but the outcome is not, the action path **shall** return `ActionStatus::EvidenceIncomplete` and **shall never** report `Emitted`; when the intent and outcome are durable but the host reports `Rejected` or `Unavailable`, the action path **shall** return the distinct non-success `ActionStatus::EmissionRejected`/`EmissionUnavailable` and **shall never** report `Emitted` (`T028-STK-002`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp",
+    "tests/xcom/stimulation_actions/lifecycle_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-007-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-007 unit verification",
+  "unit_cases": [
+    {
+      "expected": "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25.",
+      "id": "XcomStimulationActionsAction.ActionPathExecutesNominalActionKinds",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25.",
+      "id": "XcomStimulationActionsAction.ActionPathSyntheticProvenance",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25.",
+      "id": "XcomStimulationActionsLifecycle.LifecycleEvidenceIncompleteCompletion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "nominal action and evidence-incomplete cases; CHK-08, CHK-15, CHK-16, NEG-07, NEG-25.",
+      "id": "XcomStimulationActionsLifecycle.LifecycleTerminalEvidenceIncompleteNeverClosed",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

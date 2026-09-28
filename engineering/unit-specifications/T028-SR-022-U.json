@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-022-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-022-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "Every new public C++ declaration **shall** carry useful Doxygen documentation including ownership, lifetime, thread-safety, and failure contract, and the header file block **shall** name T028 and `\\ingroup xcom_stim`; the admitted repository documentation configuration **shall** be unchanged."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Every new public C++ declaration **shall** carry useful Doxygen documentation including ownership, lifetime, thread-safety, and failure contract, and the header file block **shall** name T028 and `\\ingroup xcom_stim`; the admitted repository documentation configuration **shall** be unchanged.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/negative_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-022-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-022 unit verification",
+  "unit_cases": [
+    {
+      "expected": "declaration inspection and the existing documentation configuration check; CHK-22.",
+      "id": "XcomStimulationActionsNegative.ActionPathPayloadFreeDeclarationInspection",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T028-SR-009-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t028/requirements.md",
+  "responsibilities": [
+    "A service-emulation request **shall** acquire an exclusive lease bound to the exact session identity, endpoint identity, endpoint generation, and plan digest before emission; a missing, foreign, or mismatched identity **shall** be rejected (`LeaseStatus::SessionMismatch` / `GenerationMismatch` / `PlanMismatch`) with no mutation and no emission."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T028-SR-009 allocation"
+}

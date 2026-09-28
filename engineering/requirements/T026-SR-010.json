@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "truncated-tail and corrupt-frame recovery cases; CHK-12, NEG-15, NEG-16."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "id": "T026-SR-010",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-021"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-010"
+  },
+  "statement": "On recovery, a torn or truncated trailing frame **shall** be discarded (and its bytes excluded from the retained view) while every complete preceding frame is preserved exactly; a complete frame whose digest does not match **shall** stop the scan with `CorruptRecord` without discarding the preceding complete records.",
+  "status": "accepted",
+  "title": "T026 requirement 010",
+  "verification_intent": "truncated-tail and corrupt-frame recovery cases; CHK-12, NEG-15, NEG-16."
+}

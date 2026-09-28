@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "callback-outside-lock probe and bounded deterministic-concurrency check; CHK-17, CHK-18, NEG-26."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "id": "T026-SR-017",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-014"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-017"
+  },
+  "statement": "The journal **shall** declare single-writer serialization under one per-journal mutex, **shall** invoke no host callback while holding that mutex, and the tests **shall** use only a bounded, finite thread count and iteration count with no wall-clock verdict; two independent journals driven in parallel **shall** each produce the single-threaded golden byte stream.",
+  "status": "accepted",
+  "title": "T026 requirement 017",
+  "verification_intent": "callback-outside-lock probe and bounded deterministic-concurrency check; CHK-17, CHK-18, NEG-26."
+}

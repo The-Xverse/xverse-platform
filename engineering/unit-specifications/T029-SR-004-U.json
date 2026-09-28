@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-004-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-004-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "When the matrix evaluates a request, every request-evaluation guard reason **shall** be exercised through the accepted action path and **shall** map to the declared `ActionStatus` (`Rejected` for a definite mismatch, `Failed` for an indeterminate evaluation) with the exact `GuardReason` preserved; the accepted guard **shall** be evaluated exactly once per request, the recording emitter **shall** observe zero calls, and the durable journal **shall** append zero records."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When the matrix evaluates a request, every request-evaluation guard reason **shall** be exercised through the accepted action path and **shall** map to the declared `ActionStatus` (`Rejected` for a definite mismatch, `Failed` for an indeterminate evaluation) with the exact `GuardReason` preserved; the accepted guard **shall** be evaluated exactly once per request, the recording emitter **shall** observe zero calls, and the durable journal **shall** append zero records.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-004-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-004 unit verification",
+  "unit_cases": [
+    {
+      "expected": "mismatch-row matrix; CHK-06, CHK-15, NEG-04, NEG-05.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixEveryGuardReason",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

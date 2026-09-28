@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-010-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-010-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "invariants": [
+    "When an intent append or sync fails, the action **shall** return the matching non-emitting `ActionStatus` (`JournalFailed`/`CapacityExhausted`/`RejectedConfiguration`), the emitter **shall** observe zero calls, and no durable record **shall** be committed."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When an intent append or sync fails, the action **shall** return the matching non-emitting `ActionStatus` (`JournalFailed`/`CapacityExhausted`/`RejectedConfiguration`), the emitter **shall** observe zero calls, and no durable record **shall** be committed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/journal_recovery_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-010-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-010 unit verification",
+  "unit_cases": [
+    {
+      "expected": "injected intent-append/sync failure matrix; CHK-11, NEG-14, NEG-15.",
+      "id": "XcomStimulationMatrixJournalRecovery.JournalIntentAppendFailureEmitsNothing",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "injected intent-append/sync failure matrix; CHK-11, NEG-14, NEG-15.",
+      "id": "XcomStimulationMatrixJournalRecovery.JournalCapacityExhaustionFailsClosed",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

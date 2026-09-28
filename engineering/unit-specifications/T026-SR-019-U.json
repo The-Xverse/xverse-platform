@@ -1,0 +1,45 @@
+{
+  "component_id": "T026-SR-019-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-019-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "Committed source, tests, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value; test scratch files **shall** be bounded, synthetic, and created under a test-local, host-derived build/scratch path that is never printed into public evidence."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "Committed source, tests, work products, and evidence **shall** contain no credential, private address, unrestricted or real payload, proprietary source excerpt, environment-specific absolute host path, or sensitive deployment value; test scratch files **shall** be bounded, synthetic, and created under a test-local, host-derived build/scratch path that is never printed into public evidence.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-019-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-019 unit verification",
+  "unit_cases": [
+    {
+      "expected": "public-safety scan and path-hygiene inspection; CHK-21, NEG-28.",
+      "id": "T026JournalUnit.test_journal_record_size_and_tag_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "component_id": "T026-SR-011-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-011-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "The journal **shall** enforce a declared maximum retained-record count and a declared maximum journal byte size; when a new intent would exceed either bound the request **shall** be rejected with `CapacityExhausted` **before** any append and **before** any emission, and every already-complete retained record **shall** be preserved byte-for-byte."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The journal **shall** enforce a declared maximum retained-record count and a declared maximum journal byte size; when a new intent would exceed either bound the request **shall** be rejected with `CapacityExhausted` **before** any append and **before** any emission, and every already-complete retained record **shall** be preserved byte-for-byte.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/negative_tests.cpp",
+    "tests/xcom/stimulation_journal/recovery_tests.cpp",
+    "tests/xcom/stimulation_journal/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-011-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-011 unit verification",
+  "unit_cases": [
+    {
+      "expected": "record-count and byte-capacity boundaries at minimum and maximum with zero-emission checks and byte-preservation; CHK-13, NEG-17, NEG-18.",
+      "id": "T026JournalUnit.test_journal_snapshot_and_capacity_accounting",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "record-count and byte-capacity boundaries at minimum and maximum with zero-emission checks and byte-preservation; CHK-13, NEG-17, NEG-18.",
+      "id": "T026JournalNegative.test_journal_capacity_bound_matrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "record-count and byte-capacity boundaries at minimum and maximum with zero-emission checks and byte-preservation; CHK-13, NEG-17, NEG-18.",
+      "id": "T026JournalRecovery.test_journal_over_bound_recovery_fails_closed",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

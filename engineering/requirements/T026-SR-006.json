@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13."
+  ],
+  "applicability": "T026 bounded stimulation candidate",
+  "id": "T026-SR-006",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-021"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t026/requirements.md T026-SR-006"
+  },
+  "statement": "After the callback returns an explicit outcome, the journal **shall** durably append and sync an outcome frame; if the outcome append or sync fails, the API **shall** report `EvidenceIncomplete` and **shall** not report success, and a recovery scan **shall** surface the intent as an orphan until an explicit resolution outcome is written.",
+  "status": "accepted",
+  "title": "T026 requirement 006",
+  "verification_intent": "outcome-write-failure and orphan-surfacing cases; CHK-08, CHK-12, NEG-08, NEG-13."
+}

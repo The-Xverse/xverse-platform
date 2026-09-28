@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "bounded deterministic-concurrency and concurrent-rejection cases; CHK-18, NEG-29, NEG-36."
+  ],
+  "applicability": "T027 bounded stimulation candidate",
+  "id": "T027-SR-015",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-FR-014"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t027/requirements.md T027-SR-015"
+  },
+  "statement": "The guard **shall** serialize evaluation and commit under one per-guard mutex, **shall** invoke no host callback, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent evaluations of one guard **shall** commit a deterministic total order and **shall never** exceed the declared quota or loop-window bounds or mutate state on a rejection.",
+  "status": "accepted",
+  "title": "T027 requirement 015",
+  "verification_intent": "bounded deterministic-concurrency and concurrent-rejection cases; CHK-18, NEG-29, NEG-36."
+}

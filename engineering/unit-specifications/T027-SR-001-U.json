@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-001-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-001-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "The guard **shall** be a new, additive C++20 unit at `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` and `src/xverse/xcom/src/stimulation_guard.cpp`, exposed through one new runtime target `xverse_xcom_stimulation_guard` added to the T012 `XVERSE_XCOM_RUNTIME_TARGETS` inventory and routed through the inherited warning-as-error rule; it **shall** change no existing production header, source, or target behavior, and every existing test case, target, label, command, and expected value **shall** be preserved unchanged."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The guard **shall** be a new, additive C++20 unit at `src/xverse/xcom/include/xverse/xcom/stimulation_guard.hpp` and `src/xverse/xcom/src/stimulation_guard.cpp`, exposed through one new runtime target `xverse_xcom_stimulation_guard` added to the T012 `XVERSE_XCOM_RUNTIME_TARGETS` inventory and routed through the inherited warning-as-error rule; it **shall** change no existing production header, source, or target behavior, and every existing test case, target, label, command, and expected value **shall** be preserved unchanged.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/unit_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-001-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-001 unit verification",
+  "unit_cases": [
+    {
+      "expected": "changed-path and discovered-count comparison plus the full suite; CHK-02, CHK-04, CHK-18, NEG-01.",
+      "id": "XcomStimulationGuardUnit.GuardAuthorizesNominalRequestAndSnapshot",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

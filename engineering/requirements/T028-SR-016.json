@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "drain/close/revoke/expiry/evidence-incomplete matrix; CHK-16, NEG-20, NEG-21, NEG-22."
+  ],
+  "applicability": "T028 bounded stimulation candidate",
+  "id": "T028-SR-016",
+  "level": "software",
+  "parents": [
+    "XCOM-SYS-SC-007"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t028/requirements.md T028-SR-016"
+  },
+  "statement": "`drain` **shall** complete due pending actions in deterministic order within the bounded step budget; `close` **shall** drain then release every held lease; `revoke` and `expire` **shall** cancel every pending action with zero emission and release or quarantine every held lease; `mark_evidence_incomplete` **shall** surface every intent without a durable outcome explicitly; each completion operation **shall** return a bounded, deterministic `CompletionReport`; and a due, previously authorized pending action that cannot be completed (a failed intent append or a non-delivered host emission) **shall** be surfaced in that report (`CompletionReport.failed`) and **shall never** be reported as a clean `Drained`/`Closed` while a due action was dropped without a durable intent.",
+  "status": "accepted",
+  "title": "T028 requirement 016",
+  "verification_intent": "drain/close/revoke/expiry/evidence-incomplete matrix; CHK-16, NEG-20, NEG-21, NEG-22."
+}

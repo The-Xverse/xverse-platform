@@ -1,0 +1,45 @@
+{
+  "component_id": "T028-SR-003-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-003-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "The unit **shall** expose closed, enumerable, deterministically ordered vocabularies: `ActionStatus` (one enumerator per bounded action outcome), `LeaseStatus` (one enumerator per bounded lease operation outcome), `LeaseState` (`None`/`Active`/`Released`/`Quarantined`/`Expired`), `OrderingRule`, `LateItemPolicy`, `DrainState`, `EmissionStatus`, and `CompletionOutcome`; it **shall** reuse the accepted T027 `StimulationAction`/`StimulationActionMask`/`GuardReason`/`GuardOutcome` and the accepted T026 `OutcomeKind`/`JournalStatus` and the accepted T-CORE `OriginKind` rather than redefining them, and stable precedence **shall** be declared."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The unit **shall** expose closed, enumerable, deterministically ordered vocabularies: `ActionStatus` (one enumerator per bounded action outcome), `LeaseStatus` (one enumerator per bounded lease operation outcome), `LeaseState` (`None`/`Active`/`Released`/`Quarantined`/`Expired`), `OrderingRule`, `LateItemPolicy`, `DrainState`, `EmissionStatus`, and `CompletionOutcome`; it **shall** reuse the accepted T027 `StimulationAction`/`StimulationActionMask`/`GuardReason`/`GuardOutcome` and the accepted T026 `OutcomeKind`/`JournalStatus` and the accepted T-CORE `OriginKind` rather than redefining them, and stable precedence **shall** be declared.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-003-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-003 unit verification",
+  "unit_cases": [
+    {
+      "expected": "vocabulary inspection and determinism cases; CHK-17, NEG-28.",
+      "id": "XcomStimulationActionsAction.ActionPathVocabularyAndDeterminism",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

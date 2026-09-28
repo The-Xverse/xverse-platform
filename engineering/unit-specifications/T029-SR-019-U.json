@@ -1,0 +1,51 @@
+{
+  "component_id": "T029-SR-019-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-019-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "invariants": [
+    "The matrix **shall** prove the completion contract end-to-end: `drain`, `close`, `revoke`, `expire`, and `mark_evidence_incomplete` return the declared bounded outcomes; every pending action is drained or cancelled as declared; every held lease is released or quarantined; and a durable intent without a durable outcome forces `EvidenceIncomplete` and is never reported as `Closed`."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The matrix **shall** prove the completion contract end-to-end: `drain`, `close`, `revoke`, `expire`, and `mark_evidence_incomplete` return the declared bounded outcomes; every pending action is drained or cancelled as declared; every held lease is released or quarantined; and a durable intent without a durable outcome forces `EvidenceIncomplete` and is never reported as `Closed`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-019-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-019 unit verification",
+  "unit_cases": [
+    {
+      "expected": "drain/terminal/evidence-incomplete completion matrix; CHK-14, CHK-18, NEG-17, NEG-29, NEG-30.",
+      "id": "XcomStimulationMatrixLeaseDrain.DrainTerminalLifecycleMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "drain/terminal/evidence-incomplete completion matrix; CHK-14, CHK-18, NEG-17, NEG-29, NEG-30.",
+      "id": "XcomStimulationMatrixLeaseDrain.DrainOrderingLatePolicyAndImmediateLabel",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

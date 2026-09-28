@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-022-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-022-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "invariants": [
+    "The slice **shall** be local-only and offline beyond the test-local fault-injectable journal storage seam and a bounded optional test-local scratch path for the restart case; it **shall** perform no network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy repository/binary access, **shall** retain or log no payload byte, and **shall** add no domain-specific primitive."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The slice **shall** be local-only and offline beyond the test-local fault-injectable journal storage seam and a bounded optional test-local scratch path for the restart case; it **shall** perform no network, socket, resolver, TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy repository/binary access, **shall** retain or log no payload byte, and **shall** add no domain-specific primitive.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/permit_action_matrix_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-022-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-022 unit verification",
+  "unit_cases": [
+    {
+      "expected": "forbidden-API source scan and the offline build; CHK-19, CHK-20, NEG-34.",
+      "id": "XcomStimulationMatrixPermitAction.MismatchMatrixQuotaExhaustion",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

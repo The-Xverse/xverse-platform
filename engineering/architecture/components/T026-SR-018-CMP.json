@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T026-SR-018-CMP",
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t026/requirements.md",
+  "responsibilities": [
+    "The journal **shall** be local-only and offline: it **shall** access only a host-provided local file path or an injected storage seam, perform no network/socket/resolver/TLS, ambient-configuration, secret, dynamic-load, subprocess, or legacy-repository/binary access, and add no domain-specific primitive."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T026-SR-018 allocation"
+}

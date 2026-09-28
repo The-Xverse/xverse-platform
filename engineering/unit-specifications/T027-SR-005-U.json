@@ -1,0 +1,45 @@
+{
+  "component_id": "T027-SR-005-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T027-SR-005-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_guard.cpp"
+  ],
+  "invariants": [
+    "When a request is evaluated, if its session identity, permit identity, or plan digest differs from the bound immutable permit, the guard **shall** reject it (`PermitMismatch`) before any state mutation and before any emission; every authorization **shall** be bound to the exact plan digest (`XCOM-INV-07`)."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "When a request is evaluated, if its session identity, permit identity, or plan digest differs from the bound immutable permit, the guard **shall** reject it (`PermitMismatch`) before any state mutation and before any emission; every authorization **shall** be bound to the exact plan digest (`XCOM-INV-07`).",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_guard/mismatch_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T027-SR-005-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T027-SR-005 unit verification",
+  "unit_cases": [
+    {
+      "expected": "identity/plan mismatch matrix; CHK-06, CHK-16, NEG-06, NEG-07.",
+      "id": "XcomStimulationGuardMismatch.GuardIdentityAndPlanMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

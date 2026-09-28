@@ -1,0 +1,45 @@
+{
+  "component_id": "T029-SR-012-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T029-SR-012-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/zero_emission_tests.cpp"
+  ],
+  "invariants": [
+    "If any precondition, guard, lease, quota, loop, late-policy, journal, or clock decision declines, the matrix **shall** observe zero emitter calls, byte-identical durable journal bytes, and an operational snapshot unchanged apart from the declared rejection/latency counters; a declined action **shall never** return `Emitted`."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "If any precondition, guard, lease, quota, loop, late-policy, journal, or clock decision declines, the matrix **shall** observe zero emitter calls, byte-identical durable journal bytes, and an operational snapshot unchanged apart from the declared rejection/latency counters; a declined action **shall never** return `Emitted`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_matrix/zero_emission_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T029-SR-012-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T029-SR-012 unit verification",
+  "unit_cases": [
+    {
+      "expected": "decline-family snapshot comparison with zero-call counting; CHK-12, NEG-18, NEG-19, NEG-20.",
+      "id": "XcomStimulationMatrixZeroEmission.ZeroEmissionAcrossEveryRejectionFamily",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

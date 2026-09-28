@@ -1,0 +1,51 @@
+{
+  "component_id": "T026-SR-010-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-010-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "On recovery, a torn or truncated trailing frame **shall** be discarded (and its bytes excluded from the retained view) while every complete preceding frame is preserved exactly; a complete frame whose digest does not match **shall** stop the scan with `CorruptRecord` without discarding the preceding complete records."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "On recovery, a torn or truncated trailing frame **shall** be discarded (and its bytes excluded from the retained view) while every complete preceding frame is preserved exactly; a complete frame whose digest does not match **shall** stop the scan with `CorruptRecord` without discarding the preceding complete records.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/recovery_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-010-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-010 unit verification",
+  "unit_cases": [
+    {
+      "expected": "truncated-tail and corrupt-frame recovery cases; CHK-12, NEG-15, NEG-16.",
+      "id": "T026JournalRecovery.test_journal_torn_tail_and_corrupt_frame",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "truncated-tail and corrupt-frame recovery cases; CHK-12, NEG-15, NEG-16.",
+      "id": "T026JournalRecovery.test_journal_over_long_recovered_tag_is_corrupt",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

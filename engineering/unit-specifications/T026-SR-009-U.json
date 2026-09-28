@@ -1,0 +1,52 @@
+{
+  "component_id": "T026-SR-009-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T026-SR-009-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_journal.cpp"
+  ],
+  "invariants": [
+    "If a storage append reports fewer bytes than requested (partial write) or a transient write/sync failure, the journal **shall** fail closed: it **shall** attempt to restore the last complete frame boundary (truncate to the last known-good offset) and, if it cannot, **shall** mark the journal unusable for further appends and report `PartialWrite`/`WriteFailed`; it **shall** never count a partial frame as a retained record."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "If a storage append reports fewer bytes than requested (partial write) or a transient write/sync failure, the journal **shall** fail closed: it **shall** attempt to restore the last complete frame boundary (truncate to the last known-good offset) and, if it cannot, **shall** mark the journal unusable for further appends and report `PartialWrite`/`WriteFailed`; it **shall** never count a partial frame as a retained record.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_journal/failure_tests.cpp",
+    "tests/xcom/stimulation_journal/recovery_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T026-SR-009-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T026-SR-009 unit verification",
+  "unit_cases": [
+    {
+      "expected": "fault-injected short append and sync failure with boundary restoration; CHK-11, NEG-12, NEG-14.",
+      "id": "T026JournalRecovery.test_journal_torn_tail_and_corrupt_frame",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "fault-injected short append and sync failure with boundary restoration; CHK-11, NEG-12, NEG-14.",
+      "id": "T026JournalFailure.test_journal_sync_failure_and_partial_write",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

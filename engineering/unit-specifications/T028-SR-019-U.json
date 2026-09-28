@@ -1,0 +1,51 @@
+{
+  "component_id": "T028-SR-019-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-019-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "The action path and lease **shall** serialize their state under one mutex each, **shall** invoke no host callback under a lock, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent action execution, lease acquisition, and completion **shall** commit a deterministic total order and **shall never** exceed the declared queue, lease, quota, or lineage bounds or mutate state on a decline."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The action path and lease **shall** serialize their state under one mutex each, **shall** invoke no host callback under a lock, and the tests **shall** use only a bounded, finite thread and iteration count with no wall-clock verdict; concurrent action execution, lease acquisition, and completion **shall** commit a deterministic total order and **shall never** exceed the declared queue, lease, quota, or lineage bounds or mutate state on a decline.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/concurrency_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-019-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-019 unit verification",
+  "unit_cases": [
+    {
+      "expected": "bounded deterministic-concurrency and concurrent-conflict cases; CHK-18, NEG-29, NEG-36.",
+      "id": "XcomStimulationActionsConcurrency.ActionPathBoundedDeterministicConcurrency",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "bounded deterministic-concurrency and concurrent-conflict cases; CHK-18, NEG-29, NEG-36.",
+      "id": "XcomStimulationActionsConcurrency.LeaseConcurrentRaceSingleWinner",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

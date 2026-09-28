@@ -1,0 +1,52 @@
+{
+  "component_id": "T028-SR-004-CMP",
+  "concurrency": "bounded deterministic test execution",
+  "errors": [
+    "test assertion failure"
+  ],
+  "id": "T028-SR-004-U",
+  "inputs": [
+    "bounded synthetic test fixture"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/src/stimulation_actions.cpp"
+  ],
+  "invariants": [
+    "The unit's bounded values (`ActionPathConfig`, `EndpointGeneration`, `EmulationLease`, `LeaseSnapshot`, `PendingAction`, `SyntheticStimulationItem`, `ActionDiagnostic`, `ActionPathSnapshot`, `CompletionReport`) **shall** carry no payload, value body, address, free-form text, or unbounded member; a declared per-action payload view **shall** be forwarded to the emission seam only and **shall** be retained, journaled, or logged by nothing; the pending queue, lease table, and lineage window **shall** be bounded by declared maxima; and a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size."
+  ],
+  "note": "Unit cases contribute to this requirement; governance and documentation obligations also require stage and strict delivery checks.",
+  "outputs": [
+    "declared action, journal, guard, or test result"
+  ],
+  "purpose": "The unit's bounded values (`ActionPathConfig`, `EndpointGeneration`, `EmulationLease`, `LeaseSnapshot`, `PendingAction`, `SyntheticStimulationItem`, `ActionDiagnostic`, `ActionPathSnapshot`, `CompletionReport`) **shall** carry no payload, value body, address, free-form text, or unbounded member; a declared per-action payload view **shall** be forwarded to the emission seam only and **shall** be retained, journaled, or logged by nothing; the pending queue, lease table, and lineage window **shall** be bounded by declared maxima; and a compile-time rule **shall** reject construction from a payload byte container or free-form text and **shall** bound each value's size.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/stimulation_actions/action_tests.cpp",
+    "tests/xcom/stimulation_actions/negative_tests.cpp"
+  ],
+  "state": "bounded task-owned state",
+  "static_checks": [
+    {
+      "expected": "no static-analysis or compiler error",
+      "id": "T028-SR-004-STATIC",
+      "rule": "task source compiles under the accepted X-COM profile",
+      "tool": "cppcheck and warning-as-error C++ build"
+    }
+  ],
+  "title": "T028-SR-004 unit verification",
+  "unit_cases": [
+    {
+      "expected": "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05.",
+      "id": "XcomStimulationActionsAction.ActionPathConfigAndPreconditionMatrix",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    },
+    {
+      "expected": "field inspection and a non-vacuous compile-time negative assertion; CHK-05, CHK-20, NEG-03, NEG-05.",
+      "id": "XcomStimulationActionsNegative.ActionPathPayloadFreeDeclarationInspection",
+      "precondition": "declared bounded fixture",
+      "stimulus": "execute the documented task case"
+    }
+  ]
+}

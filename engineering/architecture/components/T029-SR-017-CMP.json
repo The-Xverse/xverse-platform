@@ -1,0 +1,22 @@
+{
+  "concurrency": "bounded deterministic task contract",
+  "dependencies": [
+    "accepted T025 and X-COM contracts"
+  ],
+  "deployment": "in-process X-COM library or offline test process",
+  "errors": [
+    "declared fail-closed status or test failure"
+  ],
+  "id": "T029-SR-017-CMP",
+  "interfaces": [
+    "tests/xcom/stimulation_matrix/lease_drain_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t029/requirements.md",
+  "responsibilities": [
+    "An elapsed lease in a declared domain **shall** become inactive and **shall** no longer authorize or conflict-block, and a value in a foreign domain **shall never** be compared or ordered (`XCOM-INV-09`)."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "bounded task-owned state",
+  "title": "T029-SR-017 allocation"
+}
