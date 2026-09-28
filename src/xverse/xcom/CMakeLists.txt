@@ -727,6 +727,7 @@ if(BUILD_TESTING)
       provenance
       lease_drain
       concurrency
+      external_review
   )
     string(REPLACE "_" "-" matrix_label "${matrix_kind}")
     add_executable(

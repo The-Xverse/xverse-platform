@@ -535,6 +535,8 @@ private:
     /// \brief Whether the frame is an outcome frame.
     /// \unitspec{T026-U-JOURNAL}
     bool is_outcome{false};
+    /// \brief True only while the owning callback is running; never persisted.
+    bool in_flight{false};
     /// \brief Identity carried by the frame (intent request id or outcome request id).
     /// \unitspec{T026-U-JOURNAL}
     std::uint64_t request_id{0U};

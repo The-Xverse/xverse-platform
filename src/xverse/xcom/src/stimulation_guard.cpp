@@ -350,6 +350,20 @@ GuardSnapshot StimulationGuard::snapshot() const {
   return result;
 }
 
+StimulationGuard::AuthorizationCheckpoint StimulationGuard::checkpoint() const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return {actions_authorized_, window_actions_, evaluations_, loop_window_};
+}
+
+void StimulationGuard::restore_authorization(const AuthorizationCheckpoint &checkpoint) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  actions_authorized_ = checkpoint.actions_authorized;
+  window_actions_ = checkpoint.window_actions;
+  evaluations_ = checkpoint.evaluations;
+  // The checkpoint was copied before authorization, and the vector already has bounded capacity.
+  loop_window_ = checkpoint.loop_window;
+}
+
 bool StimulationGuard::is_open() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return open_;

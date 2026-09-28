@@ -904,6 +904,7 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
     }
     IndexEntry intent_entry;
     intent_entry.is_outcome = false;
+    intent_entry.in_flight = true;
     intent_entry.request_id = intent.request_id;
     intent_entry.intent = intent;
     const JournalStatus append_status = append_frame_locked(intent_frame, intent_entry);
@@ -915,12 +916,31 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
   // A throwing host callback is intentionally not caught: its exception propagates after the
   // durable intent, which then has no outcome and is surfaced by recovery as an explicit
   // `EvidenceIncomplete` orphan. The call never reports `Ok` for a missing outcome.
-  StimulationOutcome produced = emit(intent);
+  StimulationOutcome produced;
+  try {
+    produced = emit(intent);
+  } catch (...) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (IndexEntry &entry : index_) {
+      if (!entry.is_outcome && entry.request_id == intent.request_id) {
+        entry.in_flight = false;
+        break;
+      }
+    }
+    throw;
+  }
   produced.request_id = intent.request_id;
   // Validate the callback-returned kind against the closed vocabulary before encoding: an
   // out-of-vocabulary kind is never appended (which would make the journal write a record its
   // own scan later rejects), so the durable journal stays decodable and the intent is orphaned.
   if (!outcome_kind_in_vocabulary(produced.kind)) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (IndexEntry &entry : index_) {
+      if (!entry.is_outcome && entry.request_id == intent.request_id) {
+        entry.in_flight = false;
+        break;
+      }
+    }
     return JournalStatus::RejectedConfiguration;
   }
   out = produced;
@@ -928,6 +948,12 @@ JournalStatus StimulationJournal::journal_then_emit(const StimulationIntent &int
   const std::vector<std::uint8_t> outcome_frame = encode_outcome_frame(produced);
   {
     std::lock_guard<std::mutex> lock(mutex_);
+    for (IndexEntry &entry : index_) {
+      if (!entry.is_outcome && entry.request_id == intent.request_id) {
+        entry.in_flight = false;
+        break;
+      }
+    }
     if (index_.size() + 1U > config_.max_retained_records) {
       return JournalStatus::EvidenceIncomplete;
     }
@@ -980,6 +1006,9 @@ JournalStatus StimulationJournal::resolve(std::uint64_t request_id,
     if (entry.is_outcome) {
       ++outcomes_with_id;
     } else {
+      if (entry.in_flight) {
+        return JournalStatus::RejectedConfiguration;
+      }
       ++intents_with_id;
     }
   }

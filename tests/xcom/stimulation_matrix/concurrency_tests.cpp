@@ -171,7 +171,7 @@ struct LeaseRun {
     thread.join();
   }
   const val::CompletionReport report =
-      fixture.path->drain(val::CompletionRequest{100, kDomain, val::LifecycleState::active});
+      fixture.path->drain(val::CompletionRequest{99, kDomain, val::LifecycleState::active});
   EXPECT_EQ(not_queued.load(), 0U);
 
   LeaseRun result;

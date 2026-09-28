@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <limits>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -66,6 +67,12 @@ namespace {
   return lhs.request_id < rhs.request_id;
 }
 
+[[nodiscard]] bool is_late(Timestamp now, Timestamp scheduled, Timestamp tolerance) noexcept {
+  // Tolerance is nonnegative. Avoid signed overflow when the legal deadline exceeds Timestamp.
+  return scheduled <= std::numeric_limits<Timestamp>::max() - tolerance &&
+         now > scheduled + tolerance;
+}
+
 } // namespace
 
 // ---------------------------------------------------------------------------------------------
@@ -86,28 +93,36 @@ bool ServiceEmulationRegistry::key_is_valid(const EndpointGeneration &key) noexc
 
 ServiceEmulationRegistry::LeaseEntry *
 ServiceEmulationRegistry::find_locked(const EndpointGeneration &key) noexcept {
+  LeaseEntry *inactive = nullptr;
   for (LeaseEntry &entry : entries_) {
     if (entry.key == key) {
-      return &entry;
+      if (entry.state == LeaseState::Active || entry.emission_reserved) {
+        return &entry;
+      }
+      inactive = &entry;
     }
   }
-  return nullptr;
+  return inactive;
 }
 
 const ServiceEmulationRegistry::LeaseEntry *
 ServiceEmulationRegistry::find_locked(const EndpointGeneration &key) const noexcept {
+  const LeaseEntry *inactive = nullptr;
   for (const LeaseEntry &entry : entries_) {
     if (entry.key == key) {
-      return &entry;
+      if (entry.state == LeaseState::Active || entry.emission_reserved) {
+        return &entry;
+      }
+      inactive = &entry;
     }
   }
-  return nullptr;
+  return inactive;
 }
 
 std::size_t ServiceEmulationRegistry::active_count_locked() const noexcept {
   std::size_t count = 0U;
   for (const LeaseEntry &entry : entries_) {
-    if (entry.state == LeaseState::Active) {
+    if (entry.state == LeaseState::Active || entry.emission_reserved) {
       ++count;
     }
   }
@@ -116,7 +131,7 @@ std::size_t ServiceEmulationRegistry::active_count_locked() const noexcept {
 
 ServiceEmulationRegistry::LeaseEntry *ServiceEmulationRegistry::reusable_slot_locked() noexcept {
   for (LeaseEntry &entry : entries_) {
-    if (entry.state != LeaseState::Active) {
+    if (entry.state != LeaseState::Active && !entry.emission_reserved) {
       return &entry;
     }
   }
@@ -137,7 +152,8 @@ LeaseStatus ServiceEmulationRegistry::acquire(const EndpointGeneration &key,
   // A foreign identity is classified before the capacity check so a superseded generation or a
   // foreign session or plan never appears as a capacity failure.
   for (const LeaseEntry &entry : entries_) {
-    if (entry.state != LeaseState::Active || entry.key.endpoint != key.endpoint) {
+    if ((entry.state != LeaseState::Active && !entry.emission_reserved) ||
+        entry.key.endpoint != key.endpoint) {
       continue;
     }
     ++conflicts_;
@@ -158,7 +174,18 @@ LeaseStatus ServiceEmulationRegistry::acquire(const EndpointGeneration &key,
   if (active_count_locked() >= capacity_) {
     return LeaseStatus::CapacityExhausted;
   }
-  LeaseEntry *slot = reusable_slot_locked();
+  // Reuse a tombstone for the same key before a different slot; otherwise two inactive
+  // generations with the same key would make state_of ambiguous after the new lease ends.
+  LeaseEntry *slot = nullptr;
+  for (LeaseEntry &entry : entries_) {
+    if (entry.key == key && entry.state != LeaseState::Active && !entry.emission_reserved) {
+      slot = &entry;
+      break;
+    }
+  }
+  if (slot == nullptr) {
+    slot = reusable_slot_locked();
+  }
   if (slot == nullptr) {
     return LeaseStatus::CapacityExhausted;
   }
@@ -168,6 +195,7 @@ LeaseStatus ServiceEmulationRegistry::acquire(const EndpointGeneration &key,
   slot->acquired_at = acquired_at;
   slot->expires_at = expires_at;
   slot->state = LeaseState::Active;
+  slot->emission_reserved = false;
   ++acquisitions_;
   return LeaseStatus::Ok;
 }
@@ -183,7 +211,8 @@ LeaseStatus ServiceEmulationRegistry::precheck(const EndpointGeneration &key, Cl
   // capacity check so a superseded generation or a foreign session or plan never appears as a
   // capacity failure, and no entry or counter is touched.
   for (const LeaseEntry &entry : entries_) {
-    if (entry.state != LeaseState::Active || entry.key.endpoint != key.endpoint) {
+    if ((entry.state != LeaseState::Active && !entry.emission_reserved) ||
+        entry.key.endpoint != key.endpoint) {
       continue;
     }
     if (entry.key == key) {
@@ -276,6 +305,27 @@ bool ServiceEmulationRegistry::holds(const EndpointGeneration &key) const {
   return entry != nullptr && entry->state == LeaseState::Active;
 }
 
+bool ServiceEmulationRegistry::reserve_emission(const EndpointGeneration &key,
+                                                 std::uint64_t request_id) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  LeaseEntry *entry = find_locked(key);
+  if (entry == nullptr || entry->state != LeaseState::Active ||
+      entry->request_id != request_id || entry->emission_reserved) {
+    return false;
+  }
+  entry->emission_reserved = true;
+  return true;
+}
+
+void ServiceEmulationRegistry::finish_emission(const EndpointGeneration &key,
+                                                std::uint64_t request_id) noexcept {
+  std::lock_guard<std::mutex> lock(mutex_);
+  LeaseEntry *entry = find_locked(key);
+  if (entry != nullptr && entry->request_id == request_id) {
+    entry->emission_reserved = false;
+  }
+}
+
 LeaseState ServiceEmulationRegistry::state_of(const EndpointGeneration &key) const {
   std::lock_guard<std::mutex> lock(mutex_);
   const LeaseEntry *entry = find_locked(key);
@@ -319,10 +369,7 @@ StimulationActionPath::StimulationActionPath(const ActionPathConfig &config,
                                              StimulationJournal &journal,
                                              ServiceEmulationRegistry &registry,
                                              ActionEmitter &emitter) noexcept
-    : config_(config), journal_(journal), registry_(registry), emitter_(emitter) {
-  pending_.reserve(config_.max_pending_actions);
-  lineage_.reserve(config_.max_lineage_entries);
-}
+    : config_(config), journal_(journal), registry_(registry), emitter_(emitter) {}
 
 bool StimulationActionPath::config_is_legal(const ActionPathConfig &config) noexcept {
   if (config.max_pending_actions < 1U ||
@@ -348,6 +395,14 @@ bool StimulationActionPath::config_is_legal(const ActionPathConfig &config) noex
 GuardStatus StimulationActionPath::open(const Permit &permit, const StimulationPolicy &policy) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!config_is_legal(config_)) {
+    open_ = false;
+    return GuardStatus::RejectedConfiguration;
+  }
+  try {
+    pending_.reserve(config_.max_pending_actions);
+    lineage_.reserve(config_.max_lineage_entries);
+    held_leases_.reserve(kActionPathMaxActiveLeases);
+  } catch (const std::exception &) {
     open_ = false;
     return GuardStatus::RejectedConfiguration;
   }
@@ -429,11 +484,14 @@ void StimulationActionPath::queue_locked(const PendingAction &pending) {
 }
 
 StimulationActionPath::EmissionAttempt
-StimulationActionPath::journal_and_emit(const StimulationIntent &intent,
+StimulationActionPath::journal_and_emit(std::unique_lock<std::mutex> &lock,
+                                        const StimulationIntent &intent,
                                         std::span<const std::byte> payload, Timestamp observed_at) {
   EmissionAttempt attempt;
-  const auto seam = [this, payload, observed_at, &attempt](
+  const auto seam = [this, &lock, payload, observed_at, &attempt](
                         const StimulationIntent &emitted) -> StimulationOutcome {
+    attempt.emission_started = true;
+    lock.unlock();
     SyntheticStimulationItem item;
     item.origin = OriginKind::validation_tool;
     item.intent = emitted;
@@ -537,6 +595,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   }
   // Step 6: evaluate the accepted guard exactly once, before any lease is acquired.
   GuardDiagnostic guard_out;
+  const auto guard_checkpoint = guard_.checkpoint();
   const GuardOutcome decision = guard_.authorize(request, session_state, resolved_time, guard_out);
   if (decision != GuardOutcome::Authorized) {
     out.guard_reason = guard_out.reason;
@@ -556,6 +615,7 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
     const LeaseStatus lease = registry_.acquire(key, request.request_id, resolved_time.domain,
                                                 resolved_time.value, permit_.valid_until());
     if (lease != LeaseStatus::Ok) {
+      guard_.restore_authorization(guard_checkpoint);
       out.lease_status = lease;
       out.status = ActionStatus::LeaseConflict;
       ++lease_conflicts_;
@@ -568,8 +628,11 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
     PendingAction pending;
     pending.request_id = request.request_id;
     pending.action = request.action;
-    pending.domain = request.clock_domain;
-    pending.scheduled_at = request.scheduled_at;
+    pending.domain = resolved_time.domain;
+    // A foreign clock cannot be ordered against permit-domain completion. The supplied
+    // resolution is the only trusted execution deadline in that case.
+    pending.scheduled_at = request.clock_domain == resolved_time.domain
+                               ? request.scheduled_at : resolved_time.value;
     pending.immediate = false;
     pending.request = request;
     queue_locked(pending);
@@ -578,9 +641,39 @@ StimulationActionPath::execute(const StimulationRequest &request, LifecycleState
   }
   // Step 9: journal the intent durably, then emit once outside every lock.
   const StimulationIntent intent = intent_for(request);
-  lock.unlock();
-  const EmissionAttempt attempt = journal_and_emit(intent, payload, resolved_time.value);
-  lock.lock();
+  const bool emulation = request.action == StimulationAction::EmulateService;
+  if (emulation && !registry_.reserve_emission(key, request.request_id)) {
+    guard_.restore_authorization(guard_checkpoint);
+    (void)registry_.release(key, request.request_id);
+    held_leases_.pop_back();
+    out.status = ActionStatus::LeaseConflict;
+    ++lease_conflicts_;
+    return out.status;
+  }
+  EmissionAttempt attempt;
+  try {
+    attempt = journal_and_emit(lock, intent, payload, resolved_time.value);
+  } catch (...) {
+    if (emulation) {
+      registry_.finish_emission(key, request.request_id);
+    }
+    if (!lock.owns_lock()) {
+      lock.lock();
+    }
+    throw;
+  }
+  if (emulation) {
+    registry_.finish_emission(key, request.request_id);
+  }
+  if (!lock.owns_lock()) {
+    lock.lock();
+  } else {
+    guard_.restore_authorization(guard_checkpoint);
+    if (request.action == StimulationAction::EmulateService) {
+      (void)registry_.release(key, request.request_id);
+      held_leases_.pop_back();
+    }
+  }
   out.journal_status = attempt.journal;
   out.emission_status = attempt.emission;
   out.status = classify_locked(attempt, request.request_id);
@@ -606,17 +699,33 @@ ActionStatus StimulationActionPath::emit_pending_locked(std::unique_lock<std::mu
                                                         std::size_t index, Timestamp now) {
   const PendingAction pending = pending_[index];
   pending_.erase(pending_.begin() + static_cast<std::ptrdiff_t>(index));
-  if (pending.request.action == StimulationAction::EmulateService) {
-    const EndpointGeneration key = lease_key_for(pending.request);
-    if (!registry_.holds(key)) {
+  const bool emulation = pending.request.action == StimulationAction::EmulateService;
+  const EndpointGeneration key = emulation ? lease_key_for(pending.request) : EndpointGeneration{};
+  if (emulation) {
+    if (!registry_.reserve_emission(key, pending.request_id)) {
       ++cancelled_;
       return ActionStatus::Cancelled;
     }
   }
   const StimulationIntent intent = intent_for(pending.request);
-  lock.unlock();
-  const EmissionAttempt attempt = journal_and_emit(intent, {}, now);
-  lock.lock();
+  EmissionAttempt attempt;
+  try {
+    attempt = journal_and_emit(lock, intent, {}, now);
+  } catch (...) {
+    if (emulation) {
+      registry_.finish_emission(key, pending.request_id);
+    }
+    if (!lock.owns_lock()) {
+      lock.lock();
+    }
+    throw;
+  }
+  if (emulation) {
+    registry_.finish_emission(key, pending.request_id);
+  }
+  if (!lock.owns_lock()) {
+    lock.lock();
+  }
   return classify_locked(attempt, pending.request_id);
 }
 
@@ -699,6 +808,15 @@ CompletionReport StimulationActionPath::drain(const CompletionRequest &request) 
                                                      : CompletionOutcome::None;
     return report;
   }
+  if (request.now < permit_.valid_from() || request.now >= permit_.valid_until()) {
+    report.cancelled = cancel_all_locked();
+    report.released_leases = release_all_locked();
+    report.evidence_incomplete = incomplete_count();
+    drain_state_ = DrainState::Cancelled;
+    report.outcome = request.now >= permit_.valid_until() ? CompletionOutcome::Expired
+                                                           : CompletionOutcome::None;
+    return report;
+  }
   std::size_t steps = 0U;
   while (steps < config_.max_drain_steps) {
     std::size_t index = 0U;
@@ -706,7 +824,7 @@ CompletionReport StimulationActionPath::drain(const CompletionRequest &request) 
       break;
     }
     ++steps;
-    if (request.now > pending_[index].scheduled_at + config_.late_tolerance) {
+    if (is_late(request.now, pending_[index].scheduled_at, config_.late_tolerance)) {
       if (config_.late_policy == LateItemPolicy::RejectLate) {
         ++expired_;
       } else {
@@ -787,6 +905,15 @@ CompletionReport StimulationActionPath::close(const CompletionRequest &request) 
                                                      : CompletionOutcome::None;
     return report;
   }
+  if (request.now < permit_.valid_from() || request.now >= permit_.valid_until()) {
+    report.cancelled = cancel_all_locked();
+    report.released_leases = release_all_locked();
+    report.evidence_incomplete = incomplete_count();
+    drain_state_ = DrainState::Cancelled;
+    report.outcome = request.now >= permit_.valid_until() ? CompletionOutcome::Expired
+                                                           : CompletionOutcome::None;
+    return report;
+  }
   std::size_t steps = 0U;
   while (steps < config_.max_drain_steps) {
     std::size_t index = 0U;
@@ -794,7 +921,7 @@ CompletionReport StimulationActionPath::close(const CompletionRequest &request) 
       break;
     }
     ++steps;
-    if (request.now > pending_[index].scheduled_at + config_.late_tolerance) {
+    if (is_late(request.now, pending_[index].scheduled_at, config_.late_tolerance)) {
       if (config_.late_policy == LateItemPolicy::RejectLate) {
         ++expired_;
       } else {

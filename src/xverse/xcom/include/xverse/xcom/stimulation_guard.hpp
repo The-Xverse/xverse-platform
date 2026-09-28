@@ -551,6 +551,7 @@ struct GuardSnapshot {
  *          decline mutates operational state or emits.
  */
 class StimulationGuard {
+  friend class StimulationActionPath;
 public:
   /// \brief Bound snapshot type, also usable as `StimulationGuard::GuardSnapshot`.
   using GuardSnapshot = ::xverse::xcom::validation::GuardSnapshot;
@@ -604,6 +605,14 @@ public:
   [[nodiscard]] GuardStatus status() const;
 
 private:
+  struct AuthorizationCheckpoint {
+    std::size_t actions_authorized{0};
+    std::size_t window_actions{0};
+    std::uint64_t evaluations{0};
+    std::vector<std::uint64_t> loop_window{};
+  };
+  [[nodiscard]] AuthorizationCheckpoint checkpoint() const;
+  void restore_authorization(const AuthorizationCheckpoint &checkpoint);
   /// \brief Serializes `open`, the checks, the tallies, and the loop window.
   mutable std::mutex mutex_{};
   /// \brief Whether a valid permit/policy pair is bound.

@@ -250,7 +250,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleScheduledQueueAndOrdering) {
   EXPECT_EQ(harness.emitter.order[0], 10U);
   EXPECT_EQ(harness.emitter.order[1], 20U);
 
-  const val::CompletionReport final_report = harness.path->drain(completion(kUntil));
+  const val::CompletionReport final_report = harness.path->drain(completion(kUntil - 1));
   EXPECT_EQ(final_report.outcome, val::CompletionOutcome::Drained);
   EXPECT_EQ(harness.emitter.order.size(), 3U);
   EXPECT_EQ(harness.emitter.order[2], 30U);
@@ -384,7 +384,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleDrainCloseRevokeExpire) {
     ASSERT_EQ(harness.path->execute(make_signal(permit, 202U, false, 10),
                                     val::LifecycleState::active, in_window(), {}, diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport report = harness.path->close(completion(kUntil));
+    const val::CompletionReport report = harness.path->close(completion(kUntil - 1));
     EXPECT_EQ(report.outcome, val::CompletionOutcome::Closed);
     EXPECT_EQ(report.drained, 1U);
     EXPECT_EQ(report.released_leases, 1U);
@@ -463,7 +463,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleEvidenceIncompleteCompletion) {
   EXPECT_EQ(path.snapshot().evidence_incomplete, 1U);
   EXPECT_EQ(journal.snapshot().orphan_intents, 1U);
 
-  const val::CompletionReport report = path.close(completion(kUntil));
+  const val::CompletionReport report = path.close(completion(kUntil - 1));
   EXPECT_EQ(report.outcome, val::CompletionOutcome::EvidenceIncomplete);
   EXPECT_EQ(report.evidence_incomplete, 1U);
   EXPECT_NE(report.outcome, val::CompletionOutcome::Closed);
@@ -489,7 +489,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleEvidenceIncompleteCompletion) {
     ASSERT_EQ(drain_path.execute(make_signal(drain_permit, 310U, false, 10),
                                  val::LifecycleState::active, in_window(), {}, drain_diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport drain_report = drain_path.drain(completion(kUntil));
+    const val::CompletionReport drain_report = drain_path.drain(completion(kUntil - 1));
     EXPECT_EQ(drain_report.failed, 1U);
     EXPECT_EQ(drain_report.drained, 0U);
     EXPECT_NE(drain_report.outcome, val::CompletionOutcome::Drained);
@@ -519,7 +519,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleEvidenceIncompleteCompletion) {
                                       val::LifecycleState::active, in_window(), {},
                                       incomplete_diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport incomplete_report = incomplete_path.drain(completion(kUntil));
+    const val::CompletionReport incomplete_report = incomplete_path.drain(completion(kUntil - 1));
     EXPECT_EQ(incomplete_report.outcome, val::CompletionOutcome::EvidenceIncomplete);
     EXPECT_NE(incomplete_report.outcome, val::CompletionOutcome::Drained);
     EXPECT_EQ(incomplete_report.drained, 0U);
@@ -547,7 +547,7 @@ TEST(XcomStimulationActionsLifecycle, LifecycleEvidenceIncompleteCompletion) {
     ASSERT_EQ(close_path.execute(make_signal(close_permit, 330U, false, 10),
                                  val::LifecycleState::active, in_window(), {}, close_diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport close_report = close_path.close(completion(kUntil));
+    const val::CompletionReport close_report = close_path.close(completion(kUntil - 1));
     EXPECT_EQ(close_report.outcome, val::CompletionOutcome::EvidenceIncomplete);
     EXPECT_EQ(close_report.evidence_incomplete, 1U);
     EXPECT_EQ(close_report.evidence_incomplete, close_journal.snapshot().orphan_intents);

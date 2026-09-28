@@ -1,22 +1,22 @@
 {
   "schema_version": 1,
   "project_id": "xverse-platform",
-  "title": "T020 ordering-equivalence, malformed-plan, drift, bound, and regression verification for the XDL-derived activation-plan chain",
+  "title": "T026-T029 durable stimulation journal, guard, action path, and verification matrix",
   "scope": {
     "users": [
       "X-Verse platform engineer",
-      "X-COM capability-007 reviewer"
+      "X-COM stimulation reviewer"
     ],
-    "intended_use": "Verify the accepted XDL-derived activation-plan chain (T017 contract, T018 compiler, T019 decoder) with ordering-equivalence, malformed-plan, drift, bound, and regression suites, and provide the system-to-test traceability for the accumulated X-COM candidate.",
+    "intended_use": "Deliver and verify the accumulated T026-T029 stimulation slice in the X-Verse platform: durable journal, pre-emission guard, exclusive service-emulation action path, and complete matrix.",
     "boundaries": [
-      "Bounded capability-007 prototype scope: repository-owned fixtures and synthetic vectors only.",
-      "No runtime activation, transport, gateway, external peer, TCP listener, legacy repository, or production workload.",
-      "No production source, schema, contract, or accepted predecessor test is changed by T020."
+      "Bounded capability-007 prototype scope: repository-owned fixtures, in-process callbacks, and synthetic vectors only.",
+      "No runtime activation, transport, gateway, external peer, TCP listener, restricted predecessor repository, or production workload.",
+      "T026-T029 candidate changes are limited to stimulation journal, guard, action path, tests, and their integration/trace records."
     ],
     "success_criteria": [
-      "Every accepted T020 software requirement is traced to a component, unit, unit case, code path, verification measure, and validation scenario.",
-      "The five C++ suites and the Python module execute offline and deterministically and preserve every accepted T017/T018/T019 behaviour.",
-      "The trusted unit, whole-system integration, validation, and static measures are run and retained as exact-candidate evidence before acceptance."
+      "Every accepted T026-T029 software requirement is traced to the applicable X-Verse system requirement, component, unit, code, unit/integration/validation tests and measured evidence.",
+      "The stimulation matrix and whole-platform integration suite pass in an isolated checkout of the pinned target repository.",
+      "Independent review and strict delivery validation bind the exact candidate before acceptance."
     ]
   },
   "languages": [
@@ -27,41 +27,38 @@
     "xverse-platform"
   ],
   "reliability": {
-    "basis": "Deterministic, offline, single-threaded test execution over immutable committed artifacts and bounded repository-owned vectors; the whole-system reliability basis is the pinned X-Verse checkout at revision 1e289bfe6234553df94eb25065371f7d423fad88."
+    "basis": "Deterministic offline bounded stimulation tests plus whole-system integration in an isolated checkout of pinned xverse-platform main revision 0741563b12ae34cc54b49d95967dd79441415d5a."
   },
   "assurance_profile": "engineered",
   "authority": {
     "baseline_status": "accepted",
-    "baseline_revision": "1e289bfe6234553df94eb25065371f7d423fad88",
+    "baseline_revision": "1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d",
     "protected_paths": [
-      "src/xverse/xcom/include/**",
-      "src/xverse/xcom/src/**",
       "src/xverse_xdl/**",
       "scripts/**",
       "xdl/**",
       "proto/**",
       "Doxyfile",
-      "tests/xcom/activation_plan/decoder_*.cpp",
-      "tests/test_xcom_plan.py",
-      "tests/xcom/activation_plan/fixtures/**",
+      "tests/xcom/activation_plan/**",
       "docs/engineering/xcom/t017/**",
       "docs/engineering/xcom/t018/**",
       "docs/engineering/xcom/t019/**",
       "docs/engineering/xcom/t025/**"
     ],
-    "decision_rule": "Any conflict between this candidate and the accepted capability-007 specification, the accepted T017/T018/T019 artifacts, the constitution, an accepted ADR, the T007 ownership register, or the T008 register is resolved in favour of the accepted source; a material gap is recorded, not guessed."
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, or accepted T025 session contract is resolved in favour of the accepted source; material gaps are recorded, not guessed."
   },
   "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "The trusted read-only policy /home/jefferson/x-verse_fabric/automation/trusted/xcom-t020-integration-policy.json defines the required measures as explicit argv arrays (unit, integration, validation, static_analysis= cppcheck). This profile is declared rather than the cpp20 profile because the trusted policy does not include clang-format, clang-tidy, gcovr, or the external CodeQL check that the cpp20 profile would require; declaring cpp20 would assert obligations the trusted policy does not carry. No declared measure is waived.",
+  "verification_profile_note": "Trusted policy requires explicit unit, static, validation, and target-repository integration measures for the accumulated T026-T029 stimulation slice.",
   "feature": {
-    "task_id": "T020",
+    "task_id": "T029",
     "capability": "007",
-    "queue_id": "xcom-t007-t010-t017-t020",
+    "queue_id": "xcom-t026-t029-20260928",
     "predecessors": [
-      "T017",
-      "T018",
-      "T019"
+      "T025",
+      "T026",
+      "T027",
+      "T028"
     ],
-    "queued_run": "01M3H4QN7Y1HC152JH0D4ZKMJ1"
+    "queued_run": "01M3KM6QYAJCSA2K1MM1GXXTAB"
   }
 }

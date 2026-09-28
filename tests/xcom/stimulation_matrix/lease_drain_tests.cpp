@@ -184,7 +184,7 @@ TEST(XcomStimulationMatrixLeaseDrain, DrainTerminalLifecycleMatrix) {
                                                  false, 10),
                                     val::LifecycleState::active, in_window(), {}, diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport report = fixture.path->drain(completion(kUntil));
+    const val::CompletionReport report = fixture.path->drain(completion(kUntil - 1));
     EXPECT_EQ(report.outcome, val::CompletionOutcome::Drained);
     EXPECT_EQ(report.drained, 1U);
     EXPECT_EQ(fixture.path->snapshot().drain_state, val::DrainState::Drained);
@@ -220,7 +220,7 @@ TEST(XcomStimulationMatrixLeaseDrain, DrainTerminalLifecycleMatrix) {
                                                  false, 10),
                                     val::LifecycleState::active, in_window(), {}, diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport report = fixture.path->close(completion(kUntil));
+    const val::CompletionReport report = fixture.path->close(completion(kUntil - 1));
     EXPECT_EQ(report.outcome, val::CompletionOutcome::Closed);
     EXPECT_EQ(report.drained, 1U);
     EXPECT_EQ(report.released_leases, 1U);
@@ -330,7 +330,7 @@ TEST(XcomStimulationMatrixLeaseDrain, DrainOrderingLatePolicyAndImmediateLabel) 
     EXPECT_EQ(partial.drained, 2U);
     EXPECT_EQ(fixture.emitter.emission_order(),
               (std::vector<std::uint64_t>{10U, 20U}));
-    const val::CompletionReport final_report = fixture.path->drain(completion(kUntil));
+    const val::CompletionReport final_report = fixture.path->drain(completion(kUntil - 1));
     EXPECT_EQ(final_report.outcome, val::CompletionOutcome::Drained);
     EXPECT_EQ(fixture.emitter.emission_order(),
               (std::vector<std::uint64_t>{10U, 20U, 30U}));
@@ -383,7 +383,7 @@ TEST(XcomStimulationMatrixLeaseDrain, DrainOrderingLatePolicyAndImmediateLabel) 
                                                  false, 10),
                                     val::LifecycleState::active, in_window(), {}, diagnostic),
               val::ActionStatus::Queued);
-    const val::CompletionReport report = fixture.path->drain(completion(kUntil));
+    const val::CompletionReport report = fixture.path->drain(completion(kUntil - 1));
     EXPECT_EQ(report.failed, 1U);
     EXPECT_EQ(report.drained, 0U);
     EXPECT_EQ(report.outcome, val::CompletionOutcome::EvidenceIncomplete);
@@ -403,7 +403,7 @@ TEST(XcomStimulationMatrixLeaseDrain, DrainOrderingLatePolicyAndImmediateLabel) 
                                                  false, 10),
                                     val::LifecycleState::active, in_window(), {}, diagnostic),
               val::ActionStatus::Queued);
-    ASSERT_EQ(fixture.path->drain(completion(kUntil)).drained, 1U);
+    ASSERT_EQ(fixture.path->drain(completion(kUntil - 1)).drained, 1U);
     EXPECT_FALSE(fixture.emitter.last_item().intent.immediate);
   }
 }

@@ -874,6 +874,11 @@ public:
   /// \return `true` when an active entry with the exact key exists.
   [[nodiscard]] bool holds(const EndpointGeneration &key) const;
 
+  /// \brief Atomically reserves emission for the exact owning request.
+  /// A reserved slot cannot be reused until finish_emission, even if released meanwhile.
+  [[nodiscard]] bool reserve_emission(const EndpointGeneration &key, std::uint64_t request_id);
+  void finish_emission(const EndpointGeneration &key, std::uint64_t request_id) noexcept;
+
   /// \brief Returns the state of the lease with the exact key.
   /// \param key Exact lease key.
   /// \return The lease state, or `LeaseState::None` when no entry matches.
@@ -902,6 +907,7 @@ private:
     Timestamp expires_at{0};
     /// \brief Current lease state.
     LeaseState state{LeaseState::None};
+    bool emission_reserved{false};
     /// \brief Recorded quarantine reason; meaningful only for a quarantined entry.
     QuarantineReason quarantine_reason{QuarantineReason::Conflict};
   };
@@ -1054,6 +1060,7 @@ private:
     JournalStatus journal{JournalStatus::Ok};
     /// \brief Host emission status observed exactly once; only set when the callback ran.
     EmissionStatus emission{EmissionStatus::Delivered};
+    bool emission_started{false};
   };
 
   /// \brief Reports whether a declared configuration is legal.
@@ -1097,7 +1104,8 @@ private:
   /// \param payload Call-scoped payload view.
   /// \param observed_at Observed time recorded with the outcome.
   /// \return The journal status of the durable intent/outcome pair and the host emission status.
-  [[nodiscard]] EmissionAttempt journal_and_emit(const StimulationIntent &intent,
+  [[nodiscard]] EmissionAttempt journal_and_emit(std::unique_lock<std::mutex> &lock,
+                                                 const StimulationIntent &intent,
                                                  std::span<const std::byte> payload,
                                                  Timestamp observed_at);
 
