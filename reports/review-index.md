@@ -435,3 +435,71 @@ measure — plus its refining software requirements. No requirement, component, 
 register, or accepted predecessor byte changes; no trace checker is weakened. The original internal review is
 preserved as historical evidence; a fresh independent DeepSeek review and every trusted measure cover this successor,
 and T039/T041 acceptance remains separate.
+
+## T033 reusable contract-suite candidate
+
+- Task `T033` (capability `007`, slice `T-CORE`/GW) on accepted baseline
+  `2fd395e39e44e1f6fe9547998b47499d996b1756`; pinned stage model `deepseek-v4-flash`.
+- The candidate implements the reusable provider, observer, stimulation-tool, and gateway contract suites as
+  four implementation-agnostic drivers behind narrow subject seams, instantiated against the accepted T016
+  loopback/probe providers, T024 observation hub, T029 stimulation composition, and T031 gateway fixture.
+
+### Implementation change set
+
+- `tests/xcom/contract_suites/suite_support.hpp` (new) — the bounded `SuiteReport`/`SuiteCheck` vocabulary.
+- `tests/xcom/contract_suites/{provider,observer,stimulation_tool,gateway}_contract_suite.hpp` (new) — the four
+  reusable suites and their `*Subject` seams; each names only accepted interfaces and accepted fixture helpers.
+- `tests/xcom/contract_suites/{provider,observer,stimulation_tool,gateway}_suite_tests.cpp` (new) — the four
+  additive drivers (eight cases).
+- `src/xverse/xcom/CMakeLists.txt` (additive) — four `t033-<kind>` test targets; the runtime-target inventory is
+  unchanged and no existing target, label, command, or value changes.
+- T033 engineering requirement/component/unit/validation records, `engineering/trace/links.json` (198 additive
+  links plus the nine repair-pass `implemented_by` links `T033-L-0199`…`T033-L-0207`; inherited
+  `src/xverse/xcom/CMakeLists.txt` digest refreshed), `engineering/verification/measures/`
+  refreshed to the eight T033 cases, inherited `engineering/stage-results/*.json` digest refresh,
+  `engineering/project.json`, the T033 checkbox line in `specs/007-xcom-core/tasks.md`, and
+  `docs/engineering/xcom/t033/{implementation,requirements,verification-plan}.md`.
+
+### Repair pass (REV-T033-001, REV-T033-002)
+
+The first read-only DeepSeek internal review recorded `verdict: fail` with two annotation-only findings: an off-by-one
+`@par Traceability` requirement-range shift across the four reusable suite headers and four drivers
+(`REV-T033-001`), and bare SESN-era observation plus undefined stimulation requirement anchors
+(`REV-T033-002`). The successor corrects every range to the authoritative `engineering/requirements/T033-SR-*.json`
+mapping, replaces the anchors with their accepted `docs/engineering/xcom/t008/requirements-register.json` ids, adds the
+nine driver `implemented_by` links that make each cited range a subset of the ids linked to its file, and drops the
+unused `XCOM_T033_SUITE_HEADER_ROOT` compile definition. The change is annotation-only: `ctest -L t033-` still reports
+8/8, `validate_trace` passes at 605 artifacts and 2135 links, the T007–T010 register validators pass, and the
+deterministic gate passes. A fresh independent DeepSeek review and repeated affected verification remain required.
+
+
+### Repair pass 2 (REV-T033-003, REV-T033-004, REV-T033-005, REV-T033-006)
+
+The second read-only DeepSeek internal review of the REV-T033-001/-002 successor recorded `verdict: fail` with four
+low documentation-consistency findings and no executed-behaviour finding. The successor corrects a truncated
+context-diagram label in `architecture.md` §3.1 (`lo`→`loopback`), the `reports/review-index.md` full-discovery count
+(`476`→`483`, the reproducible `ctest -N` value), the `requirements.md` §4.3 `T033-SR-007` verification intent
+(`S-01`…`S-03`, `S-05` → the action-emission set `S-01`, `S-02-0`…`S-02-3`, `S-05`, so `S-03` is owned only by
+`T033-SR-008`), and the `unit-specifications.md` `T033-SR-009-U` inputs (the `gateway_operation_names()` operation
+table plus the generated `ProtocolVersion`/`QueryVersionRequest`/`QueryVersionResponse` messages actually consumed by
+`G-02`…`G-04`, replacing the unconsumed "generated descriptor method set"). The change is documentation-only: no
+requirement, check, expected value, test, target, label, or measure changes; `ctest -L t033-` still reports 8/8; the
+refreshed `implemented_by` pins `T033-L-0189`…`T033-L-0192` and the inherited `engineering/trace/links.json` plus
+`reports/review-index.md` stage artifact digests match the current bytes. A fresh independent DeepSeek review and
+repeated affected verification remain required. The closure is recorded in `implementation.md` §14 and
+`verification-plan.md` §10.
+
+
+### Local verification (candidate working tree)
+
+- `ctest -L t033-` — `100% tests passed, 0 tests failed out of 8` (2 provider, 2 observer, 2 stimulation-tool,
+  2 gateway).
+- `ctest -L "t0(20|2[6-9]|3[0-4])-"` — `100% tests passed, 0 tests failed out of 229`; full discovery `483`.
+- T007–T010 register validators pass; `git diff --check` is clean.
+
+### Review state
+
+A separate read-only DeepSeek internal review covers every tracked and untracked candidate file and is recorded
+in `docs/engineering/xcom/t033/internal-review.json`. External Codex review and explicit user acceptance remain
+T039/T041 and are deferred until the ordered backlog `xcom-t030-t034-20260928` completes; no acceptance or
+integration is claimed by this index.

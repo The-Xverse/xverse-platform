@@ -1,0 +1,50 @@
+{
+  "component_id": "T033-SR-001-CMP",
+  "concurrency": "single declared user per suite",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed suite check"
+  ],
+  "id": "T033-SR-001-U",
+  "inputs": [
+    "a subject over an accepted implementation or fixture",
+    "the accepted bounded fixtures"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/provider_contract_suite.hpp",
+    "tests/xcom/contract_suites/provider_suite_tests.cpp"
+  ],
+  "invariants": [
+    "the suite names no concrete implementation and records one bounded check per obligation",
+    "a decline emits nothing and is never reported as success"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the bounded SuiteReport verdict"
+  ],
+  "purpose": "The provider suite **shall** be parameterized by a `ProviderSubject` seam and **shall** validate descriptor identity, descriptor_compatible(), nonzero instance identity, explicit registration, and duplicate-registration rejection without naming a concrete provider type.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/provider_contract_suite.hpp",
+    "tests/xcom/contract_suites/provider_suite_tests.cpp"
+  ],
+  "state": "one reusable suite run over the supplied subject",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T033-SR-001-U-STATIC",
+      "rule": "the reusable suite and its driver compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T033-SR-001-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
+      "precondition": "an owned subject over the accepted implementation and the admitted offline build",
+      "stimulus": "run the named reusable contract-suite driver"
+    }
+  ]
+}

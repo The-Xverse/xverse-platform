@@ -94,7 +94,7 @@ and predecessor regression evidence retained.
   flow control, safe logs, and disconnect cleanup.
 - [X] T032 Implement a separate-process synthetic client and generated-client contract tests for
   observation and every allowed stimulation action.
-- [ ] T033 Build reusable provider, observer, stimulation-tool, and gateway contract suites.
+- [X] T033 Build reusable provider, observer, stimulation-tool, and gateway contract suites.
 - [ ] T034 Add a second minimal synthetic provider implementation to prove replaceability and version
   rejection; verify adapter failures do not affect unrelated routes.
 

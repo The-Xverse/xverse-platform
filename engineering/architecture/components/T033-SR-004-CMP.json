@@ -1,0 +1,26 @@
+{
+  "concurrency": "single declared user per suite; accepted components serialize their own state",
+  "dependencies": [
+    "accepted T007-T032 registers and fixtures",
+    "T011 admitted offline envelope",
+    "T016/T021-T029/T031 accepted fixtures and public headers"
+  ],
+  "deployment": "offline build and in-process reusable contract-suite run",
+  "errors": [
+    "declared fail-closed suite check",
+    "build or configuration failure"
+  ],
+  "id": "T033-SR-004-CMP",
+  "interfaces": [
+    "tests/xcom/contract_suites/observer_contract_suite.hpp",
+    "tests/xcom/contract_suites/observer_suite_tests.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t033/requirements.md",
+  "responsibilities": [
+    "When the observer suite attaches a metadata-only tap and an item is published, it **shall** observe one normalized record with the exact logical identity, complete source payload size, and no payload byte."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one bounded suite report over the subject-supplied implementation",
+  "title": "T033-SR-004 allocation"
+}

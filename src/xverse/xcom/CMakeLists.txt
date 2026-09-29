@@ -1081,6 +1081,69 @@ if(BUILD_TESTING)
     )
   endforeach()
 
+  # T033 reusable provider/observer/stimulation-tool/gateway contract suites. Registration is
+  # additive: four `t033-<kind>` test executables. No existing target, test name, label, command, or
+  # expected value changes and no existing discovery count is reduced, and no runtime-target
+  # inventory entry is added. Each suite header is implementation-agnostic and is instantiated by its
+  # driver against the accepted implementations; the T033 headers and drivers consume the accepted
+  # T016/T021-T029/T031 test fixtures and public headers read-only. The committed test fixtures are
+  # reached through the `${PROJECT_SOURCE_DIR}/tests/xcom` include root, and the bounded build-tree
+  # scratch directory is supplied as a build-time definition only (never printed into public
+  # evidence). Each suite uses one hyphenated `t033-<kind>` label (CMake 3.22 label workaround).
+  foreach(
+    contract_suite_kind
+    IN ITEMS
+      provider
+      observer
+      stimulation_tool
+      gateway
+  )
+    string(REPLACE "_" "-" contract_suite_label "${contract_suite_kind}")
+    add_executable(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/contract_suites/${contract_suite_kind}_suite_tests.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      PRIVATE
+        "${PROJECT_SOURCE_DIR}/tests/xcom"
+        "${PROJECT_SOURCE_DIR}/tests/xcom/contract_suites"
+    )
+    target_include_directories(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      SYSTEM PRIVATE
+        "${xcom_t030_generated_dir}"
+        "${xcom_t030_protobuf_include}"
+    )
+    target_compile_definitions(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      PRIVATE
+        "XCOM_T031_SCRATCH_DIR=\"t033-scratch\""
+    )
+    target_link_libraries(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      PRIVATE
+        xverse::xcom_tool_gateway
+        xverse::xcom_stimulation_actions
+        xverse::xcom_observation
+        xverse::xcom_provider_loopback
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_contract_suite_${contract_suite_kind}_tests)
+    add_dependencies(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      xverse_xcom_tool_gateway_proto_generated
+    )
+    gtest_discover_tests(
+      xverse_xcom_contract_suite_${contract_suite_kind}_tests
+      PROPERTIES
+        LABELS "t033-${contract_suite_label}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+  endforeach()
+
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(
     xverse_xcom_provider_loopback

@@ -1,0 +1,25 @@
+{
+  "concurrency": "single declared user per suite; accepted components serialize their own state",
+  "dependencies": [
+    "accepted T007-T032 registers and fixtures",
+    "T011 admitted offline envelope",
+    "T016/T021-T029/T031 accepted fixtures and public headers"
+  ],
+  "deployment": "offline build and in-process reusable contract-suite run",
+  "errors": [
+    "declared fail-closed suite check",
+    "build or configuration failure"
+  ],
+  "id": "T033-SR-003-CMP",
+  "interfaces": [
+    "tests/xcom/contract_suites/provider_contract_suite.hpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t033/requirements.md",
+  "responsibilities": [
+    "When the provider suite drives the accepted lifecycle, it **shall** observe prepare, activate, submit, bounded reject-new saturation with preserved FIFO, receive, drain, close, and bounded reconcile reporting."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one bounded suite report over the subject-supplied implementation",
+  "title": "T033-SR-003 allocation"
+}
