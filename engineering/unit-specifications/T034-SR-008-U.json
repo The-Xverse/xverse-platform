@@ -1,0 +1,48 @@
+{
+  "component_id": "T034-SR-008-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-008-U",
+  "inputs": [
+    "a second provider configured with a forced stable failure outcome"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "invariants": [
+    "the configured outcome is returned",
+    "unrelated state is not mutated",
+    "zero items are emitted"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the prepare/submit outcome and the emission count"
+  ],
+  "purpose": "If the second provider fails a prepare or submit operation, the operation **shall** report the configured stable failure outcome, mutate no unrelated state, and emit no item.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-008-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-008-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034FailureIsolation.ProviderFailureYieldsStableOutcomeNoEmission",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "component_id": "T034-SR-011-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-011-U",
+  "inputs": [
+    "the build file and the discovered test inventory"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "invariants": [
+    "three additive t034-<kind> targets exist",
+    "the fixture is compiled into the test executables",
+    "no existing target, label, command, or value changes"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the discovered t034- count and the unchanged runtime-target inventory"
+  ],
+  "purpose": "Build wiring **shall** be additive - new `t034-<kind>` test executables plus the second-provider fixture source compiled into them - with any runtime-target inventory change declared explicitly and no existing target, test name, label, command, or expected value changed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/CMakeLists.txt"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-011-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-011-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

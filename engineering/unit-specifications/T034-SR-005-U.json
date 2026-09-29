@@ -1,0 +1,53 @@
+{
+  "component_id": "T034-SR-005-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-005-U",
+  "inputs": [
+    "a second provider over a descriptor declaring contract version 2.0.0"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp"
+  ],
+  "invariants": [
+    "registration returns unsupported_contract_version before any route preparation or activation",
+    "no provider-route handle is issued"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the registration outcome"
+  ],
+  "purpose": "If a second-provider instance declares a provider-contract version other than the accepted `1.0.0`, explicit registration **shall** be rejected with `unsupported_contract_version` before any route preparation or activation.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-005-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-005-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.MisreportedContractVersionRejectedAtRegistration",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    },
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

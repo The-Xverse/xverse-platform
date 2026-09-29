@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "Traces to its accepted system anchor and is verified by its named checks."
+  ],
+  "applicability": "T034 second-provider replaceability candidate",
+  "id": "T034-SR-003",
+  "level": "software",
+  "parents": [
+    "T034-STK-001"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t034/requirements.md T034-SR-003"
+  },
+  "statement": "When the second provider is driven over a reject-new queue of capacity one, it **shall** accept the first item, reject the second with `queue_saturated` without dropping the first, and report bounded active route state with `queued_items()==1` and `queue_capacity()==1`.",
+  "status": "accepted",
+  "title": "Bounded capability and saturation",
+  "verification_intent": "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation"
+}

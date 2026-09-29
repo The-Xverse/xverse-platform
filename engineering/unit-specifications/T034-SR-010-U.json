@@ -1,0 +1,49 @@
+{
+  "component_id": "T034-SR-010-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-010-U",
+  "inputs": [
+    "the accepted provider_contract_suite.hpp and ProviderSubject"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_suite_tests.cpp",
+    "tests/xcom/contract_suites/provider_contract_suite.hpp"
+  ],
+  "invariants": [
+    "the suite header and seam are not modified",
+    "the second provider is validated through a new subject adapter only"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the unchanged-file verdict and the second-provider conformance verdict"
+  ],
+  "purpose": "The T033 reusable provider suite header `tests/xcom/contract_suites/provider_contract_suite.hpp` and its `ProviderSubject` seam **shall** be consumed without modification; the second provider **shall** be validated through a new subject adapter only.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/second_provider_suite_tests.cpp",
+    "tests/xcom/contract_suites/provider_contract_suite.hpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-010-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-010-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

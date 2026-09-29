@@ -1,0 +1,48 @@
+{
+  "component_id": "T034-SR-004-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-004-U",
+  "inputs": [
+    "the accepted provider/route lifecycle over the second provider"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp"
+  ],
+  "invariants": [
+    "prepare and activate succeed",
+    "the exact FIFO item is received",
+    "drain and close complete and reconcile is bounded"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "provider checks P-05, P-09-P-13"
+  ],
+  "purpose": "When the second provider is driven through prepare, activate, submit, receive, drain, and close, it **shall** report `prepared`, `activated`, `accepted`, `received`, `draining`, and `closed` with a bounded reconcile outcome and no lost or duplicated item.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-004-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-004-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderLifecycle.CompletesFullBoundedLifecycle",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

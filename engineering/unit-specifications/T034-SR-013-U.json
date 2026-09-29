@@ -1,0 +1,52 @@
+{
+  "component_id": "T034-SR-013-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-013-U",
+  "inputs": [
+    "the T007-T010 registers, the work products, and the trace records"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t034/requirements.md",
+    "docs/engineering/xcom/t034/implementation.md",
+    "docs/engineering/xcom/t034/unit-specifications.md"
+  ],
+  "invariants": [
+    "registers are unchanged in substance",
+    "REF-002 stays unchanged with an empty promoted list",
+    "the second provider is recorded implemented by T034 with T035-T041 allocated"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the validator verdict, the recorded maturity, and the trace verdict"
+  ],
+  "purpose": "T034 **shall** reconcile with the T007 ownership register, the T008 register, the T009 architecture model, and the T010 unit design without rewriting or weakening them; **shall** keep the REF-002 disposition `unchanged` with an empty `promoted` list; **shall** record the second provider as implemented by T034 while T035-T041 remain allocated; and **shall** satisfy the deterministic Phase 7 gate and the required trace links.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t034/requirements.md",
+    "docs/engineering/xcom/t034/implementation.md",
+    "docs/engineering/xcom/t034/unit-specifications.md"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-013-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-013-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderSuite.ProviderIsIndependentOfLoopback",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

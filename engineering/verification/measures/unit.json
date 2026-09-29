@@ -4,23 +4,28 @@
     "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase7_tests.py",
     "unit"
   ],
-  "command_runs": "Isolated X-Verse checkout: build the C++ platform, then run the 8 T033 reusable contract-suite CTest cases with the preserved T020/T026-T032 suites",
+  "command_runs": "Isolated X-Verse checkout: build the C++ platform, then run the 13 T034 second-provider replaceability/version-rejection/isolation CTest cases with the preserved T020/T026-T033 suites",
   "discovery_check": "100% tests passed",
   "expected": "pass",
   "id": "unit",
   "kind": "unit",
-  "note": "Scoped T033 reusable contract-suite slice; whole-system integration and static analysis run separately from the isolated target checkout. Candidate command is a portable descriptor; the trusted policy binds the executable host path.",
+  "note": "Scoped T034 second-provider slice; whole-system integration and static analysis run separately from the isolated target checkout. Candidate command is a portable descriptor; the trusted policy binds the executable host path.",
   "revision": "1",
   "schema_version": 1,
   "test_ids": [
-    "T033GatewayContractSuite.AcceptedGatewaySessionConforms",
-    "T033GatewayContractSuite.SuiteIsReusableAcrossFixtures",
-    "T033ObserverContractSuite.AcceptedObservationHubConforms",
-    "T033ObserverContractSuite.SuiteIsReusableAcrossHubInstances",
-    "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
-    "T033ProviderContractSuite.SuiteIsReusableAcrossProviderImplementations",
-    "T033StimulationToolContractSuite.AcceptedStimulationPathConforms",
-    "T033StimulationToolContractSuite.SuiteIsReusableAcrossFixtures"
+    "T034FailureIsolation.ProviderFailureYieldsStableOutcomeNoEmission",
+    "T034FailureIsolation.RejectedAdapterLeavesUnrelatedRouteIntact",
+    "T034FailureIsolation.UnrelatedRouteRemainsActiveAndBounded",
+    "T034FailureIsolation.UnrelatedRouteStateStaysObservable",
+    "T034SecondProviderLifecycle.CompletesFullBoundedLifecycle",
+    "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation",
+    "T034SecondProviderSuite.ProviderIsIndependentOfLoopback",
+    "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
+    "T034VersionRejection.MisreportedCapabilityRejectedAtRegistration",
+    "T034VersionRejection.MisreportedContractVersionRejectedAtRegistration",
+    "T034VersionRejection.RejectionEmitsNothing",
+    "T034VersionRejection.UnsupportedRequestedCapabilityRejectedBeforeActivation",
+    "T034VersionRejection.UnsupportedRequestedVersionRejectedBeforeActivation"
   ],
-  "title": "T033 reusable provider/observer/stimulation-tool/gateway contract-suite unit cases"
+  "title": "T034 second minimal synthetic provider unit cases"
 }

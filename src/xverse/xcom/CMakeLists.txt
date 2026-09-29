@@ -1144,6 +1144,51 @@ if(BUILD_TESTING)
     )
   endforeach()
 
+  # T034 second minimal synthetic provider and its replaceability, version-rejection, and
+  # failure-isolation drivers. Registration is additive: the fixture source
+  # `src/xverse/xcom/fixtures/synthetic_provider.cpp` is compiled directly into each `t034-<kind>`
+  # test executable (no new runtime library, so XVERSE_XCOM_RUNTIME_TARGETS is unchanged) and no
+  # existing target, test name, label, command, or expected value changes. The fixture header is
+  # reached through the fixtures include root; the accepted T033 provider contract suite and the
+  # accepted T016 core-matrix fixtures are consumed read-only. Each driver uses one hyphenated
+  # `t034-<kind>` label (CMake 3.22 label workaround): the `suite` driver is labelled
+  # `t034-replaceability`.
+  set(xcom_t034_kinds suite version isolation)
+  set(xcom_t034_labels replaceability version isolation)
+  list(LENGTH xcom_t034_kinds xcom_t034_count)
+  math(EXPR xcom_t034_last "${xcom_t034_count} - 1")
+  foreach(xcom_t034_index RANGE 0 ${xcom_t034_last})
+    list(GET xcom_t034_kinds ${xcom_t034_index} xcom_t034_kind)
+    list(GET xcom_t034_labels ${xcom_t034_index} xcom_t034_label)
+    add_executable(
+      xverse_xcom_t034_${xcom_t034_kind}_tests
+      "${PROJECT_SOURCE_DIR}/tests/xcom/contract_suites/second_provider_${xcom_t034_kind}_tests.cpp"
+      "${PROJECT_SOURCE_DIR}/src/xverse/xcom/fixtures/synthetic_provider.cpp"
+    )
+    target_include_directories(
+      xverse_xcom_t034_${xcom_t034_kind}_tests
+      PRIVATE
+        "${PROJECT_SOURCE_DIR}/tests/xcom"
+        "${PROJECT_SOURCE_DIR}/tests/xcom/contract_suites"
+        "${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+    )
+    target_link_libraries(
+      xverse_xcom_t034_${xcom_t034_kind}_tests
+      PRIVATE
+        xverse::xcom_provider_loopback
+        GTest::gtest_main
+        GTest::gmock
+        Threads::Threads
+    )
+    xverse_xcom_apply_runtime_rules(xverse_xcom_t034_${xcom_t034_kind}_tests)
+    gtest_discover_tests(
+      xverse_xcom_t034_${xcom_t034_kind}_tests
+      PROPERTIES
+        LABELS "t034-${xcom_t034_label}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+  endforeach()
+
   # Test-only friend seam for paired comparison with the admitted pre-observation submit path.
   target_compile_definitions(
     xverse_xcom_provider_loopback

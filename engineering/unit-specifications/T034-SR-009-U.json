@@ -1,0 +1,60 @@
+{
+  "component_id": "T034-SR-009-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-009-U",
+  "inputs": [
+    "an active unrelated loopback route and a failing or rejected second-provider route"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "invariants": [
+    "the unrelated route stays active with unchanged bounds",
+    "it still accepts and returns its exact items and stays observable",
+    "the rejected provider issues no handle"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the unrelated route's activity, queue state, and snapshot after the failure"
+  ],
+  "purpose": "When a provider route or adapter on one route fails or is rejected, every unrelated already-active route **shall** remain active with unchanged queue bounds, still accept and return its exact items, and keep its provider-route state observable.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-009-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-009-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034FailureIsolation.UnrelatedRouteRemainsActiveAndBounded",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    },
+    {
+      "expected": "pass",
+      "id": "T034FailureIsolation.UnrelatedRouteStateStaysObservable",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    },
+    {
+      "expected": "pass",
+      "id": "T034FailureIsolation.RejectedAdapterLeavesUnrelatedRouteIntact",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

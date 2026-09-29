@@ -503,3 +503,95 @@ A separate read-only DeepSeek internal review covers every tracked and untracked
 in `docs/engineering/xcom/t033/internal-review.json`. External Codex review and explicit user acceptance remain
 T039/T041 and are deferred until the ordered backlog `xcom-t030-t034-20260928` completes; no acceptance or
 integration is claimed by this index.
+
+# T034 review index — second minimal synthetic provider and replaceability/version-rejection/failure-isolation candidate
+
+Candidate: T034 on baseline `f63491101aed1c4f7db57fa7c506ad5c0510038f` (accepted T033 reusable contract suites),
+queue `xcom-t030-t034-20260928`. The T020, T030, T031, T032, and T033 indexes above are retained as historical
+predecessor evidence and are not rewritten.
+
+This section records the T034 **plan-stage** work products. The implementation, its local verification, and the
+separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the trusted
+target-repository integration measure, and the delivery package are separate gates; none is claimed complete by
+this index, and external review and acceptance are deferred until the ordered backlog `xcom-t030-t034-20260928`
+completes.
+
+## Declared T034 plan-stage work products
+
+- `docs/engineering/xcom/t034/requirements.md` — 5 stakeholder and 14 software requirements (`T034-STK-001`…`-005`,
+  `T034-SR-001`…`-014`) with accepted system anchors, the reused-suite replaceability decision, and the REF-002
+  disposition (`unchanged`, empty `promoted`; T035–T041 allocated).
+- `docs/engineering/xcom/t034/architecture.md` — trust boundaries `T34-XB-1`…`-008`, components
+  `T34-CMP-{PROVIDER,SUITE,VERSION,ISOLATION,BUILD,WP}`, and the negative-case map.
+- `docs/engineering/xcom/t034/detailed-design.md` — the `SyntheticProvider` interface and bounded behavior, the
+  unchanged T033 `ProviderContractSuite` reuse through a new `ProviderSubject`, the version/capability
+  fail-closed gates, the failure-isolation composition, and the three `t034-<kind>` drivers.
+- `docs/engineering/xcom/t034/unit-specifications.md` — 14 unit specifications and the thirteen-case index.
+- `docs/engineering/xcom/t034/verification-plan.md` — `CHK-01`…`CHK-22`, `NEG-01`…`NEG-08`, evidence retention,
+  exit criteria, and the accepted-anchor traceability.
+
+## Declared T034 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T034`, capability `007`, accepted baseline
+  `f63491101aed1c4f7db57fa7c506ad5c0510038f`.
+- `engineering/requirements/T034-STK-00{1..5}.json` and `engineering/requirements/T034-SR-0{01..14}.json`.
+- `engineering/architecture/components/T034-SR-0{01..14}-CMP.json`.
+- `engineering/unit-specifications/T034-SR-0{01..14}-U.json`.
+- `engineering/validation/scenarios/T034-VS-ACCUMULATED.json` — thirteen `t034-` cases validating
+  `T034-SR-001`…`-014`.
+
+## Declared T034 implementation change set (expected at the implementation stage)
+
+- `src/xverse/xcom/fixtures/synthetic_provider.hpp` (new) and `src/xverse/xcom/fixtures/synthetic_provider.cpp`
+  (new) — the second minimal synthetic provider (`SyntheticProvider`, `XCOM-DU-007`/`XCOM-DU-008`,
+  `XCOM-CMP-006`/`007`/`011`).
+- `src/xverse/xcom/CMakeLists.txt` (shared) — the fixture source compiled into three additive `t034-<kind>`
+  test targets; no runtime library is added and `XVERSE_XCOM_RUNTIME_TARGETS` is unchanged.
+- `tests/xcom/contract_suites/second_provider_suite_tests.cpp` (`t034-replaceability`),
+  `second_provider_version_tests.cpp` (`t034-version`), and `second_provider_isolation_tests.cpp`
+  (`t034-isolation`) — the thirteen cases, reusing the unchanged T033 `ProviderContractSuite`.
+- `engineering/trace/links.json`, `engineering/verification/measures/*.json`, and inherited
+  `engineering/stage-results/*.json` digest refresh; `engineering/project.json` current-task pointer; the T034
+  checkbox line in `specs/007-xcom-core/tasks.md` (implementation stage only); `reports/xcom-queue/t034-package.json`;
+  `docs/engineering/xcom/t034/{implementation.md,internal-review.json}`.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this index
+  does not claim they passed.
+- **L-T034-1 (admitted offline inputs).** The Phase 7 runner requires `XVERSE_XCOM_TOOLCHAIN`,
+  `XVERSE_XCOM_PACKAGE_MANIFEST`, and `XVERSE_XCOM_T025_TEST_TOOLCHAIN` (or the documented A-1 cache seed). If the
+  gate process environment does not carry them, the configure fails closed before any T034 target builds. This is
+  an external environment prerequisite, not a T034 defect.
+- **L-T034-2 (owned synthetic providers only).** T034 proves replaceability and failure isolation against owned
+  in-process synthetic providers over the accepted composition; it makes no network, transport, third-party
+  provider, or legacy-provider compatibility claim.
+- **L-T034-3 (bounded isolation model).** The accepted composition owns one provider registry and one active
+  route per fixture; isolation is proven for an unrelated route on an independently composed provider and for a
+  rejected provider registered into the same composition (`T034-GAP-02`).
+- **L-T034-4 (deferred external review).** External Codex review and explicit user acceptance remain pending; the
+  reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+The implementation-stage record, its local verification, and the separate internal DeepSeek review follow in their
+own stages and are not claimed by this plan-stage section.
+
+## T034 implementation-stage verification (candidate working tree)
+
+The implementation stage realized the declared change set exactly. Measured locally on the candidate working tree
+in the admitted offline build (`build/fabro-t030-t034-system-unit`); the trusted measures and the strict
+target-repository integration gate remain separate and are not claimed here:
+
+- `ctest -L t034-` — `100% tests passed, 0 tests failed out of 13` (4 `t034-replaceability`, 5 `t034-version`,
+  4 `t034-isolation`); `ctest -N -L t034-` reports `Total Tests: 13`.
+- `ctest -L 't0(20|2[6-9]|3[0-4])-'` — `100% tests passed, 0 tests failed out of 242` (the preserved inherited
+  suites plus the thirteen `t034-` cases); full discovery `ctest -N` reports `Total Tests: 496`.
+- `python3 -m pytest -q` — `150 passed, 24 subtests passed`.
+- `git diff --check f63491101aed1c4f7db57fa7c506ad5c0510038f --` — clean.
+- Trace validation (`fabro_engineering.core.validate_trace`, project `xverse-platform`) — passes with 653
+  artifacts and 2329 links; every accepted `T034-SR-0{01..14}` carries `allocated_to`, `implemented_by`, and
+  `verified_by`, and every unit carries `decomposes_to`, `implemented_by`, `verified_by`, and `analyzed_by`.
+
+The T034-owned artifacts and inherited build/links digests are recorded in `docs/engineering/xcom/t034/implementation.md`
+§6.1 and in the package manifest `reports/xcom-queue/t034-package.json` (emitted at package time). This is a
+candidate-stage result only; external Codex review, the trusted whole-system integration measure, and explicit user
+acceptance await T039/T041 and the completion of the ordered backlog `xcom-t030-t034-20260928`.

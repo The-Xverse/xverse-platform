@@ -1,0 +1,52 @@
+{
+  "component_id": "T034-SR-014-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-014-U",
+  "inputs": [
+    "the fixture source and the committed test paths"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp",
+    "tests/xcom/contract_suites/second_provider_suite_tests.cpp",
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp",
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "invariants": [
+    "no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, or production workload is used"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the forbidden-API verdict"
+  ],
+  "purpose": "The second provider and its tests **shall** use only in-process owned storage and the accepted offline toolchain; they **shall not** create a TCP listener or `AF_INET`/`AF_INET6` socket, use DNS, a resolver, or TLS, contact an external peer, or execute a legacy binary or production workload.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp",
+    "tests/xcom/contract_suites/second_provider_suite_tests.cpp",
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp",
+    "tests/xcom/contract_suites/second_provider_isolation_tests.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-014-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-014-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

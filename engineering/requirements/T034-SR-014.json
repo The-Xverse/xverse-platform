@@ -1,0 +1,21 @@
+{
+  "acceptance_criteria": [
+    "Traces to its accepted system anchor and is verified by its named checks."
+  ],
+  "applicability": "T034 second-provider replaceability candidate",
+  "id": "T034-SR-014",
+  "level": "software",
+  "parents": [
+    "T034-STK-001"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t034/requirements.md T034-SR-014"
+  },
+  "statement": "The second provider and its tests **shall** use only in-process owned storage and the accepted offline toolchain; they **shall not** create a TCP listener or `AF_INET`/`AF_INET6` socket, use DNS, a resolver, or TLS, contact an external peer, or execute a legacy binary or production workload.",
+  "status": "accepted",
+  "title": "In-process only, no network or legacy",
+  "verification_intent": "the forbidden-API/public-safety inspection plus the contributory T034SecondProviderSuite.ReusedProviderContractSuitePasses case"
+}

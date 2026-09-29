@@ -1,0 +1,27 @@
+{
+  "concurrency": "single declared user per driver; the accepted composition and the second provider serialize their own state",
+  "dependencies": [
+    "accepted T007-T033 registers and fixtures",
+    "T011 admitted offline envelope",
+    "T015/T016 provider boundary, composition, and core-matrix fixtures",
+    "T033 reusable provider contract suite"
+  ],
+  "deployment": "offline build and in-process provider run",
+  "errors": [
+    "declared fail-closed provider outcome",
+    "build or configuration failure"
+  ],
+  "id": "T034-SR-002-CMP",
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_suite_tests.cpp",
+    "tests/xcom/contract_suites/provider_contract_suite.hpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t034/requirements.md",
+  "responsibilities": [
+    "When the unchanged accepted reusable `ProviderContractSuite` (T033) is run against the second synthetic provider through a `ProviderSubject`, it **shall** report `ok()` with every provider check `P-01`-`P-13` passing."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one bounded provider instance or suite report owned by the driver over the accepted composition",
+  "title": "T034-SR-002 allocation"
+}

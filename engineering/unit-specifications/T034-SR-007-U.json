@@ -1,0 +1,60 @@
+{
+  "component_id": "T034-SR-007-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-007-U",
+  "inputs": [
+    "a descriptor claiming more routes/queue items than the finite storage",
+    "a request naming an unadvertised delivery claim"
+  ],
+  "interfaces": [
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp"
+  ],
+  "invariants": [
+    "the misreporting descriptor fails registration with invalid_descriptor",
+    "the unsupported request fails preparation before activation"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the registration and preparation outcomes"
+  ],
+  "purpose": "If a provider claims a capability its bounded storage cannot honor, registration **shall** fail with `invalid_descriptor`; if a route requests an unsupported capability, preparation **shall** fail with the matching stable `unsupported_*` outcome before activation.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/contract_suites/second_provider_version_tests.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-007-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-007-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.MisreportedCapabilityRejectedAtRegistration",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    },
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.UnsupportedRequestedCapabilityRejectedBeforeActivation",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    },
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

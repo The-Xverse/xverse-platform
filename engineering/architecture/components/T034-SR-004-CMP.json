@@ -1,0 +1,26 @@
+{
+  "concurrency": "single declared user per driver; the accepted composition and the second provider serialize their own state",
+  "dependencies": [
+    "accepted T007-T033 registers and fixtures",
+    "T011 admitted offline envelope",
+    "T015/T016 provider boundary, composition, and core-matrix fixtures",
+    "T033 reusable provider contract suite"
+  ],
+  "deployment": "offline build and in-process provider run",
+  "errors": [
+    "declared fail-closed provider outcome",
+    "build or configuration failure"
+  ],
+  "id": "T034-SR-004-CMP",
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp"
+  ],
+  "rationale": "Source allocation from docs/engineering/xcom/t034/requirements.md",
+  "responsibilities": [
+    "When the second provider is driven through prepare, activate, submit, receive, drain, and close, it **shall** report `prepared`, `activated`, `accepted`, `received`, `draining`, and `closed` with a bounded reconcile outcome and no lost or duplicated item."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "one bounded provider instance or suite report owned by the driver over the accepted composition",
+  "title": "T034-SR-004 allocation"
+}

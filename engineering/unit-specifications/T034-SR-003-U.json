@@ -1,0 +1,48 @@
+{
+  "component_id": "T034-SR-003-CMP",
+  "concurrency": "single declared user per driver",
+  "errors": [
+    "test assertion failure",
+    "declared fail-closed provider outcome"
+  ],
+  "id": "T034-SR-003-U",
+  "inputs": [
+    "a reject-new queue of capacity one over the second provider"
+  ],
+  "interfaces": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp"
+  ],
+  "invariants": [
+    "the first submit is accepted",
+    "the second is queue_saturated without losing the first",
+    "the active state reports queued_items()==1 and queue_capacity()==1"
+  ],
+  "note": "Unit cases are contributory; the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "provider checks P-02, P-06, P-07, P-08"
+  ],
+  "purpose": "When the second provider is driven over a reject-new queue of capacity one, it **shall** accept the first item, reject the second with `queue_saturated` without dropping the first, and report bounded active route state with `queued_items()==1` and `queue_capacity()==1`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp"
+  ],
+  "state": "one bounded run over the second provider or its reused suite",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic",
+      "id": "T034-SR-003-U-STATIC",
+      "rule": "the second provider and its drivers compile under the accepted X-COM warning-as-error profile",
+      "tool": "admitted offline C++20 build"
+    }
+  ],
+  "title": "T034-SR-003-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation",
+      "precondition": "an owned subject over the second provider and the admitted offline build",
+      "stimulus": "run the named T034 driver case"
+    }
+  ]
+}

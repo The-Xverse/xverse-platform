@@ -95,7 +95,7 @@ and predecessor regression evidence retained.
 - [X] T032 Implement a separate-process synthetic client and generated-client contract tests for
   observation and every allowed stimulation action.
 - [X] T033 Build reusable provider, observer, stimulation-tool, and gateway contract suites.
-- [ ] T034 Add a second minimal synthetic provider implementation to prove replaceability and version
+- [X] T034 Add a second minimal synthetic provider implementation to prove replaceability and version
   rejection; verify adapter failures do not affect unrelated routes.
 
 ## Phase 8: Evidence, documentation, and acceptance

@@ -4,7 +4,7 @@
     "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase7_tests.py",
     "integration"
   ],
-  "command_runs": "Assemble the T033 candidate in an isolated checkout of the pinned xverse-platform revision, build the full platform, and run all CTest cases and the complete pytest suite; the listed IDs identify the T033 reusable contract-suite subset.",
+  "command_runs": "Assemble the T034 candidate in an isolated checkout of the pinned xverse-platform revision, build the full platform, and run all CTest cases and the complete pytest suite; the listed IDs identify the T034 second-provider subset.",
   "discovery_check": "100% tests passed",
   "expected": "pass",
   "id": "integration",
@@ -13,14 +13,19 @@
   "revision": "1",
   "schema_version": 1,
   "test_ids": [
-    "T033GatewayContractSuite.AcceptedGatewaySessionConforms",
-    "T033GatewayContractSuite.SuiteIsReusableAcrossFixtures",
-    "T033ObserverContractSuite.AcceptedObservationHubConforms",
-    "T033ObserverContractSuite.SuiteIsReusableAcrossHubInstances",
-    "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
-    "T033ProviderContractSuite.SuiteIsReusableAcrossProviderImplementations",
-    "T033StimulationToolContractSuite.AcceptedStimulationPathConforms",
-    "T033StimulationToolContractSuite.SuiteIsReusableAcrossFixtures"
+    "T034FailureIsolation.ProviderFailureYieldsStableOutcomeNoEmission",
+    "T034FailureIsolation.RejectedAdapterLeavesUnrelatedRouteIntact",
+    "T034FailureIsolation.UnrelatedRouteRemainsActiveAndBounded",
+    "T034FailureIsolation.UnrelatedRouteStateStaysObservable",
+    "T034SecondProviderLifecycle.CompletesFullBoundedLifecycle",
+    "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation",
+    "T034SecondProviderSuite.ProviderIsIndependentOfLoopback",
+    "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
+    "T034VersionRejection.MisreportedCapabilityRejectedAtRegistration",
+    "T034VersionRejection.MisreportedContractVersionRejectedAtRegistration",
+    "T034VersionRejection.RejectionEmitsNothing",
+    "T034VersionRejection.UnsupportedRequestedCapabilityRejectedBeforeActivation",
+    "T034VersionRejection.UnsupportedRequestedVersionRejectedBeforeActivation"
   ],
-  "title": "T033 reusable contract-suite integration cases"
+  "title": "T034 second minimal synthetic provider integration cases"
 }
