@@ -1129,3 +1129,109 @@ Measured results (exact candidate, local/offline):
 Open limitations are unchanged: the repository-wide route keeps `WARN_IF_UNDOCUMENTED = NO` and
 `WARN_NO_PARAMDOC = NO` because it also covers out-of-scope Python and test inputs (L-T037-2); the inherited
 Python docstring findings remain (L-T037-3); and external review/acceptance remain deferred (L-T037-6).
+
+# T038 review index — Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence
+
+Candidate: T038 on baseline `d5b9c6399da67a0a028fae21c2f0dcc8da3619bc` (accepted T037 complete Doxygen comments
+and warning-free generated reference), queue `xcom-t030-t034-20260928`. The T020 and T030–T037 indexes above
+are retained as historical predecessor evidence and are not rewritten.
+
+This section records the T038 **plan-stage** work products. The implementation, its local verification, and the
+separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the trusted
+target-repository integration measure, and the delivery package are separate gates; none is claimed complete by
+this index, and external review and acceptance are deferred until the ordered backlog `xcom-t030-t034-20260928`
+completes.
+
+## Declared T038 plan-stage work products
+
+- `docs/engineering/xcom/t038/requirements.md` — 5 stakeholder and 10 software requirements
+  (`T038-STK-001`…`-005`, `T038-SR-001`…`-010`) with accepted system/software anchors, the measured
+  plan-stage traceability and REF-002 disposition inventory, the exact evidence report and verification route,
+  and the REF-002 disposition (`unchanged`, empty `promoted`; T039–T041 allocated).
+- `docs/engineering/xcom/t038/architecture.md` — trust boundaries `T38-XB-1`…`-7`, components
+  `T38-CMP-{VERIFIER,REPORT,REGISTER,TRACE,SPEC,WP}`, and the negative-case map.
+- `docs/engineering/xcom/t038/detailed-design.md` — the chain-validation obligations, the REF-002
+  accounting and no-promotion rules, the fail-closed verifier, the
+  `reports/xcom-queue/t038-traceability.json` schema, and the trace digest-refresh obligation.
+- `docs/engineering/xcom/t038/unit-specifications.md` — 10 unit specifications and the ten-case index drawn
+  from the accepted discovered inventory.
+- `docs/engineering/xcom/t038/verification-plan.md` — `CHK-01`…`CHK-13`, `NEG-01`…`NEG-11`, the exact evidence
+  report, the task-owned traceability route (`B-1`…`B-5`), and the accepted-anchor traceability.
+
+## Declared T038 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T038`, capability `007`, accepted baseline
+  `d5b9c6399da67a0a028fae21c2f0dcc8da3619bc`; T037 added to the protected predecessor paths.
+- `engineering/requirements/T038-STK-00{1..5}.json` and `engineering/requirements/T038-SR-0{01..10}.json`.
+- `engineering/architecture/components/T038-SR-0{01..10}-CMP.json`.
+- `engineering/unit-specifications/T038-SR-0{01..10}-U.json`.
+- `engineering/validation/scenarios/T038-VS-ACCUMULATED.json` — the inherited discovered case set validating
+  `T038-SR-001`…`-010` and `T038-STK-001`…`-005`.
+- `engineering/trace/links.json` — 142 additive `T038-L-*` links and refreshed `implemented_by` pins for the
+  fifteen links targeting `engineering/project.json`. The trusted `validate_trace` reports 822 artifacts and
+  2997 links; the accepted `scripts/validate_xcom_requirements_traceability.py --verify` passes.
+
+## Declared T038 implementation change set (expected at the implementation stage)
+
+- `engineering/check_xcom_traceability.py` — the task-owned, deterministic, offline verifier (`--verify`,
+  `--self-test`) that validates the requirement/design/code/test/evidence chain, the twenty REF-002
+  dispositions with no promotion, and public safety, and fails closed.
+- `reports/xcom-queue/t038-traceability.json` — the exact-candidate report with `requirements`, `design`,
+  `code`, `tests`, `evidence`, `ref002`, the environment identity, hashes, and the candidate identity.
+- `engineering/trace/links.json` — refreshed `implemented_by` pins for every edited artifact; the plan-stage
+  T038 links remain; `engineering/project.json` current-task pointer; the T038 checkbox line in
+  `specs/007-xcom-core/tasks.md` (implementation stage only); `reports/xcom-queue/t038-package.json`;
+  `docs/engineering/xcom/t038/{implementation.md,internal-review.json}`.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this
+  index does not claim they passed.
+- **L-T038-1 (measured baseline inventory).** The plan stage measured, read-only, the accepted baseline at 786
+  inventoried artifacts and 2855 trace links, of which 139 are the accepted `T037-L-*` links; fifteen
+  `implemented_by` links pin `engineering/project.json`, and the current-task pointer change refreshes those
+  fifteen pins. These are plan-stage measurements, not implementation results.
+- **L-T038-2 (all twenty REF-002 IDs remain architectural-target).** The accepted register records ten
+  **allocated** and ten **deferred** dispositions; **none** is `implemented`. T038 records and validates the
+  `unchanged` capability disposition with an empty `promoted` list and promotes nothing.
+- **L-T038-3 (mechanical vs judged public safety).** The task-owned verifier enforces the five mechanically
+  decidable excluded-content classes; the classes that are not mechanically decidable remain a review-stage
+  judgement (T038-GAP-03).
+- **L-T038-4 (trace digest refresh).** T038 edits `engineering/project.json`, so the implementation stage must
+  refresh every edited-artifact `implemented_by` pin in `engineering/trace/links.json`; the plan-stage pins are
+  plan-time only (`T038-OPEN-02`).
+- **L-T038-5 (verifier does not replace the accepted validator).** T038 adds an additive task-owned verifier
+  and reuses the accepted `scripts/validate_xcom_requirements_traceability.py` semantics without modifying or
+  weakening it (`T038-OPEN-05`).
+- **L-T038-6 (deferred external review).** External Codex review and explicit user acceptance remain pending;
+  the reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+## T038 implementation state (exact candidate)
+
+The T038 implementation produced the task-owned verifier `engineering/check_xcom_traceability.py`, the
+exact-candidate evidence report `reports/xcom-queue/t038-traceability.json`, the implementation record, the one-line
+T038 checkbox in `specs/007-xcom-core/tasks.md`, and the refreshed `implemented_by` digest pins in
+`engineering/trace/links.json`. The report is bound to baseline `d5b9c6399da67a0a028fae21c2f0dcc8da3619bc` and the
+54-input material digest `32960ea32ba27231b7ab96d214902ad83f183f7930b711898224ee45b5991d21`.
+
+Measured implementation results (exact candidate, local/offline):
+
+- B-1 `engineering/check_xcom_traceability.py --verify reports/xcom-queue/t038-traceability.json`: exit `0`; the
+  T038 chain is complete (`127` resolved edges, `0` unresolved), all twenty REF-002 dispositions are explicit and
+  unchanged, and `ref002.promoted` is empty.
+- B-2 `engineering/check_xcom_traceability.py --self-test`: exit `0`; `NEG-01` missing edge → `CHAIN_INVALID`,
+  `NEG-02` stale hash pin → `STALE_LINK`, `NEG-03` promoted disposition → `REF002_INVALID`, `NEG-04`
+  excluded content → `PUBLIC_SAFETY_INVALID`.
+- B-3/B-4 `scripts/validate_xcom_requirements_traceability.py --verify` / `--check-human`: exit `0`; the accepted
+  register and matrix validate unchanged and the human projections are byte-stable.
+- B-5 `run_xcom_phase8_tests.py unit`: `100% tests passed`.
+
+**Pre-repair finding (recorded before repair, per the repository review rule).** The first `--self-test` run
+failed the positive fixture with `REF002_INVALID` for `XVE-SYS-0145`…`-0147`, because the accepted
+`specs/007-xcom-core/reference-traceability.md` names those IDs as a range. The verifier was corrected to parse the
+allocation/deferment bullet table and expand en-dash ranges; the self-test then passed. The repair changed only the
+task-owned verifier (additive), not any accepted artifact.
+
+Open limitations are unchanged: mechanical public-safety classes only (L-T038-2); the T035/T036/T037 deliverables
+are consumed read-only (L-T038-3); the accepted register maturities are recorded honestly and not rewritten
+(L-T038-4); and external review/acceptance remain deferred (L-T038-5/L-T038-6).

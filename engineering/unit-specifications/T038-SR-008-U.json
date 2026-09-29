@@ -1,0 +1,47 @@
+{
+  "component_id": "T038-SR-008-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-008-U",
+  "inputs": [
+    "the executed command set and the committed artifacts"
+  ],
+  "interfaces": [
+    "engineering/check_xcom_traceability.py"
+  ],
+  "invariants": [
+    "no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or added dependency"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the forbidden-resource and dependency verdict"
+  ],
+  "purpose": "No T038 command shall open a TCP listener or AF_INET/AF_INET6 socket, use DNS, a resolver, or TLS, contact an external peer, execute a legacy binary or production workload, or add an admitted dependency.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/architecture.md",
+    "docs/engineering/xcom/t038/detailed-design.md"
+  ],
+  "state": "one bounded forbidden-resource verdict owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-008-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-008-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

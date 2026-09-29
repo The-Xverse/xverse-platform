@@ -1,0 +1,49 @@
+{
+  "component_id": "T038-SR-003-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-003-U",
+  "inputs": [
+    "the accepted dispositions and the candidate source/test/evidence inventory"
+  ],
+  "interfaces": [
+    "specs/007-xcom-core/reference-traceability.md",
+    "docs/engineering/xcom/t008/requirements-register.json"
+  ],
+  "invariants": [
+    "no allocated/deferred/architectural-target/superseded ID is recorded implemented",
+    "the promoted list is empty"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the promoted-list verdict"
+  ],
+  "purpose": "The task shall keep every allocated, deferred, architectural-target, or superseded REF-002 ID at its recorded disposition and shall not record any of them implemented unless source and exact-candidate executed evidence exist.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/detailed-design.md",
+    "specs/007-xcom-core/reference-traceability.md"
+  ],
+  "state": "one bounded no-promotion check owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-003-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-003-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayBounds.MessageSizeBoundEnforced",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

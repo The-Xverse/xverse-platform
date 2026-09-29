@@ -106,7 +106,7 @@ and predecessor regression evidence retained.
 - [x] T036 Run controlled benchmarks and record environment, uncertainty, baseline, disabled/enabled
   tap results, and explicit non-production limitations.
 - [X] T037 Add complete Doxygen comments and generate warning-free reference documentation.
-- [ ] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe
+- [X] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe
   logs/evidence; do not promote allocated or deferred SADS targets without proof.
 - [ ] T039 Conduct an independent read-only review in a separate context, record every finding before
   repair, and disposition findings without weakening required acceptance criteria; any repair creates a

@@ -1,0 +1,49 @@
+{
+  "component_id": "T038-SR-004-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-004-U",
+  "inputs": [
+    "the accepted baseline revision, the candidate material inventory/digest, and the report contents"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t038-traceability.json",
+    "engineering/check_xcom_traceability.py"
+  ],
+  "invariants": [
+    "the report carries the five required sections",
+    "a stale or foreign binding fails the verifier"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the report with requirements, design, code, tests, evidence, environment, hashes, and candidate identity"
+  ],
+  "purpose": "reports/xcom-queue/t038-traceability.json shall record the requirements, design, code, tests, and evidence results, the resolved environment identity, retained-evidence hashes, and the exact-candidate identity, and shall be bound to the accepted baseline revision and the exact candidate material.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/detailed-design.md",
+    "docs/engineering/xcom/t038/verification-plan.md"
+  ],
+  "state": "one bounded traceability evidence report owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-004-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-004-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T026JournalRecovery.test_journal_restart_recovery_and_orphans",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

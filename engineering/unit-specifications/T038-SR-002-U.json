@@ -1,0 +1,51 @@
+{
+  "component_id": "T038-SR-002-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-002-U",
+  "inputs": [
+    "specs/007-xcom-core/reference-traceability.md",
+    "docs/engineering/xcom/t008/requirements-register.json",
+    "the task-owned disposition table"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t008/requirements-register.json",
+    "specs/007-xcom-core/reference-traceability.md"
+  ],
+  "invariants": [
+    "all twenty IDs carry an explicit disposition and owning capability",
+    "the capability disposition is unchanged"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the twenty-disposition verdict and the capability disposition"
+  ],
+  "purpose": "The task shall validate that all twenty REF-002 communication IDs XVE-SYS-0139 through XVE-SYS-0158 carry an explicit disposition and owning capability consistent with specs/007-xcom-core/reference-traceability.md and the accepted register.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/requirements.md",
+    "specs/007-xcom-core/reference-traceability.md"
+  ],
+  "state": "one bounded REF-002 disposition accounting owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-002-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-002-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

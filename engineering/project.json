@@ -1,9 +1,9 @@
 {
   "assurance_profile": "engineered",
   "authority": {
-    "baseline_revision": "8757a79d4e6b2630124d774fcba2a55d6342a879",
+    "baseline_revision": "d5b9c6399da67a0a028fae21c2f0dcc8da3619bc",
     "baseline_status": "accepted",
-    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design and doxygen_plan, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T037 changes documentation comments, the Doxygen configuration, and the documentation checker only: it changes no compiled behavior, no accepted test, and no accepted predecessor work product beyond additive records.",
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design and doxygen_plan, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T038 validates Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence: it adds the T038 work products, requirement/component/unit/validation records, the task-owned traceability verifier, exact-candidate evidence report, additive trace links, and the current-task pointer, and changes no accepted requirement, design, code, test, register, or ADR.",
     "protected_paths": [
       "src/xverse_xdl/**",
       "xdl/**",
@@ -13,6 +13,7 @@
       "tests/test_xcom_plan.py",
       "scripts/validate_xcom_*.py",
       "scripts/xcom_dependency_preflight.py",
+      "scripts/check_doxygen.py",
       "docs/engineering/xcom/task-ownership.json",
       "docs/engineering/xcom/task-ownership.md",
       "docs/engineering/xcom/t007/**",
@@ -45,6 +46,7 @@
       "docs/engineering/xcom/t034/**",
       "docs/engineering/xcom/t035/**",
       "docs/engineering/xcom/t036/**",
+      "docs/engineering/xcom/t037/**",
       "engineering/verification/measures/**"
     ]
   },
@@ -52,11 +54,12 @@
     "capability": "007",
     "predecessors": [
       "T035",
-      "T036"
+      "T036",
+      "T037"
     ],
     "queue_id": "xcom-t030-t034-20260928",
     "queued_run": null,
-    "task_id": "T037"
+    "task_id": "T038"
   },
   "languages": [
     "C++20",
@@ -64,21 +67,21 @@
   ],
   "project_id": "xverse-platform",
   "reliability": {
-    "basis": "Deterministic offline Doxygen coverage and generation over the owned X-COM C/C++ public interface in the admitted build envelope, with each check's outcome derived from executed coverage/generation and bound to the exact candidate revision."
+    "basis": "Deterministic offline validation of capability-007 Spec Kit and REF-002 requirements/design/code/test/evidence traceability and public-safe logs at one exact candidate revision, with every check's outcome derived from executed validators and bound to the exact candidate revision."
   },
   "schema_version": 1,
   "scope": {
     "boundaries": [
-      "Bounded capability-007 Phase 8 documentation scope: the T037 work products, the T037 requirement/component/unit/validation records, Doxygen comments in the owned src/xverse/xcom C/C++ inputs, the Doxyfile configuration, scripts/check_doxygen.py, the exact-candidate Doxygen report reports/xcom-queue/t037-doxygen.json, and the additive T037 trace links.",
-      "No change to any compiled statement, signature, type, default, control-flow decision, accepted test, target, label, command, expected value, contract, schema, register, or XDL profile; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
-      "T037 changes are limited to docs/engineering/xcom/t037/**, the Doxygen comments in src/xverse/xcom/**, Doxyfile, scripts/check_doxygen.py, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T037 records, engineering/trace/links.json, engineering/project.json, reports/review-index.md, reports/xcom-queue/t037-doxygen.json, and the one-line T037 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
+      "Bounded capability-007 Phase 8 traceability scope: the T038 work products, the T038 requirement/component/unit/validation records, the task-owned traceability verifier engineering/check_xcom_traceability.py, the exact-candidate evidence report reports/xcom-queue/t038-traceability.json, the additive T038 trace links, and the current-task pointer in engineering/project.json.",
+      "No change to any accepted requirement, design, code, test, target, label, command, expected value, contract, schema, register, XDL profile, or ADR; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
+      "T038 changes are limited to docs/engineering/xcom/t038/**, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T038 records, engineering/check_xcom_traceability.py, reports/xcom-queue/t038-traceability.json, engineering/trace/links.json, engineering/project.json, reports/review-index.md, and the one-line T038 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
     ],
-    "intended_use": "Complete the Doxygen documentation of the owned X-COM C/C++ public interface and generate warning-free reference documentation (HTML/XML), retaining command, warnings, output, environment, and exact-candidate evidence, without changing any compiled behavior or accepted test and without claiming the T038 traceability-verifier or T039-T041 review/acceptance results.",
+    "intended_use": "Validate that every accepted capability-007 requirement traces bidirectionally to design units, code, tests, measures, evidence, and intended-use validation; account for all twenty REF-002 communication IDs without promoting any allocated, deferred, architectural-target, or superseded ID; retain public-safe exact-candidate evidence; and leave the REF-002 disposition unchanged without claiming the T039-T041 review/acceptance results.",
     "success_criteria": [
-      "Every accepted T037 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
-      "Every owned public C/C++ declaration is documented and every owned file carries the mandatory file block; the strict C++-scoped configuration returns zero warnings and zero coverage gaps.",
-      "The repository-wide Doxyfile route is warning-free under WARN_AS_ERROR = YES, and reports/xcom-queue/t037-doxygen.json records command, warnings, output, environment, hashes, and the exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
-      "Independent review and strict delivery validation bind the exact candidate before acceptance."
+      "Every accepted T038 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
+      "Every capability-007 requirement edge validates with no missing or stale link, and every REF-002 ID XVE-SYS-0139-0158 retains an explicit disposition with no promoted allocated/deferred/architectural-target/superseded ID.",
+      "reports/xcom-queue/t038-traceability.json records requirements, design, code, tests, and evidence results plus the exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
+      "No accepted requirement, design, code, test, register, or ADR changes; independent review and strict delivery validation bind the exact candidate before acceptance."
     ],
     "users": [
       "X-Verse platform engineer",
@@ -88,7 +91,7 @@
   "targets": [
     "xverse-platform"
   ],
-  "title": "T037 complete Doxygen comments and warning-free generated reference documentation",
+  "title": "T038 Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence",
   "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T037 neither defines nor replaces them and is exercised by the validation measure through the warning-free Doxygen generation route."
+  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T038 neither defines nor replaces them and is exercised by the validation measure through the task-owned traceability verifier route (engineering/check_xcom_traceability.py --verify reports/xcom-queue/t038-traceability.json)."
 }

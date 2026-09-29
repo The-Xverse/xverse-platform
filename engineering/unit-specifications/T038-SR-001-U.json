@@ -1,0 +1,49 @@
+{
+  "component_id": "T038-SR-001-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-001-U",
+  "inputs": [
+    "the accepted engineering requirement/component/unit/measure/scenario records and engineering/trace/links.json"
+  ],
+  "interfaces": [
+    "engineering/trace/links.json",
+    "engineering/check_xcom_traceability.py"
+  ],
+  "invariants": [
+    "every refines/allocated_to/decomposes_to/implemented_by/verified_by/analyzed_by/validates edge resolves to a declared artifact of the expected group",
+    "no edge is missing or stale"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the resolved/unresolved edge counts and the chain verdict"
+  ],
+  "purpose": "The task shall validate that every accepted capability-007 requirement traces from spec to system to software to component to unit to code to test/measure to evidence to intended-use validation at the exact candidate revision, and that no required relation is missing or stale.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/verification-plan.md",
+    "engineering/trace/links.json"
+  ],
+  "state": "one bounded traceability chain validation owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-001-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-001-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

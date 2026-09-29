@@ -1,0 +1,52 @@
+{
+  "component_id": "T038-SR-007-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-007-U",
+  "inputs": [
+    "the T007-T010 models, the accepted registers, and the candidate trace"
+  ],
+  "interfaces": [
+    "engineering/trace/links.json",
+    "engineering/project.json",
+    "docs/engineering/xcom/task-ownership.json"
+  ],
+  "invariants": [
+    "registers unchanged in substance",
+    "the current-task pointer is set",
+    "REF-002 unchanged with an empty promoted list",
+    "no stale hash pin after the refresh"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the reconciled maturity and trace verdict"
+  ],
+  "purpose": "T038 shall reconcile with the T007 ownership register and the T008/T009/T010 models without rewriting or weakening them, shall set the current-task pointer, shall record T038 implemented while T039 through T041 remain allocated, and shall leave the capability REF-002 disposition unchanged with an empty promoted list.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/project.json",
+    "engineering/trace/links.json"
+  ],
+  "state": "one bounded governance/maturity reconciliation owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-007-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-007-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}

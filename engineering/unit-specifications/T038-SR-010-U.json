@@ -1,0 +1,49 @@
+{
+  "component_id": "T038-SR-010-CMP",
+  "concurrency": "single traceability user; single-threaded tooling",
+  "errors": [
+    "traceability check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T038-SR-010-U",
+  "inputs": [
+    "the task-owned verifier route and the accepted measure set"
+  ],
+  "interfaces": [
+    "docs/engineering/xcom/t038/verification-plan.md",
+    "engineering/check_xcom_traceability.py"
+  ],
+  "invariants": [
+    "the trusted T038 validation measure invokes the task-owned route",
+    "every accepted target, label, command, test, and expected value is preserved"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned traceability route; the task-owned verifier and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the route exit status and the preserved discovered inventory"
+  ],
+  "purpose": "The task shall provide engineering/check_xcom_traceability.py --verify as the task-owned route exercised by the trusted Phase 8 T038 validation measure and shall preserve every accepted target, label, command, test, and expected value.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t038/verification-plan.md",
+    "engineering/project.json"
+  ],
+  "state": "one bounded task-owned route verdict owned by the T038 record set",
+  "static_checks": [
+    {
+      "expected": "no compiler or evidence-inspection diagnostic and the declared traceability evidence is present",
+      "id": "T038-SR-010-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the accepted records, the task-owned verifier, and the report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository traceability/evidence inspection"
+    }
+  ],
+  "title": "T038-SR-010-U traceability verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
+      "precondition": "the accepted platform and records exist at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T038 traceability route as part of the check"
+    }
+  ]
+}
