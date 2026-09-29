@@ -1,0 +1,49 @@
+{
+  "component_id": "T035-SR-015-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-015-U",
+  "inputs": [
+    "the T007-T010 registers and the candidate trace"
+  ],
+  "interfaces": [
+    "engineering/trace/links.json"
+  ],
+  "invariants": [
+    "registers unchanged in substance",
+    "REF-002 unchanged with an empty promoted list",
+    "the required trace edges present"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the validator verdict, recorded maturity, and trace verdict"
+  ],
+  "purpose": "T035 **shall** reconcile with the T007 ownership register, the T008 register, the T009 architecture model, and the T010 unit design without rewriting or weakening them; **shall** keep the REF-002 disposition `unchanged` with an empty `promoted` list; **shall** record T035 as implemented while T036-T041 remain allocated; and **shall** satisfy the deterministic Phase 8 gate and the required trace links.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/project.json",
+    "docs/engineering/xcom/t035/requirements.md"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-015-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-015-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

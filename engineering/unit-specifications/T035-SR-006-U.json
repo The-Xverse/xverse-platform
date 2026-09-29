@@ -1,0 +1,48 @@
+{
+  "component_id": "T035-SR-006-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-006-U",
+  "inputs": [
+    "src/xverse/xcom/src and the cppcheck tool"
+  ],
+  "interfaces": [
+    "engineering/verification/measures/static_analysis.json"
+  ],
+  "invariants": [
+    "error-exit is enabled",
+    "a finding is recorded verbatim"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the cppcheck exit status and outcome"
+  ],
+  "purpose": "The `cppcheck` static-analysis measure **shall** execute over `src/xverse/xcom/src` with error-exit enabled, and its exit status and outcome **shall** be recorded.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/verification/measures/static_analysis.json",
+    "docs/engineering/xcom/t035/verification-plan.md"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-006-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-006-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

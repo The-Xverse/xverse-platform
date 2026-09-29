@@ -1,0 +1,47 @@
+{
+  "component_id": "T035-SR-011-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-011-U",
+  "inputs": [
+    "each executed command and its trusted discovery check"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t035-verification.json"
+  ],
+  "invariants": [
+    "pass only when the discovery check is satisfied",
+    "missing/stale/skipped/failed is never pass"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "per-command argv, exit status, and pass/failed/blocked outcome"
+  ],
+  "purpose": "Every recorded command **shall** carry its argv and exit status, and its outcome **shall** be `pass` only when the trusted discovery check is satisfied; a missing, stale, mismatched, skipped, or failed measure **shall** be recorded as `failed` or `blocked`.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t035/verification-plan.md"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-011-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-011-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayBounds.MessageSizeBoundEnforced",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

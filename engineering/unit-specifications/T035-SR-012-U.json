@@ -1,0 +1,48 @@
+{
+  "component_id": "T035-SR-012-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-012-U",
+  "inputs": [
+    "the resolved tool and admitted-input identities"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t035-verification.json"
+  ],
+  "invariants": [
+    "identities and hashes are public-safe",
+    "host-specific absolute paths are excluded"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the recorded environment identities and hashes"
+  ],
+  "purpose": "The report **shall** record the compiler, CMake, Ninja, `cppcheck`, Python, and admitted offline toolchain/package-manifest/GTest-prefix identities and hashes, and **shall** exclude host-specific absolute paths from the public evidence.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t035/detailed-design.md",
+    "docs/engineering/xcom/t035/requirements.md"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-012-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-012-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033ObserverContractSuite.AcceptedObservationHubConforms",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

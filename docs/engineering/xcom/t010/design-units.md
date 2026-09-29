@@ -1638,7 +1638,7 @@ Overflow policies: `n/a`
 
 **Artifact paths:**
 
-- `docs/engineering/xcom/t035/` (planned)
+- `docs/engineering/xcom/t035/` (established)
 - `docs/engineering/xcom/t036/` (planned)
 - `docs/engineering/xcom/t038/` (planned)
 - `docs/engineering/xcom/t040/` (planned)

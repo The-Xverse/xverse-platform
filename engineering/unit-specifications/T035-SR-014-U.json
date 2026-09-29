@@ -1,0 +1,47 @@
+{
+  "component_id": "T035-SR-014-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-014-U",
+  "inputs": [
+    "the baseline-versus-candidate diff"
+  ],
+  "interfaces": [
+    "engineering/verification/measures/**"
+  ],
+  "invariants": [
+    "no accepted production source, test, target, label, command, or expected value changes"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the changed-path verdict and the preserved discovered inventory"
+  ],
+  "purpose": "T035 **shall** change no accepted production source, header, contract, schema, register, XDL profile, or test byte; any build-wiring or measure-descriptor touch **shall** be additive or content-only and **shall** preserve every accepted target, label, command, and expected value.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/verification/measures/unit.json",
+    "engineering/verification/measures/integration.json"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-014-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-014-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

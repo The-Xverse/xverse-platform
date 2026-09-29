@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "task_id": "T035",
+  "capability": "007",
+  "baseline_revision": "dab68568bd8d189b14c7a4a9e3a9c325085a7529",
+  "candidate_revision": "dab68568bd8d189b14c7a4a9e3a9c325085a7529",
+  "candidate_identity": {
+    "candidate_kind": "uncommitted working-tree successor of the accepted baseline (HEAD == baseline)",
+    "material_digest": "67ac5ae0056028bd657db0a6c337d202aee64dc61830f3cae332b5c30425a8ef",
+    "generated_at": "2026-09-29T00:59:49.235329+00:00",
+    "material_inputs": [
+      "docs/engineering/xcom/t010/design-units.md",
+      "docs/engineering/xcom/t010/unit-design.json",
+      "docs/engineering/xcom/t035/architecture.md",
+      "docs/engineering/xcom/t035/detailed-design.md",
+      "docs/engineering/xcom/t035/implementation.md",
+      "docs/engineering/xcom/t035/requirements.md",
+      "docs/engineering/xcom/t035/unit-specifications.md",
+      "docs/engineering/xcom/t035/verification-plan.md",
+      "engineering/architecture/components/T035-SR-001-CMP.json",
+      "engineering/architecture/components/T035-SR-002-CMP.json",
+      "engineering/architecture/components/T035-SR-003-CMP.json",
+      "engineering/architecture/components/T035-SR-004-CMP.json",
+      "engineering/architecture/components/T035-SR-005-CMP.json",
+      "engineering/architecture/components/T035-SR-006-CMP.json",
+      "engineering/architecture/components/T035-SR-007-CMP.json",
+      "engineering/architecture/components/T035-SR-008-CMP.json",
+      "engineering/architecture/components/T035-SR-009-CMP.json",
+      "engineering/architecture/components/T035-SR-010-CMP.json",
+      "engineering/architecture/components/T035-SR-011-CMP.json",
+      "engineering/architecture/components/T035-SR-012-CMP.json",
+      "engineering/architecture/components/T035-SR-013-CMP.json",
+      "engineering/architecture/components/T035-SR-014-CMP.json",
+      "engineering/architecture/components/T035-SR-015-CMP.json",
+      "engineering/architecture/components/T035-SR-016-CMP.json",
+      "engineering/project.json",
+      "engineering/requirements/T035-SR-001.json",
+      "engineering/requirements/T035-SR-002.json",
+      "engineering/requirements/T035-SR-003.json",
+      "engineering/requirements/T035-SR-004.json",
+      "engineering/requirements/T035-SR-005.json",
+      "engineering/requirements/T035-SR-006.json",
+      "engineering/requirements/T035-SR-007.json",
+      "engineering/requirements/T035-SR-008.json",
+      "engineering/requirements/T035-SR-009.json",
+      "engineering/requirements/T035-SR-010.json",
+      "engineering/requirements/T035-SR-011.json",
+      "engineering/requirements/T035-SR-012.json",
+      "engineering/requirements/T035-SR-013.json",
+      "engineering/requirements/T035-SR-014.json",
+      "engineering/requirements/T035-SR-015.json",
+      "engineering/requirements/T035-SR-016.json",
+      "engineering/requirements/T035-STK-001.json",
+      "engineering/requirements/T035-STK-002.json",
+      "engineering/requirements/T035-STK-003.json",
+      "engineering/requirements/T035-STK-004.json",
+      "engineering/requirements/T035-STK-005.json",
+      "engineering/trace/links.json",
+      "engineering/unit-specifications/T035-SR-001-U.json",
+      "engineering/unit-specifications/T035-SR-002-U.json",
+      "engineering/unit-specifications/T035-SR-003-U.json",
+      "engineering/unit-specifications/T035-SR-004-U.json",
+      "engineering/unit-specifications/T035-SR-005-U.json",
+      "engineering/unit-specifications/T035-SR-006-U.json",
+      "engineering/unit-specifications/T035-SR-007-U.json",
+      "engineering/unit-specifications/T035-SR-008-U.json",
+      "engineering/unit-specifications/T035-SR-009-U.json",
+      "engineering/unit-specifications/T035-SR-010-U.json",
+      "engineering/unit-specifications/T035-SR-011-U.json",
+      "engineering/unit-specifications/T035-SR-012-U.json",
+      "engineering/unit-specifications/T035-SR-013-U.json",
+      "engineering/unit-specifications/T035-SR-014-U.json",
+      "engineering/unit-specifications/T035-SR-015-U.json",
+      "engineering/unit-specifications/T035-SR-016-U.json",
+      "engineering/validation/scenarios/T035-VS-ACCUMULATED.json",
+      "engineering/verification/measures/integration.json",
+      "engineering/verification/measures/sanitizer.json",
+      "engineering/verification/measures/static_analysis.json",
+      "engineering/verification/measures/unit.json",
+      "engineering/verification/measures/validation.json",
+      "reports/review-index.md",
+      "specs/007-xcom-core/tasks.md"
+    ]
+  },
+  "environment": {
+    "compiler": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+    "cxx_standard": "C++20 warning-as-error (T012)",
+    "cmake": "3.22.1",
+    "ninja": "1.10.1",
+    "cppcheck": "2.7",
+    "python": "3.13.13",
+    "build_type": "Debug",
+    "admitted_toolchain_sha256": "48ef3d662d2d2b94a09ef134635f17da223c31f4ca6db5a00503b85fc14d249f",
+    "package_manifest_sha256": "031c6aecdc4fe0cf4e0dff474d9b161777122142bf9bb1393c25d679807b055c",
+    "gtest_prefix_sha256": "36eaadd3106a3714266ac67a0b24bce4ef6f2b95b452706f57ca8fea156fddfe",
+    "trusted_policy_sha256": "78c285270a777675a3596878632941b9b5826a3305b59089f9b20a82d89ec32c"
+  },
+  "commands": [
+    {
+      "id": "M-1",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
+        "unit"
+      ],
+      "exit_code": 0,
+      "log_sha256": "de3e04aaa2949e039d1c9465250743315586e4ae1c075150c6d8db75d7b68324",
+      "discovery_check": "100% tests passed",
+      "outcome": "pass",
+      "execution_root": "candidate checkout",
+      "note": "full discovered CTest suite: 496/496 passed"
+    },
+    {
+      "id": "M-2",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
+        "integration"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b23e5a88d7d38f5b22fc544769c9527d3a00703d2b6d78abe8c7305209c83248",
+      "discovery_check": "100% tests passed",
+      "outcome": "pass",
+      "execution_root": "short material-identical checkout",
+      "note": "full CTest suite 496/496 plus pytest 150 passed, 24 subtests; candidate-local"
+    },
+    {
+      "id": "M-3",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
+        "validation"
+      ],
+      "exit_code": 0,
+      "log_sha256": "31e83cf24bfdfd63e86d1cc14665bc79ef3cc64de363589c3c786c6cc4215632",
+      "discovery_check": "[1-9][0-9]* passed",
+      "outcome": "pass",
+      "execution_root": "short material-identical checkout",
+      "note": "full CTest suite 496/496 plus pytest 150 passed, 24 subtests; candidate-local"
+    },
+    {
+      "id": "M-4",
+      "argv": [
+        "cppcheck",
+        "--error-exitcode=1",
+        "--quiet",
+        "--std=c++20",
+        "--language=c++",
+        "--suppress=invalidLifetime",
+        "src/xverse/xcom/src"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "discovery_check": "exit code 0",
+      "outcome": "pass",
+      "execution_root": "candidate checkout",
+      "note": "no diagnostic output; exit 0"
+    },
+    {
+      "id": "M-5",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_conformance.py"
+      ],
+      "exit_code": 1,
+      "log_sha256": "6456cf414563c842cca32cdd3e17005f271887bd0fe466d28ac4dbbcb8bb90cf",
+      "discovery_check": "26 conformance inspections passed",
+      "outcome": "failed",
+      "execution_root": "isolated baseline worktree",
+      "note": "external baseline inconsistency E-T035-2: accepted t009 change vs stale Phase 6 pin"
+    },
+    {
+      "id": "M-6",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
+        "sanitizer"
+      ],
+      "exit_code": 0,
+      "log_sha256": "842f60ba79de33b0f26cef1ef5f3408c4a63a3a178ef514812d4ba084e7269b6",
+      "discovery_check": "100% tests passed",
+      "outcome": "pass",
+      "execution_root": "short material-identical checkout",
+      "note": "-fsanitize=address,undefined; 496/496 passed"
+    },
+    {
+      "id": "PY",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b23e5a88d7d38f5b22fc544769c9527d3a00703d2b6d78abe8c7305209c83248",
+      "discovery_check": "[1-9][0-9]* passed",
+      "outcome": "pass",
+      "execution_root": "short material-identical checkout",
+      "note": "150 passed, 24 subtests passed (observed in the integration/validation runs)"
+    },
+    {
+      "id": "SEL",
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "build/fabro-t035-t038-system-integration",
+        "-R",
+        "<16 selected T035 case IDs>"
+      ],
+      "exit_code": 0,
+      "log_sha256": "802970d5f92e3c21a63f5164e8fbcdde678caa708b6c06bf68ccdd2ee69acf1d",
+      "discovery_check": "100% tests passed",
+      "outcome": "pass",
+      "execution_root": "short material-identical checkout",
+      "note": "16/16 selected T035 cases passed"
+    },
+    {
+      "id": "DIAG-1",
+      "argv": [
+        "python3",
+        "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
+        "integration"
+      ],
+      "exit_code": 1,
+      "log_sha256": "fb4a93ffccbabf6d83dcf5fc5a9f2f4ff53aeadf5a353da44c53fb147a743290",
+      "discovery_check": "100% tests passed",
+      "outcome": "failed",
+      "execution_root": "candidate checkout",
+      "note": "E-T035-1: default pinned build-directory names exceed the AF_UNIX sun_path limit; 14 XcomSyntheticClient* failures"
+    }
+  ],
+  "outcomes": {
+    "unit": "pass",
+    "integration": "pass",
+    "validation": "pass",
+    "sanitizer": "pass",
+    "static_analysis": "pass",
+    "conformance": "failed",
+    "python": "pass"
+  },
+  "hashes": {
+    "docs/engineering/xcom/t010/design-units.md": "f521167b704fd036bf057f1c9fce08c8c3654b55746e4e069a8688b924200c07",
+    "docs/engineering/xcom/t010/unit-design.json": "e951f47178c387d2c8addeb26a0849ba25fccde2d24c6b02cf24dfbfe8d08ba4",
+    "docs/engineering/xcom/t035/architecture.md": "edd21ca559dc92f69058a6da62470e0f18418db4287f3e39e9838ad7bccc6dcf",
+    "docs/engineering/xcom/t035/detailed-design.md": "b8ae56b7edde33ab4fb3eb1a60186a9ca551f24c3a4bf0db2354babb8973ec87",
+    "docs/engineering/xcom/t035/implementation.md": "a1d57c0c26f0f730d1b2abd11522e3879566edcc41da7ccb44f31bc6bb812b13",
+    "docs/engineering/xcom/t035/requirements.md": "a12abc3ff7dee3765afb535e6f9170a9481388ca0aed90dd87ca2b7c8498d796",
+    "docs/engineering/xcom/t035/unit-specifications.md": "b9d9dab6b4fe24777a2d20004db72ed0ae482e7b55f0296871709732310002f6",
+    "docs/engineering/xcom/t035/verification-plan.md": "103197554e51f96b441af8852f7b3d9c68ece2075f4c89e050b3a360a8bcd19a",
+    "engineering/architecture/components/T035-SR-001-CMP.json": "2351f1b8381cc5d751a26e404b735528bfaac220a7796ccf3a08411050966322",
+    "engineering/architecture/components/T035-SR-002-CMP.json": "9e9021065ed8963c8073b88a51c4421c54f6e8e5e9ad1ada16e80ad6553895cc",
+    "engineering/architecture/components/T035-SR-003-CMP.json": "ab2a6c3913b31bd35b28d7c311d45a36effa9a2a7adb646962d2d34e16d2c994",
+    "engineering/architecture/components/T035-SR-004-CMP.json": "f1d56fb7c39ea66e7d02e76963bf79652094d7aa39048895cee8163c5262c64d",
+    "engineering/architecture/components/T035-SR-005-CMP.json": "f1202983026bad57c3fd9f8cc2253e2bd96dc2818c4463999606f3acecbe781a",
+    "engineering/architecture/components/T035-SR-006-CMP.json": "03093de83b161e26f73b0902e7e13fb823ad30ab033b9679d4fcfe3d732e62a5",
+    "engineering/architecture/components/T035-SR-007-CMP.json": "8f7902fa0d8efb8553eb33d3c43bd6457447ad98456910542adc045e6a1fccad",
+    "engineering/architecture/components/T035-SR-008-CMP.json": "242f56c1fd71a868b371df9ffda1f2099fc852b1738f84adc8fc24867b372031",
+    "engineering/architecture/components/T035-SR-009-CMP.json": "c907e93b365996565a2d9815b561e97fd2e9ec66660036c29a77fe6a1d54e6e6",
+    "engineering/architecture/components/T035-SR-010-CMP.json": "93b8d73e6de2ba1dfb5026dbd4f758b663d64e016c6d347b9faed6ddce9d6b5d",
+    "engineering/architecture/components/T035-SR-011-CMP.json": "564ef72c3afce15f1e480ef0a50246a34d8614bcbe290ff2301c565cca391afe",
+    "engineering/architecture/components/T035-SR-012-CMP.json": "ba52b19073cf613e2ec90bb95d738c44c2c1e13812954be2a196d7ed3b1f83d5",
+    "engineering/architecture/components/T035-SR-013-CMP.json": "d6e650452122cf7c5d162f610cf98a41fbeeed20c6c0fa2b497298cf5ad25001",
+    "engineering/architecture/components/T035-SR-014-CMP.json": "d0321439f4fca17e1620341ca4b2a1e4280d02888343f6cb3f45b20ca31a9d95",
+    "engineering/architecture/components/T035-SR-015-CMP.json": "08eb4bca2676e830b41807c1682809ba590ebb2c7e680eb382304ed37dada8a6",
+    "engineering/architecture/components/T035-SR-016-CMP.json": "e592cc3b09ef50d5513138e6dc347560893c23cad6882867aafdc0a59d685c9a",
+    "engineering/project.json": "d8d271e74eacda780bcb3cad95c3044805cbfd103dd13406023d5c480e5e3777",
+    "engineering/requirements/T035-SR-001.json": "521339f8c586f866daae16405aae3d775da8debf02bbe7435062ef27dc4f5dd0",
+    "engineering/requirements/T035-SR-002.json": "7f55fa002984be3824bd1257d20a61730521b191791c63aae282dd5d48a1fd71",
+    "engineering/requirements/T035-SR-003.json": "2562c06613073332e3351320748106cd0839e94354c32caa3469a4d5346248c5",
+    "engineering/requirements/T035-SR-004.json": "fb88d5b1f633b70440c95b9618888c75be45f68e0362dd823af921561ad69de6",
+    "engineering/requirements/T035-SR-005.json": "ac5bc36dcac929ea3696012557cfcbffe9200cd913c95fa7af10dbd0971c96ad",
+    "engineering/requirements/T035-SR-006.json": "64be5c6a36e35b1edccc785926492e50cb91aa3ca541a8676a80d252d0587a20",
+    "engineering/requirements/T035-SR-007.json": "ee74270ddc93105baad3df3b69a80524ab0b1a6a2532fe1742109899940d143d",
+    "engineering/requirements/T035-SR-008.json": "c58dfaaa108c805151a410499cf688dd21e24d21f730526b104c3f871254c746",
+    "engineering/requirements/T035-SR-009.json": "314c5e96dfac7e8c01b5b749e510e5e189e9210b773c42f2d16336b12bbf1370",
+    "engineering/requirements/T035-SR-010.json": "db047070211009726efc3c018005dcfe977e058419c8dbea99cc92bf9e62bed9",
+    "engineering/requirements/T035-SR-011.json": "adc7da9f21a889c4089d8141b9e592ff982b02128f06a78570c59bcf9c24753d",
+    "engineering/requirements/T035-SR-012.json": "ecd74a5f910752cb727f772f53b677e6ecd38a01e969d351efd09dbd1fceca91",
+    "engineering/requirements/T035-SR-013.json": "11e98c7e44b6841866137c890221052edb078dc535b045ba038a5872d3845a73",
+    "engineering/requirements/T035-SR-014.json": "c6da5d74f86e66e294cf1b91333c38b34214d2e59f9498d9f995e06e0f404c9e",
+    "engineering/requirements/T035-SR-015.json": "395fea8597325460ebaeb96ba764483594f2776b84119919d0788d360984baeb",
+    "engineering/requirements/T035-SR-016.json": "583c066d8f1e8c838ff89cf6dc6187cb0eeca9f0ae20ef2930c053602dbb8916",
+    "engineering/requirements/T035-STK-001.json": "f5fc5ee5d686c8af65789c3b7bc5226b60c3add8fd00d750908fd43d06dbf7c4",
+    "engineering/requirements/T035-STK-002.json": "ffc7a0e8ef4b6768a987ba7cff51413646ce7c5b5d82d1fffa306e696b0eb4ec",
+    "engineering/requirements/T035-STK-003.json": "dc67ee35c86fb0752dc693512c1632bdff1429cc720388aa9cb01ba826174c40",
+    "engineering/requirements/T035-STK-004.json": "56dc01d4b552875815027eb263221888cb301c8521dba7e114d0c477d018af23",
+    "engineering/requirements/T035-STK-005.json": "dee7984f605704e70da46fa5d9ce030230a0375fc48fb18c79c76b3e0b536f4d",
+    "engineering/trace/links.json": "c4a6c4f4d92e0c93f269c9b7396e025db1c47bc2f4a29c22c885406076de3d7a",
+    "engineering/unit-specifications/T035-SR-001-U.json": "4c4edd50b935421b6157604697fcee9a8667e8113b7153f32d59bdf553e93652",
+    "engineering/unit-specifications/T035-SR-002-U.json": "3f679e2e0eb82a29e04443a822f12537ff0584c989cf3b2c07532efe96cccfbf",
+    "engineering/unit-specifications/T035-SR-003-U.json": "08955f9d099bd2769a63e16b51a80d44fbd27d3e8bfd3e12bff20c8a70084b84",
+    "engineering/unit-specifications/T035-SR-004-U.json": "2fcc9cf367634ba48803fbc0d0162d5d15f2d7874e0539a2fc7a6b35dea3768d",
+    "engineering/unit-specifications/T035-SR-005-U.json": "44f8194d5561e8ccbc6e71e27902cb43dabcd20b68701003d1a2e8143e0679ff",
+    "engineering/unit-specifications/T035-SR-006-U.json": "9cfd31a32a6f0062e53d47b59afd4b8f0e548c1954c8641d6fdcbde6cbd01cf2",
+    "engineering/unit-specifications/T035-SR-007-U.json": "045742644fd89ad3d0580176f95909418d4730a3b7478e2aeacbd90b62774b03",
+    "engineering/unit-specifications/T035-SR-008-U.json": "44597d7cb5da7e0db3d2efb5827e2c35b1281f505c44bf8b3d7de66c64f55153",
+    "engineering/unit-specifications/T035-SR-009-U.json": "c9952760fe8cd5bdd454db5ce5d63e59d35e4ea40b46afecc911b1623ceb89d4",
+    "engineering/unit-specifications/T035-SR-010-U.json": "38fbd3a24f01dfd47c7da3418ffcdb34d4a04b4c35eab4e1949bb0e08013aa0a",
+    "engineering/unit-specifications/T035-SR-011-U.json": "ca5ec2cbc33e519e0075fcbd82c5ef9352b963524664749ed8f8bc20b8be86f7",
+    "engineering/unit-specifications/T035-SR-012-U.json": "e8d3f13b5b2f50701fb37c904661753fb4907846328cfca71184d2e4bb6e8944",
+    "engineering/unit-specifications/T035-SR-013-U.json": "7626e2817002db83b60076c9b4d829c03d65d1e1bef93550694e812c19e7f9e1",
+    "engineering/unit-specifications/T035-SR-014-U.json": "2e198f9cd56fa707d3b26145e68f4f137fd31262c6c9ec7b916333508ea5a456",
+    "engineering/unit-specifications/T035-SR-015-U.json": "3a75e28bae2aab473e5887bad095499dde35ff4d7cd6b5c4ff66a46b51f03570",
+    "engineering/unit-specifications/T035-SR-016-U.json": "55dbcc7ebc687186917f1e6c13ad83ada2c15427d201fa2680c9247105fedbb5",
+    "engineering/validation/scenarios/T035-VS-ACCUMULATED.json": "1a79609b54066a99d3cb42c8184b3a2d24f1c9d489f3aab056df50f13fd75d96",
+    "engineering/verification/measures/integration.json": "d6bb60eb883149813202bf5712174baf4ad9e19de2df4e302f6067010a7b5ed4",
+    "engineering/verification/measures/sanitizer.json": "a1daff49f2fdacd73447f0b17de5bbd4a3cef7f6c0e77fbbe835073429dbaa92",
+    "engineering/verification/measures/static_analysis.json": "bbc5f6b0b2008adf3d1ccd3581aa48974e7b4dfe15edff678d7cc431a504d478",
+    "engineering/verification/measures/unit.json": "fd53ff86d0c35b2ce615815037245b3b456e64e0ce1bc222e7fe2f051e85b184",
+    "engineering/verification/measures/validation.json": "54aae0d762f5f97c782f0a98e500913d419d32090761b9beb0ab8970c3687638",
+    "reports/review-index.md": "5d6902b73c0d0dbdf744f5c5998b5e73a48152408d9bd488ca7847530182df96",
+    "specs/007-xcom-core/tasks.md": "addb7172fe955eb565940b65a7509554b24e1b4e88fd03174eed194b5ac5c926"
+  },
+  "logs": {
+    "M-1": "t029-external-review         =   0.06 sec*proc (18 tests)\nt029-journal-recovery        =   0.01 sec*proc (5 tests)\nt029-lease-drain             =   0.01 sec*proc (3 tests)\nt029-permit-action-matrix    =   0.01 sec*proc (5 tests)\nt029-provenance              =   0.02 sec*proc (4 tests)\nt029-zero-emission           =   0.00 sec*proc (1 test)\nt030-contract                =   0.05 sec*proc (11 tests)\nt030-evolution               =   0.02 sec*proc (5 tests)\nt030-negative                =   0.02 sec*proc (5 tests)\nt030-provenance              =   0.01 sec*proc (3 tests)\nt031-bounds                  =   0.02 sec*proc (4 tests)\nt031-lifecycle               =   0.02 sec*proc (4 tests)\nt031-local-ipc               =   0.01 sec*proc (3 tests)\nt031-logging                 =   0.01 sec*proc (2 tests)\nt031-negative                =   0.02 sec*proc (5 tests)\nt031-session                 =   0.03 sec*proc (6 tests)\nt032-bounds                  =   0.78 sec*proc (3 tests)\nt032-contract                =   0.35 sec*proc (4 tests)\nt032-negative                =   0.07 sec*proc (5 tests)\nt032-observation             =   0.07 sec*proc (5 tests)\nt032-stimulation             =   0.06 sec*proc (5 tests)\nt033-gateway                 =   0.01 sec*proc (2 tests)\nt033-observer                =   0.01 sec*proc (2 tests)\nt033-provider                =   0.02 sec*proc (2 tests)\nt033-stimulation-tool        =   0.01 sec*proc (2 tests)\nt034-isolation               =   0.03 sec*proc (4 tests)\nt034-replaceability          =   0.03 sec*proc (4 tests)\nt034-version                 =   0.03 sec*proc (5 tests)\n\nTotal Test time (real) =   6.85 sec",
+    "M-2": "t029-provenance              =   0.02 sec*proc (4 tests)\nt029-zero-emission           =   0.00 sec*proc (1 test)\nt030-contract                =   0.05 sec*proc (11 tests)\nt030-evolution               =   0.02 sec*proc (5 tests)\nt030-negative                =   0.02 sec*proc (5 tests)\nt030-provenance              =   0.01 sec*proc (3 tests)\nt031-bounds                  =   0.02 sec*proc (4 tests)\nt031-lifecycle               =   0.02 sec*proc (4 tests)\nt031-local-ipc               =   0.01 sec*proc (3 tests)\nt031-logging                 =   0.01 sec*proc (2 tests)\nt031-negative                =   0.02 sec*proc (5 tests)\nt031-session                 =   0.03 sec*proc (6 tests)\nt032-bounds                  =   0.77 sec*proc (3 tests)\nt032-contract                =   0.34 sec*proc (4 tests)\nt032-negative                =   0.07 sec*proc (5 tests)\nt032-observation             =   0.07 sec*proc (5 tests)\nt032-stimulation             =   0.07 sec*proc (5 tests)\nt033-gateway                 =   0.01 sec*proc (2 tests)\nt033-observer                =   0.01 sec*proc (2 tests)\nt033-provider                =   0.02 sec*proc (2 tests)\nt033-stimulation-tool        =   0.01 sec*proc (2 tests)\nt034-isolation               =   0.03 sec*proc (4 tests)\nt034-replaceability          =   0.03 sec*proc (4 tests)\nt034-version                 =   0.03 sec*proc (5 tests)\n\nTotal Test time (real) =   7.09 sec\n................................................ [ 32%]\n........................................................................ [ 80%]\n..............................                                           [100%]\n150 passed, 24 subtests passed in 15.95s",
+    "M-3": "t029-provenance              =   0.02 sec*proc (4 tests)\nt029-zero-emission           =   0.00 sec*proc (1 test)\nt030-contract                =   0.04 sec*proc (11 tests)\nt030-evolution               =   0.02 sec*proc (5 tests)\nt030-negative                =   0.02 sec*proc (5 tests)\nt030-provenance              =   0.01 sec*proc (3 tests)\nt031-bounds                  =   0.02 sec*proc (4 tests)\nt031-lifecycle               =   0.02 sec*proc (4 tests)\nt031-local-ipc               =   0.01 sec*proc (3 tests)\nt031-logging                 =   0.01 sec*proc (2 tests)\nt031-negative                =   0.02 sec*proc (5 tests)\nt031-session                 =   0.03 sec*proc (6 tests)\nt032-bounds                  =   0.78 sec*proc (3 tests)\nt032-contract                =   0.35 sec*proc (4 tests)\nt032-negative                =   0.07 sec*proc (5 tests)\nt032-observation             =   0.07 sec*proc (5 tests)\nt032-stimulation             =   0.07 sec*proc (5 tests)\nt033-gateway                 =   0.01 sec*proc (2 tests)\nt033-observer                =   0.01 sec*proc (2 tests)\nt033-provider                =   0.02 sec*proc (2 tests)\nt033-stimulation-tool        =   0.01 sec*proc (2 tests)\nt034-isolation               =   0.03 sec*proc (4 tests)\nt034-replaceability          =   0.03 sec*proc (4 tests)\nt034-version                 =   0.03 sec*proc (5 tests)\n\nTotal Test time (real) =   7.07 sec\n................................................ [ 32%]\n........................................................................ [ 80%]\n..............................                                           [100%]\n150 passed, 24 subtests passed in 15.89s",
+    "M-4": "",
+    "M-5": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.010s\n\nOK\nPASS T026_SR_001 layout: 2 task-owned additions and declared CMake registration inspected\nPASS T026_SR_002 dependencies: 2 public X-COM includes and no prohibited external include inspected\nPASS T026_SR_018 offline: 2 task-owned files scanned for prohibited host operations\nPASS T026_SR_019 content: 82 scoped source, test, work-product, and evidence files scanned; independent content review remains required\nPASS T026_SR_020 documentation: 9 public method Doxygen blocks, task header contract, and unchanged Doxyfile inspected\nTraceback (most recent call last):\n  File \"<tmp-path>\", line 15, in <module>\n    main()\n    ~~~~^^\n  File \"<tmp-path>\", line 268, in main\n    detail = inspect(task, number, kind)\n  File \"<tmp-path>\", line 209, in inspect\n    require(not git(\"diff\", \"--name-only\", BASELINES[26], \"HEAD\", \"--\",\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    f\"docs/engineering/xcom/{predecessor}\"),\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            f\"accepted {predecessor} work products changed\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<tmp-path>\", line 61, in require\n    raise ValueError(detail)\nValueError: accepted t009 work products changed",
+    "M-6": "t029-external-review         =   0.36 sec*proc (18 tests)\nt029-journal-recovery        =   0.10 sec*proc (5 tests)\nt029-lease-drain             =   0.05 sec*proc (3 tests)\nt029-permit-action-matrix    =   0.09 sec*proc (5 tests)\nt029-provenance              =   0.07 sec*proc (4 tests)\nt029-zero-emission           =   0.02 sec*proc (1 test)\nt030-contract                =   0.19 sec*proc (11 tests)\nt030-evolution               =   0.08 sec*proc (5 tests)\nt030-negative                =   0.07 sec*proc (5 tests)\nt030-provenance              =   0.04 sec*proc (3 tests)\nt031-bounds                  =   0.07 sec*proc (4 tests)\nt031-lifecycle               =   0.07 sec*proc (4 tests)\nt031-local-ipc               =   0.08 sec*proc (3 tests)\nt031-logging                 =   0.06 sec*proc (2 tests)\nt031-negative                =   0.15 sec*proc (5 tests)\nt031-session                 =   0.11 sec*proc (6 tests)\nt032-bounds                  =   0.87 sec*proc (3 tests)\nt032-contract                =   0.47 sec*proc (4 tests)\nt032-negative                =   0.26 sec*proc (5 tests)\nt032-observation             =   0.27 sec*proc (5 tests)\nt032-stimulation             =   0.26 sec*proc (5 tests)\nt033-gateway                 =   0.07 sec*proc (2 tests)\nt033-observer                =   0.04 sec*proc (2 tests)\nt033-provider                =   0.05 sec*proc (2 tests)\nt033-stimulation-tool        =   0.04 sec*proc (2 tests)\nt034-isolation               =   0.08 sec*proc (4 tests)\nt034-replaceability          =   0.09 sec*proc (4 tests)\nt034-version                 =   0.10 sec*proc (5 tests)\n\nTotal Test time (real) =  20.69 sec",
+    "PY": "t029-provenance              =   0.02 sec*proc (4 tests)\nt029-zero-emission           =   0.00 sec*proc (1 test)\nt030-contract                =   0.05 sec*proc (11 tests)\nt030-evolution               =   0.02 sec*proc (5 tests)\nt030-negative                =   0.02 sec*proc (5 tests)\nt030-provenance              =   0.01 sec*proc (3 tests)\nt031-bounds                  =   0.02 sec*proc (4 tests)\nt031-lifecycle               =   0.02 sec*proc (4 tests)\nt031-local-ipc               =   0.01 sec*proc (3 tests)\nt031-logging                 =   0.01 sec*proc (2 tests)\nt031-negative                =   0.02 sec*proc (5 tests)\nt031-session                 =   0.03 sec*proc (6 tests)\nt032-bounds                  =   0.77 sec*proc (3 tests)\nt032-contract                =   0.34 sec*proc (4 tests)\nt032-negative                =   0.07 sec*proc (5 tests)\nt032-observation             =   0.07 sec*proc (5 tests)\nt032-stimulation             =   0.07 sec*proc (5 tests)\nt033-gateway                 =   0.01 sec*proc (2 tests)\nt033-observer                =   0.01 sec*proc (2 tests)\nt033-provider                =   0.02 sec*proc (2 tests)\nt033-stimulation-tool        =   0.01 sec*proc (2 tests)\nt034-isolation               =   0.03 sec*proc (4 tests)\nt034-replaceability          =   0.03 sec*proc (4 tests)\nt034-version                 =   0.03 sec*proc (5 tests)\n\nTotal Test time (real) =   7.09 sec\n................................................ [ 32%]\n........................................................................ [ 80%]\n..............................                                           [100%]\n150 passed, 24 subtests passed in 15.95s",
+    "SEL": "12/16 Test #330: T034VersionRejection.RejectionEmitsNothing ....................................   Passed    0.01 sec\n      Start 379: T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue\n13/16 Test #379: T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue ............   Passed    0.01 sec\n      Start 453: CoreMatrixNegative.Neg09_UnsupportedContractVersion_RejectedBeforeDispatch\n14/16 Test #453: CoreMatrixNegative.Neg09_UnsupportedContractVersion_RejectedBeforeDispatch ....   Passed    0.01 sec\n      Start 475: CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource\n15/16 Test #475: CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource ...............   Passed    0.01 sec\n      Start 478: CoreMatrixConcurrency.ConcurrentRepeatedRuns_DeterministicOutcome\n16/16 Test #478: CoreMatrixConcurrency.ConcurrentRepeatedRuns_DeterministicOutcome .............   Passed    0.05 sec\n\n100% tests passed, 0 tests failed out of 16\n\nLabel Time Summary:\nt016-concurrency             =   0.05 sec*proc (1 test)\nt016-negative                =   0.01 sec*proc (1 test)\nt016-recovery                =   0.01 sec*proc (1 test)\nt020-ordering-equivalence    =   0.01 sec*proc (1 test)\nt026-recovery                =   0.14 sec*proc (1 test)\nt027-concurrency             =   0.00 sec*proc (1 test)\nt029-concurrency             =   0.01 sec*proc (1 test)\nt030-negative                =   0.01 sec*proc (1 test)\nt031-bounds                  =   0.00 sec*proc (1 test)\nt033-gateway                 =   0.01 sec*proc (1 test)\nt033-observer                =   0.01 sec*proc (1 test)\nt033-provider                =   0.01 sec*proc (1 test)\nt033-stimulation-tool        =   0.00 sec*proc (1 test)\nt034-replaceability          =   0.01 sec*proc (1 test)\nt034-version                 =   0.01 sec*proc (2 tests)\n\nTotal Test time (real) =   0.30 sec",
+    "DIAG-1": "The following tests FAILED:\n\t296 - XcomSyntheticClientObservation.ClientObservesEmittedTraffic (Failed)\n\t297 - XcomSyntheticClientStimulation.ClientInjectsSignal (Failed)\n\t298 - XcomSyntheticClientStimulation.ClientInjectsMessage (Failed)\n\t299 - XcomSyntheticClientStimulation.ClientInvokesService (Failed)\n\t300 - XcomSyntheticClientStimulation.ClientEmulatesService (Failed)\n\t303 - XcomSyntheticClientContract.GeneratedRequestRoundTripsThroughClient (Failed)\n\t304 - XcomSyntheticClientContract.UnknownFieldSurvivesClientRoundTrip (Failed)\n\t305 - XcomSyntheticClientContract.ClientOperationTableMatchesGeneratedDescriptor (Failed)\n\t306 - XcomSyntheticClientNegative.NoTcpListenerForClientEndpoint (Failed)\n\t307 - XcomSyntheticClientNegative.InvalidSessionEmitsZeroItems (Failed)\n\t308 - XcomSyntheticClientNegative.ExpiredSessionEmitsZeroItems (Failed)\n\t311 - XcomSyntheticClientBounds.MessageSizeBoundEnforced (Failed)\n\t312 - XcomSyntheticClientBounds.DeadlineBoundEnforced (Failed)\n\t313 - XcomSyntheticClientBounds.TransportTimeoutBounded (Failed)\nErrors while running CTest\nTraceback (most recent call last):\n  File \"<host-path>\", line 72, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"<host-path>\", line 53, in main\n    execute(\"ctest\", \"--test-dir\", build, \"--output-on-failure\")\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<host-path>\", line 32, in execute\n    subprocess.run(argv, check=True, env=environment)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<host-path>\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '('ctest', '--test-dir', 'build/fabro-t035-t038-system-integration', '--output-on-failure')' returned non-zero exit status 8."
+  },
+  "selected_cases": [
+    {
+      "id": "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
+      "result": "pass"
+    },
+    {
+      "id": "T033ObserverContractSuite.AcceptedObservationHubConforms",
+      "result": "pass"
+    },
+    {
+      "id": "T033StimulationToolContractSuite.AcceptedStimulationPathConforms",
+      "result": "pass"
+    },
+    {
+      "id": "T033GatewayContractSuite.AcceptedGatewaySessionConforms",
+      "result": "pass"
+    },
+    {
+      "id": "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
+      "result": "pass"
+    },
+    {
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "result": "pass"
+    },
+    {
+      "id": "T034VersionRejection.UnsupportedRequestedCapabilityRejectedBeforeActivation",
+      "result": "pass"
+    },
+    {
+      "id": "CoreMatrixNegative.Neg09_UnsupportedContractVersion_RejectedBeforeDispatch",
+      "result": "pass"
+    },
+    {
+      "id": "CoreMatrixConcurrency.ConcurrentRepeatedRuns_DeterministicOutcome",
+      "result": "pass"
+    },
+    {
+      "id": "CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource",
+      "result": "pass"
+    },
+    {
+      "id": "XcomStimulationGuardConcurrency.GuardBoundedDeterministicConcurrency",
+      "result": "pass"
+    },
+    {
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentQuotaEmissionDeterminism",
+      "result": "pass"
+    },
+    {
+      "id": "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+      "result": "pass"
+    },
+    {
+      "id": "XcomToolGatewayBounds.MessageSizeBoundEnforced",
+      "result": "pass"
+    },
+    {
+      "id": "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+      "result": "pass"
+    },
+    {
+      "id": "T026JournalRecovery.test_journal_restart_recovery_and_orphans",
+      "result": "pass"
+    }
+  ],
+  "discovered_ctest_total": 496,
+  "discovered_ctest_passed": 496,
+  "python_collected_passed": "150 passed, 24 subtests passed",
+  "diagnostics": [
+    {
+      "id": "E-T035-1",
+      "severity": "environment",
+      "measure": "integration/validation/sanitizer",
+      "observation": "The pinned Phase 8 runner selects build/fabro-t035-t038-system-<mode>, whose absolute scratch directory yields a T032 AF_UNIX socket path of 109-111 bytes, exceeding the 108-byte sun_path limit; the default-root runs failed 14 XcomSyntheticClient* cases. The identical commands from a short material-identical checkout passed all 496 tests.",
+      "candidate_defect": false,
+      "remediation_owner": "Phase 8 runner/policy maintainer (mirror the accepted phase7 build/f7i and build/f7v short build-directory workaround)"
+    },
+    {
+      "id": "E-T035-2",
+      "severity": "baseline",
+      "measure": "conformance",
+      "observation": "The pinned Phase 6 conformance governance inspection requires docs/engineering/xcom/t007..t009 unchanged since BASELINES[26]=1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d; accepted T030/T031/T032 changed docs/engineering/xcom/t009/architecture-model.json, so the inspection fails at the accepted baseline. T035 changes no protected Phase 6 path.",
+      "candidate_defect": false,
+      "remediation_owner": "T038/T040 or the Phase 6 conformance-pin maintainer"
+    },
+    {
+      "id": "E-T035-3",
+      "severity": "environment",
+      "measure": "dependency_preflight",
+      "observation": "The admitted protoc probe requires the admitted prefix library path (LD_LIBRARY_PATH=<admitted prefix>/usr/lib/x86_64-linux-gnu); without it protoc fails with a missing libprotoc.so.23 at load time. With the library path set the T011 admission preflight passes.",
+      "candidate_defect": false,
+      "remediation_owner": "T011 admitted-envelope consumer (set the admitted prefix library path when executing the protoc probe)"
+    }
+  ],
+  "limitations": [
+    "L-T035-1 verification only; no deployed-service, network, transport, timing, compatibility, performance, or production-readiness claim",
+    "L-T035-2 candidate-local runs are not whole-system integration; only the trusted target-repository measure is integration",
+    "L-T035-3 the admitted envelope cannot link the gRPC transport runtime (T032-GAP-01)",
+    "L-T035-4 no benchmark (T036), Doxygen (T037), traceability-verifier/SADS (T038), external review (T039/T040), or user acceptance (T041) is produced or claimed",
+    "L-T035-5 the report is produced only at the implementation stage from executed commands",
+    "L-T035-6 the pinned Phase 8 runner build-directory names exceed the host AF_UNIX sun_path limit for the T032 separate-process fixture in integration/validation/sanitizer; passing runs used a material-identical short checkout and the default-root failures are disclosed (E-T035-1)",
+    "L-T035-7 the inherited Phase 6 conformance recheck fails at the accepted baseline because accepted T030-T032 changed docs/engineering/xcom/t009/architecture-model.json after the pinned Phase 6 baseline; recorded failed with external root cause (E-T035-2)"
+  ],
+  "repository_checks": [
+    {
+      "id": "RC-01",
+      "check": "scripts/validate_xcom_task_ownership.py --verify",
+      "result": "pass"
+    },
+    {
+      "id": "RC-02",
+      "check": "scripts/validate_xcom_requirements_traceability.py --verify",
+      "result": "pass"
+    },
+    {
+      "id": "RC-03",
+      "check": "scripts/validate_xcom_architecture_contracts.py --verify",
+      "result": "pass"
+    },
+    {
+      "id": "RC-04",
+      "check": "scripts/validate_xcom_unit_design.py --verify",
+      "result": "pass"
+    },
+    {
+      "id": "RC-05",
+      "check": "fabro_engineering.core.validate_trace",
+      "result": "pass",
+      "detail": "708 artifacts and 2552 links validate"
+    },
+    {
+      "id": "RC-06",
+      "check": "scripts/xcom_dependency_preflight.py --all",
+      "result": "pass",
+      "detail": "admitted offline dependency set admitted; requires the admitted prefix library path (E-T035-3)"
+    },
+    {
+      "id": "RC-07",
+      "check": "git diff --check <baseline> --",
+      "result": "pass"
+    }
+  ],
+  "public_safe": true,
+  "external_review": "deferred_until_backlog_completion"
+}

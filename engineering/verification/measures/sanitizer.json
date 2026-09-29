@@ -2,14 +2,14 @@
   "command": [
     "python3",
     "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
-    "unit"
+    "sanitizer"
   ],
-  "command_runs": "Isolated candidate checkout: build the C++ platform warning-as-error, then run the full discovered CTest suite including the selected T035 contract/negative/concurrency cases and the preserved T016/T020/T026-T034 suites",
+  "command_runs": "Rebuild the platform with -fsanitize=address,undefined and run the full CTest suite",
   "discovery_check": "100% tests passed",
   "expected": "pass",
-  "id": "unit",
-  "kind": "unit",
-  "note": "Candidate command is a portable descriptor; the trusted policy binds the executable host path. Candidate-local unit measure; whole-system integration runs separately from the assembled target checkout.",
+  "id": "sanitizer",
+  "kind": "sanitizer",
+  "note": "A sanitizer failure is recorded as failed, never suppressed.",
   "revision": "1",
   "schema_version": 1,
   "test_ids": [
@@ -30,5 +30,5 @@
     "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
     "T026JournalRecovery.test_journal_restart_recovery_and_orphans"
   ],
-  "title": "T035 exact-candidate C++ unit/contract matrix"
+  "title": "T035 sanitizer build and suite"
 }

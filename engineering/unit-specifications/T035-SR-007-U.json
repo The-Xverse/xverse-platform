@@ -1,0 +1,48 @@
+{
+  "component_id": "T035-SR-007-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-007-U",
+  "inputs": [
+    "the repository Python test suite"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t035-verification.json"
+  ],
+  "invariants": [
+    "the Python suite executes",
+    "its result is recorded, not inferred"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the collected/passed Python counts and outcome"
+  ],
+  "purpose": "All existing Python tests **shall** execute and their collected/passed counts and outcome **shall** be recorded.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t035/verification-plan.md",
+    "engineering/verification/measures/validation.json"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-007-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-007-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

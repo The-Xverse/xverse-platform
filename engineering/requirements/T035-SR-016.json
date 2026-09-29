@@ -1,0 +1,22 @@
+{
+  "acceptance_criteria": [
+    "Traces to its accepted system anchor and is verified by its named checks."
+  ],
+  "applicability": "T035 exact-candidate verification matrix candidate",
+  "id": "T035-SR-016",
+  "level": "software",
+  "parents": [
+    "T035-STK-003",
+    "T035-STK-005"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t035/requirements.md T035-SR-016"
+  },
+  "statement": "No verification command **shall** open a TCP listener, create an `AF_INET`/`AF_INET6` socket, use DNS, a resolver, or TLS, contact an external network peer, execute a legacy binary or production workload, or make a runtime, compatibility, performance, or production-readiness claim beyond the executed checks.",
+  "status": "accepted",
+  "title": "Offline and no-legacy execution",
+  "verification_intent": "T026JournalRecovery.test_journal_restart_recovery_and_orphans"
+}

@@ -100,7 +100,7 @@ and predecessor regression evidence retained.
 
 ## Phase 8: Evidence, documentation, and acceptance
 
-- [ ] T035 Run full C++ unit/contract/integration/negative/concurrency/sanitizer/static checks and all
+- [x] T035 Run full C++ unit/contract/integration/negative/concurrency/sanitizer/static checks and all
   existing Python tests; retain repository-owned manifests, bounded logs, tool/environment identity,
   commands, outcomes, and hashes bound to the exact candidate revision.
 - [ ] T036 Run controlled benchmarks and record environment, uncertainty, baseline, disabled/enabled

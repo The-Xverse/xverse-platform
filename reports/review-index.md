@@ -595,3 +595,112 @@ The T034-owned artifacts and inherited build/links digests are recorded in `docs
 §6.1 and in the package manifest `reports/xcom-queue/t034-package.json` (emitted at package time). This is a
 candidate-stage result only; external Codex review, the trusted whole-system integration measure, and explicit user
 acceptance await T039/T041 and the completion of the ordered backlog `xcom-t030-t034-20260928`.
+
+# T035 review index — exact-candidate verification matrix and repository-owned results
+
+Candidate: T035 on baseline `dab68568bd8d189b14c7a4a9e3a9c325085a7529` (accepted T034 second synthetic provider),
+queue `xcom-t030-t034-20260928`. The T020, T030, T031, T032, T033, and T034 indexes above are retained as
+historical predecessor evidence and are not rewritten.
+
+This section records the T035 **plan-stage** work products. The implementation, its executed matrix, and the
+separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the trusted
+measures, and the delivery package are separate gates; none is claimed complete by this index, and external
+review and acceptance are deferred until the ordered backlog `xcom-t030-t034-20260928` completes.
+
+## Declared T035 plan-stage work products
+
+- `docs/engineering/xcom/t035/requirements.md` — 5 stakeholder and 16 software requirements (`T035-STK-001`…`-005`,
+  `T035-SR-001`…`-016`) with accepted system anchors, the evidence-only boundary, and the REF-002 disposition
+  (`unchanged`, empty `promoted`; T036–T041 allocated).
+- `docs/engineering/xcom/t035/architecture.md` — trust boundaries `T35-XB-1`…`-008`, components
+  `T35-CMP-{MATRIX,MEASURES,TRACE,WP}`, the ordered data flow, and the negative-case map.
+- `docs/engineering/xcom/t035/detailed-design.md` — the exact verification route (`unit`, `integration`,
+  `validation`, `static_analysis`, `conformance`, `sanitizer`, `python`), the
+  `reports/xcom-queue/t035-verification.json` schema (`commands`, `outcomes`, `hashes`, `environment`, bounded
+  logs, exact-candidate identity), the content-only measure refresh, and the already-discovered selected case set.
+- `docs/engineering/xcom/t035/unit-specifications.md` — 16 contributory unit specifications and the selected-case
+  index.
+- `docs/engineering/xcom/t035/verification-plan.md` — `CHK-01`…`CHK-20`, `NEG-01`…`NEG-10`, the exact evidence
+  report, the task-owned route, evidence binding, and exit criteria.
+
+## Declared T035 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T035`, capability `007`, accepted baseline
+  `dab68568bd8d189b14c7a4a9e3a9c325085a7529`.
+- `engineering/requirements/T035-STK-00{1..5}.json` and `engineering/requirements/T035-SR-0{01..16}.json`.
+- `engineering/architecture/components/T035-SR-0{01..16}-CMP.json`.
+- `engineering/unit-specifications/T035-SR-0{01..16}-U.json`.
+- `engineering/validation/scenarios/T035-VS-ACCUMULATED.json` — the selected case set validating
+  `T035-SR-001`…`-016` and `T035-STK-001`…`-005`.
+- `engineering/verification/measures/{unit,integration,validation,static_analysis}.json` — content-only refresh to
+  the Phase 8 route (each `id`, `revision`, and `kind` preserved) — and the new
+  `engineering/verification/measures/sanitizer.json`.
+- `engineering/trace/links.json` — 223 additive T035 links plus the inherited `engineering/project.json`
+  `implemented_by` digest refresh (`T034-L-0168`); the trace validates with 708 artifacts and 2552 links.
+- `docs/engineering/xcom/t010/unit-design.json` and `docs/engineering/xcom/t010/design-units.md` — the required
+  planned→established path-status reconciliation for the now-present `docs/engineering/xcom/t035/` path
+  (`XCOM-DU-024`; status field only); the T007–T010 register validators pass.
+
+## Declared T035 implementation change set (expected at the implementation stage)
+
+- `reports/xcom-queue/t035-verification.json` (new) — the exact-candidate verification evidence report with
+  `commands`, `outcomes`, `hashes`, `environment`, bounded logs, and the exact-candidate identity.
+- `docs/engineering/xcom/t035/implementation.md` (new) — the executed-matrix record, changed-path inventory,
+  environment/tool identities, hashes, maintenance notes, and limitations.
+- `specs/007-xcom-core/tasks.md` (shared; the one-line T035 checkbox, **implementation stage only**).
+- `reports/xcom-queue/t035-package.json` — the implementation-stage package record.
+- T035 changes no accepted production source, header, contract, schema, register, XDL profile, test, target,
+  label, command, or expected value.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this index
+  does not claim they passed.
+- **L-T035-1 (admitted offline inputs).** The Phase 8 runner requires `XVERSE_XCOM_TOOLCHAIN`,
+  `XVERSE_XCOM_PACKAGE_MANIFEST`, and `XVERSE_XCOM_T025_TEST_TOOLCHAIN`; the runner binds them to the admitted
+  cache paths and otherwise fails closed before any target builds. This is an external environment prerequisite,
+  not a T035 defect.
+- **L-T035-2 (verification only).** T035 executes and records the accepted matrix; it makes no deployed-service,
+  network, transport, timing, compatibility, performance, or production-readiness claim.
+- **L-T035-3 (candidate-local vs whole-system).** Only the trusted target-repository integration measure is
+  whole-system integration; the unit, static-analysis, sanitizer, and validation runs are candidate-local.
+- **L-T035-4 (report is implementation-stage).** This plan stage records the report schema and the exact command
+  route; it does not fabricate executed results. An unavailable input is recorded as `blocked`, never as `pass`.
+- **L-T035-5 (deferred external review).** External Codex review and explicit user acceptance remain pending; the
+  reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+The implementation-stage record, its executed evidence, and the separate internal DeepSeek review follow in their
+own stages and are not claimed by this plan-stage section.
+
+## T035 implementation-stage results
+
+The T035 verification matrix executed against the exact candidate working tree on baseline
+`dab68568bd8d189b14c7a4a9e3a9c325085a7529`; full detail, command argv, exit status, bounded public-safe logs,
+hashes, and environment identity are in `reports/xcom-queue/t035-verification.json` and
+`docs/engineering/xcom/t035/implementation.md`.
+
+- **unit** — `python3 ${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py unit`: `100% tests passed, 0
+  tests failed out of 496` (candidate checkout).
+- **integration** / **validation** — `run_xcom_phase8_tests.py integration|validation`: `100% tests passed, 0
+  tests failed out of 496` and pytest `150 passed, 24 subtests passed` (short material-identical checkout;
+  candidate-local).
+- **sanitizer** — `run_xcom_phase8_tests.py sanitizer`: `100% tests passed, 0 tests failed out of 496` with
+  `-fsanitize=address,undefined`.
+- **static_analysis** — `cppcheck ... src/xverse/xcom/src`: exit `0`, no diagnostic output.
+- **selected case set** — 16/16 named `T035` cases passed.
+- **python** — `150 passed, 24 subtests passed`.
+- **conformance** — **failed** at the accepted baseline (external, recorded): the pinned Phase 6 governance
+  inspection requires `docs/engineering/xcom/t007..t009` unchanged since `1f5ebd198c16cf545c5e49a98cfae53a65cf8c4d`,
+  but accepted T030/T031/T032 changed `docs/engineering/xcom/t009/architecture-model.json`. T035 changes no
+  protected Phase 6 path (`E-T035-2`, `L-T035-7`).
+
+Recorded external environment issue: the pinned Phase 8 runner's default build directories
+(`build/fabro-t035-t038-system-integration|validation|sanitizer`) make the T032 `AF_UNIX` fixture socket path
+exceed the 108-byte `sun_path` limit on this host, so the default-root runs fail 14 `XcomSyntheticClient*` cases;
+the identical commands from a material-identical short checkout pass all 496 tests (`E-T035-1`, `L-T035-6`). The
+accepted Phase 7 runner avoids this with `build/f7i`/`build/f7v`. No accepted production source, test, target,
+label, command, or expected value was changed.
+
+This is a candidate-stage result only; the separate DeepSeek internal review, external Codex review, the trusted
+whole-system integration measure, and explicit user acceptance await their own stages and the completion of the
+ordered backlog `xcom-t030-t034-20260928`.

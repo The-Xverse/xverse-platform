@@ -1,11 +1,4 @@
 {
-  "schema_version": 1,
-  "id": "static_analysis",
-  "revision": "1",
-  "kind": "static_analysis",
-  "title": "Static analysis of the T026-T029 stimulation source",
-  "expected": "pass",
-  "test_ids": [],
   "command": [
     "cppcheck",
     "--error-exitcode=1",
@@ -15,7 +8,14 @@
     "--suppress=invalidLifetime",
     "src/xverse/xcom/src"
   ],
-  "command_runs": "cppcheck over the X-COM source tree including the T026 journal, T027 guard, and T028 action path",
+  "command_runs": "cppcheck over the accepted X-COM source tree at the exact candidate revision",
   "discovery_check": "none (non-test measure)",
-  "note": "The trusted policy static_analysis measure; it does not carry discovered test IDs."
+  "expected": "pass",
+  "id": "static_analysis",
+  "kind": "static_analysis",
+  "note": "The trusted policy static_analysis measure; it does not carry discovered test IDs.",
+  "revision": "1",
+  "schema_version": 1,
+  "test_ids": [],
+  "title": "Static analysis of the X-COM production source"
 }

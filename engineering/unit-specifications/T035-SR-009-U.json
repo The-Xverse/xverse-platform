@@ -1,0 +1,46 @@
+{
+  "component_id": "T035-SR-009-CMP",
+  "concurrency": "single verification user",
+  "errors": [
+    "test assertion failure",
+    "declared failed or blocked measure outcome"
+  ],
+  "id": "T035-SR-009-U",
+  "inputs": [
+    "the inherited T026-T029 conformance inspections"
+  ],
+  "interfaces": [
+    "engineering/verification/measures/conformance.json"
+  ],
+  "invariants": [
+    "a changed protected Phase 6 input fails the recheck closed"
+  ],
+  "note": "Unit cases are contributory already-discovered cases; the executed matrix is the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the 26 inspection outcomes"
+  ],
+  "purpose": "When the inherited Phase 6 conformance recheck runs against the candidate, every named inspection's outcome **shall** be recorded.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/verification/measures/conformance.json"
+  ],
+  "state": "one bounded verification run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T035-SR-009-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T035 evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T035-SR-009-U unit verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomStimulationMatrixConcurrency.ConcurrentQuotaEmissionDeterminism",
+      "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted suite case as part of the T035 matrix"
+    }
+  ]
+}

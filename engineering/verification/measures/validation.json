@@ -1,31 +1,34 @@
 {
   "command": [
     "python3",
-    "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase7_tests.py",
+    "${XVERSE_FABRIC_ROOT}/automation/run_xcom_phase8_tests.py",
     "validation"
   ],
-  "command_runs": "Isolated X-Verse checkout: build the C++ platform, then run the 13 T034 second-provider CTest cases and the complete pytest suite",
+  "command_runs": "Isolated candidate checkout: build the C++ platform, then run the full CTest suite and the complete pytest suite",
   "discovery_check": "[1-9][0-9]* passed",
   "expected": "pass",
   "id": "validation",
   "kind": "validation",
-  "note": "Scoped T034 second-provider slice; whole-system integration and static analysis run separately from the isolated target checkout. Candidate command is a portable descriptor; the trusted policy binds the executable host path.",
+  "note": "Candidate-local validation measure; whole-system integration and static analysis run separately from the isolated target checkout.",
   "revision": "1",
   "schema_version": 1,
   "test_ids": [
-    "T034FailureIsolation.ProviderFailureYieldsStableOutcomeNoEmission",
-    "T034FailureIsolation.RejectedAdapterLeavesUnrelatedRouteIntact",
-    "T034FailureIsolation.UnrelatedRouteRemainsActiveAndBounded",
-    "T034FailureIsolation.UnrelatedRouteStateStaysObservable",
-    "T034SecondProviderLifecycle.CompletesFullBoundedLifecycle",
-    "T034SecondProviderSuite.BoundedCapabilitiesAndSaturation",
-    "T034SecondProviderSuite.ProviderIsIndependentOfLoopback",
+    "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
+    "T033ObserverContractSuite.AcceptedObservationHubConforms",
+    "T033StimulationToolContractSuite.AcceptedStimulationPathConforms",
+    "T033GatewayContractSuite.AcceptedGatewaySessionConforms",
     "T034SecondProviderSuite.ReusedProviderContractSuitePasses",
-    "T034VersionRejection.MisreportedCapabilityRejectedAtRegistration",
-    "T034VersionRejection.MisreportedContractVersionRejectedAtRegistration",
     "T034VersionRejection.RejectionEmitsNothing",
     "T034VersionRejection.UnsupportedRequestedCapabilityRejectedBeforeActivation",
-    "T034VersionRejection.UnsupportedRequestedVersionRejectedBeforeActivation"
+    "CoreMatrixNegative.Neg09_UnsupportedContractVersion_RejectedBeforeDispatch",
+    "CoreMatrixConcurrency.ConcurrentRepeatedRuns_DeterministicOutcome",
+    "CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource",
+    "XcomStimulationGuardConcurrency.GuardBoundedDeterministicConcurrency",
+    "XcomStimulationMatrixConcurrency.ConcurrentQuotaEmissionDeterminism",
+    "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+    "XcomToolGatewayBounds.MessageSizeBoundEnforced",
+    "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+    "T026JournalRecovery.test_journal_restart_recovery_and_orphans"
   ],
-  "title": "T034 second minimal synthetic provider validation cases"
+  "title": "T035 exact-candidate validation"
 }
