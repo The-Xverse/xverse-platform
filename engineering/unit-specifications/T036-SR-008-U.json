@@ -1,0 +1,47 @@
+{
+  "component_id": "T036-SR-008-CMP",
+  "concurrency": "single benchmark user; single-threaded measurement",
+  "errors": [
+    "benchmark case failure",
+    "declared failed or blocked case outcome"
+  ],
+  "id": "T036-SR-008-U",
+  "inputs": [
+    "the accepted baseline revision, the candidate material inventory/digest, and the report/artifact contents"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t036-benchmark.json",
+    "engineering/run_xcom_benchmarks.py"
+  ],
+  "invariants": [
+    "the candidate commit is the direct child of the baseline carrying the recorded material; a changed material digest/hash, a foreign commit, or any other revision fails --verify"
+  ],
+  "note": "Cases are contributory already-discovered cases or the accepted benchmark fixture; the harness and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the binding and hash record"
+  ],
+  "purpose": "The report shall be bound to the accepted baseline revision and the exact candidate material (inventory, digest, and per-file hashes) and shall record the SHA-256 hashes of the retained evidence, raw samples, and candidate artifacts; the candidate commit is the direct child of the baseline carrying that material.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/project.json"
+  ],
+  "state": "one bounded benchmark run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T036-SR-008-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T036 harness/evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T036-SR-008-U benchmark verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033GatewayContractSuite.AcceptedGatewaySessionConforms",
+      "precondition": "the accepted owned loopback/observation build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T036 harness route as part of the benchmark"
+    }
+  ]
+}

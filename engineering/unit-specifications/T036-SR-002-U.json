@@ -1,0 +1,47 @@
+{
+  "component_id": "T036-SR-002-CMP",
+  "concurrency": "single benchmark user; single-threaded measurement",
+  "errors": [
+    "benchmark case failure",
+    "declared failed or blocked case outcome"
+  ],
+  "id": "T036-SR-002-U",
+  "inputs": [
+    "the raw paired samples for the disabled and enabled cases"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t036-benchmark.json",
+    "engineering/run_xcom_benchmarks.py"
+  ],
+  "invariants": [
+    "the uncertainty is computed from the recorded samples and is labelled non-production"
+  ],
+  "note": "Cases are contributory already-discovered cases or the accepted benchmark fixture; the harness and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "per-case sample count, median, and dispersion or interval"
+  ],
+  "purpose": "The benchmark shall compute and record an uncertainty statement (sample count, median, and a dispersion or interval measure) for each disabled and enabled case.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/src/observation.cpp"
+  ],
+  "state": "one bounded benchmark run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T036-SR-002-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T036 harness/evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T036-SR-002-U benchmark verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "CoreMatrixConcurrency.ConcurrentRepeatedRuns_DeterministicOutcome",
+      "precondition": "the accepted owned loopback/observation build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T036 harness route as part of the benchmark"
+    }
+  ]
+}

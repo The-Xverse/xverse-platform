@@ -1,40 +1,9 @@
 {
-  "schema_version": 1,
-  "project_id": "xverse-platform",
-  "title": "T035 exact-candidate X-COM verification matrix and repository-owned results",
-  "scope": {
-    "users": [
-      "X-Verse platform engineer",
-      "X-COM verification engineer"
-    ],
-    "intended_use": "Execute and retain the complete exact-candidate capability-007 verification matrix: the full C++ unit/contract/integration/negative/concurrency/sanitizer checks, the static-analysis measure, the inherited Phase 6 conformance recheck, and all existing Python tests, with command argv, exit status, deterministic outcomes, tool/environment identity, bounded logs, and artifact hashes bound to the exact candidate revision, without changing any accepted production source or test and without claiming benchmark, Doxygen, traceability-verifier, external-review, or acceptance results owned by T036-T041.",
-    "boundaries": [
-      "Bounded capability-007 Phase 8 verification scope: the T035 work products, the T035 engineering requirement/component/unit/validation records, the exact-candidate verification report reports/xcom-queue/t035-verification.json, the T035 trace links, and the Phase 8 verification-measure descriptors.",
-      "No change to any accepted production source, header, contract, schema, register, XDL profile, T030 contract, T031/T032 gateway/client, or T033/T034 suite; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
-      "T035 changes are limited to docs/engineering/xcom/t035/**, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T035 records, engineering/verification/measures/**, engineering/trace/links.json, engineering/project.json, reports/review-index.md, reports/xcom-queue/t035-verification.json, and the one-line T035 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
-    ],
-    "success_criteria": [
-      "Every accepted T035 software requirement is traced to the applicable X-Verse system anchor, component, unit, code, verification measure, and named executed case or inspection.",
-      "The full C++ suite, sanitizer build, static analysis, inherited Phase 6 conformance recheck, whole-system integration measure, and all existing Python tests execute and pass at the exact candidate revision, with no existing target, label, count, or expected value reduced.",
-      "reports/xcom-queue/t035-verification.json records commands, outcomes, hashes, environment, bounded logs, and exact-candidate identity; a missing, stale, mismatched, skipped, or failed measure is reported as failed or blocked, never as pass.",
-      "Independent review and strict delivery validation bind the exact candidate before acceptance."
-    ]
-  },
-  "languages": [
-    "C++20",
-    "Protocol Buffers v3 (proto3)",
-    "Python 3.11+"
-  ],
-  "targets": [
-    "xverse-platform"
-  ],
-  "reliability": {
-    "basis": "Deterministic offline full-matrix runs over the accepted capability-007 platform in the admitted X-COM build envelope, with each measure's outcome derived from its trusted discovery check and bound to the exact candidate revision."
-  },
   "assurance_profile": "engineered",
   "authority": {
+    "baseline_revision": "8ec69ddd34ed8c7a07adbcb631dcfb2da3faf15f",
     "baseline_status": "accepted",
-    "baseline_revision": "dab68568bd8d189b14c7a4a9e3a9c325085a7529",
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T036 adds a benchmark harness and evidence only: it changes no accepted production source, header, contract, schema, register, test, or accepted benchmark fixture, and no accepted predecessor work product.",
     "protected_paths": [
       "src/xverse_xdl/**",
       "scripts/**",
@@ -51,24 +20,63 @@
       "docs/engineering/xcom/t018/**",
       "docs/engineering/xcom/t019/**",
       "docs/engineering/xcom/t020/**",
+      "docs/engineering/xcom/t021/**",
+      "docs/engineering/xcom/t022/**",
+      "docs/engineering/xcom/t023/**",
+      "docs/engineering/xcom/t024/**",
       "docs/engineering/xcom/t025/**",
+      "docs/engineering/xcom/t026/**",
+      "docs/engineering/xcom/t027/**",
+      "docs/engineering/xcom/t028/**",
+      "docs/engineering/xcom/t029/**",
       "docs/engineering/xcom/t030/**",
       "docs/engineering/xcom/t031/**",
       "docs/engineering/xcom/t032/**",
       "docs/engineering/xcom/t033/**",
-      "docs/engineering/xcom/t034/**"
-    ],
-    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T035 records evidence only: it changes no accepted production source, header, contract, schema, register, or test, and no accepted predecessor work product."
+      "docs/engineering/xcom/t034/**",
+      "docs/engineering/xcom/t035/**"
+    ]
   },
-  "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the T035 exact-candidate verification matrix; T035 neither defines nor replaces them.",
   "feature": {
-    "task_id": "T035",
     "capability": "007",
-    "queue_id": "xcom-t030-t034-20260928",
     "predecessors": [
-      "T034"
+      "T035"
     ],
-    "queued_run": null
-  }
+    "queue_id": "xcom-t030-t034-20260928",
+    "queued_run": null,
+    "task_id": "T036"
+  },
+  "languages": [
+    "C++20",
+    "Python 3.11+"
+  ],
+  "project_id": "xverse-platform",
+  "reliability": {
+    "basis": "Deterministic offline controlled-benchmark runs over the accepted owned loopback and observation boundaries in the admitted X-COM build envelope, with each case's outcome derived from controlled repeated paired samples and bound to the exact candidate revision."
+  },
+  "schema_version": 1,
+  "scope": {
+    "boundaries": [
+      "Bounded capability-007 Phase 8 benchmark scope: the T036 work products, the T036 engineering requirement/component/unit/validation records, the new benchmark harness engineering/run_xcom_benchmarks.py, the exact-candidate benchmark report reports/xcom-queue/t036-benchmark.json, and the additive T036 trace links.",
+      "No change to any accepted production source, header, contract, schema, register, XDL profile, T030 contract, T031/T032 gateway/client, T033/T034 suite, or accepted test/benchmark fixture; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
+      "T036 changes are limited to docs/engineering/xcom/t036/**, engineering/run_xcom_benchmarks.py, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T036 records, engineering/trace/links.json, engineering/project.json, reports/review-index.md, reports/xcom-queue/t036-benchmark.json, and the one-line T036 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
+    ],
+    "intended_use": "Run controlled disabled/enabled observation-tap benchmarks over the accepted owned loopback workload and record environment, uncertainty, baseline, disabled-tap, enabled-tap, and explicit non-production limitations in repository-owned evidence bound to the exact candidate revision, without changing any accepted production source or test and without claiming Doxygen, traceability-verifier, external-review, or acceptance results owned by T037-T041.",
+    "success_criteria": [
+      "Every accepted T036 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
+      "The harness measures the disabled (same-baseline) and enabled observation-tap cases over the same owned loopback workload with controlled repeated paired samples, records the per-case uncertainty, and gates the tap-disabled regression against the same owned-loopback baseline with the accepted 2% median threshold while recording the enabled-tap regression only as an ungated observation.",
+      "reports/xcom-queue/t036-benchmark.json records environment, uncertainty, baseline, tap_disabled, tap_enabled, raw samples, method, limitations, hashes, and exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
+      "Independent review and strict delivery validation bind the exact candidate before acceptance."
+    ],
+    "users": [
+      "X-Verse platform engineer",
+      "X-COM performance engineer"
+    ]
+  },
+  "targets": [
+    "xverse-platform"
+  ],
+  "title": "T036 controlled disabled/enabled-tap X-COM benchmarks and repository-owned results",
+  "verification_profile": "generic-explicit-command",
+  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T036 neither defines nor replaces them and is exercised by the validation measure through engineering/run_xcom_benchmarks.py --verify."
 }

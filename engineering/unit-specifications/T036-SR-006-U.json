@@ -1,0 +1,48 @@
+{
+  "component_id": "T036-SR-006-CMP",
+  "concurrency": "single benchmark user; single-threaded measurement",
+  "errors": [
+    "benchmark case failure",
+    "declared failed or blocked case outcome"
+  ],
+  "id": "T036-SR-006-U",
+  "inputs": [
+    "the report limitations and the uncertainty note"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t036-benchmark.json",
+    "engineering/run_xcom_benchmarks.py"
+  ],
+  "invariants": [
+    "no production performance claim is made",
+    "uncontrolled factors are listed"
+  ],
+  "note": "Cases are contributory already-discovered cases or the accepted benchmark fixture; the harness and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the declared non-production verdict"
+  ],
+  "purpose": "The report shall declare explicit non-production limitations, including uncontrolled CPU affinity, scheduler load, DVFS, thermal, and cache state, and shall not claim production performance.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t036/verification-plan.md"
+  ],
+  "state": "one bounded benchmark run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T036-SR-006-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T036 harness/evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T036-SR-006-U benchmark verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033ProviderContractSuite.AcceptedLoopbackProviderConforms",
+      "precondition": "the accepted owned loopback/observation build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T036 harness route as part of the benchmark"
+    }
+  ]
+}

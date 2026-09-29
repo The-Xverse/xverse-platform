@@ -103,7 +103,7 @@ and predecessor regression evidence retained.
 - [x] T035 Run full C++ unit/contract/integration/negative/concurrency/sanitizer/static checks and all
   existing Python tests; retain repository-owned manifests, bounded logs, tool/environment identity,
   commands, outcomes, and hashes bound to the exact candidate revision.
-- [ ] T036 Run controlled benchmarks and record environment, uncertainty, baseline, disabled/enabled
+- [x] T036 Run controlled benchmarks and record environment, uncertainty, baseline, disabled/enabled
   tap results, and explicit non-production limitations.
 - [ ] T037 Add complete Doxygen comments and generate warning-free reference documentation.
 - [ ] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe

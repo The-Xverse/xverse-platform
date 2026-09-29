@@ -1,0 +1,24 @@
+{
+  "acceptance_criteria": [
+    "Traces to its accepted system and software anchors and is verified by its named checks, harness route, or report inspection."
+  ],
+  "accepted_anchors": [
+    "XCOM-SW-INTG-003"
+  ],
+  "applicability": "T036 controlled disabled/enabled-tap benchmark candidate",
+  "id": "T036-SR-009",
+  "level": "software",
+  "parents": [
+    "T036-STK-004"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "capability_007_task",
+    "reference": "docs/engineering/xcom/t036/requirements.md T036-SR-009"
+  },
+  "statement": "When engineering/run_xcom_benchmarks.py --verify reports/xcom-queue/t036-benchmark.json runs, it shall re-read the report and fail closed (nonzero) when a required field is missing, the method or uncertainty is incomplete, the result is stale or foreign to the candidate, or a two-percent threshold is exceeded.",
+  "status": "accepted",
+  "title": "Fail-closed harness verification",
+  "verification_intent": "XcomToolGatewayBounds.MessageSizeBoundEnforced"
+}

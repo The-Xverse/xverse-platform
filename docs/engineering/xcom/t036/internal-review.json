@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "task_id": "T036",
+  "baseline_revision": "8ec69ddd34ed8c7a07adbcb631dcfb2da3faf15f",
+  "stage": "internal_review",
+  "review_type": "fresh pinned read-only DeepSeek Flash internal review of the replayed T036 controlled disabled/enabled-tap benchmark candidate after the regenerated stage records invalidated the pre-replay package hashes: the committed-candidate revision binding, the re-executed exact-candidate report, the six T036 work products, and the aligned governance records (HEAD == baseline)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "docs/engineering/xcom/t010/design-units.md",
+    "docs/engineering/xcom/t010/unit-design.json",
+    "docs/engineering/xcom/t036/architecture.md",
+    "docs/engineering/xcom/t036/detailed-design.md",
+    "docs/engineering/xcom/t036/implementation.md",
+    "docs/engineering/xcom/t036/requirements.md",
+    "docs/engineering/xcom/t036/unit-specifications.md",
+    "docs/engineering/xcom/t036/verification-plan.md",
+    "engineering/architecture/components/T036-SR-001-CMP.json",
+    "engineering/architecture/components/T036-SR-002-CMP.json",
+    "engineering/architecture/components/T036-SR-003-CMP.json",
+    "engineering/architecture/components/T036-SR-004-CMP.json",
+    "engineering/architecture/components/T036-SR-005-CMP.json",
+    "engineering/architecture/components/T036-SR-006-CMP.json",
+    "engineering/architecture/components/T036-SR-007-CMP.json",
+    "engineering/architecture/components/T036-SR-008-CMP.json",
+    "engineering/architecture/components/T036-SR-009-CMP.json",
+    "engineering/architecture/components/T036-SR-010-CMP.json",
+    "engineering/architecture/components/T036-SR-011-CMP.json",
+    "engineering/architecture/components/T036-SR-012-CMP.json",
+    "engineering/project.json",
+    "engineering/requirements/T036-SR-001.json",
+    "engineering/requirements/T036-SR-002.json",
+    "engineering/requirements/T036-SR-003.json",
+    "engineering/requirements/T036-SR-004.json",
+    "engineering/requirements/T036-SR-005.json",
+    "engineering/requirements/T036-SR-006.json",
+    "engineering/requirements/T036-SR-007.json",
+    "engineering/requirements/T036-SR-008.json",
+    "engineering/requirements/T036-SR-009.json",
+    "engineering/requirements/T036-SR-010.json",
+    "engineering/requirements/T036-SR-011.json",
+    "engineering/requirements/T036-SR-012.json",
+    "engineering/requirements/T036-STK-001.json",
+    "engineering/requirements/T036-STK-002.json",
+    "engineering/requirements/T036-STK-003.json",
+    "engineering/requirements/T036-STK-004.json",
+    "engineering/requirements/T036-STK-005.json",
+    "engineering/run_xcom_benchmarks.py",
+    "engineering/trace/links.json",
+    "engineering/unit-specifications/T036-SR-001-U.json",
+    "engineering/unit-specifications/T036-SR-002-U.json",
+    "engineering/unit-specifications/T036-SR-003-U.json",
+    "engineering/unit-specifications/T036-SR-004-U.json",
+    "engineering/unit-specifications/T036-SR-005-U.json",
+    "engineering/unit-specifications/T036-SR-006-U.json",
+    "engineering/unit-specifications/T036-SR-007-U.json",
+    "engineering/unit-specifications/T036-SR-008-U.json",
+    "engineering/unit-specifications/T036-SR-009-U.json",
+    "engineering/unit-specifications/T036-SR-010-U.json",
+    "engineering/unit-specifications/T036-SR-011-U.json",
+    "engineering/unit-specifications/T036-SR-012-U.json",
+    "engineering/validation/scenarios/T036-VS-ACCUMULATED.json",
+    "reports/review-index.md",
+    "reports/xcom-queue/t036-benchmark.json",
+    "specs/007-xcom-core/tasks.md"
+  ],
+  "checks": [
+    {
+      "id": "IRV-01",
+      "name": "baseline identity, boundary, candidate inventory, and diff hygiene",
+      "command_or_evidence": "git rev-parse HEAD; git diff --name-only <baseline> --; git ls-files --others --exclude-standard; git diff --check <baseline> --; automation/xcom_phase8_gate.py verify T036 <baseline>",
+      "measured": "HEAD == baseline 8ec69ddd34ed8c7a07adbcb631dcfb2da3faf15f. The tracked diff is exactly 6 paths (docs/engineering/xcom/t010/design-units.md, docs/engineering/xcom/t010/unit-design.json, engineering/project.json, engineering/trace/links.json, reports/review-index.md, specs/007-xcom-core/tasks.md); the untracked set is 60 files. Excluding the review record, reports/xcom-queue/t036-package.json, and the eight generated phase8-t036 stage-result records yields exactly 56 candidate paths, matching the gate. git diff --check is clean and the Phase 8 verify gate re-ran to changed_paths=56.",
+      "observation": "reviewed_paths equals the tracked-baseline diff union the untracked candidate files, excluding only the review record, the package record, and the eight regenerated stage records.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-02",
+      "name": "no accepted production source, test, target, documentation, or predecessor change",
+      "command_or_evidence": "git diff --name-only <baseline> -- src tests proto xdl cmake CMakeLists.txt Doxyfile; inspection of the tracked diffs and untracked candidate set",
+      "measured": "Empty output for every accepted production source, header, contract, schema, register, XDL profile, accepted test/benchmark fixture, build target, and Doxyfile. The tracked changes are limited to the T010 planned->established path-status field (one field in two files), the T036 project pointer, the additive T036 trace links plus the inherited engineering/project.json digest refresh (three predecessor implemented_by pins d8d271e7...->563eb5fb...), the append-only T036 review-index sections, and the one-line T036 checkbox. No T030-T035 work product, test, target, label, command, or expected value changes.",
+      "observation": "T036 remains evidence-plus-harness (T036-DD-01); the accepted owned-loopback/observation sources are consumed read-only at compile time.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-03",
+      "name": "measurement control and the three-case controlled benchmark",
+      "command_or_evidence": "engineering/run_xcom_benchmarks.py (DRIVER_SOURCE, run_sample, compile_driver, build_report); inspection of tests/xcom/observation/integration/test_support.hpp, disabled_tap_benchmark.cpp, provider.hpp/provider.cpp submit_disabled_observation_baseline, src/xverse/xcom/CMakeLists.txt:1195/1345-1368",
+      "measured": "The driver measures three cases over one identical in-process owned-loopback workload: baseline = the accepted pinned pre-observation submit (submit_disabled_observation_baseline, compiled only under XVERSE_XCOM_ENABLE_DISABLED_OBSERVATION_BENCHMARK exactly as the accepted fixture target is), tap_disabled = the public submit on a composition with no observation hub, tap_enabled = the public submit on a composition with a bounded metadata-only tap. Each case is warmed once, then measured over 21 interleaved paired samples of 5000 submit/receive pairs with the order alternated each sample, single-threaded, steady_clock, in an isolated temporary build compiled -std=c++20 -Wall -Wextra -Wpedantic -Werror -O2. The macro adds a benchmark-only method and does not alter the public submit path, so the control is valid.",
+      "observation": "The control (identical workload, warm-up, alternating paired samples, single thread) is adequate for a bounded prototype and reproduces the accepted disabled-tap fixture seam.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-04",
+      "name": "baseline, disabled/enabled comparison, uncertainty, and non-production limitations",
+      "command_or_evidence": "report uncertainty/baseline/tap_disabled/tap_enabled/regression/limitations blocks; verification-plan CHK-01..CHK-05; requirements.md T036-SR-001/-002/-003/-006; implementation.md 2.2",
+      "measured": "The gated SC-008 comparison is tap_disabled versus the same owned-loopback baseline: median latency 0.8152586652085292% and median throughput 0.808665946011089% (both pass, regression.outcome='pass'). The enabled-versus-disabled regression (53.315591917297134% latency / 34.775061851541565% throughput) is recorded under regression.tap_enabled_observation with within_2_percent=false and gated=false and is not compared to the threshold. Each uncertainty block records n=21, median, MAD, min, max, and p95 (every statistic named in method.statistics), with an explicit non-production note; limitations declare prototype-only scope, uncontrolled CPU affinity/scheduler/DVFS/thermal/cache, the non-production uncertainty, T032-GAP-01, the ungated enabled case, the absence of T037-T041 results, and the exact-candidate binding.",
+      "observation": "The SC-008 threshold is applied only to the disabled-tap case exactly as accepted SC-008/XCOM-SW-INTG-003 require; the ~53% enabled-tap overhead is recorded honestly rather than claimed within 2%.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-05",
+      "name": "evidence report fields, raw samples, recomputation, material digest, and hashes",
+      "command_or_evidence": "reading reports/xcom-queue/t036-benchmark.json; recomputing per-case medians, the disabled and enabled per-sample median regressions, the material digest, and the per-file hashes; python3 engineering/run_xcom_benchmarks.py --verify reports/xcom-queue/t036-benchmark.json; recomputing the admitted-input digests",
+      "measured": "The report carries environment, method, uncertainty, baseline, tap_disabled, tap_enabled, regression, the 21 raw samples, hashes, limitations, blockers, and the candidate identity. The disabled medians recompute to 0.8152586652085292 / 0.808665946011089 and the enabled medians to 53.315591917297134 / 34.775061851541565 from the raw samples; the largest per-sample disabled latency regression is 0.9995933091829334 (index 12), so no disabled sample exceeds 2% on this run. The material-input inventory (53 entries) matches harness material_paths() and the material digest 247f3afdabde77afbf712399aa28b825279d1c5ec4390847374d1ce2861bc239 matches the working tree. The report SHA-256 95c78ad3988e6e9f501cbfbd0d343f760c7d8a9e374b7c26441e9d88d441bd7c and the harness SHA-256 a442fc45f9d7c1b5f348398cc8adf4d57afc82bbf83b1c2053298c8aa227be57 match implementation.md 1/4.1 and the report hashes map. --verify exits 0 (candidate_revision_state='working-tree'). The environment admitted-input digests (toolchain 48ef3d66.../925 files, GTest prefix 36eaadd3.../282 files, manifest 031c6aec...) recompute exactly. The report deliberately excludes itself, implementation.md, review-index.md, and the generated stage/package/review records from material_inputs to keep the binding acyclic and reproducible.",
+      "observation": "The report is a freshly executed run bound to the exact candidate material digest and claims no accepted production artifact.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-06",
+      "name": "exact-candidate revision binding fix (the validation-rejected defect)",
+      "command_or_evidence": "inspection of engineering/run_xcom_benchmarks.py git_parent/git_commits_ahead/verify_report; independent isolated clone: git clone -s <repo> /tmp/xclone, checkout baseline, overlay the candidate files, commit as the direct child, run --verify; then an extra successor commit; nine tampered /tmp report copies",
+      "measured": "The repair records baseline_revision (the measured HEAD) and candidate_revision=null, binds the exact candidate through candidate_identity.material_inputs/material_digest/hashes, and accepts exactly two revisions. Independently reproduced: the committed direct-child clone verifies with candidate_revision_state='committed' (exit 0); an extra successor commit is rejected ('stale or foreign', exit 2). Tamper probes each fail closed (exit 2): changed raw sample (inconsistent regression), missing required field, outcome=failed, wrong material digest, foreign baseline revision, empty limitations, wrong sample count, removed non-production note, and a changed artifact hash. The 2% threshold, material inventory/digest, per-file hashes, sample recomputation, and limitations are unchanged and were not weakened.",
+      "observation": "The fix is realizable and correct in both the working-tree and committed-candidate states, and it fails closed on foreign, extra-successor, and tampered-material inputs.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-07",
+      "name": "work-product requirement/design/unit/verification-intent consistency",
+      "command_or_evidence": "programmatic comparison of docs/engineering/xcom/t036/{requirements,architecture,detailed-design,unit-specifications,verification-plan,implementation}.md with engineering/requirements/T036-*.json, engineering/architecture/components/T036-SR-*-CMP.json, and engineering/unit-specifications/T036-SR-*-U.json",
+      "measured": "All 12 software requirements agree in statement and verification intent across requirements.md, unit-specifications.md, the requirement JSON, and the unit JSON (e.g. T036-SR-003 = CoreMatrixConcurrency.ConcurrentSubmitReceive_ExactlyOncePerRouteFifo and T036-SR-006 = T033ProviderContractSuite.AcceptedLoopbackProviderConforms in every file). The revision-binding text is consistent across the harness docstring, architecture.md 6.1/6.2/8, detailed-design.md 4/6, requirements.md T036-STK-002/T036-SR-008, verification-plan.md CHK-09/7, and unit-specifications.md/implementation.md. The detailed-design schema matches the realized report (environment.admitted_inputs map, no hashes.report_self key, baseline.case='tap_disabled_same_baseline', candidate_revision=null).",
+      "observation": "No requirement/design/label drift remains; the third repair aligned every work product with the committed-candidate binding.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-08",
+      "name": "traceability: every endpoint resolves, revisions are pinned, and register validators pass",
+      "command_or_evidence": "engineering-checks (installed fabro_engineering) trace --root .; scripts/validate_xcom_task_ownership.py --verify; scripts/validate_xcom_requirements_traceability.py --verify; scripts/validate_xcom_architecture_contracts.py --verify; scripts/validate_xcom_unit_design.py --verify; scripts/validate_xcom_plan.py --verify; independent recomputation of every T036 implemented_by target_revision",
+      "measured": "The installed verifier trace returns {'artifacts': 750, 'links': 2716, 'ok': true}. engineering/trace/links.json holds 164 additive T036 links (refines 24, allocated_to 12, decomposes_to 12, implemented_by 39, verified_by 48, analyzed_by 12, validates 17). Every T036 endpoint resolves: each T036-SR accepted software requirement has allocated_to/implemented_by/verified_by; each T036-SR-*-U has an owning component, a component->unit decomposes_to, and implemented_by/verified_by/analyzed_by; T036-VS-ACCUMULATED has 17 validates links; and all 39 T036 implemented_by target_revision digests equal the current file SHA-256. All five T007-T010 register/plan validators exit 0.",
+      "observation": "No stale hash-pinned link remains; the earlier harness pin 684f3813... was correctly refreshed to a442fc45..., and the three predecessor engineering/project.json pins were refreshed to the current 563eb5fb... pointer.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-09",
+      "name": "REF-002/SADS disposition: no allocated or deferred promotion (T038 challenge)",
+      "command_or_evidence": "scan of engineering/trace/links.json for XVE-SYS; docs/engineering/xcom/t010/unit-design.json ref002 block; git diff <baseline> -- docs/architecture/; requirements.md 6",
+      "measured": "No T036 link references any XVE-SYS-* SADS target. docs/architecture/sads-requirements-traceability.json is untouched by the candidate. The T010 ref002 disposition remains 'unchanged' with an empty promoted list. requirements.md 6 records T036 as a partial contribution to the already-allocated XVE-SYS-0139-0158 series and explicitly keeps XVE-SYS-0141/0143/0144/0148/0150/0151/0153/0155/0157/0158 deferred; no allocated, deferred, architectural-target, or superseded SADS requirement is promoted or reported as implemented by T036.",
+      "observation": "T038 (traceability verifier / SADS disposition proof) remains allocated and produces no record; T036 neither promotes nor depends on it.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-10",
+      "name": "test discovery, named-case existence, and inherited T035 category completeness (T035 challenge)",
+      "command_or_evidence": "grep of the 16 selected IDs in engineering/validation/scenarios/T036-VS-ACCUMULATED.json and the 12 unit specifications against tests/ and src/xverse/xcom/CMakeLists.txt; ctest --test-dir build/f8u; reports/xcom-queue/t035-verification.json outcomes",
+      "measured": "All 16 selected cases resolve to a test source: xcom_observation_disabled_benchmark is a registered CTest target (CMakeLists 1345-1368) and every named GoogleTest case (CoreMatrixConcurrency.*, T034VersionRejection.RejectionEmitsNothing, T033*ContractSuite.*, CoreMatrixNegative.Neg09_..., CoreMatrixRecovery.Reconcile_..., XcomStimulationMatrixConcurrency.*, XcomToolGatewayNegative.NoTcpOrAddressPrimitive, XcomToolGatewayBounds.MessageSizeBoundEnforced, T20OrderingEquivalence.*, T026JournalRecovery.test_journal_restart_recovery_and_orphans) resolves. ctest on build/f8u reports 100% tests passed, 496/496. T036 adds no accepted CTest target. The accepted T035 verification report records all seven trusted categories (unit, integration, validation, sanitizer, static_analysis, conformance, python); its conformance outcome is 'failed' with root cause E-T035-2 disclosed as an external accepted-baseline governance inconsistency and candidate_defect=false (L-T035-7). T036 preserves each category and does not re-run or weaken any.",
+      "observation": "The selected case set names only already-discovered cases, so the discovered inventory is unchanged; T035's required categories are each present (with the conformance baseline inconsistency disclosed) and inherited unchanged.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-11",
+      "name": "T037 boundary: no Doxygen/source-coverage claim (T037 challenge)",
+      "command_or_evidence": "git diff <baseline> -- Doxyfile; inspection of the T036 work products and report limitations; specs/007-xcom-core/tasks.md",
+      "measured": "Doxyfile is unchanged and T036 adds/changes no C/C++ interface comment, no generated documentation, and no Doxygen config (the tracked diff has no src/ change). The report limitations, implementation.md L-T036-6, detailed-design.md 10, and requirements.md 8.2 all defer warning-free generated reference documentation and source coverage to T037. tasks.md keeps T037-T041 unchecked. No T036 artifact claims a warning-free Doxygen result or a source-coverage figure.",
+      "observation": "The T037 deliverable is neither produced nor claimed; no overclaim of generated documentation or source coverage exists.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-12",
+      "name": "public-safety and forbidden-resource inspection",
+      "command_or_evidence": "regex scan of the 56 candidate artifacts for host absolute paths, /tmp paths, credentials, private-key markers, RFC1918 addresses, and secret markers; inspection of harness subprocess/socket use and the driver",
+      "measured": "No host-specific absolute path, /tmp path, credential, private-key marker, RFC1918 address, payload byte, or permit content appears in any candidate artifact; the only AF_INET/DNS/resolver/TLS matches are the negative-case prohibition text. The harness opens no listener, AF_INET/AF_INET6 or AF_UNIX socket, DNS/resolver, or TLS, contacts no legacy or external peer, and executes only the accepted in-process owned-loopback workload. The admitted inputs are recorded by environment-variable name and digest only; the temporary build and its argv are discarded and never committed.",
+      "observation": "T036-SR-007/-012 are satisfied; the tracked evidence contains no host path or secret.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-13",
+      "name": "governance records and repair integrity",
+      "command_or_evidence": "git diff <baseline> -- docs/engineering/xcom/t010 engineering/project.json specs/007-xcom-core/tasks.md reports/review-index.md",
+      "measured": "engineering/project.json points at task T036 with baseline 8ec69ddd... and states the gated tap_disabled-versus-same-baseline criterion. The T010 change is exactly the one planned->established status field in unit-design.json and design-units.md for docs/engineering/xcom/t036/ (XCOM-DU-024); tasks.md changes only the one-line T036 checkbox while T037-T041 remain unchecked; review-index.md appends the plan, implementation, first-repair, second-repair, and third-repair T036 sections and explicitly disclaims the superseded report hashes/material digests cited by the earlier sections. No predecessor section is rewritten.",
+      "observation": "The repair is confined to the T036 artifacts and their trace digests; no accepted or predecessor artifact is modified.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-14",
+      "name": "deterministic Phase 8 gate and trusted measure re-run",
+      "command_or_evidence": "automation/xcom_phase8_gate.py verify T036 <baseline>; ctest --test-dir build/f8u; engineering/run_xcom_benchmarks.py --verify",
+      "measured": "The Phase 8 verify gate re-ran and passed: {'ok': true, 'task_id': 'T036', 'changed_paths': 56, 'report': 'reports/xcom-queue/t036-benchmark.json', 'checks': ['unit']}. The unit measure reports 100% tests passed, 496/496 CTest cases. The task-owned harness --verify exits 0 in the working-tree state, exits 0 in an independently constructed committed-candidate clone, and fails closed on every exercised negative.",
+      "observation": "Every trusted measure available to this review passes at the exact candidate revision; whole-system integration runs from the assembled checkout at its own gate.",
+      "result": "pass"
+    },
+    {
+      "id": "IRV-15",
+      "name": "generated stage-record provenance (excluded from reviewed_paths)",
+      "command_or_evidence": "inspection of the eight engineering/stage-results/phase8-t036-*.json records and reports/xcom-queue/t036-package.json; recomputation of every stage-record artifact hash",
+      "measured": "The eight generated stage-result records each name inputs ['8ec69ddd...', '01M3NGDH5WG8K7N5MNWGZSY977'], model deepseek-v4-flash, status complete, and every artifact hash they reference matches the current candidate file. They are recreated by the stage harness after review, so the eight records are excluded from reviewed_paths by the gate's candidate_paths(). The pre-replay reports/xcom-queue/t036-package.json records 64 changed_paths and eight stale hashes for exactly these eight records; that mismatch is the known regenerated-stage condition the replay checkpoint tolerates and is not a candidate defect. The internal_review stage record pins the pre-replay review hash b1f5d6b8..., which this replay supersedes.",
+      "observation": "The stage-record pollution is confined to the eight generated records and the generated package; no reviewed candidate artifact or evidence hash is affected.",
+      "result": "pass"
+    }
+  ],
+  "findings": [],
+  "observations": [
+    "The gated statistic is the median of the 21 paired per-sample tap_disabled-versus-baseline regressions; on this run no disabled sample exceeds 2% (largest per-sample disabled latency regression 0.9996% at index 12), and every raw sample is retained rather than a favourable subset.",
+    "requirements.md 5 cites XCOM-SYS-SC-009 in the human 'spec anchor' column for T036-STK-004 while the materialized record and trace refines link use XCOM-SYS-SC-007; this matches the accepted T035 precedent exactly (T035-STK-004 also refines XCOM-SYS-SC-007 while its 5 table cites SC-009) and the validated trace, so it is a documentation convention, not a missing or stale endpoint.",
+    "The enabled metadata-only tap adds ~53.3% median latency and ~34.8% median throughput regression against the disabled case; it is labelled gated:false and no 2% bound is claimed for it, consistent with SC-008 which bounds disabled taps.",
+    "The report excludes implementation.md, review-index.md, the benchmark report itself, and the generated stage/package/review records from candidate_identity.material_inputs so the exact-candidate binding stays acyclic; the remaining 53 material inputs cover every machine-checked artifact.",
+    "The committed-candidate branch of --verify was reproduced only in a throwaway clone under /tmp (now removed); the candidate repository and its .git were not modified by this review.",
+    "Edge case observed but without impact on this delivered candidate: in the working-tree state (HEAD == accepted baseline) --verify would also accept a report whose baseline_revision and candidate_identity.baseline_revision are relabelled to the immediate parent commit of HEAD, because HEAD is then that ancestor's direct child; the material digest still binds the exact candidate content and the trusted replay checkpoint independently pins the accepted baseline_revision, and the delivered report records the correct 8ec69ddd..., so this is a documentation-level limitation of the self-contained harness rather than a defect of the candidate.",
+    "T037-T041 remain unchecked; no Doxygen, traceability-verifier/SADS, external review, or acceptance result is produced or claimed, and external Codex review and user acceptance remain deferred until the ordered backlog xcom-t030-t034-20260928 completes."
+  ],
+  "limitations": [
+    "Read-only review of the working-tree candidate at HEAD == baseline; the review record is the only artifact written by this stage and it edits no production code or test.",
+    "The independent committed-candidate and tamper probes were performed in an isolated /tmp clone and on /tmp report copies; the benchmark was not re-executed (measurement is host-noisy and the harness --verify reproduces the recorded statistics).",
+    "The review does not establish external acceptance or platform-main delivery; T039/T040 external review and T041 user acceptance remain deferred."
+  ],
+  "method": "Read-only inspection of the exact 56-path candidate union, the six tracked diffs, the harness with an independent isolated committed-candidate reproduction and fail-closed negative probes, the six T036 work products, the requirement/component/unit/validation records with a programmatic verification-intent cross-check, the report with independent recomputation of the material digest, admitted-input digests, artifact hashes, and per-sample regressions, the trace graph with the installed trusted verifier plus the five register/plan validators, the Phase 8 verify gate and the 496-case unit measure, named-case discovery, the eight generated stage-record hashes and the pre-replay package hash mismatch, and a public-safety/forbidden-resource scan.",
+  "reviewer": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash"
+  }
+}

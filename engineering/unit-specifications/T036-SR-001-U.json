@@ -1,0 +1,50 @@
+{
+  "component_id": "T036-SR-001-CMP",
+  "concurrency": "single benchmark user; single-threaded measurement",
+  "errors": [
+    "benchmark case failure",
+    "declared failed or blocked case outcome"
+  ],
+  "id": "T036-SR-001-U",
+  "inputs": [
+    "the admitted offline toolchain and the exact candidate checkout",
+    "the accepted owned loopback fixture"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t036-benchmark.json",
+    "engineering/run_xcom_benchmarks.py"
+  ],
+  "invariants": [
+    "the same workload and sample count apply to both cases",
+    "the warm-up is recorded"
+  ],
+  "note": "Cases are contributory already-discovered cases or the accepted benchmark fixture; the harness and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the disabled and enabled median latency and throughput for the fixed sample set"
+  ],
+  "purpose": "At the exact candidate revision, the benchmark shall measure median latency and throughput with the observation tap disabled (same-baseline) and enabled over the same owned loopback workload, using controlled repeated paired samples, and shall record both results.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "tests/xcom/observation/integration/disabled_tap_benchmark.cpp",
+    "src/xverse/xcom/src/observation.cpp"
+  ],
+  "state": "one bounded benchmark run or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T036-SR-001-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T036 harness/evidence/records are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T036-SR-001-U benchmark verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "xcom_observation_disabled_benchmark",
+      "precondition": "the accepted owned loopback/observation build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T036 harness route as part of the benchmark"
+    }
+  ]
+}
