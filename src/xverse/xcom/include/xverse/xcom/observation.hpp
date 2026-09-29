@@ -1,5 +1,6 @@
 /**
  * @file observation.hpp
+ * @ingroup xcom_obs
  * @brief Bounded provider-neutral X-COM observation values and pull-based taps.
  * @ownership Records, filters, policies, handles, and snapshots own their values. ObservationHub
  * exclusively owns fixed tap and record slots; reservations own bounded item and tap claims;

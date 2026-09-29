@@ -1,0 +1,54 @@
+{
+  "component_id": "T037-SR-001-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-001-U",
+  "inputs": [
+    "the owned src/xverse/xcom C++ headers, sources, and fixtures",
+    "the T010 doxygen_plan mandatory tags"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "every public declaration carries @brief and the applicable contract clauses",
+    "every owned file carries the mandatory file block"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the completed file blocks and declaration comments with the mandatory contract clauses"
+  ],
+  "purpose": "Every public declaration in the owned src/xverse/xcom C++ headers, sources, and fixtures shall carry a Doxygen @brief and the applicable params, returns, and ownership/lifetime/thread-safety/failure clauses, and every owned C++ file shall carry the mandatory file block.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/xcom/include/xverse/xcom/activation_plan.hpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp",
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-001-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-001-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T033ObserverContractSuite.AcceptedObservationHubConforms",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

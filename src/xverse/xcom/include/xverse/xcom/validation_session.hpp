@@ -1,5 +1,6 @@
 /**
  * \file validation_session.hpp
+ * \ingroup xcom_stim
  * \brief Standalone C++20 foundation for an explicit time authority, an immutable
  *        local validation permit, and a bounded validation-session lifecycle.
  *
@@ -650,12 +651,14 @@ public:
   /// \unitspec{T025-U-PERMIT}
   Permit(const Permit &) = default;
   /// \brief Copy assignment; permits are immutable values.
+  /// \return This permit after assignment.
   /// \unitspec{T025-U-PERMIT}
   Permit &operator=(const Permit &) = default;
   /// \brief Move constructor; permits are immutable values.
   /// \unitspec{T025-U-PERMIT}
   Permit(Permit &&) = default;
   /// \brief Move assignment; permits are immutable values.
+  /// \return This permit after assignment.
   /// \unitspec{T025-U-PERMIT}
   Permit &operator=(Permit &&) = default;
   /// \brief Destructor.

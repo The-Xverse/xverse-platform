@@ -1,5 +1,6 @@
 /**
  * @file loopback_provider.hpp
+ * @ingroup xcom_core
  * @brief Owned fixed-capacity in-process FIFO loopback provider.
  * @ownership The provider owns every prepared route and every accepted CommunicationItem copy.
  * @lifetime Returned handles do not retain resources; items returned by receive() are independent
@@ -62,30 +63,53 @@ class LoopbackProvider final : public CommunicationProvider {
  private:
   friend class ProviderComposition;
 
-  /** @copydoc CommunicationProvider::prepare */
+  /** @brief Prepares one exact route binding; see the base private route contract.
+   * @param binding Exact validated route binding.
+   * @return Prepared token or stable outcome. */
   [[nodiscard]] ProviderResult<ProviderRouteToken> prepare(
       const ProviderRouteBinding& binding) noexcept override;
-  /** @copydoc CommunicationProvider::activate */
+  /** @brief Activates one prepared route token; see the base private route contract.
+   * @param token Exact prepared provider-local token.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Status without changing lifecycle-controller state. */
   [[nodiscard]] ProviderStatus activate(const ProviderRouteToken& token,
                                         const LifecycleController& lifecycle) noexcept override;
-  /** @copydoc CommunicationProvider::submit */
+  /** @brief Submits one item on an active route; see the base private route contract.
+   * @param token Exact active provider-local token.
+   * @param item Owned item copied on acceptance.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Submission status. */
   [[nodiscard]] ProviderStatus submit(const ProviderRouteToken& token,
                                       const CommunicationItem& item,
                                       const LifecycleController& lifecycle) noexcept override;
-  /** @copydoc CommunicationProvider::receive */
+  /** @brief Receives the oldest item on an active route; see the base private route contract.
+   * @param token Exact active or draining provider-local token.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Oldest owned item or an explicit empty/failure outcome. */
   [[nodiscard]] ProviderResult<CommunicationItem> receive(
       const ProviderRouteToken& token,
       const LifecycleController& lifecycle) noexcept override;
-  /** @copydoc CommunicationProvider::drain */
+  /** @brief Drains an active route; see the base private route contract.
+   * @param token Exact active provider-local token.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Status without changing lifecycle-controller state. */
   [[nodiscard]] ProviderStatus drain(const ProviderRouteToken& token,
                                      const LifecycleController& lifecycle) noexcept override;
-  /** @copydoc CommunicationProvider::close */
+  /** @brief Closes an empty draining route; see the base private route contract.
+   * @param token Exact empty draining provider-local token.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Resource-release status without changing lifecycle-controller state. */
   [[nodiscard]] ProviderStatus close(const ProviderRouteToken& token,
                                      const LifecycleController& lifecycle) noexcept override;
-  /** @copydoc CommunicationProvider::state */
+  /** @brief Reports bounded provider state; see the base private route contract.
+   * @param token Exact current provider-local token.
+   * @return Owned bounded provider state. */
   [[nodiscard]] ProviderResult<ProviderRouteStateValue> state(
       const ProviderRouteToken& token) const noexcept override;
-  /** @copydoc CommunicationProvider::reconcile */
+  /** @brief Reconciles bounded provider state; see the base private route contract.
+   * @param token Exact current provider-local token.
+   * @param lifecycle Bound lifecycle owner.
+   * @return Reconciled bounded state or interrupted-resource outcome. */
   [[nodiscard]] ProviderResult<ProviderRouteStateValue> reconcile(
       const ProviderRouteToken& token,
       const LifecycleController& lifecycle) const noexcept override;

@@ -1,0 +1,48 @@
+{
+  "component_id": "T037-SR-007-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-007-U",
+  "inputs": [
+    "the committed report, logs, work products, and excerpts"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "no credential, private address, payload, proprietary excerpt, or host path"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the public-safety verdict"
+  ],
+  "purpose": "The committed report, logs, work products, and excerpts shall contain no credential, private address, unrestricted payload, proprietary source excerpt, or host-specific absolute path.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t037/requirements.md"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-007-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-007-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayNegative.NoTcpOrAddressPrimitive",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

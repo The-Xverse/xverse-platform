@@ -1,0 +1,50 @@
+{
+  "component_id": "T037-SR-005-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-005-U",
+  "inputs": [
+    "the accepted baseline revision, the candidate material inventory/digest, and the report contents"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "the report carries command, warnings, and output",
+    "a stale or foreign binding fails the checker"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the report with command, warnings, output, environment, hashes, and candidate identity"
+  ],
+  "purpose": "reports/xcom-queue/t037-doxygen.json shall record command, warnings, output, the resolved environment identity, retained-evidence hashes, and the exact-candidate identity, and shall be bound to the accepted baseline revision and the exact candidate material.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t037/detailed-design.md",
+    "docs/engineering/xcom/t037/verification-plan.md"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-005-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-005-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "XcomToolGatewayBounds.MessageSizeBoundEnforced",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

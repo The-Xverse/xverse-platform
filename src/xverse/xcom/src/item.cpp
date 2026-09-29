@@ -1,5 +1,6 @@
 /**
  * @file item.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free communication-item validation and contract consistency.
  * @ownership Successful items own copied metadata and payload; failures own diagnostics.
  * @lifetime No caller-provided view or span is retained after construction.

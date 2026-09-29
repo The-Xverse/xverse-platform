@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "task_id": "T037",
+  "baseline_revision": "8757a79d4e6b2630124d774fcba2a55d6342a879",
+  "stage": "internal_review",
+  "review_type": "separate pinned read-only DeepSeek internal review of the T037 complete-Doxygen-comments and warning-free-generation candidate: the owned C++ Doxygen comments, the Doxyfile alias, the strict C++ checker, the exact-candidate report, the six T037 work products, the reconciled governance records, and the inherited T030-T036 behaviour and T038 disposition (HEAD == baseline)",
+  "verdict": "pass",
+  "reviewed_paths": [
+    "Doxyfile",
+    "docs/engineering/xcom/t037/architecture.md",
+    "docs/engineering/xcom/t037/detailed-design.md",
+    "docs/engineering/xcom/t037/implementation.md",
+    "docs/engineering/xcom/t037/requirements.md",
+    "docs/engineering/xcom/t037/unit-specifications.md",
+    "docs/engineering/xcom/t037/verification-plan.md",
+    "engineering/architecture/components/T037-SR-001-CMP.json",
+    "engineering/architecture/components/T037-SR-002-CMP.json",
+    "engineering/architecture/components/T037-SR-003-CMP.json",
+    "engineering/architecture/components/T037-SR-004-CMP.json",
+    "engineering/architecture/components/T037-SR-005-CMP.json",
+    "engineering/architecture/components/T037-SR-006-CMP.json",
+    "engineering/architecture/components/T037-SR-007-CMP.json",
+    "engineering/architecture/components/T037-SR-008-CMP.json",
+    "engineering/architecture/components/T037-SR-009-CMP.json",
+    "engineering/architecture/components/T037-SR-010-CMP.json",
+    "engineering/project.json",
+    "engineering/requirements/T037-SR-001.json",
+    "engineering/requirements/T037-SR-002.json",
+    "engineering/requirements/T037-SR-003.json",
+    "engineering/requirements/T037-SR-004.json",
+    "engineering/requirements/T037-SR-005.json",
+    "engineering/requirements/T037-SR-006.json",
+    "engineering/requirements/T037-SR-007.json",
+    "engineering/requirements/T037-SR-008.json",
+    "engineering/requirements/T037-SR-009.json",
+    "engineering/requirements/T037-SR-010.json",
+    "engineering/requirements/T037-STK-001.json",
+    "engineering/requirements/T037-STK-002.json",
+    "engineering/requirements/T037-STK-003.json",
+    "engineering/requirements/T037-STK-004.json",
+    "engineering/requirements/T037-STK-005.json",
+    "engineering/trace/links.json",
+    "engineering/unit-specifications/T037-SR-001-U.json",
+    "engineering/unit-specifications/T037-SR-002-U.json",
+    "engineering/unit-specifications/T037-SR-003-U.json",
+    "engineering/unit-specifications/T037-SR-004-U.json",
+    "engineering/unit-specifications/T037-SR-005-U.json",
+    "engineering/unit-specifications/T037-SR-006-U.json",
+    "engineering/unit-specifications/T037-SR-007-U.json",
+    "engineering/unit-specifications/T037-SR-008-U.json",
+    "engineering/unit-specifications/T037-SR-009-U.json",
+    "engineering/unit-specifications/T037-SR-010-U.json",
+    "engineering/validation/scenarios/T037-VS-ACCUMULATED.json",
+    "reports/review-index.md",
+    "reports/xcom-queue/t037-doxygen.json",
+    "scripts/check_doxygen.py",
+    "specs/007-xcom-core/tasks.md",
+    "src/xverse/xcom/fixtures/synthetic_provider.cpp",
+    "src/xverse/xcom/fixtures/synthetic_provider.hpp",
+    "src/xverse/xcom/fixtures/synthetic_tool.cpp",
+    "src/xverse/xcom/include/xverse/xcom/activation_plan.hpp",
+    "src/xverse/xcom/include/xverse/xcom/contract.hpp",
+    "src/xverse/xcom/include/xverse/xcom/core_types.hpp",
+    "src/xverse/xcom/include/xverse/xcom/diagnostic.hpp",
+    "src/xverse/xcom/include/xverse/xcom/endpoint_route_lifecycle.hpp",
+    "src/xverse/xcom/include/xverse/xcom/item.hpp",
+    "src/xverse/xcom/include/xverse/xcom/loopback_provider.hpp",
+    "src/xverse/xcom/include/xverse/xcom/observation.hpp",
+    "src/xverse/xcom/include/xverse/xcom/provider.hpp",
+    "src/xverse/xcom/include/xverse/xcom/result.hpp",
+    "src/xverse/xcom/include/xverse/xcom/stimulation_actions.hpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
+    "src/xverse/xcom/include/xverse/xcom/validation_session.hpp",
+    "src/xverse/xcom/include/xverse/xcom/value.hpp",
+    "src/xverse/xcom/src/activation_plan.cpp",
+    "src/xverse/xcom/src/contract.cpp",
+    "src/xverse/xcom/src/diagnostic.cpp",
+    "src/xverse/xcom/src/endpoint_route_lifecycle.cpp",
+    "src/xverse/xcom/src/item.cpp",
+    "src/xverse/xcom/src/loopback_provider.cpp",
+    "src/xverse/xcom/src/observation.cpp",
+    "src/xverse/xcom/src/provider.cpp",
+    "src/xverse/xcom/src/validation_session.cpp",
+    "src/xverse/xcom/src/value.cpp"
+  ],
+  "checks": [
+    {
+      "id": "IRV-01",
+      "name": "baseline identity, candidate inventory, and diff hygiene",
+      "command_or_evidence": "git rev-parse HEAD; git diff --name-only <baseline> --; git ls-files --others --exclude-standard; git diff --check <baseline> --; python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_phase8_gate.py verify T037 <baseline>",
+      "measured": "HEAD == baseline 8757a79d4e6b2630124d774fcba2a55d6342a879. The tracked changes (33) plus the untracked candidate files (45) less the generated review record and package record form the exact 76-path candidate union recorded in reviewed_paths and in reports/xcom-queue/t037-package.json. git diff --check is clean; the gate verify stage reported ok with changed_paths=76 and the unit measure green."
+    },
+    {
+      "id": "IRV-02",
+      "name": "owned C++ change is documentation-comment-only",
+      "command_or_evidence": "independent comment-stripping equivalence and comment-stripped line-normalised comparison of each of the 27 changed src/xverse/xcom .hpp/.cpp files against git show <baseline>:<path>",
+      "measured": "all 27 changed C++ files are equivalent to the baseline after removing // and /* */ comments (whitespace-normalised), so no compiled token, signature, type, default, control-flow decision, contract, or expected value changed. The 6 unchanged owned C++ files are byte-identical."
+    },
+    {
+      "id": "IRV-03",
+      "name": "repository-wide warning-free generation",
+      "command_or_evidence": "independent doxygen run over Doxyfile with OUTPUT_DIRECTORY/WARN_AS_ERROR=YES/WARN_LOGFILE appended (the trusted Phase 8 validation route)",
+      "measured": "exit 0; empty warning log (0 warnings); build/rev-dox-repo/out/html/index.html and build/rev-dox-repo/out/xml/index.xml generated; 170 indexed files. Matches the report output.repository_exit_code=0, repository_indexed_files=170, warnings.count=0."
+    },
+    {
+      "id": "IRV-04",
+      "name": "strict C++-scoped zero-warning generation and file-block coverage",
+      "command_or_evidence": "python3 scripts/check_doxygen.py --strict-cpp; independent find_missing_file_blocks over _owned_cpp_sources()",
+      "measured": "exit 0; 33 indexed files; 0 warnings; 0 coverage gaps. The owned C++ set is exactly 33 .hpp/.cpp files (no file is excluded by */build/*, *.pb.h, *.pb.cc, */generated/*); every owned file carries the @file/@brief/@ingroup block. Matches report strict_cpp.warning_count=0 and coverage_gap_count=0."
+    },
+    {
+      "id": "IRV-05",
+      "name": "evidence report schema, required fields, and exact-candidate binding",
+      "command_or_evidence": "inspection of reports/xcom-queue/t037-doxygen.json; independent recomputation of the material digest and every recorded per-file hash",
+      "measured": "the report carries the gate-required command, warnings, and output fields plus environment, strict_cpp, hashes, candidate_identity, limitations, and blockers. The recomputed material digest 85ffec0680aa6b82a3ced29dd32a670c21259eca738a75c6b65ada0f387ba72a and all 80 per-file hashes match the current candidate; the inventory equals the recomputed inventory. The report is not stale and its sha256 (d6468558...) is unchanged by this read-only review."
+    },
+    {
+      "id": "IRV-06",
+      "name": "Doxyfile alias and configuration scope",
+      "command_or_evidence": "git diff Doxyfile; Doxyfile warning/extraction setting inspection",
+      "measured": "the only Doxyfile change is ALIASES += bounds=\"\\par Bounds:\", the single previously-unknown command used by the admitted inputs. No extraction, warning, input, or exclusion setting was weakened; the repository route keeps WARN_IF_UNDOCUMENTED=NO/WARN_NO_PARAMDOC=NO as disclosed."
+    },
+    {
+      "id": "IRV-07",
+      "name": "checker preserved behaviour and fail-closed self-test",
+      "command_or_evidence": "python3 scripts/check_doxygen.py --coverage-only; python3 scripts/check_doxygen.py --self-test --coverage-only; python3 scripts/check_doxygen.py --strict-cpp",
+      "measured": "the preserved Python/docstring coverage behaviour is unchanged from the baseline (it still fails pre-existing on out-of-scope Python docstrings, recorded as a limitation); _self_test() detects the synthetic undocumented module/function and the synthetic header missing its file block; --strict-cpp fails closed on any warning or coverage gap."
+    },
+    {
+      "id": "IRV-08",
+      "name": "traceability and governance reconciliation",
+      "command_or_evidence": "fabro_engineering.core.validate_trace(root, 'xverse-platform'); baseline-vs-candidate links.json diff; REF-002 register inspection",
+      "measured": "validate_trace passes with 786 artifacts and 2855 links; all 48 implemented_by target_revision pins that changed between baseline and candidate equal the current code_endpoint SHA-256 values (no stale pin remains) and 139 additive T037-L-* links are present. docs/engineering/xcom/t008 and docs/architecture/sads-requirements-traceability.json are unmodified; the 20 REF-002 dispositions stay 10 allocated / 10 deferred with no promotion."
+    },
+    {
+      "id": "IRV-09",
+      "name": "test discovery of the named T037 cases",
+      "command_or_evidence": "ctest --test-dir build/f8u -N inventory compared with the 16 T037 case IDs",
+      "measured": "all 16 case IDs named by engineering/unit-specifications/T037-*.json and engineering/validation/scenarios/T037-VS-ACCUMULATED.json (T033*/T034*/CoreMatrix*/Xcom*/T026JournalRecovery/T20OrderingEquivalence) are present in the 496-entry discovered inventory."
+    },
+    {
+      "id": "IRV-10",
+      "name": "public safety and forbidden-resource inspection",
+      "command_or_evidence": "scan of all 76 candidate files for host-specific absolute paths, private addresses, credentials, and payloads; inspection of commands for network/legacy use; git check-ignore on build/",
+      "measured": "no candidate artifact records a host-specific absolute path, private address, credential, payload, or proprietary excerpt; the checker adds no socket/DNS/TLS/network/legacy execution; no dependency or compiled symbol is added. Generated HTML/XML lives under the gitignored build/ tree and is not versioned (git ls-files build/ is empty)."
+    },
+    {
+      "id": "IRV-11",
+      "name": "T035 required test categories challenged",
+      "command_or_evidence": "inspection of reports/xcom-queue/t035-verification.json commands/outcomes and docs/engineering/xcom/t035/internal-review.json",
+      "measured": "T035 records unit, integration, validation, static_analysis, sanitizer, conformance, and Python categories. Six pass; conformance recorded intentionally failed at the accepted baseline with disclosed external root cause E-T035-2 (the Phase 6 pin predates accepted T030-T032 t009 changes) and E-T035-1 (environment AF_UNIX sun_path, fixed by the short build path used now). Every category was exercised; no category is silently omitted, so the T037 candidate inherits no undeclared gap."
+    },
+    {
+      "id": "IRV-12",
+      "name": "T036 measurement control, uncertainty, baseline, and comparison challenged",
+      "command_or_evidence": "inspection of reports/xcom-queue/t036-benchmark.json",
+      "measured": "T036 records environment identity, method (single-threaded steady_clock, warmup 1, 21 alternating paired samples x 5000 iterations), per-case uncertainty (n/min/max/median/MAD/p95 with an explicit dispersion-not-confidence-interval note), the tap_disabled_same_baseline, the tap_disabled and tap_enabled medians, the median-of-paired-regressions statistic, and explicit non-production limitations. The disabled/enabled comparison and baseline are present and controlled."
+    },
+    {
+      "id": "IRV-13",
+      "name": "T038 trace endpoints and SADS promotion challenged",
+      "command_or_evidence": "validate_trace endpoint resolution; REF-002 register inspection; tasks.md checkbox and reports/xcom-queue content inspection",
+      "measured": "every trace endpoint resolves (each source is an inventory item; every non-code target is an inventory item; every implemented_by target is an existing code endpoint with a matching content digest). No allocated or deferred SADS requirement is promoted (REF-002 10 allocated / 10 deferred, empty promoted list). T038 is not marked complete and no t038-traceability.json is produced."
+    },
+    {
+      "id": "IRV-14",
+      "name": "inherited T030-T034 behaviour unchanged",
+      "command_or_evidence": "git diff --stat <baseline> over tests/**, proto/**, xdl/**, CMakeLists.txt and the comment-only C++ diff",
+      "measured": "no accepted test, proto, xdl, CMake, target, label, command, or expected value changes; the only source edits are Doxygen comments in the 27 owned files, so the accepted T030-T034 contract/gateway/client/suite/provider behaviour and dispositions are preserved."
+    }
+  ],
+  "findings": [],
+  "observations": [
+    "The core T037 obligations are independently reproduced: both the repository-wide and the strict C++-scoped routes are warning-free (exit 0, 0 warnings), the strict scope indexes all 33 owned files with 0 file-block coverage gaps, and every owned-source diff is Doxygen-comment-only.",
+    "Evidence-summary accuracy note (non-blocking): reports/review-index.md:1097 states '27 of the 35 owned' src/xverse/xcom C++ files. The owned set is exactly 33 .hpp/.cpp files and the strict route indexes 33, so the sentence should read '27 of the 33 owned'. The work products proper (implementation.md:55) say only 'the 27 edited C++ files' and are unaffected.",
+    "Evidence-summary accuracy note (non-blocking): docs/engineering/xcom/t037/implementation.md:84, :170, :199 and reports/review-index.md:1116 state '57 stale implemented_by digest pins were refreshed'. The number of pins whose recorded target digest actually changed between baseline and candidate is 48 (11 project.json + 37 other edited artifacts); 57 equals the candidate implemented_by links targeting the edited artifacts other than engineering/project.json (48 existing + 20 new T037 links). The substance is correct: all 48 changed pins equal the current SHA-256 values and validate_trace reports no stale pin. Recommend the deferred external review reconcile the prose count.",
+    "Evidence-summary accuracy note (non-blocking): docs/engineering/xcom/t037/verification-plan.md:77 and detailed-design.md:46 list B-3 'python3 scripts/check_doxygen.py --self-test --coverage-only' with expected 'exit 0'. The command exits 1 both at the accepted baseline and at the candidate because the preserved coverage check fails on inherited Python docstrings (T037-OPEN-06); the self-test function itself does detect the synthetic module/function and header. implementation.md:120 deliberately omits an exit-code claim for B-3 and discloses the inherited failure, so no false pass is recorded, but the plan expectation is not reconciled.",
+    "The implementation record is intentionally excluded from the report material inventory so it can cite the report hash/digest without a circular binding (T036 precedent); the report hashes map therefore omits docs/engineering/xcom/t037/implementation.md.",
+    "The repository-wide route keeps WARN_IF_UNDOCUMENTED=NO/WARN_NO_PARAMDOC=NO because its admitted inputs include out-of-scope Python and test sources; declaration-level strictness is exercised only by the C++-scoped configuration and is disclosed as T037-GAP-02.",
+    "T035's conformance failure (E-T035-2) is an inherited accepted-baseline inconsistency owned by T038/T040 or the Phase 6 conformance-pin maintainer, not a T037 candidate defect; T037 introduces no trace endpoint or pin that would worsen it."
+  ],
+  "limitations": [
+    "Read-only review of the working-tree candidate at HEAD == baseline; the review record is the only artifact written by this stage and it edits no production code, test, or evidence artifact.",
+    "The strict declaration-level coverage is scoped to the owned src/xverse/xcom C++ inputs; the repository-wide route is not declaration-level strict for out-of-scope Python/test inputs.",
+    "The inherited Python docstring findings in scripts/** and src/xverse_xdl/** remain and are reported as a limitation, not as passing.",
+    "The review does not establish external Codex review, user acceptance, or platform-main delivery; those remain deferred until the ordered backlog completes (T038-T041)."
+  ],
+  "method": "Read-only inspection of the exact 76-path candidate union; independent comment-stripping equivalence of the 27 changed C++ files; independent re-execution of the repository-wide and strict C++ Doxygen routes; independent recomputation of the report material digest and all 80 per-file hashes; Doxyfile alias diff review; checker mode and self-test exercise; fabro_engineering.core.validate_trace endpoint resolution; baseline-vs-candidate links.json pin diff; REF-002 register inspection; ctest inventory comparison for every named T037 case; T035/T036 evidence inspection; and public-safety/forbidden-resource scanning.",
+  "reviewer": {
+    "provider": "deepseek",
+    "backend": "api",
+    "requested_model": "deepseek-v4-flash"
+  }
+}

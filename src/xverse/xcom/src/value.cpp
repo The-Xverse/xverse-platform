@@ -1,5 +1,6 @@
 /**
  * @file value.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free validation implementation for bounded core values.
  * @ownership Created values copy and own all accepted input.
  * @lifetime No input view is retained after a factory returns.

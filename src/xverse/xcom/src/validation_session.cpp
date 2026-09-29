@@ -1,5 +1,6 @@
 /**
  * \file validation_session.cpp
+ * \ingroup xcom_stim
  * \brief Implementation of the standalone T025 time-authority, permit, and
  *        validation-session foundation.
  *

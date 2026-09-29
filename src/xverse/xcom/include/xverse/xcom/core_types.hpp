@@ -1,5 +1,6 @@
 /**
  * @file core_types.hpp
+ * @ingroup xcom_core
  * @brief Convenience include for the bounded X-COM core value model.
  * @ownership Included types are value-owned and retain no caller storage.
  * @lifetime Included accessor views follow their owning value lifetime.

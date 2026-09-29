@@ -1004,3 +1004,128 @@ contains it, so the previous contract was unrealizable and the check was wrong, 
   validators pass. T030–T035 work products and behavior are unchanged. The earlier T036 sections above are
   retained as historical evidence for their own candidate revisions and are not rewritten; the report
   SHA-256 and material digest they cite refer to superseded candidates, not to the current one.
+
+# T037 review index — complete Doxygen comments and warning-free generated reference documentation
+
+Candidate: T037 on baseline `8757a79d4e6b2630124d774fcba2a55d6342a879` (accepted T036 controlled
+disabled/enabled-tap benchmark), queue `xcom-t030-t034-20260928`. The T020 and T030–T036 indexes above are
+retained as historical predecessor evidence and are not rewritten.
+
+This section records the T037 **plan-stage** work products. The implementation, its local verification, and
+the separate internal DeepSeek review are produced by their own stages. External Codex acceptance, the
+trusted target-repository integration measure, and the delivery package are separate gates; none is claimed
+complete by this index, and external review and acceptance are deferred until the ordered backlog
+`xcom-t030-t034-20260928` completes.
+
+## Declared T037 plan-stage work products
+
+- `docs/engineering/xcom/t037/requirements.md` — 5 stakeholder and 10 software requirements
+  (`T037-STK-001`…`-005`, `T037-SR-001`…`-010`) with accepted system anchors, the measured plan-stage Doxygen
+  gap inventory, the exact evidence report and verification route, and the REF-002 disposition (`unchanged`,
+  empty `promoted`; T038–T041 allocated).
+- `docs/engineering/xcom/t037/architecture.md` — trust boundaries `T37-XB-1`…`-007`, components
+  `T37-CMP-{SOURCE,CONFIG,CHECKER,REPORT,TRACE,WP}`, and the negative-case map.
+- `docs/engineering/xcom/t037/detailed-design.md` — the comment obligations for the owned C++ public surface,
+  the `Doxyfile` alias requirement (the missing `bounds` command), the strict C++-scoped configuration, the
+  fail-closed checker, the `reports/xcom-queue/t037-doxygen.json` schema, and the trace digest-refresh
+  obligation.
+- `docs/engineering/xcom/t037/unit-specifications.md` — 10 unit specifications and the ten-case index drawn
+  from the accepted discovered inventory.
+- `docs/engineering/xcom/t037/verification-plan.md` — `CHK-01`…`CHK-13`, `NEG-01`…`NEG-10`, the exact
+  evidence report, the task-owned documentation route (`B-1`…`B-5`), and the accepted-anchor traceability.
+
+## Declared T037 engineering records (plan stage)
+
+- `engineering/project.json` — project `xverse-platform`, task `T037`, capability `007`, accepted baseline
+  `8757a79d4e6b2630124d774fcba2a55d6342a879`.
+- `engineering/requirements/T037-STK-00{1..5}.json` and `engineering/requirements/T037-SR-0{01..10}.json`.
+- `engineering/architecture/components/T037-SR-0{01..10}-CMP.json`.
+- `engineering/unit-specifications/T037-SR-0{01..10}-U.json`.
+- `engineering/validation/scenarios/T037-VS-ACCUMULATED.json` — the inherited discovered case set validating
+  `T037-SR-001`…`-010`.
+- `engineering/trace/links.json` — 139 additive `T037-L-*` links and refreshed `implemented_by` pins for the
+  current-task pointer and the T037-edited configuration/source artifacts. The trusted `validate_trace`
+  reports 786 artifacts and 2855 links; the T007–T010 register validators pass.
+
+## Declared T037 implementation change set (expected at the implementation stage)
+
+- Doxygen comments (comments only) across the owned `src/xverse/xcom/include/xverse/xcom/*.hpp`,
+  `src/xverse/xcom/src/*.cpp`, and `src/xverse/xcom/fixtures/*`, completing the public-surface and file-block
+  obligations; no compiled token, signature, type, default, or expected value changes.
+- `Doxyfile` — add the missing alias definition(s) (notably `bounds`) so the repository-wide route the
+  trusted Phase 8 validation measure runs is warning-free under `WARN_AS_ERROR = YES`.
+- `scripts/check_doxygen.py` — a strict C++-scoped mode that fails closed on an undocumented declaration, a
+  missing mandatory tag, or any warning.
+- `reports/xcom-queue/t037-doxygen.json` — the exact-candidate report with `command`, `warnings`, `output`,
+  the environment identity, hashes, and the candidate identity.
+- `engineering/trace/links.json` and inherited `engineering/stage-results/*.json` digest refresh (every
+  edited-artifact `implemented_by` pin); `engineering/project.json` current-task pointer; the T037 checkbox
+  line in `specs/007-xcom-core/tasks.md` (implementation stage only); `reports/xcom-queue/t037-package.json`;
+  `docs/engineering/xcom/t037/{implementation.md,internal-review.json}`.
+
+## Verification state and open limitations
+
+- Trusted measures and the delivery matrix are executed by the workflow gates after implementation; this
+  index does not claim they passed.
+- **L-T037-1 (measured baseline gap).** The plan stage measured, read-only, that the accepted repository-wide
+  `doxygen Doxyfile` route **fails closed** under `WARN_AS_ERROR = YES` (dominated by 104
+  `Found unknown command '@bounds'` diagnostics across 49 admitted inputs) and that the strict C++-scoped
+  probe over `src/xverse/xcom` reports 111 warning lines concentrated in `activation_plan.hpp` (86) and
+  `tool_gateway.hpp` (20). These are the obligations T037 must close; they are plan-stage measurements, not
+  implementation results.
+- **L-T037-2 (strict C++ scope).** The accepted repository-wide route also covers out-of-scope Python and test
+  inputs that cannot be forced to declaration-level strictness without out-of-scope edits; the strict
+  declaration-level coverage is therefore scoped to the owned C++ inputs (`DOX-GAP-01`, `DOX-GAP-03`).
+- **L-T037-3 (inherited Python findings).** `scripts/check_doxygen.py --coverage-only` fails
+  **pre-existing** on Python docstrings in unchanged `scripts/**` and `src/xverse_xdl/**` files
+  (`T013-LIM-02`, `T022-LIM-08`, `T023-LIM-08`). T037 preserves that finding as an inherited limitation and
+  does not claim the Python coverage check passes.
+- **L-T037-4 (trace digest refresh).** T037 edits C++ headers and the Doxygen configuration/checker, so the
+  implementation stage must refresh every edited-artifact `implemented_by` pin in `engineering/trace/links.json`
+  (and the inherited `engineering/project.json` pins); the plan-stage pins are plan-time only (`T037-OPEN-03`).
+- **L-T037-5 (no T010 path reconciliation).** Unlike `docs/engineering/xcom/t036/`,
+  `docs/engineering/xcom/t037/` was not declared as a planned artifact path in the T010 unit design, so no
+  planned→established path-status reconciliation is performed (`T037-OPEN-07`).
+- **L-T037-6 (deferred external review).** External Codex review and explicit user acceptance remain pending;
+  the reported DeepSeek stage model is `deepseek-v4-flash` as pinned by the workflow.
+
+## T037 implementation stage — completed comments, strict route, and evidence report
+
+`verdict: awaiting_external_review` — the candidate realizes the plan-stage design. Local results recorded
+here are implementation-stage measurements, not acceptance, and no T038/T039/T040/T041 result is claimed.
+
+- **Owned C++ documentation (comments only).** 27 of the 35 owned `src/xverse/xcom` C++ headers, sources, and
+  fixtures changed for Doxygen comments only: the 86 undocumented `activation_plan.hpp` plan members, the
+  `tool_gateway.hpp` session/endpoint parameter and return gaps, the `stimulation_actions.hpp`
+  `reserve_emission`/`journal_and_emit` gaps, the `validation_session.hpp` `Permit` assignment returns, the
+  `loopback_provider.hpp`/`synthetic_provider.hpp` private override documentation, the `synthetic_tool.cpp`
+  move-constructor parameter, and the mandatory `@file`/`@brief`/`@ingroup` file block on every owned C++
+  file. No compiled token, signature, type, default, control-flow decision, contract, or expected value
+  changed.
+- **`Doxyfile`.** Added the missing `bounds` contract alias (`ALIASES += bounds="\par Bounds:"`); the
+  repository-wide `doxygen Doxyfile` route the trusted Phase 8 validation measure runs is now warning-free
+  under `WARN_AS_ERROR = YES`.
+- **`scripts/check_doxygen.py`.** Added `--strict-cpp` (strict C++-scoped zero-warning generation plus the
+  mandatory-file-block coverage gate, fail-closed) and `--report reports/xcom-queue/t037-doxygen.json`
+  (executes both routes and writes the exact-candidate evidence report). The preserved default,
+  `--coverage-only`, and `--self-test` behavior is unchanged; `--self-test` additionally proves the
+  file-block gate rejects a synthetic undocumented header.
+- **`reports/xcom-queue/t037-doxygen.json`.** The task-owned evidence report records `command`, `warnings`
+  (`count: 0`), `output`, the resolved environment identity, the `strict_cpp` result, artifact `hashes`, and the
+  exact-candidate material identity.
+- **Trace and governance.** `engineering/trace/links.json` refreshed 57 stale `implemented_by` digest pins for
+  the edited artifacts (the plan-stage T037 links remain); `engineering/project.json` carries the current-task
+  pointer; the one-line T037 checkbox in `specs/007-xcom-core/tasks.md` is marked complete at implementation
+  only.
+
+Measured results (exact candidate, local/offline):
+
+| Route | Result |
+| --- | --- |
+| `doxygen Doxyfile` with `WARN_AS_ERROR = YES` (repository-wide) | exit `0`; `0` warnings; HTML and XML indexes generated |
+| `python3 scripts/check_doxygen.py --strict-cpp` (`INPUT = src/xverse/xcom`) | exit `0`; `33` indexed files; `0` warnings; `0` coverage gaps |
+| `python3 scripts/check_doxygen.py --report reports/xcom-queue/t037-doxygen.json` | exit `0`; report written with `warnings.count = 0` |
+
+Open limitations are unchanged: the repository-wide route keeps `WARN_IF_UNDOCUMENTED = NO` and
+`WARN_NO_PARAMDOC = NO` because it also covers out-of-scope Python and test inputs (L-T037-2); the inherited
+Python docstring findings remain (L-T037-3); and external review/acceptance remain deferred (L-T037-6).

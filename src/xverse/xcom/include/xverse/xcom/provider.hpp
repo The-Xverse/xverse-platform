@@ -1,5 +1,6 @@
 /**
  * @file provider.hpp
+ * @ingroup xcom_core
  * @brief Explicit source-linked X-COM provider composition contracts.
  * @ownership Public values own their data. ProviderComposition retains non-owning provider pointers;
  * registered providers must outlive it and every handle it issued.

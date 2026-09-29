@@ -249,6 +249,7 @@ class LocalClientChannel final {
     }
   }
   /// @brief Move construction transfers descriptor ownership.
+  /// @param other Source channel whose descriptor ownership is transferred.
   LocalClientChannel(LocalClientChannel &&other) noexcept : fd_(other.fd_) { other.fd_ = -1; }
   /// @brief Copy construction is deleted; the channel owns a unique descriptor.
   LocalClientChannel(const LocalClientChannel &) = delete;

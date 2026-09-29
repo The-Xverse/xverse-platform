@@ -1,0 +1,48 @@
+{
+  "component_id": "T037-SR-008-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-008-U",
+  "inputs": [
+    "the executed command set and the committed artifacts"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "no network, DNS, TLS, legacy binary, production workload, or added dependency"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the forbidden-resource and dependency verdict"
+  ],
+  "purpose": "No T037 command shall open a TCP listener or AF_INET/AF_INET6 socket, use DNS, a resolver, or TLS, contact an external peer, execute a legacy binary or production workload, or add an admitted dependency.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "docs/engineering/xcom/t037/architecture.md"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-008-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-008-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T034VersionRejection.RejectionEmitsNothing",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

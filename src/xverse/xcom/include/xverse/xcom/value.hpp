@@ -1,5 +1,6 @@
 /**
  * @file value.hpp
+ * @ingroup xcom_core
  * @brief Fixed-capacity, value-owned primitives used by the X-COM core model.
  * @ownership Each value owns its text or bytes; no caller-owned view is retained.
  * @lifetime Returned views remain valid until the owning value is destroyed.

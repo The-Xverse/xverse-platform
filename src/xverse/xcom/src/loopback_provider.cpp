@@ -1,5 +1,6 @@
 /**
  * @file loopback_provider.cpp
+ * @ingroup xcom_core
  * @brief Serialized fixed-array loopback route and reject-new FIFO mechanics.
  * @ownership Route bindings and queued items are copied into provider-owned fixed storage.
  * @lifetime Queue removal returns an independent owned CommunicationItem copy.

@@ -878,6 +878,9 @@ public:
 
   /// \brief Atomically reserves emission for the exact owning request.
   /// A reserved slot cannot be reused until finish_emission, even if released meanwhile.
+  /// \param key Session, endpoint generation, and plan bound to the lease.
+  /// \param request_id Owning request identity.
+  /// \return `true` when the reservation was created; `false` when no matching lease/owner exists.
   [[nodiscard]] bool reserve_emission(const EndpointGeneration &key, std::uint64_t request_id);
   /// \brief Ends the exact request's emission reservation under the lease mutex.
   /// \param key Session, endpoint generation, and plan bound to the lease.
@@ -1105,6 +1108,7 @@ private:
                                       std::size_t &index) const;
 
   /// \brief Journals the intent durably and emits once; called with the mutex released.
+  /// \param lock Held action-path lock, released around the host emission.
   /// \param intent Bounded intent.
   /// \param payload Call-scoped payload view.
   /// \param observed_domain Domain containing the observed completion timestamp.

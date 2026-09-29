@@ -1,5 +1,6 @@
 /**
  * @file synthetic_provider.cpp
+ * @ingroup xcom_gw
  * @brief T034 independently written fixed-array route and reject-new FIFO mechanics for the second
  *        minimal synthetic provider.
  * @ownership Route bindings, provider-local tokens, and queued items are copied into this fixture's

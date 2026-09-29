@@ -1,5 +1,6 @@
 /**
  * @file contract.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free contract and flow-policy validation with interaction compatibility.
  * @ownership Successful contracts own copied values; failures own fixed diagnostics.
  * @lifetime No caller-provided view is retained after construction.

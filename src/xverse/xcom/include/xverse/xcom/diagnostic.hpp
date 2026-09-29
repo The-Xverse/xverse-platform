@@ -1,5 +1,6 @@
 /**
  * @file diagnostic.hpp
+ * @ingroup xcom_core
  * @brief Stable fixed-capacity diagnostics for core value validation.
  * @ownership Diagnostics and sets own every reported byte.
  * @lifetime Returned views remain valid until their diagnostic owner is destroyed.

@@ -1,3 +1,9 @@
+/**
+ * \file activation_plan.cpp
+ * \brief Bounded X-COM activation_plan implementation unit.
+ * \ingroup xcom_xdl
+ */
+
 // Bounded, immutable C++ decoder for the canonical X-COM activation-plan v1 artifact.
 //
 // Implements the T019 units: bounded strict parse (U-01), closed shape/vocabulary (U-02),
@@ -1434,6 +1440,9 @@ std::string domain_separator() {
 
 }  // namespace
 
+/// @brief True iff every `DecodeLimits` member is >= 1.
+/// @param limits Bounded decode limits to validate.
+/// @return `true` iff every member is >= 1.
 bool is_valid(const DecodeLimits& limits) noexcept {
   return limits.max_bytes >= 1u && limits.max_depth >= 1u && limits.max_nodes >= 1u &&
          limits.max_string_length >= 1u && limits.max_contracts >= 1u &&
@@ -1443,6 +1452,9 @@ bool is_valid(const DecodeLimits& limits) noexcept {
          limits.max_provenance_resources >= 1u;
 }
 
+/// @brief Lowercase-hex SHA-256 of the given bytes.
+/// @param bytes Bytes to digest.
+/// @return Lowercase-hex SHA-256 digest.
 std::string sha256_hex(std::string_view bytes) {
   const std::array<std::uint8_t, 32> digest = sha256_bytes(bytes);
   static constexpr char kHex[] = "0123456789abcdef";
@@ -1455,6 +1467,10 @@ std::string sha256_hex(std::string_view bytes) {
   return out;
 }
 
+/// @brief Canonical bytes of the digested region (the plan value minus the top-level `digest`).
+/// @param document_json Caller-supplied plan document bytes.
+/// @param limits Bounded decode limits applied to the document.
+/// @return Canonical digested-region bytes, or a rejected/failed result with an empty value.
 BytesResult canonical_plan_body_bytes(std::string_view document_json, const DecodeLimits& limits) {
   json plan;
   DecodeError err;
@@ -1474,6 +1490,10 @@ BytesResult canonical_plan_body_bytes(std::string_view document_json, const Deco
   return result;
 }
 
+/// @brief Recomputed domain-separated SHA-256 hex of the plan body.
+/// @param document_json Caller-supplied plan document bytes.
+/// @param limits Bounded decode limits applied to the document.
+/// @return Recomputed digest bytes, or a rejected/failed result with an empty value.
 BytesResult recompute_plan_digest(std::string_view document_json, const DecodeLimits& limits) {
   const BytesResult body = canonical_plan_body_bytes(document_json, limits);
   if (body.outcome != DecodeOutcome::accepted) {
@@ -1485,6 +1505,10 @@ BytesResult recompute_plan_digest(std::string_view document_json, const DecodeLi
   return result;
 }
 
+/// @brief Bounded decode with independent version/digest/capability verification.
+/// @param document_json Caller-supplied plan document bytes.
+/// @param limits Bounded decode limits applied to the document.
+/// @return The accepted decoded plan, or a rejected/failed result with a stable code and no plan.
 DecodeResult decode_activation_plan(std::string_view document_json, const DecodeLimits& limits) {
   json plan;
   DecodeError err;

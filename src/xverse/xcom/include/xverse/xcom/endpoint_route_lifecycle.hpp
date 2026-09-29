@@ -1,5 +1,6 @@
 /**
  * @file endpoint_route_lifecycle.hpp
+ * @ingroup xcom_core
  * @brief Fixed-capacity endpoint and route lifecycle control plane.
  * @ownership Public values own all data; the controller exclusively owns its fixed records.
  * @lifetime Value accessor views live with their owner; handles are usable only with their issuing

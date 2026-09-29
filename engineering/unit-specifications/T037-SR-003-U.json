@@ -1,0 +1,49 @@
+{
+  "component_id": "T037-SR-003-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-003-U",
+  "inputs": [
+    "the admitted repository inputs and the Doxyfile alias set"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "every admitted-input command is defined",
+    "the route is warning-free under WARN_AS_ERROR"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the repository-route exit status and warning log"
+  ],
+  "purpose": "Doxyfile shall define every command used by the admitted inputs, including the bounds alias, and the repository-wide Doxygen generation route shall complete warning-free under WARN_AS_ERROR = YES.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "Doxyfile"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-003-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-003-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "T20OrderingEquivalence.ReorderedDocumentSameOutcomeAndDecodedValue",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

@@ -1,21 +1,30 @@
 {
   "assurance_profile": "engineered",
   "authority": {
-    "baseline_revision": "8ec69ddd34ed8c7a07adbcb631dcfb2da3faf15f",
+    "baseline_revision": "8757a79d4e6b2630124d774fcba2a55d6342a879",
     "baseline_status": "accepted",
-    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T036 adds a benchmark harness and evidence only: it changes no accepted production source, header, contract, schema, register, test, or accepted benchmark fixture, and no accepted predecessor work product.",
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design and doxygen_plan, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T037 changes documentation comments, the Doxygen configuration, and the documentation checker only: it changes no compiled behavior, no accepted test, and no accepted predecessor work product beyond additive records.",
     "protected_paths": [
       "src/xverse_xdl/**",
-      "scripts/**",
       "xdl/**",
-      "Doxyfile",
       "proto/xverse/xcom/v1/tool_gateway.proto",
-      "src/xverse/xcom/include/**",
-      "src/xverse/xcom/src/**",
       "src/xverse/xcom/contracts/**",
-      "src/xverse/xcom/fixtures/**",
       "tests/xcom/**",
       "tests/test_xcom_plan.py",
+      "scripts/validate_xcom_*.py",
+      "scripts/xcom_dependency_preflight.py",
+      "docs/engineering/xcom/task-ownership.json",
+      "docs/engineering/xcom/task-ownership.md",
+      "docs/engineering/xcom/t007/**",
+      "docs/engineering/xcom/t008/**",
+      "docs/engineering/xcom/t009/**",
+      "docs/engineering/xcom/t010/**",
+      "docs/engineering/xcom/t011/**",
+      "docs/engineering/xcom/t012/**",
+      "docs/engineering/xcom/t013/**",
+      "docs/engineering/xcom/t014/**",
+      "docs/engineering/xcom/t015/**",
+      "docs/engineering/xcom/t016/**",
       "docs/engineering/xcom/t017/**",
       "docs/engineering/xcom/t018/**",
       "docs/engineering/xcom/t019/**",
@@ -34,17 +43,20 @@
       "docs/engineering/xcom/t032/**",
       "docs/engineering/xcom/t033/**",
       "docs/engineering/xcom/t034/**",
-      "docs/engineering/xcom/t035/**"
+      "docs/engineering/xcom/t035/**",
+      "docs/engineering/xcom/t036/**",
+      "engineering/verification/measures/**"
     ]
   },
   "feature": {
     "capability": "007",
     "predecessors": [
-      "T035"
+      "T035",
+      "T036"
     ],
     "queue_id": "xcom-t030-t034-20260928",
     "queued_run": null,
-    "task_id": "T036"
+    "task_id": "T037"
   },
   "languages": [
     "C++20",
@@ -52,31 +64,31 @@
   ],
   "project_id": "xverse-platform",
   "reliability": {
-    "basis": "Deterministic offline controlled-benchmark runs over the accepted owned loopback and observation boundaries in the admitted X-COM build envelope, with each case's outcome derived from controlled repeated paired samples and bound to the exact candidate revision."
+    "basis": "Deterministic offline Doxygen coverage and generation over the owned X-COM C/C++ public interface in the admitted build envelope, with each check's outcome derived from executed coverage/generation and bound to the exact candidate revision."
   },
   "schema_version": 1,
   "scope": {
     "boundaries": [
-      "Bounded capability-007 Phase 8 benchmark scope: the T036 work products, the T036 engineering requirement/component/unit/validation records, the new benchmark harness engineering/run_xcom_benchmarks.py, the exact-candidate benchmark report reports/xcom-queue/t036-benchmark.json, and the additive T036 trace links.",
-      "No change to any accepted production source, header, contract, schema, register, XDL profile, T030 contract, T031/T032 gateway/client, T033/T034 suite, or accepted test/benchmark fixture; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
-      "T036 changes are limited to docs/engineering/xcom/t036/**, engineering/run_xcom_benchmarks.py, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T036 records, engineering/trace/links.json, engineering/project.json, reports/review-index.md, reports/xcom-queue/t036-benchmark.json, and the one-line T036 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
+      "Bounded capability-007 Phase 8 documentation scope: the T037 work products, the T037 requirement/component/unit/validation records, Doxygen comments in the owned src/xverse/xcom C/C++ inputs, the Doxyfile configuration, scripts/check_doxygen.py, the exact-candidate Doxygen report reports/xcom-queue/t037-doxygen.json, and the additive T037 trace links.",
+      "No change to any compiled statement, signature, type, default, control-flow decision, accepted test, target, label, command, expected value, contract, schema, register, or XDL profile; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
+      "T037 changes are limited to docs/engineering/xcom/t037/**, the Doxygen comments in src/xverse/xcom/**, Doxyfile, scripts/check_doxygen.py, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T037 records, engineering/trace/links.json, engineering/project.json, reports/review-index.md, reports/xcom-queue/t037-doxygen.json, and the one-line T037 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
     ],
-    "intended_use": "Run controlled disabled/enabled observation-tap benchmarks over the accepted owned loopback workload and record environment, uncertainty, baseline, disabled-tap, enabled-tap, and explicit non-production limitations in repository-owned evidence bound to the exact candidate revision, without changing any accepted production source or test and without claiming Doxygen, traceability-verifier, external-review, or acceptance results owned by T037-T041.",
+    "intended_use": "Complete the Doxygen documentation of the owned X-COM C/C++ public interface and generate warning-free reference documentation (HTML/XML), retaining command, warnings, output, environment, and exact-candidate evidence, without changing any compiled behavior or accepted test and without claiming the T038 traceability-verifier or T039-T041 review/acceptance results.",
     "success_criteria": [
-      "Every accepted T036 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
-      "The harness measures the disabled (same-baseline) and enabled observation-tap cases over the same owned loopback workload with controlled repeated paired samples, records the per-case uncertainty, and gates the tap-disabled regression against the same owned-loopback baseline with the accepted 2% median threshold while recording the enabled-tap regression only as an ungated observation.",
-      "reports/xcom-queue/t036-benchmark.json records environment, uncertainty, baseline, tap_disabled, tap_enabled, raw samples, method, limitations, hashes, and exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
+      "Every accepted T037 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
+      "Every owned public C/C++ declaration is documented and every owned file carries the mandatory file block; the strict C++-scoped configuration returns zero warnings and zero coverage gaps.",
+      "The repository-wide Doxyfile route is warning-free under WARN_AS_ERROR = YES, and reports/xcom-queue/t037-doxygen.json records command, warnings, output, environment, hashes, and the exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
       "Independent review and strict delivery validation bind the exact candidate before acceptance."
     ],
     "users": [
       "X-Verse platform engineer",
-      "X-COM performance engineer"
+      "X-COM maintainer"
     ]
   },
   "targets": [
     "xverse-platform"
   ],
-  "title": "T036 controlled disabled/enabled-tap X-COM benchmarks and repository-owned results",
+  "title": "T037 complete Doxygen comments and warning-free generated reference documentation",
   "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T036 neither defines nor replaces them and is exercised by the validation measure through engineering/run_xcom_benchmarks.py --verify."
+  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T037 neither defines nor replaces them and is exercised by the validation measure through the warning-free Doxygen generation route."
 }

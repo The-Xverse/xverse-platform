@@ -1,5 +1,6 @@
 /**
  * @file observation.cpp
+ * @ingroup xcom_obs
  * @brief Fixed-storage implementation of the provider-neutral observation boundary.
  * @ownership Hub slots retain value-owned policies and records only.
  * @lifetime All returned records/snapshots are copied after serialized state access.

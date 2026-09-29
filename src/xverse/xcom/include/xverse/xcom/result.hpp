@@ -1,5 +1,6 @@
 /**
  * @file result.hpp
+ * @ingroup xcom_core
  * @brief Exclusive immutable success-or-diagnostics result for validated construction.
  * @ownership A result owns either its value or its non-empty diagnostic set.
  * @lifetime Accessor pointers remain valid until the owning result is destroyed.

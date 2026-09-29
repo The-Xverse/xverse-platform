@@ -1,5 +1,6 @@
 /**
  * @file diagnostic.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free diagnostic construction, ordering, and owned storage.
  * @ownership All accepted text is copied into fixed-capacity immutable values.
  * @lifetime No caller view is retained after creation.

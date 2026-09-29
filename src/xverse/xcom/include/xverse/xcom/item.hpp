@@ -1,5 +1,6 @@
 /**
  * @file item.hpp
+ * @ingroup xcom_core
  * @brief Immutable bounded communication-item metadata and payload.
  * @ownership Items own all metadata and payload bytes.
  * @lifetime Accessor references and views remain valid while the item lives.

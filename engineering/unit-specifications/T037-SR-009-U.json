@@ -1,0 +1,51 @@
+{
+  "component_id": "T037-SR-009-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-009-U",
+  "inputs": [
+    "the T007-T010 models, the accepted registers, and the candidate trace"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "registers unchanged in substance",
+    "REF-002 unchanged with an empty promoted list",
+    "no stale hash pin after the implementation refresh"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the validator verdict, recorded maturity, and trace verdict"
+  ],
+  "purpose": "T037 shall reconcile with the T007 ownership register, the T008 register, the T009 architecture model, and the T010 unit design without rewriting or weakening them; shall keep the REF-002 disposition unchanged with an empty promoted list; shall record T037 as implemented while T038-T041 remain allocated; and shall satisfy the deterministic Phase 8 gate and the required trace links with every edited-artifact pin refreshed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "engineering/project.json",
+    "docs/engineering/xcom/t037/requirements.md"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-009-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-009-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "CoreMatrixRecovery.Reconcile_MismatchReportsInterruptedResource",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

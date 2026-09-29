@@ -235,8 +235,11 @@ class LocalIpcEndpoint final {
   /// @brief Destructor; closes the descriptor and unlinks the bound socket path.
   ~LocalIpcEndpoint();
   /// @brief Move construction transfers descriptor ownership.
+  /// @param other Source endpoint whose descriptor ownership is transferred.
   LocalIpcEndpoint(LocalIpcEndpoint &&other) noexcept;
   /// @brief Move assignment releases any held descriptor and takes ownership.
+  /// @param other Source endpoint whose descriptor ownership is transferred.
+  /// @return This endpoint after taking ownership.
   LocalIpcEndpoint &operator=(LocalIpcEndpoint &&other) noexcept;
   /// @brief Copy construction is deleted; the endpoint owns a unique descriptor.
   LocalIpcEndpoint(const LocalIpcEndpoint &) = delete;
@@ -447,6 +450,8 @@ class GatewaySession final {
   [[nodiscard]] v1::QueryVersionResponse QueryVersion(const v1::QueryVersionRequest &request) noexcept;
 
   /// @brief Opens one bounded observation stream.
+  /// @param request Bounded open request.
+  /// @return The bounded observation stream handle, or a declining diagnostic.
   [[nodiscard]] v1::OpenObservationResponse
   OpenObservation(const v1::OpenObservationRequest &request) noexcept;
 
@@ -458,29 +463,43 @@ class GatewaySession final {
                                              std::span<v1::ObservationRecord> out) noexcept;
 
   /// @brief Closes one bounded observation stream and returns delivered/dropped counters.
+  /// @param request Bounded close request.
+  /// @return The bounded delivered/dropped counters, or a declining diagnostic.
   [[nodiscard]] v1::CloseObservationResponse
   CloseObservation(const v1::CloseObservationRequest &request) noexcept;
 
   /// @brief Arms one validation session under the exact accepted permit.
+  /// @param request Bounded arm request carrying the exact permit.
+  /// @return The bounded arming result, or a declining diagnostic.
   [[nodiscard]] v1::ArmSessionResponse ArmSession(const v1::ArmSessionRequest &request) noexcept;
 
   /// @brief Revokes one validation session; revocation is terminal.
+  /// @param request Bounded revoke request.
+  /// @return The bounded terminal revocation result, or a declining diagnostic.
   [[nodiscard]] v1::RevokeSessionResponse
   RevokeSession(const v1::RevokeSessionRequest &request) noexcept;
 
   /// @brief Submits one bounded stimulation action through the accepted action path.
+  /// @param request Bounded stimulation request.
+  /// @return The bounded emission/outcome result, or a declining diagnostic.
   [[nodiscard]] v1::SubmitStimulationResponse
   SubmitStimulation(const v1::SubmitStimulationRequest &request) noexcept;
 
   /// @brief Acquires one exclusive generation-bound service-emulation lease.
+  /// @param request Bounded lease-acquire request.
+  /// @return The bounded lease result, or a declining diagnostic.
   [[nodiscard]] v1::AcquireLeaseResponse
   AcquireLease(const v1::AcquireLeaseRequest &request) noexcept;
 
   /// @brief Releases one held service-emulation lease.
+  /// @param request Bounded lease-release request.
+  /// @return The bounded lease-release result, or a declining diagnostic.
   [[nodiscard]] v1::ReleaseLeaseResponse
   ReleaseLease(const v1::ReleaseLeaseRequest &request) noexcept;
 
   /// @brief Queries bounded session state and finite counters.
+  /// @param request Bounded query request.
+  /// @return The bounded session state and counters, or a declining diagnostic.
   [[nodiscard]] v1::QuerySessionResponse
   QuerySession(const v1::QuerySessionRequest &request) noexcept;
 
@@ -492,6 +511,7 @@ class GatewaySession final {
   void on_idle_tick(validation::Timestamp now) noexcept;
 
   /// @brief Whether the bounded in-flight/rate budget admitted the most recent request.
+  /// @return `true` when the most recent request was admitted within the bounded budget.
   [[nodiscard]] bool flow_tokens_available() const noexcept;
 
   /// @brief Returns an immutable bounded snapshot of the session's own bookkeeping.

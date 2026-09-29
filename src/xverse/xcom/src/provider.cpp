@@ -1,5 +1,6 @@
 /**
  * @file provider.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free descriptor validation and explicit provider dispatch.
  * @ownership Accepted descriptors, registrations, bindings, and results are copied by value.
  * @lifetime The registry retains caller-owned provider addresses until registry destruction.

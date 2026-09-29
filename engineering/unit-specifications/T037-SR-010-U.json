@@ -1,0 +1,48 @@
+{
+  "component_id": "T037-SR-010-CMP",
+  "concurrency": "single documentation user; single-threaded tooling",
+  "errors": [
+    "documentation check failure",
+    "declared failed or blocked check outcome"
+  ],
+  "id": "T037-SR-010-U",
+  "inputs": [
+    "the checker checks and the generated output"
+  ],
+  "interfaces": [
+    "reports/xcom-queue/t037-doxygen.json",
+    "Doxyfile",
+    "scripts/check_doxygen.py"
+  ],
+  "invariants": [
+    "a missing comment or any warning yields a nonzero exit"
+  ],
+  "note": "Cases are contributory already-discovered accepted cases plus the task-owned documentation route; the configuration, checker, and report are the evidence and the exact acceptance decision remains T039/T041.",
+  "outputs": [
+    "the checker exit status"
+  ],
+  "purpose": "The task-owned documentation checker shall fail closed, exiting nonzero, when an owned public declaration is undocumented, a mandatory contract tag is absent, or the strict generation emits a warning; it shall exit zero only for a complete, warning-free result.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "scripts/check_doxygen.py"
+  ],
+  "state": "one bounded documentation check or evidence inspection",
+  "static_checks": [
+    {
+      "expected": "no compiler or warning-as-error diagnostic and the declared evidence is present",
+      "id": "T037-SR-010-U-STATIC",
+      "rule": "the accepted platform builds warning-as-error and the T037 configuration/checker/report are present at the candidate revision",
+      "tool": "admitted offline C++20 build and repository evidence inspection"
+    }
+  ],
+  "title": "T037-SR-010-U documentation verification",
+  "unit_cases": [
+    {
+      "expected": "pass",
+      "id": "CoreMatrixNegative.Neg09_UnsupportedContractVersion_RejectedBeforeDispatch",
+      "precondition": "the accepted owned-source build exists at the exact candidate revision in the admitted offline envelope",
+      "stimulus": "run the named accepted case or the T037 documentation route as part of the check"
+    }
+  ]
+}

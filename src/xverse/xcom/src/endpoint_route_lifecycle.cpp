@@ -1,5 +1,6 @@
 /**
  * @file endpoint_route_lifecycle.cpp
+ * @ingroup xcom_core
  * @brief Allocation-free declarations and serialized fixed-record lifecycle operations.
  * @ownership Accepted inputs are copied into values or controller-owned fixed records.
  * @lifetime No caller view or reference is retained after an operation returns.

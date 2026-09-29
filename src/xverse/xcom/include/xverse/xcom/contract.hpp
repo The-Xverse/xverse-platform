@@ -1,5 +1,6 @@
 /**
  * @file contract.hpp
+ * @ingroup xcom_core
  * @brief Immutable domain-neutral communication contract and flow-policy values.
  * @ownership Contracts copy and own every identifier and version.
  * @lifetime Accessor views remain valid while the contract lives.
