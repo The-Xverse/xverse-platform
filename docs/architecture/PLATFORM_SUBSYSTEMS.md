@@ -32,7 +32,7 @@ xverse-platform/
 | Name | Responsibility target | Current maturity |
 |---|---|---|
 | Maestro | Plan and coordinate declared lifecycle actions and experiments. | Architectural target; early M3 lifecycle mechanics currently remain in `xverse_xdl`. |
-| X-COM | Realize declared communication semantics through explicit provider/protocol bindings; expose controlled observation and stimulation boundaries for validation tools. | Next platform-first capability; no X-COM runtime exists. |
+| X-COM | Realize declared communication semantics through explicit provider/protocol bindings; expose controlled observation and stimulation boundaries for validation tools. | Accepted bounded prototype in `src/xverse/xcom`: the implemented capability 007 communication, observation, stimulation, and local-IPC/gRPC tool-gateway boundaries, with the sealed gateway acceptance recorded in `specs/007-xcom-core/tasks.md` and the recorded F01–F09 qualifications and limitations. The generic platform core/runtime, Maestro, Argus, simulation/FMI, devices, security, results, UI/SDK/CLI, production readiness, and legacy compatibility remain distinct architectural targets. |
 | Argus | Collect, store/export, query, and visualize declared observations and experiment evidence, including X-COM tap streams. | Architectural target; M3 evidence journaling is a precursor, not Argus. |
 
 The current `xverse_xdl` API is pinned by the M3 compatibility conformance package. Moving its catalog,

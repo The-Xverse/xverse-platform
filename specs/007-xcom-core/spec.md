@@ -6,6 +6,13 @@
 
 **Status**: Design accepted and bounded prototype implementation authorized on 2026-09-21
 
+**Status addendum (2026-09-30)**: The capability 007 prototype implementation was accepted and
+delivered to `xverse-platform/main` at `48e85051a419fe1c193afaa47cef40b1e7457fdf` (T039–T041 complete
+for that accepted gateway baseline). This addendum is status information only; it changes no accepted
+normative requirement, classification, or human-projection matrix, and the documentation/evidence
+reconciliation recorded in `docs/engineering/xcom/t038/delivery-reconciliation.md` is a separate
+successor candidate that still requires its own review and explicit acceptance.
+
 **Input**: Implement the main X-Verse platform before legacy integration. Define X-COM as a
 domain-neutral, performance-oriented communication core with common external-tool stimulation and
 observation interfaces for node and system validation, plus pluggable monitoring for later dashboards.

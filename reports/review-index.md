@@ -1235,3 +1235,38 @@ task-owned verifier (additive), not any accepted artifact.
 Open limitations are unchanged: mechanical public-safety classes only (L-T038-2); the T035/T036/T037 deliverables
 are consumed read-only (L-T038-3); the accepted register maturities are recorded honestly and not rewritten
 (L-T038-4); and external review/acceptance remain deferred (L-T038-5/L-T038-6).
+
+# X-COM baseline delivery projection — accepted gateway baseline (2026-09-30)
+
+This section is appended as current index context for the accepted gateway delivery. Every T020 and
+T030–T038 section above is retained as historical predecessor evidence for its own candidate revision
+and is not rewritten or replaced by a fresh execution claim.
+
+The reviewed candidate `48e85051a419fe1c193afaa47cef40b1e7457fdf` was independently reviewed (T039,
+`docs/reviews/t039-r6-independent-review-2026-09-30.md`), its evidence bundle was terminally inspected
+(T040, `docs/reviews/t040-r6-terminal-inspection-2026-09-30.md`), the user explicitly approved it (T041,
+`automation/reviews/t041-gateway-repair-acceptance-20260930/approval.json`), and it was delivered to
+`xverse-platform/main` at that same commit
+(`automation/reviews/t041-gateway-repair-acceptance-20260930/delivery/delivery.json` and
+`docs/reviews/t041-gateway-repair-delivery-2026-09-30.md`). External tasks T039 and T040 are `completed`
+and T041 is `accepted_and_delivered` for that baseline.
+
+A portable, explicitly **DERIVED** projection of those sealed originals is maintained at
+`docs/engineering/xcom/accepted-delivery-20260930/projection.json` (with `README.md`); the bounded
+reconciliation record is `docs/engineering/xcom/t038/delivery-reconciliation.md`. The projection's
+`acceptance_attestation_scope` is `accepted_gateway_baseline_only`: it attests the accepted gateway
+baseline only and does not accept or merge any later documentation successor. The capability 007 task
+projection in `specs/007-xcom-core/tasks.md` now shows T039–T041 complete for this baseline, with the
+pre-acceptance R2–R6 statements retained under an explicit historical label.
+
+The current T036 benchmark, T037 Doxygen, and T038 traceability reports are regenerated to bind the
+current documentation successor material identity; the accepted gateway runtime, tests, proto, build
+inputs, and all historical baseline evidence remain bound to their original identities. The retained
+limitations (logical watch association rather than OS peer authentication; callback-dependent
+post-100 ms-grace shutdown; volatile lease identity versus durable recorded stimulation outcomes;
+unknown absent outcome with no implicit retry; full owned compiler sanitizer coverage with the admitted
+prebuilt gRPC ABI qualification; the `T037-OPEN-06` global Python docstring limitation; the qualified
+predecessor conformance replay; and the measured disabled/enabled-tap benchmark scope) remain
+accurately recorded. No production-readiness, deployed-service, legacy-compatibility, parity, or
+certification claim is made. This documentation/evidence reconciliation is itself a separate successor
+candidate and still requires its own review and explicit acceptance before it is accepted or merged.

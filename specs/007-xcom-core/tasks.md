@@ -108,16 +108,33 @@ and predecessor regression evidence retained.
 - [X] T037 Add complete Doxygen comments and generate warning-free reference documentation.
 - [X] T038 Validate Spec Kit plus REF-002 requirements/design/code/test traceability and public-safe
   logs/evidence; do not promote allocated or deferred SADS targets without proof.
-- [ ] T039 Conduct an independent read-only review in a separate context, record every finding before
+- [X] T039 Conduct an independent read-only review in a separate context, record every finding before
   repair, and disposition findings without weakening required acceptance criteria; any repair creates a
   successor candidate and repeats affected verification and review.
-- [ ] T040 Assemble and inspect the complete repository-owned exact-candidate work-product and evidence
+- [X] T040 Assemble and inspect the complete repository-owned exact-candidate work-product and evidence
   bundle, including traceability, dependency/generated-code provenance, command results, manifests, hashes,
   maintenance guidance, and limitations.
-- [ ] T041 Present the implemented software and inspected evidence bundle to the user and record explicit
+- [X] T041 Present the implemented software and inspected evidence bundle to the user and record explicit
   acceptance or rework.
 
-**Status (2026-09-30):** T038 remains the accepted-baseline delivery-envelope task (`engineering/project.json`
+**Current status — accepted baseline delivery (2026-09-30).** T039, T040, and T041 are complete for the
+accepted gateway baseline. The exact reviewed candidate `48e85051a419fe1c193afaa47cef40b1e7457fdf` was
+independently reviewed (T039), its evidence bundle was terminally inspected (T040), the user explicitly
+approved it with “approved” (T041), and it was delivered to `xverse-platform/main` at that same commit.
+A portable, explicitly DERIVED projection of the sealed originals is
+`docs/engineering/xcom/accepted-delivery-20260930/projection.json` (with its `README.md`); the bounded
+reconciliation record is `docs/engineering/xcom/t038/delivery-reconciliation.md`. The sealed originals are
+the independent review `docs/reviews/t039-r6-independent-review-2026-09-30.md`, the terminal inspection
+`docs/reviews/t040-r6-terminal-inspection-2026-09-30.md`, the approval receipt
+`automation/reviews/t041-gateway-repair-acceptance-20260930/approval.json`, the delivery receipt
+`automation/reviews/t041-gateway-repair-acceptance-20260930/delivery/delivery.json`, and the delivery report
+`docs/reviews/t041-gateway-repair-delivery-2026-09-30.md`. That projection attests the accepted gateway
+baseline only; it does not accept or merge any later documentation successor. This documentation/evidence
+reconciliation is itself a separate successor candidate and still requires its own review and explicit
+acceptance before it is accepted or merged.
+
+**Historical pre-acceptance status (2026-09-30, through R6; superseded by the accepted delivery above and
+retained as historical evidence).** T038 remains the accepted-baseline delivery-envelope task (`engineering/project.json`
 `task_id` stays `T038`). The T039 R2 independent review recorded `T039-F07` (major) and confirmed `T039-F01`–`T039-F06`
 as addressed within their stated qualifications; the T040 R2 audit recorded `T040-E01`–`T040-E03`. The T039 R3
 successor repaired `T039-F07` and reconciled `T040-E01`–`T040-E03`. The T039 R4 successor closed `T039-F08` and
@@ -125,9 +142,10 @@ preserved `T039-F01`–`T039-F07`; the R4 review required `T039-F09` complete ad
 evidence. The T039 R5 successor completed the `T039-F09` documentation and evidence obligations; its independent
 review preserved `T039-F01`–`T039-F08` and required three documented-precision corrections (`F09-R5-A` lease
 identity, `F09-R5-B` shutdown grace qualification, `F09-R5-C` change-identity wording), which the T039 R6
-documentation-precision successor records in `docs/engineering/xcom/t038/r6-repair.md`. No R2–R6 review or repair
-marks T039, T040, or T041 complete, and none accepts or merges the candidate. External T039/T040 inspection, the
-repeated affected verification, the separate review, and T041 explicit user acceptance remain open. Historical
+documentation-precision successor records in `docs/engineering/xcom/t038/r6-repair.md`. At that historical R6 point, no
+R2–R6 review or repair marked T039, T040, or T041 complete and none accepted or merged the candidate; external
+T039/T040 inspection, the repeated affected verification, the separate review, and T041 explicit user acceptance
+remained open, and were later closed by the sealed acceptance and delivery recorded above. Historical
 failed gates (the inherited T036 verifier report at the accepted revision, the direct Phase 6 Doxyfile-immutability
 script) are preserved as historical evidence and are not promoted to current passes; the authorized inherited
 Phase 6 replay is recorded separately.

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "kind": "derived_acceptance_delivery_projection",
+  "derived": true,
+  "accepted_candidate_revision": "48e85051a419fe1c193afaa47cef40b1e7457fdf",
+  "resulting_main_commit": "48e85051a419fe1c193afaa47cef40b1e7457fdf",
+  "user_approval": "approved",
+  "acceptance_attestation_scope": "accepted_gateway_baseline_only",
+  "external_tasks": {
+    "T039": "completed",
+    "T040": "completed",
+    "T041": "accepted_and_delivered"
+  },
+  "source_refs": {
+    "approval": {
+      "repository": "x-verse_fabric",
+      "path": "automation/reviews/t041-gateway-repair-acceptance-20260930/approval.json",
+      "sha256": "cb055c36b9cd4f730b14accf45d047c51c86d608c1d3cc80dc6195c5c67facdf"
+    },
+    "independent_review": {
+      "repository": "x-verse_fabric",
+      "path": "docs/reviews/t039-r6-independent-review-2026-09-30.md",
+      "sha256": "edb4e97fe42ba17d961673797690f2d89fa54af9e04c89502aaac1ccfd8150b0"
+    },
+    "independent_review_manifest": {
+      "repository": "x-verse_fabric",
+      "path": "automation/reviews/t039-r6-independent-review-20260930/manifest.json",
+      "sha256": "cac18b7d78b05fb43cec8228963b189aae5ecebd7d860b130b3ae4113e78ac4f"
+    },
+    "terminal_inspection": {
+      "repository": "x-verse_fabric",
+      "path": "docs/reviews/t040-r6-terminal-inspection-2026-09-30.md",
+      "sha256": "9ef2354c7f6c4d6cea1b15a89446cc8c858a838eb9ef278dbcbfc31d59f8900b"
+    },
+    "terminal_inspection_manifest": {
+      "repository": "x-verse_fabric",
+      "path": "automation/reviews/t040-r6-terminal-inspection-20260930/manifest.json",
+      "sha256": "0db9a2d68e2b54eccb464bdbf5b7a17b8aa21f36845d9cc9cafb1caa349fa25c"
+    },
+    "delivery": {
+      "repository": "x-verse_fabric",
+      "path": "automation/reviews/t041-gateway-repair-acceptance-20260930/delivery/delivery.json",
+      "sha256": "9db6ea5cc1f217c0e3ab4d9b30a0fc41a5b2e2b0d4c39e9f29147b4849c9b2c7"
+    },
+    "delivery_report": {
+      "repository": "x-verse_fabric",
+      "path": "docs/reviews/t041-gateway-repair-delivery-2026-09-30.md",
+      "sha256": "08c864440bac385ad7b9a551f113bdf6c33be172914d127bc88e5688b6c38022"
+    },
+    "delivery_manifest": {
+      "repository": "x-verse_fabric",
+      "path": "automation/reviews/t041-gateway-repair-acceptance-20260930/manifest.json",
+      "sha256": "095b9d3fe1e990cc50433f762444c9b453941b15d55701ad5402bf90b4d74e4e"
+    }
+  },
+  "projection_note": "This file is explicitly DERIVED. It is a portable, sanitized projection of the sealed original acceptance, review, inspection, and delivery records listed in source_refs; it is not an original source receipt and does not replace or override them. Each source_refs entry records the originating repository, the repository-relative path, and the frozen SHA-256 of the immutable original.",
+  "acceptance_scope_note": "acceptance_attestation_scope is accepted_gateway_baseline_only: this projection attests the accepted X-COM gateway baseline (candidate and resulting main commit 48e85051a419fe1c193afaa47cef40b1e7457fdf) only. Acceptance of a later documentation successor is a separate record and is not covered by this projection.",
+  "prior_main_revision": "a9c6e5d41e65625ed2b8c6f5a4457e10c6fcb090",
+  "approval_recorded_at": "2026-09-30T21:27:41.510394+00:00",
+  "delivered_at": "2026-09-30T21:31:16.839972+00:00",
+  "delivery_status": "delivered",
+  "delivery_verification_summary": {
+    "cpp_cases": 526,
+    "independent_closure_probes": 6,
+    "python_cases": 150,
+    "python_subtests": 24,
+    "current_report_and_documentation_checks": 7,
+    "tracked_file_identity_matches": 2721,
+    "approved_artifact_hashes_verified": 53
+  },
+  "accepted_scope": "Cumulative X-COM gateway F01-F09 repair, the authorized local liveness service, and the accepted documentation/trace/verification evidence; no unrelated candidate tasks.",
+  "limitations": [
+    "The gateway watch association is a logical, single-matching-watch lifecycle association, not OS process peer authentication or an authorization primitive.",
+    "Shutdown requests gRPC shutdown with a 100 ms grace deadline before forced cancellation; that deadline does not preempt or bound an executing RPC callback, so destructor completion still requires those callbacks to return. No fixed total-destruction bound is claimed.",
+    "The reported lease identity is volatile, in-memory, session-scoped state and is not persisted; durable recorded stimulation outcomes are reconciled separately from the lease identity.",
+    "An absent durable stimulation intent leaves the outcome unknown and does not authorize an implicit retry.",
+    "Sanitizer coverage is complete for the owned production translation units, with the admitted prebuilt gRPC dependency retaining its documented GRPC_ASAN_SUPPRESSED and ABI-size qualification; no claim is made that the third-party gRPC dependency is sanitized.",
+    "T037-OPEN-06 remains open: the global Python docstring coverage limitation is retained and no global --self-test --coverage-only result is claimed as passing.",
+    "Conformance retains the admitted qualified predecessor replay (26 inspections); it is not a universal predecessor-conformance claim.",
+    "The T036 evidence is a measured in-process owned loopback disabled/enabled-tap benchmark with the reported non-production scope; the enabled-tap case is recorded as an observation and is not gated, and no general production performance, transport, or timing guarantee is inferred."
+  ],
+  "no_false_claims": "No production-readiness, deployed-service, legacy-compatibility, parity, or certification claim is made by this projection; it records only the sealed accepted gateway baseline and its recorded limitations."
+}

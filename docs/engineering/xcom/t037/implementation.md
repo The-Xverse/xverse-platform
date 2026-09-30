@@ -290,3 +290,23 @@ review recorded against the R5 addendum above; it does not rewrite §11 or any h
 
 The corrections are documentation comments and evidence text only. The focused R6 record, commands, and
 provenance are in `docs/engineering/xcom/t038/r6-repair.md`.
+
+## 13. Accepted-delivery reconciliation addendum (2026-09-30)
+
+This section is additive and does not rewrite the historical sections above, whose measured identity is
+their own original candidate revision.
+
+After the X-COM gateway was accepted and delivered to `xverse-platform/main` at
+`48e85051a419fe1c193afaa47cef40b1e7457fdf`, the bounded documentation/evidence reconciliation recorded in
+`docs/engineering/xcom/t038/delivery-reconciliation.md` refreshed the current T037 evidence against that
+accepted baseline. The only checker change was the top-level `BASELINE_REVISION` assignment (readmitted to
+`48e8505…`); `ADMITTED_INPUTS` and the checker body are unchanged, and no scope, exclusion, strict flag, or
+negative check was weakened. The refreshed `reports/xcom-queue/t037-doxygen.json` binds `baseline_revision`
+`48e85051a419fe1c193afaa47cef40b1e7457fdf`, `candidate_revision` `null`, the sorted `82`-input material
+inventory, and material digest `df82b1bb979da4cfacdc1d739d143b56c88e5a53364323e087d00d77462d44bd`; both
+routes report `0` warnings (`173` repository indexed files, `35` strict indexed files, `0` coverage gaps).
+The six `implemented_by` pins for `scripts/check_doxygen.py` in `engineering/trace/links.json` were refreshed
+to its successor SHA-256 `bc13518d8915be5e32ebc670b7665f0df613a684ea1f2008c732291cb47c8796`. The historical
+report identities recorded in §1, §4, and §11 remain evidence only for their original revisions and are not
+represented as the current result. `T037-OPEN-06` remains open, and no production-readiness,
+deployed-service, compatibility, or certification claim is added.
