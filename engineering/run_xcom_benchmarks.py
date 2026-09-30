@@ -355,7 +355,7 @@ def resolve_admitted() -> dict[str, dict[str, object]]:
             digest, count = tree_digest(path)
             resolved[name] = {"kind": "directory", "sha256": digest, "files": count}
     manifest = str(resolved["XVERSE_XCOM_PACKAGE_MANIFEST"]["sha256"])
-    if manifest != "031c6aecdc4fe0cf4e0dff474d9b161777122142bf9bb1393c25d679807b055c":
+    if manifest != "9879911b35058e8c8e0ee78ad5faef258c34d9e490b78b2121d6b9565c92945c":
         raise HarnessError("admitted offline package manifest digest changed")
     return resolved
 

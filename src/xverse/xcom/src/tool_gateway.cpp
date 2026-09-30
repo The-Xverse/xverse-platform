@@ -543,7 +543,8 @@ bool GatewaySession::session_matches(const std::string &session_id) const noexce
   return !binding_.session_id.empty() && binding_.session_id == session_id;
 }
 
-GatewaySession::Admission GatewaySession::admit(std::uint64_t deadline_millis) noexcept {
+GatewaySession::Admission GatewaySession::admit(
+    std::uint64_t deadline_millis, std::optional<val::Timestamp> arrival_tick) noexcept {
   Admission admission{};
   ++requests_received_;
   if (!open_ || terminal_) {
@@ -567,14 +568,14 @@ GatewaySession::Admission GatewaySession::admit(std::uint64_t deadline_millis) n
         deadline_millis);
     return admission;
   }
-  // A per-request deadline is anchored to the request's own declared arrival, never to the
-  // session creation tick. A long-lived session therefore accepts a fresh request with a still
-  // valid permit and an in-window deadline; the declared bound caps the request, not the session.
+  // The arrival is captured for this request before dispatch. In-process callers that do not
+  // supply one begin their request at the current declared tick. An explicit arrival lets a
+  // transport reject work delayed after reception without using the session-creation tick.
   const std::uint64_t effective =
       deadline_millis == 0U ? config_.max_deadline_millis() : deadline_millis;
   const val::Timestamp now = resolve_dispatch_tick();
-  last_activity_tick_ = now;
-  const val::Timestamp due = saturating_add(now, static_cast<val::Timestamp>(effective));
+  const val::Timestamp arrival = arrival_tick.value_or(now);
+  const val::Timestamp due = saturating_add(arrival, static_cast<val::Timestamp>(effective));
   if (now > due) {
     admission.outcome = GatewayOutcome::expired;
     ++requests_rejected_;
@@ -591,6 +592,7 @@ GatewaySession::Admission GatewaySession::admit(std::uint64_t deadline_millis) n
     return admission;
   }
   --flow_tokens_;
+  last_activity_tick_ = now;
   admission.proceed = true;
   return admission;
 }
@@ -710,6 +712,10 @@ void GatewaySession::on_idle_tick(val::Timestamp now) noexcept {
   }
 }
 
+void GatewaySession::poll_now() noexcept { on_idle_tick(resolve_dispatch_tick()); }
+
+val::Timestamp GatewaySession::current_tick() const noexcept { return resolve_dispatch_tick(); }
+
 bool GatewaySession::flow_tokens_available() const noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   return flow_tokens_ > 0U;
@@ -762,10 +768,11 @@ v1::QueryVersionResponse GatewaySession::QueryVersion(const v1::QueryVersionRequ
 }
 
 v1::OpenObservationResponse
-GatewaySession::OpenObservation(const v1::OpenObservationRequest &request) noexcept {
+GatewaySession::OpenObservation(const v1::OpenObservationRequest &request,
+                                std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::OpenObservationResponse response;
-  const Admission admission = admit(request.deadline_millis());
+  const Admission admission = admit(request.deadline_millis(), arrival_tick);
   if (!admission.proceed) {
     set_diagnostic(response.mutable_diagnostic(), "gw.observation.declined", v1::SEVERITY_ERROR,
                    "observation", to_string(admission.outcome));
@@ -832,9 +839,10 @@ GatewaySession::OpenObservation(const v1::OpenObservationRequest &request) noexc
 
 std::size_t
 GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
-                                 std::span<v1::ObservationRecord> out) noexcept {
+                                 std::span<v1::ObservationRecord> out,
+                                 std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
-  const Admission admission = admit(request.deadline_millis());
+  const Admission admission = admit(request.deadline_millis(), arrival_tick);
   if (!admission.proceed) {
     return 0U;
   }
@@ -879,10 +887,11 @@ GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
 }
 
 v1::CloseObservationResponse
-GatewaySession::CloseObservation(const v1::CloseObservationRequest &request) noexcept {
+GatewaySession::CloseObservation(const v1::CloseObservationRequest &request,
+                                 std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::CloseObservationResponse response;
-  const Admission admission = admit(0U);
+  const Admission admission = admit(0U, arrival_tick);
   if (!admission.proceed) {
     set_diagnostic(response.mutable_diagnostic(), "gw.observation.close.declined",
                    v1::SEVERITY_ERROR, "observation", to_string(admission.outcome));
@@ -916,10 +925,11 @@ GatewaySession::CloseObservation(const v1::CloseObservationRequest &request) noe
 }
 
 v1::ArmSessionResponse
-GatewaySession::ArmSession(const v1::ArmSessionRequest &request) noexcept {
+GatewaySession::ArmSession(const v1::ArmSessionRequest &request,
+                           std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::ArmSessionResponse response;
-  const Admission admission = admit(request.deadline_millis());
+  const Admission admission = admit(request.deadline_millis(), arrival_tick);
   if (!admission.proceed) {
     response.set_state(wire_state(terminal_, armed_, terminal_, admission.outcome == GatewayOutcome::expired));
     set_diagnostic(response.mutable_diagnostic(), "gw.session.arm.declined", v1::SEVERITY_ERROR,
@@ -1001,10 +1011,11 @@ GatewaySession::ArmSession(const v1::ArmSessionRequest &request) noexcept {
 }
 
 v1::RevokeSessionResponse
-GatewaySession::RevokeSession(const v1::RevokeSessionRequest &request) noexcept {
+GatewaySession::RevokeSession(const v1::RevokeSessionRequest &request,
+                              std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::RevokeSessionResponse response;
-  const Admission admission = admit(0U);
+  const Admission admission = admit(0U, arrival_tick);
   if (!admission.proceed) {
     response.set_state(wire_state(terminal_, armed_, false, false));
     set_diagnostic(response.mutable_diagnostic(), "gw.session.revoke.declined", v1::SEVERITY_ERROR,
@@ -1040,14 +1051,18 @@ GatewaySession::RevokeSession(const v1::RevokeSessionRequest &request) noexcept 
 }
 
 v1::SubmitStimulationResponse
-GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) noexcept {
+GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request,
+                                  std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::SubmitStimulationResponse response;
   response.set_request_id(request.request_id());
-  const Admission admission = admit(request.deadline_millis());
+  const Admission admission = admit(request.deadline_millis(), arrival_tick);
   if (!admission.proceed) {
     response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
-    set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.declined", v1::SEVERITY_ERROR,
+    set_diagnostic(response.mutable_diagnostic(),
+                   admission.outcome == GatewayOutcome::expired ? "gw.deadline.expired"
+                                                                 : "gw.stimulation.declined",
+                   v1::SEVERITY_ERROR,
                    "stimulation", to_string(admission.outcome));
     return response;
   }
@@ -1141,8 +1156,15 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
   const std::uint64_t effective_deadline = request.deadline_millis() == 0U
                                                ? config_.max_deadline_millis()
                                                : request.deadline_millis();
-  const val::Timestamp request_horizon =
-      saturating_add(now, static_cast<val::Timestamp>(effective_deadline));
+  const val::Timestamp request_horizon = saturating_add(
+      arrival_tick.value_or(now), static_cast<val::Timestamp>(effective_deadline));
+  if (now > request_horizon) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.deadline.expired", v1::SEVERITY_ERROR,
+                   "stimulation", "request deadline expired before action dispatch");
+    return response;
+  }
   const std::uint64_t raw_due = request.schedule().due_nanos();
   const val::Timestamp declared_due =
       raw_due > static_cast<std::uint64_t>(std::numeric_limits<val::Timestamp>::max())
@@ -1231,10 +1253,11 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
 }
 
 v1::AcquireLeaseResponse
-GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request) noexcept {
+GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
+                             std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::AcquireLeaseResponse response;
-  const Admission admission = admit(request.deadline_millis());
+  const Admission admission = admit(request.deadline_millis(), arrival_tick);
   if (!admission.proceed) {
     response.set_state(v1::LEASE_STATE_UNSPECIFIED);
     set_diagnostic(response.mutable_diagnostic(), "gw.lease.declined", v1::SEVERITY_ERROR, "lease",
@@ -1289,10 +1312,11 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request) noexcept {
 }
 
 v1::ReleaseLeaseResponse
-GatewaySession::ReleaseLease(const v1::ReleaseLeaseRequest &request) noexcept {
+GatewaySession::ReleaseLease(const v1::ReleaseLeaseRequest &request,
+                             std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::ReleaseLeaseResponse response;
-  const Admission admission = admit(0U);
+  const Admission admission = admit(0U, arrival_tick);
   if (!admission.proceed) {
     response.set_state(v1::LEASE_STATE_UNSPECIFIED);
     set_diagnostic(response.mutable_diagnostic(), "gw.lease.release.declined", v1::SEVERITY_ERROR,
@@ -1334,10 +1358,11 @@ GatewaySession::ReleaseLease(const v1::ReleaseLeaseRequest &request) noexcept {
 }
 
 v1::QuerySessionResponse
-GatewaySession::QuerySession(const v1::QuerySessionRequest &request) noexcept {
+GatewaySession::QuerySession(const v1::QuerySessionRequest &request,
+                             std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::QuerySessionResponse response;
-  const Admission admission = admit(0U);
+  const Admission admission = admit(0U, arrival_tick);
   if (!admission.proceed) {
     response.set_state(wire_state(terminal_, armed_, false, false));
     set_diagnostic(response.mutable_diagnostic(), "gw.query.declined", v1::SEVERITY_ERROR, "query",
@@ -1374,4 +1399,3 @@ std::span<const std::string_view> gateway_operation_names() noexcept {
 }
 
 }  // namespace xverse::xcom
-

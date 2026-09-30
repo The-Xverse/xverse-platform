@@ -21,6 +21,7 @@ set(
   xverse_xcom_stimulation_actions
   xverse_xcom_tool_gateway_proto
   xverse_xcom_tool_gateway
+  xverse_xcom_tool_gateway_grpc
 )
 
 # Fail closed when the inherited warning-as-error policy is absent or not promoted to an error
@@ -553,9 +554,8 @@ set_target_properties(
 
 # T030's single versioned external-tool contract. The committed
 # proto/xverse/xcom/v1/tool_gateway.proto is the source of truth; the admitted protoc 3.12.4 and
-# grpc_cpp_plugin 1.30.2 generate the Protocol Buffers messages (compiled) and the gRPC stubs
-# (generated for provenance, not compiled or linked because the admitted envelope lacks the gRPC
-# runtime transitive libraries, T030-GAP-02). The generation runs offline with the admitted prefix
+# grpc_cpp_plugin 1.30.2 generate the Protocol Buffers messages and gRPC stubs. Both are compiled
+# by their owning targets. The generation runs offline with the admitted prefix
 # library directory on the child library path only; no ambient path or network is discovered. This
 # is one declared addition to the T012 runtime-target inventory above.
 set(
@@ -615,8 +615,8 @@ add_custom_command(
   VERBATIM
 )
 
-# The generated Protocol Buffers message code only. Only the admitted libprotobuf is linked; the
-# gRPC stubs are deliberately not compiled or linked (T030-GAP-02). The admitted protobuf headers
+# The generated Protocol Buffers message code only; the generated gRPC service is compiled by
+# xverse_xcom_tool_gateway_grpc below. The admitted protobuf headers
 # and the generated headers are system includes: third-party and generated-header warnings are
 # suppressed while the X-COM warning-as-error policy still governs every T030-owned source line.
 add_library(xverse_xcom_tool_gateway_proto STATIC "${xcom_t030_pb_source}")
@@ -648,8 +648,8 @@ add_custom_target(
 
 # T031's bounded, host-protected, local-IPC-only tool gateway session. It realizes the accepted
 # T030 message and method contract and delegates onto the accepted T021-T029 in-process boundaries.
-# It links no gRPC runtime (the admitted envelope lacks the gRPC runtime transitive libraries,
-# T030-GAP-02 / T031-GAP-01); it adds exactly one declared entry to the T012 runtime-target
+# This in-process core links no gRPC runtime; its separate adapter below owns that dependency.
+# It adds one declared entry to the T012 runtime-target
 # inventory above. The generated Protocol Buffers headers are system includes so third-party and
 # generated-header warnings are suppressed while the X-COM warning-as-error policy still governs
 # every T031-owned source line.
@@ -686,6 +686,36 @@ set_target_properties(
     CXX_EXTENSIONS OFF
 )
 
+# The accepted external transport uses the generated service and the pinned offline gRPC runtime.
+# The existing framed gateway remains a compatibility fixture for earlier accepted tests.
+add_library(
+  xverse_xcom_tool_gateway_grpc STATIC
+  "${xcom_t030_grpc_source}"
+  src/tool_gateway_grpc.cpp
+)
+add_library(xverse::xcom_tool_gateway_grpc ALIAS xverse_xcom_tool_gateway_grpc)
+target_include_directories(
+  xverse_xcom_tool_gateway_grpc
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+target_include_directories(
+  xverse_xcom_tool_gateway_grpc
+  SYSTEM PUBLIC
+    "$<BUILD_INTERFACE:${xcom_t030_generated_dir}>"
+    "$<BUILD_INTERFACE:${xcom_t030_protobuf_include}>"
+)
+target_link_libraries(
+  xverse_xcom_tool_gateway_grpc PUBLIC
+  xverse::xcom_tool_gateway
+  gRPC::grpc++
+  protobuf::libprotobuf
+)
+target_compile_features(xverse_xcom_tool_gateway_grpc PUBLIC cxx_std_20)
+add_dependencies(xverse_xcom_tool_gateway_grpc xverse_xcom_tool_gateway_proto_generated)
+xverse_xcom_apply_runtime_rules(xverse_xcom_tool_gateway_grpc)
+set_target_properties(xverse_xcom_tool_gateway_grpc PROPERTIES
+  CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+
 if(BUILD_TESTING)
   find_package(Threads REQUIRED)
   if(NOT DEFINED ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN} OR "$ENV{XVERSE_XCOM_T025_TEST_TOOLCHAIN}" STREQUAL "")
@@ -703,6 +733,21 @@ if(BUILD_TESTING)
     NO_DEFAULT_PATH
   )
   include(GoogleTest)
+
+  # Real generated-client proof against the production gRPC adapter in a separate process.
+  add_executable(
+    xverse_xcom_grpc_generated_client_tests
+    "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway/grpc_generated_client_tests.cpp"
+  )
+  target_include_directories(xverse_xcom_grpc_generated_client_tests PRIVATE
+    "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway")
+  target_compile_definitions(xverse_xcom_grpc_generated_client_tests PRIVATE
+    "XCOM_T031_SCRATCH_DIR=\"${CMAKE_BINARY_DIR}/t031-scratch\"")
+  target_link_libraries(xverse_xcom_grpc_generated_client_tests PRIVATE
+    xverse::xcom_tool_gateway_grpc GTest::gtest Threads::Threads)
+  xverse_xcom_apply_runtime_rules(xverse_xcom_grpc_generated_client_tests)
+  gtest_discover_tests(xverse_xcom_grpc_generated_client_tests PROPERTIES
+    LABELS "t030-grpc" WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
   # T012 deterministic, offline build-contract check. Exactly one additive test; every baseline test
   # name and label is preserved (T012-SR-006, INV-06).

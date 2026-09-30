@@ -148,6 +148,15 @@ PACKAGE_LOCK: tuple[PackageSpec, ...] = (
         "Apache-2.0 WITH LLVM-exception",
     ),
     PackageSpec(
+        "libc-ares2_1.18.1-1ubuntu0.22.04.3_amd64.deb",
+        "d1c9a66669d6a4ec968efebb670a72d2188d98a1f37823c1f6cde8da23b51e0c",
+        45110,
+        "libc-ares2",
+        "1.18.1-1ubuntu0.22.04.3",
+        "c-ares",
+        "MIT",
+    ),
+    PackageSpec(
         "libgrpc++-dev_1.30.2-3build6_amd64.deb",
         "067752d39cb0bcbad10cf71d8a22d4e155e299c9f31187ceb4c400b56dd624c6",
         564346,
@@ -248,7 +257,7 @@ def sha256_file(path: Path) -> str:
 
 
 def validate_lock(
-    lock: Sequence[PackageSpec], expected_count: int = 12
+    lock: Sequence[PackageSpec], expected_count: int = 13
 ) -> list[Diagnostic]:
     """Validate internal lock invariants before trusting it for admission."""
 
@@ -361,7 +370,7 @@ def load_manifest(
             )
         ]
 
-    lock_errors = validate_lock(lock, 12 if lock is PACKAGE_LOCK else len(lock))
+    lock_errors = validate_lock(lock, 13 if lock is PACKAGE_LOCK else len(lock))
     if lock_errors:
         return [], lock_errors
     expected = {item.file: item for item in lock}
@@ -443,7 +452,7 @@ def load_manifest(
                 "XCOM-BLD-E007",
                 ExitCode.MANIFEST_INVALID,
                 "package-set",
-                "manifest must contain exactly the twelve locked packages",
+                "manifest must contain exactly the thirteen locked packages",
             )
         )
     for filename in sorted(set(observed) & set(expected)):
@@ -1368,7 +1377,7 @@ def validate_dependency_lock_document(text: str) -> list[Diagnostic]:
                 "XCOM-BLD-E051",
                 ExitCode.POLICY_INVALID,
                 "dependency-lock.md#package-records",
-                "lock documentation does not contain exactly the twelve package rows",
+                "lock documentation does not contain exactly the thirteen package rows",
             )
         )
     for spec in PACKAGE_LOCK:
@@ -1418,7 +1427,7 @@ def validate_dependency_lock_document(text: str) -> list[Diagnostic]:
 
     payload = sections.get(LOCK_DOCUMENT_SECTIONS[2], "")
     for marker in (
-        "exactly the twelve retained filenames",
+        "exactly the thirteen retained filenames",
         "byte sizes",
         "SHA-256",
         "dpkg-deb -f",

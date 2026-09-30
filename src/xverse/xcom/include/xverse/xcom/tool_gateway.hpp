@@ -459,57 +459,76 @@ class GatewaySession final {
 
   /// @brief Opens one bounded observation stream.
   /// @param request Bounded open request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded observation stream handle, or a declining diagnostic.
   [[nodiscard]] v1::OpenObservationResponse
-  OpenObservation(const v1::OpenObservationRequest &request) noexcept;
+  OpenObservation(const v1::OpenObservationRequest &request,
+                  std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Reads at most the granted bounded number of metadata-only records.
   /// @param request Bounded read request.
   /// @param out Destination span of at most `request.max_records()` records.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The number of records written, never above the granted, configured, or span bound.
-  [[nodiscard]] std::size_t ReadObservations(const v1::ReadObservationsRequest &request,
-                                             std::span<v1::ObservationRecord> out) noexcept;
+  [[nodiscard]] std::size_t ReadObservations(
+      const v1::ReadObservationsRequest &request, std::span<v1::ObservationRecord> out,
+      std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Closes one bounded observation stream and returns delivered/dropped counters.
   /// @param request Bounded close request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded delivered/dropped counters, or a declining diagnostic.
   [[nodiscard]] v1::CloseObservationResponse
-  CloseObservation(const v1::CloseObservationRequest &request) noexcept;
+  CloseObservation(const v1::CloseObservationRequest &request,
+                   std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Arms one validation session under the exact accepted permit.
   /// @param request Bounded arm request carrying the exact permit.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded arming result, or a declining diagnostic.
-  [[nodiscard]] v1::ArmSessionResponse ArmSession(const v1::ArmSessionRequest &request) noexcept;
+  [[nodiscard]] v1::ArmSessionResponse ArmSession(
+      const v1::ArmSessionRequest &request,
+      std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Revokes one validation session; revocation is terminal.
   /// @param request Bounded revoke request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded terminal revocation result, or a declining diagnostic.
   [[nodiscard]] v1::RevokeSessionResponse
-  RevokeSession(const v1::RevokeSessionRequest &request) noexcept;
+  RevokeSession(const v1::RevokeSessionRequest &request,
+                std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Submits one bounded stimulation action through the accepted action path.
   /// @param request Bounded stimulation request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded emission/outcome result, or a declining diagnostic.
   [[nodiscard]] v1::SubmitStimulationResponse
-  SubmitStimulation(const v1::SubmitStimulationRequest &request) noexcept;
+  SubmitStimulation(const v1::SubmitStimulationRequest &request,
+                    std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Acquires one exclusive generation-bound service-emulation lease.
   /// @param request Bounded lease-acquire request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded lease result, or a declining diagnostic.
   [[nodiscard]] v1::AcquireLeaseResponse
-  AcquireLease(const v1::AcquireLeaseRequest &request) noexcept;
+  AcquireLease(const v1::AcquireLeaseRequest &request,
+               std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Releases one held service-emulation lease.
   /// @param request Bounded lease-release request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded lease-release result, or a declining diagnostic.
   [[nodiscard]] v1::ReleaseLeaseResponse
-  ReleaseLease(const v1::ReleaseLeaseRequest &request) noexcept;
+  ReleaseLease(const v1::ReleaseLeaseRequest &request,
+               std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Queries bounded session state and finite counters.
   /// @param request Bounded query request.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded session state and counters, or a declining diagnostic.
   [[nodiscard]] v1::QuerySessionResponse
-  QuerySession(const v1::QuerySessionRequest &request) noexcept;
+  QuerySession(const v1::QuerySessionRequest &request,
+               std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Deterministic disconnect cleanup: close streams, drain/revoke/release/quarantine.
   void on_disconnect() noexcept;
@@ -517,6 +536,13 @@ class GatewaySession final {
   /// @brief Deterministic idle-timeout cleanup evaluated against a declared tick.
   /// @param now Caller-supplied declared tick.
   void on_idle_tick(validation::Timestamp now) noexcept;
+
+  /// @brief Drive scheduled completion and idle cleanup from the accepted time authority.
+  void poll_now() noexcept;
+
+  /// @brief Capture the current tick for a transport request before it waits for dispatch.
+  /// @return Current tick in the session's bound declared clock domain.
+  [[nodiscard]] validation::Timestamp current_tick() const noexcept;
 
   /// @brief Whether the bounded in-flight/rate budget admitted the most recent request.
   /// @return `true` when the most recent request was admitted within the bounded budget.
@@ -540,8 +566,11 @@ class GatewaySession final {
 
   /// @brief Applies version, terminal, deadline, and flow-control admission.
   /// @param deadline_millis Declared request deadline in milliseconds.
+  /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The admission decision; a declining decision has already counted the request.
-  [[nodiscard]] Admission admit(std::uint64_t deadline_millis) noexcept;
+  [[nodiscard]] Admission admit(
+      std::uint64_t deadline_millis,
+      std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Records one bounded payload-free log record when a sink is present.
   void log(GatewayOutcome outcome, GatewayPhase phase, std::string_view code,

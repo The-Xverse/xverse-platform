@@ -252,3 +252,27 @@ TEST(XcomToolGatewayBounds, RequestDeadlineAnchoredToRequestArrival) {
   EXPECT_EQ(session.SubmitStimulation(request).outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
   EXPECT_EQ(fixture.emitter().calls, 1U);
 }
+
+TEST(XcomToolGatewayBounds, RequestDeadlineExpiresWithValidPermit) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "42");
+  request.set_deadline_millis(100U);
+  fixture.clock().set(401);
+  const auto expired = session.SubmitStimulation(request, 300);
+  EXPECT_EQ(expired.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(expired.diagnostic().code(), "gw.deadline.expired");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+
+  // The same request at its exact deadline remains admissible under the same permit.
+  fixture.clock().set(400);
+  const auto boundary = session.SubmitStimulation(request, 300);
+  EXPECT_EQ(boundary.outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
+  EXPECT_EQ(fixture.emitter().calls, 1U);
+}
