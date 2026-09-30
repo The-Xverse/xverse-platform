@@ -5,7 +5,12 @@ package xverse.xcom.v1;
 // Local Unix-socket transport lifecycle. This service is separate from the
 // published ten-method ToolGateway contract.
 message WatchSessionRequest {}
-message WatchSessionReady { bool ready = 1; }
+message WatchSessionReady {
+  bool ready = 1;
+  // Opaque association for this watch. Stateful ToolGateway calls must carry
+  // it in exactly one x-xcom-watch-id metadata entry while the watch is live.
+  string watch_id = 2;
+}
 
 service GatewayLiveness {
   // Keep this stream open for the lifetime of a tool session. Cancelling or

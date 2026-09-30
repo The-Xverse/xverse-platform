@@ -765,7 +765,7 @@ v1::QueryVersionResponse GatewaySession::QueryVersion(const v1::QueryVersionRequ
   capability->set_revision(1U);
   capability = capabilities->add_capabilities();
   capability->set_id("xcom.gateway_liveness.local_ipc");
-  capability->set_revision(1U);
+  capability->set_revision(2U);
   capability = capabilities->add_capabilities();
   capability->set_id("xcom.stimulation_outcome_lookup");
   capability->set_revision(1U);

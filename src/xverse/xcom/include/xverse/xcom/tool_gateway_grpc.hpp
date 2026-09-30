@@ -10,10 +10,16 @@
 #include <cstddef>
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 
 namespace xverse::xcom {
+
+// The admitted gRPC binary uses the POSIX mutex layout. Its optional ASan
+// leak-checker field changes the ABI; compiler sanitizer instrumentation stays on.
+static_assert(sizeof(gpr_mu) == sizeof(pthread_mutex_t),
+              "gRPC consumer mutex ABI must match the admitted POSIX binary");
 
 /// The real generated gRPC and local liveness services for one permit-bound gateway session.
 /// The owning application must keep the session and its dependencies alive until shutdown.
@@ -47,16 +53,21 @@ class GatewayGrpcService final : public v1::ToolGateway::Service,
                             grpc::ServerWriter<v1::WatchSessionReady> *) override;
   void poll() noexcept;
   void disconnect() noexcept;
+  /// Stop accepting stateful calls and terminate a live watch before server shutdown.
+  void request_shutdown() noexcept;
   /// Maximum request and response size configured for this service.
   [[nodiscard]] std::size_t message_bound() const noexcept;
 
  private:
   grpc::Status check(grpc::ServerContext *, std::size_t request_bytes) const;
-  grpc::Status require_watch() const;
+  grpc::Status require_watch(grpc::ServerContext *) const;
   GatewaySession &session_;
   GatewayConfig config_;
   std::atomic<bool> watch_active_{false};
   std::atomic<bool> watch_failed_{false};
+  mutable std::mutex watch_mutex_{};
+  std::string watch_id_{};
+  std::mutex dispatch_mutex_{};
 };
 
 /// Owns a protected local Unix-socket gRPC listener. No TCP address is accepted.

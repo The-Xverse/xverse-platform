@@ -714,14 +714,10 @@ add_library(
   "${xcom_liveness_grpc_source}"
   src/tool_gateway_grpc.cpp
 )
-if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
-  # Generated gRPC 1.30.2 call ops include inline client and completion-queue
-  # code that fails under ASan/UBSan with the admitted binary runtime. The
-  # adapter and all gateway-owned production sources remain instrumented.
-  set_source_files_properties(
-    "${xcom_t030_grpc_source}" "${xcom_liveness_grpc_source}"
-    PROPERTIES COMPILE_OPTIONS "-fno-sanitize=address,undefined")
-endif()
+# gRPC 1.30.2 adds a field to gpr_mu/gpr_cv when its ASan layout hook is
+# enabled. The admitted binary is built with the ordinary POSIX layout.
+# Preserve that ABI in every consumer without disabling compiler ASan/UBSan.
+target_compile_definitions(xverse_xcom_tool_gateway_grpc PUBLIC GRPC_ASAN_SUPPRESSED=1)
 add_library(xverse::xcom_tool_gateway_grpc ALIAS xverse_xcom_tool_gateway_grpc)
 target_include_directories(
   xverse_xcom_tool_gateway_grpc
@@ -772,18 +768,11 @@ if(BUILD_TESTING)
     "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway")
   target_compile_definitions(xverse_xcom_grpc_generated_client_tests PRIVATE
     "XCOM_T031_SCRATCH_DIR=\"${CMAKE_BINARY_DIR}/t031-scratch\"")
-  if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
-    # The client translation unit instantiates the same incompatible inline
-    # gRPC code. Keep every generated-client case in sanitizer CTest while
-    # instrumenting the production gateway and adapter it exercises.
-    target_compile_options(xverse_xcom_grpc_generated_client_tests PRIVATE
-      -fno-sanitize=address,undefined)
-  endif()
   target_link_libraries(xverse_xcom_grpc_generated_client_tests PRIVATE
     xverse::xcom_tool_gateway_grpc GTest::gtest Threads::Threads)
   xverse_xcom_apply_runtime_rules(xverse_xcom_grpc_generated_client_tests)
   gtest_discover_tests(xverse_xcom_grpc_generated_client_tests PROPERTIES
-    LABELS "t030-grpc" WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    LABELS "t030-grpc" TIMEOUT 10 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
   # T012 deterministic, offline build-contract check. Exactly one additive test; every baseline test
   # name and label is preserved (T012-SR-006, INV-06).

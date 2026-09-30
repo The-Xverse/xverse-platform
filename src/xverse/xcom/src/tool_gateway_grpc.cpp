@@ -1,17 +1,21 @@
 #include "xverse/xcom/tool_gateway_grpc.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <iterator>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
 
 #include <sys/stat.h>
+#include <sys/random.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -19,6 +23,29 @@ namespace xverse::xcom {
 
 namespace {
 std::mutex socket_creation_mutex;
+
+bool new_watch_id(std::string &id) {
+  std::array<unsigned char, 32U> bytes{};
+  std::size_t filled = 0U;
+  while (filled < bytes.size()) {
+    const ssize_t count = ::getrandom(bytes.data() + filled, bytes.size() - filled, GRND_NONBLOCK);
+    if (count < 0 && errno == EINTR) {
+      continue;
+    }
+    if (count <= 0) {
+      return false;
+    }
+    filled += static_cast<std::size_t>(count);
+  }
+  constexpr char hex[] = "0123456789abcdef";
+  id.clear();
+  id.reserve(2U * bytes.size());
+  for (const unsigned char byte : bytes) {
+    id.push_back(hex[byte >> 4U]);
+    id.push_back(hex[byte & 15U]);
+  }
+  return true;
+}
 
 bool protected_parent(const std::string &path) {
   const std::size_t slash = path.find_last_of('/');
@@ -41,7 +68,11 @@ GatewayGrpcService::GatewayGrpcService(GatewaySession &session,
     : session_(session), config_(config) {}
 
 void GatewayGrpcService::poll() noexcept { session_.poll_now(); }
-void GatewayGrpcService::disconnect() noexcept { session_.on_disconnect(); }
+void GatewayGrpcService::request_shutdown() noexcept { watch_failed_.store(true); }
+void GatewayGrpcService::disconnect() noexcept {
+  request_shutdown();
+  session_.on_disconnect();
+}
 std::size_t GatewayGrpcService::message_bound() const noexcept {
   return config_.max_message_bytes();
 }
@@ -60,9 +91,20 @@ grpc::Status GatewayGrpcService::check(grpc::ServerContext *context,
   return grpc::Status::OK;
 }
 
-grpc::Status GatewayGrpcService::require_watch() const {
+grpc::Status GatewayGrpcService::require_watch(grpc::ServerContext *context) const {
   if (!watch_active_.load() || watch_failed_.load() || session_.snapshot().terminal) {
     return {grpc::StatusCode::FAILED_PRECONDITION, "active session watch required"};
+  }
+  const auto &metadata = context->client_metadata();
+  const auto range = metadata.equal_range("x-xcom-watch-id");
+  if (range.first == range.second || std::next(range.first) != range.second) {
+    return {grpc::StatusCode::FAILED_PRECONDITION, "one watch association required"};
+  }
+  const auto &value = range.first->second;
+  const std::string_view supplied(value.data(), value.size());
+  std::lock_guard<std::mutex> lock(watch_mutex_);
+  if (watch_id_.empty() || supplied != watch_id_) {
+    return {grpc::StatusCode::FAILED_PRECONDITION, "watch association mismatch"};
   }
   return grpc::Status::OK;
 }
@@ -85,16 +127,30 @@ grpc::Status GatewayGrpcService::WatchSession(
     watch_active_.store(false);
     return {grpc::StatusCode::FAILED_PRECONDITION, "session already terminal"};
   }
+  std::string id;
+  if (!new_watch_id(id)) {
+    watch_active_.store(false);
+    return {grpc::StatusCode::UNAVAILABLE, "watch association unavailable"};
+  }
+  {
+    std::lock_guard<std::mutex> lock(watch_mutex_);
+    watch_id_ = id;
+  }
   v1::WatchSessionReady ready;
   ready.set_ready(true);
+  ready.set_watch_id(id);
   const bool delivered = writer->Write(ready);
   if (delivered) {
-    while (!context->IsCancelled()) {
+    while (!context->IsCancelled() && !watch_failed_.load()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
   watch_failed_.store(true);
   session_.on_disconnect();
+  {
+    std::lock_guard<std::mutex> lock(watch_mutex_);
+    watch_id_.clear();
+  }
   watch_active_.store(false);
   return {grpc::StatusCode::CANCELLED, "session watch closed"};
 }
@@ -104,11 +160,12 @@ grpc::Status GatewayGrpcService::WatchSession(
                                            const v1::Request *request,                   \
                                            v1::Response *response) {                    \
     const auto arrival = session_.current_tick();                                        \
+    std::lock_guard<std::mutex> dispatch(dispatch_mutex_);                                \
     const grpc::Status admitted = check(context, request->ByteSizeLong());              \
     if (!admitted.ok()) {                                                                \
       return admitted;                                                                   \
     }                                                                                    \
-    const grpc::Status watched = require_watch();                                        \
+    const grpc::Status watched = require_watch(context);                                 \
     if (!watched.ok()) {                                                                  \
       return watched;                                                                    \
     }                                                                                    \
@@ -140,11 +197,12 @@ grpc::Status GatewayGrpcService::SubmitStimulation(
     grpc::ServerContext *context, const v1::SubmitStimulationRequest *request,
     v1::SubmitStimulationResponse *response) {
   const auto arrival = session_.current_tick();
+  std::lock_guard<std::mutex> dispatch(dispatch_mutex_);
   const grpc::Status admitted = check(context, request->ByteSizeLong());
   if (!admitted.ok()) {
     return admitted;
   }
-  const grpc::Status watched = require_watch();
+  const grpc::Status watched = require_watch(context);
   if (!watched.ok()) {
     return watched;
   }
@@ -156,11 +214,16 @@ grpc::Status GatewayGrpcService::SubmitStimulation(
           config_.max_message_bytes() - response_overhead) {
     return {grpc::StatusCode::RESOURCE_EXHAUSTED, "response would exceed message bound"};
   }
+  struct TransportProbe {
+    grpc::ServerContext *call;
+    GatewayGrpcService *service;
+  } probe{context, this};
   const auto cancelled = [](void *opaque) noexcept {
-    auto *call = static_cast<grpc::ServerContext *>(opaque);
-    return call->IsCancelled() || std::chrono::system_clock::now() >= call->deadline();
+    const auto *state = static_cast<TransportProbe *>(opaque);
+    return state->call->IsCancelled() || state->service->watch_failed_.load() ||
+           std::chrono::system_clock::now() >= state->call->deadline();
   };
-  *response = session_.SubmitStimulation(*request, arrival, cancelled, context);
+  *response = session_.SubmitStimulation(*request, arrival, cancelled, &probe);
   if (response->diagnostic().code() == "gw.transport.cancelled") {
     const grpc::Status ended = check(context, 0U);
     return ended.ok() ? grpc::Status(grpc::StatusCode::CANCELLED, "transport ended before dispatch")
@@ -184,11 +247,12 @@ grpc::Status GatewayGrpcService::ArmSession(grpc::ServerContext *context,
                                              const v1::ArmSessionRequest *request,
                                              v1::ArmSessionResponse *response) {
   const auto arrival = session_.current_tick();
+  std::lock_guard<std::mutex> dispatch(dispatch_mutex_);
   const grpc::Status admitted = check(context, request->ByteSizeLong());
   if (!admitted.ok()) {
     return admitted;
   }
-  const grpc::Status watched = require_watch();
+  const grpc::Status watched = require_watch(context);
   if (!watched.ok()) {
     return watched;
   }
@@ -204,11 +268,12 @@ grpc::Status GatewayGrpcService::ReadObservations(
     grpc::ServerContext *context, const v1::ReadObservationsRequest *request,
     grpc::ServerWriter<v1::ObservationRecord> *writer) {
   const auto arrival = session_.current_tick();
+  std::lock_guard<std::mutex> dispatch(dispatch_mutex_);
   const grpc::Status admitted = check(context, request->ByteSizeLong());
   if (!admitted.ok()) {
     return admitted;
   }
-  const grpc::Status watched = require_watch();
+  const grpc::Status watched = require_watch(context);
   if (!watched.ok()) {
     return watched;
   }
@@ -290,8 +355,9 @@ std::unique_ptr<GatewayGrpcServer> GatewayGrpcServer::start(
 
 GatewayGrpcServer::~GatewayGrpcServer() {
   active_.store(false);
+  service_.request_shutdown();
+  server_->Shutdown(std::chrono::system_clock::now() + std::chrono::milliseconds(100));
   poller_.join();
-  server_->Shutdown();
   service_.disconnect();
   ::unlink(path_.c_str());
 }
