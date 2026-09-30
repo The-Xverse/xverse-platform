@@ -118,6 +118,111 @@ TEST(XcomToolGatewayNegative, TransportAccessDoesNotAuthorize) {
   EXPECT_EQ(fixture.emitter().calls, 0U);
 }
 
+TEST(XcomToolGatewayNegative, IncompatibleInteractionRejectedZeroSideEffects) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "21");
+  request.set_interaction(v1::INTERACTION_KIND_RESPONSE);
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.stimulation.interaction");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+}
+
+TEST(XcomToolGatewayNegative, IncompatibleDirectionRejectedZeroSideEffects) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "22");
+  request.set_direction(v1::DIRECTION_INBOUND);
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.stimulation.direction");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+}
+
+TEST(XcomToolGatewayNegative, UnknownScheduleModeRejectedZeroSideEffects) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "23");
+  request.mutable_schedule()->set_mode(static_cast<v1::ScheduleMode>(99));
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.schedule.unknown");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+}
+
+TEST(XcomToolGatewayNegative, UnmappedClockRejectedZeroSideEffects) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "24");
+  request.mutable_schedule()->set_clock_domain("unmapped.foreign");
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.clock.unmapped");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+}
+
+TEST(XcomToolGatewayNegative, ContractMismatchRejectedZeroSideEffects) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "25");
+  request.set_contract_id("other.contract");
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.contract.mismatch");
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+}
+
+TEST(XcomToolGatewayNegative, UnauthorizedScheduledTargetNotQueued) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "26");
+  request.set_target_endpoint("unauthorized.target");
+  request.mutable_schedule()->set_mode(v1::SCHEDULE_SCHEDULED);
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+}
+
 TEST(XcomToolGatewayNegative, NoInetOrDnsOrTlsApi) {
   const std::string header = read_text_file(XCOM_T031_HEADER_PATH);
   const std::string source = read_text_file(XCOM_T031_SOURCE_PATH);

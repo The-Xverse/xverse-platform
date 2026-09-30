@@ -51,6 +51,10 @@ inline constexpr std::string_view kSessionId = "session-1";
 inline constexpr std::string_view kPlanDigest = "plan-1";
 /// @brief Logical graph digest bound to the fixture.
 inline constexpr std::string_view kGraphDigest = "graph-1";
+/// @brief Logical wire name of the bound arrival clock domain.
+inline constexpr std::string_view kClockDomainName = "clock.gateway";
+/// @brief Logical contract identity expected on the wire.
+inline constexpr std::string_view kContractId = "gateway.contract";
 
 /// @brief Bound declared session identity.
 [[nodiscard]] inline val::SessionId session_identity() {
@@ -403,9 +407,11 @@ class GatewayFixture final {
     binding_.controller = controller_identity();
     binding_.context = context_for(permit_);
     binding_.arrival_domain = kDomain;
+    binding_.arrival_domain_name = std::string(kClockDomainName);
     binding_.arrival_tick = clock_.get();
     binding_.service_owner = val::ServiceOwner{tag("svc.alpha"), 3U, true};
     binding_.blueprint_id = "gateway.blueprint";
+    binding_.contract_id = std::string(kContractId);
     bind();
   }
 

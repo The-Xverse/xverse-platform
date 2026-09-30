@@ -204,19 +204,65 @@ val::StimulationAction action_from_kind(v1::StimulationActionKind kind, bool &kn
   }
 }
 
-/// @brief Maps the accepted action onto its canonical interaction family.
-InteractionKind interaction_for(val::StimulationAction action) noexcept {
+/// @brief Reports whether a declared wire interaction is the canonical family of one action.
+/// @param wire Declared wire interaction kind.
+/// @param action Declared stimulation action.
+/// @return `true` only for the one compatible family; every other value is rejected.
+bool wire_interaction_matches(v1::InteractionKind wire, val::StimulationAction action) noexcept {
   switch (action) {
   case val::StimulationAction::InjectMessage:
-    return InteractionKind::message_event;
+    return wire == v1::INTERACTION_KIND_MESSAGE;
   case val::StimulationAction::InvokeService:
-    return InteractionKind::service_request;
+    return wire == v1::INTERACTION_KIND_REQUEST;
   case val::StimulationAction::EmulateService:
-    return InteractionKind::service_response;
+    return wire == v1::INTERACTION_KIND_RESPONSE;
   case val::StimulationAction::InjectSignal:
+  default:
+    return wire == v1::INTERACTION_KIND_SIGNAL;
+  }
+}
+
+/// @brief Preserves the declared wire interaction as the accepted interaction family.
+/// @param wire Declared wire interaction kind; call only after `wire_interaction_matches` holds.
+/// @return The accepted interaction family for the declared wire value.
+InteractionKind interaction_from_wire(v1::InteractionKind wire) noexcept {
+  switch (wire) {
+  case v1::INTERACTION_KIND_MESSAGE:
+    return InteractionKind::message_event;
+  case v1::INTERACTION_KIND_REQUEST:
+    return InteractionKind::service_request;
+  case v1::INTERACTION_KIND_RESPONSE:
+    return InteractionKind::service_response;
+  case v1::INTERACTION_KIND_SIGNAL:
   default:
     return InteractionKind::signal_state_update;
   }
+}
+
+/// @brief Reports whether a declared wire direction is the only valid outbound stimulation one.
+/// @param wire Declared wire direction.
+/// @return `true` only for `DIRECTION_OUTBOUND`; every other value is rejected.
+bool wire_direction_valid(v1::Direction wire) noexcept {
+  return wire == v1::DIRECTION_OUTBOUND;
+}
+
+/// @brief Reports whether a declared schedule mode is one of the two accepted explicit values.
+/// @param mode Declared schedule mode.
+/// @return `true` only for `SCHEDULE_IMMEDIATE` or `SCHEDULE_SCHEDULED`.
+bool wire_schedule_mode_known(v1::ScheduleMode mode) noexcept {
+  return mode == v1::SCHEDULE_IMMEDIATE || mode == v1::SCHEDULE_SCHEDULED;
+}
+
+/// @brief Adds a bounded delta to a declared tick without signed overflow.
+/// @param base Declared base tick.
+/// @param delta Non-negative declared delta.
+/// @return The saturated sum.
+val::Timestamp saturating_add(val::Timestamp base, val::Timestamp delta) noexcept {
+  const val::Timestamp maximum = std::numeric_limits<val::Timestamp>::max();
+  if (delta > maximum - base) {
+    return maximum;
+  }
+  return base + delta;
 }
 
 /// @brief Maps the accepted action onto its canonical endpoint direction.
@@ -454,6 +500,7 @@ GatewaySession::GatewaySession(const GatewayConfig &config,
                                const GatewayDependencies &dependencies,
                                GatewaySessionBinding binding) noexcept
     : config_(config), dependencies_(dependencies), binding_(std::move(binding)),
+      last_activity_tick_(binding_.arrival_tick),
       flow_tokens_(config.max_pending_requests()) {}
 
 GatewayOutcome GatewaySession::negotiate(const v1::ProtocolVersion &peer) noexcept {
@@ -520,11 +567,14 @@ GatewaySession::Admission GatewaySession::admit(std::uint64_t deadline_millis) n
         deadline_millis);
     return admission;
   }
+  // A per-request deadline is anchored to the request's own declared arrival, never to the
+  // session creation tick. A long-lived session therefore accepts a fresh request with a still
+  // valid permit and an in-window deadline; the declared bound caps the request, not the session.
   const std::uint64_t effective =
       deadline_millis == 0U ? config_.max_deadline_millis() : deadline_millis;
-  const val::Timestamp due =
-      binding_.arrival_tick + static_cast<val::Timestamp>(effective);
   const val::Timestamp now = resolve_dispatch_tick();
+  last_activity_tick_ = now;
+  const val::Timestamp due = saturating_add(now, static_cast<val::Timestamp>(effective));
   if (now > due) {
     admission.outcome = GatewayOutcome::expired;
     ++requests_rejected_;
@@ -561,13 +611,62 @@ void GatewaySession::log(GatewayOutcome outcome, GatewayPhase phase, std::string
   dependencies_.log->record(record);
 }
 
-void GatewaySession::cleanup_locked(GatewayOutcome pending_outcome, GatewayPhase phase) noexcept {
-  if (dependencies_.observations != nullptr && observation_.has_value()) {
-    static_cast<void>(dependencies_.observations->detach(*observation_));
+GatewaySession::StreamOwnership *
+GatewaySession::find_stream_locked(std::string_view stream_id) noexcept {
+  for (StreamOwnership &stream : streams_) {
+    if (stream.id == stream_id) {
+      return &stream;
+    }
   }
-  observation_.reset();
-  stream_id_.clear();
+  return nullptr;
+}
+
+void GatewaySession::detach_all_streams_locked() noexcept {
+  if (dependencies_.observations != nullptr) {
+    for (StreamOwnership &stream : streams_) {
+      static_cast<void>(dependencies_.observations->detach(*stream.handle));
+    }
+  }
+  streams_.clear();
   active_streams_ = 0U;
+}
+
+std::uint32_t GatewaySession::action_pending_locked() const noexcept {
+  if (dependencies_.actions == nullptr) {
+    return 0U;
+  }
+  const val::ActionPathSnapshot snapshot = dependencies_.actions->snapshot();
+  const std::size_t bounded =
+      std::min<std::size_t>(snapshot.pending, config_.max_pending_requests());
+  return static_cast<std::uint32_t>(bounded);
+}
+
+void GatewaySession::drain_scheduled_locked(val::Timestamp now) noexcept {
+  if (dependencies_.actions == nullptr) {
+    return;
+  }
+  val::CompletionRequest completion{};
+  completion.now = now;
+  completion.domain = binding_.arrival_domain;
+  completion.session_state = val::LifecycleState::active;
+  const val::CompletionReport report = dependencies_.actions->drain(completion);
+  emitted_ += report.drained;
+  evidence_incomplete_ += report.evidence_incomplete;
+  if (report.drained > 0U) {
+    last_pending_outcome_ = GatewayOutcome::accepted;
+  }
+  pending_requests_ = action_pending_locked();
+}
+
+void GatewaySession::cleanup_locked(GatewayOutcome pending_outcome, GatewayPhase phase) noexcept {
+  detach_all_streams_locked();
+  if (dependencies_.actions != nullptr && pending_requests_ > 0U) {
+    val::CompletionRequest completion{};
+    completion.now = resolve_dispatch_tick();
+    completion.domain = binding_.arrival_domain;
+    completion.session_state = val::LifecycleState::evidence_incomplete;
+    static_cast<void>(dependencies_.actions->close(completion));
+  }
   if (lease_held_ && dependencies_.leases != nullptr) {
     const val::LeaseStatus released = dependencies_.leases->release(lease_key_, lease_request_id_);
     if (released != val::LeaseStatus::Ok) {
@@ -598,12 +697,16 @@ void GatewaySession::on_idle_tick(val::Timestamp now) noexcept {
   if (terminal_) {
     return;
   }
-  const val::Timestamp deadline =
-      binding_.arrival_tick + static_cast<val::Timestamp>(config_.session_idle_timeout_millis());
+  // Idle timeout is measured from the most recent declared activity, not from session creation.
+  const val::Timestamp deadline = saturating_add(
+      last_activity_tick_, static_cast<val::Timestamp>(config_.session_idle_timeout_millis()));
   if (now >= deadline) {
     cleanup_locked(GatewayOutcome::expired, GatewayPhase::session);
-  } else {
-    flow_tokens_ = config_.max_pending_requests();
+    return;
+  }
+  flow_tokens_ = config_.max_pending_requests();
+  if (armed_ && has_handle_) {
+    drain_scheduled_locked(now);
   }
 }
 
@@ -711,18 +814,19 @@ GatewaySession::OpenObservation(const v1::OpenObservationRequest &request) noexc
                    "observation", "observation boundary rejected the tap");
     return response;
   }
-  observation_.emplace(*attached.handle);
   ++stream_counter_;
-  stream_id_ = "gw-stream-" + std::to_string(stream_counter_);
+  streams_.push_back(StreamOwnership{
+      std::string("gw-stream-" + std::to_string(stream_counter_)),
+      std::make_unique<ObservationTapHandle>(*attached.handle)});
   ++active_streams_;
   ++requests_authorized_;
-  response.set_stream_id(stream_id_);
+  response.set_stream_id(streams_.back().id);
   response.set_granted_max_records(config_.max_observation_records());
   response.set_granted_max_record_bytes(0U);
   set_diagnostic(response.mutable_diagnostic(), "gw.observation.opened", v1::SEVERITY_INFO,
                  "observation", "bounded metadata-only stream granted");
-  log(GatewayOutcome::accepted, GatewayPhase::observation, "gw.observation.opened", stream_id_,
-      static_cast<std::uint64_t>(stream_id_.size()), 0U);
+  log(GatewayOutcome::accepted, GatewayPhase::observation, "gw.observation.opened",
+      streams_.back().id, static_cast<std::uint64_t>(streams_.back().id.size()), 0U);
   return response;
 }
 
@@ -734,8 +838,9 @@ GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
   if (!admission.proceed) {
     return 0U;
   }
-  if (!observation_.has_value() || request.stream_id().empty() ||
-      request.stream_id() != stream_id_) {
+  StreamOwnership *stream =
+      request.stream_id().empty() ? nullptr : find_stream_locked(request.stream_id());
+  if (stream == nullptr) {
     ++requests_rejected_;
     log(GatewayOutcome::rejected, GatewayPhase::observation, "gw.stream.unknown", binding_.session_id,
         0U, 0U);
@@ -749,7 +854,7 @@ GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
     if (dependencies_.observations == nullptr) {
       break;
     }
-    ObservationPollResult poll = dependencies_.observations->poll(*observation_);
+    ObservationPollResult poll = dependencies_.observations->poll(*stream->handle);
     if (!poll.record.has_value()) {
       break;
     }
@@ -768,7 +873,7 @@ GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
     ++written;
   }
   ++requests_authorized_;
-  log(GatewayOutcome::accepted, GatewayPhase::observation, "gw.observation.read", stream_id_,
+  log(GatewayOutcome::accepted, GatewayPhase::observation, "gw.observation.read", stream->id,
       static_cast<std::uint64_t>(written), 0U);
   return written;
 }
@@ -783,21 +888,23 @@ GatewaySession::CloseObservation(const v1::CloseObservationRequest &request) noe
                    v1::SEVERITY_ERROR, "observation", to_string(admission.outcome));
     return response;
   }
-  if (!observation_.has_value() || request.stream_id() != stream_id_ ||
-      dependencies_.observations == nullptr) {
+  StreamOwnership *stream =
+      request.stream_id().empty() ? nullptr : find_stream_locked(request.stream_id());
+  if (stream == nullptr || dependencies_.observations == nullptr) {
     ++requests_rejected_;
     set_diagnostic(response.mutable_diagnostic(), "gw.stream.unknown", v1::SEVERITY_ERROR,
                    "observation", "unknown stream");
     return response;
   }
   const std::optional<ObservationSnapshot> snapshot =
-      dependencies_.observations->snapshot(*observation_);
+      dependencies_.observations->snapshot(*stream->handle);
   const std::uint64_t delivered = snapshot.has_value() ? snapshot->accepted : 0U;
   const std::uint64_t dropped = snapshot.has_value() ? snapshot->dropped : 0U;
-  static_cast<void>(dependencies_.observations->detach(*observation_));
-  observation_.reset();
-  stream_id_.clear();
-  active_streams_ = 0U;
+  static_cast<void>(dependencies_.observations->detach(*stream->handle));
+  streams_.erase(streams_.begin() + (stream - streams_.data()));
+  if (active_streams_ > 0U) {
+    --active_streams_;
+  }
   ++requests_authorized_;
   response.set_delivered(delivered);
   response.set_dropped(dropped);
@@ -975,13 +1082,43 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
                    "stimulation", "unknown stimulation action kind");
     return response;
   }
-  if (request.schedule().mode() == v1::SCHEDULE_SCHEDULED) {
-    ++pending_requests_;
-    last_pending_outcome_ = GatewayOutcome::accepted;
-    ++requests_authorized_;
-    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_QUEUED);
-    set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.queued", v1::SEVERITY_INFO,
-                   "stimulation", "bounded pending action queued");
+  // R2: validate and preserve every declared wire field before any side effect. A request is
+  // rejected, never silently normalized, when its declared semantics are incompatible with the
+  // action, its contract, its schedule mode, or its declared clock domain.
+  if (!wire_interaction_matches(request.interaction(), action)) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.interaction", v1::SEVERITY_ERROR,
+                   "stimulation", "declared interaction is incompatible with the action");
+    return response;
+  }
+  if (!wire_direction_valid(request.direction())) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.direction", v1::SEVERITY_ERROR,
+                   "stimulation", "declared direction is not an outbound stimulation direction");
+    return response;
+  }
+  if (!binding_.contract_id.empty() && request.contract_id() != binding_.contract_id) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.contract.mismatch", v1::SEVERITY_ERROR,
+                   "stimulation", "declared contract identity differs from the bound contract");
+    return response;
+  }
+  if (!wire_schedule_mode_known(request.schedule().mode())) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.schedule.unknown", v1::SEVERITY_ERROR,
+                   "stimulation", "unknown schedule mode");
+    return response;
+  }
+  if (!binding_.arrival_domain_name.empty() &&
+      request.schedule().clock_domain() != binding_.arrival_domain_name) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.clock.unmapped", v1::SEVERITY_ERROR,
+                   "stimulation", "declared clock domain is unmapped");
     return response;
   }
   if (dependencies_.actions == nullptr) {
@@ -991,14 +1128,6 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
                    "stimulation", "no accepted action-path boundary");
     return response;
   }
-  val::StimulationRequest stimulation{};
-  stimulation.permit_id = binding_.permit.permit_id();
-  stimulation.session_id = binding_.permit.session_id();
-  stimulation.plan_digest = binding_.permit.plan_digest();
-  stimulation.action = action;
-  stimulation.interaction = interaction_for(action);
-  stimulation.direction = direction_for(action);
-  stimulation.schema = schema_for(action);
   const std::optional<val::Tag> target = val::Tag::make(request.target_endpoint());
   if (!target.has_value()) {
     ++requests_rejected_;
@@ -1007,6 +1136,45 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
                    "stimulation", "invalid target tag");
     return response;
   }
+  const bool scheduled = request.schedule().mode() == v1::SCHEDULE_SCHEDULED;
+  const val::Timestamp now = resolve_dispatch_tick();
+  const std::uint64_t effective_deadline = request.deadline_millis() == 0U
+                                               ? config_.max_deadline_millis()
+                                               : request.deadline_millis();
+  const val::Timestamp request_horizon =
+      saturating_add(now, static_cast<val::Timestamp>(effective_deadline));
+  const std::uint64_t raw_due = request.schedule().due_nanos();
+  const val::Timestamp declared_due =
+      raw_due > static_cast<std::uint64_t>(std::numeric_limits<val::Timestamp>::max())
+          ? std::numeric_limits<val::Timestamp>::max()
+          : static_cast<val::Timestamp>(raw_due);
+  // R4: the declared schedule must fall inside this request's own deadline window; a schedule that
+  // cannot complete within the request bound is rejected before it can be queued.
+  if (scheduled && declared_due > request_horizon) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.deadline.schedule", v1::SEVERITY_ERROR,
+                   "stimulation", "declared schedule exceeds the request deadline");
+    return response;
+  }
+  // R3: the bounded pending queue is the real accepted scheduler queue, not a counter. Capacity is
+  // enforced before enqueueing, independent of transient flow-credit replenishment.
+  if (scheduled && action_pending_locked() >= config_.max_pending_requests()) {
+    ++requests_rejected_;
+    ++flow_rejections_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.flow.saturated", v1::SEVERITY_ERROR,
+                   "stimulation", "bounded scheduled queue is full");
+    return response;
+  }
+  val::StimulationRequest stimulation{};
+  stimulation.permit_id = binding_.permit.permit_id();
+  stimulation.session_id = binding_.permit.session_id();
+  stimulation.plan_digest = binding_.permit.plan_digest();
+  stimulation.action = action;
+  stimulation.interaction = interaction_from_wire(request.interaction());
+  stimulation.direction = direction_for(action);
+  stimulation.schema = schema_for(action);
   stimulation.target = *target;
   const std::optional<val::Tag> interface_tag =
       val::Tag::make(binding_.context.interface_name.empty() ? kDefaultInterface
@@ -1015,13 +1183,13 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
                                                         : val::Tag(std::string(kDefaultInterface));
   stimulation.service_owner = binding_.service_owner;
   stimulation.clock_domain = binding_.arrival_domain;
-  stimulation.scheduled_at = 0;
-  stimulation.immediate = true;
+  stimulation.scheduled_at = scheduled ? declared_due : 0;
+  stimulation.immediate = !scheduled;
   stimulation.request_id = parse_identity(request.request_id());
   stimulation.correlation_id = parse_identity(request.action().correlation_id());
   stimulation.causation_id = request.action().causation_id();
   stimulation.quota_cost = 0U;
-  const val::ResolvedTime resolved{binding_.arrival_domain, resolve_dispatch_tick(), val::Result::Ok};
+  const val::ResolvedTime resolved{binding_.arrival_domain, now, val::Result::Ok};
   const auto *payload_bytes = reinterpret_cast<const std::byte *>(request.payload().data());
   const std::span<const std::byte> payload(payload_bytes, request.payload().size());
   val::ActionDiagnostic diagnostic{};
@@ -1035,13 +1203,14 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request) n
     response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_EMITTED);
     set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.emitted", v1::SEVERITY_INFO,
                    "stimulation", "synthetic item emitted");
+    response.mutable_diagnostic()->set_identity(request.contract_id());
   } else if (outcome == GatewayOutcome::accepted) {
-    ++pending_requests_;
+    pending_requests_ = action_pending_locked();
     last_pending_outcome_ = GatewayOutcome::accepted;
     ++requests_authorized_;
     response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_QUEUED);
     set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.queued", v1::SEVERITY_INFO,
-                   "stimulation", "bounded pending action queued");
+                   "stimulation", "bounded scheduled action retained in the accepted queue");
   } else if (outcome == GatewayOutcome::evidence_incomplete) {
     ++evidence_incomplete_;
     ++requests_rejected_;
@@ -1136,6 +1305,15 @@ GatewaySession::ReleaseLease(const v1::ReleaseLeaseRequest &request) noexcept {
     response.set_state(v1::LEASE_QUARANTINED);
     set_diagnostic(response.mutable_diagnostic(), "gw.lease.notheld", v1::SEVERITY_ERROR, "lease",
                    "no held lease for this session");
+    return response;
+  }
+  // R6: the release must name the exact held lease identity. A mismatched or stale identity is
+  // rejected without changing any lease or session state.
+  if (request.lease_id() != lease_id_) {
+    ++requests_rejected_;
+    response.set_state(v1::LEASE_QUARANTINED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.lease.identity", v1::SEVERITY_ERROR, "lease",
+                   "lease identity does not match the held lease");
     return response;
   }
   const val::LeaseStatus status = dependencies_.leases->release(lease_key_, lease_request_id_);

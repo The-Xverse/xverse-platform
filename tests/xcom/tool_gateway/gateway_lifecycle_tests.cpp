@@ -139,3 +139,85 @@ TEST(XcomToolGatewayLifecycle, IdleTimeoutCleanup) {
   query.set_session_id(std::string(kSessionId));
   EXPECT_EQ(session.QuerySession(query).diagnostic().code(), "gw.query.declined");
 }
+
+TEST(XcomToolGatewayLifecycle, IndependentObservationStreamsClose) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+
+  v1::OpenObservationRequest open;
+  open.set_tap_id("tap.first");
+  open.set_max_records(1U);
+  open.set_deadline_millis(1000U);
+  const v1::OpenObservationResponse first = session.OpenObservation(open);
+  ASSERT_FALSE(first.stream_id().empty());
+  open.set_tap_id("tap.second");
+  const v1::OpenObservationResponse second = session.OpenObservation(open);
+  ASSERT_FALSE(second.stream_id().empty());
+  EXPECT_NE(first.stream_id(), second.stream_id());
+  EXPECT_EQ(session.snapshot().active_streams, 2U);
+
+  v1::CloseObservationRequest close_first;
+  close_first.set_stream_id(first.stream_id());
+  EXPECT_EQ(session.CloseObservation(close_first).diagnostic().code(), "gw.observation.closed");
+  EXPECT_EQ(session.snapshot().active_streams, 1U);
+
+  v1::CloseObservationRequest close_second;
+  close_second.set_stream_id(second.stream_id());
+  EXPECT_EQ(session.CloseObservation(close_second).diagnostic().code(), "gw.observation.closed");
+  EXPECT_EQ(session.snapshot().active_streams, 0U);
+}
+
+TEST(XcomToolGatewayLifecycle, LeaseReleaseRequiresExactIdentity) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::AcquireLeaseRequest lease;
+  lease.set_session_id(std::string(kSessionId));
+  lease.set_endpoint_id("svc.alpha");
+  lease.set_endpoint_generation(3U);
+  lease.set_plan_digest("plan-1");
+  lease.set_lease_millis(500U);
+  lease.set_deadline_millis(1000U);
+  const v1::AcquireLeaseResponse acquired = session.AcquireLease(lease);
+  ASSERT_EQ(acquired.state(), v1::LEASE_ACTIVE);
+  ASSERT_FALSE(acquired.lease_id().empty());
+
+  v1::ReleaseLeaseRequest wrong;
+  wrong.set_session_id(std::string(kSessionId));
+  wrong.set_lease_id("wrong-lease-identity");
+  EXPECT_NE(session.ReleaseLease(wrong).state(), v1::LEASE_RELEASED);
+  EXPECT_TRUE(session.snapshot().lease_held);
+
+  v1::ReleaseLeaseRequest exact;
+  exact.set_session_id(std::string(kSessionId));
+  exact.set_lease_id(acquired.lease_id());
+  EXPECT_EQ(session.ReleaseLease(exact).state(), v1::LEASE_RELEASED);
+  EXPECT_FALSE(session.snapshot().lease_held);
+}
+
+TEST(XcomToolGatewayLifecycle, IdleTimeoutTracksLastActivity) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  fixture.clock().set(600);
+  ASSERT_EQ(session.SubmitStimulation(stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL,
+                                                          "61"))
+                .outcome()
+                .kind(),
+            v1::STIMULATION_OUTCOME_EMITTED);
+
+  session.on_idle_tick(1200);
+  EXPECT_FALSE(session.snapshot().terminal);
+  session.on_idle_tick(1600);
+  EXPECT_TRUE(session.snapshot().terminal);
+}

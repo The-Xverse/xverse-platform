@@ -28,11 +28,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 /// @brief Root namespace of the X-COM subsystem.
 namespace xverse::xcom {
@@ -329,8 +331,14 @@ struct GatewaySessionBinding final {
   validation::SessionContext context{};
   /// @brief Declared arrival clock domain for deadlines.
   validation::ClockDomainId arrival_domain{validation::kInvalidClockDomain};
-  /// @brief Declared arrival tick used to compute absolute deadlines.
+  /// @brief Logical wire name of the bound arrival clock domain; a request naming another domain is
+  ///        rejected as unmapped rather than silently rewritten.
+  std::string arrival_domain_name;
+  /// @brief Declared arrival tick used as the initial session activity anchor.
   validation::Timestamp arrival_tick{0};
+  /// @brief Logical contract identity expected on the wire for a stimulation submission; a request
+  ///        naming another contract is rejected rather than silently dropped.
+  std::string contract_id;
   /// @brief Declared service-owner identity validated only for service actions.
   validation::ServiceOwner service_owner{};
   /// @brief Logical blueprint/contract tag used for log identities.
@@ -545,6 +553,26 @@ class GatewaySession final {
   /// @brief Validates the wire session identity against the bound logical identity.
   [[nodiscard]] bool session_matches(const std::string &session_id) const noexcept;
 
+  /// @brief One accepted bounded observation stream and its independent exact handle.
+  struct StreamOwnership final {
+    /// @brief Stable logical stream identity granted to the peer.
+    std::string id;
+    /// @brief Exact detached-able hub handle for this stream only.
+    std::unique_ptr<ObservationTapHandle> handle;
+  };
+
+  /// @brief Finds the accepted stream with the exact logical identity; call only holding the mutex.
+  /// @param stream_id Declared stream identity.
+  /// @return Pointer to the retained stream ownership, or `nullptr` when absent.
+  [[nodiscard]] StreamOwnership *find_stream_locked(std::string_view stream_id) noexcept;
+  /// @brief Detaches and forgets every accepted stream; call only holding the mutex.
+  void detach_all_streams_locked() noexcept;
+  /// @brief Reports the bounded scheduled queue depth from the accepted action path.
+  [[nodiscard]] std::uint32_t action_pending_locked() const noexcept;
+  /// @brief Executes every due scheduled action and applies the bounded terminal outcome.
+  /// @param now Caller-supplied declared tick in the bound arrival domain.
+  void drain_scheduled_locked(validation::Timestamp now) noexcept;
+
   GatewayConfig config_;
   GatewayDependencies dependencies_{};
   GatewaySessionBinding binding_{};
@@ -557,10 +585,10 @@ class GatewaySession final {
   v1::ProtocolVersion peer_version_{};
   validation::SessionHandle handle_{};
   bool has_handle_{false};
-  std::optional<ObservationTapHandle> observation_{};
-  std::string stream_id_;
+  std::vector<StreamOwnership> streams_{};
   std::uint32_t stream_counter_{0U};
   std::uint32_t active_streams_{0U};
+  validation::Timestamp last_activity_tick_{0};
   std::uint32_t pending_requests_{0U};
   GatewayOutcome last_pending_outcome_{GatewayOutcome::accepted};
   std::uint32_t flow_tokens_{0U};

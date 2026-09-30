@@ -143,9 +143,11 @@ class SyntheticClientFixture final {
     binding_.controller = controller_identity();
     binding_.context = context_for(permit_);
     binding_.arrival_domain = kDomain;
+    binding_.arrival_domain_name = "clock.gateway";
     binding_.arrival_tick = clock_.get();
     binding_.service_owner = val::ServiceOwner{tag("svc.alpha"), 3U, true};
     binding_.blueprint_id = "gateway.blueprint";
+    binding_.contract_id = "gateway.contract";
     bind();
   }
 

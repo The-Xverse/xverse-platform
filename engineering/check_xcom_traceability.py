@@ -196,21 +196,43 @@ MATERIAL_GLOBS = (
 )
 
 # Retained evidence scanned for excluded content (the verifier's own source is
-# excluded because it legitimately declares the detector patterns).
+# excluded because it legitimately declares the detector patterns).  The scan
+# covers the T038 work products plus the retained T030-T038 package/evidence
+# inventory: the T038 review/typed JSON, the predecessor typed records, the
+# predecessor package manifests, the T038 stage results, and the review index.
 SCAN_GLOBS = (
     "docs/engineering/xcom/t008/requirements-register.json",
     "docs/engineering/xcom/t008/traceability-matrix.json",
     "docs/engineering/xcom/t038/*.md",
+    "docs/engineering/xcom/t038/*.json",
+    "docs/engineering/xcom/t03[0-7]/internal-review.json",
     "engineering/architecture/components/T038-SR-*-CMP.json",
+    "engineering/architecture/components/T03[0-7]-*-CMP.json",
     "engineering/project.json",
     "engineering/requirements/T038-*.json",
+    "engineering/requirements/T03[0-7]-*.json",
+    "engineering/stage-results/phase8-t038-*.json",
     "engineering/trace/links.json",
     "engineering/unit-specifications/T038-SR-*-U.json",
+    "engineering/unit-specifications/T03[0-7]*-U.json",
     "engineering/validation/scenarios/T038-VS-ACCUMULATED.json",
+    "reports/review-index.md",
+    "reports/xcom-queue/t038-package.json",
     "reports/xcom-queue/t038-traceability.json",
+    "reports/xcom-queue/t03[0-7]-package.json",
     "specs/007-xcom-core/reference-traceability.md",
     "specs/007-xcom-core/tasks.md",
 )
+
+# Explicit, bounded scan exceptions: immutable predecessor review records that
+# embed historical scratch paths and were already public-safety validated by
+# their own candidate scan.  Every entry must name a predecessor (T030-T037)
+# ``internal-review.json``; the T038 retained review JSON is never excepted.
+SCAN_EXCEPTIONS = {
+    "docs/engineering/xcom/t035/internal-review.json": "immutable predecessor review record",
+    "docs/engineering/xcom/t036/internal-review.json": "immutable predecessor review record",
+}
+SCAN_EXCEPTION_RE = re.compile(r"^docs/engineering/xcom/t03[0-7]/internal-review\.json$")
 
 ADMITTED_INPUTS = {
     "XVERSE_XCOM_TOOLCHAIN": "directory",
@@ -378,24 +400,36 @@ def load_json(path: pathlib.Path) -> object:
 
 
 def load_records() -> dict[str, object]:
+    """Load the entire accumulated capability-007 record set, not just T038.
+
+    The expected requirement/component/unit set spans every retained accepted
+    slice (T020, T026-T038).  Loading only the current task would let a deleted
+    predecessor record pass unnoticed, so every typed record and validation
+    scenario is loaded and cross-checked against the committed trace links.
+    """
     requirements: dict[str, dict] = {}
-    for path in sorted((REPO_ROOT / "engineering/requirements").glob("T038-*.json")):
+    for path in sorted((REPO_ROOT / "engineering/requirements").glob("*.json")):
         record = load_json(path)
         requirements[record["id"]] = record
     components: dict[str, dict] = {}
-    for path in sorted((REPO_ROOT / "engineering/architecture/components").glob("T038-*-CMP.json")):
+    for path in sorted((REPO_ROOT / "engineering/architecture/components").glob("*.json")):
         record = load_json(path)
         components[record["id"]] = record
     units: dict[str, dict] = {}
-    for path in sorted((REPO_ROOT / "engineering/unit-specifications").glob("T038-*-U.json")):
+    for path in sorted((REPO_ROOT / "engineering/unit-specifications").glob("*.json")):
         record = load_json(path)
         units[record["id"]] = record
+    scenarios: dict[str, dict] = {}
+    for path in sorted((REPO_ROOT / "engineering/validation/scenarios").glob("*.json")):
+        record = load_json(path)
+        scenarios[record.get("id", path.stem)] = record
     scenario = load_json(REPO_ROOT / "engineering/validation/scenarios/T038-VS-ACCUMULATED.json")
     register = load_json(REPO_ROOT / "docs/engineering/xcom/t008/requirements-register.json")
     return {
         "requirements": requirements,
         "components": components,
         "units": units,
+        "scenarios": scenarios,
         "scenario": scenario,
         "register": register,
     }
@@ -555,6 +589,86 @@ def check_chain(records: dict[str, object], links: list[dict], findings: Finding
     }
 
 
+def check_accumulated(records: dict[str, object], links: list[dict],
+                      findings: Findings) -> dict[str, object]:
+    """Resolve every required record and edge across the whole accumulated scope.
+
+    This is the predecessor-coverage check: it is independent of the current
+    task id, so a deleted predecessor requirement, component, or unit record, or
+    a removed predecessor relationship, fails closed instead of shrinking the
+    expected set silently.
+    """
+    requirements = records["requirements"]
+    components = records["components"]
+    units = records["units"]
+    scenarios = records["scenarios"]
+    defined = set(requirements) | set(components) | set(units) | set(scenarios)
+    edges = edge_index(links)
+
+    resolved = 0
+    unresolved: list[str] = []
+
+    def require_edge(relation: str, source: str, accept) -> None:
+        nonlocal resolved
+        good = [link for link in edges.get((relation, source), []) if accept(link)]
+        if good:
+            resolved += len(good)
+        else:
+            unresolved.append(f"{relation}:{source}")
+            findings.add(EXIT_CHAIN,
+                         f"required accumulated chain edge is missing: {relation} {source}")
+
+    # Referential integrity: every link endpoint must resolve to a declared
+    # record, component, unit, scenario, measure, or accepted system/REF-002 id.
+    for link in links:
+        source = str(link.get("source", ""))
+        if source not in defined and source not in MEASURES:
+            findings.add(EXIT_CHAIN,
+                         f"trace link source resolves to no declared record: {source}")
+        relation = link.get("relation")
+        target = str(link.get("target", ""))
+        if relation == "allocated_to" and target not in components:
+            findings.add(EXIT_CHAIN, f"allocated_to target is not a declared component: {target}")
+        if relation == "decomposes_to" and target not in units:
+            findings.add(EXIT_CHAIN, f"decomposes_to target is not a declared unit: {target}")
+        if relation in ("verified_by", "analyzed_by") and target not in MEASURES:
+            findings.add(EXIT_CHAIN, f"{relation} target is not an accepted measure: {target}")
+
+    def implemented_file_exists(link: dict) -> bool:
+        return (REPO_ROOT / str(link["target"])).is_file()
+
+    def is_component(link: dict) -> bool:
+        return str(link["target"]) in components
+
+    def is_unit(link: dict) -> bool:
+        return str(link["target"]) in units
+
+    def is_measure(link: dict) -> bool:
+        return str(link["target"]) in MEASURES
+
+    for rid, record in requirements.items():
+        if record.get("level") != "software":
+            continue
+        require_edge("refines", rid, lambda link: True)
+        require_edge("allocated_to", rid, is_component)
+        require_edge("implemented_by", rid, implemented_file_exists)
+        require_edge("verified_by", rid, is_measure)
+    for cid in components:
+        require_edge("decomposes_to", cid, is_unit)
+    for uid in units:
+        require_edge("implemented_by", uid, implemented_file_exists)
+        require_edge("verified_by", uid, is_measure)
+        require_edge("analyzed_by", uid, lambda link: str(link["target"]) == STATIC_ANALYSIS)
+
+    return {
+        "unresolved_edges": unresolved,
+        "resolved_edges": resolved,
+        "requirements": len(requirements),
+        "components": len(components),
+        "units": len(units),
+    }
+
+
 def _expand_reference_ids(text: str) -> set[str]:
     """Return the REF-002 IDs named in a bullet, expanding ``XVE-SYS-0145–0147`` ranges."""
     ids: set[str] = set()
@@ -672,7 +786,17 @@ def check_ref002(register: dict, reference_markdown: str, findings: Findings) ->
 
 
 def check_public_safety(findings: Findings) -> dict[str, object]:
-    """Scan the retained evidence for the mechanically decidable excluded classes."""
+    """Scan the retained package/evidence inventory for excluded content.
+
+    The scan set is the explicit retained-evidence globs minus the bounded,
+    documented predecessor exceptions.  An exception that does not name a
+    predecessor ``internal-review.json`` (or that names the T038 review JSON)
+    fails closed, so the exception list cannot silently grow.
+    """
+    for relative in SCAN_EXCEPTIONS:
+        if not SCAN_EXCEPTION_RE.fullmatch(relative):
+            findings.add(EXIT_PUBLIC_SAFETY,
+                         f"scan exception is not a bounded predecessor review record: {relative}")
     scanned: list[str] = []
     seen: set[str] = set()
     for pattern in SCAN_GLOBS:
@@ -683,6 +807,8 @@ def check_public_safety(findings: Findings) -> dict[str, object]:
             if relative in seen:
                 continue
             seen.add(relative)
+            if relative in SCAN_EXCEPTIONS:
+                continue
             scanned.append(relative)
             try:
                 text = match.read_text(encoding="utf-8")
@@ -693,6 +819,34 @@ def check_public_safety(findings: Findings) -> dict[str, object]:
                 if regex.search(text):
                     findings.add(EXIT_PUBLIC_SAFETY, f"{relative} matches excluded content: {name}")
     return {"scanned_files": sorted(scanned), "verdict": "pass"}
+
+
+def check_inherited_validators(findings: Findings) -> dict[str, object]:
+    """Run the inherited, repository-owned validators on the assembled revision.
+
+    A later task must not let an earlier task's evidence silently go stale.  The
+    T036 benchmark report is re-verified through its own repository-owned
+    verifier against this exact candidate revision and material digest.
+    """
+    results: dict[str, object] = {}
+    script = REPO_ROOT / "engineering/run_xcom_benchmarks.py"
+    benchmark = REPO_ROOT / "reports/xcom-queue/t036-benchmark.json"
+    if not script.is_file() or not benchmark.is_file():
+        findings.add(EXIT_BINDING, "inherited T036 benchmark evidence is not retained")
+        return results
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script), "--verify", str(benchmark)],
+            cwd=REPO_ROOT, text=True, capture_output=True, check=False, timeout=300,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover - defensive
+        findings.add(EXIT_STALE, f"inherited T036 benchmark verifier did not run: {exc}")
+        return results
+    results["t036_benchmark"] = {"exit_code": completed.returncode, "ok": completed.returncode == 0}
+    if completed.returncode != 0:
+        findings.add(EXIT_STALE,
+                     "inherited T036 benchmark evidence does not verify at this candidate")
+    return results
 
 
 def analyze() -> tuple[dict[str, object], Findings]:
@@ -707,10 +861,21 @@ def analyze() -> tuple[dict[str, object], Findings]:
         encoding="utf-8"
     )
     chain = check_chain(records, links, findings)
+    accumulated = check_accumulated(records, links, findings)
     ref002 = check_ref002(records["register"], reference_markdown, findings)
     public_safety = check_public_safety(findings)
+    # The chain's declared sets and resolved-edge count cover the entire
+    # accumulated scope, not only the current task.
+    chain["counts"]["requirements"] = accumulated["requirements"]
+    chain["counts"]["components"] = accumulated["components"]
+    chain["counts"]["units"] = accumulated["units"]
+    chain["counts"]["resolved_edges"] += accumulated["resolved_edges"]
+    chain["unresolved_edges"] = chain["unresolved_edges"] + accumulated["unresolved_edges"]
+    inherited = check_inherited_validators(findings)
     observed = {
         "chain": chain,
+        "accumulated": accumulated,
+        "inherited": inherited,
         "ref002": ref002,
         "public_safety": public_safety,
         "records": records,
@@ -786,6 +951,7 @@ def build_report(observed: dict[str, object]) -> dict[str, object]:
             "public_safety": public_safety["verdict"],
             "excluded_content_classes": EXCLUDED_CONTENT_CLASSES,
             "scanned_files": public_safety["scanned_files"],
+            "inherited_validators": observed["inherited"],
             "hashes": hashes,
             "verdict": "pass",
         },
@@ -864,6 +1030,10 @@ def validate_report(report: dict, observed: dict[str, object], findings: Finding
             findings, EXIT_PUBLIC_SAFETY)
     require(evidence.get("validates_links") == counts["validates_links"],
             "the report validates count is inconsistent", findings, EXIT_CHAIN)
+    inherited = evidence.get("inherited_validators")
+    require(isinstance(inherited, dict)
+            and inherited.get("t036_benchmark", {}).get("ok") is True,
+            "the report does not record a verified inherited T036 benchmark", findings, EXIT_STALE)
 
     recorded_ref002 = report["ref002"]
     require(recorded_ref002.get("capability_disposition") == "unchanged",
@@ -1039,6 +1209,68 @@ def run_self_test() -> int:
         failures += 1
         print(f"NEG-04: expected PUBLIC_SAFETY_INVALID but got exit {findings.exit_code()}",
               file=sys.stderr)
+
+    # NEG-05 onward mutate the real retained files and run the complete
+    # verification path, so the scanner is exercised through the full command on
+    # a mutated file rather than only a detached detector regex.
+    def file_mutation(exit_class, label, mutate) -> None:
+        nonlocal failures
+        findings = Findings()
+        try:
+            mutate()
+            _, findings = analyze()
+        except TraceabilityError as exc:  # pragma: no cover - defensive
+            findings.add(EXIT_CHAIN, f"mutation probe error: {exc}")
+        finally:
+            restore_all()
+        if findings.exit_code() == exit_class:
+            print(f"{label}: rejected with {CLASS_NAMES[exit_class]} (exit {exit_class})")
+        else:
+            failures += 1
+            print(f"{label}: expected {CLASS_NAMES[exit_class]} but got exit "
+                  f"{findings.exit_code()}", file=sys.stderr)
+
+    saved_files: dict[pathlib.Path, bytes] = {}
+
+    def stage(path: pathlib.Path) -> pathlib.Path:
+        if path not in saved_files:
+            saved_files[path] = path.read_bytes()
+        return path
+
+    def restore_all() -> None:
+        for path, payload in saved_files.items():
+            path.write_bytes(payload)
+        saved_files.clear()
+
+    # NEG-05: a deleted predecessor requirement record.
+    predecessor = stage(REPO_ROOT / "engineering/requirements/T031-SR-001.json")
+    file_mutation(EXIT_CHAIN, "NEG-05 (deleted predecessor requirement)",
+                  lambda: predecessor.unlink())
+
+    # NEG-06: a removed predecessor verification edge.
+    links_path = stage(REPO_ROOT / "engineering/trace/links.json")
+
+    def remove_predecessor_verification() -> None:
+        document = json.loads(links_path.read_text(encoding="utf-8"))
+        document["links"] = [
+            link for link in document["links"]
+            if not (link.get("relation") == "verified_by" and link.get("source") == "T031-SR-001")
+        ]
+        links_path.write_text(json.dumps(document), encoding="utf-8")
+
+    file_mutation(EXIT_CHAIN, "NEG-06 (missing predecessor verification edge)",
+                  remove_predecessor_verification)
+
+    # NEG-07: excluded content injected into the retained T038 review JSON.
+    review = stage(REPO_ROOT / "docs/engineering/xcom/t038/internal-review.json")
+
+    def inject_excluded_content() -> None:
+        document = json.loads(review.read_text(encoding="utf-8"))
+        document["synthetic_probe"] = "forbidden host /home/example/private"
+        review.write_text(json.dumps(document), encoding="utf-8")
+
+    file_mutation(EXIT_PUBLIC_SAFETY, "NEG-07 (excluded content in retained review JSON)",
+                  inject_excluded_content)
 
     if failures:
         print(f"T038 self-test FAILED: {failures} fixture(s) did not behave as declared",

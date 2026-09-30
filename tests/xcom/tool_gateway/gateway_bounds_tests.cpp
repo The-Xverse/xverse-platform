@@ -150,3 +150,105 @@ TEST(XcomToolGatewayBounds, ObservationQueueBounded) {
   EXPECT_LE(delivered, 2U);
   EXPECT_LE(delivered, records.size());
 }
+
+TEST(XcomToolGatewayBounds, ScheduledQueueBoundedAcrossCreditReplenishment) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  for (unsigned identity = 1U; identity <= 40U; ++identity) {
+    session.on_idle_tick(0);
+    v1::SubmitStimulationRequest request =
+        stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, std::to_string(identity));
+    request.mutable_schedule()->set_mode(v1::SCHEDULE_SCHEDULED);
+    request.mutable_schedule()->set_due_nanos(5U);
+    static_cast<void>(session.SubmitStimulation(request));
+  }
+  EXPECT_LE(session.snapshot().pending_requests, fixture.config().max_pending_requests());
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+
+  fixture.clock().set(5);
+  session.on_idle_tick(5);
+  EXPECT_GT(fixture.emitter().calls, 0U);
+  EXPECT_LE(session.snapshot().pending_requests, fixture.config().max_pending_requests());
+}
+
+TEST(XcomToolGatewayBounds, ScheduledActionExecutesWhenDue) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "31");
+  request.mutable_schedule()->set_mode(v1::SCHEDULE_SCHEDULED);
+  request.mutable_schedule()->set_due_nanos(20U);
+  EXPECT_EQ(session.SubmitStimulation(request).outcome().kind(), v1::STIMULATION_OUTCOME_QUEUED);
+  EXPECT_EQ(session.snapshot().pending_requests, 1U);
+
+  session.on_idle_tick(19);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+  session.on_idle_tick(20);
+  EXPECT_EQ(fixture.emitter().calls, 1U);
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+}
+
+TEST(XcomToolGatewayBounds, ScheduledActionExpiresPastLateWindow) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "32");
+  request.mutable_schedule()->set_mode(v1::SCHEDULE_SCHEDULED);
+  ASSERT_EQ(session.SubmitStimulation(request).outcome().kind(), v1::STIMULATION_OUTCOME_QUEUED);
+
+  fixture.clock().set(500);
+  session.on_idle_tick(500);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+}
+
+TEST(XcomToolGatewayBounds, ScheduleBeyondRequestDeadlineRejected) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "33");
+  request.mutable_schedule()->set_mode(v1::SCHEDULE_SCHEDULED);
+  request.mutable_schedule()->set_due_nanos(5000U);
+  request.set_deadline_millis(100U);
+  const v1::SubmitStimulationResponse response = session.SubmitStimulation(request);
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(response.diagnostic().code(), "gw.deadline.schedule");
+  EXPECT_EQ(session.snapshot().pending_requests, 0U);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+}
+
+TEST(XcomToolGatewayBounds, RequestDeadlineAnchoredToRequestArrival) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+
+  fixture.clock().set(500);
+  v1::SubmitStimulationRequest request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "41");
+  request.set_deadline_millis(100U);
+  EXPECT_EQ(session.SubmitStimulation(request).outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
+  EXPECT_EQ(fixture.emitter().calls, 1U);
+}
