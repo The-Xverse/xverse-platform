@@ -263,8 +263,30 @@ are unchanged. The refreshed evidence report binds the exact R5 candidate materi
 identity, and only the report's `BASELINE_REVISION`/`ADMITTED_INPUTS` metadata changed in the checker.
 A second R5 pass reconciled the documented return and lifetime contracts with the implementation, still as
 documentation comments only: `WatchSession`, `AcquireLease`, and the `GatewayGrpcService` lifetime clause now
-match the compiled behavior, and no compiled token, statement, test, CMake, proto, or runtime behavior changed.
+match the compiled behavior. No function type, compiled statement, control flow, test, CMake, proto, or runtime
+behavior changed; the only source-level adaptation is the parameter identifiers already disclosed above.
 
 The exact R5 commands, outcomes, execution locations, and provenance are recorded in
 `docs/engineering/xcom/t038/r5-repair.md`. The historical T037 report identity recorded in §1 and §4 is retained
 as evidence only for that original revision and is not represented as the current result.
+
+## 12. R6 successor precision correction (2026-09-30)
+
+This section is additive and corrects three documentation-precision findings that the T039 R5 independent
+review recorded against the R5 addendum above; it does not rewrite §11 or any historical section.
+
+- **Lease identity precision.** The `QuerySession` response contract now states that the reported `lease_id` is
+  the current in-memory, session-scoped lease identity that is not persisted and does not survive session or
+  process termination, and it separately describes durable stimulation-outcome reconciliation; an absent durable
+  intent leaves the outcome unknown and does not authorize a retry.
+- **Shutdown precision.** The public adapter summary and the `GatewayGrpcServer` lifetime/destructor
+  documentation now qualify the 100 ms gRPC shutdown grace deadline: it bounds only the grace period before
+  forced cancellation and does not preempt or bound an executing RPC callback, so destructor completion still
+  requires those callbacks to return.
+- **Change-identity precision.** The requirement successor descriptions and §11 above no longer claim that no
+  compiled token changed. They state that no function type, compiled statement, control flow, or accepted
+  runtime behavior changed and disclose the 33 inert parameter identifiers that bind the required `@param`
+  clauses.
+
+The corrections are documentation comments and evidence text only. The focused R6 record, commands, and
+provenance are in `docs/engineering/xcom/t038/r6-repair.md`.

@@ -159,10 +159,17 @@ class GatewayGrpcService final : public v1::ToolGateway::Service,
   grpc::Status ReleaseLease(grpc::ServerContext *context,
                             const v1::ReleaseLeaseRequest *request,
                             v1::ReleaseLeaseResponse *response) override;
-  /// @brief Reconcile a committed outcome without requiring a watch association.
+  /// @brief Report session state and reconcile a committed stimulation outcome without requiring a
+  ///        watch association.
   /// @param context Server context carrying the request deadline and cancellation state.
-  /// @param request Accepted session-query request.
-  /// @param response Populated from the bound session, including any durable lease identity.
+  /// @param request Accepted session-query request; a non-empty stimulation request id selects the
+  ///        durable reconciliation lookup.
+  /// @param response Populated from the bound session. `lease_id` is reported only while a lease is
+  ///        currently held and is the in-memory, session-scoped lease identity: it is not persisted
+  ///        and does not survive session or process termination. When a stimulation request id is
+  ///        supplied, the response separately carries the outcome reconciled from the durable
+  ///        stimulation journal; an absent durable intent leaves that outcome unknown and does not
+  ///        authorize a retry.
   /// @return `OK`, or an admission status when cancelled, past deadline, or over the bound.
   grpc::Status QuerySession(grpc::ServerContext *context, const v1::QuerySessionRequest *request,
                             v1::QuerySessionResponse *response) override;
@@ -204,8 +211,13 @@ class GatewayGrpcService final : public v1::ToolGateway::Service,
  * @brief Owns a protected local Unix-socket gRPC listener; no TCP address is accepted.
  * @ownership Owns the local listener, its poller thread, the retained socket path, and the socket
  *            inode that is unlinked on destruction; it borrows the bound service.
- * @lifetime The referenced service must outlive this server; destruction stops the listener and
- *           joins the poller before the owning application tears down the session.
+ * @lifetime The referenced service must outlive this server. Destruction marks the service
+ *           shutting down, requests gRPC shutdown with a 100 ms grace deadline before forced
+ *           cancellation, joins the poller, and disconnects the session before the owning
+ *           application tears down the session. That deadline bounds only the grace period before
+ *           forced cancellation: it does not preempt or bound an executing RPC callback, so
+ *           destructor completion still requires those callbacks to return and must not be
+ *           documented as a fixed 100 ms bound.
  * @thread_safety Construction returns a fully started server; `wait` blocks the calling thread
  *                until shutdown, while the poller runs independently. The type is non-copyable
  *                and non-assignable.
@@ -222,6 +234,10 @@ class GatewayGrpcServer final {
   static std::unique_ptr<GatewayGrpcServer> start(const std::string &socket_path,
                                                    GatewayGrpcService &service,
                                                    std::size_t max_message_bytes);
+  /// @brief Stop accepting stateful calls, request gRPC shutdown with a 100 ms grace deadline,
+  ///        join the poller, disconnect the session, and unlink the socket. The deadline bounds
+  ///        only the grace period before forced cancellation; this destructor returns once
+  ///        executing RPC callbacks have returned, so it is not a fixed 100 ms bound.
   ~GatewayGrpcServer();
   GatewayGrpcServer(const GatewayGrpcServer &) = delete;
   GatewayGrpcServer &operator=(const GatewayGrpcServer &) = delete;

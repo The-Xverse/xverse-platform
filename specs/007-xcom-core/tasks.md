@@ -120,11 +120,17 @@ and predecessor regression evidence retained.
 **Status (2026-09-30):** T038 remains the accepted-baseline delivery-envelope task (`engineering/project.json`
 `task_id` stays `T038`). The T039 R2 independent review recorded `T039-F07` (major) and confirmed `T039-F01`–`T039-F06`
 as addressed within their stated qualifications; the T040 R2 audit recorded `T040-E01`–`T040-E03`. The T039 R3
-successor repairs `T039-F07` and reconciles `T040-E01`–`T040-E03`; it does **not** mark T039, T040, or T041 complete
-and does not accept or merge the candidate. External T039/T040 inspection, the repeated affected verification, the
-separate review, and T041 explicit user acceptance remain open. Historical failed gates (the inherited T036 verifier
-report at the accepted revision, the direct Phase 6 Doxyfile-immutability script) are preserved as historical evidence
-and are not promoted to current passes; the authorized inherited Phase 6 replay is recorded separately.
+successor repaired `T039-F07` and reconciled `T040-E01`–`T040-E03`. The T039 R4 successor closed `T039-F08` and
+preserved `T039-F01`–`T039-F07`; the R4 review required `T039-F09` complete adapter documentation and current exact
+evidence. The T039 R5 successor completed the `T039-F09` documentation and evidence obligations; its independent
+review preserved `T039-F01`–`T039-F08` and required three documented-precision corrections (`F09-R5-A` lease
+identity, `F09-R5-B` shutdown grace qualification, `F09-R5-C` change-identity wording), which the T039 R6
+documentation-precision successor records in `docs/engineering/xcom/t038/r6-repair.md`. No R2–R6 review or repair
+marks T039, T040, or T041 complete, and none accepts or merges the candidate. External T039/T040 inspection, the
+repeated affected verification, the separate review, and T041 explicit user acceptance remain open. Historical
+failed gates (the inherited T036 verifier report at the accepted revision, the direct Phase 6 Doxyfile-immutability
+script) are preserved as historical evidence and are not promoted to current passes; the authorized inherited
+Phase 6 replay is recorded separately.
 
 ## Dependencies and execution order
 

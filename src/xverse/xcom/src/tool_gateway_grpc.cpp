@@ -5,9 +5,14 @@
  * @details Implements the per-request admission (cancellation, deadline, message bound), the
  *          single current watch association, serialized stateful dispatch onto the accepted
  *          `GatewaySession`, bounded observation streaming with disconnect handling, the
- *          pre-dispatch transport probe for stimulation, and the bounded server shutdown and
- *          destructor cleanup declared in `tool_gateway_grpc.hpp`. It links the admitted
- *          unsanitized gRPC runtime and opens no network, DNS, TLS, legacy, or process resource.
+ *          pre-dispatch transport probe for stimulation, and the server shutdown declared in
+ *          `tool_gateway_grpc.hpp`: destruction marks the service shutting down, requests gRPC
+ *          shutdown with a 100 ms grace deadline before forced cancellation, joins the poller,
+ *          disconnects the session, and unlinks the socket. That deadline bounds only the grace
+ *          period before forced cancellation; it does not preempt or bound an executing RPC
+ *          callback, so destructor completion still requires those callbacks to return. It links
+ *          the admitted unsanitized gRPC runtime and opens no network, DNS, TLS, legacy, or
+ *          process resource.
  * @ingroup xcom_gw
  * @par Traceability
  * Implements accepted `T031-SR-012` (exclusive generation-bound lease delegation) and

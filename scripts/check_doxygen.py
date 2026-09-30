@@ -43,7 +43,7 @@ WARNING_LOG = ROOT / "build" / "doxygen-warnings.log"
 STRICT_OUTPUT_ROOT = ROOT / "build" / "doxygen-strict"
 STRICT_WARNING_LOG = ROOT / "build" / "doxygen-strict-warnings.log"
 REPORT_PATH = ROOT / "reports" / "xcom-queue" / "t037-doxygen.json"
-BASELINE_REVISION = "88cf30b16adbe4b48c5c79935dd21af605480c98"
+BASELINE_REVISION = "25a9990b86c39408e75381ed5d4aa3d29fc453a7"
 
 # Admitted exclusion list for the strict C++-scoped route: system and generated
 # headers are out of the owned hand-written documentation scope (T037-GAP-03).
