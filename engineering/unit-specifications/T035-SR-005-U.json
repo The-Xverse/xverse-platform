@@ -24,7 +24,10 @@
   "schema_version": 1,
   "source_paths": [
     "engineering/verification/measures/sanitizer.json",
-    "docs/engineering/xcom/t035/verification-plan.md"
+    "docs/engineering/xcom/t035/verification-plan.md",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "state": "one bounded verification run or evidence inspection",
   "static_checks": [
@@ -43,5 +46,11 @@
       "precondition": "the accepted suites are built at the exact candidate revision in the admitted offline envelope",
       "stimulus": "run the named accepted suite case as part of the T035 matrix"
     }
-  ]
+  ],
+  "successor_disposition": {
+    "recorded_by": "T039 R3 successor reconciliation (2026-09-30)",
+    "finding": "T039-F01 sanitizer compile coverage",
+    "disposition": "The generated-client harness, the generated glue, the adapter, and the core compile with compiler ASan/UBSan; GRPC_ASAN_SUPPRESSED=1 preserves the admitted unsanitized gRPC binary's POSIX mutex ABI and never disables compiler instrumentation.",
+    "scope": "linked gateway and its generated-client harness only"
+  }
 }

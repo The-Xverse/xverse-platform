@@ -10,7 +10,10 @@
     "the committed gateway interface and bounded test-local fixtures"
   ],
   "interfaces": [
-    "src/xverse/xcom/src/tool_gateway.cpp"
+    "src/xverse/xcom/src/tool_gateway.cpp",
+    "proto/xverse/xcom/v1/gateway_liveness.proto",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "invariants": [
     "When a peer disconnects or a session reaches its idle timeout, the gateway **shall** close its observation handles and drain, revoke, release, or quarantine its validation-owned resources according to durable state; a pending request **shall** end explicit (`evidence-incomplete` or `failed`), and an unknown outcome **shall never** be reported as success."
@@ -25,7 +28,12 @@
   "source_paths": [
     "docs/engineering/xcom/t031/requirements.md",
     "tests/xcom/tool_gateway/gateway_lifecycle_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_session_tests.cpp"
+    "tests/xcom/tool_gateway/gateway_session_tests.cpp",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "proto/xverse/xcom/v1/gateway_liveness.proto",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp",
+    "tests/xcom/tool_gateway/gateway_support.hpp"
   ],
   "state": "session cleanup state and terminal flag",
   "static_checks": [
@@ -67,6 +75,30 @@
       "id": "XcomToolGatewayLifecycle.IdleTimeoutCleanup",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "advance the injected time past the session idle timeout"
+    },
+    {
+      "expected": "destruction returns within the bound, the session is terminal, and no active lease or stream remains",
+      "id": "XcomGrpcGeneratedClient.ShutdownTerminatesLiveWatchAndCleansResources",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "destroy the server while the owner keeps a live watch, lease, and stream"
+    },
+    {
+      "expected": "the session becomes terminal, streams are detached, and the authoritative registry reports no active lease",
+      "id": "XcomGrpcGeneratedClient.WatchCancellationReleasesLiveResources",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "cancel the owner watch while the session holds an observation stream and a lease"
+    },
+    {
+      "expected": "disconnect cleanup releases the lease and the authoritative registry reports no active lease",
+      "id": "XcomGrpcGeneratedClient.AbruptClientExitReleasesLiveResources",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "the owner process exits abruptly with no local destructor while holding a lease and stream"
+    },
+    {
+      "expected": "the original owned lease is released and no active owned lease remains",
+      "id": "XcomGrpcGeneratedClient.RepeatedAcquireLeaseDeclinesSecondAllocation",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "owner cancellation after a declined repeated acquisition"
     }
   ]
 }

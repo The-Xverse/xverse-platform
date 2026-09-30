@@ -343,3 +343,15 @@ definitions) for the forbidden-API scan.
 - The test helper and suites carry the X-COM file-block tags required of changed test units.
 - Generated Protocol Buffers documentation remains `DOX-GAP-02` (T037); T031 documents only the hand-written
   gateway interface.
+
+## Successor disposition (T039 R3, recorded 2026-09-30)
+
+`T31-DD-01` remains the historical decision for the accepted local-IPC framing. The T039 successor
+supersedes its "cannot link the gRPC runtime" premise for the linked gateway component only: the
+`GatewayLiveness` watch service and the `ToolGateway` service are compiled and linked by the
+`xverse_xcom_tool_gateway_grpc` adapter through the admitted gRPC runtime.
+
+The successor adds a single-owner watch association (one opaque `x-xcom-watch-id` per stateful call),
+single-owned-lease enforcement (`T039-F07`), and a bounded shutdown cancellation deadline. The
+dialect restriction on the separate T032 synthetic client is unchanged: it keeps its framed local-IPC
+transport and does not claim a linked gRPC runtime.

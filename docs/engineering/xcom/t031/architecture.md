@@ -291,3 +291,21 @@ Every boundary has a declared fail-closed behaviour and a negative-case owner; t
 | `T31-XB-9` | add an admitted dependency or link the gRPC runtime | NEG-07 |
 | `T31-XB-10` | weaken an accepted requirement/test/register or promote a REF-002 target | NEG-09, NEG-10 |
 | Governance | mark the checkbox in the plan stage or skip the inherited provenance refresh | NEG-10 |
+
+## Successor disposition (T039 R3, recorded 2026-09-30)
+
+The historical statements above remain evidence for the T031 local-IPC session slice at that
+revision. The T039 successor adds a linked gRPC transport for the platform gateway component, so the
+"links no gRPC runtime" restriction is superseded for that component only.
+
+- `T31-XB-9` / `T031-GAP-01`: superseded for the linked gateway component. The separate
+  `xverse_xcom_tool_gateway_grpc` adapter compiles and links the admitted gRPC runtime and both
+  generated services; dependency admission records the admitted prefix and package manifest, and no
+  network fetch or new third-party dependency is introduced.
+- The in-process gateway core (`xverse_xcom_tool_gateway`) still links no gRPC runtime; the earlier
+  in-process statements remain accurate for that target.
+- The logical watch owner (F02) is a lifecycle association, not OS process authentication. Host
+  permissions and the exact stimulation permit remain separate controls, and a running host action
+  callback must still return before shutdown completes (F06).
+- No accepted requirement, expected result, negative case, or REF-002 disposition is weakened, and no
+  deferred REF-002 target is promoted.

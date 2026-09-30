@@ -10,7 +10,9 @@
     "the committed gateway interface and bounded test-local fixtures"
   ],
   "interfaces": [
-    "src/xverse/xcom/src/tool_gateway.cpp"
+    "src/xverse/xcom/src/tool_gateway.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "invariants": [
     "When a tool submits a stimulation action, the gateway **shall** route all four allowed actions through the accepted T027 pre-emission guard, T026 journal, and T028 action path; an accepted item **shall** carry persistent synthetic provenance, and a rejected or failed request **shall** emit zero normal-route items."
@@ -25,7 +27,10 @@
   "source_paths": [
     "docs/engineering/xcom/t031/requirements.md",
     "tests/xcom/tool_gateway/gateway_bounds_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_negative_tests.cpp"
+    "tests/xcom/tool_gateway/gateway_negative_tests.cpp",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "state": "accepted guard/journal/action-path composition",
   "static_checks": [
@@ -55,6 +60,18 @@
       "id": "XcomToolGatewayNegative.ExpiredSessionRejectedZeroEmission",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "SubmitStimulation against an expired/unauthorized session"
+    },
+    {
+      "expected": "the request is rejected by the transport and zero normal-route items are emitted",
+      "id": "XcomGrpcGeneratedClient.DeadlineAndCancellationAreTransportEnforced",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a generated-client stimulation request whose deadline expired or whose context was cancelled"
+    },
+    {
+      "expected": "the committed emission is reconciled from the durable journal and is not replayed or duplicated",
+      "id": "XcomGrpcGeneratedClient.LateTransportFailuresReconcileCommittedEmission",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a transport failure after the action path committed"
     }
   ]
 }

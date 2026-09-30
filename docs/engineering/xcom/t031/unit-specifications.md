@@ -253,3 +253,34 @@ candidate revision; it is not a deployed-service, separate-process, or compatibi
 
 Every `T031-SR-###` requirement is covered by at least one unit case or named inspection; every case belongs to one
 listed requirement and one suite. Unit cases are contributory; the exact acceptance decision remains T039/T041.
+
+## Successor addendum (T039 R3, recorded 2026-09-30)
+
+This addendum records successor unit cases for the linked gRPC gateway component. It does not
+rename, remove, or weaken any `T31-TS-###` case above, and the historical inventory remains evidence
+at its pinned revision. The generated-client cases run in
+`tests/xcom/tool_gateway/grpc_generated_client_tests.cpp` against the production adapter
+(`tool_gateway_grpc.hpp`/`.cpp`) and the `GatewayLiveness` watch contract
+(`proto/xverse/xcom/v1/gateway_liveness.proto`).
+
+| Requirement unit | Successor cases | Purpose |
+| --- | --- | --- |
+| `T031-SR-012-U` | `XcomGrpcGeneratedClient.RepeatedAcquireLeaseDeclinesSecondAllocation`, `XcomGrpcGeneratedClient.RepeatedAcquireLeaseOriginalIdentityStillReleases`, `XcomGrpcGeneratedClient.UnassociatedPeerCannotBorrowLiveWatch`, `XcomGrpcGeneratedClient.SeparateServerHonorsContractAndWireRejection` | Enforce the single-owned-lease boundary (T039-F07) and the logical watch-owner association (T039-F02) with the authoritative registry and exact-identity release. |
+| `T031-SR-013-U` | `XcomGrpcGeneratedClient.ShutdownTerminatesLiveWatchAndCleansResources`, `XcomGrpcGeneratedClient.WatchCancellationReleasesLiveResources`, `XcomGrpcGeneratedClient.AbruptClientExitReleasesLiveResources`, `XcomGrpcGeneratedClient.RepeatedAcquireLeaseDeclinesSecondAllocation` | Owner cancellation, abrupt exit, and server shutdown leave no active owned lease in the authoritative registry. |
+| `T031-SR-010-U` | `XcomGrpcGeneratedClient.RejectedObservationReadHasExplicitTransportStatus`, `XcomGrpcGeneratedClient.WatchCancellationReleasesLiveResources` | Explicit transport status for rejected observation reads (T039-F05). |
+| `T031-SR-006-U` | `XcomGrpcGeneratedClient.DeadlineAndCancellationAreTransportEnforced`, `XcomGrpcGeneratedClient.LateTransportFailuresReconcileCommittedEmission` | Transport deadline/cancellation and post-commit reconciliation (T039-F03/F04). |
+| `T031-SR-011-U` | `XcomGrpcGeneratedClient.DeadlineAndCancellationAreTransportEnforced`, `XcomGrpcGeneratedClient.LateTransportFailuresReconcileCommittedEmission` | Zero emission on a rejected transport and reconciliation of a committed emission (T039-F03). |
+| `T035-SR-005-U` | the generated-client harness suite | Compiler ASan/UBSan and leak detection with `GRPC_ASAN_SUPPRESSED=1` preserving the admitted binary ABI (T039-F01). |
+
+**Successor single-owned-lease boundary (`T039-F07`).** A session owns at most one exclusive
+service-emulation lease. While one is held, a further acquisition is declined with `LEASE_CONFLICT`
+before any registry allocation; the original lease identity is preserved and never aliased, and the
+declined request does not mutate the held lease's registry entry. The linked identity releases the
+lease exactly, and every cleanup path leaves no active owned lease in the authoritative registry.
+An expanded bounded ownership set is explicitly out of scope and requires its own design.
+
+**Declared limits carried forward.** The watch association is a logical lifecycle association, not
+OS process authentication; clients must keep the watch identifier private and must not share it. A
+running host action callback must return before shutdown can complete. Durable lookup reconciles a
+committed immediate outcome; the absence of a scheduled intent remains explicitly uncertain and does
+not authorize a retry.

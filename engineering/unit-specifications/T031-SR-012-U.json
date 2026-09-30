@@ -10,7 +10,10 @@
     "the committed gateway interface and bounded test-local fixtures"
   ],
   "interfaces": [
-    "src/xverse/xcom/src/tool_gateway.cpp"
+    "src/xverse/xcom/src/tool_gateway.cpp",
+    "proto/xverse/xcom/v1/gateway_liveness.proto",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "invariants": [
     "When a tool acquires or releases a service-emulation lease, the gateway **shall** delegate to the accepted T028 exclusive generation-bound lease, and conflict, expiry, or disconnect **shall** release or quarantine the lease without ambiguous ownership."
@@ -25,7 +28,12 @@
   "source_paths": [
     "docs/engineering/xcom/t031/requirements.md",
     "tests/xcom/tool_gateway/gateway_lifecycle_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_negative_tests.cpp"
+    "tests/xcom/tool_gateway/gateway_negative_tests.cpp",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "proto/xverse/xcom/v1/gateway_liveness.proto",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp",
+    "tests/xcom/tool_gateway/gateway_support.hpp"
   ],
   "state": "exclusive generation-bound emulation lease",
   "static_checks": [
@@ -49,6 +57,30 @@
       "id": "XcomToolGatewayNegative.TransportAccessDoesNotAuthorize",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "a valid local channel with no valid permit"
+    },
+    {
+      "expected": "the repeated acquisitions return LEASE_CONFLICT, the original lease identity is retained, and owner cancellation leaves no active registry lease",
+      "id": "XcomGrpcGeneratedClient.RepeatedAcquireLeaseDeclinesSecondAllocation",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "acquire svc.alpha then acquire svc.beta and svc.alpha again while the first lease is held"
+    },
+    {
+      "expected": "the exact original identity releases the lease and the registry reports no active lease",
+      "id": "XcomGrpcGeneratedClient.RepeatedAcquireLeaseOriginalIdentityStillReleases",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "release the held lease by its original identity after a declined repeated acquisition"
+    },
+    {
+      "expected": "stateful calls are rejected fail-closed and the owner's resources remain owned",
+      "id": "XcomGrpcGeneratedClient.UnassociatedPeerCannotBorrowLiveWatch",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a separate process presents no valid watch association while the owner keeps resources live"
+    },
+    {
+      "expected": "the lease is acquired and released with unambiguous ownership and the contract surface is honored",
+      "id": "XcomGrpcGeneratedClient.SeparateServerHonorsContractAndWireRejection",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a generated client drives acquire, query, exact-identity release, and wire-level rejection against a separate server process"
     }
   ]
 }

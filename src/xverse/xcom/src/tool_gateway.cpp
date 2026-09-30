@@ -1304,6 +1304,19 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
                    "lease", "session not armed or no lease boundary");
     return response;
   }
+  // T039-F07: a session owns at most one exclusive service-emulation lease at a time. Before any
+  // further allocation the declared single-owned-lease boundary is enforced; a declined acquisition
+  // reports and retains the original owned identity without touching the registry entry.
+  if (lease_held_) {
+    ++requests_rejected_;
+    response.set_state(v1::LEASE_CONFLICT);
+    response.set_lease_id(lease_id_);
+    set_diagnostic(response.mutable_diagnostic(), "gw.lease.held", v1::SEVERITY_ERROR, "lease",
+                   "session already owns an exclusive service-emulation lease");
+    log(GatewayOutcome::rejected, GatewayPhase::lease, "gw.lease.held", request.session_id(), 0U,
+        static_cast<std::uint64_t>(resolve_dispatch_tick()));
+    return response;
+  }
   const std::optional<val::Tag> endpoint = val::Tag::make(request.endpoint_id());
   if (!endpoint.has_value()) {
     ++requests_rejected_;
@@ -1320,12 +1333,15 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
   const val::Timestamp now = resolve_dispatch_tick();
   const val::Timestamp expires =
       saturating_add(now, static_cast<val::Timestamp>(request.lease_millis()));
-  lease_request_id_ = request.endpoint_generation() + 1U;
+  // The candidate request identity is computed locally so a declined acquisition never mutates the
+  // identity of an already-held lease (T039-F07).
+  const std::uint64_t request_id = request.endpoint_generation() + 1U;
   const val::LeaseStatus status =
-      dependencies_.leases->acquire(key, lease_request_id_, binding_.arrival_domain, now, expires);
+      dependencies_.leases->acquire(key, request_id, binding_.arrival_domain, now, expires);
   const GatewayOutcome outcome = outcome_from_lease(status);
   if (status == val::LeaseStatus::Ok) {
     lease_key_ = key;
+    lease_request_id_ = request_id;
     lease_held_ = true;
     lease_id_ = "gw-lease-" + std::to_string(request.endpoint_generation());
     ++requests_authorized_;

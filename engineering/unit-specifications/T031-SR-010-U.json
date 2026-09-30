@@ -10,7 +10,9 @@
     "the committed gateway interface and bounded test-local fixtures"
   ],
   "interfaces": [
-    "src/xverse/xcom/src/tool_gateway.cpp"
+    "src/xverse/xcom/src/tool_gateway.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "invariants": [
     "When a tool opens, reads, or closes an observation stream, the gateway **shall** use the accepted bounded observation boundary, return at most the granted number of metadata-only records before the deadline, and return delivered and dropped counters on close."
@@ -25,7 +27,10 @@
   "source_paths": [
     "docs/engineering/xcom/t031/requirements.md",
     "tests/xcom/tool_gateway/gateway_bounds_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_lifecycle_tests.cpp"
+    "tests/xcom/tool_gateway/gateway_lifecycle_tests.cpp",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "state": "bounded observation stream and tap handles",
   "static_checks": [
@@ -49,6 +54,18 @@
       "id": "XcomToolGatewayLifecycle.DisconnectClosesObservationStreams",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "disconnect a session holding an observation stream"
+    },
+    {
+      "expected": "each rejected read exposes an explicit transport error and the empty-success ambiguity is removed",
+      "id": "XcomGrpcGeneratedClient.RejectedObservationReadHasExplicitTransportStatus",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a generated-client observation read on an unnegotiated, missing, and expired stream"
+    },
+    {
+      "expected": "the observation stream is detached and the authoritative registry holds no active lease",
+      "id": "XcomGrpcGeneratedClient.WatchCancellationReleasesLiveResources",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "cancel the owner watch while an observation stream and a lease are live"
     }
   ]
 }

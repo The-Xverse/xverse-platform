@@ -226,3 +226,20 @@ contributes the gateway-side evidence and leaves the rest to their owning tasks.
 
 No evidence name above is claimed beyond what its own exact-candidate evidence shows. The separate-process client,
 the reusable contract suites, and the second provider remain T032–T034.
+
+## 10. Successor disposition (T039 R3, recorded 2026-09-30)
+
+This section records successor dispositions; it does not change any expected result above, and the
+historical T031 verification plan remains evidence at its pinned revision.
+
+| Historical check | Successor disposition | Reason and component scope |
+| --- | --- | --- |
+| `CHK-03` — single gateway interface; no claimed gRPC-runtime link | **Partially superseded for the linked gateway component.** The gateway now realizes the accepted T030 messages/methods through the production gRPC adapter and both generated services; the in-process core still exposes one interface and one contract. The "no claimed gRPC-runtime link" clause no longer applies to the linked adapter component. | The earlier envelope could not link the gRPC runtime; dependency admission now records the admitted prefix and manifest, and the adapter links it offline. The separate T032 synthetic client keeps its framed transport and its own restriction. |
+| `CHK-20` — offline, local-only, no new dependency; gRPC runtime not linked | **Partially superseded for the linked gateway component.** The build remains offline and local-only with no network fetch and no new third-party dependency, but the admitted gRPC runtime is now linked by the adapter. | Distinguish the linked gateway adapter from the T032 synthetic client, which still links no gRPC runtime. |
+
+Additional successor verification measures added with the R3 candidate: generated-client registry
+checks for repeated acquisition, original-identity release, owner cancellation, abrupt exit, and
+server shutdown; the exact named cases are recorded in `unit-specifications.md` §"Successor addendum"
+and the T039 R3 repair record. The F07 single-owned-lease boundary is exercised against the
+authoritative lease registry as well as gateway/QuerySession state. No negative case is weakened and
+no deferred REF-002 target is promoted.

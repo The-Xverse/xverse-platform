@@ -1,115 +1,129 @@
 {
   "schema_version": 1,
   "task_id": "T038",
-  "baseline_revision": "fe923fe21d2c9116940c7f83f22ef274ebe818c1",
+  "baseline_revision": "b15936781995ef188db30d7f99fc462701662b90",
   "stage": "internal_review",
-  "review_type": "separate read-only DeepSeek Flash internal review of the T030-T038 terminal repair candidate at HEAD == baseline fe923fe21d2c9116940c7f83f22ef274ebe818c1: the complete baseline diff, the nine 2026-09-29 Astra terminal findings R1-R9, the authoritative external gateway probes, the repository-owned traceability and benchmark verifiers, the regenerated successor evidence reports, and the applied implementation-journal lessons",
+  "review_type": "separate-context read-only DeepSeek internal review of the T039 R3 successor at HEAD == baseline b15936781995ef188db30d7f99fc462701662b90: exact baseline diff, the R2 independent review and T040 evidence audit (docs/reviews in the Fabric review store), implementation-journal J-083, the immutable external closure probes, the repository-owned traceability and benchmark verifiers, both generated services, and the Durable successor work products",
   "verdict": "pass",
   "reviewed_paths": [
-    "docs/engineering/xcom/t038/terminal-repair.md",
-    "engineering/check_xcom_traceability.py",
+    "docs/engineering/xcom/t030/detailed-design.md",
+    "docs/engineering/xcom/t031/architecture.md",
+    "docs/engineering/xcom/t031/detailed-design.md",
+    "docs/engineering/xcom/t031/unit-specifications.md",
+    "docs/engineering/xcom/t031/verification-plan.md",
+    "docs/engineering/xcom/t032/detailed-design.md",
+    "docs/engineering/xcom/t032/verification-plan.md",
+    "docs/engineering/xcom/t038/r3-repair.md",
+    "engineering/requirements/T032-SR-017.json",
     "engineering/trace/links.json",
+    "engineering/unit-specifications/T031-SR-006-U.json",
+    "engineering/unit-specifications/T031-SR-010-U.json",
+    "engineering/unit-specifications/T031-SR-011-U.json",
+    "engineering/unit-specifications/T031-SR-012-U.json",
+    "engineering/unit-specifications/T031-SR-013-U.json",
+    "engineering/unit-specifications/T035-SR-005-U.json",
     "reports/xcom-queue/t036-benchmark.json",
     "reports/xcom-queue/t038-traceability.json",
+    "specs/007-xcom-core/tasks.md",
     "src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp",
     "src/xverse/xcom/src/tool_gateway.cpp",
-    "tests/xcom/tool_gateway/gateway_bounds_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_lifecycle_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_negative_tests.cpp",
-    "tests/xcom/tool_gateway/gateway_support.hpp",
-    "tests/xcom/tool_gateway/synthetic_client_support.hpp"
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp"
   ],
   "checks": [
     {
       "id": "IRV-01",
       "name": "baseline identity, candidate inventory, and diff hygiene",
-      "command_or_evidence": "git rev-parse HEAD; git diff --name-only <baseline> --; git ls-files --others --exclude-standard; git diff --check <baseline> --; python3 ${XVERSE_FABRIC_ROOT}/automation/xcom_phase8_gate.py verify T038 <baseline>",
-      "measured": "HEAD == baseline fe923fe21d2c9116940c7f83f22ef274ebe818c1. The 11 tracked baseline changes plus the single untracked candidate file (terminal-repair.md), less the generated review record, the T038 package record, and the eight regenerated phase8-T038 stage records, form the exact 12-path candidate union recorded in reviewed_paths and in reports/xcom-queue/t038-package.json after regeneration. git diff --check is clean. No file in the union is a generated stage/package/review artifact (J-077 satisfied)."
+      "command_or_evidence": "git rev-parse HEAD; git diff --name-only b159367 --; git ls-files --others --exclude-standard; git diff --check b159367 --",
+      "measured": "HEAD equals the pinned baseline b15936781995ef188db30d7f99fc462701662b90. The tracked baseline changes plus the single untracked candidate file (docs/engineering/xcom/t038/r3-repair.md), excluding this review record, reports/xcom-queue/t038-package.json, and the eight phase8-t038-* stage records, form the exact 22-path union recorded in reviewed_paths. git diff --check is clean. No reviewed path is a generated stage, package, or review artifact."
     },
     {
       "id": "IRV-02",
-      "name": "R1 required gRPC transport and generated-client surface",
-      "command_or_evidence": "independent inspection of the admitted offline prefix and package envelope: ldd on the admitted libgrpc++.so.1.30.2 / libgrpc.so.10.0.0 / libgrpc++_unsecure / libgrpc_unsecure, nm over the admitted static libgrpc.a and libgrpc_unsecure.a, search for any c-ares runtime/header, and comparison against the pinned package manifest digest",
-      "measured": "R1 is NOT closed and is not falsely claimed. The admitted shared gRPC runtimes all carry NEEDED libcares.so.2 and the loader reports it unresolved; no libcares runtime or ares.h exists in the admitted prefix, in the admitted package manifest, or on the host; the admitted static libraries retain 15 undefined ares_* symbols each, so static linking cannot satisfy them either. The candidate therefore keeps the accepted T031/T032 custom length/method framing as an explicitly unclaimed floor and does not substitute it for the contracted gRPC service. Closing R1 requires admitting the complete pinned gRPC runtime (at minimum a c-ares runtime) into the offline envelope, which is a host-side dependency change outside this repair; it is carried to external acceptance as an unresolved P1 blocker."
+      "name": "T039-F07 single-owned-lease enforcement in production code",
+      "command_or_evidence": "source inspection of GatewaySession::AcquireLease (src/xverse/xcom/src/tool_gateway.cpp ~1310), ReleaseLease ~1385, cleanup_locked ~676, and the public contract in src/xverse/xcom/include/xverse/xcom/tool_gateway.hpp ~515",
+      "measured": "AcquireLease now declines any acquisition while lease_held_ is true, returning LEASE_CONFLICT with diagnostic gw.lease.held and the retained original lease_id, incrementing requests_rejected_, and never calling the registry acquire. The request identity is computed into a local and assigned to lease_request_id_ only on LeaseStatus::Ok, so a declined acquisition cannot overwrite lease_key_, lease_request_id_, or lease_id_. ReleaseLease still requires the exact held lease_id and releases the original key; cleanup_locked releases or quarantines the original key on disconnect, cancellation, and shutdown. The method holds the session mutex, so the held-check and allocation are serialized. No other site mutates the lease members."
     },
     {
       "id": "IRV-03",
-      "name": "R2 declared wire-field validation and zero rejected-side effects",
-      "command_or_evidence": "independent compilation and execution of the authoritative host probe automation/reviews/t030-t038-20260929/gateway_probes.cpp against the assembled library set, plus source inspection of GatewaySession::SubmitStimulation and the added XcomToolGatewayNegative cases",
-      "measured": "SubmitStimulation validates interaction, direction, schedule mode, clock domain, and contract identity before any emission or enqueue; the declared interaction is preserved through the accepted guard/action path instead of being rewritten from the action. All four external negative probes (mismatched interaction, mismatched direction, unknown schedule enum 99, unmapped clock) and the valid control pass: rejected requests produce one rejected outcome with emitter call count zero. The candidate regression cases confirm zero emission and zero pending retention on each rejection, and a contract mismatch is rejected rather than dropped."
+      "name": "independent external closure probes (F07 plus F03/F04/F06 regression) in normal and instrumented builds",
+      "command_or_evidence": "Fabric automation/check_xcom_t039_r3.py (trusted input sha 2ceaa4b2...6e09) executed against build/gi and build/gs; it compiles the immutable external probe automation/reviews/t039-r2-independent-review-20260930/probe.cpp (trusted input sha c4e436da...8f541) with each build's own compiler/link flags and libraries and requires the shared fixture hash 2559ead6...a3aa5",
+      "measured": "All four probe modes pass in both builds. two-leases: first acquisition svc.alpha state=1 LEASE_ACTIVE registry_active=1; the second acquisition svc.beta returns transport OK state=5 (LEASE_CONFLICT) with the ORIGINAL lease_id gw-lease-3 and registry_active=1 (no second active lease, no aliasing); after owner-watch cancellation terminal=1 lease_held=0 registry_active=0 registry_released=1. The R2 failure (two active leases and registry_active=1 after disconnect) no longer reproduces. cancel-queued, deadline-queued, and unread-shutdown also pass in both builds (cancel-queued terminal=1 with first durable outcome; deadline-queued second call DEADLINE_EXCEEDED with one emission; unread-shutdown terminal=1, socket removed, 1 ms normal and 10 ms under sanitizers). No probe timed out or reported a sanitizer error."
     },
     {
       "id": "IRV-04",
-      "name": "R3 bounded scheduled queue and eventual execution",
-      "command_or_evidence": "external probes RejectUnauthorizedScheduledTarget and PendingQueueRemainsBoundedAcrossTicks, source inspection of SubmitStimulation and StimulationActionPath::execute/queue/drain, and the added XcomToolGatewayBounds scheduled cases",
-      "measured": "Scheduled work is no longer a bare counter: capacity is checked against the accepted action-path queue depth before enqueue, the request and payload are retained in the accepted StimulationActionPath bounded queue, and on_idle_tick drains due work through the accepted scheduler into real emitted/expired terminal outcomes. The external bound probe holds pending at or below the configured maximum across re-submission and flow-credit replenishment, and the candidate regressions confirm eventual execution when due, expiry past the late window, and no retention for an unauthorized/clock-unmapped scheduled target."
+      "name": "generated-client regression assertions execute under normal and ASan/UBSan instrumentation",
+      "command_or_evidence": "ctest -R XcomGrpcGeneratedClient in build/gi and in build/gs with ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 and UBSAN_OPTIONS=halt_on_error=1",
+      "measured": "All ten XcomGrpcGeneratedClient cases pass in both configurations (10/10). The two new F07 cases assert the complete contract against the authoritative fixture lease registry, not only gateway bookkeeping: RepeatedAcquireLeaseDeclinesSecondAllocation requires the second and repeated acquisitions to return LEASE_CONFLICT with the original lease_id, requires registry active == 1 throughout, requires QuerySession to report the retained lease, and requires owner cancellation to leave registry active == 0; RepeatedAcquireLeaseOriginalIdentityStillReleases requires the original identity to release the lease with registry active == 0 and released == 1. WatchCancellationReleasesLiveResources, AbruptClientExitReleasesLiveResources, ShutdownTerminatesLiveWatchAndCleansResources, and exercise_live_owner are strengthened with the same authoritative-registry assertion."
     },
     {
       "id": "IRV-05",
-      "name": "R4 per-request deadlines anchored to request arrival",
-      "command_or_evidence": "external probe EachRequestReceivesItsOwnDeadline, source inspection of GatewaySession::admit and on_idle_tick, and the added XcomToolGatewayBounds/Lifecycle deadline and idle cases",
-      "measured": "Admission now anchors the request deadline to the request's own declared arrival tick in the bound domain rather than to the fixed session-creation tick, so a session created at tick 0 accepts a fresh valid request at tick 500 with a 100-unit deadline (the external probe emits as before). Idle timeout is likewise measured from the last admitted activity, not from session creation."
+      "name": "full successor suites",
+      "command_or_evidence": "ctest --test-dir build/f8u (524 cases); ctest --test-dir build/gs under leak detection and UBSan halt (524 cases); python3 -m pytest -q with the admitted inputs and PYTEST_DISABLE_PLUGIN_AUTOLOAD=1; scripts/validate_xcom_requirements_traceability.py --verify and --check-human",
+      "measured": "build/f8u passes 524/524 and build/gs passes 524/524 with leak detection and halt-on-error. pytest reports 150 passed and 24 subtests passed. The requirements traceability validator and its human check both pass. This reproduces the R3 repair record's declared successor counts (522 predecessor plus 2 new F07 cases) and confirms the two new cases did not displace or weaken predecessor coverage."
     },
     {
       "id": "IRV-06",
-      "name": "R5 observation-stream ownership",
-      "command_or_evidence": "external probe FirstStreamSurvivesSecondOpen, source inspection of OpenObservation/ReadObservations/CloseObservation/detach_all_streams_locked, and the added XcomToolGatewayLifecycle.IndependentObservationStreamsClose case",
-      "measured": "Each accepted stream now owns an independent bounded handle in a per-session list capped by max_streams_per_session; opening a second stream no longer overwrites the first, and the external probe confirms the first stream handle still closes cleanly after a second open. Read, close, and disconnect address the exact requested stream identity and the active counter tracks the retained handles."
+      "name": "T040-E01 current trace graph and refreshed justified pins",
+      "command_or_evidence": "independent recomputation of sha256 for every implemented_by target in engineering/trace/links.json and comparison with the recorded target_revision; per-target edge counts; python3 engineering/check_xcom_traceability.py --verify and --self-test",
+      "measured": "All 618 implemented_by pins match their current file digests (0 stale), so the 79 stale pins recorded by the T040 audit across CMakeLists.txt (13), tool_gateway.proto (26), tool_gateway.hpp (6), tool_gateway.cpp (6), gateway_session_tests.cpp (6), gateway_bounds_tests.cpp (8), gateway_lifecycle_tests.cpp (4), and gateway_contract_suite.hpp (10) are refreshed. The six previously unlinked changed paths now carry requirement/unit-sourced edges (28 new edges): t039/transport-repair.md 4, gateway_liveness.proto 4, tool_gateway_grpc.hpp 4, tool_gateway_grpc.cpp 4, grpc_generated_client_tests.cpp 10, gateway_support.hpp 2. The affected unit specifications now name the successor cases and source paths, and the human-readable t031 unit-specifications addendum adds no renamed, removed, or weakened case. The verifier passes at material digest d8181788...ea0249 with 322 requirements and 2780 resolved edges, and its positive fixture plus NEG-01..NEG-07 self-tests behave as declared."
     },
     {
       "id": "IRV-07",
-      "name": "R6 exact lease-release identity",
-      "command_or_evidence": "external probe ReleaseRequiresExactLeaseIdentity, source inspection of GatewaySession::ReleaseLease, and the added XcomToolGatewayLifecycle.LeaseReleaseRequiresExactIdentity case plus the synthetic separate-process client lease test",
-      "measured": "ReleaseLease compares the supplied lease identity against the exact held lease identity and rejects a mismatched or stale identity without releasing or mutating lease/session state; the external probe confirms a wrong identity never returns a released state, while the synthetic client that sends the acquired identity still releases successfully."
+      "name": "T040-E02 current report identities, regeneration, and self-tests",
+      "command_or_evidence": "python3 engineering/run_xcom_benchmarks.py --verify reports/xcom-queue/t036-benchmark.json; python3 engineering/check_xcom_traceability.py --verify reports/xcom-queue/t038-traceability.json and --self-test; inspection of both reports' candidate_identity, material_inputs, hashes, and limitations",
+      "measured": "Both reports are bound to baseline_revision b159367 and verify at the working-tree successor. The benchmark reports outcome pass (disabled-tap latency regression 1.1256%, throughput regression 1.1131%, both within the accepted 2% threshold). The traceability report records stale_hash_pins [], code verdict pass, 40 implemented_by and 40 verified_by links, public_safety pass, and inherited T036 benchmark ok. Both verifiers name engineering/trace/links.json and specs/007-xcom-core/tasks.md in their material-input inventories, so their same-revision/direct-child and stale-input rules bind the successor rather than a copied prior report. The traceability self-test's positive fixture and NEG-01..NEG-07 all behave as declared. The historical failed T038 verifier output, its failed positive self-test, and the direct Phase 6 Doxyfile-immutability failure are retained as historical evidence in the Fabric review store at their pinned identity and are not promoted to current passes."
     },
     {
       "id": "IRV-08",
-      "name": "R7 final-candidate benchmark evidence freshness",
-      "command_or_evidence": "python3 engineering/run_xcom_benchmarks.py --verify reports/xcom-queue/t036-benchmark.json in the working tree and in a disposable clone committed as the direct child of the baseline; source inspection of check_inherited_validators",
-      "measured": "The T036 report was re-measured so that baseline_revision equals the candidate HEAD and the material digest and per-file hashes bind the successor. The repository-owned benchmark verifier passes in both the working-tree state and the committed direct-child state (candidate_revision_state working-tree then committed). The traceability verifier now also runs this inherited benchmark verifier on every candidate, so an earlier task's evidence cannot silently go stale during a later task; identity checks were not weakened."
+      "name": "T040-E03 explicit predecessor transport-decision dispositions",
+      "command_or_evidence": "inspection of the successor disposition sections in docs/engineering/xcom/t030/detailed-design.md, t031/architecture.md, t031/detailed-design.md, t031/verification-plan.md, t032/detailed-design.md, t032/verification-plan.md, and the additive successor_disposition field in engineering/requirements/T032-SR-017.json",
+      "measured": "T30-DD-03 and T30-GAP-02 are marked superseded for the linked gateway component only, with T30-DD-02/T30-DD-04 retained; T31-XB-9 and T031-GAP-01 are superseded for the linked gateway component while the in-process core keeps its no-gRPC-runtime statement; T31-DD-01's cannot-link premise is superseded only for the linked component; CHK-03 and CHK-20 are partially superseded for the linked component while offline/local-only/no-new-dependency still hold; the T032 separate-process synthetic client retains its framed transport and T032-GAP-01. T032-SR-017 keeps status accepted and revision 1, adds only a successor_disposition object, and promotes no REF-002 target. No accepted requirement, expected result, negative case, or unrelated scope is weakened."
     },
     {
       "id": "IRV-09",
-      "name": "R8 accumulated predecessor trace coverage",
-      "command_or_evidence": "independent full-command negative probes (deleting a predecessor requirement and injecting a missing predecessor edge) with byte-exact restore, plus the verifier --self-test NEG-05/NEG-06 and inspection of load_records/check_accumulated",
-      "measured": "The verifier now loads the whole retained capability-007 requirement/component/unit/scenario set and resolves referential integrity and every required relationship across the accumulated scope. Independent probes deleting engineering/requirements/T026-SR-001.json and engineering/requirements/T030-SR-001.json fail closed with CHAIN_INVALID (exit 2), and the self-test T031-SR-001 removal negative also fails closed; the positive fixture still passes at 322 requirements and 2752 resolved edges. A deleted predecessor record or edge therefore cannot pass as before."
+      "name": "both generated services' provenance",
+      "command_or_evidence": "sha256 of proto/xverse/xcom/v1/tool_gateway.proto and gateway_liveness.proto; sha256 of the eight generated files in build/gi and build/gs; inspection of the add_custom_command generation rule in src/xverse/xcom/CMakeLists.txt",
+      "measured": "The two committed protos are the source of truth and their digests match the recorded inputs (tool_gateway.proto 90e56f82...f289f, gateway_liveness.proto a649602b...1da527). One CMake generation step invokes the admitted protoc and grpc_cpp_plugin for both protos and produces both services; the eight generated digests match the recorded outputs exactly and are byte-identical between the normal and instrumented build trees (verified for .pb.h/.pb.cc and .grpc.pb.h/.grpc.pb.cc of both services)."
     },
     {
       "id": "IRV-10",
-      "name": "R9 retained-file public-safety scan inventory",
-      "command_or_evidence": "independent full-command injection probes into reports/xcom-queue/t038-package.json and a predecessor requirement record with byte-exact restore, plus inspection of SCAN_GLOBS/SCAN_EXCEPTIONS and the verifier --self-test NEG-07",
-      "measured": "The retained-evidence scan now covers the T038 review/typed JSON, the T038 package record, the predecessor typed records and package manifests, the T038 stage results, and the review index. Independent injection of a synthetic absolute host path into the T038 package record and into a predecessor requirement fails closed with PUBLIC_SAFETY_INVALID (exit 5). Exceptions are bounded to two predecessor review records that are the only predecessor review files containing an absolute host path, and an exception that does not name a predecessor review record fails closed; the T038 review JSON is never excepted."
+      "name": "preservation of F01-F06 corrections, sanitizer instrumentation, and semantics",
+      "command_or_evidence": "ninja -t commands for the generated-client target in build/gs; inspection of the baseline diff of tool_gateway.cpp/.hpp and grpc_generated_client_tests.cpp; confirmation that tool_gateway_grpc.hpp/.cpp, gateway_support.hpp, check_xcom_traceability.py, and run_xcom_benchmarks.py are unchanged from the baseline",
+      "measured": "The baseline diff touches only the AcquireLease guard and documentation plus added/strengthened tests; no F01-F06 correction or limitation is removed. The generated-client translation unit, both grpc stubs, and the production adapter compile with -fsanitize=address,undefined and carry GRPC_ASAN_SUPPRESSED=1; there is no -fno-sanitize site anywhere in the target's commands (the only exclusion-shaped flag is -fno-sanitize-recover=undefined, which makes UBSan halt rather than disabling instrumentation). The logical watch association, durable-outcome reconciliation, saturating deadline arithmetic, and explicit rejected-read status are unchanged and continue to be exercised by the passing cases and closure probes."
     },
     {
       "id": "IRV-11",
-      "name": "inherited Phase 6 conformance and journal lessons",
-      "command_or_evidence": "trusted Phase 8 conformance wrapper (additive-Doxygen-only guard plus the Phase 6 checker in an isolated worktree at the pinned Phase 6 revision) in a disposable committed clone; review of docs/engineering/xcom/t038/terminal-repair.md section 4",
-      "measured": "The inherited conformance wrapper passes on the committed candidate (26 Phase 6 inspections). tool_gateway.hpp/cpp are not Phase 6-owned paths, so the repair's behavioural corrections do not violate the additive-only guard; the repository Phase 6 checker only fails when run directly at accumulated HEAD because T037 changed Doxyfile relative to the Phase 6 baseline, an inherited accepted-baseline condition already recorded under the T035 evidence, not a defect of this repair. terminal-repair.md applies J-054 (challenge at submission/emission and bind evidence to accumulated scope), J-056 (deferred scheduled path through the accepted drain with full-command predecessor-deletion negatives), J-075 (re-measure and inherit the benchmark verifier), J-077 (exclude regenerated stage records from the reviewed inventory), J-078 (no protected Phase 6 source line changed), and J-080 (challenge accumulated gateway semantics and evidence coverage)."
+      "name": "dependency, ABI, and generator identity",
+      "command_or_evidence": "sha256 of the admitted package manifest; inspection of the GRPC_ASAN_SUPPRESSED rationale and generator declarations in src/xverse/xcom/CMakeLists.txt; the successor record's dependency-admission statement",
+      "measured": "The admitted package manifest digest is 9879911b...92945c as recorded, the generated clients are produced by protoc 3.12.4 and grpc_cpp_plugin 1.30.2 from the admitted prefix, and GRPC_ASAN_SUPPRESSED=1 preserves the admitted unsanitized gRPC binary's POSIX mutex layout while compiler ASan/UBSan and leak/Boolean checks stay enabled. No new third-party dependency and no network fetch is introduced."
     },
     {
       "id": "IRV-12",
-      "name": "assembled unit suite and evidence verifier",
-      "command_or_evidence": "ctest --test-dir build/f8u (full unit measure) and python3 engineering/check_xcom_traceability.py --verify reports/xcom-queue/t038-traceability.json",
-      "measured": "510 of 510 CTest cases pass in the assembled subtree (the 496 baseline cases plus the 14 added T031 regression cases), including all 84 gateway and synthetic-client cases. The traceability verifier passes with candidate_revision_state working-tree and, in the disposable committed clone, committed; the material digest is identical in both states. The retained trusted integration record remains the prior cross-process evidence and was not re-run here."
+      "name": "scope, REF-002, validator integrity, and open gates",
+      "command_or_evidence": "inspection of the baseline diff file list; the traceability report ref002 block and promoted list; inspection of specs/007-xcom-core/tasks.md checkboxes and engineering/project.json",
+      "measured": "No evidence validator (engineering/check_xcom_traceability.py, engineering/run_xcom_benchmarks.py) or engineering/verification/measures file is modified by this candidate, so no gate is weakened. REF-002 remains unchanged with 20 architectural-target IDs, none promoted to implemented. T038 stays the delivery-envelope task in engineering/project.json. In specs/007-xcom-core/tasks.md, T038 remains complete while T039, T040, and T041 remain open and unchecked; the successor record and tasks status both state that external T039/T040 inspection, repeated affected verification, the separate successor review, and T041 user acceptance remain open, and no acceptance or platform-main merge is claimed."
+    },
+    {
+      "id": "IRV-13",
+      "name": "generated package and stage records excluded from the reviewed inventory",
+      "command_or_evidence": "recomputation of the gate candidate inventory (tracked diff plus untracked files minus the review record, reports/xcom-queue/t038-package.json, and the eight engineering/stage-results/phase8-t038-*.json records) and inspection of the current package and stage-record contents",
+      "measured": "The exact candidate union is the 22 reviewed paths. The current reports/xcom-queue/t038-package.json and the eight phase8-t038-* stage records still carry the predecessor run binding (baseline fe923fe, run 01M3R8NPGB9SN2KQCPYH5NQSQF) and are regenerated by the subsequent candidate/package stage, so they are deliberately excluded from reviewed_paths and are not treated as current successor evidence by this review."
     }
   ],
   "findings": [],
   "observations": [
-    "R1 (P1, transport) is the only finding not closed by this repair, and it is not closed by a substitute. It is independently reproduced as an external admitted-envelope blocker, not a candidate code defect: the admitted gRPC shared libraries require an absent c-ares runtime and the admitted static libraries keep undefined c-ares symbols, with no ares runtime or header in the admitted prefix, the admitted package manifest, or the host. The candidate keeps the accepted T031/T032 custom framing only as an explicitly unclaimed floor and never presents it as the contracted gRPC service. An intentional contract change would need an explicit scope decision; admitting the complete pinned gRPC runtime is a host-side offline dependency change outside this repair. External acceptance must disposition this P1 item.",
-    "The remaining eight findings (R2-R9) are independently verified closed by the authoritative external probes, by targeted source inspection, and by independent full-command negative probes that mutate and restore real retained files. No repaired behaviour relies only on the repair agent's claims or on a green suite.",
-    "R4 residual note: because admission now anchors the deadline to the request's own arrival, the literal 'now greater than now plus deadline' comparison in admit() is structurally unreachable, so a freshly arrived request is never expired at admission; the meaningful remaining bound is the accepted action-path guard and permit validity (an out-of-permit request is still rejected with zero emission), and the declared schedule must fall inside the request deadline window. This is a benign dead-comparison comment-level residual, not an observable behaviour defect.",
-    "R3 residual note: the gateway enforces its own max_pending_requests ceiling before enqueue while the accepted action path also enforces its own max_pending_actions; both are finite bounds, and the lower effective ceiling is the gateway value. This is consistent with the accepted scheduler and is recorded for completeness.",
-    "R7 bound scope: both the benchmark verifier and the traceability verifier were exercised in the working-tree state and in a disposable clone committed as the direct child of the baseline; no commit or ref was created in the candidate repository.",
-    "Inherited condition (not one of R1-R9): running engineering/run_phase6_conformance.py directly at accumulated HEAD fails because T037 changed Doxyfile relative to the pinned Phase 6 baseline. This is an accepted-baseline condition carried under the T035 evidence; the Phase 8 trusted wrapper isolates the Phase 6 checker at the pinned revision and passes."
+    "The single-owned-lease boundary is enforced by declining a second allocation rather than by tracking a bounded owned set; an expanded multi-lease ownership model remains explicitly out of scope and would require its own design. Rejected acquisitions return LEASE_CONFLICT and preserve the original identity, which is the contract the R2 review required.",
+    "The successor record and the benchmark report limitations retain the historical clause that the admitted offline envelope cannot link the gRPC transport runtime (T032-GAP-01). This clause is now conservative rather than wrong in effect: it understates the successor capability, is scoped to the T036 benchmark's in-process owned-loopback workload and its accepted in-process sources, and the T032 component it names does retain that limitation. It is not an acceptance-supporting claim, so it is recorded here as an observation for a later refresh rather than as a blocking finding.",
+    "Watch ownership remains a logical lifecycle association keyed by an opaque identifier, not OS process authentication; clients must keep the identifier private. A running host action callback must still return before shutdown can complete. Durable lookup reconciles a committed immediate outcome; the absence of a scheduled intent remains explicitly uncertain and does not authorize a retry. These limits are carried into the maintained client guidance.",
+    "This review reproduced the R3 record's focused measures (524/524 normal, 524/524 sanitizer, the ten generated-client cases in both builds, 150 pytest tests plus 24 subtests, both report verifiers, and the requirements validator) and independently ran the immutable external closure probes; it did not rebuild the separate trusted integration (build/f8i) or validation (build/f8v) measures, rerun the inherited conformance replay, or regenerate the trace and benchmark reports from scratch.",
+    "The R2 review's identity checks and historical probe logs were treated as immutable inputs at their pinned hashes; the external probe file, the shared fixture, and the closure-gate script all match the admitted trusted-input digests, so the reproduced F07 result is attributable to this successor rather than to a substituted artifact."
   ],
   "limitations": [
-    "This is a read-only internal review of the uncommitted T030-T038 repair candidate; the review record is the only artifact written and no production code or test was edited.",
-    "R1 remains an unresolved external P1 blocker; this review neither accepts it nor changes the accepted tool-gateway contract, and it does not establish external acceptance, terminal re-review, or platform-main delivery.",
-    "The full isolated-platform build was not re-created; the assembled build/f8u tree was reused for the unit measure and the independently compiled external probes, so the cross-process integration evidence is the retained trusted record rather than a fresh rerun in this review.",
-    "The committed-candidate verifier branches were exercised in a disposable clone; the candidate repository, its index, and its refs were left unchanged.",
-    "No production performance, timing, transport, compatibility, or live-readiness claim is made."
+    "This is a read-only internal review of the uncommitted T039 R3 successor; docs/engineering/xcom/t038/internal-review.json is the only artifact written, and no production code, test, evidence validator, host input, stage record, package record, or platform-main file was edited.",
+    "The trusted target-repository assembly and the integration, validation, static-analysis, and conformance measures are repeated by the trusted runner at the pinned candidate revision; this review verified the successor's focused evidence and did not substitute for that runner.",
+    "No OS-process authentication, arbitrary-callback preemption, exhaustive concurrency correctness, durability across every storage failure, or safe retry of an absent scheduled outcome is established. No ThreadSanitizer run, new generator replay, or production-performance claim is made.",
+    "External T039/T040 inspection, the separate successor review, and T041 explicit user acceptance remain open gates; this review neither accepts nor merges the candidate."
   ],
-  "method": "Read-only inspection of the exact 12-path candidate union and its baseline diff; independent compilation and execution of the authoritative host gateway probe against the assembled library set; independent full-command negative probes that delete predecessor requirement records, remove predecessor verification edges, and inject synthetic absolute host paths into retained package and record files, each with byte-exact restore and post-restore re-verification; independent reproduction of the gRPC runtime blocker via loader and symbol inspection; execution of the repository-owned benchmark and traceability verifiers in the working-tree state and in a disposable clone committed as the direct child of the baseline; the trusted Phase 8 conformance wrapper in the committed clone; the full 510-case assembled unit suite; and a public-safety scan of every retained file this review writes.",
+  "method": "Read-only inspection of the exact 22-path candidate union and its baseline diff; independent recomputation of every implemented_by hash pin and of both generated services' input/output digests across the normal and instrumented build trees; independent compilation and execution of the immutable external closure probe against both builds; execution of the ten generated-client regression cases under normal and ASan/UBSan instrumentation; full normal and instrumented suites, the Python suite, both repository-owned report verifiers with self-tests, and the requirements traceability validator; and a public-safety check of every string this record writes.",
   "reviewer": {
     "provider": "deepseek",
     "backend": "api",

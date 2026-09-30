@@ -232,3 +232,14 @@ contributes the separate-process conformance evidence and leaves the rest to the
 
 No evidence name above is claimed beyond what its own exact-candidate evidence shows. The reusable contract suites and
 the second provider remain T033/T034.
+
+## Successor disposition (T039 R3, recorded 2026-09-30)
+
+`CHK-03` and `CHK-20` remain accurate for the T032 separate-process synthetic client: it links no
+gRPC runtime and adds no admitted dependency. The successor T039 linked gateway component is
+distinguished from this client and does not alter the T032 expected results.
+
+No T032 expected result is weakened, no accepted requirement is changed, and no deferred REF-002
+target is promoted. The maintained client guidance for the successor gateway (logical watch owner,
+callback-return shutdown bound, uncertain scheduled-request retry) belongs to the T039 R3 repair
+record and does not modify the T032 client contract.

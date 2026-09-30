@@ -10,7 +10,9 @@
     "the committed gateway interface and bounded test-local fixtures"
   ],
   "interfaces": [
-    "src/xverse/xcom/src/tool_gateway.cpp"
+    "src/xverse/xcom/src/tool_gateway.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "invariants": [
     "When a unary request arrives, the gateway **shall** enforce its declared deadline against the accepted T025 time authority (not an ambient wall clock); an overdue request **shall** return a deterministic diagnostic and emit no item."
@@ -24,7 +26,10 @@
   "schema_version": 1,
   "source_paths": [
     "docs/engineering/xcom/t031/requirements.md",
-    "tests/xcom/tool_gateway/gateway_bounds_tests.cpp"
+    "tests/xcom/tool_gateway/gateway_bounds_tests.cpp",
+    "tests/xcom/tool_gateway/grpc_generated_client_tests.cpp",
+    "src/xverse/xcom/src/tool_gateway_grpc.cpp",
+    "src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp"
   ],
   "state": "per-session deadline state against the injected time authority",
   "static_checks": [
@@ -42,6 +47,18 @@
       "id": "XcomToolGatewayBounds.DeadlineEnforcedBeforeEmission",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "a request whose declared deadline has passed"
+    },
+    {
+      "expected": "the transport returns DEADLINE_EXCEEDED and CANCELLED and no item is emitted",
+      "id": "XcomGrpcGeneratedClient.DeadlineAndCancellationAreTransportEnforced",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a generated-client RPC with an expired deadline and a cancelled context"
+    },
+    {
+      "expected": "the committed outcome is reconciled from the durable journal and the retained request is not replayed",
+      "id": "XcomGrpcGeneratedClient.LateTransportFailuresReconcileCommittedEmission",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "a controlled slow emission cancelled after the action commits, then reconciled by durable request identity"
     }
   ]
 }

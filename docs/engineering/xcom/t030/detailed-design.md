@@ -573,3 +573,16 @@ path; no ambient discovery or network resolution occurs.
 - The test helper and suites carry the X-COM file-block tags required of changed test units.
 - Generated C++ documentation remains `DOX-GAP-02` (T037); T030 records the generated-code provenance policy
   contribution and closes the "no generated C++ exists yet" part of `T011-GAP-02` for the gateway proto.
+
+## 10. Successor disposition (T039 R3, recorded 2026-09-30)
+
+This section is a successor disposition; it does not rewrite the historical decisions above, which
+remain evidence for the T030 provenance-only slice at that revision.
+
+| Historical decision | Successor disposition | Scope and reason |
+| --- | --- | --- |
+| `T30-DD-03` — generate gRPC stubs for provenance but do not compile or link them | **Superseded for the linked gateway component.** The T039 successor compiles and links the generated `ToolGateway` and `GatewayLiveness` service implementations in the separate `xverse_xcom_tool_gateway_grpc` adapter, using the admitted gRPC runtime already present in the linked environment. | Superseded only for the platform gateway component; the earlier provenance-only slice and its `T030-GAP-02` envelope statement remain historical evidence at their pinned revision. `T30-DD-02` generation and `T30-DD-04` descriptor verification still hold. |
+| `T30-GAP-02` — admitted envelope cannot link the gRPC runtime | **Superseded for the linked gateway build.** Dependency admission records the admitted gRPC prefix and manifest; the adapter links it without a new network fetch. | The separate T032 synthetic client retains its framed local-IPC transport and its own `T032-GAP-01`; the two components are distinguished and neither claim covers the other. |
+
+No unrelated accepted requirement, decision, expected result, or REF-002 disposition is changed, and
+no deferred REF-002 target is promoted.

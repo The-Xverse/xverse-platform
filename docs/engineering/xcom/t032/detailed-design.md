@@ -292,3 +292,15 @@ Each emitted item carries persistent synthetic provenance (asserted on the accep
   an accepted additive contract change is visible in the same change that updates the client. T032 defines no
   competing contract, RPC, or configuration language.
 
+
+## Successor disposition (T039 R3, recorded 2026-09-30)
+
+`T32-DD-01` and `T32-DD-13` remain the accepted decisions for this component. The T032
+separate-process synthetic client keeps its bounded framed local-IPC transport, adds no admitted
+dependency, and links no gRPC runtime; `T032-GAP-01` remains an accurate historical statement for
+this component.
+
+This disposition is component-scoped: the later T039 successor introduces a **separate** linked gRPC
+gateway component (`xverse_xcom_tool_gateway_grpc`) that compiles and links both generated services.
+The successor gateway's linked-runtime capability is not a T032 claim, and the T032 client's framed
+transport is not superseded by it. Neither component's evidence is used to prove the other.

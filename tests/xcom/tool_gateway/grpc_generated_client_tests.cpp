@@ -321,6 +321,8 @@ void exercise_live_owner(bool shutdown) {
   EXPECT_TRUE(after.terminal);
   EXPECT_FALSE(after.lease_held);
   EXPECT_EQ(after.active_streams, 0U);
+  // T039-F07: cleanup must also empty the authoritative lease registry, not only gateway state.
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
   server.reset();
   EXPECT_EQ(::rmdir(directory), 0);
 }
@@ -490,6 +492,158 @@ TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
   EXPECT_FALSE(snapshot.lease_held());
 }
 
+v1::AcquireLeaseRequest lease_request(const char *endpoint) {
+  v1::AcquireLeaseRequest request;
+  request.set_session_id("session-1");
+  request.set_endpoint_id(endpoint);
+  request.set_endpoint_generation(3U);
+  request.set_plan_digest("plan-1");
+  request.set_lease_millis(500U);
+  request.set_deadline_millis(1000U);
+  return request;
+}
+
+// T039-F07: a session owns at most one exclusive service-emulation lease. A repeated acquisition
+// must be declined without aliasing the held identity, and owner cancellation must leave the
+// authoritative registry with no active owned lease.
+TEST(XcomGrpcGeneratedClient, RepeatedAcquireLeaseDeclinesSecondAllocation) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-repeat-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context, watch);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  v1::AcquireLeaseResponse first;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &first).ok());
+  }
+  ASSERT_EQ(first.state(), v1::LEASE_ACTIVE);
+  ASSERT_FALSE(first.lease_id().empty());
+  ASSERT_EQ(fixture.registry().snapshot().active, 1U);
+
+  // A different endpoint is a new allocation: the single-owned-lease boundary declines it without
+  // aliasing the held identity and without mutating the registry.
+  v1::AcquireLeaseResponse second;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    const grpc::Status status = client->AcquireLease(&context, lease_request("svc.beta"), &second);
+    EXPECT_TRUE(status.ok());
+  }
+  EXPECT_EQ(second.state(), v1::LEASE_CONFLICT);
+  EXPECT_EQ(second.lease_id(), first.lease_id());
+  EXPECT_EQ(fixture.registry().snapshot().active, 1U);
+  EXPECT_TRUE(session.snapshot().lease_held);
+
+  // Repeating the held endpoint is likewise declined while the identity is retained.
+  v1::AcquireLeaseResponse repeated;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &repeated).ok());
+  }
+  EXPECT_EQ(repeated.state(), v1::LEASE_CONFLICT);
+  EXPECT_EQ(repeated.lease_id(), first.lease_id());
+  EXPECT_EQ(fixture.registry().snapshot().active, 1U);
+
+  v1::QuerySessionRequest query;
+  query.set_session_id("session-1");
+  grpc::ClientContext query_context;
+  bound(query_context, watch);
+  v1::QuerySessionResponse snapshot;
+  ASSERT_TRUE(client->QuerySession(&query_context, query, &snapshot).ok());
+  EXPECT_TRUE(snapshot.lease_held());
+  EXPECT_EQ(snapshot.lease_id(), first.lease_id());
+
+  // Owner cancellation releases the original owned lease; no active owned lease may remain.
+  watch.close();
+  const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+  while (!session.snapshot().terminal && std::chrono::steady_clock::now() < limit) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+  const auto after = session.snapshot();
+  EXPECT_TRUE(after.terminal);
+  EXPECT_FALSE(after.lease_held);
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
+// T039-F07: after a declined repeated acquisition, the original lease identity remains the exact
+// identity that releases the lease, leaving no active registry entry.
+TEST(XcomGrpcGeneratedClient, RepeatedAcquireLeaseOriginalIdentityStillReleases) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-release-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context, watch);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  v1::AcquireLeaseResponse first;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &first).ok());
+  }
+  ASSERT_EQ(first.state(), v1::LEASE_ACTIVE);
+  v1::AcquireLeaseResponse declined;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.beta"), &declined).ok());
+  }
+  ASSERT_EQ(declined.state(), v1::LEASE_CONFLICT);
+
+  v1::ReleaseLeaseRequest release;
+  release.set_session_id("session-1");
+  release.set_lease_id(first.lease_id());
+  grpc::ClientContext release_context;
+  bound(release_context, watch);
+  v1::ReleaseLeaseResponse released;
+  ASSERT_TRUE(client->ReleaseLease(&release_context, release, &released).ok());
+  EXPECT_EQ(released.state(), v1::LEASE_RELEASED);
+  const auto registry = fixture.registry().snapshot();
+  EXPECT_EQ(registry.active, 0U);
+  EXPECT_EQ(registry.released, 1U);
+  EXPECT_FALSE(session.snapshot().lease_held);
+  watch.close();
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
 TEST(XcomGrpcGeneratedClient, DeadlineAndCancellationAreTransportEnforced) {
   ServerProcess process;
   ASSERT_TRUE(process.connected());
@@ -611,6 +765,8 @@ TEST(XcomGrpcGeneratedClient, WatchCancellationReleasesLiveResources) {
   EXPECT_TRUE(after.terminal);
   EXPECT_EQ(after.active_streams, 0U);
   EXPECT_FALSE(after.lease_held);
+  // T039-F07: owner cancellation must empty the authoritative lease registry as well.
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
   grpc::ClientContext query_context;
   bound(query_context, watch);
   v1::QuerySessionRequest query;
@@ -664,6 +820,8 @@ TEST(XcomGrpcGeneratedClient, AbruptClientExitReleasesLiveResources) {
   EXPECT_TRUE(after.terminal);
   EXPECT_EQ(after.active_streams, 0U);
   EXPECT_FALSE(after.lease_held);
+  // T039-F07: an abrupt owner exit must leave no active lease in the authoritative registry.
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
   server.reset();
   EXPECT_EQ(::rmdir(directory), 0);
 }

@@ -512,7 +512,9 @@ class GatewaySession final {
                     bool (*abort_before_dispatch)(void *) noexcept = nullptr,
                     void *abort_context = nullptr) noexcept;
 
-  /// @brief Acquires one exclusive generation-bound service-emulation lease.
+  /// @brief Acquires the session's single exclusive generation-bound service-emulation lease.
+  /// While one lease is held, a further acquisition is declined with `LEASE_CONFLICT` and the
+  /// original owned identity is preserved; the session never aliases or overwrites it (T039-F07).
   /// @param request Bounded lease-acquire request.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded lease result, or a declining diagnostic.

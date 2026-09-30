@@ -117,6 +117,15 @@ and predecessor regression evidence retained.
 - [ ] T041 Present the implemented software and inspected evidence bundle to the user and record explicit
   acceptance or rework.
 
+**Status (2026-09-30):** T038 remains the accepted-baseline delivery-envelope task (`engineering/project.json`
+`task_id` stays `T038`). The T039 R2 independent review recorded `T039-F07` (major) and confirmed `T039-F01`–`T039-F06`
+as addressed within their stated qualifications; the T040 R2 audit recorded `T040-E01`–`T040-E03`. The T039 R3
+successor repairs `T039-F07` and reconciles `T040-E01`–`T040-E03`; it does **not** mark T039, T040, or T041 complete
+and does not accept or merge the candidate. External T039/T040 inspection, the repeated affected verification, the
+separate review, and T041 explicit user acceptance remain open. Historical failed gates (the inherited T036 verifier
+report at the accepted revision, the direct Phase 6 Doxyfile-immutability script) are preserved as historical evidence
+and are not promoted to current passes; the authorized inherited Phase 6 replay is recorded separately.
+
 ## Dependencies and execution order
 
 T001–T004 precede architecture review. T005–T006 and the ACC015/ADR-0020 workflow amendment gate all
