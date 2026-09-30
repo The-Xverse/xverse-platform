@@ -26,12 +26,15 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -362,6 +365,11 @@ class RecordingEmitter final : public val::ActionEmitter {
   /// @brief Delivers one descriptor and records the call count.
   val::EmissionStatus emit(const val::SyntheticStimulationItem &item,
                            std::span<const std::byte> payload) override {
+    entered_emit.store(true);
+    const auto delay = delay_millis.load();
+    if (delay > 0U) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    }
     ++calls;
     last_request_id = item.intent.request_id;
     last_payload_size = payload.size();
@@ -374,6 +382,8 @@ class RecordingEmitter final : public val::ActionEmitter {
   std::uint64_t last_request_id{0U};
   /// @brief Last observed call-scoped payload size.
   std::size_t last_payload_size{0U};
+  std::atomic<bool> entered_emit{false};
+  std::atomic<unsigned> delay_millis{0U};
 };
 
 /**

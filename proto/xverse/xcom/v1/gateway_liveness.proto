@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package xverse.xcom.v1;
+
+// Local Unix-socket transport lifecycle. This service is separate from the
+// published ten-method ToolGateway contract.
+message WatchSessionRequest {}
+message WatchSessionReady { bool ready = 1; }
+
+service GatewayLiveness {
+  // Keep this stream open for the lifetime of a tool session. Cancelling or
+  // losing it makes the server release the session's streams and lease.
+  rpc WatchSession(WatchSessionRequest) returns (stream WatchSessionReady);
+}

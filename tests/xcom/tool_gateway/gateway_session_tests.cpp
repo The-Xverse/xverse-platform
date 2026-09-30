@@ -48,7 +48,7 @@ TEST(XcomToolGatewaySession, VersionNegotiationAcceptsSupportedMajor) {
   EXPECT_EQ(snapshot.negotiation, GatewayOutcome::accepted);
   const v1::QueryVersionResponse version = session.QueryVersion(v1::QueryVersionRequest{});
   EXPECT_EQ(version.protocol().major(), 1U);
-  EXPECT_EQ(version.protocol().minor(), 0U);
+  EXPECT_EQ(version.protocol().minor(), 1U);
 }
 
 TEST(XcomToolGatewaySession, VersionNegotiationRejectsUnsupportedMajor) {

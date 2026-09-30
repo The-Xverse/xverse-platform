@@ -2,6 +2,7 @@
 #define XVERSE_XCOM_TOOL_GATEWAY_GRPC_HPP_
 
 #include "xverse/xcom/tool_gateway.hpp"
+#include "xverse/xcom/v1/gateway_liveness.grpc.pb.h"
 #include "xverse/xcom/v1/tool_gateway.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
@@ -14,9 +15,10 @@
 
 namespace xverse::xcom {
 
-/// The real generated gRPC service for one permit-bound gateway session.
+/// The real generated gRPC and local liveness services for one permit-bound gateway session.
 /// The owning application must keep the session and its dependencies alive until shutdown.
-class GatewayGrpcService final : public v1::ToolGateway::Service {
+class GatewayGrpcService final : public v1::ToolGateway::Service,
+                                 public v1::GatewayLiveness::Service {
  public:
   GatewayGrpcService(GatewaySession &session, const GatewayConfig &config) noexcept;
 
@@ -40,13 +42,21 @@ class GatewayGrpcService final : public v1::ToolGateway::Service {
                             v1::ReleaseLeaseResponse *) override;
   grpc::Status QuerySession(grpc::ServerContext *, const v1::QuerySessionRequest *,
                             v1::QuerySessionResponse *) override;
+  /// Keep one local session watch open until the client disconnects or cancels it.
+  grpc::Status WatchSession(grpc::ServerContext *, const v1::WatchSessionRequest *,
+                            grpc::ServerWriter<v1::WatchSessionReady> *) override;
   void poll() noexcept;
   void disconnect() noexcept;
+  /// Maximum request and response size configured for this service.
+  [[nodiscard]] std::size_t message_bound() const noexcept;
 
  private:
   grpc::Status check(grpc::ServerContext *, std::size_t request_bytes) const;
+  grpc::Status require_watch() const;
   GatewaySession &session_;
   GatewayConfig config_;
+  std::atomic<bool> watch_active_{false};
+  std::atomic<bool> watch_failed_{false};
 };
 
 /// Owns a protected local Unix-socket gRPC listener. No TCP address is accepted.

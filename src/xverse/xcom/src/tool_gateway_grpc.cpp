@@ -42,6 +42,9 @@ GatewayGrpcService::GatewayGrpcService(GatewaySession &session,
 
 void GatewayGrpcService::poll() noexcept { session_.poll_now(); }
 void GatewayGrpcService::disconnect() noexcept { session_.on_disconnect(); }
+std::size_t GatewayGrpcService::message_bound() const noexcept {
+  return config_.max_message_bytes();
+}
 
 grpc::Status GatewayGrpcService::check(grpc::ServerContext *context,
                                         std::size_t request_bytes) const {
@@ -57,6 +60,45 @@ grpc::Status GatewayGrpcService::check(grpc::ServerContext *context,
   return grpc::Status::OK;
 }
 
+grpc::Status GatewayGrpcService::require_watch() const {
+  if (!watch_active_.load() || watch_failed_.load() || session_.snapshot().terminal) {
+    return {grpc::StatusCode::FAILED_PRECONDITION, "active session watch required"};
+  }
+  return grpc::Status::OK;
+}
+
+grpc::Status GatewayGrpcService::WatchSession(
+    grpc::ServerContext *context, const v1::WatchSessionRequest *request,
+    grpc::ServerWriter<v1::WatchSessionReady> *writer) {
+  const grpc::Status admitted = check(context, request->ByteSizeLong());
+  if (!admitted.ok()) {
+    return admitted;
+  }
+  if (session_.snapshot().terminal) {
+    return {grpc::StatusCode::FAILED_PRECONDITION, "session already terminal"};
+  }
+  bool expected = false;
+  if (!watch_active_.compare_exchange_strong(expected, true)) {
+    return {grpc::StatusCode::ALREADY_EXISTS, "session already watched"};
+  }
+  if (watch_failed_.load() || session_.snapshot().terminal) {
+    watch_active_.store(false);
+    return {grpc::StatusCode::FAILED_PRECONDITION, "session already terminal"};
+  }
+  v1::WatchSessionReady ready;
+  ready.set_ready(true);
+  const bool delivered = writer->Write(ready);
+  if (delivered) {
+    while (!context->IsCancelled()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+  watch_failed_.store(true);
+  session_.on_disconnect();
+  watch_active_.store(false);
+  return {grpc::StatusCode::CANCELLED, "session watch closed"};
+}
+
 #define XCOM_GRPC_UNARY(method, Request, Response)                                      \
   grpc::Status GatewayGrpcService::method(grpc::ServerContext *context,                 \
                                            const v1::Request *request,                   \
@@ -66,19 +108,66 @@ grpc::Status GatewayGrpcService::check(grpc::ServerContext *context,
     if (!admitted.ok()) {                                                                \
       return admitted;                                                                   \
     }                                                                                    \
+    const grpc::Status watched = require_watch();                                        \
+    if (!watched.ok()) {                                                                  \
+      return watched;                                                                    \
+    }                                                                                    \
     *response = session_.method(*request, arrival);                                      \
-    return check(context, response->ByteSizeLong());                                     \
+    return grpc::Status::OK;                                                              \
   }
 
 XCOM_GRPC_UNARY(OpenObservation, OpenObservationRequest, OpenObservationResponse)
 XCOM_GRPC_UNARY(CloseObservation, CloseObservationRequest, CloseObservationResponse)
 XCOM_GRPC_UNARY(RevokeSession, RevokeSessionRequest, RevokeSessionResponse)
-XCOM_GRPC_UNARY(SubmitStimulation, SubmitStimulationRequest, SubmitStimulationResponse)
 XCOM_GRPC_UNARY(AcquireLease, AcquireLeaseRequest, AcquireLeaseResponse)
 XCOM_GRPC_UNARY(ReleaseLease, ReleaseLeaseRequest, ReleaseLeaseResponse)
-XCOM_GRPC_UNARY(QuerySession, QuerySessionRequest, QuerySessionResponse)
 
 #undef XCOM_GRPC_UNARY
+
+grpc::Status GatewayGrpcService::QuerySession(
+    grpc::ServerContext *context, const v1::QuerySessionRequest *request,
+    v1::QuerySessionResponse *response) {
+  const auto arrival = session_.current_tick();
+  const grpc::Status admitted = check(context, request->ByteSizeLong());
+  if (!admitted.ok()) {
+    return admitted;
+  }
+  *response = session_.QuerySession(*request, arrival);
+  return grpc::Status::OK;
+}
+
+grpc::Status GatewayGrpcService::SubmitStimulation(
+    grpc::ServerContext *context, const v1::SubmitStimulationRequest *request,
+    v1::SubmitStimulationResponse *response) {
+  const auto arrival = session_.current_tick();
+  const grpc::Status admitted = check(context, request->ByteSizeLong());
+  if (!admitted.ok()) {
+    return admitted;
+  }
+  const grpc::Status watched = require_watch();
+  if (!watched.ok()) {
+    return watched;
+  }
+  // Response diagnostics are bounded, but request_id is echoed. Reserve enough
+  // space before entering the action path so send-size rejection cannot follow emission.
+  constexpr std::size_t response_overhead = 512U;
+  if (config_.max_message_bytes() <= response_overhead ||
+      request->request_id().size() + request->contract_id().size() >
+          config_.max_message_bytes() - response_overhead) {
+    return {grpc::StatusCode::RESOURCE_EXHAUSTED, "response would exceed message bound"};
+  }
+  const auto cancelled = [](void *opaque) noexcept {
+    auto *call = static_cast<grpc::ServerContext *>(opaque);
+    return call->IsCancelled() || std::chrono::system_clock::now() >= call->deadline();
+  };
+  *response = session_.SubmitStimulation(*request, arrival, cancelled, context);
+  if (response->diagnostic().code() == "gw.transport.cancelled") {
+    const grpc::Status ended = check(context, 0U);
+    return ended.ok() ? grpc::Status(grpc::StatusCode::CANCELLED, "transport ended before dispatch")
+                      : ended;
+  }
+  return grpc::Status::OK;
+}
 
 grpc::Status GatewayGrpcService::QueryVersion(grpc::ServerContext *context,
                                                const v1::QueryVersionRequest *request,
@@ -99,12 +188,16 @@ grpc::Status GatewayGrpcService::ArmSession(grpc::ServerContext *context,
   if (!admitted.ok()) {
     return admitted;
   }
+  const grpc::Status watched = require_watch();
+  if (!watched.ok()) {
+    return watched;
+  }
   if (!request->has_protocol() ||
       session_.negotiate(request->protocol()) != GatewayOutcome::accepted) {
     return {grpc::StatusCode::FAILED_PRECONDITION, "unsupported protocol version"};
   }
   *response = session_.ArmSession(*request, arrival);
-  return check(context, response->ByteSizeLong());
+  return grpc::Status::OK;
 }
 
 grpc::Status GatewayGrpcService::ReadObservations(
@@ -115,10 +208,21 @@ grpc::Status GatewayGrpcService::ReadObservations(
   if (!admitted.ok()) {
     return admitted;
   }
+  const grpc::Status watched = require_watch();
+  if (!watched.ok()) {
+    return watched;
+  }
   const std::size_t bound = std::min<std::size_t>(request->max_records(),
                                                  config_.max_observation_records());
   std::vector<v1::ObservationRecord> records(bound);
-  const std::size_t count = session_.ReadObservations(*request, records, arrival);
+  GatewayOutcome outcome = GatewayOutcome::rejected;
+  const std::size_t count = session_.ReadObservations(*request, records, arrival, &outcome);
+  if (outcome == GatewayOutcome::expired) {
+    return {grpc::StatusCode::DEADLINE_EXCEEDED, "observation read deadline expired"};
+  }
+  if (outcome != GatewayOutcome::accepted) {
+    return {grpc::StatusCode::FAILED_PRECONDITION, "observation read rejected"};
+  }
   for (std::size_t index = 0U; index < count; ++index) {
     const grpc::Status ready = check(context, records[index].ByteSizeLong());
     if (!ready.ok()) {
@@ -150,7 +254,8 @@ GatewayGrpcServer::GatewayGrpcServer(std::string path,
 std::unique_ptr<GatewayGrpcServer> GatewayGrpcServer::start(
     const std::string &socket_path, GatewayGrpcService &service,
     std::size_t max_message_bytes) {
-  if (max_message_bytes == 0U ||
+  // Every fixed gateway response fits within this local transport floor.
+  if (max_message_bytes < 1024U || max_message_bytes != service.message_bound() ||
       max_message_bytes > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
     return nullptr;
   }
@@ -165,7 +270,8 @@ std::unique_ptr<GatewayGrpcServer> GatewayGrpcServer::start(
   quota.Resize(8U * 1024U * 1024U + 2U * max_message_bytes).SetMaxThreads(8);
   builder.SetResourceQuota(quota);
   builder.SetSyncServerOption(grpc::ServerBuilder::MAX_POLLERS, 4);
-  builder.RegisterService(&service);
+  builder.RegisterService(static_cast<v1::ToolGateway::Service *>(&service));
+  builder.RegisterService(static_cast<v1::GatewayLiveness::Service *>(&service));
   builder.AddListeningPort("unix://" + socket_path, grpc::InsecureServerCredentials());
   const mode_t prior_umask = ::umask(0077);
   std::unique_ptr<grpc::Server> server = builder.BuildAndStart();

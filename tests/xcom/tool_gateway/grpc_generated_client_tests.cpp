@@ -12,6 +12,7 @@
 #include <thread>
 
 #include <sys/stat.h>
+#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -51,6 +52,7 @@ class ServerProcess final {
     path_ = directory_ + "/gateway.sock";
     child_ = ::fork();
     if (child_ == 0) {
+      static_cast<void>(::prctl(PR_SET_PDEATHSIG, SIGTERM));
       ::execl("/proc/self/exe", "/proc/self/exe", "--xcom-grpc-server",
               path_.c_str(), static_cast<char *>(nullptr));
       ::_exit(127);
@@ -93,6 +95,80 @@ void bound(grpc::ClientContext &context) {
   context.set_deadline(std::chrono::system_clock::now() + std::chrono::seconds(2));
 }
 
+class SessionWatch final {
+ public:
+  explicit SessionWatch(const std::shared_ptr<grpc::Channel> &channel)
+      : stub_(v1::GatewayLiveness::NewStub(channel)),
+        reader_(stub_->WatchSession(&context_, v1::WatchSessionRequest{})) {}
+
+  [[nodiscard]] bool ready() {
+    v1::WatchSessionReady response;
+    return reader_->Read(&response) && response.ready();
+  }
+
+  void close() {
+    if (reader_) {
+      context_.TryCancel();
+      static_cast<void>(reader_->Finish());
+      reader_.reset();
+    }
+  }
+
+  ~SessionWatch() { close(); }
+
+ private:
+  std::unique_ptr<v1::GatewayLiveness::Stub> stub_;
+  grpc::ClientContext context_;
+  std::unique_ptr<grpc::ClientReader<v1::WatchSessionReady>> reader_;
+};
+
+[[noreturn]] void abrupt_client(const char *path) {
+  auto channel = grpc::CreateChannel(std::string("unix://") + path,
+                                     grpc::InsecureChannelCredentials());
+  if (!channel->WaitForConnected(std::chrono::system_clock::now() +
+                                 std::chrono::seconds(2))) {
+    ::_exit(2);
+  }
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  if (!watch.ready()) {
+    ::_exit(3);
+  }
+  grpc::ClientContext arm_context;
+  bound(arm_context);
+  v1::ArmSessionResponse armed;
+  if (!client->ArmSession(&arm_context, arm_request(), &armed).ok() ||
+      armed.state() != v1::SESSION_ARMED) {
+    ::_exit(4);
+  }
+  v1::OpenObservationRequest open;
+  open.set_tap_id("tap.first");
+  open.set_max_records(1U);
+  open.set_deadline_millis(1000U);
+  grpc::ClientContext open_context;
+  bound(open_context);
+  v1::OpenObservationResponse stream;
+  if (!client->OpenObservation(&open_context, open, &stream).ok() ||
+      stream.stream_id().empty()) {
+    ::_exit(5);
+  }
+  v1::AcquireLeaseRequest acquire;
+  acquire.set_session_id("session-1");
+  acquire.set_endpoint_id("svc.alpha");
+  acquire.set_endpoint_generation(3U);
+  acquire.set_plan_digest("plan-1");
+  acquire.set_lease_millis(500U);
+  acquire.set_deadline_millis(1000U);
+  grpc::ClientContext lease_context;
+  bound(lease_context);
+  v1::AcquireLeaseResponse lease;
+  if (!client->AcquireLease(&lease_context, acquire, &lease).ok() ||
+      lease.state() != v1::LEASE_ACTIVE) {
+    ::_exit(6);
+  }
+  ::_exit(0);  // No local destructor cancels the watch or releases resources.
+}
+
 TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
   ServerProcess process;
   ASSERT_TRUE(process.connected());
@@ -101,6 +177,8 @@ TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
   EXPECT_TRUE(S_ISSOCK(socket_info.st_mode));
   EXPECT_EQ(socket_info.st_mode & 0777, 0600);
   auto client = v1::ToolGateway::NewStub(process.channel());
+  SessionWatch watch(process.channel());
+  ASSERT_TRUE(watch.ready());
 
   grpc::ClientContext version_context;
   bound(version_context);
@@ -202,6 +280,15 @@ TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
   ASSERT_TRUE(client->AcquireLease(&acquire_context, acquire, &lease).ok());
   ASSERT_EQ(lease.state(), v1::LEASE_ACTIVE);
 
+  v1::QuerySessionRequest query;
+  query.set_session_id("session-1");
+  grpc::ClientContext held_context;
+  bound(held_context);
+  v1::QuerySessionResponse snapshot;
+  ASSERT_TRUE(client->QuerySession(&held_context, query, &snapshot).ok());
+  EXPECT_TRUE(snapshot.lease_held());
+  EXPECT_EQ(snapshot.lease_id(), lease.lease_id());
+
   v1::ReleaseLeaseRequest release;
   release.set_session_id("session-1");
   release.set_lease_id(lease.lease_id());
@@ -213,11 +300,9 @@ TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
 
   grpc::ClientContext query_context;
   bound(query_context);
-  v1::QuerySessionRequest query;
-  query.set_session_id("session-1");
-  v1::QuerySessionResponse snapshot;
   ASSERT_TRUE(client->QuerySession(&query_context, query, &snapshot).ok());
   EXPECT_EQ(snapshot.counters().emitted(), 1U);
+  EXPECT_FALSE(snapshot.lease_held());
 
   v1::RevokeSessionRequest revoke;
   revoke.set_session_id("session-1");
@@ -227,6 +312,11 @@ TEST(XcomGrpcGeneratedClient, SeparateServerHonorsContractAndWireRejection) {
   v1::RevokeSessionResponse revoked;
   ASSERT_TRUE(client->RevokeSession(&revoke_context, revoke, &revoked).ok());
   EXPECT_EQ(revoked.state(), v1::SESSION_REVOKED);
+  grpc::ClientContext terminal_query_context;
+  bound(terminal_query_context);
+  ASSERT_TRUE(client->QuerySession(&terminal_query_context, query, &snapshot).ok());
+  EXPECT_EQ(snapshot.state(), v1::SESSION_REVOKED);
+  EXPECT_FALSE(snapshot.lease_held());
 }
 
 TEST(XcomGrpcGeneratedClient, DeadlineAndCancellationAreTransportEnforced) {
@@ -248,11 +338,264 @@ TEST(XcomGrpcGeneratedClient, DeadlineAndCancellationAreTransportEnforced) {
       client->QueryVersion(&cancelled, v1::QueryVersionRequest{}, &response);
   EXPECT_EQ(cancellation.error_code(), grpc::StatusCode::CANCELLED);
 }
+
+TEST(XcomGrpcGeneratedClient, RejectedObservationReadHasExplicitTransportStatus) {
+  ServerProcess process;
+  ASSERT_TRUE(process.connected());
+  auto client = v1::ToolGateway::NewStub(process.channel());
+  SessionWatch watch(process.channel());
+  ASSERT_TRUE(watch.ready());
+  v1::ReadObservationsRequest request;
+  request.set_stream_id("missing-stream");
+  request.set_max_records(1U);
+  request.set_deadline_millis(100U);
+
+  grpc::ClientContext unnegotiated;
+  bound(unnegotiated);
+  auto early = client->ReadObservations(&unnegotiated, request);
+  v1::ObservationRecord record;
+  EXPECT_FALSE(early->Read(&record));
+  EXPECT_EQ(early->Finish().error_code(), grpc::StatusCode::FAILED_PRECONDITION);
+
+  grpc::ClientContext arm_context;
+  bound(arm_context);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  grpc::ClientContext missing;
+  bound(missing);
+  auto absent = client->ReadObservations(&missing, request);
+  EXPECT_FALSE(absent->Read(&record));
+  EXPECT_EQ(absent->Finish().error_code(), grpc::StatusCode::FAILED_PRECONDITION);
+
+  grpc::ClientContext expired;
+  expired.set_deadline(std::chrono::system_clock::now() - std::chrono::seconds(1));
+  auto overdue = client->ReadObservations(&expired, request);
+  EXPECT_FALSE(overdue->Read(&record));
+  EXPECT_EQ(overdue->Finish().error_code(), grpc::StatusCode::DEADLINE_EXCEEDED);
+}
+
+TEST(XcomGrpcGeneratedClient, WatchCancellationReleasesLiveResources) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-watch-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+
+  grpc::ClientContext unwatched_context;
+  bound(unwatched_context);
+  v1::ArmSessionResponse unwatched_response;
+  EXPECT_EQ(client->ArmSession(&unwatched_context, arm_request(), &unwatched_response).error_code(),
+            grpc::StatusCode::FAILED_PRECONDITION);
+
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  v1::OpenObservationRequest open;
+  open.set_tap_id("tap.first");
+  open.set_max_records(1U);
+  open.set_deadline_millis(1000U);
+  grpc::ClientContext open_context;
+  bound(open_context);
+  v1::OpenObservationResponse stream;
+  ASSERT_TRUE(client->OpenObservation(&open_context, open, &stream).ok());
+  ASSERT_FALSE(stream.stream_id().empty());
+
+  v1::AcquireLeaseRequest acquire;
+  acquire.set_session_id("session-1");
+  acquire.set_endpoint_id("svc.alpha");
+  acquire.set_endpoint_generation(3U);
+  acquire.set_plan_digest("plan-1");
+  acquire.set_lease_millis(500U);
+  acquire.set_deadline_millis(1000U);
+  grpc::ClientContext lease_context;
+  bound(lease_context);
+  v1::AcquireLeaseResponse lease;
+  ASSERT_TRUE(client->AcquireLease(&lease_context, acquire, &lease).ok());
+  ASSERT_EQ(lease.state(), v1::LEASE_ACTIVE);
+  ASSERT_EQ(session.snapshot().active_streams, 1U);
+  ASSERT_TRUE(session.snapshot().lease_held);
+
+  watch.close();
+  const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+  while (!session.snapshot().terminal && std::chrono::steady_clock::now() < limit) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+  const auto after = session.snapshot();
+  EXPECT_TRUE(after.terminal);
+  EXPECT_EQ(after.active_streams, 0U);
+  EXPECT_FALSE(after.lease_held);
+  grpc::ClientContext query_context;
+  bound(query_context);
+  v1::QuerySessionRequest query;
+  query.set_session_id("session-1");
+  v1::QuerySessionResponse state;
+  ASSERT_TRUE(client->QuerySession(&query_context, query, &state).ok());
+  EXPECT_EQ(state.state(), v1::SESSION_EVIDENCE_INCOMPLETE);
+  EXPECT_FALSE(state.lease_held());
+  EXPECT_EQ(state.active_observation_streams(), 0U);
+  grpc::ClientContext terminal_context;
+  bound(terminal_context);
+  v1::ReadObservationsRequest terminal_read;
+  terminal_read.set_stream_id(stream.stream_id());
+  terminal_read.set_max_records(1U);
+  auto rejected = client->ReadObservations(&terminal_context, terminal_read);
+  v1::ObservationRecord record;
+  EXPECT_FALSE(rejected->Read(&record));
+  EXPECT_EQ(rejected->Finish().error_code(), grpc::StatusCode::FAILED_PRECONDITION);
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
+TEST(XcomGrpcGeneratedClient, AbruptClientExitReleasesLiveResources) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-exit-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  const pid_t child = ::fork();
+  ASSERT_GE(child, 0);
+  if (child == 0) {
+    static_cast<void>(::prctl(PR_SET_PDEATHSIG, SIGTERM));
+    ::execl("/proc/self/exe", "/proc/self/exe", "--xcom-grpc-disconnect-client",
+            path.c_str(), static_cast<char *>(nullptr));
+    ::_exit(127);
+  }
+  int child_status = 0;
+  ASSERT_EQ(::waitpid(child, &child_status, 0), child);
+  ASSERT_TRUE(WIFEXITED(child_status));
+  ASSERT_EQ(WEXITSTATUS(child_status), 0);
+  const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+  while (!session.snapshot().terminal && std::chrono::steady_clock::now() < limit) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+  const auto after = session.snapshot();
+  EXPECT_TRUE(after.terminal);
+  EXPECT_EQ(after.active_streams, 0U);
+  EXPECT_FALSE(after.lease_held);
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
+TEST(XcomGrpcGeneratedClient, LateTransportFailuresReconcileCommittedEmission) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-commit-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  auto overbound_response =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, std::string(3600U, '1'));
+  grpc::ClientContext overbound_context;
+  bound(overbound_context);
+  v1::SubmitStimulationResponse overbound_result;
+  EXPECT_EQ(client->SubmitStimulation(&overbound_context, overbound_response, &overbound_result)
+                .error_code(), grpc::StatusCode::RESOURCE_EXHAUSTED);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+
+  fixture.emitter().delay_millis.store(100U);
+  const auto request = stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "901");
+  grpc::ClientContext context;
+  bound(context);
+  v1::SubmitStimulationResponse first;
+  grpc::Status status;
+  std::thread caller([&] { status = client->SubmitStimulation(&context, request, &first); });
+  const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+  while (!fixture.emitter().entered_emit.load() && std::chrono::steady_clock::now() < limit) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  const bool entered = fixture.emitter().entered_emit.load();
+  context.TryCancel();
+  caller.join();
+  static_cast<void>(session.snapshot());  // Wait for the already-entered action to finish.
+  EXPECT_TRUE(entered);
+  EXPECT_EQ(status.error_code(), grpc::StatusCode::CANCELLED);
+  EXPECT_EQ(fixture.emitter().calls, 1U);
+
+  grpc::ClientContext retry_context;
+  bound(retry_context);
+  v1::SubmitStimulationResponse retry;
+  ASSERT_TRUE(client->SubmitStimulation(&retry_context, request, &retry).ok());
+  EXPECT_NE(retry.outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
+  EXPECT_EQ(fixture.emitter().calls, 1U);
+
+  fixture.emitter().entered_emit.store(false);
+  fixture.emitter().delay_millis.store(600U);
+  grpc::ClientContext deadline_context;
+  deadline_context.set_deadline(std::chrono::system_clock::now() +
+                                std::chrono::milliseconds(300));
+  const auto timed_request =
+      stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "903");
+  v1::SubmitStimulationResponse timed_response;
+  const grpc::Status timed =
+      client->SubmitStimulation(&deadline_context, timed_request, &timed_response);
+  static_cast<void>(session.snapshot());
+  EXPECT_TRUE(fixture.emitter().entered_emit.load());
+  EXPECT_EQ(timed.error_code(), grpc::StatusCode::DEADLINE_EXCEEDED);
+  EXPECT_EQ(fixture.emitter().calls, 2U);
+  watch.close();
+  grpc::ClientContext lookup_context;
+  bound(lookup_context);
+  v1::QuerySessionRequest lookup;
+  lookup.set_session_id("session-1");
+  lookup.set_stimulation_request_id("901");
+  v1::QuerySessionResponse reconciled;
+  ASSERT_TRUE(client->QuerySession(&lookup_context, lookup, &reconciled).ok());
+  EXPECT_TRUE(reconciled.stimulation_intent_found());
+  EXPECT_EQ(reconciled.stimulation_outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
+  grpc::ClientContext timed_lookup_context;
+  bound(timed_lookup_context);
+  lookup.set_stimulation_request_id("903");
+  ASSERT_TRUE(client->QuerySession(&timed_lookup_context, lookup, &reconciled).ok());
+  EXPECT_TRUE(reconciled.stimulation_intent_found());
+  EXPECT_EQ(reconciled.stimulation_outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
 }  // namespace
 
 int main(int argc, char **argv) {
   if (argc == 3 && std::strcmp(argv[1], "--xcom-grpc-server") == 0) {
     return serve(argv[2]);
+  }
+  if (argc == 3 && std::strcmp(argv[1], "--xcom-grpc-disconnect-client") == 0) {
+    abrupt_client(argv[2]);
   }
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

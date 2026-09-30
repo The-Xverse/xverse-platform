@@ -566,6 +566,8 @@ set(
   xcom_t030_proto_source
   "${xcom_t030_proto_root}/xverse/xcom/v1/tool_gateway.proto"
 )
+set(xcom_liveness_proto_source
+  "${xcom_t030_proto_root}/xverse/xcom/v1/gateway_liveness.proto")
 set(
   xcom_t030_generated_dir
   "${CMAKE_CURRENT_BINARY_DIR}/t030-proto-gen"
@@ -586,6 +588,14 @@ set(
   xcom_t030_grpc_source
   "${xcom_t030_generated_dir}/xverse/xcom/v1/tool_gateway.grpc.pb.cc"
 )
+set(xcom_liveness_pb_source
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/gateway_liveness.pb.cc")
+set(xcom_liveness_pb_header
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/gateway_liveness.pb.h")
+set(xcom_liveness_grpc_source
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/gateway_liveness.grpc.pb.cc")
+set(xcom_liveness_grpc_header
+  "${xcom_t030_generated_dir}/xverse/xcom/v1/gateway_liveness.grpc.pb.h")
 set(
   xcom_t030_protobuf_include
   "${XVERSE_XCOM_TOOLCHAIN}/usr/include"
@@ -601,6 +611,10 @@ add_custom_command(
     "${xcom_t030_pb_header}"
     "${xcom_t030_grpc_source}"
     "${xcom_t030_grpc_header}"
+    "${xcom_liveness_pb_source}"
+    "${xcom_liveness_pb_header}"
+    "${xcom_liveness_grpc_source}"
+    "${xcom_liveness_grpc_header}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${xcom_t030_generated_dir}"
   COMMAND
     ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${xcom_t030_toolchain_lib}"
@@ -610,7 +624,8 @@ add_custom_command(
     "--grpc_out=${xcom_t030_generated_dir}"
     "--plugin=protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>"
     "xverse/xcom/v1/tool_gateway.proto"
-  DEPENDS "${xcom_t030_proto_source}"
+    "xverse/xcom/v1/gateway_liveness.proto"
+  DEPENDS "${xcom_t030_proto_source}" "${xcom_liveness_proto_source}"
   COMMENT "T030: generating the versioned tool-gateway Protocol Buffers and gRPC artifacts"
   VERBATIM
 )
@@ -619,7 +634,8 @@ add_custom_command(
 # xverse_xcom_tool_gateway_grpc below. The admitted protobuf headers
 # and the generated headers are system includes: third-party and generated-header warnings are
 # suppressed while the X-COM warning-as-error policy still governs every T030-owned source line.
-add_library(xverse_xcom_tool_gateway_proto STATIC "${xcom_t030_pb_source}")
+add_library(xverse_xcom_tool_gateway_proto STATIC
+  "${xcom_t030_pb_source}" "${xcom_liveness_pb_source}")
 add_library(xverse::xcom_tool_gateway_proto ALIAS xverse_xcom_tool_gateway_proto)
 target_include_directories(
   xverse_xcom_tool_gateway_proto
@@ -644,6 +660,10 @@ add_custom_target(
     "${xcom_t030_pb_source}"
     "${xcom_t030_grpc_header}"
     "${xcom_t030_grpc_source}"
+    "${xcom_liveness_pb_header}"
+    "${xcom_liveness_pb_source}"
+    "${xcom_liveness_grpc_header}"
+    "${xcom_liveness_grpc_source}"
 )
 
 # T031's bounded, host-protected, local-IPC-only tool gateway session. It realizes the accepted
@@ -691,8 +711,17 @@ set_target_properties(
 add_library(
   xverse_xcom_tool_gateway_grpc STATIC
   "${xcom_t030_grpc_source}"
+  "${xcom_liveness_grpc_source}"
   src/tool_gateway_grpc.cpp
 )
+if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
+  # Generated gRPC 1.30.2 call ops include inline client and completion-queue
+  # code that fails under ASan/UBSan with the admitted binary runtime. The
+  # adapter and all gateway-owned production sources remain instrumented.
+  set_source_files_properties(
+    "${xcom_t030_grpc_source}" "${xcom_liveness_grpc_source}"
+    PROPERTIES COMPILE_OPTIONS "-fno-sanitize=address,undefined")
+endif()
 add_library(xverse::xcom_tool_gateway_grpc ALIAS xverse_xcom_tool_gateway_grpc)
 target_include_directories(
   xverse_xcom_tool_gateway_grpc
@@ -743,6 +772,13 @@ if(BUILD_TESTING)
     "${PROJECT_SOURCE_DIR}/tests/xcom/tool_gateway")
   target_compile_definitions(xverse_xcom_grpc_generated_client_tests PRIVATE
     "XCOM_T031_SCRATCH_DIR=\"${CMAKE_BINARY_DIR}/t031-scratch\"")
+  if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
+    # The client translation unit instantiates the same incompatible inline
+    # gRPC code. Keep every generated-client case in sanitizer CTest while
+    # instrumenting the production gateway and adapter it exercises.
+    target_compile_options(xverse_xcom_grpc_generated_client_tests PRIVATE
+      -fno-sanitize=address,undefined)
+  endif()
   target_link_libraries(xverse_xcom_grpc_generated_client_tests PRIVATE
     xverse::xcom_tool_gateway_grpc GTest::gtest Threads::Threads)
   xverse_xcom_apply_runtime_rules(xverse_xcom_grpc_generated_client_tests)

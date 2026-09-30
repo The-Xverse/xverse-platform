@@ -42,7 +42,7 @@ namespace xverse::xcom {
 /// @brief Accepted protocol major realized by this gateway slice.
 inline constexpr std::uint32_t kGatewaySupportedMajor = 1U;
 /// @brief Negotiated protocol minor realized by this gateway slice.
-inline constexpr std::uint32_t kGatewaySupportedMinor = 0U;
+inline constexpr std::uint32_t kGatewaySupportedMinor = 1U;
 
 /**
  * @brief Caller-supplied bounds for one gateway configuration.
@@ -469,10 +469,12 @@ class GatewaySession final {
   /// @param request Bounded read request.
   /// @param out Destination span of at most `request.max_records()` records.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
+  /// @param outcome Optional admission result; a valid empty stream reports `accepted`.
   /// @return The number of records written, never above the granted, configured, or span bound.
   [[nodiscard]] std::size_t ReadObservations(
       const v1::ReadObservationsRequest &request, std::span<v1::ObservationRecord> out,
-      std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
+      std::optional<validation::Timestamp> arrival_tick = std::nullopt,
+      GatewayOutcome *outcome = nullptr) noexcept;
 
   /// @brief Closes one bounded observation stream and returns delivered/dropped counters.
   /// @param request Bounded close request.
@@ -501,10 +503,14 @@ class GatewaySession final {
   /// @brief Submits one bounded stimulation action through the accepted action path.
   /// @param request Bounded stimulation request.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
+  /// @param abort_before_dispatch Optional transport abort probe, called once before action commit.
+  /// @param abort_context Non-owning context supplied to the abort probe.
   /// @return The bounded emission/outcome result, or a declining diagnostic.
   [[nodiscard]] v1::SubmitStimulationResponse
   SubmitStimulation(const v1::SubmitStimulationRequest &request,
-                    std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
+                    std::optional<validation::Timestamp> arrival_tick = std::nullopt,
+                    bool (*abort_before_dispatch)(void *) noexcept = nullptr,
+                    void *abort_context = nullptr) noexcept;
 
   /// @brief Acquires one exclusive generation-bound service-emulation lease.
   /// @param request Bounded lease-acquire request.
@@ -522,10 +528,10 @@ class GatewaySession final {
   ReleaseLease(const v1::ReleaseLeaseRequest &request,
                std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
-  /// @brief Queries bounded session state and finite counters.
+  /// @brief Queries bounded session and lease state or a durable stimulation outcome by request ID.
   /// @param request Bounded query request.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
-  /// @return The bounded session state and counters, or a declining diagnostic.
+  /// @return The bounded session state, counters, or durable outcome with an explicit diagnostic.
   [[nodiscard]] v1::QuerySessionResponse
   QuerySession(const v1::QuerySessionRequest &request,
                std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
@@ -608,6 +614,7 @@ class GatewaySession final {
   mutable std::mutex mutex_{};
   bool open_{true};
   bool terminal_{false};
+  v1::SessionState terminal_state_{v1::SESSION_EVIDENCE_INCOMPLETE};
   bool negotiated_{false};
   bool armed_{false};
   GatewayOutcome negotiation_{GatewayOutcome::rejected};

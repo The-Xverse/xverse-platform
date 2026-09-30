@@ -137,7 +137,10 @@ TEST(XcomToolGatewayLifecycle, IdleTimeoutCleanup) {
 
   v1::QuerySessionRequest query;
   query.set_session_id(std::string(kSessionId));
-  EXPECT_EQ(session.QuerySession(query).diagnostic().code(), "gw.query.declined");
+  const auto terminal = session.QuerySession(query);
+  EXPECT_EQ(terminal.diagnostic().code(), "gw.query.declined");
+  EXPECT_EQ(terminal.state(), v1::SESSION_EXPIRED);
+  EXPECT_FALSE(terminal.lease_held());
 }
 
 TEST(XcomToolGatewayLifecycle, IndependentObservationStreamsClose) {

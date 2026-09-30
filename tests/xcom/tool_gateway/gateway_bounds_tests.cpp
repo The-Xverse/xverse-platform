@@ -276,3 +276,73 @@ TEST(XcomToolGatewayBounds, RequestDeadlineExpiresWithValidPermit) {
   EXPECT_EQ(boundary.outcome().kind(), v1::STIMULATION_OUTCOME_EMITTED);
   EXPECT_EQ(fixture.emitter().calls, 1U);
 }
+
+TEST(XcomToolGatewayBounds, NegativeDeclaredClockKeepsDeadlineArithmeticDefined) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  fixture.clock().set(-1);
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  EXPECT_EQ(session.current_tick(), -1);
+  const auto requests_before = session.snapshot().requests_received;
+
+  v1::QuerySessionRequest request;
+  request.set_session_id("session-1");
+  const auto response = session.QuerySession(request, -1);
+  EXPECT_EQ(response.diagnostic().code(), "gw.session.query");
+  EXPECT_EQ(response.counters().requests_received(), requests_before + 1U);
+  EXPECT_EQ(response.counters().emitted(), 0U);
+}
+
+TEST(XcomToolGatewayBounds, TransportAbortBeforeActionDispatchEmitsNothing) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  negotiate_accepted(session);
+  ASSERT_EQ(session.ArmSession(arm_request()).state(), v1::SESSION_ARMED);
+  const auto request = stimulation_request(v1::STIMULATION_ACTION_INJECT_SIGNAL, "902");
+  const auto aborted = [](void *) noexcept { return true; };
+  const auto response = session.SubmitStimulation(request, session.current_tick(), aborted);
+  EXPECT_EQ(response.diagnostic().code(), "gw.transport.cancelled");
+  EXPECT_EQ(response.outcome().kind(), v1::STIMULATION_OUTCOME_REJECTED);
+  EXPECT_EQ(fixture.emitter().calls, 0U);
+  v1::QuerySessionRequest lookup;
+  lookup.set_session_id(std::string(kSessionId));
+  lookup.set_stimulation_request_id("902");
+  const auto reconciled = session.QuerySession(lookup);
+  EXPECT_FALSE(reconciled.stimulation_intent_found());
+  EXPECT_EQ(reconciled.diagnostic().code(), "gw.stimulation.lookup.absent");
+}
+
+TEST(XcomToolGatewayBounds, ObservationReadDistinguishesEmptyExpiredAndTerminal) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  v1::ReadObservationsRequest read;
+  read.set_stream_id("missing");
+  read.set_max_records(1U);
+  read.set_deadline_millis(10U);
+  std::array<v1::ObservationRecord, 1U> records{};
+  GatewayOutcome outcome = GatewayOutcome::accepted;
+  EXPECT_EQ(session.ReadObservations(read, records, 0, &outcome), 0U);
+  EXPECT_EQ(outcome, GatewayOutcome::rejected);
+
+  negotiate_accepted(session);
+  v1::OpenObservationRequest open;
+  open.set_tap_id("tap.first");
+  open.set_max_records(1U);
+  open.set_deadline_millis(1000U);
+  const auto stream = session.OpenObservation(open);
+  ASSERT_FALSE(stream.stream_id().empty());
+  read.set_stream_id(stream.stream_id());
+  EXPECT_EQ(session.ReadObservations(read, records, 0, &outcome), 0U);
+  EXPECT_EQ(outcome, GatewayOutcome::accepted);
+
+  fixture.clock().set(100);
+  EXPECT_EQ(session.ReadObservations(read, records, 0, &outcome), 0U);
+  EXPECT_EQ(outcome, GatewayOutcome::expired);
+  session.on_disconnect();
+  EXPECT_EQ(session.ReadObservations(read, records, 100, &outcome), 0U);
+  EXPECT_EQ(outcome, GatewayOutcome::evidence_incomplete);
+}

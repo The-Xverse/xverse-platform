@@ -133,7 +133,7 @@ class GatewayContractSuite final {
       const gateway_contract::QueryVersionResponse version =
           session.QueryVersion(gateway_contract::QueryVersionRequest{});
       report.add("G-03",
-                 accepted && version.protocol().major() == 1U && version.protocol().minor() == 0U &&
+                 accepted && version.protocol().major() == 1U && version.protocol().minor() == 1U &&
                      session.snapshot().negotiated,
                  "supported major negotiated and reported");
     }

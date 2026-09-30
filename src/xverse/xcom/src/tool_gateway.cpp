@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <charconv>
 #include <cstdio>
 #include <cstring>
 #include <limits>
@@ -259,8 +260,12 @@ bool wire_schedule_mode_known(v1::ScheduleMode mode) noexcept {
 /// @return The saturated sum.
 val::Timestamp saturating_add(val::Timestamp base, val::Timestamp delta) noexcept {
   const val::Timestamp maximum = std::numeric_limits<val::Timestamp>::max();
-  if (delta > maximum - base) {
+  const val::Timestamp minimum = std::numeric_limits<val::Timestamp>::min();
+  if (delta > 0 && base > maximum - delta) {
     return maximum;
+  }
+  if (delta < 0 && base < minimum - delta) {
+    return minimum;
   }
   return base + delta;
 }
@@ -296,14 +301,12 @@ val::SchemaKey schema_for(val::StimulationAction action) noexcept {
 
 /// @brief Parses a bounded decimal identity; a malformed value yields zero.
 std::uint64_t parse_identity(std::string_view text) noexcept {
-  std::uint64_t value = 0U;
-  for (const char character : text) {
-    if (character < '0' || character > '9') {
-      return 0U;
-    }
-    value = value * 10U + static_cast<std::uint64_t>(character - '0');
+  if (text.empty()) {
+    return 0U;
   }
-  return value;
+  std::uint64_t value = 0U;
+  const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
+  return parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() ? value : 0U;
 }
 
 /// @brief Reports whether a method name is the committed operation table.
@@ -594,6 +597,7 @@ GatewaySession::Admission GatewaySession::admit(
   --flow_tokens_;
   last_activity_tick_ = now;
   admission.proceed = true;
+  admission.outcome = GatewayOutcome::accepted;
   return admission;
 }
 
@@ -682,6 +686,8 @@ void GatewaySession::cleanup_locked(GatewayOutcome pending_outcome, GatewayPhase
     pending_requests_ = 0U;
   }
   terminal_ = true;
+  terminal_state_ = pending_outcome == GatewayOutcome::expired
+                        ? v1::SESSION_EXPIRED : v1::SESSION_EVIDENCE_INCOMPLETE;
   armed_ = false;
   log(pending_outcome, phase, "gw.session.cleanup", binding_.session_id, 0U, 0U);
 }
@@ -749,12 +755,19 @@ v1::QueryVersionResponse GatewaySession::QueryVersion(const v1::QueryVersionRequ
   response.mutable_protocol()->set_major(kGatewaySupportedMajor);
   response.mutable_protocol()->set_minor(kGatewaySupportedMinor);
   v1::GatewayCapabilities *capabilities = response.mutable_capabilities();
+  *capabilities->mutable_protocol() = response.protocol();
   capabilities->set_max_message_bytes(static_cast<std::uint32_t>(config_.max_message_bytes()));
   capabilities->set_max_concurrent_streams(config_.max_streams_per_session());
   capabilities->set_max_deadline_millis(config_.max_deadline_millis());
   capabilities->set_max_observation_queue(config_.max_observation_records());
   v1::Capability *capability = capabilities->add_capabilities();
   capability->set_id("xcom.tool_gateway.local_ipc");
+  capability->set_revision(1U);
+  capability = capabilities->add_capabilities();
+  capability->set_id("xcom.gateway_liveness.local_ipc");
+  capability->set_revision(1U);
+  capability = capabilities->add_capabilities();
+  capability->set_id("xcom.stimulation_outcome_lookup");
   capability->set_revision(1U);
   v1::Diagnostic *diagnostic = response.mutable_diagnostic();
   if (negotiated_) {
@@ -840,9 +853,13 @@ GatewaySession::OpenObservation(const v1::OpenObservationRequest &request,
 std::size_t
 GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
                                  std::span<v1::ObservationRecord> out,
-                                 std::optional<val::Timestamp> arrival_tick) noexcept {
+                                 std::optional<val::Timestamp> arrival_tick,
+                                 GatewayOutcome *outcome) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   const Admission admission = admit(request.deadline_millis(), arrival_tick);
+  if (outcome != nullptr) {
+    *outcome = admission.outcome;
+  }
   if (!admission.proceed) {
     return 0U;
   }
@@ -850,6 +867,9 @@ GatewaySession::ReadObservations(const v1::ReadObservationsRequest &request,
       request.stream_id().empty() ? nullptr : find_stream_locked(request.stream_id());
   if (stream == nullptr) {
     ++requests_rejected_;
+    if (outcome != nullptr) {
+      *outcome = GatewayOutcome::rejected;
+    }
     log(GatewayOutcome::rejected, GatewayPhase::observation, "gw.stream.unknown", binding_.session_id,
         0U, 0U);
     return 0U;
@@ -1044,6 +1064,7 @@ GatewaySession::RevokeSession(const v1::RevokeSessionRequest &request,
   log(GatewayOutcome::accepted, GatewayPhase::session, "gw.session.revoked", binding_.session_id, 0U,
       static_cast<std::uint64_t>(now));
   cleanup_locked(GatewayOutcome::evidence_incomplete, GatewayPhase::session);
+  terminal_state_ = v1::SESSION_REVOKED;
   response.set_state(v1::SESSION_REVOKED);
   set_diagnostic(response.mutable_diagnostic(), "gw.session.revoked", v1::SEVERITY_INFO, "session",
                  "session revoked");
@@ -1052,7 +1073,9 @@ GatewaySession::RevokeSession(const v1::RevokeSessionRequest &request,
 
 v1::SubmitStimulationResponse
 GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request,
-                                  std::optional<val::Timestamp> arrival_tick) noexcept {
+                                  std::optional<val::Timestamp> arrival_tick,
+                                  bool (*abort_before_dispatch)(void *) noexcept,
+                                  void *abort_context) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::SubmitStimulationResponse response;
   response.set_request_id(request.request_id());
@@ -1189,6 +1212,15 @@ GatewaySession::SubmitStimulation(const v1::SubmitStimulationRequest &request,
                    "stimulation", "bounded scheduled queue is full");
     return response;
   }
+  // This is the last gateway-owned point before the accepted action path may commit an item.
+  // A later transport loss is not a failed business request and is reconciled by request ID.
+  if (abort_before_dispatch != nullptr && abort_before_dispatch(abort_context)) {
+    ++requests_rejected_;
+    response.mutable_outcome()->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+    set_diagnostic(response.mutable_diagnostic(), "gw.transport.cancelled", v1::SEVERITY_ERROR,
+                   "stimulation", "transport ended before action dispatch");
+    return response;
+  }
   val::StimulationRequest stimulation{};
   stimulation.permit_id = binding_.permit.permit_id();
   stimulation.session_id = binding_.permit.session_id();
@@ -1286,7 +1318,8 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
   key.generation = request.endpoint_generation();
   key.plan_digest = binding_.permit.plan_digest();
   const val::Timestamp now = resolve_dispatch_tick();
-  const val::Timestamp expires = now + static_cast<val::Timestamp>(request.lease_millis());
+  const val::Timestamp expires =
+      saturating_add(now, static_cast<val::Timestamp>(request.lease_millis()));
   lease_request_id_ = request.endpoint_generation() + 1U;
   const val::LeaseStatus status =
       dependencies_.leases->acquire(key, lease_request_id_, binding_.arrival_domain, now, expires);
@@ -1362,28 +1395,87 @@ GatewaySession::QuerySession(const v1::QuerySessionRequest &request,
                              std::optional<val::Timestamp> arrival_tick) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   v1::QuerySessionResponse response;
+  const auto populate_state = [&] {
+    response.set_state(terminal_ ? terminal_state_ : wire_state(false, armed_, false, false));
+    response.set_lease_held(lease_held_);
+    if (lease_held_) {
+      response.set_lease_id(lease_id_);
+    }
+    response.set_active_observation_streams(active_streams_);
+    v1::SessionCounters *counters = response.mutable_counters();
+    counters->set_requests_received(requests_received_);
+    counters->set_requests_authorized(requests_authorized_);
+    counters->set_requests_rejected(requests_rejected_);
+    counters->set_emitted(emitted_);
+    counters->set_evidence_incomplete(evidence_incomplete_);
+  };
+  if (!request.stimulation_request_id().empty()) {
+    // Reconciliation is read-only and remains available after the transport
+    // watch has ended or the session has become terminal.
+    if (!session_matches(request.session_id()) || dependencies_.journal == nullptr ||
+        parse_identity(request.stimulation_request_id()) == 0U) {
+      set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.lookup.invalid",
+                     v1::SEVERITY_ERROR, "query", "invalid reconciliation identity");
+      return response;
+    }
+    populate_state();
+    const std::uint64_t id = parse_identity(request.stimulation_request_id());
+    const auto intents = dependencies_.journal->recovered_intents();
+    const bool found = std::any_of(intents.begin(), intents.end(),
+        [this, id](const auto &intent) {
+          return intent.request_id == id && intent.session_id == binding_.permit.session_id();
+        });
+    if (!found) {
+      set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.lookup.absent",
+                     v1::SEVERITY_INFO, "query", "no durable intent for request");
+      return response;
+    }
+    response.set_stimulation_intent_found(true);
+    auto *reconciled = response.mutable_stimulation_outcome();
+    reconciled->set_request_id(request.stimulation_request_id());
+    reconciled->set_kind(v1::STIMULATION_OUTCOME_EVIDENCE_INCOMPLETE);
+    const auto outcomes = dependencies_.journal->recovered_outcomes();
+    for (const auto &outcome : outcomes) {
+      if (outcome.request_id != id) {
+        continue;
+      }
+      switch (outcome.kind) {
+      case val::OutcomeKind::Delivered:
+        reconciled->set_kind(v1::STIMULATION_OUTCOME_EMITTED);
+        break;
+      case val::OutcomeKind::Rejected:
+      case val::OutcomeKind::Expired:
+      case val::OutcomeKind::Cancelled:
+        reconciled->set_kind(v1::STIMULATION_OUTCOME_REJECTED);
+        break;
+      case val::OutcomeKind::Unknown:
+        break;
+      }
+      break;
+    }
+    set_diagnostic(response.mutable_diagnostic(), "gw.stimulation.lookup.found",
+                   reconciled->kind() == v1::STIMULATION_OUTCOME_EVIDENCE_INCOMPLETE
+                       ? v1::SEVERITY_WARNING : v1::SEVERITY_INFO,
+                   "query", "durable stimulation outcome");
+    return response;
+  }
   const Admission admission = admit(0U, arrival_tick);
   if (!admission.proceed) {
-    response.set_state(wire_state(terminal_, armed_, false, false));
+    if (session_matches(request.session_id())) {
+      populate_state();
+    }
     set_diagnostic(response.mutable_diagnostic(), "gw.query.declined", v1::SEVERITY_ERROR, "query",
                    to_string(admission.outcome));
     return response;
   }
   if (!session_matches(request.session_id())) {
     ++requests_rejected_;
-    response.set_state(wire_state(terminal_, armed_, false, false));
     set_diagnostic(response.mutable_diagnostic(), "gw.session.unknown", v1::SEVERITY_ERROR, "query",
                    "unknown session");
     return response;
   }
   ++requests_authorized_;
-  response.set_state(wire_state(terminal_, armed_, false, false));
-  v1::SessionCounters *counters = response.mutable_counters();
-  counters->set_requests_received(requests_received_);
-  counters->set_requests_authorized(requests_authorized_);
-  counters->set_requests_rejected(requests_rejected_);
-  counters->set_emitted(emitted_);
-  counters->set_evidence_incomplete(evidence_incomplete_);
+  populate_state();
   set_diagnostic(response.mutable_diagnostic(), "gw.session.query", v1::SEVERITY_INFO, "query",
                  "bounded counters");
   return response;

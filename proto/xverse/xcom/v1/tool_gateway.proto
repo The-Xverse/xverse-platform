@@ -397,6 +397,8 @@ message SessionCounters {
 // Query a bounded session outcome by logical session identity.
 message QuerySessionRequest {
   string session_id = 1;
+  // When set, reconcile this decimal stimulation request ID from the durable journal.
+  string stimulation_request_id = 2;
   reserved 1000 to 1999;
 }
 
@@ -405,6 +407,14 @@ message QuerySessionResponse {
   SessionState state = 1;
   SessionCounters counters = 2;
   Diagnostic diagnostic = 3;
+  // Present only when the requested ID has a durable intent. An absent outcome
+  // is reported as evidence incomplete, never as emitted.
+  StimulationOutcome stimulation_outcome = 4;
+  bool stimulation_intent_found = 5;
+  // Read-only reconciliation for lease and observation mutations after transport loss.
+  bool lease_held = 6;
+  string lease_id = 7;
+  uint32 active_observation_streams = 8;
   reserved 1000 to 1999;
 }
 
