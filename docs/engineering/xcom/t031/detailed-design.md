@@ -355,3 +355,18 @@ The successor adds a single-owner watch association (one opaque `x-xcom-watch-id
 single-owned-lease enforcement (`T039-F07`), and a bounded shutdown cancellation deadline. The
 dialect restriction on the separate T032 synthetic client is unchanged: it keeps its framed local-IPC
 transport and does not claim a linked gRPC runtime.
+
+## Successor disposition (T039 R4, recorded 2026-09-30)
+
+The R3 single-owned-lease design is retained and clarified for allocation identity (`T039-F08`). The
+shared design decision is that a lease release is validated against the exact successful allocation,
+not against a reused endpoint-generation label. `GatewaySession` allocates each successful lease a
+fresh public identity from a session-scoped, strictly monotonic sequence that never wraps, and the
+generation-bound registry delegation carries that same allocation identity, so a delayed or repeated
+release for an earlier allocation cannot name a later allocation of any endpoint in the session. When
+the bounded identity sequence is exhausted the acquisition is declined with `LEASE_CONFLICT` before
+the registry is touched, with no wraparound and no lease, registry, or sequence side effect. The
+single-owned-lease boundary, the retained original identity on a declined acquisition, the
+exact-session check, the generation-bound registry delegation, and the cleanup/quarantine semantics
+are unchanged; the ten `ToolGateway` methods and the separate `GatewayLiveness` liveness contract are
+unchanged and no additional interface or dependency is introduced.

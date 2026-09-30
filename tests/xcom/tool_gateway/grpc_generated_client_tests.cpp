@@ -644,6 +644,192 @@ TEST(XcomGrpcGeneratedClient, RepeatedAcquireLeaseOriginalIdentityStillReleases)
   EXPECT_EQ(::rmdir(directory), 0);
 }
 
+// T039-F08: each successful allocation receives a fresh public identity. After a release and a
+// re-acquisition across different endpoints at equal generation, replaying the first allocation's
+// identity must not release the second; the new authoritative registry entry and QuerySession
+// ownership stay intact, and the new allocation's own identity must still release it.
+TEST(XcomGrpcGeneratedClient, StaleReleaseIdentityDoesNotReleaseLaterAllocation) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-stale-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context, watch);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  v1::AcquireLeaseResponse first;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &first).ok());
+  }
+  ASSERT_EQ(first.state(), v1::LEASE_ACTIVE);
+  ASSERT_FALSE(first.lease_id().empty());
+  ASSERT_EQ(fixture.registry().snapshot().active, 1U);
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest release;
+    release.set_session_id("session-1");
+    release.set_lease_id(first.lease_id());
+    v1::ReleaseLeaseResponse released;
+    ASSERT_TRUE(client->ReleaseLease(&context, release, &released).ok());
+    ASSERT_EQ(released.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
+  ASSERT_FALSE(session.snapshot().lease_held);
+
+  // A different endpoint at the same generation is admitted after the release and must receive a
+  // distinct public identity, because the earlier identity can no longer be reused.
+  v1::AcquireLeaseResponse second;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.beta"), &second).ok());
+  }
+  ASSERT_EQ(second.state(), v1::LEASE_ACTIVE);
+  EXPECT_NE(second.lease_id(), first.lease_id());
+  ASSERT_EQ(fixture.registry().snapshot().active, 1U);
+
+  // Replaying the released identity must be rejected and must not tear down the new allocation.
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest stale;
+    stale.set_session_id("session-1");
+    stale.set_lease_id(first.lease_id());
+    v1::ReleaseLeaseResponse rejected;
+    ASSERT_TRUE(client->ReleaseLease(&context, stale, &rejected).ok());
+    EXPECT_NE(rejected.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 1U);
+  EXPECT_TRUE(session.snapshot().lease_held);
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::QuerySessionRequest query;
+    query.set_session_id("session-1");
+    v1::QuerySessionResponse snapshot;
+    ASSERT_TRUE(client->QuerySession(&context, query, &snapshot).ok());
+    EXPECT_TRUE(snapshot.lease_held());
+    EXPECT_EQ(snapshot.lease_id(), second.lease_id());
+  }
+
+  // The new allocation's own identity still releases its authoritative registry entry.
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest own;
+    own.set_session_id("session-1");
+    own.set_lease_id(second.lease_id());
+    v1::ReleaseLeaseResponse released;
+    ASSERT_TRUE(client->ReleaseLease(&context, own, &released).ok());
+    EXPECT_EQ(released.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
+  EXPECT_FALSE(session.snapshot().lease_held);
+  watch.close();
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
+// T039-F08: repeated allocation of the same endpoint after an explicit release also receives a
+// fresh identity, so the released identity cannot release the reacquired lease.
+TEST(XcomGrpcGeneratedClient, RepeatedAllocationOfSameEndpointGetsFreshIdentity) {
+  GatewayFixture fixture;
+  ASSERT_TRUE(fixture.ready());
+  ASSERT_TRUE(fixture.open_path());
+  GatewaySession session(fixture.config(), fixture.dependencies(), fixture.binding());
+  GatewayGrpcService service(session, fixture.config());
+  char directory[] = "/tmp/xcom-realloc-XXXXXX";
+  ASSERT_NE(::mkdtemp(directory), nullptr);
+  const std::string path = std::string(directory) + "/gateway.sock";
+  auto server = GatewayGrpcServer::start(path, service, fixture.config().max_message_bytes());
+  ASSERT_NE(server, nullptr);
+  auto channel = grpc::CreateChannel("unix://" + path, grpc::InsecureChannelCredentials());
+  ASSERT_TRUE(channel->WaitForConnected(std::chrono::system_clock::now() +
+                                        std::chrono::seconds(2)));
+  auto client = v1::ToolGateway::NewStub(channel);
+  SessionWatch watch(channel);
+  ASSERT_TRUE(watch.ready());
+  grpc::ClientContext arm_context;
+  bound(arm_context, watch);
+  v1::ArmSessionResponse armed;
+  ASSERT_TRUE(client->ArmSession(&arm_context, arm_request(), &armed).ok());
+  ASSERT_EQ(armed.state(), v1::SESSION_ARMED);
+
+  v1::AcquireLeaseResponse first;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &first).ok());
+  }
+  ASSERT_EQ(first.state(), v1::LEASE_ACTIVE);
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest release;
+    release.set_session_id("session-1");
+    release.set_lease_id(first.lease_id());
+    v1::ReleaseLeaseResponse released;
+    ASSERT_TRUE(client->ReleaseLease(&context, release, &released).ok());
+    ASSERT_EQ(released.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
+
+  v1::AcquireLeaseResponse second;
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    ASSERT_TRUE(client->AcquireLease(&context, lease_request("svc.alpha"), &second).ok());
+  }
+  ASSERT_EQ(second.state(), v1::LEASE_ACTIVE);
+  EXPECT_NE(second.lease_id(), first.lease_id());
+  ASSERT_EQ(fixture.registry().snapshot().active, 1U);
+
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest stale;
+    stale.set_session_id("session-1");
+    stale.set_lease_id(first.lease_id());
+    v1::ReleaseLeaseResponse rejected;
+    ASSERT_TRUE(client->ReleaseLease(&context, stale, &rejected).ok());
+    EXPECT_NE(rejected.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 1U);
+  EXPECT_TRUE(session.snapshot().lease_held);
+  {
+    grpc::ClientContext context;
+    bound(context, watch);
+    v1::ReleaseLeaseRequest own;
+    own.set_session_id("session-1");
+    own.set_lease_id(second.lease_id());
+    v1::ReleaseLeaseResponse released;
+    ASSERT_TRUE(client->ReleaseLease(&context, own, &released).ok());
+    EXPECT_EQ(released.state(), v1::LEASE_RELEASED);
+  }
+  EXPECT_EQ(fixture.registry().snapshot().active, 0U);
+  EXPECT_FALSE(session.snapshot().lease_held);
+  watch.close();
+  server.reset();
+  EXPECT_EQ(::rmdir(directory), 0);
+}
+
 TEST(XcomGrpcGeneratedClient, DeadlineAndCancellationAreTransportEnforced) {
   ServerProcess process;
   ASSERT_TRUE(process.connected());

@@ -284,3 +284,25 @@ OS process authentication; clients must keep the watch identifier private and mu
 running host action callback must return before shutdown can complete. Durable lookup reconciles a
 committed immediate outcome; the absence of a scheduled intent remains explicitly uncertain and does
 not authorize a retry.
+
+## Successor addendum (T039 R4, recorded 2026-09-30)
+
+This additive addendum records the `T039-F08` identity repair for the linked gRPC gateway component.
+It does not rename, remove, or weaken any `T31-TS-###` case or the R3 addendum above, and the
+historical inventory remains evidence at its pinned revision. The successor cases run in
+`tests/xcom/tool_gateway/grpc_generated_client_tests.cpp` against the production adapter.
+
+| Requirement unit | Successor cases | Purpose |
+| --- | --- | --- |
+| `T031-SR-012-U` | `XcomGrpcGeneratedClient.StaleReleaseIdentityDoesNotReleaseLaterAllocation`, `XcomGrpcGeneratedClient.RepeatedAllocationOfSameEndpointGetsFreshIdentity` | Every successful allocation receives a fresh public identity; a stale release cannot release a later allocation, including a different endpoint at an equal generation, and repeated allocation of one endpoint receives a new identity. |
+| `T031-SR-013-U` | `XcomGrpcGeneratedClient.StaleReleaseIdentityDoesNotReleaseLaterAllocation` | A rejected stale release leaves the authoritative registry entry and exact-session ownership intact, so cleanup semantics remain unambiguous. |
+
+**Successor allocation-identity boundary (`T039-F08`).** A release is validated against the exact
+successful allocation. The public identity of an allocation is session-scoped and strictly
+monotonic, drawn from a bounded sequence that never wraps, and is never reused after that lease is
+released. A delayed or repeated release for an earlier allocation is rejected without changing the
+held lease, the registry entry, or the session; the allocating identity still releases its own
+entry. When the bounded identity sequence is exhausted, the acquisition is declined before the
+registry is touched, with no wraparound and no lease or registry side effect. The generation-bound
+registry delegation, `LEASE_CONFLICT` single-owned-lease boundary, and disconnect cleanup are
+unchanged.

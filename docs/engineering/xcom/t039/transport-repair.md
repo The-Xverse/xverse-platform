@@ -23,6 +23,17 @@ resources require this association. `QueryVersion` and read-only `QuerySession` 
 without it. The latter reports
 terminal state, bounded counters, current lease ownership, and active observation-stream count.
 
+A session owns at most one exclusive service-emulation lease. While one is held, a further
+acquisition is declined with `LEASE_CONFLICT` and the held identity is reported unchanged. Each
+successful allocation receives a fresh, session-scoped public identity drawn from a bounded,
+strictly monotonic sequence that never wraps, and a release must name the exact identity of the
+currently held allocation. A delayed or repeated release for an earlier allocation is rejected
+without changing the held lease or its registry entry, even when a different endpoint reuses the
+same endpoint generation; the allocating identity still releases its own registry entry. When the
+bounded identity sequence is exhausted the acquisition is declined before the registry is touched.
+The identity is an opaque logical lease-lifecycle association within one session: clients must not
+synthesize, guess, or reuse an identity after the lease it named is released.
+
 Server destruction stops stateful admission and signals the watch to finish, then uses gRPC shutdown
 with a 100 ms forced-cancellation deadline before joining its poller and unlinking the socket.
 An otherwise idle healthy watch cannot hold shutdown open. In-flight host action callbacks must
@@ -66,7 +77,8 @@ The new generated-client cases cover watch denial, explicit cancellation and abr
 cleanup with a live lease and observation stream, denial of a separate unassociated process,
 wrong and duplicate watch metadata, shutdown while the owner keeps its watch and resources live,
 explicit read errors, cancellation and deadline after a controlled slow emission, durable outcome
-lookup, and duplicate emission prevention. The bounded session cases cover negative clock arithmetic and
+lookup, duplicate emission prevention, and release/reacquire with a stale-identity replay across
+different endpoints at the same generation plus repeated allocation of one endpoint. The bounded session cases cover negative clock arithmetic and
 pre-dispatch transport abort. The exact commands, environment identities, results, logs, and hashes
 belong in the successor evidence manifest after the candidate revision is pinned. Cleanup may wait
 for a currently executing action to release the session lock; transport failure after commit must

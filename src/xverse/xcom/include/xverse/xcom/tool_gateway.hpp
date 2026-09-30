@@ -515,6 +515,11 @@ class GatewaySession final {
   /// @brief Acquires the session's single exclusive generation-bound service-emulation lease.
   /// While one lease is held, a further acquisition is declined with `LEASE_CONFLICT` and the
   /// original owned identity is preserved; the session never aliases or overwrites it (T039-F07).
+  /// Every successful allocation receives a fresh public identity from a bounded, strictly
+  /// monotonic, session-scoped sequence, so a delayed or repeated release for an earlier allocation
+  /// can never name a later one, even for a different endpoint at an equal generation (T039-F08).
+  /// When that bounded identity space is exhausted the acquisition is declined with
+  /// `LEASE_CONFLICT` before the registry is touched, never wrapping the sequence.
   /// @param request Bounded lease-acquire request.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded lease result, or a declining diagnostic.
@@ -523,6 +528,9 @@ class GatewaySession final {
                std::optional<validation::Timestamp> arrival_tick = std::nullopt) noexcept;
 
   /// @brief Releases one held service-emulation lease.
+  /// The release must name the exact identity of the currently held allocation; a stale or
+  /// mismatched identity, including one that belonged to an earlier allocation of any endpoint in
+  /// this session, is rejected without changing the held lease or its registry entry (T039-F08).
   /// @param request Bounded lease-release request.
   /// @param arrival_tick Captured request arrival in the bound clock, when available.
   /// @return The bounded lease-release result, or a declining diagnostic.
@@ -633,6 +641,8 @@ class GatewaySession final {
   validation::EndpointGeneration lease_key_{};
   std::string lease_id_;
   std::uint64_t lease_request_id_{0U};
+  /// @brief Session-scoped, strictly monotonic allocation sequence that never wraps (T039-F08).
+  std::uint64_t lease_sequence_{0U};
   bool lease_held_{false};
   std::uint64_t requests_received_{0U};
   std::uint64_t requests_authorized_{0U};

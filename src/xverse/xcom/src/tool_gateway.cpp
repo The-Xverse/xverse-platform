@@ -1325,6 +1325,20 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
                    "invalid endpoint identity");
     return response;
   }
+  // T039-F08: the public identity of every successful allocation must be unique within the
+  // session's supported replay lifetime, so a delayed or repeated release for an earlier allocation
+  // can never name a later one. The session-scoped allocation sequence is strictly monotonic and
+  // never wraps; exhaustion is declined here, before the registry is touched, leaving no lease,
+  // registry entry, or consumed sequence number behind.
+  if (lease_sequence_ == std::numeric_limits<std::uint64_t>::max()) {
+    ++requests_rejected_;
+    response.set_state(v1::LEASE_CONFLICT);
+    set_diagnostic(response.mutable_diagnostic(), "gw.lease.exhausted", v1::SEVERITY_ERROR, "lease",
+                   "lease identity space exhausted");
+    log(GatewayOutcome::rejected, GatewayPhase::lease, "gw.lease.exhausted", request.session_id(), 0U,
+        static_cast<std::uint64_t>(resolve_dispatch_tick()));
+    return response;
+  }
   val::EndpointGeneration key{};
   key.session = binding_.permit.session_id();
   key.endpoint = *endpoint;
@@ -1333,17 +1347,19 @@ GatewaySession::AcquireLease(const v1::AcquireLeaseRequest &request,
   const val::Timestamp now = resolve_dispatch_tick();
   const val::Timestamp expires =
       saturating_add(now, static_cast<val::Timestamp>(request.lease_millis()));
-  // The candidate request identity is computed locally so a declined acquisition never mutates the
-  // identity of an already-held lease (T039-F07).
-  const std::uint64_t request_id = request.endpoint_generation() + 1U;
+  // The candidate allocation identity is computed locally so a declined acquisition neither mutates
+  // the identity of an already-held lease (T039-F07) nor advances the sequence (T039-F08).
+  const std::uint64_t allocation = lease_sequence_ + 1U;
   const val::LeaseStatus status =
-      dependencies_.leases->acquire(key, request_id, binding_.arrival_domain, now, expires);
+      dependencies_.leases->acquire(key, allocation, binding_.arrival_domain, now, expires);
   const GatewayOutcome outcome = outcome_from_lease(status);
   if (status == val::LeaseStatus::Ok) {
     lease_key_ = key;
-    lease_request_id_ = request_id;
+    lease_request_id_ = allocation;
+    lease_sequence_ = allocation;
     lease_held_ = true;
-    lease_id_ = "gw-lease-" + std::to_string(request.endpoint_generation());
+    lease_id_ = "gw-lease-" + std::to_string(request.endpoint_generation()) + "-" +
+                std::to_string(allocation);
     ++requests_authorized_;
     response.set_lease_id(lease_id_);
     response.set_state(v1::LEASE_ACTIVE);
@@ -1380,8 +1396,10 @@ GatewaySession::ReleaseLease(const v1::ReleaseLeaseRequest &request,
                    "no held lease for this session");
     return response;
   }
-  // R6: the release must name the exact held lease identity. A mismatched or stale identity is
-  // rejected without changing any lease or session state.
+  // R6/T039-F08: the release must name the exact held allocation identity. Because every
+  // allocation receives a fresh, never-reused public identity, a stale identity from an earlier
+  // allocation (including one for another endpoint at an equal generation) is rejected here,
+  // without changing any lease, registry entry, or session state.
   if (request.lease_id() != lease_id_) {
     ++requests_rejected_;
     response.set_state(v1::LEASE_QUARANTINED);

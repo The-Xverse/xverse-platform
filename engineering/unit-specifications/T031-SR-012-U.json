@@ -81,6 +81,18 @@
       "id": "XcomGrpcGeneratedClient.SeparateServerHonorsContractAndWireRejection",
       "precondition": "bounded gateway fixture configured with explicit limits",
       "stimulus": "a generated client drives acquire, query, exact-identity release, and wire-level rejection against a separate server process"
+    },
+    {
+      "expected": "the reacquired lease has a distinct identity, the stale replay is rejected without releasing the new authoritative registry entry, and the new allocation's own identity still releases it",
+      "id": "XcomGrpcGeneratedClient.StaleReleaseIdentityDoesNotReleaseLaterAllocation",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "release svc.alpha at generation 3, acquire svc.beta at the same generation, then replay the released identity before releasing the current one"
+    },
+    {
+      "expected": "the repeated allocation of the same endpoint receives a fresh identity and the released identity cannot release it",
+      "id": "XcomGrpcGeneratedClient.RepeatedAllocationOfSameEndpointGetsFreshIdentity",
+      "precondition": "bounded gateway fixture configured with explicit limits",
+      "stimulus": "release svc.alpha at generation 3, reacquire the same endpoint generation, then replay the released identity"
     }
   ]
 }
