@@ -11,6 +11,14 @@ identities. It does not mark T039, T040, or T041 complete, accept, or merge anyt
 Nothing in this record is a successor execution of the retained R3/R4 inputs; the R5 evidence is generated
 only for this successor assembly. Historical success is not current execution.
 
+**Validation-repair successor (baseline `88cf30b16adbe4b48c5c79935dd21af605480c98`).** A later trusted
+validation of the R5 successor commit `88cf30b16adbe4b48c5c79935dd21af605480c98` — the direct child of the
+R5 candidate `67e38e5974f2dd827b4d7fb902343c347341c796` recorded below — rejected
+`docs/engineering/xcom/t038/internal-review.json` with `PUBLIC_SAFETY_INVALID` because it retained two
+absolute host paths. Section 12 records that deterministic failure, the exact scope of this successor
+repair, and the regenerated evidence. Sections 1–11 remain the historical R5 record at their original
+identity and are not relabelled as current.
+
 ## 1. Authorization and identity boundary
 
 | Field | Value |
@@ -100,6 +108,11 @@ logic, material scope, exclusions, negative checks, and fail-closed behavior are
 The refreshed report is bound to the admitted baseline and the admitted manifest SHA-256
 `9879911b35058e8c8e0ee78ad5faef258c34d9e490b78b2121d6b9565c92945c`.
 
+For the validation-repair successor the metadata was readmitted once more: `BASELINE_REVISION` is now
+`88cf30b16adbe4b48c5c79935dd21af605480c98`, while `ADMITTED_INPUTS` already resolved to the admitted
+linked-gRPC prefix, package manifest, and GTest prefix and is unchanged. The same AST comparison confirms
+that only those two top-level assignments may differ; see §12.
+
 ## 4. Execution locations and provenance (R4 correction and R5 statement)
 
 The R4 record's blanket statement that all trusted measures ran from the target checkout is inaccurate.
@@ -151,6 +164,10 @@ The trace `implemented_by` pins for the two changed adapter files, the documenta
 `docs/engineering/xcom/t037/detailed-design.md` were refreshed to the exact successor file digests; every
 other pin still resolves to the exact bytes it pins, no edge was removed, and no predecessor scope was
 weakened.
+
+This section records the R5 generation at `HEAD == baseline` (`67e38e5`). Section 12 records the
+validation-repair regeneration at the successor baseline `88cf30b`; the R5 digests above remain evidence
+only for the R5 candidate identity and are not relabelled as current.
 
 ## 6. Commands and evidence provenance
 
@@ -264,3 +281,70 @@ retry.
   exploratory global `--self-test --coverage-only` route is not reported as passing.
 - No production-readiness, compatibility, parity, deployed-service, or certification claim is made, and no
   REF-002 target is promoted.
+
+## 12. Validation-repair successor — public-safety failure and re-baselining
+
+**Validation failure (deterministic).** The R5 successor commit
+`88cf30b16adbe4b48c5c79935dd21af605480c98` had already passed DeepSeek review, packaging, unit, static
+analysis, and target-repository integration, then failed trusted validation:
+`engineering/check_xcom_traceability.py --verify` reported `PUBLIC_SAFETY_INVALID` (exit 5):
+
+```text
+T038 traceability validation FAILED: PUBLIC_SAFETY_INVALID (exit 5)
+- [PUBLIC_SAFETY_INVALID] docs/engineering/xcom/t038/internal-review.json matches excluded content: absolute host path
+```
+
+Two absolute host paths were retained in that review record — a host checker path in check `IRV-03` and a
+host temporary-checkout path in check `IRV-10`. The reviewed source and evidence were already committed in
+the baseline, so the defect was documentation/evidence only: no source, test, proto, CMake, generated
+service, or runtime behavior changed.
+
+**Repair scope (this successor).**
+
+- `docs/engineering/xcom/t038/internal-review.json` now cites only repository-relative paths and public-safe
+  descriptions; the two host paths are replaced by repository-relative wording while the record keeps its
+  original R5 review identity. The successor record itself is written by the separate reviewer stage and
+  must keep the same rule: repository-relative references only, never a temporary or host absolute path.
+- `scripts/check_doxygen.py` was readmitted to the new baseline: only the top-level `BASELINE_REVISION`
+  assignment changed (`67e38e5974f2dd827b4d7fb902343c347341c796` →
+  `88cf30b16adbe4b48c5c79935dd21af605480c98`); `ADMITTED_INPUTS` was already the admitted linked-gRPC
+  prefix, package manifest, and GTest prefix and is unchanged. `MATERIAL_GLOBS`, `MATERIAL_EXCLUDES`,
+  `STRICT_CPP_EXCLUSIONS`, the strict overrides, the fail-closed checks, the negative checks, and the CLI are
+  byte-unchanged.
+- The `implemented_by` pins for `scripts/check_doxygen.py` in `engineering/trace/links.json` were refreshed
+  to the successor digest `31b5e4dd751d5a74656b1b6165dda37377e7f0f13984433b97bbb8e6814e9f36`; no edge was
+  removed and no predecessor scope was weakened.
+
+**Regenerated evidence at baseline `88cf30b`.** All three repository-owned reports were regenerated with
+their existing scripts at `HEAD == baseline` (`88cf30b`), the measured working-tree successor:
+
+| Report | Material inputs | Material digest |
+| --- | --- | --- |
+| `reports/xcom-queue/t037-doxygen.json` | 82 | `fec3fce9d41caffb2515252efce1905db4b7a57259f6e0c79120d2ce5d6969f3` |
+| `reports/xcom-queue/t036-benchmark.json` | 53 | `1ea295ba19e274471c8297394ac6ad08d517eaf441280513571ec18953b91709` |
+| `reports/xcom-queue/t038-traceability.json` | 54 | `de75b90649a095240319cb5fad0fac45134e7b3e33f29cdfa3a18eef5a3a0168` |
+
+T037 result: repository route exit `0` with `0` warnings and `173` indexed files; strict C++ route exit `0`
+with `35` indexed files, `0` warnings, and `0` coverage gaps. The trusted host Doxygen evidence verifier
+accepts the regenerated report — `82` material inputs, digest `fec3fce9…`, six negative evidence probes, and
+the synthetic omission self-test passed.
+
+T036 result: `outcome` `pass`, disabled-tap latency regression `-0.11317691944101593%` and throughput
+regression `-0.1133051547246966%`, within the accepted 2% threshold.
+
+T038 result: `322` requirements, `2780` resolved edges, `0` unresolved, `20` REF-002 IDs with `promoted`
+empty, and public-safety verdict `pass`.
+
+**Faithful execution provenance.** The T037/T036/T038 evidence above was generated and verified in the
+source worker checkout at baseline `88cf30b`; the `verify` and `closure_gate` nodes re-execute the strict
+documentation route, the current-evidence verifier, and the unit suite on this successor, and the six
+immutable closure probes are re-run there. The trusted integration measure is a downstream successor gate
+that assembles and executes in the isolated target-repository worktree declared by the integration policy
+and named by its repository-relative target id only; it is neither executed nor asserted here. Host checker
+commands are named through the `${XVERSE_FABRIC_ROOT}` placeholder and no absolute host path is recorded.
+
+**Preserved boundaries.** `T039-F01`–`T039-F08` runtime behavior, generated-service provenance,
+`T037-OPEN-06`, the REF-002 `unchanged` disposition with no promoted target, and the historical R3/R4/R5
+review identities are preserved. `tests/xcom/tool_gateway/gateway_support.hpp` remains byte-identical
+(SHA-256 `2559ead663bb0c25d5190bc949a3fb18b6096a2e49c90512e8a81ba3fa1a3aa5`). T039/T040 external review and
+T041 user acceptance remain separate and open, and the platform-main merge is not performed.
