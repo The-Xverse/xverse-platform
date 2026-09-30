@@ -242,3 +242,29 @@ the recorded candidate. The accepted `XCOM-SW-INTG-002`, `XCOM-SW-INTG-001`, `XC
 `XCOM-SW-CORE-007`, and `XCOM-SW-ENB-001/002` requirements remain unchanged accepted text; this slice records
 its contribution and its explicit non-production limitations. T038–T041 remain allocated, the REF-002
 disposition stays `unchanged` with an empty `promoted` list, and user acceptance remains T041.
+
+## 11. R5 successor addendum (2026-09-30)
+
+This section is additive and does not rewrite the sections above, whose measured identity is the historical
+T037 candidate at baseline `8757a79d4e6b2630124d774fcba2a55d6342a879`.
+
+The `T039-F09` independent finding recorded that the owned hand-written gateway gRPC adapter files
+`src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp` and
+`src/xverse/xcom/src/tool_gateway_grpc.cpp` lacked the mandatory file block and complete public declaration
+documentation, so `scripts/check_doxygen.py --strict-cpp` exited nonzero at the exact R4 candidate. Those files
+were introduced in the accepted baseline `a9c6e5d41e65625ed2b8c6f5a4457e10c6fcb090` and were never covered by
+this task's original comment pass.
+
+The R5 successor repair completes the adapter documentation: the `@file`/`@brief`/`@ingroup` file block plus the
+`@brief`, `@param`, and `@return` declaration clauses and the ownership, lifetime, thread-safety, failure, and
+watch/session semantics. Parameter identifiers are supplied on the previously unnamed override declarations so
+the parameter documentation attaches; function types, return types, compiled statements, and accepted behavior
+are unchanged. The refreshed evidence report binds the exact R5 candidate material and admitted dependency
+identity, and only the report's `BASELINE_REVISION`/`ADMITTED_INPUTS` metadata changed in the checker.
+A second R5 pass reconciled the documented return and lifetime contracts with the implementation, still as
+documentation comments only: `WatchSession`, `AcquireLease`, and the `GatewayGrpcService` lifetime clause now
+match the compiled behavior, and no compiled token, statement, test, CMake, proto, or runtime behavior changed.
+
+The exact R5 commands, outcomes, execution locations, and provenance are recorded in
+`docs/engineering/xcom/t038/r5-repair.md`. The historical T037 report identity recorded in §1 and §4 is retained
+as evidence only for that original revision and is not represented as the current result.

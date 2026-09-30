@@ -131,6 +131,24 @@ The mandatory public tags are `brief`, `ownership`, `lifetime`, `thread_safety`,
 conditional tags are `param`, `return`, `retval`, `note`, `pre`, and `post` (T010 `doxygen_plan`). The groups
 are `xcom_core`, `xcom_xdl`, `xcom_obs`, `xcom_stim`, `xcom_gw`, `xcom_intg`, and `xcom_enb`.
 
+### 5.1 R5 successor completion (additive)
+
+`T039-F09` recorded that the owned hand-written gateway gRPC adapter files
+`src/xverse/xcom/include/xverse/xcom/tool_gateway_grpc.hpp` and
+`src/xverse/xcom/src/tool_gateway_grpc.cpp` lacked their mandatory file blocks and complete public declaration
+documentation, so the strict C++-scoped route failed at the exact R4 candidate. The R5 successor repair adds the
+`@file`/`@brief`/`@ingroup` file block and the per-declaration `@brief`, `@param`, and `@return` clauses with the
+ownership, lifetime, thread-safety, failure, and watch/session semantics for both adapter files. Parameter
+identifiers are supplied on the previously unnamed override declarations so the parameter documentation attaches;
+the function types, return types, compiled statements, and accepted behavior are unchanged. The documented return
+and lifetime contracts are reconciled with the implementation: `WatchSession` returns `CANCELLED` on the
+watch-closing path, including when the ready frame cannot be delivered; `AcquireLease` returns `OK` and encodes
+`LEASE_CONFLICT` in the response state; and the service lifetime clause no longer requires the configuration,
+which is copied by value, to outlive the service. With the completion,
+`scripts/check_doxygen.py --strict-cpp` exits zero over the owned surface with zero warnings and zero coverage
+gaps, and the refreshed `reports/xcom-queue/t037-doxygen.json` binds the exact candidate material and admitted
+dependency identity. This subsection is additive; the original obligations above are unchanged.
+
 ## 6. Failure semantics
 
 | Condition | Outcome |

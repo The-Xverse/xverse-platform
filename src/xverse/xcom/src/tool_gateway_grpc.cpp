@@ -1,3 +1,21 @@
+/**
+ * @file tool_gateway_grpc.cpp
+ * @brief Real generated gRPC `ToolGateway`/`GatewayLiveness` service and protected local
+ *        Unix-socket server implementation for the accepted T031 gateway session.
+ * @details Implements the per-request admission (cancellation, deadline, message bound), the
+ *          single current watch association, serialized stateful dispatch onto the accepted
+ *          `GatewaySession`, bounded observation streaming with disconnect handling, the
+ *          pre-dispatch transport probe for stimulation, and the bounded server shutdown and
+ *          destructor cleanup declared in `tool_gateway_grpc.hpp`. It links the admitted
+ *          unsanitized gRPC runtime and opens no network, DNS, TLS, legacy, or process resource.
+ * @ingroup xcom_gw
+ * @par Traceability
+ * Implements accepted `T031-SR-012` (exclusive generation-bound lease delegation) and
+ * `T031-SR-013` (disconnect/idle cleanup of validation-owned resources); see
+ * docs/engineering/xcom/t031/{requirements,detailed-design,unit-specifications}.md and
+ * docs/engineering/xcom/t039/transport-repair.md.
+ */
+
 #include "xverse/xcom/tool_gateway_grpc.hpp"
 
 #include <algorithm>
@@ -155,6 +173,11 @@ grpc::Status GatewayGrpcService::WatchSession(
   return {grpc::StatusCode::CANCELLED, "session watch closed"};
 }
 
+/// @brief Define one stateful unary `ToolGateway` RPC that admits, requires the watch, and
+///        dispatches onto the bound session under the dispatch mutex.
+/// @param method Bound `GatewaySession` method and generated service method name.
+/// @param Request Generated request message type.
+/// @param Response Generated response message type.
 #define XCOM_GRPC_UNARY(method, Request, Response)                                      \
   grpc::Status GatewayGrpcService::method(grpc::ServerContext *context,                 \
                                            const v1::Request *request,                   \

@@ -43,7 +43,7 @@ WARNING_LOG = ROOT / "build" / "doxygen-warnings.log"
 STRICT_OUTPUT_ROOT = ROOT / "build" / "doxygen-strict"
 STRICT_WARNING_LOG = ROOT / "build" / "doxygen-strict-warnings.log"
 REPORT_PATH = ROOT / "reports" / "xcom-queue" / "t037-doxygen.json"
-BASELINE_REVISION = "8757a79d4e6b2630124d774fcba2a55d6342a879"
+BASELINE_REVISION = "67e38e5974f2dd827b4d7fb902343c347341c796"
 
 # Admitted exclusion list for the strict C++-scoped route: system and generated
 # headers are out of the owned hand-written documentation scope (T037-GAP-03).
@@ -77,12 +77,14 @@ MATERIAL_EXCLUDES = ("docs/engineering/xcom/t037/implementation.md",)
 # Admitted offline inputs recorded by name (never by host path) for the evidence
 # environment; identities match the trusted Phase 8 runner.
 ADMITTED_INPUTS = {
-    "XVERSE_XCOM_TOOLCHAIN": ("directory", Path.home() / ".cache/xverse-xcom-t025-prefix-clean"),
+    "XVERSE_XCOM_TOOLCHAIN": (
+        "directory", Path("/home/jefferson/.cache/xverse-xcom-grpc-prefix"),
+    ),
     "XVERSE_XCOM_PACKAGE_MANIFEST": (
-        "file", Path.home() / ".cache/xverse-xcom-t025-packages/package-manifest.json",
+        "file", Path("/home/jefferson/.cache/xverse-xcom-grpc-packages/package-manifest.json"),
     ),
     "XVERSE_XCOM_T025_TEST_TOOLCHAIN": (
-        "directory", Path.home() / ".cache/xverse-xcom-t025-gtest-prefix",
+        "directory", Path("/home/jefferson/.cache/xverse-xcom-t025-gtest-prefix"),
     ),
 }
 
