@@ -31,6 +31,11 @@ from .lifecycle import (  # noqa: E402
     InMemoryEvidenceJournal, IsolationAttestation, LifecycleController, LifecycleDiagnostic,
     LifecycleError, LifecycleProvider, LifecycleResult, OwnedResourceHandle, ProcessProvider,
 )
+from .experiment_plan import (  # noqa: E402
+    ExperimentLimits, ExperimentPlanResult, canonical_plan_bytes, compile_experiment_files,
+    compile_experiment_plan, compile_experiment_sources, compute_plan_digest,
+    experiment_plan_status, plan_matches_digest,
+)
 
 __all__ = [
     "SUPPORTED_API_VERSIONS", "CatalogBuildResult", "CatalogEntry", "Diagnostic", "ElementIdentity",
@@ -41,4 +46,7 @@ __all__ = [
     "OwnedResourceHandle", "PlanAction", "ProcessAction", "ProcessProvider", "RUNTIME_PROFILE_NAMESPACE",
     "StaticReadiness", "ValidationGate", "ValidationResult", "__version__", "build_lifecycle_plan",
     "canonical_json", "catalog_entry_public_data", "derive_catalog", "validate_files", "validate_sources",
+    "ExperimentLimits", "ExperimentPlanResult", "canonical_plan_bytes", "compile_experiment_files",
+    "compile_experiment_plan", "compile_experiment_sources", "compute_plan_digest",
+    "experiment_plan_status", "plan_matches_digest",
 ]

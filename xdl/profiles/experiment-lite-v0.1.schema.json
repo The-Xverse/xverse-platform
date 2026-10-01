@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xverse.io/profiles/experiment-lite/v0.1/schema.json",
+  "title": "io.xverse.experiment Profile v0.1",
+  "description": "Closed, versioned, neutral experiment-intent payload attached at existing XDL v1alpha1 extension points and selected by a Profile resource schemaRef. One closed kind discriminator selects exactly one of four permitted payload forms: scenario-intent (Scenario /extensions), step-intent (Scenario step extensions), fault-intent (Scenario fault extensions) and realization-intent (Deployment binding extensions). The payload carries declared intent only: no artifact address, credential, live handle, scientific threshold, execution request or oracle call.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "target"],
+  "properties": {
+    "schemaVersion": {"const": "0.1"},
+    "kind": {"$ref": "#/$defs/kind"},
+    "target": {"$ref": "#/$defs/target"},
+    "seed": {"$ref": "#/$defs/seed"},
+    "parameters": {"$ref": "#/$defs/parameterList"},
+    "fidelityLimitations": {"$ref": "#/$defs/fidelityLimitations"},
+    "phase": {"$ref": "#/$defs/phase"},
+    "dependsOn": {"$ref": "#/$defs/dependsOn"},
+    "duration": {"$ref": "#/$defs/timeQuantity"},
+    "trigger": {"$ref": "#/$defs/trigger"},
+    "timeDomainId": {"$ref": "#/$defs/identifier"},
+    "delivery": {"enum": ["in-place", "staged", "none"]},
+    "retry": {"$ref": "#/$defs/retry"},
+    "protocolBinding": {"$ref": "#/$defs/protocolBinding"}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "scenario-intent"}}, "required": ["kind"]},
+      "then": {
+        "properties": {"target": {"$ref": "#/$defs/scenarioTarget"}},
+        "required": ["target", "seed", "parameters"]
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "step-intent"}}, "required": ["kind"]},
+      "then": {
+        "properties": {"target": {"$ref": "#/$defs/scenarioElementTarget"}},
+        "required": ["target", "phase"]
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "fault-intent"}}, "required": ["kind"]},
+      "then": {
+        "properties": {"target": {"$ref": "#/$defs/scenarioElementTarget"}},
+        "required": ["target", "trigger", "duration"]
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "realization-intent"}}, "required": ["kind"]},
+      "then": {
+        "properties": {"target": {"$ref": "#/$defs/deploymentElementTarget"}},
+        "required": ["target"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"kind": {"const": "fault-intent"}, "trigger": {"properties": {"kind": {"const": "time"}}}},
+        "required": ["kind", "trigger"]
+      },
+      "then": {"required": ["timeDomainId"]},
+      "else": {"not": {"required": ["timeDomainId"]}}
+    },
+    {
+      "if": {
+        "properties": {"retry": {"properties": {"policy": {"const": "bounded"}}}},
+        "required": ["retry"]
+      },
+      "then": {"properties": {"retry": {"required": ["policy", "maxAttempts"]}}},
+      "else": {"properties": {"retry": {"not": {"required": ["maxAttempts"]}}}}
+    }
+  ],
+  "$defs": {
+    "kind": {
+      "type": "string",
+      "enum": ["scenario-intent", "step-intent", "fault-intent", "realization-intent"]
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 63
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)+$",
+      "maxLength": 253
+    },
+    "text": {"type": "string", "minLength": 1, "maxLength": 200},
+    "unitSemantics": {"type": "string", "minLength": 1, "maxLength": 64},
+    "timeUnit": {"enum": ["tick", "ns", "us", "ms", "s"]},
+    "timeQuantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number", "minimum": 0},
+        "unit": {"$ref": "#/$defs/timeUnit"}
+      },
+      "additionalProperties": false
+    },
+    "scenarioTarget": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"const": "Scenario"},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "scenarioElementTarget": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name", "element"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"const": "Scenario"},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "element": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "deploymentElementTarget": {
+      "type": "object",
+      "required": ["apiVersion", "kind", "namespace", "name", "element"],
+      "properties": {
+        "apiVersion": {"const": "xverse.io/xdl/v1alpha1"},
+        "kind": {"const": "Deployment"},
+        "namespace": {"$ref": "#/$defs/namespace"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "element": {"$ref": "#/$defs/identifier"}
+      },
+      "additionalProperties": false
+    },
+    "target": {"oneOf": [
+      {"$ref": "#/$defs/scenarioTarget"},
+      {"$ref": "#/$defs/scenarioElementTarget"},
+      {"$ref": "#/$defs/deploymentElementTarget"}
+    ]},
+    "seed": {
+      "type": "object",
+      "required": ["value", "unitSemantics"],
+      "properties": {
+        "value": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "unitSemantics": {"$ref": "#/$defs/unitSemantics"}
+      },
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "valueType", "value", "unitSemantics"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "valueType": {"enum": ["boolean", "integer", "number", "string"]},
+        "value": {},
+        "unitSemantics": {"$ref": "#/$defs/unitSemantics"},
+        "mutability": {"enum": ["constant", "configuration", "scenario"]},
+        "limitations": {
+          "type": "array", "maxItems": 8, "uniqueItems": true, "items": {"$ref": "#/$defs/text"}
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"valueType": {"const": "boolean"}}, "required": ["valueType"]},
+          "then": {"properties": {"value": {"type": "boolean"}}}
+        },
+        {
+          "if": {"properties": {"valueType": {"const": "integer"}}, "required": ["valueType"]},
+          "then": {"properties": {"value": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}}}
+        },
+        {
+          "if": {"properties": {"valueType": {"const": "number"}}, "required": ["valueType"]},
+          "then": {"properties": {"value": {"type": "number", "minimum": -1e15, "maximum": 1e15}}}
+        },
+        {
+          "if": {"properties": {"valueType": {"const": "string"}}, "required": ["valueType"]},
+          "then": {"properties": {"value": {"type": "string", "minLength": 1, "maxLength": 200}}}
+        }
+      ]
+    },
+    "parameterList": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/parameter"}},
+    "fidelityLimitations": {
+      "type": "array", "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/text"}
+    },
+    "phase": {"enum": ["prepare", "start", "observe", "stop", "cleanup"]},
+    "dependsOn": {
+      "type": "array", "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}
+    },
+    "trigger": {"oneOf": [
+      {
+        "type": "object",
+        "required": ["kind", "at", "unit"],
+        "properties": {
+          "kind": {"const": "time"},
+          "at": {"type": "number", "minimum": 0},
+          "unit": {"$ref": "#/$defs/timeUnit"}
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": ["kind", "order"],
+        "properties": {
+          "kind": {"const": "declared-order"},
+          "order": {"type": "integer", "minimum": 0, "maximum": 1048575}
+        },
+        "additionalProperties": false
+      }
+    ]},
+    "retry": {
+      "type": "object",
+      "required": ["policy"],
+      "properties": {
+        "policy": {"enum": ["none", "bounded"]},
+        "maxAttempts": {"type": "integer", "minimum": 1, "maximum": 64}
+      },
+      "additionalProperties": false
+    },
+    "protocolBinding": {
+      "type": "object",
+      "required": ["standardRef", "bindingKind", "compatibility"],
+      "properties": {
+        "standardRef": {"type": "string", "format": "uri-reference", "minLength": 1},
+        "bindingKind": {"$ref": "#/$defs/identifier"},
+        "compatibility": {"enum": ["exact", "backward", "converter"]},
+        "limitations": {
+          "type": "array", "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/$defs/text"}
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

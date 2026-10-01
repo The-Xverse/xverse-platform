@@ -1,0 +1,133 @@
+{
+  "component_id": "XDL1-SR-014-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-INPUT-MUTATED",
+    "XDL1-PLAN-SECRET-IN-PUBLIC-ARTIFACT"
+  ],
+  "id": "XDL1-SR-014-U",
+  "inputs": [
+    "in-memory resources, or explicit source/file paths read only through the accepted loader"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "compile_experiment_sources",
+    "compile_experiment_files",
+    "ExperimentPlanResult"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "ExperimentPlanResult.plan or None",
+    "sorted tuple[Diagnostic]",
+    "volatile run envelope"
+  ],
+  "purpose": "Be a pure offline function: a successful compile or a rejection starts no component, performs no registry or filesystem discovery, opens no network connection, mutates no external state, returns no partial or executable plan on rejection and detects late mutation of an already-hashed input.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py"
+  ],
+  "state": "Pure in-memory function with no module-level mutable state, cache, singleton or ambient read.",
+  "static_checks": [
+    {
+      "expected": "ast scan reports no forbidden import and no ambient clock/locale/environment read",
+      "id": "XDL1-SR-014-U-STATIC",
+      "rule": "no forbidden import (subprocess, socket, threading, multiprocessing, http, urllib.request, time, datetime, os.environ access) exists in experiment_plan.py",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-014-U unit specification - Pure offline no-side-effect contract",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-INPUT-MUTATED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_expected_input_digest_mismatch_rejected",
+      "precondition": "a caller-supplied expected_input_semantic_digests entry that differs from the computed value",
+      "stimulus": "compile_experiment_plan(resources, expected_input_semantic_digests=...)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-INPUT-MUTATED; plan is None and no stale digest is emitted",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_post_hash_mutation_detected",
+      "precondition": "a normalized input mutated after its digest was first computed at entry",
+      "stimulus": "compile_experiment_plan(resources) with the entry digest captured and the value changed before finalization"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DIGEST-SELFCHECK; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_digest_selfcheck_failure_rejected",
+      "precondition": "an assembled plan whose digest does not match the recomputed canonical digest",
+      "stimulus": "compile_experiment_plan(resources) with the digest assembly path exercised so the self-check fails"
+    },
+    {
+      "expected": "ExperimentPlanResult.plan is None for every defect and no partial, placeholder or executable handle is returned",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_rejection_returns_no_plan",
+      "precondition": "a set carrying one of each declared rejection defect",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "every diagnostic has a stable XDL1-PLAN-* or accepted XDL-* code, a ValidationGate, severity error, a JSON pointer and a non-empty correction",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_error_diagnostic_has_stable_code_pointer_and_correction",
+      "precondition": "a rejected set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SECRET-IN-PUBLIC-ARTIFACT; the offending value is not echoed in any diagnostic message",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_secret_bearing_leaf_rejected_without_echo",
+      "precondition": "a declared text/parameter value matching the credential pattern",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "ExperimentPlanResult.is_valid is False and plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_result_is_valid_false_without_plan",
+      "precondition": "a rejected set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the volatile run envelope records status 'rejected' and planDigest None while the plan body does not exist",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_rejected_run_envelope_has_null_plan_digest",
+      "precondition": "a rejected set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "a resolved plan is returned and no file is opened (no OSError surfaces)",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compiler_opens_no_file_after_admission",
+      "precondition": "normalized resources already in memory and builtins.open monkeypatched to raise",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "a resolved plan is returned and no socket/registry/network call occurs",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compiler_performs_no_network_access",
+      "precondition": "socket.socket monkeypatched to raise",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "a resolved plan is returned and no thread or worker is started",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compiler_spawns_no_thread",
+      "precondition": "threading.Thread and multiprocessing.Process monkeypatched to raise",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "compilation succeeds and run.generatedAt is the frozen sentinel 1970-01-01T00:00:00Z",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compiler_reads_no_ambient_clock",
+      "precondition": "time.time, datetime.now and datetime.utcnow monkeypatched to raise, generated_at omitted",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "canonical_plan_bytes and plan.digest are identical under both environments",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compilation_independent_of_locale_and_timezone",
+      "precondition": "the same set compiled under two TZ and LANG values",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the plan resolves and every supplied file keeps its exact bytes and digest",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_successful_compile_leaves_supplied_files_unchanged",
+      "precondition": "real fixture files with recorded digests",
+      "stimulus": "compile_experiment_files(paths)"
+    }
+  ]
+}

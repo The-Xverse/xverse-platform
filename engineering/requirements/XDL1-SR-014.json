@@ -1,0 +1,34 @@
+{
+  "acceptance_criteria": [
+    "Rejection - including any declared library-bound, cross-reference, or ambiguity violation - returns diagnostics and no plan artifact of any kind; a resolved plan is emitted only when every declared bound and cross-reference is satisfied.",
+    "Compilation performs no filesystem mutation, no registry lookup, no socket or network use, and no process creation, and a late mutation of an already-hashed input is detected.",
+    "The same declared inputs compile to the same result independent of host environment details."
+  ],
+  "applicability": "Phase 1 XDL Lite bounded software allocation (offline declared experiment intent compilation). status 'accepted' records internal engineering intent only; it is not implementation satisfaction or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "XDL1-SR-014",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0117"
+  ],
+  "phase": "P1",
+  "planned_extent": "bounded_partial",
+  "review_resolution": {
+    "findings": [
+      "XDL1-RVW-001"
+    ],
+    "note": "Successor correction: the predecessor emitted a resolved plan while a declared bound was exceeded; the amended criterion now makes any declared library-bound violation a rejection that yields no plan of any kind."
+  },
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase1_software_allocation",
+    "reference": "docs/engineering/xdl-lite/requirements.md XDL1-SR-014"
+  },
+  "statement": "The compiler shall be a pure offline function: a successful compile or a rejection shall start no component, perform no registry or filesystem discovery, open no network connection, mutate no external state, and return no partial or executable plan on rejection.",
+  "status": "accepted",
+  "title": "Pure offline no-side-effect compilation contract",
+  "verification_intent": "Planned to be exercised through the XDL1-UNIT, XDL1-STATIC, XDL1-INTEGRATION, and XDL1-VALIDATION measures defined in the XDL1 verification-design stage, invoking the real loader, schema registry, catalog, activation-plan consumer, and additive CLI/API. No runtime, availability, compatibility, or readiness claim is made."
+}

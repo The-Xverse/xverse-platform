@@ -1,0 +1,114 @@
+{
+  "component_id": "XDL1-SR-017-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL-SEMANTIC-PROFILE-MISSING (accepted, reused)",
+    "XDL-SEMANTIC-PROFILE-INCOMPATIBLE (accepted, reused)",
+    "XDL-SEMANTIC-PROFILE-SCHEMA-MISSING (accepted, reused)",
+    "XDL-SEMANTIC-EXTENSION-SCHEMA (accepted, reused)",
+    "XDL1-PLAN-PROFILE-ABSENT",
+    "XDL1-PLAN-PROFILE-DUPLICATE",
+    "XDL1-PLAN-PROFILE-VERSION-UNSUPPORTED",
+    "XDL1-PLAN-PROFILE-SCHEMAREF-UNSUPPORTED",
+    "XDL1-PLAN-PROFILE-PAYLOAD-DUPLICATE",
+    "XDL1-PLAN-PROFILE-TARGET-MISMATCH"
+  ],
+  "id": "XDL1-SR-017-U",
+  "inputs": [
+    "normalized Profile resource and extension payloads at existing attachment points"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "xdl/profiles/experiment-lite-v0.1.schema.json"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-09"
+  ],
+  "outputs": [
+    "plan.profile identity, schemaRef, resourceDigest",
+    "payload-kind/target validation result"
+  ],
+  "purpose": "Consume one explicitly admitted, versioned, neutral experiment Profile at existing XDL extension points, with unknown namespaces, unknown fields and unsupported versions failing closed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "xdl/profiles/experiment-lite-v0.1.schema.json",
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_profile_unit.py"
+  ],
+  "state": "Stateless admission of exactly one admitted Profile and its payload attachments.",
+  "static_checks": [
+    {
+      "expected": "jsonschema meta-schema validation passes and the four payload kinds are the only admitted consts",
+      "id": "XDL1-SR-017-U-STATIC",
+      "rule": "payload schema is valid draft 2020-12 with additionalProperties false, closed kinds/consts and finite bounds",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-017-U unit specification - Additive, explicitly admitted, fail-closed Profile extension",
+  "unit_cases": [
+    {
+      "expected": "rejected; exactly one error XDL1-PLAN-PROFILE-ABSENT (gate policy); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_absent_rejected",
+      "precondition": "normalized closed set with one System, one Scenario and no admitted Profile resource",
+      "stimulus": "compile_experiment_plan(resources) on the normalized API entry point"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-DUPLICATE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_duplicate_rejected",
+      "precondition": "normalized set with two Profile resources that both claim extensionNamespace io.xverse.experiment",
+      "stimulus": "compile_experiment_plan(resources) (normalized path only; the loader path rejects earlier)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-VERSION-UNSUPPORTED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_version_unsupported_rejected",
+      "precondition": "admitted Profile resource with metadata.version 0.2.0",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-SCHEMAREF-UNSUPPORTED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_schemaref_unsupported_rejected",
+      "precondition": "admitted Profile whose spec.schemaRef is another admitted Profile $id (xcom-v0.1)",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected by the accepted gate with XDL-SEMANTIC-PROFILE-MISSING; plan is None and the XDL1 pipeline is skipped",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_unknown_namespace_rejected",
+      "precondition": "resource carrying an extension under namespace io.xverse.unknown",
+      "stimulus": "compile_experiment_sources with the accepted loader, schema registry and semantics"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-PAYLOAD-KIND; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_payload_kind_mismatch_rejected",
+      "precondition": "scenario-intent kind value attached at a step extension pointer",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-PAYLOAD-DUPLICATE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_payload_duplicate_rejected",
+      "precondition": "two experiment payloads at one attachment pointer (Scenario.extensions[io.xverse.experiment])",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-TARGET-MISMATCH; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_payload_target_mismatch_rejected",
+      "precondition": "scenario-intent payload whose target.name differs from the owning Scenario metadata.name",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PROFILE-PAYLOAD-ABSENT; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_scenario_intent_absent_rejected",
+      "precondition": "selected Scenario has no scenario-intent payload though other payloads are present",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected by the accepted payload schema gate with XDL-SEMANTIC-EXTENSION-SCHEMA; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_profile_unit.py::test_profile_unknown_field_rejected",
+      "precondition": "scenario-intent payload carrying an undeclared extra field",
+      "stimulus": "compile_experiment_sources with the explicit Profile schema path"
+    }
+  ]
+}

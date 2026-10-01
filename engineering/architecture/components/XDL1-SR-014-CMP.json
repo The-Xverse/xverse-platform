@@ -1,0 +1,52 @@
+{
+  "boundaries": [
+    "XDL1-XB-01",
+    "XDL1-XB-05"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL1-PLAN-INPUT-MUTATED",
+    "XDL1-PLAN-SECRET-IN-PUBLIC-ARTIFACT",
+    "XDL1-PLAN-BOUND-EXCEEDED (any ExperimentLimits scope, including the total compiled-parameter scope)"
+  ],
+  "id": "XDL1-SR-014-CMP",
+  "interfaces": [
+    "compile_experiment_plan",
+    "compile_experiment_sources",
+    "compile_experiment_files",
+    "ExperimentPlanResult"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-01",
+    "XDL1-ARCH-08"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-014 (successor, resolves XDL1-RVW-001 no-plan-on-bound-violation), realized by XDL1-ARCH-01, XDL1-ARCH-08 in docs/engineering/xdl-lite/architecture.md section 4 and frozen in docs/engineering/xdl-lite/detailed-design.md section 10.3 and section 12.",
+  "requirements": [
+    "XDL1-SR-014"
+  ],
+  "responsibilities": [
+    "Keep the compiler a pure offline function: no component start, no registry or filesystem discovery, no socket/network use, no external mutation.",
+    "Return diagnostics and no plan artifact of any kind on rejection, including for any declared library-bound violation (per-payload, total compiled-parameter, or declared-core-parameter scope).",
+    "Detect a late mutation of an already-hashed input and reject."
+  ],
+  "review_resolution": [
+    "XDL1-RVW-001"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-014-CMP allocation - Pure offline no-side-effect contract"
+}

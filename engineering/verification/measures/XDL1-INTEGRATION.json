@@ -1,0 +1,28 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "pytest",
+    "-vv",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py"
+  ],
+  "command_runs": "Candidate-local descriptor only. Whole-system integration is defined solely by the trusted policy system_integration contract: the exact candidate is assembled into the pinned xverse-platform target and the real loader, schema registry, normalizer, catalog, lifecycle-plan, X-COM activation-plan and CLI consumers are exercised there. No candidate-local check is reported as integration.",
+  "discovery_check": "[1-9][0-9]* passed",
+  "expected": "pass",
+  "id": "XDL1-INTEGRATION",
+  "kind": "integration",
+  "note": "These tests use the real admitted loader/normalizer/schema registry/catalog/X-COM activation-plan/CLI code paths and real repository fixtures; mocks alone cannot satisfy the measure. Backward compatibility of the accepted consumers is asserted rather than assumed, and nothing is executed or retrieved. The 8 identifiers are unchanged from the reviewed predecessor set because no finding concerned integration.",
+  "revision": "1",
+  "schema_version": 1,
+  "test_ids": [
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_existing_catalog_consumer_compatible_on_normalized_resources",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_existing_lifecycle_plan_api_compatible_without_execution",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_existing_loader_and_normalizer_compatible_on_accepted_examples",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_existing_xcom_activation_plan_consumer_compatible",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_legacy_cli_validate_normalize_and_version_behaviour_preserved",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_real_cli_experiment_compile_end_to_end_over_fixture_files",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_real_loader_schema_registry_and_compiler_resolve_neutral_experiment",
+    "tests/thesis_lite/xdl/test_xdl1_integration.py::test_rejected_compile_leaves_consumers_and_files_unchanged"
+  ],
+  "title": "XDL1 whole-system target-repository integration over real platform consumers"
+}

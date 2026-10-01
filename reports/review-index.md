@@ -1270,3 +1270,122 @@ predecessor conformance replay; and the measured disabled/enabled-tap benchmark 
 accurately recorded. No production-readiness, deployed-service, legacy-compatibility, parity, or
 certification claim is made. This documentation/evidence reconciliation is itself a separate successor
 candidate and still requires its own review and explicit acceptance before it is accepted or merged.
+
+# XDL Lite Phase 1 review index — offline declared experiment intent compilation (feature `XDL1`)
+
+Candidate: `XDL1` (XDL Lite Phase 1) on accepted baseline
+`0c5e249621727b2d0041707de2661f0ed1e1ef23`, admitted thesis revision
+`fe58918f9eaf2a6f39cdc9c93cfd4ce615ec84bf`.
+
+This section is appended to the mutable, append-only review index. All pre-existing T020 and
+T030–T038 sections above are preserved byte-for-byte. This is a candidate review index only: the
+trusted unit/static/integration/validation measures, the assembled pinned `xverse-platform` target
+run, the separate read-only `internal_review`, and terminal user acceptance are separate gates, and
+none is claimed complete here.
+
+## Declared XDL1 work products
+
+Documentation and work products (`docs/engineering/xdl-lite/`):
+
+- `requirements.md`, `architecture.md`, `detailed-design.md`, `unit-specifications.md`,
+  `verification-plan.md`, `integration.md`, `validation.md`, `implementation.md`, `maintenance.md`
+- `planned-trace.json`
+- `internal-review.json` (to be authored by the separate read-only reviewer; **not** authored here,
+  and no verdict is claimed by this index)
+
+Engineering records (this successor candidate):
+
+- `engineering/project.json` — project `xverse-platform`, engineered assurance profile, accepted
+  baseline `0c5e249621727b2d0041707de2661f0ed1e1ef23`, current feature pointer `XDL1`, recorded
+  predecessor `rework` finding summary.
+- `engineering/requirements/` — 19 XDL1 software requirements (`XDL1-SR-001..019`, one bounded
+  software allocation per selected REF-002 parent, in the admitted order) plus the 19 original
+  `XVE-SYS-*` parent anchors, whose original IDs (including `XVE-SYS-00014`), source text,
+  provenance, and `disposition = allocated` are preserved; no new system requirement ID and no
+  parent closed or promoted.
+- `engineering/architecture/components/` — 19 components (`XDL1-SR-001-CMP..019-CMP`).
+- `engineering/unit-specifications/` — 19 unit specifications (`XDL1-SR-001-U..019-U`) with 121
+  frozen unit cases and 19 declaration-bound static checks.
+- `engineering/verification/measures/` — `XDL1-UNIT` (121 ids), `XDL1-INTEGRATION` (8 ids),
+  `XDL1-VALIDATION` (18 ids), `XDL1-STATIC` (19 static-check ids).
+- `engineering/validation/scenarios/` — seven intended-use scenarios (`XDL1-VS-01..07`).
+- `engineering/trace/links.json` — additive XDL1 links plus refreshed mutable current code-endpoint
+  hashes only (3 334 links, 909 artifacts).
+- `engineering/stage-results/` — `xdl1-requirements.json`, `xdl1-architecture.json`,
+  `xdl1-unit_specification.json`, `xdl1-verification_design.json`, `xdl1-implementation.json`,
+  `xdl1-integration.json`, `xdl1-validation.json`, `xdl1-documentation.json`. The separate reviewer
+  adds the `internal_review` stage record and `docs/engineering/xdl-lite/internal-review.json`.
+
+Implementation change set (additive only):
+
+- `src/xverse_xdl/experiment_plan.py` (**new** pure offline compiler)
+- `src/xverse_xdl/cli.py` (additive `experiment compile` subcommand only)
+- `src/xverse_xdl/__init__.py` (additive exports only; `__all__` only grows)
+- `xdl/profiles/experiment-lite-v0.1.schema.json` (**new** admitted neutral Profile payload schema)
+- `tests/thesis_lite/xdl/**` (owned neutral fixtures and 147 pytest-discoverable cases: 121 unit +
+  8 integration + 18 validation)
+
+## Predecessor review finding closure
+
+The predecessor XDL1 attempt-1 candidate was frozen, hash-inventoried, and independently reviewed
+read-only (`verdict: rework`, three open major findings, no repair). That review evidence is consumed
+read-only and referenced by content hash: predecessor frozen-candidate manifest
+`820f3c47d264a6e75a75e3fb58f9465d9bb1ba3495b6c263797d145230c59093`; predecessor
+`review/internal-review.json` `b5ed14f18ae1e50d246deb2765215b11bdfd41c54dca0f7699325a1c9d12c2e4`;
+predecessor `review/stage.json` `9b09049a68c45160a9ee0e57b918c04dcad6ec7cdc732c94b0953009221e0e23`.
+
+The successor requirement baseline resolves the findings in the affected acceptance criteria; the
+successor design freezes the concrete behaviour (`XDL1-DD-13`, `XDL1-DD-14`, detailed-design §10.3 and
+§16.2); the successor implementation realizes it, and the integration and validation stages
+re-executed each finding's exact reproduction. No assertion was weakened, renamed, skipped, xfailed,
+or deleted.
+
+- `XDL1-RVW-001` (major, contract fidelity / units-and-bounds): `ExperimentLimits.max_parameters` is
+  now enforced over three explicit scopes — per declared extension payload, **total compiled
+  parameters** over the finished plan, and declared core parameters — with any violation emitting
+  `XDL1-PLAN-BOUND-EXCEEDED` and `plan = None`. The predecessor emitted a resolved plan carrying more
+  compiled parameters than the declared bound; the successor rejects it.
+- `XDL1-RVW-002` (major, contract fidelity / declared-intent projection): `components[]` now always
+  carries exactly one leading `scope = "system"` entry projecting every declared
+  `System.spec.parameters[]` entry (fixture id `loop-count`); component-instance entries project only
+  their referenced Component's parameters. The predecessor silently dropped declared System core
+  parameters.
+- `XDL1-RVW-003` (major, verification coverage / missing negative evidence): per-scope negative cases
+  were added for every declared count-based bound — including the total compiled-parameter scope whose
+  per-payload lists are each individually within the bound — and `XDL1-PLAN-BOUND-EXCEEDED` is no
+  longer the only frozen diagnostic code with zero test occurrences (17 occurrences across
+  `test_xdl1_quantity_unit.py` and `test_xdl1_validation.py`).
+
+Closure here rests on executed candidate-local evidence. Its terminal confirmation belongs to the
+separate read-only `internal_review` stage and the trusted host measures.
+
+## Verification state and open limitations
+
+- Candidate-local preliminary worker checks (not trusted evidence): `python3 -m pytest -q
+  tests/thesis_lite/xdl` reports `147 passed`; `python3 -m pytest -q` over the whole repository reports
+  `297 passed`; the CLI over the five neutral fixtures exits `0` with
+  `resolved plan ccf08204181f47ae7868ed7b6795c1fb2ae2d6e0aeb04437000a1b4ab3988f7d (23 sections)`,
+  and the JSON-envelope plan digest is identical; the rejection fixture exits `1` with structured
+  diagnostics and writes no file.
+- `fabro_engineering.core.validate_trace(checkout, "xverse-platform")` returns
+  `{"artifacts": 909, "links": 3334}`, and every artifact hash recorded by the earlier XDL1 stage
+  records re-hashes unchanged.
+- The trusted host must bind `unit → XDL1-UNIT`, `static_analysis → XDL1-STATIC`,
+  `integration → XDL1-INTEGRATION`, and `validation → XDL1-VALIDATION`, then assemble the exact
+  candidate into the pinned `xverse-platform` target (whole-system integration is defined only by the
+  trusted `mode = target_repository` contract) and execute the trusted measures. Without those
+  bindings the gates fail closed rather than being papered over.
+- The separate read-only `internal_review` must independently confirm the predecessor finding
+  closures and the absence of new findings; terminal user acceptance follows. Neither is claimed here.
+- No runtime, availability, readiness, compatibility, parity, certification, or delivery claim is
+  made. A resolved plan proves declared-intent validation only. No scientific protocol value,
+  threshold, tolerance, deadline, seed, margin, or campaign parameter is defaulted, invented, or
+  narrowed; those remain caller inputs, bounded only by the finite platform library limits. No
+  legacy, compatibility, blueprint, or oracle/assurance path is executed and no REF-002 parent is
+  closed or promoted.
+- Public-safe: this section uses repository-relative locators only and contains no secret, credential,
+  host address, private source excerpt, or sensitive deployment detail.
+
+The index points at `docs/engineering/xdl-lite/internal-review.json`, which the later read-only
+`internal_review` stage authors after host candidate sealing; this section records the pointer and
+claims no verdict.

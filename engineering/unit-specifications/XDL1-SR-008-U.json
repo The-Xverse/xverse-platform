@@ -1,0 +1,56 @@
+{
+  "component_id": "XDL1-SR-008-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-OBSERVER-UNRESOLVED",
+    "XDL-SEMANTIC-SCENARIO-TARGET (accepted, reused)"
+  ],
+  "id": "XDL1-SR-008-U",
+  "inputs": [
+    "normalized Scenario observers and their declared target/time/unit policy"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.observers[] with payloadPolicy and evidenceSinkRef"
+  ],
+  "purpose": "Compile declared observer intent references (explicit observation scope, time/units and payload policy) into the resolved plan without invoking any observer, writer or oracle callable.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless projection of declared observers.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no observer/writer/oracle call in experiment_plan.py",
+      "id": "XDL1-SR-008-U-STATIC",
+      "rule": "no Argus writer, observer callable or evidence sink is imported or invoked",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-008-U unit specification - Observer intent references without observation execution",
+  "unit_cases": [
+    {
+      "expected": "each observers element carries observerId, targetRef, collection, timeDomainId, samplingIntent, payloadPolicy{payloadSchema,unitSemantics} and evidenceSinkRef; nothing is invoked",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_observer_references_emitted",
+      "precondition": "declared Scenario observers with targetRef, samplingIntent, payloadSchema, unitSemantics and evidenceSinkRef",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-OBSERVER-UNRESOLVED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_observer_unresolved_rejected",
+      "precondition": "observer targetRef naming an element that does not exist",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

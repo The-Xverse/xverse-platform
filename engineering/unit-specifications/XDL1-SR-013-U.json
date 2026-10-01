@@ -1,0 +1,68 @@
+{
+  "component_id": "XDL1-SR-013-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-DEPENDENCY-CYCLE",
+    "XDL1-PLAN-DEPENDENCY-MISSING"
+  ],
+  "id": "XDL1-SR-013-U",
+  "inputs": [
+    "System.spec.componentInstances/flows/endpoints and step-intent dependsOn"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-04",
+    "XDL1-INV-06",
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10"
+  ],
+  "outputs": [
+    "plan.dependencyOrder[] with rank, kind, id, owner"
+  ],
+  "purpose": "Derive a deterministic dependency order from declared dependencies and reject a dependency cycle or competing-order ambiguity with a structured diagnostic; equal declared inputs produce an equal ordered result.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_order_unit.py"
+  ],
+  "state": "Stateless Kahn topological ordering of the declared component-instance and step graph.",
+  "static_checks": [
+    {
+      "expected": "ast inspection shows the deterministic sort key and an explicit cycle check with a rejected return",
+      "id": "XDL1-SR-013-U-STATIC",
+      "rule": "ready-set drain uses the frozen (kindRank, declaredIndex, id) key and no recursion without depth bound",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-013-U unit specification - Deterministic dependency order and cycle rejection",
+  "unit_cases": [
+    {
+      "expected": "both runs emit an identical dependencyOrder ordered by ascending key (kindRank, declaredIndex, id)",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_dependency_order_stable_tie_break",
+      "precondition": "two independent component instances declared in opposite resource order across two runs",
+      "stimulus": "compile_experiment_plan(resources) twice with permuted input order"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DEPENDENCY-CYCLE with the offending node ids in related; no partial order and no plan",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_dependency_cycle_rejected",
+      "precondition": "System flows forming a component-instance cycle",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DEPENDENCY-MISSING; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_dependency_missing_rejected",
+      "precondition": "step-intent dependsOn naming a step that is not declared",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DEPENDENCY-CYCLE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_step_depends_on_self_rejected",
+      "precondition": "step-intent dependsOn naming its own step id",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

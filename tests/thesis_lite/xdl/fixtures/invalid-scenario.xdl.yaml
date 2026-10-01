@@ -1,0 +1,138 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Scenario
+metadata:
+  namespace: org.xverse.experiment
+  name: sample-observation-run
+  version: 0.1.0
+  provenance:
+    source: xverse-public-example
+    revision: xdl1-rev-1
+    maturity: prototype
+    limitations:
+    - Acceptance expressions are declared text only.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: org.xverse.experiment
+    name: sample-loop
+  initialConditions:
+    sample-count: 0
+  steps:
+  - id: prepare-source
+    actionKind: set-parameter
+    targetRef:
+      apiVersion: xverse.io/xdl/v1alpha1
+      kind: System
+      namespace: org.xverse.experiment
+      name: sample-loop
+      element: source-instance
+    timeDomainId: experiment-time
+    schedule:
+      at: 0
+      unit: ms
+      tolerance:
+        value: 0
+        unit: ms
+    action:
+      parameter: nominal-rate
+      value: 10
+    extensions:
+      io.xverse.experiment:
+        schemaVersion: '0.1'
+        kind: step-intent
+        target:
+          apiVersion: xverse.io/xdl/v1alpha1
+          kind: Scenario
+          namespace: org.xverse.experiment
+          name: sample-observation-run
+          element: prepare-source
+        phase: prepare
+        dependsOn: []
+        duration:
+          value: 1
+          unit: ms
+        parameters: []
+  - id: start-source
+    actionKind: start
+    targetRef:
+      apiVersion: xverse.io/xdl/v1alpha1
+      kind: System
+      namespace: org.xverse.experiment
+      name: sample-loop
+      element: source-instance
+    timeDomainId: experiment-time
+    schedule:
+      at: 10
+      unit: ms
+    action:
+      operation: start
+    extensions:
+      io.xverse.experiment:
+        schemaVersion: '0.1'
+        kind: step-intent
+        target:
+          apiVersion: xverse.io/xdl/v1alpha1
+          kind: Scenario
+          namespace: org.xverse.experiment
+          name: sample-observation-run
+          element: start-source
+        phase: start
+        dependsOn:
+        - prepare-source
+        duration:
+          value: 1000000
+          unit: ns
+        parameters: []
+  faults:
+  - id: stale-sample
+    targetRef:
+      apiVersion: xverse.io/xdl/v1alpha1
+      kind: System
+      namespace: org.xverse.experiment
+      name: sample-loop
+      element: source-instance
+    faultKind: delay
+    activation: scheduled
+    recovery: automatic
+    maturity: prototype
+    extensions:
+      io.xverse.experiment:
+        schemaVersion: '0.1'
+        kind: fault-intent
+        target:
+          apiVersion: xverse.io/xdl/v1alpha1
+          kind: Scenario
+          namespace: org.xverse.experiment
+          name: sample-observation-run
+          element: stale-sample
+        trigger:
+          kind: time
+          at: 5
+          unit: ms
+        timeDomainId: experiment-time
+        duration:
+          value: 2
+          unit: ms
+        parameters: []
+  observers:
+  - id: sample-observer
+    targetRef:
+      apiVersion: xverse.io/xdl/v1alpha1
+      kind: System
+      namespace: org.xverse.experiment
+      name: sample-loop
+      element: sample-flow
+    timeDomainId: experiment-time
+    samplingIntent: observe every declared sample
+    payloadSchema: urn:xverse:experiment:sample-v1
+    unitSemantics: dimensionless
+    evidenceSinkRef: urn:xverse:experiment:evidence:sample-observer
+  metrics:
+  - id: sample-count
+    observerIds:
+    - sample-observer
+    calculationRef: urn:xverse:experiment:metric:count
+    unitSemantics: count
+    acceptance: declared acceptance text only
+  acceptanceIntent: Demonstrate offline declared intent compilation only.

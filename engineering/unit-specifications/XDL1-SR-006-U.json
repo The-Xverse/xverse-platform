@@ -1,0 +1,70 @@
+{
+  "component_id": "XDL1-SR-006-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL-SEMANTIC-TIME-MAPPING (accepted, reused)",
+    "XDL-SEMANTIC-TIME-DOMAIN-REFERENCE (accepted, reused)",
+    "XDL1-PLAN-TIME-DOMAIN-UNRESOLVED",
+    "XDL1-PLAN-TIME-MAPPING-MISSING"
+  ],
+  "id": "XDL1-SR-006-U",
+  "inputs": [
+    "System.spec.timeDomains[] and Scenario.spec.timeMappings[]"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.timeDomains[] with usedBy",
+    "plan.timeMappings[] with declaredIndex and tolerance ticks"
+  ],
+  "purpose": "Bind the declared time-domain reference of the selected Scenario and record it in the resolved plan; a missing or unmapped time reference is rejected rather than defaulted.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_time_unit.py"
+  ],
+  "state": "Stateless resolution of declared time domains and time mappings.",
+  "static_checks": [
+    {
+      "expected": "ast inspection shows conversion only through TIME_UNIT_TICKS and mapping only from declared entries",
+      "id": "XDL1-SR-006-U-STATIC",
+      "rule": "no implicit time mapping or default time domain is synthesized",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-006-U unit specification - Explicit time-domain reference",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-TIME-DOMAIN-UNRESOLVED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_time_unit.py::test_time_domain_reference_unresolved_rejected",
+      "precondition": "fault-intent timeDomainId naming a domain not declared by the System",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected with no plan; the loader path surfaces the accepted XDL-SEMANTIC-TIME-MAPPING first and the normalized path surfaces XDL1-PLAN-TIME-MAPPING-MISSING",
+      "id": "tests/thesis_lite/xdl/test_xdl1_time_unit.py::test_time_mapping_missing_rejected",
+      "precondition": "deployment/observation using a second time domain with no declared Scenario timeMapping",
+      "stimulus": "compile_experiment_plan(resources) and the loader entry point"
+    },
+    {
+      "expected": "timeMappings entry records value 1, unit 'ms' and ticks 1000000 with declaredIndex preserved",
+      "id": "tests/thesis_lite/xdl/test_xdl1_time_unit.py::test_time_mapping_tolerance_ticks_recorded",
+      "precondition": "declared tolerance 1 ms between two domains",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "each timeDomains[].usedBy contains exactly the declared using entries in order (step/observer/flow/fault prefixes) with no inference",
+      "id": "tests/thesis_lite/xdl/test_xdl1_time_unit.py::test_time_domain_used_by_entries_recorded",
+      "precondition": "steps, observers, flows and faults declared against two domains",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

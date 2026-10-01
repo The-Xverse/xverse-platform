@@ -1,0 +1,114 @@
+{
+  "component_id": "XDL1-SR-001-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-SYSTEM-MISSING",
+    "XDL1-PLAN-SYSTEM-AMBIGUOUS",
+    "XDL1-PLAN-SCENARIO-MISSING",
+    "XDL1-PLAN-SCENARIO-AMBIGUOUS",
+    "XDL1-PLAN-DEPLOYMENT-AMBIGUOUS",
+    "XDL1-PLAN-DEPLOYMENT-UNBOUND"
+  ],
+  "id": "XDL1-SR-001-U",
+  "inputs": [
+    "closed immutable tuple[NormalizedResource] from the accepted normalizer",
+    "optional declaration-only static_readiness map from the accepted SemanticsGraph"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "ExperimentPlanResult",
+    "plan_public_data"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.selection{system,deployment,scenario,staticReadiness}",
+    "plan.seed and plan.parameters",
+    "plan.initialConditions and plan.acceptanceIntent",
+    "sorted tuple[Diagnostic]"
+  ],
+  "purpose": "Resolve exactly one System, at most one Deployment bound to it and exactly one Scenario from the closed normalized resource set, emit the selected logical identities, declared parameters and declared seed into the resolved plan, and reject any missing, unresolved or ambiguous selection with a stable structured diagnostic and no plan.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_selection_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Owns no durable or cached state. Receives immutable NormalizedResource values, returns a fresh plan dict plus sorted diagnostics and a volatile run envelope; persists, journals and mutates nothing.",
+  "static_checks": [
+    {
+      "expected": "static inspection of the selection branch shows no default identity, no first-match fallback and no partial selection return",
+      "id": "XDL1-SR-001-U-STATIC",
+      "rule": "selection emits exactly one System/Scenario identity and a null-only Deployment when absent",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-001-U unit specification - Declared Scenario selection and binding",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-SYSTEM-MISSING; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_system_missing_rejected",
+      "precondition": "normalized set with zero System resources",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SYSTEM-AMBIGUOUS; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_system_ambiguous_rejected",
+      "precondition": "normalized set with two System resources",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SCENARIO-MISSING; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_scenario_missing_rejected",
+      "precondition": "one System and no Scenario referencing it",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SCENARIO-AMBIGUOUS; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_scenario_ambiguous_rejected",
+      "precondition": "two Scenarios that both reference the selected System",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DEPLOYMENT-AMBIGUOUS; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_deployment_ambiguous_rejected",
+      "precondition": "two Deployments referencing the selected System",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DEPLOYMENT-UNBOUND; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_deployment_unbound_rejected",
+      "precondition": "exactly one Deployment present but the selected Scenario declares no deploymentRef to it",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "resolved plan; selection.deployment is null, bindings == [] and no error diagnostic",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_deployment_absent_compiles_with_null_deployment",
+      "precondition": "no Deployment in the closed set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "plan.selection.scenario identity equals the declared Scenario; seed.value/unitSemantics and parameters list equal the declared payload in order",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_scenario_identity_parameters_and_seed_emitted",
+      "precondition": "admitted valid set with declared seed and two ordered parameters",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "plan.selection.staticReadiness equals the accepted declaration-only readiness map with values in {Ready,NotReady,NotEvaluated}; plan.nonReadiness is present",
+      "id": "tests/thesis_lite/xdl/test_xdl1_selection_unit.py::test_static_readiness_recorded_as_declaration_only",
+      "precondition": "valid set with a Deployment carrying declared artifacts",
+      "stimulus": "compile_experiment_plan(resources, static_readiness=ValidationResult.readiness)"
+    },
+    {
+      "expected": "plan.initialConditions equals the declared object verbatim and plan.acceptanceIntent equals the declared value or null when absent",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_initial_conditions_and_acceptance_intent_recorded_verbatim",
+      "precondition": "Scenario declaring initialConditions and acceptanceIntent",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

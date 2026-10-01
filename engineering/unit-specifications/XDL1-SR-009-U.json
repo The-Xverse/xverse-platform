@@ -1,0 +1,56 @@
+{
+  "component_id": "XDL1-SR-009-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-METRIC-LINK-INCOMPLETE",
+    "XDL-SEMANTIC-OBSERVER (accepted, reused)"
+  ],
+  "id": "XDL1-SR-009-U",
+  "inputs": [
+    "normalized Scenario metrics and observer linkage"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.metrics[] with timeDomainIds and status 'reference-only'"
+  ],
+  "purpose": "Compile declared metric intent references and their explicit linkage to observers, scope, time domain and units into the resolved plan without evaluating, computing or executing any metric or oracle.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless projection of declared metrics with the constant reference-only status.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no metric arithmetic, oracle access or non-constant status value",
+      "id": "XDL1-SR-009-U-STATIC",
+      "rule": "metric status is the constant 'reference-only' and no metric computation exists",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-009-U unit specification - Metric intent references without evaluation",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-METRIC-LINK-INCOMPLETE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_metric_link_incomplete_rejected",
+      "precondition": "metric with an empty observerIds list / no resolving time or unit link",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "metrics[].status is exactly 'reference-only'; no metric value or oracle result appears anywhere in the plan",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_metric_status_reference_only",
+      "precondition": "valid metric linked to a declared observer and time domain",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

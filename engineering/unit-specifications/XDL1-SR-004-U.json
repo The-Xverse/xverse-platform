@@ -1,0 +1,56 @@
+{
+  "component_id": "XDL1-SR-004-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-REALIZATION-UNSUPPORTED",
+    "XDL1-PLAN-DEPLOYMENT-UNBOUND",
+    "XDL-SEMANTIC-BINDING-SYSTEM (accepted, reused)"
+  ],
+  "id": "XDL1-SR-004-U",
+  "inputs": [
+    "normalized Deployment bindings, targets, artifacts and realization-intent payloads"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.bindings[] with logicalRef, collection, realizationClass, targetId, targetClass, artifactRefs, resourceIds, delivery, retry, protocolBinding"
+  ],
+  "purpose": "Resolve declared Deployment realization bindings while preserving the separation of logical identity from physical realization; an unresolved or unsupported realization target is rejected without a partial plan.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless projection of declared bindings, targets and artifact references.",
+  "static_checks": [
+    {
+      "expected": "ast/field inspection shows no artifact retrieval, address resolution or handle construction",
+      "id": "XDL1-SR-004-U-STATIC",
+      "rule": "binding projection keeps logicalRef distinct from realizationClass/targetId and resolves nothing physical",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-004-U unit specification - Deployment realization binding resolution",
+  "unit_cases": [
+    {
+      "expected": "bindings[].protocolBinding records the declared values verbatim; no standard, converter or endpoint is resolved",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_protocol_binding_recorded_as_declaration",
+      "precondition": "realization-intent protocolBinding with standardRef, bindingKind, compatibility and limitations",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "bindings[] records logicalRef identity and collection separately from realizationClass/targetId/artifactRefs; no physical resolution or handle is produced",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_binding_keeps_logical_identity_distinct_from_realization",
+      "precondition": "Deployment binding with logicalRef, realizationClass, targetId and artifacts",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

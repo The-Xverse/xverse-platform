@@ -1,0 +1,35 @@
+{
+  "acceptance_criteria": [
+    "Every declared flow concept appears in the resolved plan as a reference to an existing semantic entity, with no new top-level kind.",
+    "Every declared core parameter of the selected System and of each referenced Component appears in the resolved plan at the frozen mapping location (components[].declaredParameters); a System-level parameter is never silently dropped, including when a Component parameter is projected.",
+    "Unknown namespaces or unknown fields fail closed with a stable structured diagnostic.",
+    "The five existing XDL resource kinds remain unchanged and compatible."
+  ],
+  "applicability": "Phase 1 XDL Lite bounded software allocation (offline declared experiment intent compilation). status 'accepted' records internal engineering intent only; it is not implementation satisfaction or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "XDL1-SR-002",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0003"
+  ],
+  "phase": "P1",
+  "planned_extent": "bounded_partial",
+  "review_resolution": {
+    "findings": [
+      "XDL1-RVW-002"
+    ],
+    "note": "Successor correction: the predecessor froze the Component/System parameter mapping but silently dropped System.spec.parameters; the amended statement and second acceptance criterion now forbid any silent parameter omission."
+  },
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase1_software_allocation",
+    "reference": "docs/engineering/xdl-lite/requirements.md XDL1-SR-002"
+  },
+  "statement": "The compiler shall compile declared System, Component, Interface, Endpoint, and flow intent into the resolved plan using the existing XDL v1alpha1 System and Component semantic entities, and shall not introduce a new top-level XDL resource kind or a competing configuration language; every declared core parameter of the selected System and of each referenced Component shall be projected into the resolved plan by the frozen concept-to-field mapping, and no declared parameter may be silently omitted.",
+  "status": "accepted",
+  "title": "Logical system/component/flow intent mapped to existing resource kinds",
+  "verification_intent": "Planned to be exercised through the XDL1-UNIT, XDL1-STATIC, XDL1-INTEGRATION, and XDL1-VALIDATION measures defined in the XDL1 verification-design stage, invoking the real loader, schema registry, catalog, activation-plan consumer, and additive CLI/API. No runtime, availability, compatibility, or readiness claim is made."
+}

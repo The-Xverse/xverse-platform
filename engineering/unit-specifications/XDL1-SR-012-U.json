@@ -1,0 +1,68 @@
+{
+  "component_id": "XDL1-SR-012-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-BOUND-EXCEEDED (limitation count)"
+  ],
+  "id": "XDL1-SR-012-U",
+  "inputs": [
+    "declared metadata.provenance.limitations and scenario-intent.fidelityLimitations"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "plan_public_data"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-03",
+    "XDL1-INV-08",
+    "XDL1-INV-10"
+  ],
+  "note": "Successor revision. Adds the limitation-count negative case demanded by XDL1-SR-012 and detailed-design.md section 10.2 (max_limitations) and 17.",
+  "outputs": [
+    "plan.limitations[]",
+    "plan.nonReadiness{statement,claim,flags}"
+  ],
+  "purpose": "State declared fidelity limitations in the resolved plan and mark explicitly that a resolved plan proves intent validation only, not executable artifact availability or live readiness. Enforce the declared finite limitation bound over its full declared scope with an independent negative case, so a declared bound without negative evidence is incomplete, not satisfied. Resolves XDL1-RVW-003 (limitation-count scope).",
+  "review_resolution": [
+    "XDL1-RVW-003"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py"
+  ],
+  "state": "Stateless constant non-readiness statement plus the merged declared limitation set.",
+  "static_checks": [
+    {
+      "expected": "literal inspection shows the frozen statement/claim and no caller-supplied readiness value",
+      "id": "XDL1-SR-012-U-STATIC",
+      "rule": "nonReadiness is a compiler-emitted constant with four false capability flags",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-012-U unit specification - Declared fidelity limitations and non-readiness statement",
+  "unit_cases": [
+    {
+      "expected": "plan.limitations is the merged declared set within max_limitations; plan.nonReadiness carries the frozen statement, claim 'declared-intent-validation-only' and all four false flags",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_limitations_merged_and_nonreadiness_present",
+      "precondition": "resources carrying metadata.provenance.limitations plus scenario-intent.fidelityLimitations",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the extra limitation is additive; nonReadiness flags stay false and no availability, readiness, compatibility or parity claim is added",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_limitations_additive_do_not_widen_claim",
+      "precondition": "valid set compiled with and without one extra declared fidelity limitation",
+      "stimulus": "compile_experiment_plan(resources) twice"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED naming the merged limitation-count scope; plan is None; no resolved plan is emitted with limitations silently dropped and no limitation is truncated into a resolved plan",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_limitations_exceeded_rejected",
+      "precondition": "declared metadata.provenance.limitations plus scenario-intent.fidelityLimitations whose merged declared set has 3 distinct entries and limits=ExperimentLimits(max_limitations=2)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_limitations=2))"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Declared dependencies produce a deterministic topological order with stable tie-breaking.",
+    "A dependency cycle is rejected with a stable structured diagnostic and no plan.",
+    "Reordered equivalent inputs of a cycle-free graph produce an equal ordered plan."
+  ],
+  "applicability": "Phase 1 XDL Lite bounded software allocation (offline declared experiment intent compilation). status 'accepted' records internal engineering intent only; it is not implementation satisfaction or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "XDL1-SR-013",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0078"
+  ],
+  "phase": "P1",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase1_software_allocation",
+    "reference": "docs/engineering/xdl-lite/requirements.md XDL1-SR-013"
+  },
+  "statement": "The compiler shall derive a deterministic dependency order from declared dependencies and shall reject a dependency cycle or competing-order ambiguity with a stable structured diagnostic; equal declared inputs shall produce an equal ordered result.",
+  "status": "accepted",
+  "title": "Deterministic dependency order and cycle rejection",
+  "verification_intent": "Planned to be exercised through the XDL1-UNIT, XDL1-STATIC, XDL1-INTEGRATION, and XDL1-VALIDATION measures defined in the XDL1 verification-design stage, invoking the real loader, schema registry, catalog, activation-plan consumer, and additive CLI/API. No runtime, availability, compatibility, or readiness claim is made."
+}

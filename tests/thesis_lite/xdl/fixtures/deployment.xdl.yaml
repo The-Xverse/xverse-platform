@@ -1,0 +1,78 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Deployment
+metadata:
+  namespace: org.xverse.experiment
+  name: local-simulated-loop
+  version: 0.1.0
+  provenance:
+    source: xverse-public-example
+    revision: xdl1-rev-1
+    maturity: prototype
+    limitations:
+      - Declared realization intent only; no artifact is retrieved.
+spec:
+  systemRef:
+    apiVersion: xverse.io/xdl/v1alpha1
+    kind: System
+    namespace: org.xverse.experiment
+    name: sample-loop
+  targets:
+    - id: model-unit-target
+      targetClass: model-unit
+      capabilities:
+        - execute-model
+      lifecycle:
+        prepare: prepare
+        ready: ready
+        start: start
+        stop: stop
+        failure: failure
+  artifacts:
+    - id: sample-artifact
+      artifactKind: model
+      version: 1.0.0
+      digest: "sha256:abababababababababababababababababababababababababababababababab"
+      sourceRef: urn:xverse:experiment:artifact:sample
+      maturity: prototype
+  bindings:
+    - id: source-binding
+      logicalRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: System
+        namespace: org.xverse.experiment
+        name: sample-loop
+        element: source-instance
+      realizationClass: simulated
+      targetId: model-unit-target
+      artifactIds:
+        - sample-artifact
+      lifecycle:
+        prepare: prepare
+        ready: ready
+        start: start
+        stop: stop
+        failure: failure
+      extensions:
+        io.xverse.experiment:
+          schemaVersion: "0.1"
+          kind: realization-intent
+          target:
+            apiVersion: xverse.io/xdl/v1alpha1
+            kind: Deployment
+            namespace: org.xverse.experiment
+            name: local-simulated-loop
+            element: source-binding
+          delivery: in-place
+          retry:
+            policy: bounded
+            maxAttempts: 3
+          protocolBinding:
+            standardRef: urn:xverse:experiment:protocol:sample
+            bindingKind: sample-binding
+            compatibility: exact
+            limitations:
+              - Declared reference only; nothing is resolved.
+  readiness:
+    requiredConditions:
+      - artifacts-pinned
+    failurePolicy: fail-fast

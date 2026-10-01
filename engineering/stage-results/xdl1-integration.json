@@ -1,0 +1,81 @@
+{
+  "artifacts": [
+    {
+      "path": "docs/engineering/xdl-lite/integration.md",
+      "sha256": "94e2a50862a6e53fc8ff035249c0cd570007d7a3d34c7abcae7b5cb7cc6a9048"
+    }
+  ],
+  "attempt_id": 1,
+  "assumptions": [
+    "The 8 integration cases authored by the implementation stage in tests/thesis_lite/xdl/test_xdl1_integration.py are the frozen XDL1-INTEGRATION contract; this stage verifies them as written and does not rename, drop or weaken any identifier. Their bytes and the measure record's 8 test_ids are unchanged from the independently reviewed predecessor set because no predecessor finding concerned the integration surface.",
+    "Candidate-local pytest executions in one checkout are preliminary worker checks only. Whole-system integration is defined solely by the trusted policy system_integration contract (mode=target_repository over the pinned xverse-platform revision) and is executed by the trusted host after the exact candidate is assembled; this candidate can neither inspect nor edit that external policy.",
+    "The accepted loader/schema registry/semantics/normalizer, derived catalog, lifecycle-plan and C++ X-COM activation-plan consumers are exercised read-only through their existing public entry points; backward compatibility is asserted by execution, not assumed.",
+    "The measure record XDL1-INTEGRATION is a new feature-scoped record; historical protected measure records under engineering/verification/measures/** are preserved byte-for-byte.",
+    "engineering/trace/links.json is a mutable current trace file; this stage preserves it unchanged and leaves the scheduled refresh of the 21 pre-existing engineering/project.json implemented_by endpoint hashes to the validation stage.",
+    "No scientific protocol value, threshold, tolerance, deadline, seed, margin or campaign parameter is defaulted, invented or narrowed anywhere in Phase 1; caller inputs remain caller inputs, bounded only by the finite platform library limits.",
+    "This stage resolves no finding by assertion: the predecessor findings XDL1-RVW-001/002/003 were resolved in the successor implementation stage and are independently re-executed here, but their terminal closure belongs to the separate read-only internal_review stage and the trusted host measures."
+  ],
+  "blockers": [],
+  "findings": [
+    "informational: the integration stage added exactly one owned immutable artifact, docs/engineering/xdl-lite/integration.md, and no source, schema, fixture or test code. All earlier successor stage artifacts were preserved; no earlier work product was modified.",
+    "informational: predecessor review finding closure re-verified read-only against hash-verified evidence (manifest.json sha256=820f3c47d264a6e75a75e3fb58f9465d9bb1ba3495b6c263797d145230c59093, review/internal-review.json sha256=b5ed14f18ae1e50d246deb2765215b11bdfd41c54dca0f7699325a1c9d12c2e4, review/stage.json sha256=9b09049a68c45160a9ee0e57b918c04dcad6ec7cdc732c94b0953009221e0e23). XDL1-RVW-001 is resolved by the total compiled-parameter scope enforced before identity finalization with XDL1-PLAN-BOUND-EXCEEDED; XDL1-RVW-002 is resolved by the always-present scope='system' components[] entry projecting declared System.spec.parameters; XDL1-RVW-003 is resolved by the added per-scope negative cases (XDL1-PLAN-BOUND-EXCEEDED occurs 17 times across tests/thesis_lite/xdl/test_xdl1_quantity_unit.py and test_xdl1_validation.py).",
+    "informational: independent re-execution of XDL1-RVW-002 over the neutral fixture returns system declaredParameters ['loop-count'] with the component-instance declaredParameters ['nominal-rate', 'nominal-rate']; the previously dropped System parameter is present and no declared parameter is duplicated across scopes.",
+    "informational: prior-artifact preservation was re-verified in this stage with fabro_engineering.core.validate_stage plus an independent sha256 recomputation of every artifact recorded by xdl1-requirements.json (39), xdl1-architecture.json (21), xdl1-unit_specification.json (20), xdl1-verification_design.json (13) and xdl1-implementation.json (26): 119 of 119 match, 0 mismatches.",
+    "informational: preliminary worker check \u2014 python3 -m pytest -vv tests/thesis_lite/xdl/test_xdl1_integration.py reports 8 passed and prints exactly the 8 identifiers bound by engineering/verification/measures/XDL1-INTEGRATION.json (no missing, no extra).",
+    "informational: preliminary worker check \u2014 python3 -m pytest -q tests/thesis_lite reports 147 passed (121 unit + 8 integration + 18 validation identifiers); python3 -m pytest -q over the whole repository reports 297 passed with no regression in the accepted loaders, catalog, lifecycle, CLI or C++ X-COM suites. None of this is trusted or assembled-target evidence.",
+    "informational: preliminary worker check \u2014 python3 -m xverse_xdl experiment compile --profile-schema xdl/profiles/experiment-lite-v0.1.schema.json over the five neutral fixtures exits 0 and prints 'resolved plan ccf08204181f47ae7868ed7b6795c1fb2ae2d6e0aeb04437000a1b4ab3988f7d (23 sections)'; the --format json envelope carries valid=true, status=resolved and the identical plan digest ccf08204181f47ae7868ed7b6795c1fb2ae2d6e0aeb04437000a1b4ab3988f7d; no file is created or mutated on success or rejection.",
+    "informational: the resolved-plan digest changed from the reviewed predecessor value 8c82b2f1627113c1ea84916242668d692610407ba7d41bbd96c2353fe44e06db to ccf08204181f47ae7868ed7b6795c1fb2ae2d6e0aeb04437000a1b4ab3988f7d because the successor plan now carries the additional always-present scope='system' components[] entry required by XDL1-DD-14; this is the intended contract delta and the digest is stable run-to-run.",
+    "informational: the 8 cases exercise the real accepted loader, core schema registry, Profile schema catalog, semantics and normalizer; the real additive compiler and CLI; the accepted derived catalog and lifecycle-plan API; the accepted C++ X-COM activation-plan contract; and the accepted legacy validate/normalize/version CLI. No mock substitutes any consumer.",
+    "informational: whole-system integration over the assembled pinned xverse-platform target and the binding of the trusted integration measure to XDL1-INTEGRATION remain external host obligations; both fail closed if absent rather than being claimed here.",
+    "informational: core.validate_trace is expected to abort on the 21 pre-existing stale engineering/project.json implemented_by links; that scheduled refresh and the completed requirement-to-code-to-test trace are owned by the validation stage and were deliberately not performed here.",
+    "informational: no code repair, diagnosis or automatic retry was used in this stage; no new successor candidate and no upstream review was required here."
+  ],
+  "inputs": [
+    "admitted-input:engineering-instructions.json sha256=0e74f70f35a589669d5b49c2c04b82ce4e792af19912bf06d728271ac3d6634e",
+    "admitted-input:specs/021-thesis-lite-program/fabro/phase1-brief.md sha256=1a74abbda2e63892d1678233f3c3160b72dd889a80cf6d8963dc3279bd829684",
+    "admitted-input:specs/021-thesis-lite-program/requirements-priorities.json sha256=9c3fec63ce6b26ab1aa0d72e901752d0a5f4cc16784add5f30e9052abb36a8d0",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/spec.md sha256=36c97d669378359942f61662ed9300ca32aa40d940daa404d7045701058408e7",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/plan.md sha256=8ca3feef959e69aa5d7abb04dcb3b464d0b68f4b19fbe5d2efd0d7358c2a1e20",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/research.md sha256=71a7b9c5f3a1ef4fbe3a49f3da08108e700ae7cd95a005c22c40ee952075b0a9",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/data-model.md sha256=8bfd7108e97c098a0a21f16f5bcb3b378c9a3dc13c0955cfee577913a8bbcb2e",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/contracts/experiment-plan.md sha256=c3c05cf2887ac2320d48db1ce1a87e96d0335ad0bdcf55a82d0df40c2ccc24d1",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/quickstart.md sha256=05a155ad5efecd07715c23e0654f7e5a33411866f6f42ce62472c9e3fa2eca7d",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/tasks.md sha256=e8fd222378ed39c04af6eb281974273b5a939e03ef63991150f15f02929500a5",
+    "admitted-input:specs/THESIS_MINIMUM_PLATFORM_SCOPE.md sha256=1f2f3c83944a5d7da46bb2798f369908b5c89acbe3a41961997f0d616bb05177",
+    "admitted-input:docs/adr/ADR-THESIS-LITE-0001.md sha256=fa247b51fd77a55c77d928350e6b1c061f3d2eda2a9963ed2e0b0d22bc05df65",
+    "admitted-input:thesis_revision=fe58918f9eaf2a6f39cdc9c93cfd4ce615ec84bf",
+    "admitted-input:platform_revision=0c5e249621727b2d0041707de2661f0ed1e1ef23",
+    "admitted-predecessor-review-evidence:manifest.json sha256=820f3c47d264a6e75a75e3fb58f9465d9bb1ba3495b6c263797d145230c59093 (read-only frozen-candidate map)",
+    "admitted-predecessor-review-evidence:review/internal-review.json sha256=b5ed14f18ae1e50d246deb2765215b11bdfd41c54dca0f7699325a1c9d12c2e4 (verdict=rework; findings XDL1-RVW-001/002/003, read-only, hash-verified)",
+    "admitted-predecessor-review-evidence:review/stage.json sha256=9b09049a68c45160a9ee0e57b918c04dcad6ec7cdc732c94b0953009221e0e23 (reviewer stage record, read-only, hash-verified)",
+    "repository-source:docs/engineering/xdl-lite/requirements.md sha256=d29a7f2c6314e7fc145fad62ac86357f24c4bfcb6af0487429190ee5bf20d128 (successor rev 1, read-only)",
+    "repository-source:docs/engineering/xdl-lite/architecture.md sha256=6fd9cce342822554addaa1be70d547ec3782b0db086fe164f897975d41fb9ae8 (successor rev 1, read-only)",
+    "repository-source:docs/engineering/xdl-lite/detailed-design.md sha256=d5635372fb363fcfaa996c0285a999b43b5008e652e0209ed23622e3942e87ea (successor rev 1, read-only; sections 7, 9, 10.2, 10.3 and XDL1-DD-14 are the integrated contract)",
+    "repository-source:docs/engineering/xdl-lite/unit-specifications.md sha256=008fcb8d36a355b008234136c8d05b3bfc0e91ebf5a8861bc47da38d39fcefd2 (successor rev 1, read-only; 121 frozen unit identifiers)",
+    "repository-source:docs/engineering/xdl-lite/verification-plan.md sha256=9772f9adeb81f9fa936d28267ae80eaf2f4a79e58b63c1964a32dcd0ab6bceb7 (successor rev 1, read-only; 8 integration and 18 validation identifiers)",
+    "repository-source:docs/engineering/xdl-lite/planned-trace.json sha256=7b670c9bd73b6b6aa5e7cfed65024736d2f44e077431a8196b3daf59b8400b00 (successor rev 1, read-only; planned implemented_by endpoints)",
+    "repository-source:engineering/requirements/XDL1-SR-001..019.json and XVE-SYS-*.json (rev 1, read-only)",
+    "repository-source:engineering/architecture/components/XDL1-SR-001-CMP..019-CMP.json (rev 1, read-only)",
+    "repository-source:engineering/unit-specifications/XDL1-SR-001-U..019-U.json (rev 1, read-only; 121 unit_cases)",
+    "repository-source:engineering/verification/measures/XDL1-INTEGRATION.json sha256=2b3c853693be8306c3033148865081ec426d23cd0c68f252488204591d745515 (kind=integration, 8 bound test_ids, rev 1, read-only)",
+    "repository-source:engineering/verification/measures/XDL1-{UNIT,VALIDATION,STATIC}.json (rev 1, read-only; 121/18/19 bound ids)",
+    "repository-source:engineering/validation/scenarios/XDL1-VS-01..07.json (rev 1, read-only; XDL1-VS-07 sha256=574a1b205a4b1ebddca0727e1ebfc4883a97430ce3867a741dfb4a8378fc65e9)",
+    "repository-source:engineering/stage-results/xdl1-{requirements,architecture,unit_specification,verification_design,implementation}.json (successor rev 1, read-only, all 119 recorded artifact hashes re-verified unchanged)",
+    "repository-source:tests/thesis_lite/xdl/test_xdl1_integration.py sha256=9594406e719f455b720f39d1a9cd4fb5fc318bb83e03d0f8d129bf572397f231 (rev 1, read-only) and tests/thesis_lite/xdl/support.py sha256=b31f3c6702ec023c1b4fcc91847ffbb1b5c5197cf204082d833e6c154ab5f6a9, fixtures/*.xdl.yaml (rev 1, read-only)",
+    "repository-source:src/xverse_xdl/experiment_plan.py sha256=4e4affa52fe77cea4f37598cd6bce2309a0a767a7e878372ecee0a5599603393, cli.py sha256=15502fdf6deef6a6f6730d37cd4b755c9a125c223a9e919611536ebaceed2d6a, __init__.py sha256=0e0ca25bf3afab9276a4a18900ed2fc3d82e4c3bf23854c4c9c69b3791cec8ce and the accepted public consumers {models,loader,diagnostics,schema,semantics,normalize,validate,catalog,lifecycle,xcom_plan}.py (rev 1, read-only)",
+    "repository-source:xdl/profiles/experiment-lite-v0.1.schema.json sha256=a2123b3349ab016fda829d57084d9142565bf76fdafd474fe19fe222562dfc30, xdl/schemas/v1alpha1/**, xdl/examples/v1alpha1/**, xdl/candidates/sd0001/**, xdl/profiles/{xcom,runtime-compatibility}-v0.*.schema.json (rev 1, read-only)",
+    "repository-source:tests/helpers.py and the accepted repository test suite (rev 1, read-only, exercised for regression only)",
+    "repository-source:engineering/trace/links.json (mutable current trace file, 3334 links, 309 XDL1-related; unchanged by this stage)",
+    "repository-source:engineering/project.json (current feature pointer XDL1, unchanged by this stage)",
+    "trusted-record-schemas:fabro_engineering/core.py validate_stage/validate_trace/inventory/code_endpoint/RELATIONS (read-only local checks; the trusted graph engineering-checks shim was not called)"
+  ],
+  "model": {
+    "backend": "api",
+    "provider": "deepseek",
+    "requested_model": "deepseek-v4-flash"
+  },
+  "role": "integration",
+  "schema_version": 1,
+  "status": "complete",
+  "task_id": "XDL1"
+}

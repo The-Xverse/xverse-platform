@@ -1,0 +1,77 @@
+{
+  "component_id": "XDL1-SR-007-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-FAULT-TRIGGER-MISSING",
+    "XDL1-PLAN-FAULT-DURATION-INVALID",
+    "XDL1-PLAN-SCHEDULE-AMBIGUOUS",
+    "XDL1-PLAN-TIME-UNIT-UNKNOWN",
+    "XDL1-PLAN-TIME-DOMAIN-UNRESOLVED"
+  ],
+  "id": "XDL1-SR-007-U",
+  "inputs": [
+    "normalized Scenario faults and fault-intent payloads"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "plan.faultSchedule[] in the frozen trigger/time/order/faultId order"
+  ],
+  "purpose": "Compile the declared intended fault schedule (identity, resolved target, fault class, simulation trigger, duration and typed parameters) into a deterministic order with a stable tie-break, without activating, injecting or clearing any fault.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_order_unit.py"
+  ],
+  "state": "Stateless ordered fault schedule; no fault runtime or injector is constructed.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no fault runtime call and no invented fault-class vocabulary",
+      "id": "XDL1-SR-007-U-STATIC",
+      "rule": "faultKind is copied verbatim and no fault activation/injection call exists",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-007-U unit specification - Deterministic intended fault schedule",
+  "unit_cases": [
+    {
+      "expected": "each faultSchedule element carries entryId fault:<id>, faultKind verbatim, targetRef, collection, activation, recovery, maturity, timeDomainId, trigger, duration and parameters",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_fault_schedule_fields_emitted",
+      "precondition": "valid fault-intent payload with time trigger, domain, duration and parameters",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-FAULT-TRIGGER-MISSING; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_fault_trigger_missing_rejected",
+      "precondition": "fault-intent payload with no trigger field",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-FAULT-DURATION-INVALID; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_fault_duration_invalid_rejected",
+      "precondition": "fault-intent payload that omits duration",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SCHEDULE-AMBIGUOUS; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_schedule_declared_order_ambiguity_rejected",
+      "precondition": "two faults declaring the same declared-order trigger value",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "accepted; faultSchedule ordered by faultId ascending with no diagnostic (equal ticks are not ambiguous)",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_schedule_equal_ticks_tie_break_by_fault_id",
+      "precondition": "two time-triggered faults with equal canonical ticks in one domain",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

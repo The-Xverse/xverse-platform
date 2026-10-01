@@ -1,9 +1,9 @@
 {
   "assurance_profile": "engineered",
   "authority": {
-    "baseline_revision": "d5b9c6399da67a0a028fae21c2f0dcc8da3619bc",
+    "baseline_revision": "0c5e249621727b2d0041707de2661f0ed1e1ef23",
     "baseline_status": "accepted",
-    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design and doxygen_plan, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T038 validates Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence: it adds the T038 work products, requirement/component/unit/validation records, the task-owned traceability verifier, exact-candidate evidence report, additive trace links, and the current-task pointer, and changes no accepted requirement, design, code, test, register, or ADR.",
+    "decision_rule": "Any conflict with the accepted capability-007 specification, constitution, accepted ADRs, T007 ownership register, T008 requirement register, T009 architecture model, the accepted T010 unit design and doxygen_plan, or an accepted predecessor candidate is resolved in favour of the accepted source; material gaps are recorded, not guessed. T038 validates Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence: it adds the T038 work products, requirement/component/unit/validation records, the task-owned traceability verifier, exact-candidate evidence report, additive trace links, and the current-task pointer, and changes no accepted requirement, design, code, test, register, or ADR. XDL1 (XDL Lite Phase 1) is additive and bounded: it derives XDL1-SR-001..019 from the admitted thesis planning inputs and the accepted REF-002 allocation register, adds one bounded software allocation per selected parent (dispositions preserved, no new system requirement IDs, no parent closed), extends the accepted XDL capability with an explicitly admitted neutral experiment Profile and a pure offline resolved-plan compiler plus compatible API/CLI exposure, and changes no legacy, compat, blueprint, accepted C++ X-COM, assurance/oracle, schema, or historical record. The predecessor XDL1 attempt-1 candidate was independently reviewed read-only and returned verdict rework with findings XDL1-RVW-001/002/003; the successor requirement baseline resolves those findings in the affected acceptance criteria and later stages must re-verify them. Measured runtime outcomes, compatibility/parity, live readiness, and delivery acceptance are external gates and are not claimed by this project pointer.",
     "protected_paths": [
       "src/xverse_xdl/**",
       "xdl/**",
@@ -51,15 +51,13 @@
     ]
   },
   "feature": {
-    "capability": "007",
+    "capability": "thesis-lite-phase1",
     "predecessors": [
-      "T035",
-      "T036",
-      "T037"
+      "T038"
     ],
-    "queue_id": "xcom-t030-t034-20260928",
+    "queue_id": null,
     "queued_run": null,
-    "task_id": "T038"
+    "task_id": "XDL1"
   },
   "languages": [
     "C++20",
@@ -67,31 +65,33 @@
   ],
   "project_id": "xverse-platform",
   "reliability": {
-    "basis": "Deterministic offline validation of capability-007 Spec Kit and REF-002 requirements/design/code/test/evidence traceability and public-safe logs at one exact candidate revision, with every check's outcome derived from executed validators and bound to the exact candidate revision."
+    "basis": "Deterministic offline compilation of declared XDL experiment intent into one canonical, side-effect-free resolved plan over a closed, explicitly admitted offline input set, with explicit units/bounds, stable structured diagnostics, and no runtime, registry, network, or production activity; each stage's evidence is bound to the exact candidate revision and reviewed separately."
   },
   "schema_version": 1,
   "scope": {
     "boundaries": [
-      "Bounded capability-007 Phase 8 traceability scope: the T038 work products, the T038 requirement/component/unit/validation records, the task-owned traceability verifier engineering/check_xcom_traceability.py, the exact-candidate evidence report reports/xcom-queue/t038-traceability.json, the additive T038 trace links, and the current-task pointer in engineering/project.json.",
-      "No change to any accepted requirement, design, code, test, target, label, command, expected value, contract, schema, register, XDL profile, or ADR; no new dependency; no TCP listener, AF_INET/AF_INET6 socket, DNS, resolver, TLS, external peer, legacy binary, production workload, or linked gRPC runtime.",
-      "T038 changes are limited to docs/engineering/xcom/t038/**, the new engineering/requirements|architecture/components|unit-specifications|validation/scenarios T038 records, engineering/check_xcom_traceability.py, reports/xcom-queue/t038-traceability.json, engineering/trace/links.json, engineering/project.json, reports/review-index.md, and the one-line T038 checkbox in specs/007-xcom-core/tasks.md (implementation stage only)."
+      "Bounded Phase 1 XDL Lite scope: the XDL1 requirement/architecture/unit/verification/validation records, docs/engineering/xdl-lite/** work products, the additive neutral experiment Profile schema xdl/profiles/experiment-lite-v0.1.schema.json, the pure offline compiler src/xverse_xdl/experiment_plan.py, additive API/CLI exposure in src/xverse_xdl/**, owned neutral fixtures and tests under tests/thesis_lite/**, additive engineering/trace/links.json links, engineering/stage-results/xdl1-*.json, and reports/xdl-lite/**.",
+      "No change to legacy, compat, blueprint, accepted C++ X-COM source/contracts, assurance/oracle logic, accepted XDL v1alpha1 schemas, accepted public loader/normalizer/validator/catalog/activation-plan APIs, existing tests, or any historical accepted requirement/design/unit/measure/validation/stage record or ADR.",
+      "No runtime execution, process start, fault activation, observer/metric evaluation, artifact retrieval, registry or network discovery, online learning, oracle access, production workload, or legacy execution; no Phase 2 or later capability is started."
     ],
-    "intended_use": "Validate that every accepted capability-007 requirement traces bidirectionally to design units, code, tests, measures, evidence, and intended-use validation; account for all twenty REF-002 communication IDs without promoting any allocated, deferred, architectural-target, or superseded ID; retain public-safe exact-candidate evidence; and leave the REF-002 disposition unchanged without claiming the T039-T041 review/acceptance results.",
+    "intended_use": "Let an experiment author supply a closed declared XDL resource set plus an explicitly admitted neutral experiment Profile and receive one versioned canonical resolved plan with logical identities, Deployment realization bindings, scenario, parameters/seed, time domain, deterministic intended fault schedule, observers, metrics, and input provenance; or receive stable structured diagnostics with no plan and no side effect. A resolved plan proves intent validation only, never executable artifact availability or live readiness.",
     "success_criteria": [
-      "Every accepted T038 software requirement is traced to the applicable X-Verse system anchor, component, unit, code/evidence artifact, verification measure, and named executed case or inspection.",
-      "Every capability-007 requirement edge validates with no missing or stale link, and every REF-002 ID XVE-SYS-0139-0158 retains an explicit disposition with no promoted allocated/deferred/architectural-target/superseded ID.",
-      "reports/xcom-queue/t038-traceability.json records requirements, design, code, tests, and evidence results plus the exact-candidate identity; a missing, stale, mismatched, incomplete, or failed result is reported as failed or blocked, never as pass.",
-      "No accepted requirement, design, code, test, register, or ADR changes; independent review and strict delivery validation bind the exact candidate before acceptance."
+      "Exactly 19 bounded software requirements (XDL1-SR-001..019), one per selected REF-002 parent in the admitted order, with the original parent IDs/dispositions preserved and no new system requirement IDs.",
+      "Equivalent YAML/JSON inputs and resource permutations produce an equal canonical plan and semantic digest, while source-byte provenance and volatile run/wall-clock data stay separate.",
+      "Every declared rejection case returns a stable structured diagnostic and no plan, with no process, registry, network, or filesystem side effect, and with every declared library bound enforced over its full scope and covered by an independent negative case.",
+      "The real compiler, loader, schema registry, catalog, activation-plan consumers, and regressions are exercised in one assembled pinned target checkout by trusted measures bound to the exact candidate; source-only or mock checks cannot satisfy that gate.",
+      "A separate read-only internal review and terminal user acceptance precede the exact isolated merge and verification into platform main."
     ],
     "users": [
       "X-Verse platform engineer",
-      "X-COM maintainer"
+      "XDL maintainer",
+      "X-verse experiment author"
     ]
   },
   "targets": [
     "xverse-platform"
   ],
-  "title": "T038 Spec Kit and REF-002 requirements/design/code/test traceability and public-safe evidence",
+  "title": "XDL1 XDL Lite Phase 1 - offline declared experiment intent compilation",
   "verification_profile": "generic-explicit-command",
-  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, validation, conformance, and sanitizer measures for the Phase 8 workflow; T038 neither defines nor replaces them and is exercised by the validation measure through the task-owned traceability verifier route (engineering/check_xcom_traceability.py --verify reports/xcom-queue/t038-traceability.json)."
+  "verification_profile_note": "Trusted policy requires explicit unit, static-analysis, whole-system integration, and validation measures bound to the exact candidate revision; XDL1 neither defines nor replaces that external policy and is exercised through its scoped XDL1-UNIT, XDL1-INTEGRATION, XDL1-VALIDATION, and XDL1-STATIC measure records. Source-only or mock checks cannot satisfy the whole-system integration gate, which is assembled and run in the pinned target checkout by the trusted host policy."
 }

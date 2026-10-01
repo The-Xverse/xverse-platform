@@ -1,0 +1,63 @@
+{
+  "component_id": "XDL1-SR-015-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-REALIZATION-UNSUPPORTED",
+    "XDL1-PLAN-DELIVERY-UNSUPPORTED",
+    "XDL1-PLAN-RETRY-UNSUPPORTED",
+    "XDL-SEMANTIC-EXTENSION-SCHEMA (accepted, reused)"
+  ],
+  "id": "XDL1-SR-015-U",
+  "inputs": [
+    "realization-intent delivery/retry and deployment realizationClass/targetClass"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "no plan; XDL1-PLAN-REALIZATION-* / -DELIVERY-* / -RETRY-* diagnostics"
+  ],
+  "purpose": "Reject an unsupported realization, delivery or retry behaviour explicitly and apply no silent default for unsupported delivery behaviour.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless fail-closed check of declared realization/delivery/retry intent.",
+  "static_checks": [
+    {
+      "expected": "literal inspection shows ('simulated','virtual','hybrid') and no default delivery/retry value",
+      "id": "XDL1-SR-015-U-STATIC",
+      "rule": "SUPPORTED_REALIZATION_CLASSES is the frozen tuple and every unsupported form returns a rejection",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-015-U unit specification - Explicit unsupported realization, delivery and retry behaviour",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-REALIZATION-UNSUPPORTED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_realization_physical_unsupported_rejected",
+      "precondition": "Deployment binding/or target declared with realizationClass physical",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-DELIVERY-UNSUPPORTED; plan is None; no default delivery is applied",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_delivery_without_pinned_artifact_rejected",
+      "precondition": "realization-intent delivery 'staged' on a binding with no pinned artifactIds",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-RETRY-UNSUPPORTED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_retry_with_delivery_none_rejected",
+      "precondition": "realization-intent with delivery 'none' together with retry {policy: bounded, maxAttempts: 3}",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

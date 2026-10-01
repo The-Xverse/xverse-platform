@@ -1,0 +1,189 @@
+{
+  "component_id": "XDL1-SR-019-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-TIME-UNIT-UNKNOWN",
+    "XDL1-PLAN-TIME-PRECISION",
+    "XDL1-PLAN-QUANTITY-NONFINITE",
+    "XDL1-PLAN-QUANTITY-NEGATIVE",
+    "XDL1-PLAN-QUANTITY-OVERFLOW",
+    "XDL1-PLAN-BOUND-EXCEEDED",
+    "XDL1-PLAN-PARAMETER-BOUND"
+  ],
+  "id": "XDL1-SR-019-U",
+  "inputs": [
+    "declared time quantities, tolerances, durations and numeric parameters"
+  ],
+  "interfaces": [
+    "ExperimentLimits",
+    "compile_experiment_plan",
+    "xdl/profiles/experiment-lite-v0.1.schema.json"
+  ],
+  "invariants": [
+    "XDL1-INV-05",
+    "XDL1-INV-06",
+    "XDL1-INV-10",
+    "XDL1-INV-11"
+  ],
+  "note": "Successor revision. Adds the count-based bound negative surface: max_parameters (per-payload, total compiled, declared core, plus the at-bound positive), max_steps, max_faults, max_observers, max_metrics, max_dependencies_per_step, max_flows, max_bindings, max_resources, max_text_length, max_bytes_per_file and max_diagnostics. max_ticks, max_seed and max_number_magnitude keep their existing quantity/seed/parameter negatives; max_limitations is negatively covered by XDL1-SR-012-U.",
+  "outputs": [
+    "canonical integer ticks",
+    "XDL1-PLAN-TIME-*/QUANTITY-*/BOUND-* diagnostics"
+  ],
+  "purpose": "Validate every declared quantity, duration and bound against explicit units and finite library limits, rejecting non-finite, negative or overflow values and ambiguous units. Enforce every declared finite library bound over its complete frozen scope, including the total compiled-parameter scope of detailed-design.md section 10.3, and require at least one independent negative case per count-based bound. Resolves XDL1-RVW-001 and XDL1-RVW-003.",
+  "review_resolution": [
+    "XDL1-RVW-001",
+    "XDL1-RVW-003"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "xdl/profiles/experiment-lite-v0.1.schema.json",
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py"
+  ],
+  "state": "Stateless unit conversion through the closed vocabulary and finite-bound enforcement.",
+  "static_checks": [
+    {
+      "expected": "literal inspection shows the frozen mapping and max_ticks == 9007199254740991",
+      "id": "XDL1-SR-019-U-STATIC",
+      "rule": "TIME_UNIT_TICKS and ExperimentLimits defaults match the frozen design table and are all positive",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-019-U unit specification - Quantities, units and finite library bounds",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-QUANTITY-NONFINITE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_quantity_nonfinite_rejected",
+      "precondition": "declared duration value NaN reached through the normalized API entry point",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-QUANTITY-NEGATIVE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_quantity_negative_rejected",
+      "precondition": "declared duration value -1 with unit ms",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-QUANTITY-OVERFLOW; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_quantity_overflow_ticks_rejected",
+      "precondition": "declared duration that scales to more than max_ticks canonical ticks",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-TIME-UNIT-UNKNOWN; plan is None; no conversion is attempted",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_time_unit_unknown_rejected",
+      "precondition": "declared time unit 'min' outside the closed vocabulary",
+      "stimulus": "compile_experiment_plan(resources) on the normalized path"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-TIME-PRECISION; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_time_precision_noninteger_tick_rejected",
+      "precondition": "declared value 0.5 with unit ns, which is not an exact integer tick",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "each row is accepted with no diagnostic and the recorded atTicks/ticks equals the exact table value",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_time_unit_scaling_exact_ticks",
+      "precondition": "table of (tick,1),(ns,1),(us,1000),(ms,1000000),(s,1000000000) declared quantities",
+      "stimulus": "compile_experiment_plan(resources) for each table row"
+    },
+    {
+      "expected": "ValueError is raised and no compile occurs",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_experiment_limits_nonpositive_raises_value_error",
+      "precondition": "ExperimentLimits with one non-positive field",
+      "stimulus": "construct ExperimentLimits(max_steps=0)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED naming the per-payload parameter scope; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_parameters_per_payload_scope_exceeded_rejected",
+      "precondition": "scenario-intent.parameters declaring 3 distinct entries with limits=ExperimentLimits(max_parameters=2)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_parameters=2))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (gate policy) naming the total compiled-parameter scope; plan is None; the per-payload scope alone does not admit the plan",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_parameters_total_compiled_scope_exceeded_rejected",
+      "precondition": "valid scenario-intent declaring 2 parameters plus one step-intent declaring 1 parameter (each individual list within the bound) with limits=ExperimentLimits(max_parameters=2), so the total compiled-parameter count C_total == 3 exceeds the bound",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_parameters=2))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED naming the declared core-parameter scope with the declaring resource pointer; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_parameters_declared_core_scope_exceeded_rejected",
+      "precondition": "System declaring 3 core parameters in spec.parameters[] with extension parameter lists within the bound and limits=ExperimentLimits(max_parameters=2)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_parameters=2))"
+    },
+    {
+      "expected": "resolved plan; no error diagnostic; the emitted plan carries 2 compiled parameters (plan.parameters 1 + lifecycleIntent[].parameters 1) which equals the bound",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_parameters_all_scopes_at_bound_accepted",
+      "precondition": "scenario-intent declaring 1 parameter, one step-intent declaring 1 parameter, System declaring 2 core parameters and the referenced Component declaring 2 core parameters, each list at exactly the bound with limits=ExperimentLimits(max_parameters=2)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_parameters=2))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared step count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_steps_exceeded_rejected",
+      "precondition": "Scenario declaring 2 steps with limits=ExperimentLimits(max_steps=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_steps=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared fault count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_faults_exceeded_rejected",
+      "precondition": "Scenario declaring 2 faults with limits=ExperimentLimits(max_faults=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_faults=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared observer count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_observers_exceeded_rejected",
+      "precondition": "Scenario declaring 2 observers with limits=ExperimentLimits(max_observers=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_observers=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared metric count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_metrics_exceeded_rejected",
+      "precondition": "Scenario declaring 2 metrics with limits=ExperimentLimits(max_metrics=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_metrics=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (per-step dependency count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_dependencies_per_step_exceeded_rejected",
+      "precondition": "one step-intent declaring 2 dependsOn entries with limits=ExperimentLimits(max_dependencies_per_step=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_dependencies_per_step=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared flow count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_flows_exceeded_rejected",
+      "precondition": "System declaring 2 flows with limits=ExperimentLimits(max_flows=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_flows=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared binding count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_bindings_exceeded_rejected",
+      "precondition": "Deployment declaring 2 bindings with limits=ExperimentLimits(max_bindings=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_bindings=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (closed input-set resource count); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_resources_exceeded_rejected",
+      "precondition": "normalized closed set carrying 2 resources with limits=ExperimentLimits(max_resources=1)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_resources=1))"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-BOUND-EXCEEDED (declared text length); plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_text_length_exceeded_rejected",
+      "precondition": "declared fidelityLimitations entry of 5 characters with limits=ExperimentLimits(max_text_length=4)",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_text_length=4))"
+    },
+    {
+      "expected": "rejected by the accepted parse gate with XDL-PARSE-TOO-LARGE; plan is None; the supplied file keeps its exact bytes",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_bytes_per_file_exceeded_rejected",
+      "precondition": "one input file whose byte length is 1 byte greater than the ExperimentLimits.max_bytes_per_file bound mirrored from the accepted LoadLimits",
+      "stimulus": "compile_experiment_files(paths, limits=ExperimentLimits())"
+    },
+    {
+      "expected": "rejected; plan is None; ExperimentPlanResult.is_valid is False; the returned diagnostics tuple holds at most max_diagnostics entries (the declared bound is enforced before fail-closed)",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_max_diagnostics_exceeded_fails_closed",
+      "precondition": "closed set declaring 3 independent defects (3 steps each with a dependsOn naming an undeclared step) with limits=ExperimentLimits(max_diagnostics=2, max_steps=8) so no entity bound fires first",
+      "stimulus": "compile_experiment_plan(resources, limits=ExperimentLimits(max_diagnostics=2, max_steps=8))"
+    }
+  ]
+}

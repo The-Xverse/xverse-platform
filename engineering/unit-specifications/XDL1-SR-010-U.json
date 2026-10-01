@@ -1,0 +1,58 @@
+{
+  "component_id": "XDL1-SR-010-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-ARTIFACT-PIN-MISSING",
+    "XDL1-PLAN-ARTIFACT-REFERENCE-UNRESOLVED",
+    "XDL-BINDING-ARTIFACT-INTEGRITY (accepted, reused)"
+  ],
+  "id": "XDL1-SR-010-U",
+  "inputs": [
+    "Deployment artifacts, bindings artifactIds and Component model references"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-05",
+    "XDL1-INV-08"
+  ],
+  "outputs": [
+    "plan.bindings[].artifactRefs[]",
+    "plan.components[].modelRefs[]"
+  ],
+  "purpose": "Record declared model/artifact binding references for each component, with their declared revisions, as explicit references in the resolved plan, without retrieving, resolving or claiming availability of any artifact.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless projection of declared artifact and model references.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no file/network/process call reachable from artifact projection",
+      "id": "XDL1-SR-010-U-STATIC",
+      "rule": "no artifact fetch, unpack, digest-verify or availability probe exists",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-010-U unit specification - Model and artifact binding references recorded as references only",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-ARTIFACT-PIN-MISSING; plan is None; nothing is retrieved",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_artifact_pin_missing_rejected",
+      "precondition": "in-scope Deployment binding referencing a declared artifact without an immutable digest",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-ARTIFACT-REFERENCE-UNRESOLVED; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_artifact_reference_unresolved_rejected",
+      "precondition": "binding artifactIds naming an artifact that is not declared by the Deployment",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "component_id": "XDL1-SR-011-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-INPUT-MUTATED",
+    "XDL1-PLAN-DIGEST-SELFCHECK"
+  ],
+  "id": "XDL1-SR-011-U",
+  "inputs": [
+    "immutable normalized resources and their canonical content"
+  ],
+  "interfaces": [
+    "resource_semantic_digest",
+    "compile_experiment_plan",
+    "canonical_plan_bytes"
+  ],
+  "invariants": [
+    "XDL1-INV-04",
+    "XDL1-INV-06",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "plan.provenance.inputSemanticDigest",
+    "plan.provenance.resources[]",
+    "plan.profile.resourceDigest",
+    "run.sourceByteDigests"
+  ],
+  "purpose": "Record the exact declared input provenance (normalized source hashes plus an input semantic digest) in the resolved plan so a downstream consumer can verify plan, Profile and API versions and normalized source hashes without reparsing YAML, keeping schema, resource, Profile and artifact versions independent.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_identity_unit.py"
+  ],
+  "state": "Stateless digest computation over immutable normalized content plus the volatile byte-digest envelope.",
+  "static_checks": [
+    {
+      "expected": "literal inspection shows RESOURCE_DOMAIN_SEPARATOR, INPUT_DOMAIN_SEPARATOR and include_source_map=False",
+      "id": "XDL1-SR-011-U-STATIC",
+      "rule": "resource and input digests use the frozen domain separators and canonical_json without source maps",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-011-U unit specification - Declared input provenance and independent versions",
+  "unit_cases": [
+    {
+      "expected": "all three digests are equal 64-hex sha256 values",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_resource_semantic_digest_stable",
+      "precondition": "one normalized resource hashed twice and once after canonical key permutation",
+      "stimulus": "resource_semantic_digest(resource)"
+    },
+    {
+      "expected": "both digests are equal, proving sourceMap, file name and source format are excluded",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_resource_semantic_digest_excludes_source_map",
+      "precondition": "the same declared content loaded from two file names with differing sourceMap locations",
+      "stimulus": "resource_semantic_digest(resource)"
+    },
+    {
+      "expected": "provenance.inputSemanticDigest equals the digest over the ordered contributing set only; the unrelated resource is absent",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_input_semantic_digest_uses_contributing_set_only",
+      "precondition": "contributing resources plus one unrelated valid resource",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "canonical_plan_bytes and plan.digest are byte-equal across both runs",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_unrelated_extra_resource_does_not_change_plan",
+      "precondition": "the same valid set with and without an unrelated valid Component",
+      "stimulus": "compile_experiment_plan(resources) twice"
+    },
+    {
+      "expected": "provenance.resources contains exactly the contributing set sorted by (apiVersion, kind, namespace, name, version) with a sha256 semanticDigest each",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_provenance_resources_sorted_and_complete",
+      "precondition": "valid set with System, Deployment, Scenario, Profile and referenced Components",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

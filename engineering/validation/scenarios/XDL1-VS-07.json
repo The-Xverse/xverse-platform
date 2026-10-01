@@ -1,0 +1,23 @@
+{
+  "environment": "candidate checkout and the assembled pinned xverse-platform target; offline, Python 3.11+; declared library bounds only, no scientific protocol value, no process, registry, network or filesystem mutation.",
+  "expected": "Each declared finite library bound is enforced over its complete frozen scope: a per-payload list, the total compiled-parameter count C_total and a declared core System/Component parameter list each yield XDL1-PLAN-BOUND-EXCEEDED with plan is None and no side effect; a declared limitation count above max_limitations is likewise rejected; parameter counts exactly at each declared bound compile one resolved plan; and the resolved plan carries exactly one components[scope=\"system\"] entry whose declaredParameters contains every declared System.spec.parameters[] entry once, with no System parameter duplicated into a component-instance entry.",
+  "id": "XDL1-VS-07",
+  "intended_use": "An experiment author declares core System and Component parameters and supplies declared per-payload parameter lists whose individual lengths are each within ExperimentLimits.max_parameters while their compiled total exceeds it, plus a declared limitation count above the bound, and expects the frozen bound behaviour; an integrator reads the resolved plan to locate every declared core parameter.",
+  "revision": "1",
+  "schema_version": 1,
+  "test_ids": [
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_per_payload_parameter_bound_exceeded_rejected_without_plan",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_total_compiled_parameter_bound_exceeded_rejected_without_plan",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_declared_core_parameter_bound_exceeded_rejected_without_plan",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_declared_limitation_bound_exceeded_rejected_without_plan",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_parameter_counts_at_declared_bounds_compile_resolved_plan",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_system_core_parameters_projected_without_drop_or_duplication"
+  ],
+  "title": "Declared finite library bounds and System core-parameter projection (resolves XDL1-RVW-001/002/003)",
+  "validates": [
+    "XDL1-SR-002",
+    "XDL1-SR-012",
+    "XDL1-SR-014",
+    "XDL1-SR-019"
+  ]
+}

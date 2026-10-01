@@ -1,0 +1,105 @@
+{
+  "component_id": "XDL1-SR-016-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-PROFILE-SCHEMAREF-UNSUPPORTED"
+  ],
+  "id": "XDL1-SR-016-U",
+  "inputs": [
+    "existing resources and the new additive subcommand arguments"
+  ],
+  "interfaces": [
+    "validate_files",
+    "validate_sources",
+    "validate_mappings",
+    "canonical_json",
+    "derive_catalog",
+    "build_lifecycle_plan",
+    "xdl experiment compile"
+  ],
+  "invariants": [
+    "XDL1-INV-07",
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10"
+  ],
+  "outputs": [
+    "byte-compatible existing outputs",
+    "additive experiment-plan output and exports"
+  ],
+  "purpose": "Preserve the accepted v1alpha1 schema versions and the accepted Profile-derived serialization policy, reuse the existing explicit Profile registry, and change no accepted XDL schema, public loader/catalog/activation-plan API, or the accepted C++ X-COM implementation and contracts.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/cli.py",
+    "src/xverse_xdl/__init__.py",
+    "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py"
+  ],
+  "state": "Additive exposure layer; existing public functions, formats and exit codes are untouched.",
+  "static_checks": [
+    {
+      "expected": "diff shows no change under xdl/schemas/v1alpha1, src/xverse/xcom, proto or accepted tests; __all__ is a superset",
+      "id": "XDL1-SR-016-U-STATIC",
+      "rule": "no accepted file outside the additive boundary changes and __all__ only grows",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-016-U unit specification - Preserved schema, Profile serialization and X-COM boundary",
+  "unit_cases": [
+    {
+      "expected": "every frozen public name is importable with the frozen signature",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_public_api_exports_present",
+      "precondition": "installed candidate package",
+      "stimulus": "import the frozen ExperimentLimits, ExperimentPlanResult, compile_* helpers and probe helpers from xverse_xdl"
+    },
+    {
+      "expected": "the previous name set is a subset of the new __all__ and no name was removed",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_init_all_is_additive_superset",
+      "precondition": "installed candidate package",
+      "stimulus": "compare xverse_xdl.__all__ before and after the additive change"
+    },
+    {
+      "expected": "ExperimentPlanResult exposes diagnostics tuple, plan dict|None, run FrozenMap and the is_valid property with the frozen semantics",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_compile_api_result_shape",
+      "precondition": "one valid and one invalid normalized set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the accepted validate_sources path is exercised (no mock), resources are the normalized accepted resources and a resolved plan is returned",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_compile_sources_uses_real_loader",
+      "precondition": "real XDL source bytes for the neutral experiment fixture",
+      "stimulus": "compile_experiment_sources(sources, profile_schema_paths=(...))"
+    },
+    {
+      "expected": "exit 0 and stdout parses to {reportVersion, toolVersion, valid, plan, run, diagnostics} with plan non-null",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_cli_experiment_compile_json_emits_plan",
+      "precondition": "valid fixture files on disk",
+      "stimulus": "xdl experiment compile --format json RESOURCE..."
+    },
+    {
+      "expected": "exit 0 and stdout carries 'resolved plan <digest>' with the plan digest",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_cli_experiment_compile_text_emits_summary",
+      "precondition": "valid fixture files on disk",
+      "stimulus": "xdl experiment compile RESOURCE..."
+    },
+    {
+      "expected": "exit 1, plan null and at least one structured diagnostic; no -o file is created",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_cli_experiment_compile_rejection_exits_one",
+      "precondition": "fixture files carrying one declared defect",
+      "stimulus": "xdl experiment compile --format json RESOURCE..."
+    },
+    {
+      "expected": "exit 2 with an invocation message and no plan",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_cli_invocation_error_exits_two",
+      "precondition": "a malformed --expect-input-digest argument",
+      "stimulus": "xdl experiment compile --expect-input-digest bogus RESOURCE..."
+    },
+    {
+      "expected": "exit 2 and the input file bytes are unchanged",
+      "id": "tests/thesis_lite/xdl/test_xdl1_exposure_unit.py::test_cli_output_path_collision_exits_two",
+      "precondition": "an -o path equal to one of the input resource paths",
+      "stimulus": "xdl experiment compile -o <input> RESOURCE..."
+    }
+  ]
+}

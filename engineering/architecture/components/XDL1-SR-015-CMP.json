@@ -1,0 +1,47 @@
+{
+  "boundaries": [
+    "XDL1-XB-07"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL1-PLAN-REALIZATION-UNSUPPORTED",
+    "XDL1-PLAN-DELIVERY-UNSUPPORTED",
+    "XDL1-PLAN-RETRY-UNSUPPORTED",
+    "XDL-SEMANTIC-EXTENSION-SCHEMA (accepted, reused)"
+  ],
+  "id": "XDL1-SR-015-CMP",
+  "interfaces": [
+    "compile_experiment_plan",
+    "ExperimentPlanResult"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-02",
+    "XDL1-ARCH-03"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-015, realized by XDL1-ARCH-02, XDL1-ARCH-03 in docs/engineering/xdl-lite/architecture.md section 4 and frozen in docs/engineering/xdl-lite/detailed-design.md.",
+  "requirements": [
+    "XDL1-SR-015"
+  ],
+  "responsibilities": [
+    "Reject an unsupported realization class, delivery mode, or retry policy explicitly with a stable structured diagnostic.",
+    "Infer no default realization, delivery, or retry behaviour.",
+    "Leave no partial plan and no side effect on rejection."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-015-CMP allocation - Explicit unsupported realization, delivery, and retry behaviour"
+}

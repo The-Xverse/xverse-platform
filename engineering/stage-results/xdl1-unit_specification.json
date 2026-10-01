@@ -1,0 +1,148 @@
+{
+  "artifacts": [
+    {
+      "path": "docs/engineering/xdl-lite/unit-specifications.md",
+      "sha256": "008fcb8d36a355b008234136c8d05b3bfc0e91ebf5a8861bc47da38d39fcefd2"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-001-U.json",
+      "sha256": "06a9aace6e14940be9d916a3196d3d6aa83a406557e58895d56ca1d1e7f846eb"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-002-U.json",
+      "sha256": "1169eaabbb3bcbca91820a9e7b93bbe4d4f820aec0e9a821398a4984dc19c811"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-003-U.json",
+      "sha256": "a228871eade84fff30d3fdbaeff411f5a122a427e7fff95e91d67cdaba6ea4d3"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-004-U.json",
+      "sha256": "7ac7312c5459aefa6682222a135d93d617695e17d67f2d0859de73f8d4aa05a4"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-005-U.json",
+      "sha256": "2af18c598b3d15d5d99e129a4589081e14dba3aebbbaa6db41f51f3182e24c6e"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-006-U.json",
+      "sha256": "a2a9eb1d5840e9e1fc1fa0561968bfd141c6d81b2935fbd21d683ab430ba7d90"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-007-U.json",
+      "sha256": "68e16b636d583baa54c3d880e7ef702d5a0f6d627fd1e6e9a5734371a327c489"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-008-U.json",
+      "sha256": "bc098dcf7e837b14655f12db4ecee1d1477610d6f37151be277aef19f1ad9cf1"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-009-U.json",
+      "sha256": "9ed2984d8a66689753532a8bc8eb9b3d1e9941b69fe91b67de2d7194aaeac478"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-010-U.json",
+      "sha256": "d96e6898a0a8cf8fb03ac74ea6ca49980f82b728f1d1bd0d4ac4bf10317d8e15"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-011-U.json",
+      "sha256": "2db1d4a606d31884b298e0201236d4e1a8ac61539f32600cf4b048a558fb1a41"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-012-U.json",
+      "sha256": "39c32b4e18fe60e3b709d62a385ee5f1bef983ca0ba7474a066284d48fb58ff0"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-013-U.json",
+      "sha256": "8479699f7bcefe557c01d2726733d99a4966971d036f43bb625cad78b2e2cb30"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-014-U.json",
+      "sha256": "b72b7ef0f8597cfde6cde20941afc0a1a400b8987581939f054b678a9e762a6e"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-015-U.json",
+      "sha256": "1597212a97b2bde015a59f0ea8ff3469c86f7b55c0867f27061d2415f47ed76d"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-016-U.json",
+      "sha256": "77f4aa0b6306f58938e757d6729de77960da1f5b57e34e5edde44029e20a9b03"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-017-U.json",
+      "sha256": "c8786e222fe9107a6f9fe6c565cffef80e83567cd8301d9938bdf81db8076d20"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-018-U.json",
+      "sha256": "b5dc20b6cc8f8c2ffa80b0b70772d9a5d5f2816a0b593169f487432be1cacca5"
+    },
+    {
+      "path": "engineering/unit-specifications/XDL1-SR-019-U.json",
+      "sha256": "567753ffe087b5738f6418c69372bf9b0cf4038e2be1e58c0c97cd2f4530d663"
+    }
+  ],
+  "assumptions": [
+    "One unit record per allocation component (XDL1-SR-001-U .. XDL1-SR-019-U with component_id XDL1-SR-001-CMP .. XDL1-SR-019-CMP) follows the accepted T027/T038 precedent and keeps later decomposes_to/implemented_by/verified_by/analyzed_by links unambiguous; decomposes_to links XDL1-L-201 .. XDL1-L-219 were appended additively to engineering/trace/links.json.",
+    "The successor unit records preserve all 102 predecessor case identifiers verbatim and add 19 case identifiers (3 for XDL1-RVW-002 in XDL1-SR-002-U, 1 limitation-count negative in XDL1-SR-012-U, 15 count-based bound cases in XDL1-SR-019-U), giving 121 frozen pytest identifiers; no predecessor identifier was renamed, dropped or weakened.",
+    "Planned unit-case identifiers are full pytest node identifiers of the form tests/thesis_lite/xdl/test_xdl1_<area>_unit.py::test_<case>. They contain no hyphen, so trusted discovery normalization test_id.replace('-','_') is a no-op and each identifier appears verbatim in verbose pytest output for the unit measure.",
+    "Tests are planned as module-level functions (not classes) so the printed node identifier is exactly the recorded one; the planned package markers tests/thesis_lite/__init__.py and tests/thesis_lite/xdl/__init__.py and the neutral fixtures under tests/thesis_lite/xdl/fixtures/ are created by the implementation stage.",
+    "Defect classes that the accepted loader/schema gate rejects before the compiler runs (unknown namespace, unknown payload field, oversized file) keep their accepted XDL-* code; defect classes the accepted core does not reject (missing/duplicate/out-of-range seed, value-type or bound violation, unresolved time mapping on the normalized path, declared entity and parameter count bounds) are stated with the frozen XDL1-PLAN-* code.",
+    "ExperimentLimits.max_diagnostics is interpreted as detailed-design.md section 10.2 declares: the compiler retains at most max_diagnostics returned diagnostics and fails closed with no plan. detailed-design.md section 9 assigns no separate diagnostic code to the diagnostic-count scope, so the case asserts the bounded diagnostics list plus plan is None and no new code is invented.",
+    "ExperimentLimits.max_bytes_per_file mirrors the accepted LoadLimits byte bound and is enforced on the load path by the accepted parser, so its negative case is exercised through compile_experiment_files and expects the accepted XDL-PARSE-TOO-LARGE code; the compiler core never receives source bytes and performs no byte check.",
+    "The declared-core max_parameters scope is owned by XDL1-SR-019-U (bounds) even though the projection itself is XDL1-SR-002-U; this keeps each unit record's error surface consistent with its own component record, and avoids attributing XDL1-PLAN-BOUND-EXCEEDED to the frozen XDL1-SR-002-CMP record whose error list does not carry it.",
+    "Unit expectations contain only platform library bounds, frozen constants and declared caller values; no thesis protocol number, threshold, tolerance or seed appears anywhere in the unit specification.",
+    "The static checks recorded per unit are planned inputs to the XDL1-STATIC static_analysis measure owned by the verification-design stage; no static analysis is executed in this stage.",
+    "engineering/trace/links.json is a mutable additive trace file; it is not listed as an immutable artifact of this stage, and this stage appended only 19 decomposes_to links while preserving all 3063 pre-existing links and their endpoint revisions.",
+    "No implementation, schema, fixture or test code was written; the precode gate requires the unit-specification and verification-design stages to complete before implementation."
+  ],
+  "attempt_id": 1,
+  "blockers": [],
+  "findings": [
+    "XDL1-RVW-003 resolution in this work product: every declared finite bound of detailed-design.md section 10.2 now has a named negative case (max_resources, max_bytes_per_file, all three max_parameters scopes, max_steps, max_faults, max_observers, max_metrics, max_dependencies_per_step, max_flows, max_bindings, max_ticks, max_seed, max_number_magnitude, max_text_length, max_limitations, max_diagnostics) and XDL1-PLAN-BOUND-EXCEEDED has 13 named negatives. Boundary evidence is added by XDL1-SR-019-U::test_max_parameters_all_scopes_at_bound_accepted. This is a planned contract, not executed evidence; the successor's own tests and measures belong to the implementation and validation stages.",
+    "XDL1-RVW-001 resolution binding: XDL1-SR-019-U::test_max_parameters_total_compiled_scope_exceeded_rejected uses a valid scenario-intent (2 parameters) plus step-intent (1 parameter) combination whose individual lists are each within ExperimentLimits(max_parameters=2) while the total compiled count is 3, and requires XDL1-PLAN-BOUND-EXCEEDED with plan is None. Implementation and executed evidence are owned by later stages and are not claimed.",
+    "XDL1-RVW-002 resolution binding: XDL1-SR-002-U::test_system_core_parameters_projected_to_system_scope requires System parameter 'loop-count' at components[scope=\"system\"].declaredParameters and Component parameter 'nominal-rate' at the component-instance entry, with neither appearing in the other scope; XDL1-SR-002-U::test_system_core_parameters_not_dropped_when_component_parameters_present requires the declared-id union exactly once; XDL1-SR-002-U::test_system_scope_entry_always_present_with_empty_declared_parameters fixes the stable plan shape. Implementation and executed evidence are owned by later stages and are not claimed.",
+    "informational: this stage appended one additive decomposes_to link per unit (XDL1-L-201 .. XDL1-L-219, source XDL1-SR-0nn-CMP revision 1, target XDL1-SR-0nn-U revision 1); all 19 links resolve against the trusted inventory with matching endpoint revisions. Each unit record validates against the trusted validate_unit_specification contract; each of the 121 unit-case identifiers is unique and well formed.",
+    "informational: validate_trace still cannot pass for the XDL1 records. Its first reported failure is the pre-existing stale endpoint 'stale endpoint revision in T034-L-0168' (engineering/project.json changed by the requirements-stage current-pointer update), exactly the scheduled refresh recorded by the earlier stages and assigned to the validation stage. Additionally every XDL1 unit-specification requires implemented_by, verified_by and analyzed_by links and every accepted software requirement requires implemented_by and verified_by links; those relations are owned by the implementation and verification-design stages, which have not run. No completeness is claimed here.",
+    "informational: 121 exact test identifiers are now frozen contracts. The implementation stage must create them verbatim under tests/thesis_lite/xdl/**; the verification-design stage must bind the XDL1-UNIT measure test_ids to them; the validation stage must confirm the printed names match. Renaming, dropping or weakening one requires a reviewed successor candidate.",
+    "informational: no independent review of this stage was performed here; the admitted workflow requires a separate read-only internal_review stage, and host candidate sealing executes validate_trace only after every stage has run."
+  ],
+  "inputs": [
+    "admitted-input:specs/021-thesis-lite-program/fabro/phase1-brief.md sha256=1a74abbda2e63892d1678233f3c3160b72dd889a80cf6d8963dc3279bd829684",
+    "admitted-input:specs/021-thesis-lite-program/requirements-priorities.json sha256=9c3fec63ce6b26ab1aa0d72e901752d0a5f4cc16784add5f30e9052abb36a8d0",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/spec.md sha256=36c97d669378359942f61662ed9300ca32aa40d940daa404d7045701058408e7",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/plan.md sha256=8ca3feef959e69aa5d7abb04dcb3b464d0b68f4b19fbe5d2efd0d7358c2a1e20",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/research.md sha256=71a7b9c5f3a1ef4fbe3a49f3da08108e700ae7cd95a005c22c40ee952075b0a9",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/data-model.md sha256=8bfd7108e97c098a0a21f16f5bcb3b378c9a3dc13c0955cfee577913a8bbcb2e",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/contracts/experiment-plan.md sha256=c3c05cf2887ac2320d48db1ce1a87e96d0335ad0bdcf55a82d0df40c2ccc24d1",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/quickstart.md sha256=05a155ad5efecd07715c23e0654f7e5a33411866f6f42ce62472c9e3fa2eca7d",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/tasks.md sha256=e8fd222378ed39c04af6eb281974273b5a939e03ef63991150f15f02929500a5",
+    "admitted-input:specs/THESIS_MINIMUM_PLATFORM_SCOPE.md sha256=1f2f3c83944a5d7da46bb2798f369908b5c89acbe3a41961997f0d616bb05177",
+    "admitted-input:docs/adr/ADR-THESIS-LITE-0001.md sha256=fa247b51fd77a55c77d928350e6b1c061f3d2eda2a9963ed2e0b0d22bc05df65",
+    "admitted-input:engineering-instructions.json sha256=0e74f70f35a589669d5b49c2c04b82ce4e792af19912bf06d728271ac3d6634e",
+    "admitted-input:thesis_revision=fe58918f9eaf2a6f39cdc9c93cfd4ce615ec84bf",
+    "admitted-input:platform_revision=0c5e249621727b2d0041707de2661f0ed1e1ef23",
+    "admitted-predecessor-review-evidence:manifest.json sha256=820f3c47d264a6e75a75e3fb58f9465d9bb1ba3495b6c263797d145230c59093 (2852-file frozen-candidate map, read-only)",
+    "admitted-predecessor-review-evidence:review/internal-review.json sha256=b5ed14f18ae1e50d246deb2765215b11bdfd41c54dca0f7699325a1c9d12c2e4 (verdict=rework; findings XDL1-RVW-001/002/003, read-only)",
+    "admitted-predecessor-review-evidence:review/stage.json sha256=9b09049a68c45160a9ee0e57b918c04dcad6ec7cdc732c94b0953009221e0e23 (reviewer stage record, read-only)",
+    "admitted-predecessor-review-evidence:engineering/unit-specifications/XDL1-SR-001-U..019-U.json and the predecessor unit-specifications.md revision (exact rejected draft revisions, hash-checked against manifest.json, read-only)",
+    "repository-source:docs/engineering/xdl-lite/requirements.md sha256=d29a7f2c6314e7fc145fad62ac86357f24c4bfcb6af0487429190ee5bf20d128 (rev 1, consumed read-only)",
+    "repository-source:docs/engineering/xdl-lite/architecture.md sha256=6fd9cce342822554addaa1be70d547ec3782b0db086fe164f897975d41fb9ae8 (rev 1, consumed read-only)",
+    "repository-source:docs/engineering/xdl-lite/detailed-design.md sha256=d5635372fb363fcfaa996c0285a999b43b5008e652e0209ed23622e3942e87ea (rev 1, consumed read-only)",
+    "repository-source:engineering/requirements/XDL1-SR-001..019.json (19 accepted software requirements, consumed read-only)",
+    "repository-source:engineering/architecture/components/XDL1-SR-001-CMP..019-CMP.json (19 allocation components, consumed read-only)",
+    "repository-source:src/xverse_xdl/** accepted loader/schema/semantics/normalizer/validate/diagnostics/models/cli read-only (XDL-PARSE-TOO-LARGE and XDL-PARSE-MAX-RESOURCES byte/limit behaviour inspected for the load-path bound cases)",
+    "repository-source:xdl/schemas/v1alpha1/**, xdl/profiles/** accepted contracts read-only (byte-preserved)",
+    "repository-source:docs/architecture/sads-requirements-traceability.json sha256=d932bea5203166df71273f0216bf50008726a062b4c33e8f6f2678c625660abc",
+    "repository-source:.specify/memory/constitution.md sha256=d84eaaf18cf0cb669da232df85852fd0be44d2ef82ece2f5366813deb98cbd4c",
+    "trusted-record-schemas:fabro_engineering/core.py validate_unit_specification, inventory, validate_trace, validate_stage (read-only local checks; the trusted graph engineering-checks shim was not called)"
+  ],
+  "model": {
+    "backend": "api",
+    "provider": "deepseek",
+    "requested_model": "deepseek-v4-flash"
+  },
+  "role": "unit_specification",
+  "schema_version": 1,
+  "status": "complete",
+  "task_id": "XDL1"
+}

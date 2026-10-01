@@ -1,0 +1,83 @@
+{
+  "component_id": "XDL1-SR-002-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL-SCHEMA-UNSUPPORTED-KIND (accepted, reused)",
+    "XDL-SEMANTIC-COMPONENT-REFERENCE (accepted, reused)",
+    "XDL-SEMANTIC-FLOW-DIRECTION (accepted, reused)",
+    "XDL1-PLAN-PROFILE-PAYLOAD-KIND"
+  ],
+  "id": "XDL1-SR-002-U",
+  "inputs": [
+    "normalized System, Component and referenced resources"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "plan_public_data"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-09",
+    "XDL1-INV-10",
+    "XDL1-INV-12"
+  ],
+  "note": "Successor revision. Adds the declared core-parameter projection cases demanded by XDL1-RVW-002 and detailed-design.md sections 5, 7 (frozen field rules) and 17. The declared-core count bound itself is negatively exercised by XDL1-SR-019-U::test_max_parameters_declared_core_scope_exceeded_rejected.",
+  "outputs": [
+    "plan.components[]",
+    "plan.flows[]",
+    "plan.timeDomains[]"
+  ],
+  "purpose": "Compile declared System, Component, Interface, Endpoint and flow intent into the resolved plan using the existing XDL v1alpha1 semantic entities, without introducing a new top-level resource kind or a competing configuration language. Project every declared core parameter of the selected System and of each referenced Component into components[].declaredParameters: Component.spec.parameters[] into that Component's component-instance entry and System.spec.parameters[] into exactly one always-present components[scope=\"system\"] entry emitted first, with no silent drop and no duplication. Resolves XDL1-RVW-002.",
+  "review_resolution": [
+    "XDL1-RVW-002"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py"
+  ],
+  "state": "Stateless projection of declared normalized content onto the frozen plan sections.",
+  "static_checks": [
+    {
+      "expected": "grep of experiment_plan.py and the emitted plan shows no new top-level kind literal",
+      "id": "XDL1-SR-002-U-STATIC",
+      "rule": "only the five accepted v1alpha1 kind strings appear in emitted plan sections",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-002-U unit specification - Logical system/component/flow intent mapped to existing kinds",
+  "unit_cases": [
+    {
+      "expected": "components[] and flows[] reference existing System/Component entity identities and declared field values only; no new kind string is emitted",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_components_and_flows_map_to_existing_kinds",
+      "precondition": "System with componentInstances, interfaces, endpoints and flows",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the plan contains no kind outside the five accepted v1alpha1 kinds; ProtocolBinding/Realization appear only inside bindings and add no top-level kind",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_no_new_top_level_resource_kind_emitted",
+      "precondition": "any valid closed resource set",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "components[0].scope == 'system' with instanceId, componentRef and nodeId all null and declaredParameters listing exactly [loop-count]; the components[scope='component-instance'] entry for that Component lists exactly [nominal-rate]; 'loop-count' does not occur in any component-instance declaredParameters and 'nominal-rate' does not occur in the System entry",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_system_core_parameters_projected_to_system_scope",
+      "precondition": "valid set whose System declares spec.parameters[] holding the single id 'loop-count' and whose referenced Component declares spec.parameters[] holding the single id 'nominal-rate'",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "the multiset of ids across components[].declaredParameters equals exactly the declared System core parameter ids plus the declared Component core parameter ids (3 ids), each occurring once; no declared core parameter is silently omitted and none is duplicated across scopes",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_system_core_parameters_not_dropped_when_component_parameters_present",
+      "precondition": "System declaring two core parameters and one referenced Component declaring one core parameter",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "components[0] is always the scope='system' entry emitted first with declaredParameters == [] and modelRefs == [], followed by the component-instance entry; the plan shape is stable and the empty System projection invents no parameter",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_system_scope_entry_always_present_with_empty_declared_parameters",
+      "precondition": "System that declares no spec.parameters[] and no spec.models[] but references one Component that declares a core parameter",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

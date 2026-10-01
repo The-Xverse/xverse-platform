@@ -1,0 +1,55 @@
+{
+  "artifacts": [
+    {
+      "path": "docs/engineering/xdl-lite/internal-review.json",
+      "sha256": "6b30f0ef97dd1a45140f53ec0bf49ec4ef9523e647e0068773da10b759b3bbd6"
+    }
+  ],
+  "assumptions": [
+    "The reviewer performed a read-only pass over the exact frozen candidate bytes; no candidate file was created, modified or deleted and /workspace remains read-only (RV-CHK-01/02).",
+    "The successor candidate resolves predecessor findings XDL1-RVW-001 (aggregate max_parameters scope), XDL1-RVW-002 (declared System.spec.parameters projection) and XDL1-RVW-003 (count-bound negative evidence); all three were independently reproduced against this candidate and no finding was raised (RV-CHK-06/07/08).",
+    "/review/internal-review.json is the reviewer-authored record that the host candidate-sealing step copies to the repository path docs/engineering/xdl-lite/internal-review.json; its hash in artifacts is the hash of exactly those bytes.",
+    "Independent local pytest and Python executions are reviewer checks only, never trusted measure evidence; the trusted unit/static/integration/validation measures, the assembled pinned target run and terminal acceptance remain external gates.",
+    "The verdict is pass with findings=[] and blockers=[]; the residual shared-payload-schema observation is recorded as a review limitation, consistent with the frozen design, and is not a finding."
+  ],
+  "attempt_id": 1,
+  "blockers": [],
+  "findings": [],
+  "inputs": [
+    "admitted-input:engineering-instructions.json sha256=0e74f70f35a589669d5b49c2c04b82ce4e792af19912bf06d728271ac3d6634e",
+    "admitted-input:specs/021-thesis-lite-program/fabro/phase1-brief.md sha256=1a74abbda2e63892d1678233f3c3160b72dd889a80cf6d8963dc3279bd829684",
+    "admitted-input:specs/021-thesis-lite-program/requirements-priorities.json sha256=9c3fec63ce6b26ab1aa0d72e901752d0a5f4cc16784add5f30e9052abb36a8d0",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/spec.md sha256=36c97d669378359942f61662ed9300ca32aa40d940daa404d7045701058408e7",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/plan.md sha256=8ca3feef959e69aa5d7abb04dcb3b464d0b68f4b19fbe5d2efd0d7358c2a1e20",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/research.md sha256=71a7b9c5f3a1ef4fbe3a49f3da08108e700ae7cd95a005c22c40ee952075b0a9",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/data-model.md sha256=8bfd7108e97c098a0a21f16f5bcb3b378c9a3dc13c0955cfee577913a8bbcb2e",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/contracts/experiment-plan.md sha256=c3c05cf2887ac2320d48db1ce1a87e96d0335ad0bdcf55a82d0df40c2ccc24d1",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/quickstart.md sha256=05a155ad5efecd07715c23e0654f7e5a33411866f6f42ce62472c9e3fa2eca7d",
+    "admitted-input:specs/022-xdl-lite-experiment-plan/tasks.md sha256=e8fd222378ed39c04af6eb281974273b5a939e03ef63991150f15f02929500a5",
+    "admitted-input:specs/THESIS_MINIMUM_PLATFORM_SCOPE.md sha256=1f2f3c83944a5d7da46bb2798f369908b5c89acbe3a41961997f0d616bb05177",
+    "admitted-input:docs/adr/ADR-THESIS-LITE-0001.md sha256=fa247b51fd77a55c77d928350e6b1c061f3d2eda2a9963ed2e0b0d22bc05df65",
+    "admitted-input:thesis_revision=fe58918f9eaf2a6f39cdc9c93cfd4ce615ec84bf",
+    "admitted-input:platform_revision=0c5e249621727b2d0041707de2661f0ed1e1ef23",
+    "admitted-input:/opt/review-inventory.json sha256 (complete frozen-candidate file/hash map, 2853 entries; consumed read-only)",
+    "trusted-record-schemas:fabro_engineering/core.py validate_stage/validate_trace/inventory/RELATIONS (read-only local checks; the trusted engineering-checks graph shim was not called)",
+    "predecessor-review-evidence:review/internal-review.json sha256=b5ed14f18ae1e50d246deb2765215b11bdfd41c54dca0f7699325a1c9d12c2e4 (read-only; verdict rework, findings XDL1-RVW-001/002/003)",
+    "predecessor-review-evidence:predecessor frozen-candidate hash map sha256 (2852 entries; consumed read-only)",
+    "repository-frozen-candidate:docs/engineering/xdl-lite/** (read-only)",
+    "repository-frozen-candidate:engineering/requirements/XDL1-SR-001..019.json and XVE-SYS-*.json anchors (read-only)",
+    "repository-frozen-candidate:engineering/{architecture/components,unit-specifications,verification/measures,validation/scenarios}/XDL1-*.json (read-only)",
+    "repository-frozen-candidate:engineering/stage-results/xdl1-*.json (read-only)",
+    "repository-frozen-candidate:src/xverse_xdl/{experiment_plan,cli,__init__}.py and accepted consumers (read-only)",
+    "repository-frozen-candidate:xdl/profiles/experiment-lite-v0.1.schema.json (read-only)",
+    "repository-frozen-candidate:tests/thesis_lite/xdl/** (read-only)",
+    "repository-frozen-candidate:engineering/trace/links.json and engineering/project.json (read-only)"
+  ],
+  "model": {
+    "backend": "api",
+    "provider": "deepseek",
+    "requested_model": "deepseek-v4-flash"
+  },
+  "role": "internal_review",
+  "schema_version": 1,
+  "status": "complete",
+  "task_id": "XDL1"
+}

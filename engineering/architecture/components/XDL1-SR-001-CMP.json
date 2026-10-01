@@ -1,0 +1,49 @@
+{
+  "boundaries": [
+    "XDL1-XB-01",
+    "XDL1-XB-06"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL1-PLAN-SYSTEM-MISSING",
+    "XDL1-PLAN-SYSTEM-AMBIGUOUS",
+    "XDL1-PLAN-SCENARIO-MISSING",
+    "XDL1-PLAN-SCENARIO-AMBIGUOUS",
+    "XDL1-PLAN-DEPLOYMENT-AMBIGUOUS",
+    "XDL1-PLAN-DEPLOYMENT-UNBOUND"
+  ],
+  "id": "XDL1-SR-001-CMP",
+  "interfaces": [
+    "compile_experiment_plan",
+    "ExperimentPlanResult"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-03"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-001, realized by XDL1-ARCH-03 in docs/engineering/xdl-lite/architecture.md section 4 and frozen in docs/engineering/xdl-lite/detailed-design.md.",
+  "requirements": [
+    "XDL1-SR-001"
+  ],
+  "responsibilities": [
+    "Select exactly one System, at most one Deployment bound to it, and exactly one Scenario bound to that System from the closed normalized resource set (detailed-design.md 6.1).",
+    "Emit the selected Scenario logical identity, declared parameters, and declared seed into the resolved plan.",
+    "Reject a missing, unresolved, or ambiguous selection with a stable structured diagnostic and return no plan."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-001-CMP allocation - Scenario selection and binding"
+}

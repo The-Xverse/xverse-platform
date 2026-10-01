@@ -1,0 +1,53 @@
+{
+  "boundaries": [
+    "XDL1-XB-01",
+    "XDL1-XB-04"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL-SCHEMA-UNSUPPORTED-KIND (accepted, reused)",
+    "XDL-SEMANTIC-COMPONENT-REFERENCE (accepted, reused)",
+    "XDL-SEMANTIC-FLOW-DIRECTION (accepted, reused)",
+    "XDL1-PLAN-PROFILE-PAYLOAD-KIND"
+  ],
+  "id": "XDL1-SR-002-CMP",
+  "interfaces": [
+    "compile_experiment_plan",
+    "ExperimentPlanResult"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-03",
+    "XDL1-ARCH-06"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-002 (successor, resolves XDL1-RVW-002), realized by XDL1-ARCH-03, XDL1-ARCH-06 in docs/engineering/xdl-lite/architecture.md section 4 and frozen as XDL1-DD-14 in docs/engineering/xdl-lite/detailed-design.md sections 5 and 7.",
+  "requirements": [
+    "XDL1-SR-002"
+  ],
+  "responsibilities": [
+    "Compile declared System/Node/Component/ComponentInstance/Interface/Endpoint/Flow/Network intent into the plan using only existing v1alpha1 semantic entities.",
+    "Introduce no new top-level resource kind, no new attribute in the core schemas, and no competing configuration language.",
+    "Reference every declared flow concept to an existing semantic entity in the emitted plan.",
+    "Project every declared core parameter deterministically: Component.spec.parameters[] into that component's components[scope=\"component-instance\"].declaredParameters, and System.spec.parameters[] into exactly one components[scope=\"system\"].declaredParameters entry emitted first (no duplication, no drop).",
+    "Project declared Component.spec.models[] and System.spec.models[] into the matching components[].modelRefs[] as references only."
+  ],
+  "review_resolution": [
+    "XDL1-RVW-002"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-002-CMP allocation - Logical system/component/flow intent mapped to existing kinds"
+}

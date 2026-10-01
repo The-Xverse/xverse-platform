@@ -1,0 +1,17 @@
+{
+  "environment": "candidate checkout and the assembled pinned xverse-platform target; offline, Python 3.11+; no reparse of source YAML/JSON and no wall-clock dependence.",
+  "expected": "The plan exposes independent plan/Profile/schema/resource/artifact version dimensions and the semantic digest; equivalent YAML/JSON encodings and input permutations produce equal canonical plan bytes and equal plan digests, while byte hashes and volatile run data stay outside the semantic identity.",
+  "id": "XDL1-VS-03",
+  "intended_use": "A downstream consumer verifies plan version, Profile version/hash, API version and the normalized input semantic digest from the resolved plan without reparsing the YAML/JSON sources, and compares equivalent encodings and input permutations.",
+  "revision": "1",
+  "schema_version": 1,
+  "test_ids": [
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_downstream_consumer_verifies_versions_and_hashes_without_reparsing_yaml",
+    "tests/thesis_lite/xdl/test_xdl1_validation.py::test_equivalent_encodings_and_permutations_share_one_semantic_identity"
+  ],
+  "title": "Downstream consumer verifies versions and hashes without reparsing YAML",
+  "validates": [
+    "XDL1-SR-011",
+    "XDL1-SR-018"
+  ]
+}

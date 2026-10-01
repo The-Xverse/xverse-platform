@@ -1,0 +1,86 @@
+{
+  "component_id": "XDL1-SR-005-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL-SEMANTIC-EXTENSION-SCHEMA (accepted, reused) for a schema-invalid payload",
+    "XDL1-PLAN-PROFILE-PAYLOAD-ABSENT",
+    "XDL1-PLAN-SEED-MISSING",
+    "XDL1-PLAN-SEED-RANGE",
+    "XDL1-PLAN-PARAMETER-DUPLICATE",
+    "XDL1-PLAN-PARAMETER-VALUE-TYPE",
+    "XDL1-PLAN-PARAMETER-BOUND"
+  ],
+  "id": "XDL1-SR-005-U",
+  "inputs": [
+    "scenario-intent seed and parameter lists from the admitted payload"
+  ],
+  "interfaces": [
+    "compile_experiment_plan",
+    "ExperimentPlanResult"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-05"
+  ],
+  "outputs": [
+    "plan.seed{value,unitSemantics}",
+    "plan.parameters[] in declared order"
+  ],
+  "purpose": "Require the declared experiment parameters and an explicit seed wherever the admitted Profile requires them, record them explicitly in the resolved plan, and apply no silent default for a missing parameter or seed.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py"
+  ],
+  "state": "Stateless validation of declared seed and typed parameter lists.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no default seed value and no invented parameter constant",
+      "id": "XDL1-SR-005-U-STATIC",
+      "rule": "no literal seed or protocol default is present in experiment_plan.py",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-005-U unit specification - Explicit declared parameters and seed",
+  "unit_cases": [
+    {
+      "expected": "rejected; XDL1-PLAN-SEED-MISSING; plan is None; no seed default is invented",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_seed_missing_rejected",
+      "precondition": "normalized scenario-intent payload that omits seed",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SEED-RANGE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_seed_above_maximum_rejected",
+      "precondition": "seed value max_seed + 1 (9007199254740992)",
+      "stimulus": "compile_experiment_plan(resources) on the normalized path"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-SEED-RANGE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_seed_negative_rejected",
+      "precondition": "seed value -1",
+      "stimulus": "compile_experiment_plan(resources) on the normalized path"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PARAMETER-DUPLICATE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_parameter_duplicate_rejected",
+      "precondition": "scenario-intent.parameters containing id 'gain' twice",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PARAMETER-VALUE-TYPE; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_parameter_value_type_mismatch_rejected",
+      "precondition": "parameter with valueType 'integer' and a JSON string value",
+      "stimulus": "compile_experiment_plan(resources) on the normalized path"
+    },
+    {
+      "expected": "rejected; XDL1-PLAN-PARAMETER-BOUND; plan is None",
+      "id": "tests/thesis_lite/xdl/test_xdl1_quantity_unit.py::test_parameter_bound_exceeded_rejected",
+      "precondition": "number parameter with magnitude 1e16 (> max_number_magnitude 1e15)",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "component_id": "XDL1-SR-018-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-SCHEDULE-AMBIGUOUS",
+    "XDL1-PLAN-DIGEST-SELFCHECK",
+    "XDL1-PLAN-QUANTITY-NONFINITE"
+  ],
+  "id": "XDL1-SR-018-U",
+  "inputs": [
+    "assembled plan body without the digest field",
+    "caller run_id/generated_at"
+  ],
+  "interfaces": [
+    "canonical_plan_bytes",
+    "compute_plan_digest",
+    "plan_matches_digest",
+    "experiment_plan_status"
+  ],
+  "invariants": [
+    "XDL1-INV-04",
+    "XDL1-INV-06",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "canonical plan bytes",
+    "plan.digest.value",
+    "stable ordered schedule/observation arrays"
+  ],
+  "purpose": "Order schedule and observation intent by explicit simulation time, tick or declared order, and compute the canonical semantic plan identity from declared content only, excluding run identifiers and wall-clock observations.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_identity_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py"
+  ],
+  "state": "Stateless canonicalization; the volatile run envelope is the only per-call value.",
+  "static_checks": [
+    {
+      "expected": "ast inspection shows the frozen json.dumps options and PLAN_DOMAIN_SEPARATOR usage",
+      "id": "XDL1-SR-018-U-STATIC",
+      "rule": "canonical serialization uses sort_keys, compact separators, allow_nan False and the plan domain separator",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-018-U unit specification - Simulation-time ordering and canonical semantic identity",
+  "unit_cases": [
+    {
+      "expected": "the recomputed digest equals plan.digest.value and the canonical bytes are stable across repeated calls",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_plan_digest_self_consistent",
+      "precondition": "a resolved plan emitted by the compiler",
+      "stimulus": "compute_plan_digest(plan) and canonical_plan_bytes(plan)"
+    },
+    {
+      "expected": "plan_matches_digest is True and experiment_plan_status is exactly 'resolved'",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_plan_matches_digest_for_emitted_plan",
+      "precondition": "a resolved plan emitted by the compiler",
+      "stimulus": "plan_matches_digest(plan) and experiment_plan_status(plan)"
+    },
+    {
+      "expected": "no runId, generatedAt or sourceByteDigests key appears anywhere in the plan body; they exist only in the run envelope",
+      "id": "tests/thesis_lite/xdl/test_xdl1_identity_unit.py::test_plan_body_excludes_volatile_fields",
+      "precondition": "a resolved plan compiled with an explicit run_id and generated_at",
+      "stimulus": "recursive key scan of the plan body"
+    },
+    {
+      "expected": "observers ordered by (timeDomainId, observerId) and metrics by metricId with observerIds and timeDomainIds sorted; both runs identical",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_observer_and_metric_order_stable",
+      "precondition": "observers and metrics declared in reverse identity order",
+      "stimulus": "compile_experiment_plan(resources) twice with permuted input order"
+    },
+    {
+      "expected": "both runs return identical diagnostic tuples ordered by Diagnostic.sort_key",
+      "id": "tests/thesis_lite/xdl/test_xdl1_diagnostics_unit.py::test_diagnostics_sorted_deterministically",
+      "precondition": "a rejected set supplied twice with permuted resource order",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "canonical_plan_bytes, plan.digest and provenance.inputSemanticDigest are equal; only sourceByteDigests differ",
+      "id": "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py::test_yaml_and_json_equal_plan_bytes_and_digest",
+      "precondition": "the same declared intent authored as YAML and as JSON",
+      "stimulus": "compile_experiment_sources for both encodings"
+    },
+    {
+      "expected": "canonical_plan_bytes and plan.digest are byte-equal",
+      "id": "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py::test_resource_order_permutation_equal_plan_bytes",
+      "precondition": "the same resources supplied in two different orders",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "canonical_plan_bytes and plan.digest are byte-equal",
+      "id": "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py::test_payload_order_permutation_equal_plan_bytes",
+      "precondition": "the same payloads declared in two different orders within their extension maps",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "plan bodies and planDigest are equal; only the volatile run envelope differs",
+      "id": "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py::test_volatile_run_envelope_does_not_change_plan_digest",
+      "precondition": "the same set compiled with two different run_id and generated_at values",
+      "stimulus": "compile_experiment_plan(resources, run_id=..., generated_at=...)"
+    },
+    {
+      "expected": "selection/component logical identities are byte-identical; only the affected binding artifact reference and the recomputed digest change",
+      "id": "tests/thesis_lite/xdl/test_xdl1_metamorphic_unit.py::test_resource_revision_change_keeps_unrelated_identity",
+      "precondition": "the same set with one unrelated resource revision and one artifact digest changed",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}

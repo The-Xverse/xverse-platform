@@ -1,0 +1,57 @@
+{
+  "boundaries": [
+    "XDL1-XB-04",
+    "XDL1-XB-07"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL1-PLAN-TIME-UNIT-UNKNOWN",
+    "XDL1-PLAN-TIME-PRECISION",
+    "XDL1-PLAN-QUANTITY-NONFINITE",
+    "XDL1-PLAN-QUANTITY-NEGATIVE",
+    "XDL1-PLAN-QUANTITY-OVERFLOW",
+    "XDL1-PLAN-PARAMETER-BOUND",
+    "XDL1-PLAN-BOUND-EXCEEDED (max_parameters per declared payload list, total compiled parameters, and declared core parameter list; independent negative case required for each scope)"
+  ],
+  "id": "XDL1-SR-019-CMP",
+  "interfaces": [
+    "ExperimentLimits",
+    "compile_experiment_plan",
+    "xdl/profiles/experiment-lite-v0.1.schema.json"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-04",
+    "XDL1-ARCH-10"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-019 (successor, resolves XDL1-RVW-001 and XDL1-RVW-003), realized by XDL1-ARCH-04, XDL1-ARCH-10 in docs/engineering/xdl-lite/architecture.md section 4 and frozen as XDL1-DD-13 in docs/engineering/xdl-lite/detailed-design.md sections 10.2/10.3.",
+  "requirements": [
+    "XDL1-SR-019"
+  ],
+  "responsibilities": [
+    "Validate every declared quantity, duration, tolerance, and bound against the closed unit vocabulary and the finite ExperimentLimits.",
+    "Reject non-finite, negative, overflow, imprecise, or ambiguous-unit values with a stable structured diagnostic.",
+    "Enforce each declared finite bound over its full frozen scope, including the total compiled-parameter scope of detailed-design.md section 10.3, and require at least one independent negative case per declared bound scope.",
+    "Invent no scientific protocol number, threshold, deadline, or tolerance; library bounds are platform limits, not thesis thresholds."
+  ],
+  "review_resolution": [
+    "XDL1-RVW-001",
+    "XDL1-RVW-003"
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-019-CMP allocation - Quantities, units, and finite library bounds"
+}

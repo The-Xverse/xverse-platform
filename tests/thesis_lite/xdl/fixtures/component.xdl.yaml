@@ -1,0 +1,36 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: Component
+metadata:
+  namespace: org.xverse.experiment
+  name: sample-source
+  version: 0.1.0
+  provenance:
+    source: xverse-public-example
+    revision: xdl1-rev-1
+    maturity: prototype
+spec:
+  capabilities:
+    - produce-samples
+  interfaces:
+    - id: sample-stream
+      direction: output
+      payloadSchema: urn:xverse:experiment:sample-v1
+      unitSemantics: dimensionless
+      compatibility: exact
+  endpoints:
+    - id: samples-out
+      ownerId: sample-source
+      interfaceId: sample-stream
+      direction: output
+  parameters:
+    - id: nominal-rate
+      valueType: integer
+      unitSemantics: hertz
+      mutability: configuration
+  models:
+    - id: sample-model
+      modelKind: behavioral
+      externalRef: urn:xverse:experiment:model:sample
+      inputs: []
+      outputs: []
+      maturity: prototype

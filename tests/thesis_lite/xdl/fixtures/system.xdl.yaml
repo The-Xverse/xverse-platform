@@ -1,0 +1,73 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: System
+metadata:
+  namespace: org.xverse.experiment
+  name: sample-loop
+  version: 0.1.0
+  provenance:
+    source: xverse-public-example
+    revision: xdl1-rev-1
+    maturity: prototype
+spec:
+  defaultTimeDomainId: experiment-time
+  timeDomains:
+    - id: experiment-time
+      clockClass: simulation
+      epoch: "0"
+      rate: "1"
+      monotonic: true
+    - id: control-time
+      clockClass: logical
+      epoch: "0"
+      rate: "1"
+      monotonic: true
+  nodes:
+    - id: producer-node
+      roles:
+        - compute
+    - id: sink-node
+      roles:
+        - compute
+  componentInstances:
+    - id: source-instance
+      componentRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: Component
+        namespace: org.xverse.experiment
+        name: sample-source
+      nodeId: producer-node
+    - id: sink-instance
+      componentRef:
+        apiVersion: xverse.io/xdl/v1alpha1
+        kind: Component
+        namespace: org.xverse.experiment
+        name: sample-source
+      nodeId: sink-node
+  interfaces:
+    - id: sample-stream
+      direction: bidirectional
+      payloadSchema: urn:xverse:experiment:sample-v1
+      unitSemantics: dimensionless
+      compatibility: exact
+  endpoints:
+    - id: source-out
+      ownerId: source-instance
+      interfaceId: sample-stream
+      direction: output
+    - id: sink-in
+      ownerId: sink-instance
+      interfaceId: sample-stream
+      direction: input
+  flows:
+    - id: sample-flow
+      sourceEndpointId: source-out
+      destinationEndpointIds:
+        - sink-in
+      interfaceId: sample-stream
+      deliveryIntent: ordered
+      timeDomainId: experiment-time
+  parameters:
+    - id: loop-count
+      valueType: integer
+      unitSemantics: count
+      mutability: constant

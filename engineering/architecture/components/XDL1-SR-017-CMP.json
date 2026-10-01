@@ -1,0 +1,53 @@
+{
+  "boundaries": [
+    "XDL1-XB-04"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL-SEMANTIC-PROFILE-MISSING (accepted, reused)",
+    "XDL-SEMANTIC-PROFILE-INCOMPATIBLE (accepted, reused)",
+    "XDL-SEMANTIC-PROFILE-SCHEMA-MISSING (accepted, reused)",
+    "XDL-SEMANTIC-EXTENSION-SCHEMA (accepted, reused)",
+    "XDL1-PLAN-PROFILE-ABSENT",
+    "XDL1-PLAN-PROFILE-DUPLICATE",
+    "XDL1-PLAN-PROFILE-VERSION-UNSUPPORTED",
+    "XDL1-PLAN-PROFILE-SCHEMAREF-UNSUPPORTED",
+    "XDL1-PLAN-PROFILE-PAYLOAD-DUPLICATE",
+    "XDL1-PLAN-PROFILE-TARGET-MISMATCH"
+  ],
+  "id": "XDL1-SR-017-CMP",
+  "interfaces": [
+    "compile_experiment_plan",
+    "xdl/profiles/experiment-lite-v0.1.schema.json"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-02",
+    "XDL1-ARCH-10"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-017, realized by XDL1-ARCH-02, XDL1-ARCH-10 in docs/engineering/xdl-lite/architecture.md section 4 and frozen in docs/engineering/xdl-lite/detailed-design.md.",
+  "requirements": [
+    "XDL1-SR-017"
+  ],
+  "responsibilities": [
+    "Consume exactly one explicitly admitted, versioned, neutral experiment Profile at existing XDL extension points.",
+    "Fail closed on an unknown Profile, namespace, version, schemaRef, payload kind, or field.",
+    "Introduce neither a second configuration language nor a generic unvalidated extension bag."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-017-CMP allocation - Additive, explicitly admitted, fail-closed Profile extension"
+}

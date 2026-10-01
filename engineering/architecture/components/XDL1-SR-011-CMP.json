@@ -1,0 +1,47 @@
+{
+  "boundaries": [
+    "XDL1-XB-02",
+    "XDL1-XB-03"
+  ],
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work.",
+  "dependencies": [
+    "docs/engineering/xdl-lite/architecture.md rev 1",
+    "docs/engineering/xdl-lite/detailed-design.md rev 1",
+    "docs/engineering/xdl-lite/requirements.md rev 1",
+    "accepted XDL loader/schema/semantics/normalizer modules (read-only, unchanged)",
+    "xdl/schemas/v1alpha1/** and xdl/profiles/xcom-v0.1.schema.json (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process library call inside the admitted XDL1 envelope: no process, service, container, network, device, artifact, or registry is created, started, probed, or contacted.",
+  "errors": [
+    "XDL1-PLAN-INPUT-MUTATED",
+    "XDL1-PLAN-DIGEST-SELFCHECK"
+  ],
+  "id": "XDL1-SR-011-CMP",
+  "interfaces": [
+    "resource_semantic_digest",
+    "canonical_plan_bytes",
+    "compute_plan_digest",
+    "plan_matches_digest"
+  ],
+  "logical_elements": [
+    "XDL1-ARCH-07"
+  ],
+  "planned_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "src/xverse_xdl/__init__.py",
+    "src/xverse_xdl/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/xdl-lite/requirements.md XDL1-SR-011, realized by XDL1-ARCH-07 in docs/engineering/xdl-lite/architecture.md section 4 and frozen in docs/engineering/xdl-lite/detailed-design.md.",
+  "requirements": [
+    "XDL1-SR-011"
+  ],
+  "responsibilities": [
+    "Record per-resource normalized semantic digests plus the input semantic digest so a consumer can verify identity without reparsing YAML.",
+    "Keep plan/schema version, resource revision, Profile version, API version, and artifact/model revision independent.",
+    "Expose plan version, Profile version and digest, API version, and the normalized input semantic digest."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable or cached state. Receives immutable NormalizedResource values and returns a fresh plain plan dict plus sorted diagnostics; persists, journals, and mutates nothing.",
+  "title": "XDL1-SR-011-CMP allocation - Declared input provenance and independent versions"
+}

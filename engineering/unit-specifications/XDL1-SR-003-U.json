@@ -1,0 +1,64 @@
+{
+  "component_id": "XDL1-SR-003-CMP",
+  "concurrency": "Single-threaded pure compilation; one bounded compile per call over immutable normalized resources; no shared mutable state, no worker, thread, coroutine, timer, or background work. Compiler-emitted structures are fresh and owned by the caller; the volatile run envelope is the only per-call value and never enters the plan body.",
+  "errors": [
+    "XDL1-PLAN-DEPENDENCY-MISSING",
+    "XDL1-PLAN-DEPENDENCY-CYCLE",
+    "XDL1-PLAN-TIME-UNIT-UNKNOWN",
+    "XDL1-PLAN-TIME-PRECISION"
+  ],
+  "id": "XDL1-SR-003-U",
+  "inputs": [
+    "normalized Scenario steps and step-intent payloads"
+  ],
+  "interfaces": [
+    "compile_experiment_plan"
+  ],
+  "invariants": [
+    "XDL1-INV-01",
+    "XDL1-INV-02",
+    "XDL1-INV-10",
+    "XDL1-INV-03"
+  ],
+  "outputs": [
+    "plan.lifecycleIntent[] in the frozen (timeDomainId, atTicks, phaseRank, stepId) order"
+  ],
+  "purpose": "Compile declared lifecycle intent into an explicitly ordered, dependency-ordered intent list in the resolved plan without starting, stopping, probing or otherwise influencing any process, service or device.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse_xdl/experiment_plan.py",
+    "tests/thesis_lite/xdl/test_xdl1_intent_unit.py",
+    "tests/thesis_lite/xdl/test_xdl1_order_unit.py"
+  ],
+  "state": "Stateless ordered intent list; no lifecycle handle, permit or provider is constructed.",
+  "static_checks": [
+    {
+      "expected": "ast scan shows no import of xverse_xdl.lifecycle or process-starting module",
+      "id": "XDL1-SR-003-U-STATIC",
+      "rule": "experiment_plan.py imports no lifecycle/permit/provider capability",
+      "tool": "repository static inspection (python ast parse, jsonschema meta-schema validation, additive diff scope check)"
+    }
+  ],
+  "title": "XDL1-SR-003-U unit specification - Declared lifecycle intent without lifecycle execution",
+  "unit_cases": [
+    {
+      "expected": "each lifecycleIntent element carries stepId, actionKind, targetRef, timeDomainId, phase, schedule{declaredAt,declaredUnit,atTicks,tolerance}, dependsOn, duration and parameters",
+      "id": "tests/thesis_lite/xdl/test_xdl1_intent_unit.py::test_lifecycle_intent_fields_emitted",
+      "precondition": "valid step-intent payloads with phase, dependsOn, duration and typed parameters",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "lifecycleIntent ordered by (timeDomainId, atTicks, phaseRank, stepId) with the frozen phase rank",
+      "id": "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_lifecycle_order_key_phase_rank",
+      "precondition": "steps in one domain and equal ticks with phases prepare/start/observe/stop/cleanup declared out of order",
+      "stimulus": "compile_experiment_plan(resources)"
+    },
+    {
+      "expected": "a resolved plan is returned and no process is created",
+      "id": "tests/thesis_lite/xdl/test_xdl1_side_effect_unit.py::test_compiler_creates_no_process",
+      "precondition": "subprocess.Popen, subprocess.run and os.system monkeypatched to raise",
+      "stimulus": "compile_experiment_plan(resources)"
+    }
+  ]
+}
