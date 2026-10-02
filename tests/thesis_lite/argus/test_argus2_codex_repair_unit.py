@@ -158,3 +158,36 @@ def test_huge_version_component_yields_stable_unsupported_diagnostic(tmp_path):
     reader = EvidenceStore.read_run(root)
     assert "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED" in {d.code for d in reader.diagnostics}
     assert json.loads(reader.export_json())["evidenceStatus"] == "incomplete"
+
+
+@pytest.mark.parametrize("overrides", [
+    {"plan": {}},
+    {"plan": {"apiVersion": "wrong", "profileVersion": "0.1.0", "planVersion": "1",
+              "semanticDigest": {"algorithm": "sha256", "value": "0" * 64}}},
+    {"sourceByteProvenance": {"input": {}}},
+    {"sourceByteProvenance": {"input": {"algorithm": "sha256", "value": "bad"}}},
+    {"openedAt": None}, {"finalizedAt": []}, {"extensions": None},
+    {"unexpected": "unowned"}, {"evidenceReasons": ["unknown"]},
+    {"metricInputs": [None]},
+    {"metricInputs": [{"metricId": "m1", "observerIds": 7}]},
+])
+def test_nested_manifest_metadata_defects_cannot_be_assessed_complete(tmp_path, overrides):
+    root = S.synthetic_run(tmp_path / "run", S.annotation_event_bytes("e1"), **overrides)
+    reader = EvidenceStore.read_run(root)
+    assert reader.assessed_evidence_status == "incomplete"
+    assert reader.diagnostics
+    assert json.loads(reader.export_json())["evidenceStatus"] == "incomplete"
+
+
+def test_duplicate_artifact_identity_is_rejected(tmp_path):
+    root = tmp_path / "run"
+    run = S.open_run(root)
+    (root / "data.txt").write_bytes(b"data")
+    run.record_artifact("data.txt")
+    run.finalize()
+    manifest = json.loads((root / "manifest.json").read_text())
+    manifest["artifacts"] *= 2
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    reader = EvidenceStore.read_run(root)
+    assert reader.assessed_evidence_status == "incomplete"
+    assert reader.diagnostics

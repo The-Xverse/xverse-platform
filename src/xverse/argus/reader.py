@@ -18,7 +18,10 @@ import re
 from pathlib import Path
 from typing import Any
 
+from xverse_xdl.experiment_plan import API_VERSION, PLAN_VERSION
+
 from .artifacts import verify_index_entry
+from .clocks import validate_clock
 from .diagnostics import EvidenceDiagnostic, diagnostic
 from .limits import EvidenceLimits
 from .recovery import (
@@ -34,6 +37,7 @@ from .schema import (
     json_depth_exceeded,
     parse_json_bounded,
     parse_major,
+    validate_extensions,
 )
 from .writer import evaluate_evidence
 
@@ -372,6 +376,84 @@ def _dedupe(diagnostics: list[EvidenceDiagnostic]) -> list[EvidenceDiagnostic]:
     return result
 
 
+def _manifest_metadata_diagnostics(manifest: dict[str, Any], limits: EvidenceLimits) -> list[EvidenceDiagnostic]:
+    """Validate nested recorded metadata without coercing it or inferring absent declarations."""
+    allowed = {
+        "schemaVersion", "manifestVersion", "runId", "plan", "sourceByteProvenance", "writerState",
+        "openedAt", "finalizedAt", "eventCount", "eventStream", "artifacts", "obligations",
+        "evidenceStatus", "evidenceReasons", "limits", "extensions", "metricInputs", "clockDomains",
+    }
+    defect = bool(set(manifest) - allowed)
+
+    def digest_valid(value: Any) -> bool:
+        return (
+            isinstance(value, dict)
+            and set(value) == {"algorithm", "value"}
+            and value.get("algorithm") == "sha256"
+            and isinstance(value.get("value"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", value["value"]) is not None
+        )
+
+    plan = manifest["plan"]
+    if (
+        set(plan) != {"apiVersion", "profileVersion", "planVersion", "semanticDigest"}
+        or plan.get("apiVersion") != API_VERSION
+        or plan.get("planVersion") != PLAN_VERSION
+        or not isinstance(plan.get("profileVersion"), str)
+        or not plan["profileVersion"]
+        or not digest_valid(plan.get("semanticDigest"))
+    ):
+        defect = True
+    for source, digest in manifest["sourceByteProvenance"].items():
+        if not source or not digest_valid(digest):
+            defect = True
+
+    paths = [entry.get("path") for entry in manifest["artifacts"] if isinstance(entry.get("path"), str)]
+    if len(paths) != len(set(paths)):
+        defect = True
+
+    reason_codes = {
+        "ARGUS2-REASON-" + suffix for suffix in (
+            "TRUNCATED-STREAM", "MISSING-ARTIFACT", "MUTATED-ARTIFACT", "UNMET-OBLIGATION", "KNOWN-LOSS",
+            "DEGRADED-INTERVAL", "INVALID-INTERVAL", "UNRESOLVED-CAUSATION", "UNCLOSED-INTERVAL",
+            "UNSUPPORTED-SCHEMA", "WRITER-STATE", "CORRUPT-MANIFEST", "CORRUPT-EVENT",
+        )
+    }
+    if set(manifest["evidenceReasons"]) - reason_codes or (
+        manifest["evidenceStatus"] == "complete" and manifest["evidenceReasons"]
+    ):
+        defect = True
+
+    metric_fields = {"metricId", "observerIds", "calculationRef", "unitSemantics", "timeDomainIds", "evidenceSinkRefs"}
+    for metric in manifest.get("metricInputs", []):
+        if not isinstance(metric, dict) or set(metric) != metric_fields:
+            defect = True
+            continue
+        if any(not isinstance(metric[field], str) or not metric[field]
+               for field in ("metricId", "calculationRef", "unitSemantics")):
+            defect = True
+        if any(not isinstance(metric[field], list)
+               or any(not isinstance(value, str) or not value for value in metric[field])
+               for field in ("observerIds", "timeDomainIds", "evidenceSinkRefs")):
+            defect = True
+
+    diagnostics: list[EvidenceDiagnostic] = []
+    for field in ("openedAt", "finalizedAt"):
+        if field in manifest:
+            _, issues = validate_clock(manifest[field], pointer=f"/{field}", limits=limits)
+            diagnostics.extend(issues)
+    if "extensions" in manifest:
+        if manifest["extensions"] is None:
+            defect = True
+        diagnostics.extend(validate_extensions(manifest["extensions"], pointer="/extensions", limits=limits))
+    if defect:
+        diagnostics.append(diagnostic(
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE", "nested manifest metadata violates the frozen contract",
+            path=MANIFEST_NAME, remediation="Preserve complete, unique recorded identities and valid declarations.",
+        ))
+    return diagnostics
+
+
 def read_run(root: Any, *, limits: EvidenceLimits | None = None) -> EvidenceReader:
     """Open one run read-only, verify manifest/stream/artifacts, and return a bounded view."""
 
@@ -566,8 +648,13 @@ def read_run(root: Any, *, limits: EvidenceLimits | None = None) -> EvidenceRead
             recorded_status=recorded_status, recorded_reasons=recorded_reasons)
 
     # Apply the same obligation contract on admission and read; damaged obligations are never dropped.
-    from .api import _validate_obligations
+    from .api import _validate_obligations, _validate_run_id
 
+    metadata_diagnostics = _manifest_metadata_diagnostics(manifest, effective)
+    metadata_diagnostics.extend(_validate_run_id(run_id, effective))
+    diagnostics.extend(metadata_diagnostics[:effective.max_diagnostic_count])
+    if metadata_diagnostics:
+        assessed_reasons.append("ARGUS2-REASON-CORRUPT-MANIFEST")
     _, obligation_diagnostics = _validate_obligations(obligations, effective)
     diagnostics.extend(obligation_diagnostics[:effective.max_diagnostic_count])
     if obligation_diagnostics:

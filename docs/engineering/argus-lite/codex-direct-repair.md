@@ -17,18 +17,18 @@ The source main checkout's existing untracked author records are preserved.
 ## Review findings and successor design
 
 A separate read-only pass recorded CDX-01..03 before repairs, followed by a second pass
-recording CDX-04..05 and failing reproductions before their repairs. Both records and the
+recording CDX-04..05 and CDX-06 with failing reproductions before their repairs. Both records and the
 original worker inventory are retained in the external evidence bundle below.
 
 | Findings | Existing requirements | Repair and regression evidence |
 | --- | --- | --- |
-| CDX-01, CDX-04, CDX-05 / AR-F03 | ARGUS2-SR-001, 002, 005, 007, 010 | Reader validates required manifest member types, full stream identity and nested obligations. Present-null event members and duplicate JSON object members are rejected. Huge version components return a stable unsupported-schema result. |
+| CDX-01, CDX-04, CDX-05, CDX-06 / AR-F03 | ARGUS2-SR-001, 002, 005, 007, 010 | Reader validates required manifest member types, full stream identity, plan/provenance/metric metadata, unique artifact paths, declared clocks and nested obligations. Present-null event members and duplicate JSON object members are rejected. Huge version components return a stable unsupported-schema result. |
 | CDX-02 / AR-F01, AR-F02 | ARGUS2-SR-002, 005, 007, 010 | Recorded event count is checked against verified records. Artifact/obligation collections are bounded before verification. Actual stream line count is bounded independently of byte size. |
 | CDX-03 / AR-F01, AR-F02 | ARGUS2-SR-003, 005, 006, 010 | Descriptor-relative directory traversal anchors the read to verified parent directories; symlink swaps cannot redirect hashing. Stream and artifact I/O failures yield stable diagnostics and incomplete evidence. Artifact hashing rejects a size mismatch before hashing and stops if the file grows beyond the recorded size. |
 | Inherited AR-F04, AR-F05, AR-RVW-001 | ARGUS2-SR-001, 002, 005, 006, 007, 010 | Exact publication byte bounds, admission snapshots, defensive returned copies and iterative nesting guards are retained and repeated by the existing adversarial tests. |
 
 The additive regression file is `tests/thesis_lite/argus/test_argus2_codex_repair_unit.py`
-(35 parameterized cases). Existing frozen identifiers and assertions are preserved. Source
+(47 parameterized cases). Existing frozen identifiers and assertions are preserved. Source
 changes are in `api.py`, `artifacts.py`, `reader.py`, `recovery.py` and `schema.py`; remaining
 Argus source adjustments are import/annotation/lint cleanup. No new runtime dependency is added.
 The local descriptor walk uses Linux/POSIX directory descriptors and `O_NOFOLLOW`.
