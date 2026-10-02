@@ -1,6 +1,6 @@
 # xverse-platform
 
-X-Verse vNext is a multi-industry cyber-physical systems experimentation platform under development.
+X-Verse is a multi-industry cyber-physical systems experimentation platform under development.
 
 Owns the domain-neutral platform, authoritative architecture decisions, and cross-repository M0 inventory. Future code belongs here only after its capability specification and gates are satisfied.
 
