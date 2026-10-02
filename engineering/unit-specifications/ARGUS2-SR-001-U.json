@@ -1,0 +1,142 @@
+{
+  "component_id": "ARGUS2-SR-001-CMP",
+  "concurrency": "Single-threaded per run; one admission attempt per run root; no shared mutable state and no background work.",
+  "errors": [
+    "ARGUS2-PLAN-DIGEST-MISMATCH",
+    "ARGUS2-PLAN-VERSION-UNSUPPORTED",
+    "ARGUS2-PLAN-ENVELOPE-CONFLICT",
+    "ARGUS2-STATE-RUN-EXISTS",
+    "ARGUS2-INPUT-FIELD-INVALID"
+  ],
+  "id": "ARGUS2-SR-001-U",
+  "inputs": [
+    "fresh explicit output run root",
+    "caller-supplied unique run id",
+    "accepted resolved plan and optional run envelope",
+    "caller source-byte digests",
+    "caller EvidenceLimits and obligations"
+  ],
+  "interfaces": [
+    "EvidenceStore.open_run",
+    "EvidenceRun.run_id",
+    "xverse_xdl.experiment_plan.plan_matches_digest",
+    "xverse_xdl.experiment_plan.compute_plan_digest"
+  ],
+  "invariants": [
+    "ARGUS2-INV-02",
+    "ARGUS2-INV-05",
+    "ARGUS2-INV-10",
+    "ARGUS2-INV-13",
+    "ARGUS2-INV-21"
+  ],
+  "outputs": [
+    "opened EvidenceRun with run_id",
+    "atomically published open manifest with plan block and source-byte provenance",
+    "categorized EvidenceError on rejection"
+  ],
+  "purpose": "Verify the supplied resolved plan through the accepted xverse_xdl.experiment_plan public API, reject a digest mismatch/unsupported version/envelope conflict/existing run root, record the accepted API/Profile/plan versions and the verified semantic plan digest, keep source-byte provenance separate, and open exactly one fresh run bound to the caller-supplied identity.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/planbinding.py",
+    "src/xverse/argus/api.py",
+    "src/xverse/argus/diagnostics.py",
+    "tests/thesis_lite/argus/test_argus2_admission_unit.py"
+  ],
+  "state": "Owns the run-admission decision and the in-memory plan-identity record; holds no durable state before a successful open and creates only the exclusive run root and its first manifest.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; the scope check finds no changed xverse_xdl/xcom/xdl file; the admission path references the accepted plan_matches_digest API and no private digest, random or clock call",
+      "id": "ARGUS2-SR-001-U-STATIC",
+      "rule": "python ast parse of the planned admission sources plus a diff-scope check that no xverse_xdl/xcom/xdl file is touched; the admission path calls xverse_xdl.experiment_plan.plan_matches_digest and contains no private digest reimplementation and no random/uuid/wall-clock call",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds a deep-snapshot/round-trip call on each admitted field before storage, no assignment of a caller argument object directly into retained state, and no accessor that returns a retained mutable object by reference",
+      "id": "ARGUS2-SR-001-U-STATIC-SNAPSHOT",
+      "rule": "the admission path stores a canonical JSON round-trip snapshot of every caller-supplied obligation/envelope/source-byte digest/clock/extension value and retains no reference to a caller-owned mutable object; record_artifact stores an internally computed size/hash identity; every public accessor returns a defensive copy",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-001-U unit specification - Run admission and verified plan binding",
+  "unit_cases": [
+    {
+      "expected": "exactly one run opened; run.run_id equals the caller value; manifest.plan.semanticDigest equals the plan body digest; manifest.sourceByteProvenance is a separate map and is not equal to or derived from the semantic digest",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_fresh_run_opens_with_verified_plan_and_separated_provenance",
+      "precondition": "accepted resolved plan whose recorded digest matches its recomputed body digest; fresh empty run root; caller-supplied unique run id and source-byte digests",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan, source_byte_digests={'scenario.xdl': <sha256>})"
+    },
+    {
+      "expected": "rejected; ARGUS2-PLAN-DIGEST-MISMATCH; the run root is not created and nothing is overwritten",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_plan_digest_mutation_rejected",
+      "precondition": "plan body mutated after the recorded digest was computed",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=mutated_plan)"
+    },
+    {
+      "expected": "rejected; ARGUS2-PLAN-DIGEST-MISMATCH; the decision follows the accepted public API and no private digest reimplementation is used",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_plan_matches_digest_api_is_reused_not_reimplemented",
+      "precondition": "accepted xverse_xdl.experiment_plan.plan_matches_digest patched to return False; otherwise valid plan",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan)"
+    },
+    {
+      "expected": "rejected; ARGUS2-PLAN-VERSION-UNSUPPORTED; no run root is created",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_unsupported_plan_major_version_rejected",
+      "precondition": "resolved plan whose apiVersion/planVersion major is outside the accepted XDL v1alpha1/plan '1' contract",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=unsupported_plan)"
+    },
+    {
+      "expected": "rejected; ARGUS2-PLAN-ENVELOPE-CONFLICT; no run root is created",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_envelope_run_id_conflict_rejected",
+      "precondition": "run_envelope.runId differing from the declared run id",
+      "stimulus": "EvidenceStore.open_run(root, run_id='run-a', plan=plan, run_envelope={'runId': 'run-b'})"
+    },
+    {
+      "expected": "rejected; ARGUS2-STATE-RUN-EXISTS; the sentinel bytes are unchanged and no existing file is created or overwritten",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_existing_run_root_rejected_without_overwrite",
+      "precondition": "run root already exists containing a sentinel artifact",
+      "stimulus": "EvidenceStore.open_run(existing_root, run_id=..., plan=plan)"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-FIELD-INVALID; no run root is created",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_unsafe_run_id_rejected",
+      "precondition": "run id failing the frozen identity pattern (empty, separator-laden or over max_id_length)",
+      "stimulus": "EvidenceStore.open_run(root, run_id='../escape', plan=plan)"
+    },
+    {
+      "expected": "manifest.plan.apiVersion/profileVersion/planVersion equal the accepted declared values and are not inferred",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_open_records_accepted_api_profile_and_plan_versions",
+      "precondition": "accepted resolved plan carrying apiVersion, Profile version and plan version",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan)"
+    },
+    {
+      "expected": "manifest.plan.semanticDigest still equals the accepted plan body digest; the differing source-byte value appears only under sourceByteProvenance",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_source_byte_digests_never_substitute_semantic_identity",
+      "precondition": "source_byte_digests values chosen deliberately different from the semantic plan digest",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan, source_byte_digests={'plan.src': <different sha256>})"
+    },
+    {
+      "expected": "both manifests carry the identical caller run id and equal plan blocks; manifest.openedAt is absent; no random identity or wall-clock value appears",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_no_ambient_clock_or_random_identity_at_open",
+      "precondition": "identical caller inputs except the run root location; no caller clock supplied",
+      "stimulus": "EvidenceStore.open_run(root_a, ...); EvidenceStore.open_run(root_b, ...)"
+    },
+    {
+      "expected": "the admitted obligation is an independent deep snapshot; its evaluated minimum is unchanged by the caller mutation and the mutation can neither lower nor drop the obligation (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_nested_obligation_detail_deep_snapshotted_against_caller_mutation",
+      "precondition": "an admitted required min-observations obligation whose nested detail.minimum is a caller-owned mutable value; a fresh run root",
+      "stimulus": "open_run(root, run_id=..., plan=plan, obligations=obligations); then set obligations[0]['detail']['minimum'] = 0 and run.finalize()"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-FIELD-INVALID; no run root is created and no caller-owned object is retained (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_non_json_encodable_or_nonfinite_obligation_detail_rejected_at_admission",
+      "precondition": "an obligation whose nested detail carries a non-JSON-encodable object or a non-finite number",
+      "stimulus": "open_run(root, run_id=..., plan=plan, obligations=[{'obligationId': 'o1', 'kind': 'min-observations', 'required': True, 'detail': {'minimum': float('nan')}}])"
+    },
+    {
+      "expected": "the manifest records the admission-time snapshot; later caller mutation changes no admitted fact because no caller-owned reference is retained (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_admission_unit.py::test_envelope_digests_clocks_and_extensions_deep_snapshotted",
+      "precondition": "caller-supplied run_envelope, source_byte_digests, clocks and extensions objects",
+      "stimulus": "open_run(...); mutate every caller object after admission; inspect the published manifest"
+    }
+  ]
+}

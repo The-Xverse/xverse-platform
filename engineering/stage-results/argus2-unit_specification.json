@@ -1,0 +1,130 @@
+{
+  "artifacts": [
+    {
+      "path": "docs/engineering/argus-lite/unit-specifications.md",
+      "sha256": "ea6fd473637d874d6ab1561ce2f7a20c928076254cf09546e3c046ca8548df9d"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-001-U.json",
+      "sha256": "e045a5c47c7c65f3d00fe99f9bea39a29f3ef7b9e96878d5636d06bbd65404b5"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-002-U.json",
+      "sha256": "05b8f327fabbe15cb06739e1969f9f4bbf269d6a4e9a157850ae2a54dbd82f1b"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-003-U.json",
+      "sha256": "7e6c773e4d7d6618806c7ddf9eec6edfe229b516474c084371c9c1829e71b598"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-004-U.json",
+      "sha256": "3e25a133854b4d8b1a6116e4c51be517843b7620a29363549f479b2740a49f8c"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-005-U.json",
+      "sha256": "c6fdc6d2c35a3f1a5ec512c678e61311a62c6957fcf6bd86d085fab1952283b1"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-006-U.json",
+      "sha256": "6621c650232c5d0a7901b252150c5937f792b0b9512dce62ce8118a966bfa61e"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-007-U.json",
+      "sha256": "4dc9c269a7f4166d58ad166c82f68d92754beb8314671fcffe357fa8a2d4bcce"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-008-U.json",
+      "sha256": "1a7a5dccec88279b03b00c319b3080d095c0f382e379262a9f30676657e21cdf"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-009-U.json",
+      "sha256": "5bd8f9be57177439669c8924088dd20695325d11fb35426f8a9730d1e5489bd0"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-010-U.json",
+      "sha256": "49e7dd17a9be6a03e7ba8c3e2e493888a68f08d15a8ad6d5674707682fc1298c"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-011-U.json",
+      "sha256": "1079722816fe10277518e883d7ed4d1f7d04038217b0606e2fd4984fa4dba1ff"
+    },
+    {
+      "path": "engineering/unit-specifications/ARGUS2-SR-012-U.json",
+      "sha256": "d3a628ddfa81ae17e8c79c9d3035c9339357bf366d1cd064ccdd9b5714269f72"
+    }
+  ],
+  "assumptions": [
+    "This is the unit-specification rework of the same ARGUS2 attempt 1 candidate after the terminal-review verdict 'rework' (run 01M3WW66FB61DKFEPWFEH2BFJE, candidate 2f7806599e7df6693b9899fb328762728dbf65d5). Unit specification runs afresh: the unaccepted previous unit-specifications.md and 12 unit records are replaced by this revision 1 rework, and no accepted revision is superseded because the rejected candidate was never accepted.",
+    "The requirements stage and all its artifacts are immutable and were consumed read-only: docs/engineering/argus-lite/requirements.md, engineering/requirements/ARGUS2-SR-001..012.json, the allocation-only XVE-SYS anchor records and the requirements-stage refines links ARGUS2-L-001..012 are unchanged; no parent allocation, requirement text, provenance or disposition is modified.",
+    "The architecture-stage rework (architecture.md f2a44c73..., detailed-design.md 4f9537d6...) is consumed read-only and byte-preserved; this stage neither edits it nor changes any architecture or component record. The frozen adversarial registry ARGUS2-ADV-01..ARGUS2-ADV-07 (architecture.md section 11.1) is bound here, one-to-one with the terminal reproductions AR-F01-path, AR-F01-bounds, AR-F02, AR-F03-identities, AR-F03-malformed, AR-F04 and AR-F05.",
+    "Each unit record keeps revision '1' (one bounded component-to-unit decomposes_to link per record, ARGUS2-L-201..ARGUS2-L-212, already present and still valid). This stage did not edit engineering/trace/links.json; the inherited decomposes_to, verified_by, analyzed_by and implemented_by link objects and their endpoint revisions are byte-preserved, and validate_trace passes against the current inventory.",
+    "One unit record per allocation component (ARGUS2-SR-001-U .. ARGUS2-SR-012-U) is retained so later decomposes_to/implemented_by/verified_by/analyzed_by links stay unambiguous and the 1:1 requirement-to-component allocation does not change.",
+    "Freezing the repair cases is a specification act only: design changes cannot alter src/tests/pyproject, so this stage wrote no source, test, schema, fixture or packaging byte. The implementation stage must create each frozen identifier verbatim and must add the repair cases without removing, renaming or weakening any of the 139 inherited cases.",
+    "Planned unit-case identifiers are full pytest node identifiers of the form tests/thesis_lite/argus/<module>.py::test_<case>; they are module-level functions with no hyphen, so the trusted discovery normalization test_id.replace('-','_') is a no-op and each identifier appears verbatim in verbose pytest output.",
+    "The 33 new cases and 6 additive repair static checks are grounded in the terminal-review required fixes and the repaired detailed-design sections (4.4, 8.5, 11.1, 12.1, 12.2, 14.1); they specify bounded streaming I/O, pre-I/O confined regular-file checks, closed nested schemas and stable diagnostics, reader-assessed corrupt-evidence status, the actual serialized byte bound at every manifest publication, and deep admission snapshots with immutable returned views. No scientific protocol number, threshold, tolerance, deadline, repetition, seed or run identity is chosen, defaulted or narrowed anywhere in the specification.",
+    "Evidence reason codes (ARGUS2-REASON-*) remain manifest facts; the two new reader-assessed codes ARGUS2-REASON-CORRUPT-MANIFEST and ARGUS2-REASON-CORRUPT-EVENT are assigned only by the reader and are never written into a manifest by the writer.",
+    "The per-unit repair static checks are planned inputs to the ARGUS2-STATIC analysis owned by the verification-design stage; no static analysis is executed in this stage.",
+    "Distinct stage artifacts remain immutable and nonshared: the requirements, architecture and prior-stage records listed as inputs are byte-preserved, and later stages must regenerate their own records rather than overwrite this stage's artifacts."
+  ],
+  "attempt_id": 1,
+  "blockers": [],
+  "findings": [
+    "terminal-review repair (AR-F01, high) specified additively: ARGUS2-ADV-01 is bound to 5 exact identifiers for pre-I/O os.lstat/O_NOFOLLOW confinement and symlink/non-regular/traversal rejection before any read, and ARGUS2-ADV-02 to 6 exact identifiers for bounded manifest/stream/line/diagnostic reads with the caller limits authoritative over any manifest echo. Cases: test_reader_rejects_traversal_or_absolute_recorded_path_before_io, test_reader_rejects_symlink_manifest_stream_or_artifact_before_io, test_reader_rejects_nonregular_manifest_stream_or_artifact_before_io, test_reader_manifest_read_rejected_over_max_manifest_bytes_before_parse, test_reader_event_line_rejected_over_max_event_bytes_before_parse, test_reader_stream_rejected_over_max_events_total_bound, test_reader_caller_limits_authoritative_over_damaged_manifest_echo, test_max_diagnostic_count_caps_damaged_input_diagnostics, test_recovery_uses_nofollow_and_bounded_reads_without_unbounded_read, test_reader_artifact_path_confinement_checked_before_read.",
+    "terminal-review repair (AR-F02, high) specified additively: ARGUS2-ADV-03 is bound to 5 exact identifiers that require recorded versus assessed status separation, never primary complete for corrupt evidence, and verify exit 0 only on assessed complete. Cases: test_reader_exposes_recorded_and_assessed_status_separately, test_manifest_recorded_complete_with_corrupt_stream_assessed_incomplete, test_corrupt_manifest_never_exported_as_primary_complete, test_cli_verify_exit_zero_requires_assessed_complete, test_unreadable_manifest_returns_assessed_incomplete_without_fabrication.",
+    "terminal-review repair (AR-F03, high) specified additively: ARGUS2-ADV-04 is bound to 5 exact identifiers for required run/event/producer identity, per-run eventId uniqueness, strictly increasing ingestionOrdinal from 1, run-ID consistency and finite clock values on read; ARGUS2-ADV-05 is bound to 4 exact identifiers for wrong container types, non-object event lines, truncated JSON/unknown nested keys and the no-uncaught-TypeError/ValueError rule with stable bounded diagnostics.",
+    "terminal-review repair (AR-F04, high) specified additively: ARGUS2-ADV-06 is bound to 3 exact identifiers requiring the actual canonical serialized byte bound to be measured at open, finalize and abort through the single publication chokepoint, with the prior manifest bytes preserved and no closed/complete claim on a bound or I/O failure. Cases: test_manifest_bound_measured_on_actual_serialized_bytes_at_open_finalize_and_abort, test_finalize_manifest_bound_exceeded_preserves_prior_manifest, test_abort_manifest_bound_exceeded_preserves_prior_manifest.",
+    "terminal-review repair (AR-F05, high) specified additively: ARGUS2-ADV-07 is bound to 6 exact identifiers requiring deep admission snapshots of obligations/envelope/digests/clocks/extensions, internally owned artifact identity and immutable/defensive returned views, so post-admission caller mutation cannot lower an obligation, rewrite an indexed hash or change a returned view/export.",
+    "informational: the unit record inventory is now 172 unique, well-formed pytest-discoverable identifiers (139 inherited, unchanged, plus 33 additive repair cases) across 12 records (13, 16, 17, 8, 19, 15, 14, 12, 13, 24, 11, 10). Every identifier appears in both the unit records and unit-specifications.md section 7, and section 7.13 binds every ARGUS2-ADV-01..07 case to at least one identifier. No inherited case, diagnostic, invariant or allocation was removed, renamed or weakened.",
+    "informational: local worker checks only. validate_unit_specification passes for all 12 records; inventory returns 967 artifacts with no duplicate artifact ID; validate_project passes for the current ARGUS2 pointer; validate_trace passes with 3587 links against 967 artifacts; the repository-wide pytest suite and every trusted measure, pinned-target assembly, installed-wheel consumer check, independent internal review, candidate sealing and terminal user acceptance were NOT executed here.",
+    "informational: no source, test, schema, packaging or fixture byte is added or changed by this stage (the existing unaccepted-candidate src/tests remain untouched by this stage), and no independent review of this stage is performed here; the admitted workflow requires a separate read-only internal_review stage.",
+    "limitation: the five findings are repaired at specification level only. Source inspection of src/xverse/argus/** informed the cases, but no runtime, interoperability, compatibility, parity, readiness, security or delivery claim follows; source inspection does not demonstrate runtime success.",
+    "informational (scheduled refresh, not repaired here): the inherited engineering/stage-results/argus2-implementation.json references engineering/trace/links.json with hash 145cb448ef05a1967f5dbdd2643dc76d2585202db324c1483f95e189f1d300f9 while the current links.json hash is e55e639752d87ea3038045937189165b1a1b271739b4b35888098a428c284e7b (later stages appended links after the unaccepted implementation record was written); the trusted schema reports that inherited record's artifact hash mismatch. This stage did not edit that record and did not guess or assert a supersession waiver; the implementation stage must regenerate its own record with the exact current hashes during the rerun, and every other argus2 stage record validates against its current artifact hashes.",
+    "limitation: the admitted planning bundle names a required launch-evidence admission/review.md that is not an admitted input for this run; it remains an external, unverified later-gate input and is neither fabricated nor treated as a blocker for this unit-specification stage."
+  ],
+  "inputs": [
+    "admitted-input:engineering-instructions.json sha256=27b6392afd0f3e7729303b8ce7904734a8893d1e863ed76769d279d397c91a28",
+    "admitted-input:terminal-review-findings.json sha256=13b85afd4c9f0705d46d7b48123f0434ad5248296cb626fd969e31e1925ec714 (verdict rework; findings AR-F01..AR-F05)",
+    "admitted-input:manifest.json sha256=b62e244fdcbf6e4bb8178eaaaf86bc32e0483b85a0bc4c9a8b8298bdee80e6b7",
+    "admitted-input:specs/023-argus-lite-evidence/spec.md sha256=e3d189f4c97667f04d9c3aea23c513ff2e97bdfe8cec503a480bd86a4d3430b4",
+    "admitted-input:specs/023-argus-lite-evidence/plan.md sha256=da65f8cce216b665a3b915a460fbc447baeb7cda0b7d55699b9b1353d8c18e18",
+    "admitted-input:specs/023-argus-lite-evidence/research.md sha256=02e562313a049256c07209a936391c0070b8c2deed391717f1ba233c06f13241",
+    "admitted-input:specs/023-argus-lite-evidence/data-model.md sha256=fcbcb0f5f4d054af57ed380330613eeb7ff2ddc95799e6df3355e21bf6a999d0",
+    "admitted-input:specs/023-argus-lite-evidence/contracts/evidence.md sha256=b4347e07796e52449585aad7133912a25a5906b793164ad6086510fbe8ad9ab1",
+    "admitted-input:specs/023-argus-lite-evidence/tasks.md sha256=5419524845ef5351151c27e98a262aeef458a70c6cead7cc019fecf7b4d04000",
+    "admitted-input:specs/023-argus-lite-evidence/quickstart.md sha256=47fcdaff4c35ff45b2c0cb7ef3881a8e7debc8b04a7c77b1b9a1c106a18bdd6c",
+    "admitted-input:specs/021-thesis-lite-program/backlog.json sha256=54fff85d988e7b46eb2546e1ea77c14dc15bd029b738b190e444f56ef0cb6c57",
+    "admitted-input:specs/021-thesis-lite-program/requirements-priorities.json sha256=9c3fec63ce6b26ab1aa0d72e901752d0a5f4cc16784add5f30e9052abb36a8d0",
+    "admitted-input:docs/adr/ADR-THESIS-LITE-0001.md sha256=fa247b51fd77a55c77d928350e6b1c061f3d2eda2a9963ed2e0b0d22bc05df65",
+    "admitted-baseline:platform-revision=c1fd213cd00259b74f8308d8ca58157ea985aaa0",
+    "repository-source:docs/engineering/argus-lite/requirements.md sha256=1b6d30eef4bb1b338c7ac258a5914e99f43a6c4b13c7b4a2ae7491f9aa60e8ce (immutable requirements artifact, byte-preserved)",
+    "repository-source:engineering/requirements/ARGUS2-SR-001.json sha256=54684f9bbc65f03df72125d66dfc64203c33c55ecbc6a924f26b348a43cafafa (12 accepted software records revision 1, read-only)",
+    "repository-source:engineering/architecture/components/ARGUS2-SR-001-CMP.json sha256=6013f30ae06319b2b7abb35bc625338f1272c9dfecbb30695cf276d53f8b265f (12 allocation components revision 1, byte-preserved)",
+    "repository-source:engineering/stage-results/argus2-requirements.json sha256=94e67cbd2e90bfb8cdf13f098f56629816a9bf1ec4f75c4903a2a2bb5f4b6627 (inherited requirements-stage record, read-only, byte-preserved)",
+    "repository-source:docs/engineering/argus-lite/architecture.md sha256=f2a44c73db99a4305043a144c9ca4b2b99901648c923bf65a38491525e48dad8 (architecture-stage rework, consumed read-only, byte-preserved)",
+    "repository-source:docs/engineering/argus-lite/detailed-design.md sha256=4f9537d65657ea766039b3bbfe7a4d182114211c7fc1bc1511e9df4af7c7c152 (architecture-stage rework, consumed read-only, byte-preserved)",
+    "repository-source:engineering/stage-results/argus2-architecture.json sha256=a099e7a18c25c5e81ba1eb876c4038f3a944e97c11341b9e27c6cda7775eebca (inherited architecture-stage rework record, read-only, byte-preserved)",
+    "repository-source:engineering/trace/links.json sha256=e55e639752d87ea3038045937189165b1a1b271739b4b35888098a428c284e7b (inherited trace; not edited by this stage)",
+    "repository-source:engineering/project.json sha256=9d5927ebbf13f8141d8b7100c0fc07c764722a577e09f65057506006565df7ad (current project pointer, read-only, byte-preserved)",
+    "repository-source:.specify/memory/constitution.md sha256=d84eaaf18cf0cb669da232df85852fd0be44d2ef82ece2f5366813deb98cbd4c (read-only, byte-preserved)",
+    "repository-source:pyproject.toml sha256=a55f3d0ac062b5c349e920770188c28e2a473c5bf1bfdf6075b0a9f73a2b1320 (current candidate bytes, not edited by this stage)",
+    "repository-source:src/xverse_xdl/experiment_plan.py sha256=4e4affa52fe77cea4f37598cd6bce2309a0a767a7e878372ecee0a5599603393 (accepted public plan API, read-only)",
+    "repository-source:src/xverse/xcom/include/xverse/xcom/observation.hpp sha256=edc9a380ff7cb5825cab4114001532c9606a954db13e43e4e1837c835ac0a7fd (accepted C++ observation contract, read-only)",
+    "repository-source:docs/xcom/observation-boundary.md sha256=2678efe2e1b11d092943f4bda1f140aa99b33ccdc4973aa0c57c8b9294cbc7a0 (read-only, byte-preserved)",
+    "repository-source:proto/xverse/xcom/v1/tool_gateway.proto sha256=90e56f82d1251f04732dfaa5003597dfc43b7cfe3212e33b5507cd9e04cf289f (read-only, byte-preserved)",
+    "repository-source:src/xverse/argus/reader.py sha256=e5d21e8501ffdec89bd2c3a6517d2ef94e249b07d923fe5dcbd86ec0504879bb (unaccepted candidate source inspected read-only to ground AR-F01/AR-F02/AR-F03 cases; no bytes changed)",
+    "repository-source:src/xverse/argus/recovery.py sha256=555a68a100777b654b85f659d5c721e0612db4d91dd6f75fcb1d919afa1fae95 (unaccepted candidate source inspected read-only to ground AR-F01/AR-F03 cases; no bytes changed)",
+    "repository-source:src/xverse/argus/writer.py sha256=32d7e452d0142e37e5bf116dc5d915693dd5a787926964fd0613da014debcfa0 (unaccepted candidate source inspected read-only to ground AR-F04 cases; no bytes changed)",
+    "repository-source:src/xverse/argus/api.py sha256=dc75da95f4f63dc14104360d9c809691dec340011f2018fe7fab81aa71c31ed0 (unaccepted candidate source inspected read-only to ground AR-F05 cases; no bytes changed)",
+    "trusted-record-schemas:/opt/controls/fabro_engineering/core.py validate_unit_specification, inventory, validate_project, validate_trace (read-only local checks; the trusted engineering-checks shim was not invoked)"
+  ],
+  "model": {
+    "backend": "api",
+    "provider": "deepseek",
+    "requested_model": "deepseek-v4-flash"
+  },
+  "notes": "Unit-specification rework for ARGUS2 after terminal review verdict 'rework'. Adds 33 additive, frozen pytest-discoverable repair cases and 6 additive static checks that specify bounded streaming I/O, pre-I/O confined regular-file checks, closed nested schemas and stable bounded diagnostics, actual reader-assessed corrupt-evidence status, the actual serialized byte bound at every manifest publication, and deep admission snapshots with immutable returned views; binds ARGUS2-ADV-01..ARGUS2-ADV-07 to exact identifiers in unit-specifications.md section 7.13. All 139 inherited cases, diagnostics, invariants, component records and parent allocations are preserved in intent; no source, test or packaging byte is written and no runtime, verification, interoperability, compatibility or delivery claim is made. Requirements and architecture artifacts are immutable and consumed read-only.",
+  "role": "unit_specification",
+  "schema_version": 1,
+  "status": "complete",
+  "task_id": "ARGUS2"
+}

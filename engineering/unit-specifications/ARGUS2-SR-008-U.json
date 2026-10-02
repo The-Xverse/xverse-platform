@@ -1,0 +1,120 @@
+{
+  "component_id": "ARGUS2-SR-008-CMP",
+  "concurrency": "Pure value import from immutable serialized input; no shared mutable state and no connection to a live producer.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-INPUT-PROJECTION-INCOMPLETE",
+    "ARGUS2-INPUT-PAYLOAD-LENGTH",
+    "ARGUS2-INPUT-IDENTITY-MISSING"
+  ],
+  "id": "ARGUS2-SR-008-U",
+  "inputs": [
+    "versioned observation projection envelope and records",
+    "caller limits"
+  ],
+  "interfaces": [
+    "import_observation(projection)",
+    "observation projection v1.0",
+    "upstream contract 1.0.0"
+  ],
+  "invariants": [
+    "ARGUS2-INV-08",
+    "ARGUS2-INV-15"
+  ],
+  "outputs": [
+    "imported immutable observation records",
+    "rejection diagnostics for incomplete/unknown projection input"
+  ],
+  "purpose": "Consume a documented, versioned serialized projection of owned C++ X-COM ObservationRecord values, map every accessor by value, hold no callback/hub/provider/delivery authority, and reject the narrower gateway schema as the full projection unless a separate versioned mapping records each missing field as unavailable.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/observation.py",
+    "tests/thesis_lite/argus/test_argus2_observation_unit.py"
+  ],
+  "state": "Owns only copied immutable record values inside the run evidence; owns no hub, tap, provider handle, callback or delivery state.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; the projection mapping is closed and no socket/subprocess/hub/tap/provider reference exists",
+      "id": "ARGUS2-SR-008-U-STATIC",
+      "rule": "python ast parse of the planned observation source plus a check that the accessor mapping is a closed field set and that no socket, subprocess, hub, tap or provider handle is referenced",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-008-U unit specification - X-COM owned observation projection import",
+  "unit_cases": [
+    {
+      "expected": "every mapped accessor value (contract/interface/endpoint/schema ids and versions, interaction, origin, clocks, sequence, correlations, route/provider, source payload size, provider outcome, payload view/schema state, visible bytes, tap id, counters) is preserved by value",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_real_owned_projection_preserves_every_accessor_value",
+      "precondition": "a versioned projection serialized by the real owned C++ producer fixture over accepted X-COM headers",
+      "stimulus": "run.import_observation(projection) then read back"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-PROJECTION-INCOMPLETE; no record is appended",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_projection_requires_upstream_contract_identity",
+      "precondition": "a projection envelope omitting projectionVersion/upstreamContractVersion",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "rejected; ARGUS2-SCHEMA-MAJOR-UNSUPPORTED; no record is appended",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_unknown_projection_major_version_rejected",
+      "precondition": "a projection whose projectionVersion major is not 1",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-PROJECTION-INCOMPLETE, unless an explicitly versioned separate mapping records each missing field as unavailable; missing metadata is never fabricated",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_narrower_gateway_record_rejected_as_full_projection",
+      "precondition": "a gateway-shaped observation record carrying only the narrower protobuf field set",
+      "stimulus": "run.import_observation(gateway_shaped_projection)"
+    },
+    {
+      "expected": "no callback, mutable hub handle, provider handle, tap handle or delivery method is reachable; import only copies immutable values",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_import_exposes_no_callback_hub_or_delivery_authority",
+      "precondition": "an imported observation run",
+      "stimulus": "inspect the run object and module surface"
+    },
+    {
+      "expected": "the provider outcome is stored verbatim and does not by itself change evidenceStatus or create any experiment-validity claim",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_provider_outcome_is_not_promoted_to_experiment_validity",
+      "precondition": "an imported observation with providerOutcome 'accepted'",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-PAYLOAD-LENGTH; bytes are never synthesized, padded or truncated to fit",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_visible_byte_count_mismatch_rejected",
+      "precondition": "a projection whose visibleBytesHex decodes to a byte count other than visibleByteCount",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "rejected with the ARGUS2-SCHEMA-UNKNOWN-FIELD class; this slice never claims decoder success",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_payload_schema_state_other_than_undecoded_rejected",
+      "precondition": "a projection declaring payloadSchemaState 'decoded'",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "rejected; ARGUS2-SCHEMA-UNKNOWN-FIELD; the unknown key is neither ignored nor silently discarded",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_unknown_nested_projection_field_rejected",
+      "precondition": "a projection record carrying an additional nested key outside extensions",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-IDENTITY-MISSING; no partial accepted record is retained",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_projection_record_missing_required_identity_rejected",
+      "precondition": "a projection record with no contractId or schemaId",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "import succeeds without any socket, network, subprocess or live tap attach/pull/acknowledge operation",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_import_attaches_no_live_tap_and_performs_no_io",
+      "precondition": "an import performed with socket/subprocess access made unavailable",
+      "stimulus": "run.import_observation(projection)"
+    },
+    {
+      "expected": "the reconstructed record values equal the projected values exactly; no field is defaulted, reordered or normalized",
+      "id": "tests/thesis_lite/argus/test_argus2_observation_unit.py::test_projection_roundtrip_preserves_values_exactly",
+      "precondition": "a frozen owned projection imported and exported once",
+      "stimulus": "run.import_observation(projection); finalize; read_run(root).export_json()"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: two consecutive exports of an unchanged run produce byte-equal content and identical record ordering, and declared metric/observer references link to captured artifact/event selections without computing any metric.",
+    "Negative: a corrupt artifact, a hash mismatch or an exceeded reader bound is reported with a stable structured diagnostic and a bounded partial result rather than silent truncation or invented data.",
+    "No evaluation oracle is invoked, no metric value is computed, and no control or actuation output is produced."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-010",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0201"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-010"
+  },
+  "statement": "Argus shall provide a bounded read-only reader that verifies manifest and artifact hashes and returns records, diagnostics and declared metric-input links through JSON/JSONL export; repeated reads of unchanged inputs shall yield equal content and a deterministic selection order, and replay shall be evidence reconstruction only, never component, fault, lifecycle or evaluation-oracle execution.",
+  "status": "accepted",
+  "title": "Bounded read-only replay/export with deterministic selection and metric-input links",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

@@ -1,0 +1,49 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-03",
+    "ARGUS2-XB-04"
+  ],
+  "concurrency": "Pure value import from immutable serialized input; no shared mutable state and no connection to a live producer.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-INPUT-PROJECTION-INCOMPLETE",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-INPUT-PAYLOAD-LENGTH",
+    "ARGUS2-INPUT-IDENTITY-MISSING"
+  ],
+  "id": "ARGUS2-SR-008-CMP",
+  "interfaces": [
+    "import_observation(projection)",
+    "observation projection v1.0",
+    "upstream contract 1.0.0"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-08",
+    "ARGUS2-ARCH-09"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/observation.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-008, realized by ARGUS2-ARCH-08/ARGUS2-ARCH-09 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-008"
+  ],
+  "responsibilities": [
+    "Consume a documented, versioned serialized projection of owned C++ ObservationRecord values produced by a real owned producer fixture.",
+    "Map every accessor by value: logical contract/interface/endpoint/schema identities and versions, interaction/origin, source and observation clocks/times, optional sequence, correlation/causation, route/provider, source payload size, normalized provider outcome, payload view/schema state, visible bytes, declared tap identity and retention-time counters.",
+    "Hold no callback, mutable hub handle or delivery authority; never attach or pull a live tap, acknowledge a validity interval, change provider delivery, reserve lossless capacity, dispatch messages, or interpret a provider success outcome as experiment success.",
+    "Reject the narrower tool-gateway protobuf observation as the full owned projection unless an explicitly versioned separate mapping records each missing field as unavailable; never fabricate missing metadata."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns only copied immutable record values inside the run evidence; owns no hub, tap, provider handle, callback or delivery state.",
+  "title": "ARGUS2-SR-008-CMP allocation - X-COM owned observation projection import"
+}

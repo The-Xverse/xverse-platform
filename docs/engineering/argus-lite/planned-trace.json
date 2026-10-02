@@ -1,0 +1,334 @@
+{
+  "feature": "ARGUS2",
+  "kind": "planned_precode_trace_endpoints",
+  "note": "Precode design record. The implemented_by relations cannot be added to engineering/trace/links.json until the implementation stage has created these exact files, because the trusted code_endpoint contract resolves a real file (and, for a '::symbol' endpoint, a real symbol) and binds its SHA-256 as the code-endpoint revision. The implementation stage adds one implemented_by link per endpoint below (and the affected requirement/component/unit sources) with the exact source hash; the validation stage refreshes only mutable current code-endpoint hashes. All other planned trace relations (verified_by, analyzed_by, validates) were added by this stage.",
+  "planned_code_endpoints": [
+    {
+      "path": "pyproject.toml"
+    },
+    {
+      "path": "src/xverse/__init__.py"
+    },
+    {
+      "path": "src/xverse/argus/__init__.py"
+    },
+    {
+      "path": "src/xverse/argus/api.py"
+    },
+    {
+      "path": "src/xverse/argus/artifacts.py"
+    },
+    {
+      "path": "src/xverse/argus/causation.py"
+    },
+    {
+      "path": "src/xverse/argus/cli.py"
+    },
+    {
+      "path": "src/xverse/argus/clocks.py"
+    },
+    {
+      "path": "src/xverse/argus/diagnostics.py"
+    },
+    {
+      "path": "src/xverse/argus/limits.py"
+    },
+    {
+      "path": "src/xverse/argus/observation.py"
+    },
+    {
+      "path": "src/xverse/argus/planbinding.py"
+    },
+    {
+      "path": "src/xverse/argus/reader.py"
+    },
+    {
+      "path": "src/xverse/argus/recovery.py"
+    },
+    {
+      "path": "src/xverse/argus/schema.py"
+    },
+    {
+      "path": "src/xverse/argus/snapshot.py"
+    },
+    {
+      "path": "src/xverse/argus/writer.py"
+    }
+  ],
+  "adversarial_registry": {
+    "frozen_by": "docs/engineering/argus-lite/architecture.md section 11.1 (frozen before code)",
+    "note": "Terminal-review repair cases; each is bound to exact pytest identifiers in the ARGUS2-UNIT measure (unit cases) and, end to end, in the additive ARGUS2-VS-08 scenario of the ARGUS2-VALIDATION measure. No inherited case is removed or weakened.",
+    "cases": {
+      "ARGUS2-ADV-01": "AR-F01 / AR-F01-path - pre-I/O lstat/O_NOFOLLOW confinement; traversal/absolute/symlink/non-regular rejection",
+      "ARGUS2-ADV-02": "AR-F01 / AR-F01-bounds - bounded streaming reads; caller limits authoritative over a damaged manifest echo",
+      "ARGUS2-ADV-03": "AR-F02 / AR-F02 - recorded vs assessed status; corrupt evidence never primary complete",
+      "ARGUS2-ADV-04": "AR-F03 / AR-F03-identities - required identity, per-run eventId uniqueness, monotonic ordinal, run-ID consistency, finiteness",
+      "ARGUS2-ADV-05": "AR-F03 / AR-F03-malformed - malformed containers/versions/IO become stable bounded diagnostics; no uncaught TypeError/ValueError",
+      "ARGUS2-ADV-06": "AR-F04 / AR-F04 - actual serialized manifest byte bound at every publication; prior manifest preserved on failure",
+      "ARGUS2-ADV-07": "AR-F05 / AR-F05 - deep admission snapshots and immutable returned views"
+    }
+  },
+  "planned_measures": {
+    "integration": {
+      "case_count": 9,
+      "measure": "ARGUS2-INTEGRATION",
+      "modules": [
+        "tests/thesis_lite/argus/test_argus2_integration.py"
+      ]
+    },
+    "static_analysis": {
+      "case_count": 18,
+      "measure": "ARGUS2-STATIC",
+      "modules": []
+    },
+    "unit": {
+      "case_count": 172,
+      "measure": "ARGUS2-UNIT",
+      "modules": [
+        "tests/thesis_lite/argus/test_argus2_admission_unit.py",
+        "tests/thesis_lite/argus/test_argus2_artifacts_unit.py",
+        "tests/thesis_lite/argus/test_argus2_bounds_unit.py",
+        "tests/thesis_lite/argus/test_argus2_clocks_unit.py",
+        "tests/thesis_lite/argus/test_argus2_consumer_unit.py",
+        "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py",
+        "tests/thesis_lite/argus/test_argus2_identity_unit.py",
+        "tests/thesis_lite/argus/test_argus2_observation_unit.py",
+        "tests/thesis_lite/argus/test_argus2_offline_unit.py",
+        "tests/thesis_lite/argus/test_argus2_payload_unit.py",
+        "tests/thesis_lite/argus/test_argus2_reader_unit.py",
+        "tests/thesis_lite/argus/test_argus2_recovery_unit.py",
+        "tests/thesis_lite/argus/test_argus2_stream_unit.py",
+        "tests/thesis_lite/argus/test_argus2_writer_unit.py"
+      ]
+    },
+    "validation": {
+      "case_count": 30,
+      "measure": "ARGUS2-VALIDATION",
+      "modules": [
+        "tests/thesis_lite/argus/test_argus2_validation.py"
+      ]
+    }
+  },
+  "requirements": [
+    {
+      "component_id": "ARGUS2-SR-001-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/api.py",
+        "src/xverse/argus/diagnostics.py",
+        "src/xverse/argus/planbinding.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-001",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-001-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-002-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/schema.py",
+        "src/xverse/argus/writer.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-002",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-002-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-003-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/causation.py",
+        "src/xverse/argus/schema.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-003",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-003-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-004-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/clocks.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-004",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-004-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-005-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/artifacts.py",
+        "src/xverse/argus/diagnostics.py",
+        "src/xverse/argus/limits.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-005",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-005-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-006-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/recovery.py",
+        "src/xverse/argus/writer.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-006",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-006-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-007-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/artifacts.py",
+        "src/xverse/argus/reader.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-007",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-007-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-008-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/observation.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-008",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-008-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-009-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/observation.py",
+        "src/xverse/argus/snapshot.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-009",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-009-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-010-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/cli.py",
+        "src/xverse/argus/reader.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-010",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-010-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-011-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "src/xverse/argus/api.py",
+        "src/xverse/argus/limits.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-011",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-011-U"
+    },
+    {
+      "component_id": "ARGUS2-SR-012-CMP",
+      "planned_analyzed_by_measures": [
+        "ARGUS2-STATIC"
+      ],
+      "planned_implemented_by_endpoints": [
+        "pyproject.toml",
+        "src/xverse/__init__.py",
+        "src/xverse/argus/__init__.py",
+        "src/xverse/argus/cli.py"
+      ],
+      "planned_verified_by_measures": [
+        "ARGUS2-UNIT",
+        "ARGUS2-INTEGRATION",
+        "ARGUS2-VALIDATION"
+      ],
+      "requirement_id": "ARGUS2-SR-012",
+      "status": "planned",
+      "unit_id": "ARGUS2-SR-012-U"
+    }
+  ],
+  "schema_version": 1,
+  "status": "planned_not_implemented"
+}

@@ -1,0 +1,220 @@
+{
+  "component_id": "ARGUS2-SR-010-CMP",
+  "concurrency": "Read-only and re-entrant; concurrent readers observe the same bytes; no writes occur.",
+  "errors": [
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-FAILURE",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-PATH-ESCAPE",
+    "ARGUS2-PATH-SYMLINK",
+    "ARGUS2-PATH-NOT-REGULAR",
+    "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+    "ARGUS2-CORRUPT-EVENT",
+    "ARGUS2-CORRUPT-DUPLICATE-EVENT",
+    "ARGUS2-CORRUPT-ORDINAL",
+    "ARGUS2-CORRUPT-RUN-ID-MISMATCH",
+    "ARGUS2-INPUT-IDENTITY-MISSING",
+    "ARGUS2-INPUT-NONFINITE",
+    "ARGUS2-REASON-CORRUPT-MANIFEST",
+    "ARGUS2-REASON-CORRUPT-EVENT"
+  ],
+  "id": "ARGUS2-SR-010-U",
+  "inputs": [
+    "existing run root and its manifest/stream/artifacts",
+    "caller reader limits"
+  ],
+  "interfaces": [
+    "EvidenceStore.read_run",
+    "EvidenceReader.records",
+    "EvidenceReader.metric_inputs",
+    "EvidenceReader.export_json",
+    "EvidenceReader.export_jsonl",
+    "xverse-argus export"
+  ],
+  "invariants": [
+    "ARGUS2-INV-11",
+    "ARGUS2-INV-15",
+    "ARGUS2-INV-17",
+    "ARGUS2-INV-18",
+    "ARGUS2-INV-19",
+    "ARGUS2-INV-21"
+  ],
+  "outputs": [
+    "deterministic canonical JSON/JSONL export",
+    "records, diagnostics and declared metric-input links",
+    "CLI exit status"
+  ],
+  "purpose": "Provide a bounded read-only reader that verifies manifest and artifact hashes and returns records, diagnostics and declared metric-input links through deterministic JSON/JSONL export, with no execution, metric computation, oracle or control output.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/reader.py",
+    "src/xverse/argus/cli.py",
+    "tests/thesis_lite/argus/test_argus2_reader_unit.py"
+  ],
+  "state": "Owns no writable state; reads and verifies existing evidence and holds only a bounded in-memory export buffer.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; the reader is read-only and exposes no metric/oracle/socket/subprocess call",
+      "id": "ARGUS2-SR-010-U-STATIC",
+      "rule": "python ast parse of the planned reader/cli sources plus a check that the reader opens files read-only, selection is by ingestionOrdinal, and no metric computation, oracle, socket or subprocess call exists",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds pre-I/O confinement checks, bounded streaming reads, caller-authoritative limit selection, both recorded/assessed status fields, and defensive copy on every returned view",
+      "id": "ARGUS2-SR-010-U-STATIC-CONFINE",
+      "rule": "the reader resolves and lstat-checks confined paths before I/O, streams the manifest/stream/lines under caller finite bounds without materializing the whole file, treats the caller limits as authoritative over any manifest echo, exposes recorded and assessed status separately, and returns defensive copies",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-010-U unit specification - Bounded read-only replay/export and metric-input links",
+  "unit_cases": [
+    {
+      "expected": "records are returned in strictly increasing ingestionOrdinal order, deterministically",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_read_run_returns_records_in_ingestion_ordinal_order",
+      "precondition": "a finalized run with events appended out of clock order",
+      "stimulus": "EvidenceStore.read_run(root).records()"
+    },
+    {
+      "expected": "the two exports are byte-equal canonical JSON",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_repeated_json_export_is_byte_equal",
+      "precondition": "an unchanged finalized run",
+      "stimulus": "export_json() twice"
+    },
+    {
+      "expected": "the two exports are byte-equal canonical JSONL with identical record ordering",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_repeated_jsonl_export_is_byte_equal",
+      "precondition": "an unchanged finalized run",
+      "stimulus": "export_jsonl() twice"
+    },
+    {
+      "expected": "the manifest and every indexed artifact size/hash verify and no diagnostic is produced",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_verifies_manifest_and_artifact_hashes",
+      "precondition": "an intact finalized run with an indexed artifact",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-ARTIFACT-HASH plus a bounded partial result of the records read so far; no invented data and no silent truncation",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_corrupt_artifact_yields_diagnostic_and_bounded_partial_result",
+      "precondition": "an indexed artifact whose bytes were mutated",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED plus the first max_read_records records; the run root is not written",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_bound_exceeded_yields_bounded_partial_result",
+      "precondition": "a run holding more records than the caller max_read_records",
+      "stimulus": "EvidenceStore.read_run(root, limits=...)"
+    },
+    {
+      "expected": "each entry carries metricId, observerIds, calculationRef, unitSemantics, timeDomainIds and a declared selection of artifact paths/event ids; no metric value is computed",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_metric_inputs_link_to_captured_selection_without_computation",
+      "precondition": "a plan body declaring metrics with observer references",
+      "stimulus": "EvidenceReader.metric_inputs()"
+    },
+    {
+      "expected": "the incomplete selection is reported explicitly and never filled in or guessed",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_incomplete_metric_selection_is_reported_not_filled",
+      "precondition": "a declared metric observer reference with no matching captured selection",
+      "stimulus": "EvidenceReader.metric_inputs()"
+    },
+    {
+      "expected": "no component, fault, lifecycle action, metric computation, evaluation oracle, subprocess or network call is invoked",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_replay_performs_no_execution_or_oracle_invocation",
+      "precondition": "a finalized run read with socket/subprocess access made unavailable",
+      "stimulus": "EvidenceStore.read_run(root) and both exports"
+    },
+    {
+      "expected": "usage-free JSON summary is printed; exit 0 for complete, exit 1 for incomplete/corrupt, exit 2 for a usage/input error",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_cli_verify_reports_json_and_exit_status",
+      "precondition": "a complete run and an incomplete/corrupt run",
+      "stimulus": "xverse-argus verify <root> for each"
+    },
+    {
+      "expected": "stdout bytes equal the corresponding API export",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_cli_export_matches_api_export",
+      "precondition": "a finalized run",
+      "stimulus": "xverse-argus export <root> --format json|jsonl vs EvidenceReader.export_json()/export_jsonl()"
+    },
+    {
+      "expected": "every run-root file hash is unchanged after the read/export",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_leaves_the_run_root_byte_identical",
+      "precondition": "a finalized run",
+      "stimulus": "record every file hash, read and export, then re-hash"
+    },
+    {
+      "expected": "ARGUS2-PATH-ESCAPE before any open or parse; no bytes are read from outside the run root and the original bytes are unchanged (ARGUS2-ADV-01)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_rejects_traversal_or_absolute_recorded_path_before_io",
+      "precondition": "a manifest field (manifest/eventStream/artifact path) containing a '..' segment, an absolute path or a drive-like prefix",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-PATH-SYMLINK before any read; the link target is never followed and no O_NOFOLLOW-refused file is parsed (ARGUS2-ADV-01)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_rejects_symlink_manifest_stream_or_artifact_before_io",
+      "precondition": "the manifest.json, stream or indexed artifact path is a symlink, including one resolving inside the run root",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-PATH-NOT-REGULAR before any parse; nothing is read and no partial record is trusted (ARGUS2-ADV-01)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_rejects_nonregular_manifest_stream_or_artifact_before_io",
+      "precondition": "the manifest, stream or indexed artifact path is a directory, FIFO, device or socket",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED naming max_manifest_bytes; the partial bytes are not parsed and the original manifest bytes are unchanged (ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_manifest_read_rejected_over_max_manifest_bytes_before_parse",
+      "precondition": "a manifest file larger than the caller max_manifest_bytes",
+      "stimulus": "EvidenceStore.read_run(root, limits=caller_limits)"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED naming max_event_bytes; the over-long line is not parsed and the records before it form a bounded partial result (ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_event_line_rejected_over_max_event_bytes_before_parse",
+      "precondition": "a stream line longer than the caller max_event_bytes",
+      "stimulus": "EvidenceStore.read_run(root, limits=caller_limits)"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED naming max_events; the read stops at the derived total stream bound and the run root is not written (ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_stream_rejected_over_max_events_total_bound",
+      "precondition": "a stream whose byte length exceeds the derived total bound max_events * max_event_bytes",
+      "stimulus": "EvidenceStore.read_run(root, limits=caller_limits)"
+    },
+    {
+      "expected": "the caller limits govern verification; the echoed limits are recorded data only and never relax a bound, and an unparseable echo is a diagnostic rather than a new limit set (ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_reader_caller_limits_authoritative_over_damaged_manifest_echo",
+      "precondition": "a damaged manifest echoing a huge limits object while the caller passes small explicit limits",
+      "stimulus": "EvidenceStore.read_run(root, limits=caller_limits)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-MANIFEST-SHAPE as a stable bounded diagnostic; the container is never coerced, iterated or indexed assuming the wrong type and the assessed status is incomplete (ARGUS2-ADV-05)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_manifest_wrong_container_shape_yields_stable_corrupt_manifest_diagnostic",
+      "precondition": "a manifest that is not a JSON object, or whose artifacts/obligations/eventStream member has a scalar/array type where the frozen type requires another shape",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-EVENT as a stable bounded diagnostic; the record is excluded and the assessed status is incomplete (ARGUS2-ADV-05)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_event_line_not_a_json_object_yields_stable_corrupt_event_diagnostic",
+      "precondition": "a stream line that parses to a JSON array, scalar, string or null",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "exit 1 with an output carrying both recorded and assessed facts for the corrupt run; exit 0 only when assessedEvidenceStatus is 'complete' (ARGUS2-ADV-03)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_cli_verify_exit_zero_requires_assessed_complete",
+      "precondition": "a manifest that recorded 'complete' while verification detects corruption, and a genuinely complete run",
+      "stimulus": "xverse-argus verify <root> for each"
+    },
+    {
+      "expected": "an assessed incomplete result with no records and a bounded stable diagnostic; no manifest is synthesized and the original bytes are unchanged (ARGUS2-ADV-03)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_unreadable_manifest_returns_assessed_incomplete_without_fabrication",
+      "precondition": "a manifest that cannot be read or parsed at all",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "internal admission facts and the second read/export are unchanged because every returned view is an independent defensive copy (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_reader_unit.py::test_mutating_returned_records_cannot_change_subsequent_read_or_export",
+      "precondition": "an intact finalized run read twice",
+      "stimulus": "mutate any nested object reachable from records()/manifest/metric_inputs() returned by the first read, then export again"
+    }
+  ]
+}

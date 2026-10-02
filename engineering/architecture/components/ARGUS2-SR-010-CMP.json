@@ -1,0 +1,54 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-03",
+    "ARGUS2-XB-05"
+  ],
+  "concurrency": "Read-only and re-entrant; concurrent readers are safe and observe the same bytes; no writes occur.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-FAILURE",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED"
+  ],
+  "id": "ARGUS2-SR-010-CMP",
+  "interfaces": [
+    "EvidenceStore.read_run",
+    "EvidenceReader.records",
+    "EvidenceReader.metric_inputs",
+    "EvidenceReader.export_json",
+    "EvidenceReader.export_jsonl",
+    "xverse-argus export"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-10",
+    "ARGUS2-ARCH-07"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/reader.py",
+    "src/xverse/argus/cli.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-010, realized by ARGUS2-ARCH-10/ARGUS2-ARCH-07 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-010"
+  ],
+  "responsibilities": [
+    "Provide a bounded read-only reader that verifies manifest and artifact hashes and returns records, diagnostics and declared metric-input links through JSON/JSONL export.",
+    "Return a deterministic selection order (ingestion ordinal) so repeated reads of unchanged inputs yield equal content.",
+    "Report a corrupt artifact, hash mismatch or exceeded reader bound with a stable structured diagnostic and a bounded partial result rather than silent truncation or invented data.",
+    "Replay is evidence reconstruction only: never execute components, faults, lifecycle actions or an evaluation oracle, and never compute a metric value or emit control/actuation output."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no writable state; reads and verifies existing evidence and holds only a bounded in-memory export buffer.",
+  "title": "ARGUS2-SR-010-CMP allocation - Bounded read-only replay/export and metric-input links"
+}

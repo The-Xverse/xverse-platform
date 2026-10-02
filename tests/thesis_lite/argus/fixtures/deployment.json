@@ -1,0 +1,107 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "local-simulated-loop",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "limitations": [
+        "Declared realization intent only; no artifact is retrieved."
+      ],
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "artifacts": [
+      {
+        "artifactKind": "model",
+        "digest": "sha256:abababababababababababababababababababababababababababababababab",
+        "id": "sample-artifact",
+        "maturity": "prototype",
+        "sourceRef": "urn:xverse:experiment:artifact:sample",
+        "version": "1.0.0"
+      }
+    ],
+    "bindings": [
+      {
+        "artifactIds": [
+          "sample-artifact"
+        ],
+        "extensions": {
+          "io.xverse.experiment": {
+            "delivery": "in-place",
+            "kind": "realization-intent",
+            "protocolBinding": {
+              "bindingKind": "sample-binding",
+              "compatibility": "exact",
+              "limitations": [
+                "Declared reference only; nothing is resolved."
+              ],
+              "standardRef": "urn:xverse:experiment:protocol:sample"
+            },
+            "retry": {
+              "maxAttempts": 3,
+              "policy": "bounded"
+            },
+            "schemaVersion": "0.1",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "element": "source-binding",
+              "kind": "Deployment",
+              "name": "local-simulated-loop",
+              "namespace": "org.xverse.experiment"
+            }
+          }
+        },
+        "id": "source-binding",
+        "lifecycle": {
+          "failure": "failure",
+          "prepare": "prepare",
+          "ready": "ready",
+          "start": "start",
+          "stop": "stop"
+        },
+        "logicalRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "source-instance",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "realizationClass": "simulated",
+        "targetId": "model-unit-target"
+      }
+    ],
+    "readiness": {
+      "failurePolicy": "fail-fast",
+      "requiredConditions": [
+        "artifacts-pinned"
+      ]
+    },
+    "systemRef": {
+      "apiVersion": "xverse.io/xdl/v1alpha1",
+      "kind": "System",
+      "name": "sample-loop",
+      "namespace": "org.xverse.experiment"
+    },
+    "targets": [
+      {
+        "capabilities": [
+          "execute-model"
+        ],
+        "id": "model-unit-target",
+        "lifecycle": {
+          "failure": "failure",
+          "prepare": "prepare",
+          "ready": "ready",
+          "start": "start",
+          "stop": "stop"
+        },
+        "targetClass": "model-unit"
+      }
+    ]
+  }
+}

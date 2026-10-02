@@ -1,0 +1,48 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-02"
+  ],
+  "concurrency": "Pure value construction; no shared mutable state.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-INPUT-CLOCK-MISSING",
+    "ARGUS2-INPUT-NONFINITE",
+    "ARGUS2-CLOCK-UNRESOLVED",
+    "ARGUS2-INPUT-UNIT-MISSING"
+  ],
+  "id": "ARGUS2-SR-004-CMP",
+  "interfaces": [
+    "clock value object",
+    "EvidenceRun.append_event(clocks=...)",
+    "observation projection clocks"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-04",
+    "ARGUS2-ARCH-03"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/clocks.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-004, realized by ARGUS2-ARCH-04/ARGUS2-ARCH-03 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-004"
+  ],
+  "responsibilities": [
+    "Retain both source and observation clock domains and their values with a caller-declared unit/representation per value.",
+    "Distinguish ingestion order from temporal and causal order; never read an ambient wall clock, infer a unit, or generate a random identity.",
+    "Perform no cross-clock-domain comparison, subtraction, sorting or conversion.",
+    "Keep an unknown clock mapping, a missing predecessor and an unobserved interval explicit rather than repaired.",
+    "Reject a clock value without an explicit domain/unit or a record requiring an undeclared clock mapping."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable state; clock values are immutable normalized values carried with their records.",
+  "title": "ARGUS2-SR-004-CMP allocation - Explicit source and observation clock domains"
+}

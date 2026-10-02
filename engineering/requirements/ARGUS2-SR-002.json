@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: a run whose declared obligations are satisfied finalizes with an atomically published manifest whose artifact index, byte sizes and content hashes verify against the stream on close.",
+    "Negative: a closed stream with a truncated last record, a missing artifact, a declared observation loss, or an unmet obligation is reported explicitly as incomplete and never becomes complete by finalization alone.",
+    "Stream closure and evidence completeness are reported as separate facts; no automatic success, scientific-validity, safety or readiness claim follows."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-002",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0016"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-002"
+  },
+  "statement": "Argus shall append validated owned events to a versioned JSONL evidence stream and publish an atomic JSON run manifest carrying artifact identities, sizes and content hashes, the writer state, the event count/hash, the caller-declared evidence obligations and an explicit evidence status; finalization shall claim complete evidence only when every declared obligation and the integrity checks pass, and shall otherwise classify the run explicitly as incomplete.",
+  "status": "accepted",
+  "title": "Bounded versioned event stream and atomic run manifest with explicit completeness",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

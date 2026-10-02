@@ -1,0 +1,53 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-06",
+    "ARGUS2-XB-08"
+  ],
+  "concurrency": "Exactly one writer per run; append and finalize are serialized within that writer; the reader is a separate read-only process/stage.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-REASON-UNMET-OBLIGATION",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-002-CMP",
+  "interfaces": [
+    "EvidenceRun.append_event",
+    "EvidenceRun.finalize",
+    "EvidenceManifest",
+    "EvidenceReader.export_json",
+    "EvidenceReader.export_jsonl"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-02",
+    "ARGUS2-ARCH-12"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/writer.py",
+    "src/xverse/argus/schema.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-002, realized by ARGUS2-ARCH-02/ARGUS2-ARCH-12 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-002"
+  ],
+  "responsibilities": [
+    "Append validated events to a versioned JSONL stream (one canonical JSON object per line).",
+    "Publish an atomic JSON run manifest carrying artifact identities, sizes and content hashes, writer state, event count/hash and the caller-declared obligations.",
+    "Claim complete evidence only when every declared obligation and every integrity check pass; otherwise classify the run explicitly incomplete with reason codes.",
+    "Report stream closure and evidence completeness as separate facts."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the append-only JSONL stream and the manifest lifecycle; owns the authoritative event count/stream hash and the published evidence status until a successor candidate supersedes the run.",
+  "title": "ARGUS2-SR-002-CMP allocation - Versioned event stream and atomic run manifest"
+}

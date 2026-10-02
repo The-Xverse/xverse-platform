@@ -1,0 +1,52 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-06",
+    "ARGUS2-XB-08"
+  ],
+  "concurrency": "Single owning writer; finalize/abort are mutually exclusive; recovery is read-only and may run concurrently with nothing that writes.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-STATE-RUN-EXISTS",
+    "ARGUS2-STATE-WRITER-CONFLICT",
+    "ARGUS2-STATE-ILLEGAL-TRANSITION",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-006-CMP",
+  "interfaces": [
+    "EvidenceRun.writer_state",
+    "EvidenceRun.flush_buffer",
+    "EvidenceRun.finalize",
+    "EvidenceRun.abort",
+    "recovery reader"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-06",
+    "ARGUS2-ARCH-02"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/writer.py",
+    "src/xverse/argus/recovery.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-006, realized by ARGUS2-ARCH-06/ARGUS2-ARCH-02 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-006"
+  ],
+  "responsibilities": [
+    "Enforce exactly one owning writer per run and the new -> open -> closed / open -> failed state machine.",
+    "Reject reuse or overwrite of an existing run and reject a second concurrent or repeated writer.",
+    "Document and perform the flush/fsync/rename boundaries and bounded local partial-write handling.",
+    "Recover by reading bounded prefixes only and report incomplete or damaged evidence without rewriting, upgrading or mutating the original evidence files."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the single-writer state, the open stream handle and the durable manifest/stream bytes for the run; no other component writes them.",
+  "title": "ARGUS2-SR-006-CMP allocation - Single-writer state, durability and non-mutating recovery"
+}

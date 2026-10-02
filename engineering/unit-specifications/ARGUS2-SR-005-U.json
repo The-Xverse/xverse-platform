@@ -1,0 +1,182 @@
+{
+  "component_id": "ARGUS2-SR-005-CMP",
+  "concurrency": "Pure validation functions plus the caller limit value; no shared mutable state.",
+  "errors": [
+    "ARGUS2-INPUT-FIELD-INVALID",
+    "ARGUS2-INPUT-NONFINITE",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-FAILURE",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-LOSS-KNOWN-DROP",
+    "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+    "ARGUS2-CORRUPT-EVENT",
+    "ARGUS2-CORRUPT-RECORD-SHAPE",
+    "ARGUS2-INPUT-IDENTITY-MISSING"
+  ],
+  "id": "ARGUS2-SR-005-U",
+  "inputs": [
+    "every candidate value, identity, version, path and bound input",
+    "caller EvidenceLimits"
+  ],
+  "interfaces": [
+    "EvidenceLimits",
+    "EvidenceDiagnostic",
+    "EvidenceError",
+    "artifact path validation"
+  ],
+  "invariants": [
+    "ARGUS2-INV-01",
+    "ARGUS2-INV-12",
+    "ARGUS2-INV-13",
+    "ARGUS2-INV-18",
+    "ARGUS2-INV-19"
+  ],
+  "outputs": [
+    "EvidenceError carrying categorized EvidenceDiagnostic values",
+    "no partial accepted record on rejection"
+  ],
+  "purpose": "Fail closed on malformed, non-finite, duplicate, unsupported, unsafe or over-bound input with a stable categorized diagnostic, distinguishing input rejection, I/O failure, unsupported schema, corrupt artifact, missing evidence and known observation loss, without silently discarding, repairing or substituting anything.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/limits.py",
+    "src/xverse/argus/diagnostics.py",
+    "src/xverse/argus/artifacts.py",
+    "tests/thesis_lite/argus/test_argus2_bounds_unit.py",
+    "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py"
+  ],
+  "state": "Owns no durable state; owns the immutable effective-limits value and the diagnostic construction rules.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; every emitted diagnostic code is in the frozen closed catalogue",
+      "id": "ARGUS2-SR-005-U-STATIC",
+      "rule": "python ast parse of the planned limits/diagnostics/artifacts sources plus a check that every diagnostic code constant belongs to the frozen closed catalogue and every EvidenceLimits field is read from the caller value",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds broad boundary handling around parsing/validation entry points, all diagnostic string constants inside the closed catalogue, and a diagnostic-count cap at the emission boundary",
+      "id": "ARGUS2-SR-005-U-STATIC-DIAGNOSTICS",
+      "rule": "the reader/recovery/validation paths guard container, type, version, decode, bound and I/O handling and emit only codes from the closed diagnostic catalogue; no uncaught TypeError/ValueError/json decode error escapes; diagnostics are capped by max_diagnostic_count",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-005-U unit specification - Fail-closed validation and caller-configured finite bounds",
+  "unit_cases": [
+    {
+      "expected": "ValueError raised at construction (library programming error, not an evidence diagnostic); no run is created",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_evidence_limits_requires_positive_integers",
+      "precondition": "an EvidenceLimits field set to 0 or a negative value",
+      "stimulus": "EvidenceLimits(max_event_bytes=0, ...)"
+    },
+    {
+      "expected": "the at-bound event is accepted with no diagnostic; the over-bound event is rejected with ARGUS2-BOUND-EXCEEDED naming max_event_bytes and no line is written",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_event_bytes_at_bound_accepted_and_over_rejected",
+      "precondition": "one canonical event exactly at max_event_bytes and one one byte larger",
+      "stimulus": "append the at-bound event, then the over-bound event"
+    },
+    {
+      "expected": "the run accepts exactly max_events events; the additional append is rejected with ARGUS2-BOUND-EXCEEDED naming max_events",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_events_at_bound_accepted_and_over_rejected",
+      "precondition": "max_events accepted events then one more",
+      "stimulus": "append max_events events, then one additional event"
+    },
+    {
+      "expected": "the at-bound id is accepted; the over-bound id is rejected with ARGUS2-BOUND-EXCEEDED naming max_id_length",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_id_length_at_bound_accepted_and_over_rejected",
+      "precondition": "an event id exactly at max_id_length and one character longer",
+      "stimulus": "append both events"
+    },
+    {
+      "expected": "the at-bound text is accepted; the over-bound text is rejected with ARGUS2-BOUND-EXCEEDED naming max_text_length",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_text_length_at_bound_accepted_and_over_rejected",
+      "precondition": "annotation text exactly at max_text_length and one character longer",
+      "stimulus": "append both events"
+    },
+    {
+      "expected": "the at-bound observation is accepted; the over-bound observation is rejected with ARGUS2-BOUND-EXCEEDED naming max_payload_bytes",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_payload_bytes_at_bound_accepted_and_over_rejected",
+      "precondition": "an observation whose visible bytes equal max_payload_bytes and one whose visible bytes exceed it",
+      "stimulus": "import both projections"
+    },
+    {
+      "expected": "the at-bound index is accepted; the additional entry is rejected with ARGUS2-BOUND-EXCEEDED naming max_artifacts",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_artifacts_at_bound_accepted_and_over_rejected",
+      "precondition": "an artifact index exactly at max_artifacts and one entry more",
+      "stimulus": "record the at-bound set, then one additional artifact"
+    },
+    {
+      "expected": "the at-bound set is accepted; the additional obligation is rejected with ARGUS2-BOUND-EXCEEDED naming max_obligations",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_obligations_at_bound_accepted_and_over_rejected",
+      "precondition": "a declared obligation set exactly at max_obligations and one obligation more",
+      "stimulus": "open_run with the at-bound set, then with one additional obligation"
+    },
+    {
+      "expected": "the returned diagnostics list length is at most max_diagnostic_count; no unbounded diagnostic list is produced",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_diagnostic_count_bounds_returned_diagnostics",
+      "precondition": "an input violating more distinct rules than max_diagnostic_count",
+      "stimulus": "trigger the violations and count reported diagnostics"
+    },
+    {
+      "expected": "the at-bound manifest is published; the over-bound manifest is rejected with ARGUS2-BOUND-EXCEEDED naming max_manifest_bytes and no run is opened",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_manifest_bytes_at_bound_accepted_and_over_rejected",
+      "precondition": "a manifest exactly at max_manifest_bytes and one whose canonical bytes exceed it",
+      "stimulus": "open_run under both limits"
+    },
+    {
+      "expected": "the at-bound index is accepted; the additional entry is rejected with ARGUS2-BOUND-EXCEEDED naming max_causal_index_entries",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_causal_index_entries_at_bound_accepted_and_over_rejected",
+      "precondition": "distinct causal references exactly at max_causal_index_entries and one reference more",
+      "stimulus": "append the at-bound set, then one additional distinct reference"
+    },
+    {
+      "expected": "at most max_read_records records are returned, ARGUS2-BOUND-EXCEEDED is reported and the result is a bounded partial result rather than silent truncation",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_read_records_bounds_reader_result",
+      "precondition": "a run holding more accepted records than max_read_records",
+      "stimulus": "EvidenceStore.read_run(root, limits=...).records()"
+    },
+    {
+      "expected": "exactly one ARGUS2-BOUND-EXCEEDED diagnostic naming that field; no diagnostic is produced without an actual violation",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_each_exceeded_bound_produces_exactly_one_diagnostic",
+      "precondition": "one value violating exactly one declared bound",
+      "stimulus": "append/import the value"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-NONFINITE; the value is never truncated, rounded or repaired",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_nonfinite_value_rejected_not_truncated",
+      "precondition": "a payload or clock number that is NaN or Infinity",
+      "stimulus": "append/import the value"
+    },
+    {
+      "expected": "the six required categories (input-rejection, io-failure, unsupported-schema, corrupt-artifact, missing-evidence, known-observation-loss) are present, each diagnostic carries a code whose family prefix matches its category and no two categories share a code",
+      "id": "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py::test_diagnostic_categories_are_distinguishable",
+      "precondition": "one input defect per required diagnostic category",
+      "stimulus": "trigger each defect and collect the reported diagnostics"
+    },
+    {
+      "expected": "diagnostics is empty; no diagnostic code is emitted without an actual violation",
+      "id": "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py::test_no_diagnostic_without_actual_violation",
+      "precondition": "a valid run inside every declared bound",
+      "stimulus": "open, append, import, finalize and read"
+    },
+    {
+      "expected": "at most max_diagnostic_count diagnostics are returned and a single ARGUS2-BOUND-EXCEEDED naming max_diagnostic_count records the cap; damaged input cannot amplify diagnostics without limit (ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_bounds_unit.py::test_max_diagnostic_count_caps_damaged_input_diagnostics",
+      "precondition": "a damaged input (many malformed lines and unknown keys) violating more rules than the caller max_diagnostic_count",
+      "stimulus": "EvidenceStore.read_run(root, limits=limits)"
+    },
+    {
+      "expected": "bounded stable categorized diagnostics (corrupt-event / unknown-field) are returned as data; no TypeError, ValueError or json.JSONDecodeError escapes the reader or the CLI (ARGUS2-ADV-05)",
+      "id": "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py::test_truncated_json_and_unknown_nested_key_yield_stable_bounded_diagnostics",
+      "precondition": "an event line that is truncated JSON and another carrying an unknown nested key outside extensions",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "every case returns an assessed-incomplete bounded result with a stable diagnostic from the closed catalogue; no exception type escapes the reader or CLI (ARGUS2-ADV-05)",
+      "id": "tests/thesis_lite/argus/test_argus2_diagnostics_unit.py::test_no_uncaught_typeerror_or_valueerror_from_malformed_input",
+      "precondition": "a matrix of malformed containers, wrong-typed members and unsupported version text across the manifest and event lines",
+      "stimulus": "EvidenceStore.read_run(root) and the CLI verify/export paths"
+    }
+  ]
+}

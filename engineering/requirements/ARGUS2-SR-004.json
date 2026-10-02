@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: source and observation clock domains and their values are stored with their caller-declared units and survive read-only reconstruction unchanged.",
+    "Negative: a clock value without an explicit domain/unit, or a record requiring a clock mapping the caller did not declare, is rejected or reported as unresolved with a stable structured diagnostic.",
+    "Unknown mappings, unresolved causal references and unobserved intervals remain visible as uncertainty; no global timeline is fabricated by sorting timestamps across domains."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-004",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0183"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-004"
+  },
+  "statement": "Argus shall retain both clock domains and timestamps where a record declares them, an explicit clock-domain identity plus a declared unit/representation per value, and shall distinguish ingestion order from temporal and causal order; it shall make no implicit wall-clock read, no inferred unit, no random identity and no cross-clock-domain comparison or conversion, and shall keep an unknown clock mapping, a missing predecessor and an unobserved interval explicit rather than repaired.",
+  "status": "accepted",
+  "title": "Explicit source and observation clock domains without inferred conversion",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

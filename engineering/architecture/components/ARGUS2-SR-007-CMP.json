@@ -1,0 +1,51 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-05"
+  ],
+  "concurrency": "Filesystem operations are serialized within the owning writer; the reader performs read-only verification.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-PATH-ESCAPE",
+    "ARGUS2-PATH-SYMLINK",
+    "ARGUS2-PATH-UNSAFE",
+    "ARGUS2-PATH-NOT-REGULAR",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-CORRUPT-ARTIFACT-SIZE"
+  ],
+  "id": "ARGUS2-SR-007-CMP",
+  "interfaces": [
+    "artifact index entry",
+    "confined path resolution",
+    "artifact verification"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-07",
+    "ARGUS2-ARCH-06"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/artifacts.py",
+    "src/xverse/argus/reader.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-007, realized by ARGUS2-ARCH-07/ARGUS2-ARCH-06 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-007"
+  ],
+  "responsibilities": [
+    "Keep every written artifact inside the explicit run root.",
+    "Reject path traversal, escaping symlinks and unsafe artifact names using the resolved confined path rather than caller text.",
+    "Verify that an indexed artifact is a regular confined file and detect a missing or mutated artifact by comparing recorded size and content hash.",
+    "Index every artifact with a run-relative safe path, media/schema version, byte size, content hash and role, and re-verify on read."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the run-root confinement rule and the artifact index entries; owns no state outside the run root.",
+  "title": "ARGUS2-SR-007-CMP allocation - Confined artifacts, safe run-relative paths and integrity verification"
+}

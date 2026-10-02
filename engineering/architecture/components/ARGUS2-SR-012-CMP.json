@@ -1,0 +1,50 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-08"
+  ],
+  "concurrency": "Packaging is a build-time concern; installed import and CLI execution are single-process and offline.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-012-CMP",
+  "interfaces": [
+    "xverse.argus package import",
+    "xverse-argus console entry point",
+    "xverse_xdl.experiment_plan (preserved)",
+    "xdl CLI (preserved)"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-12",
+    "ARGUS2-ARCH-06"
+  ],
+  "planned_paths": [
+    "src/xverse/__init__.py",
+    "src/xverse/argus/__init__.py",
+    "src/xverse/argus/cli.py",
+    "pyproject.toml"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-012, realized by ARGUS2-ARCH-12/ARGUS2-ARCH-06 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-012"
+  ],
+  "responsibilities": [
+    "Deliver Argus as an additive xverse namespace/package wheel configuration that does not rename xverse-xdl, change the existing xdl CLI or break installed imports.",
+    "Expose one frozen additive consumer entry point (the xverse.argus facade plus the xverse-argus console script).",
+    "Preserve the accepted XDL plan/Profile/API versions, the accepted XDL digest reuse and the accepted C++ X-COM implementation, namespaces and contracts without any existing C++ API or source edit.",
+    "Reject an unknown major schema version and define additive unknown-field behaviour explicitly rather than silently accepting it."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the additive packaging surface only; owns no accepted xverse_xdl/C++ state and changes no existing wheel entry.",
+  "title": "ARGUS2-SR-012-CMP allocation - Additive packaging, installed-wheel compatibility and preserved contracts"
+}

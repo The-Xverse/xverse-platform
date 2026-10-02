@@ -1,0 +1,95 @@
+{
+  "component_id": "ARGUS2-SR-004-CMP",
+  "concurrency": "Pure value construction; no shared mutable state.",
+  "errors": [
+    "ARGUS2-INPUT-CLOCK-MISSING",
+    "ARGUS2-INPUT-UNIT-MISSING",
+    "ARGUS2-INPUT-NONFINITE",
+    "ARGUS2-CLOCK-UNRESOLVED"
+  ],
+  "id": "ARGUS2-SR-004-U",
+  "inputs": [
+    "caller clock domain, unit and value for source and observation",
+    "observation projection clock pairs"
+  ],
+  "interfaces": [
+    "clock value object",
+    "EvidenceRun.append_event(clocks=...)",
+    "observation projection clocks"
+  ],
+  "invariants": [
+    "ARGUS2-INV-04",
+    "ARGUS2-INV-10"
+  ],
+  "outputs": [
+    "immutable clock value objects on records and in the manifest",
+    "unresolved-clock diagnostics"
+  ],
+  "purpose": "Retain an explicit clock domain and a caller-declared unit/representation per source and observation value, keep ingestion order distinct from temporal and causal order, and perform no ambient wall-clock read, unit inference, random identity or cross-domain comparison, subtraction, sorting or conversion.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/clocks.py",
+    "tests/thesis_lite/argus/test_argus2_clocks_unit.py"
+  ],
+  "state": "Owns no durable state; clock values are immutable normalized values carried with their records.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; no ambient-clock or cross-domain arithmetic call exists",
+      "id": "ARGUS2-SR-004-U-STATIC",
+      "rule": "python ast parse of the planned clocks source plus a check that no datetime.now/time.time/utcnow/cross-domain arithmetic or unit inference call exists",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-004-U unit specification - Explicit source and observation clock domains",
+  "unit_cases": [
+    {
+      "expected": "both clock values reconstruct with their exact domain, unit and value, unchanged by the read",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_source_and_observation_clocks_stored_with_declared_units",
+      "precondition": "an imported observation declaring distinct source and observation clock domains and caller units",
+      "stimulus": "run.import_observation(projection); EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-CLOCK-MISSING; the value is not defaulted to an implicit domain",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_clock_value_without_domain_rejected",
+      "precondition": "a clock value object with no domain identity",
+      "stimulus": "run.append_event(..., clocks={'source': {'unit': 'ns', 'value': 1}})"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-UNIT-MISSING; no unit is inferred",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_clock_value_without_unit_rejected",
+      "precondition": "a clock value object with a domain but no declared unit/representation",
+      "stimulus": "run.append_event(..., clocks={'source': {'domain': 'd1', 'value': 1}})"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-NONFINITE; allow_nan=False canonical serialization is never bypassed",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_nonfinite_clock_value_rejected",
+      "precondition": "a clock value of NaN or Infinity",
+      "stimulus": "run.append_event(..., clocks={'source': {'domain': 'd1', 'unit': 'ns', 'value': float('nan')}})"
+    },
+    {
+      "expected": "records are returned in ingestion-ordinal order; neither timestamp is rescaled, subtracted, compared or sorted across domains",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_no_cross_domain_conversion_or_sorting",
+      "precondition": "two records whose source and observation domains differ in unit and magnitude",
+      "stimulus": "read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CLOCK-UNRESOLVED reported; the unmapped relation stays explicit and is never inferred",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_undeclared_clock_mapping_reported_unresolved",
+      "precondition": "a record requiring a clock mapping the caller did not declare",
+      "stimulus": "run.finalize() then EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-CLOCK-MISSING; absent means not declared and is never inferred",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_observation_event_requires_declared_clocks",
+      "precondition": "an observation-kind event appended with no clocks",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='observation', observation=<valid projection record>)"
+    },
+    {
+      "expected": "openedAt is absent (never an ambient wall-clock value); when the caller supplies a clock it is stored verbatim",
+      "id": "tests/thesis_lite/argus/test_argus2_clocks_unit.py::test_missing_opened_at_clock_is_absent_not_ambient",
+      "precondition": "open_run called with no caller clock",
+      "stimulus": "inspect manifest.openedAt"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: a single writer appends, flushes at the documented boundaries and finalizes by atomic replacement, leaving the stream and manifest internally consistent.",
+    "Negative: a second concurrent or repeated writer for the same run, an interrupted finalization, or a truncated last JSONL record is detected and reported as failed or incomplete; reopening the damaged run leaves every original byte unchanged.",
+    "No power-loss durability is claimed beyond the explicitly documented and verified filesystem contract; the claim is a bounded local guarantee, not a distributed or hardware guarantee."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-006",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0186"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-006"
+  },
+  "statement": "Argus shall enforce exactly one owning writer per run and a writer state machine (new to open to closed, or open to failed), reject reuse or overwrite of an existing run, and document its flush/fsync/rename boundaries and partial-write handling; recovery shall reopen only bounded prefixes and report incomplete or damaged evidence without rewriting, upgrading or mutating the original evidence files.",
+  "status": "accepted",
+  "title": "Single-writer state, documented durability and non-mutating recovery",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

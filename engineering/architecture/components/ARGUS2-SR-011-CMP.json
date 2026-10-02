@@ -1,0 +1,49 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-03",
+    "ARGUS2-XB-07"
+  ],
+  "concurrency": "Single-threaded caller-driven execution; no service, daemon, thread or network is created.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-INPUT-AUTHORITY-MISSING",
+    "ARGUS2-INPUT-CLOCK-MISSING",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-011-CMP",
+  "interfaces": [
+    "EvidenceStore.open_run(run_id, clocks, limits, obligations)",
+    "EvidenceLimits",
+    "obligation set"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-11",
+    "ARGUS2-ARCH-05"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/api.py",
+    "src/xverse/argus/limits.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-011, realized by ARGUS2-ARCH-11/ARGUS2-ARCH-05 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-011"
+  ],
+  "responsibilities": [
+    "Require the caller to supply the run identity, clock identities/units, finite limits and evidence obligations.",
+    "Operate offline on JSON/JSONL only, with no implicit wall clock, no random identity, no remote lookup and no cross-clock conversion.",
+    "Acquire no network service, dashboard, extra dependency or runtime service, no metrics computation, no control or actuation authority, no live tap bridge and no evaluation oracle.",
+    "Reject or omit any attempt to rely on an implicit clock/identity/limit, a remote lookup, or a control, metric-computation or oracle capability."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns only the caller-supplied authority values (identity, clocks, limits, obligations) and the offline run root.",
+  "title": "ARGUS2-SR-011-CMP allocation - Caller authority, offline operation and absence of control authority"
+}

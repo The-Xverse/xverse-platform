@@ -1,0 +1,162 @@
+{
+  "component_id": "ARGUS2-SR-002-CMP",
+  "concurrency": "Exactly one writer per run; append and finalize are serialized within that writer; the reader is a separate read-only stage.",
+  "errors": [
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-IO-FAILURE",
+    "ARGUS2-REASON-UNMET-OBLIGATION",
+    "ARGUS2-REASON-CORRUPT-MANIFEST",
+    "ARGUS2-REASON-CORRUPT-EVENT"
+  ],
+  "id": "ARGUS2-SR-002-U",
+  "inputs": [
+    "validated events from the unit-3/4/8/9 validation path",
+    "caller obligations and limits",
+    "writer-emitted run-opened/run-closed/run-failed transitions"
+  ],
+  "interfaces": [
+    "EvidenceRun.append_event",
+    "EvidenceRun.finalize",
+    "EvidenceManifest",
+    "EvidenceReader.export_json",
+    "EvidenceReader.export_jsonl"
+  ],
+  "invariants": [
+    "ARGUS2-INV-01",
+    "ARGUS2-INV-06",
+    "ARGUS2-INV-11",
+    "ARGUS2-INV-14",
+    "ARGUS2-INV-19",
+    "ARGUS2-INV-20"
+  ],
+  "outputs": [
+    "one canonical JSONL evidence stream",
+    "atomic open/closed/failed manifest with artifact index, event count/hash, obligations and evidence status"
+  ],
+  "purpose": "Append validated events to one versioned canonical JSONL stream and publish an atomic JSON manifest carrying the artifact index, writer state, event count/hash, caller obligations and an explicit evidence status; claim complete evidence only when every required obligation and integrity check passes.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/writer.py",
+    "src/xverse/argus/schema.py",
+    "tests/thesis_lite/argus/test_argus2_stream_unit.py"
+  ],
+  "state": "Owns the append-only JSONL stream and the manifest lifecycle, the authoritative event count/stream hash and the published evidence status until a successor supersedes the run.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; canonical serialization flags and the temporary-file/fsync/os.replace publication sequence are present",
+      "id": "ARGUS2-SR-002-U-STATIC",
+      "rule": "python ast parse of the planned writer/schema sources plus a check that canonical serialization uses sort_keys=True, compact separators and allow_nan=False and that the manifest is written through a temporary file, flush/fsync and os.replace",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds one publication function containing the canonical-length comparison and the temp-file/fsync/os.replace sequence, with no direct os.replace of manifest.json elsewhere",
+      "id": "ARGUS2-SR-002-U-STATIC-PUBLISH",
+      "rule": "exactly one manifest publication chokepoint serializes the candidate manifest and compares the actual canonical byte length against max_manifest_bytes before writing a temporary file and calling os.replace; open, finalize and abort all route their publication through that single chokepoint",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-002-U unit specification - Versioned event stream and atomic run manifest",
+  "unit_cases": [
+    {
+      "expected": "events.jsonl contains exactly one line terminated by a single \\n; the line is canonical JSON (sorted keys, compact separators, allow_nan=False); eventCount is 1",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_append_event_writes_one_canonical_jsonl_line",
+      "precondition": "an open run and one valid event",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='annotation', annotation={'text': 'n'})"
+    },
+    {
+      "expected": "manifest.json parses; writerState is 'open'; evidenceStatus is 'unassessed'; eventStream bytes/sha256 equal the current events.jsonl",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_open_manifest_published_with_open_state_before_appends",
+      "precondition": "a freshly opened run",
+      "stimulus": "inspect root/manifest.json immediately after open_run"
+    },
+    {
+      "expected": "manifest.writerState is 'closed'; evidenceStatus is 'complete'; evidenceReasons is empty; artifact index, byte sizes and content hashes verify against the stream",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_finalize_satisfied_obligations_publishes_complete_manifest",
+      "precondition": "a run whose declared required obligations are all satisfied and whose indexed artifacts verify",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "writerState is 'closed'; evidenceStatus is 'incomplete'; evidenceReasons contains ARGUS2-REASON-UNMET-OBLIGATION and ARGUS2-REASON-UNRESOLVED-CAUSATION",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_finalize_unmet_required_obligation_classified_incomplete",
+      "precondition": "a run with a required causal-closure obligation left unmet",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "evidenceStatus is 'incomplete'; evidenceReasons contains ARGUS2-REASON-MISSING-ARTIFACT; a diagnostic with code ARGUS2-MISSING-ARTIFACT is reported",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_closed_stream_with_missing_artifact_classified_incomplete",
+      "precondition": "an indexed artifact deleted after finalize began",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-STREAM-TRUNCATED; evidenceReasons contains ARGUS2-REASON-TRUNCATED-STREAM; evidenceStatus stays 'incomplete'; the truncated record is not counted as an accepted event",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_truncated_last_record_classified_incomplete",
+      "precondition": "the final JSONL line left without its terminating newline",
+      "stimulus": "run.finalize() then EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "evidenceStatus is 'incomplete'; evidenceReasons contains ARGUS2-REASON-KNOWN-LOSS; finalization alone never yields 'complete'",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_known_loss_never_upgraded_to_complete_by_finalize",
+      "precondition": "an imported observation whose counters.dropped is greater than zero",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "writerState is 'closed' while evidenceStatus is 'incomplete'; both facts are reported independently and no success, validity or readiness claim follows",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_stream_closure_and_evidence_completeness_are_separate_facts",
+      "precondition": "an incomplete run finalized cleanly",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "entry carries run-relative path, mediaType, schemaVersion, integer bytes, lowercase sha256 and role; entries are unique by path",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_artifact_index_entry_carries_frozen_fields",
+      "precondition": "a run that records one owned artifact",
+      "stimulus": "inspect manifest.artifacts[0]"
+    },
+    {
+      "expected": "manifest.eventCount equals the accepted line count; eventStream.bytes equals the file size; eventStream.sha256 equals the recomputed SHA-256",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_event_count_and_stream_hash_match_file_on_finalize",
+      "precondition": "a run with several appended events",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED with a bounded partial result; the original manifest bytes are unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_unsupported_manifest_major_version_rejected_on_read",
+      "precondition": "a manifest whose schemaVersion major is not 1",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "the unknown extensions namespace is echoed verbatim and never interpreted, and it does not affect status, ordering or obligations",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_extensions_namespaces_are_preserved_verbatim",
+      "precondition": "an event carrying extensions {'argus.note': {...}}",
+      "stimulus": "append then EvidenceReader.export_json()"
+    },
+    {
+      "expected": "recordedEvidenceStatus/recordedEvidenceReasons echo the manifest verbatim, assessedEvidenceStatus/assessedEvidenceReasons are computed by the reader and reported as the primary status, and the two are never conflated (ARGUS2-ADV-03)",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_reader_exposes_recorded_and_assessed_status_separately",
+      "precondition": "an intact finalized run whose manifest recorded evidenceStatus 'complete'",
+      "stimulus": "EvidenceStore.read_run(root) and EvidenceReader.export_json()"
+    },
+    {
+      "expected": "recorded status stays 'complete' only as a recorded fact while assessedEvidenceStatus is 'incomplete' with ARGUS2-REASON-TRUNCATED-STREAM/ARGUS2-REASON-CORRUPT-EVENT; the export never presents primary complete (ARGUS2-ADV-03)",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_manifest_recorded_complete_with_corrupt_stream_assessed_incomplete",
+      "precondition": "a manifest that recorded 'complete' whose stream tail was truncated after finalize",
+      "stimulus": "EvidenceStore.read_run(root); export_json()"
+    },
+    {
+      "expected": "assessedEvidenceStatus is 'incomplete' with ARGUS2-REASON-CORRUPT-MANIFEST; recorded claims are carried only as recorded facts and the primary status is never complete (ARGUS2-ADV-03)",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_corrupt_manifest_never_exported_as_primary_complete",
+      "precondition": "a structurally invalid manifest (or one with a wrong-typed frozen member) that also claims 'complete'",
+      "stimulus": "EvidenceStore.read_run(root); export_json()"
+    },
+    {
+      "expected": "the finalize publication is refused with ARGUS2-BOUND-EXCEEDED naming max_manifest_bytes; the prior open manifest bytes remain on disk; the writer does not report 'closed'/'complete' (ARGUS2-ADV-06)",
+      "id": "tests/thesis_lite/argus/test_argus2_stream_unit.py::test_manifest_bound_measured_on_actual_serialized_bytes_at_open_finalize_and_abort",
+      "precondition": "a caller max_manifest_bytes sized so the open manifest fits but the finalize manifest (artifact index, obligations and finalized metadata) exceeds it",
+      "stimulus": "open_run; append/record; run.finalize()"
+    }
+  ]
+}

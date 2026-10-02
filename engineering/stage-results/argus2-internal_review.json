@@ -1,0 +1,42 @@
+{
+ "schema_version": 1,
+ "task_id": "ARGUS2",
+ "attempt_id": 1,
+ "role": "internal_review",
+ "status": "complete",
+ "inputs": [
+  "admitted-input:engineering-instructions.json sha256=27b6392afd0f3e7729303b8ce7904734a8893d1e863ed76769d279d397c91a28",
+  "admitted-input:manifest.json sha256=b62e244fdcbf6e4bb8178eaaaf86bc32e0483b85a0bc4c9a8b8298bdee80e6b7",
+  "admitted-input:trace-supersession-proof.json sha256=04597a2e0d3ee570bb91004a5b949a1d59d3870bff979bc4610dbc290ad0ff29",
+  "repository-source:engineering/stage-results/argus2-implementation.json sha256=268dc8238ba7d4e99d88819d1053614f80de94bbbc3bad5de04203ac1d849e45 (read-only frozen candidate record)",
+  "repository-source:engineering/trace/links.json sha256=e55e639752d87ea3038045937189165b1a1b271739b4b35888098a428c284e7b (current mutable trace, reviewed hash)",
+  "repository-source:engineering/project.json sha256=9d5927ebbf13f8141d8b7100c0fc07c764722a577e09f65057506006565df7ad (current mutable project pointer)",
+  "repository-source:docs/engineering/argus-lite/**, src/xverse/argus/**, tests/thesis_lite/argus/**, pyproject.toml, reports/review-index.md (read-only, hashes in reviewed_files)",
+  "trusted-record-schemas:/opt/controls/fabro_engineering/core.py validate_stage/validate_trace (read-only local integrity replay; the trusted engineering-checks shim was not invoked)"
+ ],
+ "model": {
+  "provider": "deepseek",
+  "backend": "api",
+  "requested_model": "deepseek-v4-flash"
+ },
+ "artifacts": [
+  {
+   "path": "docs/engineering/argus-lite/internal-review.json",
+   "sha256": "4e7a21742292a7a8c5115205ff9c701765bb5e025a0e40746481c61f4914c040"
+  }
+ ],
+ "assumptions": [
+  "The frozen candidate is the /workspace tree whose files match /opt/review-inventory.json exactly; the prior host-retained review and its 2973-file inventory were used only as the reviewed-coverage set, never reused as this report's content.",
+  "The /opt/input/trace-supersession-proof.json hash attestations were corroborated locally: the implementation record's stored trace hash equals the proof old hash, the current trace recomputes to the proof reviewed hash, and exactly 21 links targeting engineering/project.json carry the proof's current project revision.",
+  "Local read-only pytest/g++/wheel execution in this worker is preliminary review evidence; the trusted host remains the authority for the sealed-candidate ARGUS2 measures.",
+  "Pre-existing stale artifact hashes in unrelated historical legacy stage records (codex-repair-*, phase7/8-*, sol-*) predate and are outside this frozen Argus2 candidate and were not treated as candidate blockers."
+ ],
+ "findings": [
+  "pass: independent re-review of the exact frozen candidate found no defect. All 17 explicit checks (IR-ARGUS2-001..017) pass, verdict=pass with findings=[].",
+  "pass: reviewed_files reproduces the entire 2973-entry /opt/review-inventory.json path/hash map; 2973/2973 candidate files exist and match, with 0 changed candidate files.",
+  "pass: the single stale stage artifact hash in the candidate (engineering/stage-results/argus2-implementation.json storing the pre-refresh engineering/trace/links.json hash 145cb448e...f1) is exactly the proof-attested, scheduled 21-project-revision-link supersession; the current trace recomputes to the reviewed hash e55e6397...e7b, and every other ARGUS2 stage artifact hash is current.",
+  "pass: candidate-local execution in the read-only workspace reproduced 173 owned tests and 468 platform tests passing, real g++ C++20 X-COM fixture interoperability, real XDL compiler consumption, and an offline built/installed wheel consumer check.",
+  "limitation: bounded local durability only; /target fallback used locally (host supplies /target); launch-evidence admission/review.md remains an external unverified later-gate input."
+ ],
+ "blockers": []
+}

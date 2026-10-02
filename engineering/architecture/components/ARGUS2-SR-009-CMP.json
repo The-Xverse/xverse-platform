@@ -1,0 +1,51 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-04",
+    "ARGUS2-XB-06"
+  ],
+  "concurrency": "Pure value import and classification; no shared mutable state.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-LOSS-KNOWN-DROP",
+    "ARGUS2-LOSS-DEGRADED-INTERVAL",
+    "ARGUS2-LOSS-INVALID-INTERVAL",
+    "ARGUS2-INPUT-INTERVAL-INCOMPLETE",
+    "ARGUS2-REASON-UNCLOSED-INTERVAL",
+    "ARGUS2-INPUT-PAYLOAD-LENGTH"
+  ],
+  "id": "ARGUS2-SR-009-CMP",
+  "interfaces": [
+    "import_observation(projection)",
+    "import_snapshot(snapshot)",
+    "observation/snapshot projection v1.0"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-09",
+    "ARGUS2-ARCH-08"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/observation.py",
+    "src/xverse/argus/snapshot.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-009, realized by ARGUS2-ARCH-09/ARGUS2-ARCH-08 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-009"
+  ],
+  "responsibilities": [
+    "Preserve payload visibility exactly as projected: metadata-only/omitted and redacted records contain no payload bytes, a bounded prefix remains explicitly truncated, complete and omitted stay distinguishable, and the schema state remains undecoded.",
+    "Import separately supplied tap snapshots carrying final counters, backpressure and the declared validity effect/state with explicit interval provenance.",
+    "Never let retention-time counters stand in for absent interval closure, and never synthesize unobserved payload.",
+    "Keep known drops/coalescing/degraded or invalid intervals visible after stream closure so a lossy run cannot become complete by finalization alone."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the imported visibility/loss/interval values and the loss-derived evidence reasons; fabricates nothing.",
+  "title": "ARGUS2-SR-009-CMP allocation - Payload visibility, loss and interval/snapshot semantics"
+}

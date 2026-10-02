@@ -1,0 +1,144 @@
+{
+  "component_id": "ARGUS2-SR-007-CMP",
+  "concurrency": "Filesystem operations are serialized within the owning writer; the reader performs read-only verification.",
+  "errors": [
+    "ARGUS2-PATH-ESCAPE",
+    "ARGUS2-PATH-SYMLINK",
+    "ARGUS2-PATH-UNSAFE",
+    "ARGUS2-PATH-NOT-REGULAR",
+    "ARGUS2-MISSING-ARTIFACT",
+    "ARGUS2-CORRUPT-ARTIFACT-HASH",
+    "ARGUS2-CORRUPT-ARTIFACT-SIZE"
+  ],
+  "id": "ARGUS2-SR-007-U",
+  "inputs": [
+    "run-relative artifact path",
+    "artifact bytes and role",
+    "recorded artifact index entry"
+  ],
+  "interfaces": [
+    "artifact index entry",
+    "confined path resolution",
+    "artifact verification"
+  ],
+  "invariants": [
+    "ARGUS2-INV-07",
+    "ARGUS2-INV-14",
+    "ARGUS2-INV-17",
+    "ARGUS2-INV-21"
+  ],
+  "outputs": [
+    "artifact index entries",
+    "verification diagnostics for escape/symlink/missing/mutated artifacts"
+  ],
+  "purpose": "Keep every written artifact inside the explicit run root, reject traversal, escaping symlinks and unsafe names on the resolved confined path, verify regular confined files, and detect a missing or mutated artifact by recorded size and content hash.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/artifacts.py",
+    "src/xverse/argus/reader.py",
+    "tests/thesis_lite/argus/test_argus2_artifacts_unit.py"
+  ],
+  "state": "Owns the run-root confinement rule and the artifact index entries; owns no state outside the run root.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; confinement uses os.lstat/realpath and rejects symlinks on the resolved path",
+      "id": "ARGUS2-SR-007-U-STATIC",
+      "rule": "python ast parse of the planned artifacts/reader sources plus a check that every path operation uses os.lstat/realpath confinement and rejects symlinks rather than caller-supplied text",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds os.lstat, O_NOFOLLOW and an fstat identity comparison on the confined path before any JSON parse, and defensive copies for every returned artifact view",
+      "id": "ARGUS2-SR-007-U-STATIC-CONFINE",
+      "rule": "for the manifest, stream and every indexed artifact the read path resolves the confined real path and applies os.lstat plus an O_NOFOLLOW open with an fstat device/inode comparison before any parse; returned artifact/index views are independent copies",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-007-U unit specification - Confined artifacts, safe run-relative paths and integrity verification",
+  "unit_cases": [
+    {
+      "expected": "the entry carries a safe run-relative path, mediaType, schemaVersion, integer bytes, sha256 and role and re-verifies on read",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_safe_run_relative_artifact_paths_are_indexed",
+      "precondition": "a recorded artifact with a safe run-relative POSIX path",
+      "stimulus": "inspect the manifest artifact index entry"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-ESCAPE; no file is created outside the run root",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_traversal_segment_rejected",
+      "precondition": "an artifact path containing a '..' segment",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-UNSAFE; no file is created outside the run root",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_absolute_artifact_path_rejected",
+      "precondition": "an absolute artifact path",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-UNSAFE; nothing is written",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_unsafe_artifact_name_rejected",
+      "precondition": "an artifact name containing a backslash, NUL, empty segment or a character outside the frozen pattern",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-SYMLINK; the link target is never followed and nothing outside the run root is written",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_escaping_symlink_rejected",
+      "precondition": "an artifact path whose parent or final component is a symlink resolving outside the run root",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-SYMLINK; symlinks are rejected regardless of resolution target and the check uses the confined real path, not caller text",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_symlink_resolving_inside_run_root_still_rejected",
+      "precondition": "an artifact path whose final component is a symlink resolving inside the run root",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "rejected; ARGUS2-PATH-NOT-REGULAR; nothing is written",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_non_regular_file_rejected",
+      "precondition": "an artifact path occupied by a directory or special file",
+      "stimulus": "record the artifact"
+    },
+    {
+      "expected": "ARGUS2-MISSING-ARTIFACT reported and the evidence is classified incomplete; the missing file is never created",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_missing_indexed_artifact_reported",
+      "precondition": "an indexed artifact deleted after indexing",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-ARTIFACT-HASH reported; the recorded content hash is not updated",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_byte_mutated_artifact_hash_mismatch",
+      "precondition": "an indexed artifact whose bytes were changed without changing its size",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-ARTIFACT-SIZE reported; the recorded size is not updated",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_size_mutated_artifact_size_mismatch",
+      "precondition": "an indexed artifact whose byte length changed",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "each attempt is rejected and no file or directory is created outside the run root",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_no_write_occurs_outside_the_run_root",
+      "precondition": "a sequence of rejected traversal, absolute and symlink artifact attempts",
+      "stimulus": "attempt each unsafe artifact record, then enumerate the parent directory"
+    },
+    {
+      "expected": "both reads verify the same recorded size/hash and leave every file byte unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_artifact_reverification_is_read_only",
+      "precondition": "an intact finalized run",
+      "stimulus": "EvidenceStore.read_run(root) twice"
+    },
+    {
+      "expected": "the indexed artifact identity (bytes/sha256/role) is unchanged because the returned view is an independent defensive copy and the identity is internally owned (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_mutating_returned_artifact_view_cannot_rewrite_indexed_hash",
+      "precondition": "a recorded artifact whose index entry is returned to the caller",
+      "stimulus": "record_artifact(...); mutate the returned dict (path/bytes/sha256/role) and any nested value; re-read the manifest"
+    },
+    {
+      "expected": "rejected before I/O with ARGUS2-PATH-SYMLINK / ARGUS2-PATH-ESCAPE; no bytes are read from the link target and no file is created (ARGUS2-ADV-01)",
+      "id": "tests/thesis_lite/argus/test_argus2_artifacts_unit.py::test_reader_artifact_path_confinement_checked_before_read",
+      "precondition": "an indexed artifact path that is a symlink or resolves outside the run root",
+      "stimulus": "EvidenceStore.read_run(root)"
+    }
+  ]
+}

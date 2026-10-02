@@ -1,0 +1,112 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "System",
+  "metadata": {
+    "name": "sample-loop",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "componentInstances": [
+      {
+        "componentRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "kind": "Component",
+          "name": "sample-source",
+          "namespace": "org.xverse.experiment"
+        },
+        "id": "source-instance",
+        "nodeId": "producer-node"
+      },
+      {
+        "componentRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "kind": "Component",
+          "name": "sample-source",
+          "namespace": "org.xverse.experiment"
+        },
+        "id": "sink-instance",
+        "nodeId": "sink-node"
+      }
+    ],
+    "defaultTimeDomainId": "experiment-time",
+    "endpoints": [
+      {
+        "direction": "output",
+        "id": "source-out",
+        "interfaceId": "sample-stream",
+        "ownerId": "source-instance"
+      },
+      {
+        "direction": "input",
+        "id": "sink-in",
+        "interfaceId": "sample-stream",
+        "ownerId": "sink-instance"
+      }
+    ],
+    "flows": [
+      {
+        "deliveryIntent": "ordered",
+        "destinationEndpointIds": [
+          "sink-in"
+        ],
+        "id": "sample-flow",
+        "interfaceId": "sample-stream",
+        "sourceEndpointId": "source-out",
+        "timeDomainId": "experiment-time"
+      }
+    ],
+    "interfaces": [
+      {
+        "compatibility": "exact",
+        "direction": "bidirectional",
+        "id": "sample-stream",
+        "payloadSchema": "urn:xverse:experiment:sample-v1",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "producer-node",
+        "roles": [
+          "compute"
+        ]
+      },
+      {
+        "id": "sink-node",
+        "roles": [
+          "compute"
+        ]
+      }
+    ],
+    "parameters": [
+      {
+        "id": "loop-count",
+        "mutability": "constant",
+        "unitSemantics": "count",
+        "valueType": "integer"
+      }
+    ],
+    "timeDomains": [
+      {
+        "clockClass": "simulation",
+        "epoch": "0",
+        "id": "experiment-time",
+        "monotonic": true,
+        "rate": "1"
+      },
+      {
+        "clockClass": "logical",
+        "epoch": "0",
+        "id": "control-time",
+        "monotonic": true,
+        "rate": "1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "pytest",
+    "-vv",
+    "tests/thesis_lite/argus/test_argus2_integration.py"
+  ],
+  "command_runs": "Run all frozen integration identifiers without weakening assertions. Whole-system evidence for the direct Codex successor is external: the exact candidate is assembled in an isolated worktree over platform main 947ac1e58e2b97f2cd6d6cdb33bc1b3c3bdc7f6b; the immutable verifier image runs the full platform suite, builds/installs the wheel offline, checks installed imports outside the source tree and repeats owned Argus tests against that wheel. The exact command, candidate identity, tool environment and logs are bound in the external verification.json referenced by docs/engineering/argus-lite/codex-direct-repair.md. A local module pass alone is insufficient.",
+  "discovery_check": "[1-9][0-9]* passed",
+  "expected": "pass",
+  "id": "ARGUS2-INTEGRATION",
+  "kind": "integration",
+  "note": "The 9 identifiers are frozen here for the implementation stage to create verbatim in tests/thesis_lite/argus/test_argus2_integration.py. Synthetic dictionaries alone cannot satisfy these cases: the owned observation and snapshot values must originate in a real C++20 fixture that includes the accepted src/xverse/xcom/include/xverse/xcom/observation.hpp and compiles the accepted src/xverse/xcom/src/observation.cpp in an owned temporary build output under /tmp, with no change to any public C++ source. The accepted XDL compiler is invoked for real to produce the plan consumed by the writer. No legacy or production workload is executed; the fixture only drives an in-process ObservationHub to produce owned records and a snapshot.",
+  "revision": "2",
+  "schema_version": 1,
+  "test_ids": [
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_real_accepted_xdl_compiler_output_written_and_reconstructed",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_real_owned_cpp_observation_fixture_compiles_and_imports_by_value",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_real_owned_cpp_snapshot_fixture_preserves_interval_and_counters",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_owned_cpp_projection_roundtrip_with_accepted_xcom_headers",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_existing_xdl_cli_and_public_api_preserved_in_assembled_target",
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_gateway_protobuf_observation_not_substituted_for_owned_projection"
+  ],
+  "title": "ARGUS2 whole-system target-repository integration over the real compiler, owned C++ producer and installed wheel"
+}

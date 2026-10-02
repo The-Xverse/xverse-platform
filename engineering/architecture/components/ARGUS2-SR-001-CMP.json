@@ -1,0 +1,52 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-01",
+    "ARGUS2-XB-07"
+  ],
+  "concurrency": "Single-threaded per run; one admission attempt per run root; no shared mutable state and no background work.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-PLAN-DIGEST-MISMATCH",
+    "ARGUS2-PLAN-VERSION-UNSUPPORTED",
+    "ARGUS2-PLAN-ENVELOPE-CONFLICT",
+    "ARGUS2-STATE-RUN-EXISTS",
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED"
+  ],
+  "id": "ARGUS2-SR-001-CMP",
+  "interfaces": [
+    "EvidenceStore.open_run",
+    "EvidenceRun.run_id",
+    "xverse_xdl.experiment_plan.plan_matches_digest",
+    "xverse_xdl.experiment_plan.compute_plan_digest"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-01",
+    "ARGUS2-ARCH-05"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/planbinding.py",
+    "src/xverse/argus/api.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-001, realized by ARGUS2-ARCH-01/ARGUS2-ARCH-05 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-001"
+  ],
+  "responsibilities": [
+    "Verify the supplied resolved plan through the accepted xverse_xdl.experiment_plan public API; reject a recorded/recomputed body-digest mismatch.",
+    "Record the accepted API/Profile/plan versions and the verified semantic plan digest in the manifest plan block.",
+    "Keep source-byte provenance in a separate map and never substitute it for the semantic plan identity.",
+    "Reject an unsupported plan/Profile/API major version, an envelope identity conflicting with the declared run identity, and an already-existing run root before creating or overwriting anything.",
+    "Open exactly one fresh run bound to the caller-supplied unique run identity."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns the run-admission decision and the in-memory plan-identity record. Holds no durable state before a successful open; creates only the exclusive run root and its manifest at open.",
+  "title": "ARGUS2-SR-001-CMP allocation - Run admission and verified plan binding"
+}

@@ -1,0 +1,54 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-05",
+    "ARGUS2-XB-07"
+  ],
+  "concurrency": "Pure validation functions plus the caller limit value; no shared mutable state.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-INPUT-*",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-*",
+    "ARGUS2-SCHEMA-*",
+    "ARGUS2-CORRUPT-*",
+    "ARGUS2-MISSING-*",
+    "ARGUS2-LOSS-*"
+  ],
+  "id": "ARGUS2-SR-005-CMP",
+  "interfaces": [
+    "EvidenceLimits",
+    "EvidenceDiagnostic",
+    "EvidenceError",
+    "artifact path validation"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-05",
+    "ARGUS2-ARCH-07"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/limits.py",
+    "src/xverse/argus/diagnostics.py",
+    "src/xverse/argus/artifacts.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-005, realized by ARGUS2-ARCH-05/ARGUS2-ARCH-07 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-005"
+  ],
+  "responsibilities": [
+    "Reject malformed or non-finite values, duplicate identities, unsupported versions, unsafe or oversized inputs and every violated caller-configured finite bound.",
+    "Emit a stable categorized diagnostic that distinguishes input rejection, I/O failure, unsupported schema, corrupt artifact, missing evidence and known observation loss.",
+    "Never silently discard a record, repair a timestamp, guess a producer, substitute an unknown version or accept a partial record.",
+    "Treat bounds as implementation limits only; produce no diagnostic without an actual violation."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable state; owns the immutable effective-limits value and the diagnostic construction rules.",
+  "title": "ARGUS2-SR-005-CMP allocation - Fail-closed validation and caller-configured finite bounds"
+}

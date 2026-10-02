@@ -1,0 +1,129 @@
+{
+  "component_id": "ARGUS2-SR-009-CMP",
+  "concurrency": "Pure value import and classification; no shared mutable state.",
+  "errors": [
+    "ARGUS2-LOSS-KNOWN-DROP",
+    "ARGUS2-LOSS-DEGRADED-INTERVAL",
+    "ARGUS2-LOSS-INVALID-INTERVAL",
+    "ARGUS2-INPUT-INTERVAL-INCOMPLETE",
+    "ARGUS2-INPUT-PAYLOAD-LENGTH",
+    "ARGUS2-REASON-UNCLOSED-INTERVAL"
+  ],
+  "id": "ARGUS2-SR-009-U",
+  "inputs": [
+    "observation projection payload fields",
+    "separately supplied snapshot with interval provenance"
+  ],
+  "interfaces": [
+    "import_observation(projection)",
+    "import_snapshot(snapshot)",
+    "observation/snapshot projection v1.0"
+  ],
+  "invariants": [
+    "ARGUS2-INV-06",
+    "ARGUS2-INV-08",
+    "ARGUS2-INV-09"
+  ],
+  "outputs": [
+    "records with preserved visibility, loss and interval provenance",
+    "evidence reasons for loss, degradation and unclosed intervals"
+  ],
+  "purpose": "Preserve payload visibility, visible bytes, source size and payload schema state exactly, import separately supplied snapshots with their counters, backpressure and declared validity/interval provenance, and never let retention counters substitute for interval closure or synthesize an unobserved payload.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/observation.py",
+    "src/xverse/argus/snapshot.py",
+    "tests/thesis_lite/argus/test_argus2_payload_unit.py"
+  ],
+  "state": "Owns the imported visibility, loss and interval values and the loss-derived evidence reasons; fabricates nothing.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; the visibility vocabulary is closed and counters are not interval-closure evidence",
+      "id": "ARGUS2-SR-009-U-STATIC",
+      "rule": "python ast parse of the planned observation/snapshot sources plus a check that the visibility states are closed and that counters are never used as interval-closure evidence and bytes are never synthesized",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-009-U unit specification - Payload visibility, loss and interval/snapshot semantics",
+  "unit_cases": [
+    {
+      "expected": "visibleByteCount is 0 and visibleBytesHex is ''; sourcePayloadSize still records the complete source byte count",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_metadata_only_omitted_carries_no_payload_bytes",
+      "precondition": "an imported observation with payloadViewState 'omitted'",
+      "stimulus": "read back the record"
+    },
+    {
+      "expected": "visibleByteCount is 0 and visibleBytesHex is ''; no withheld content is reconstructed",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_redacted_carries_no_payload_bytes",
+      "precondition": "an imported observation with payloadViewState 'redacted'",
+      "stimulus": "read back the record"
+    },
+    {
+      "expected": "the bounded prefix is retained with its exact visibleByteCount and remains explicitly truncated",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_truncated_retains_explicit_bounded_prefix",
+      "precondition": "an imported observation with payloadViewState 'truncated' and 0 < visibleByteCount < sourcePayloadSize",
+      "stimulus": "read back the record"
+    },
+    {
+      "expected": "visibleByteCount equals sourcePayloadSize and the visible bytes decode exactly",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_complete_visibility_equals_source_payload_size",
+      "precondition": "an imported observation with payloadViewState 'complete'",
+      "stimulus": "read back the record"
+    },
+    {
+      "expected": "the four visibility states reconstruct distinctly with their own visible byte counts; complete and omitted are never conflated",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_visibility_states_remain_distinguishable_after_read",
+      "precondition": "a run importing one omitted, one redacted, one truncated and one complete observation",
+      "stimulus": "read_run(root).records()"
+    },
+    {
+      "expected": "every declared snapshot value reconstructs exactly and its intervalProvenance is preserved",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_snapshot_counters_backpressure_and_validity_preserved",
+      "precondition": "a separately supplied snapshot with queued/accepted/dropped/coalesced, backpressureRejections, validityEffect and validityState",
+      "stimulus": "run.import_snapshot(snapshot) then read back"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-INTERVAL-INCOMPLETE; the interval is never completed by inference",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_closed_interval_without_bounds_rejected",
+      "precondition": "a snapshot declaring intervalProvenance.closure 'closed' with start/end absent",
+      "stimulus": "run.import_snapshot(snapshot)"
+    },
+    {
+      "expected": "evidenceStatus is 'incomplete'; evidenceReasons contains ARGUS2-REASON-UNCLOSED-INTERVAL and the unresolved interval stays visible",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_unclosed_interval_recorded_and_forces_incomplete",
+      "precondition": "a snapshot declaring intervalProvenance.closure 'unclosed'",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-LOSS-KNOWN-DROP reported; evidenceReasons contains ARGUS2-REASON-KNOWN-LOSS and finalization cannot make the run complete",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_known_drop_remains_visible_after_stream_closure",
+      "precondition": "an imported observation with counters.dropped greater than zero",
+      "stimulus": "run.finalize() then read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-LOSS-DEGRADED-INTERVAL reported; evidenceStatus is 'incomplete' and the degraded interval is not acknowledged away",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_degraded_validity_interval_forces_incomplete",
+      "precondition": "a snapshot declaring validityState 'degraded'",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-LOSS-INVALID-INTERVAL reported; evidenceStatus is 'incomplete'",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_invalid_validity_interval_forces_incomplete",
+      "precondition": "a snapshot declaring validityState 'invalid'",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "the interval-closure obligation remains unsatisfied; evidenceReasons contains ARGUS2-REASON-UNMET-OBLIGATION and no lossless capture is claimed from counters alone",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_retention_counters_do_not_substitute_for_interval_closure",
+      "precondition": "benign counters (dropped 0, coalesced 0) with no snapshot and a required interval-closure obligation",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "no bytes are generated from sourcePayloadSize and no unobserved content appears",
+      "id": "tests/thesis_lite/argus/test_argus2_payload_unit.py::test_no_unobserved_payload_is_synthesized",
+      "precondition": "an omitted/redacted record whose sourcePayloadSize is large",
+      "stimulus": "read back the record"
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "component_id": "ARGUS2-SR-006-CMP",
+  "concurrency": "Single owning writer; finalize and abort are mutually exclusive; recovery is read-only and may run concurrently with nothing that writes.",
+  "errors": [
+    "ARGUS2-STATE-RUN-EXISTS",
+    "ARGUS2-STATE-WRITER-CONFLICT",
+    "ARGUS2-STATE-ILLEGAL-TRANSITION",
+    "ARGUS2-CORRUPT-STREAM-TRUNCATED",
+    "ARGUS2-IO-FAILURE",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-PATH-SYMLINK"
+  ],
+  "id": "ARGUS2-SR-006-U",
+  "inputs": [
+    "explicit run root",
+    "append/finalize/abort requests",
+    "existing manifest and stream bytes on recovery"
+  ],
+  "interfaces": [
+    "EvidenceRun.writer_state",
+    "EvidenceRun.flush_buffer",
+    "EvidenceRun.finalize",
+    "EvidenceRun.abort",
+    "recovery reader"
+  ],
+  "invariants": [
+    "ARGUS2-INV-05",
+    "ARGUS2-INV-06",
+    "ARGUS2-INV-14",
+    "ARGUS2-INV-17",
+    "ARGUS2-INV-18",
+    "ARGUS2-INV-20"
+  ],
+  "outputs": [
+    "writer state transitions and durable stream/manifest bytes",
+    "recovery diagnostics without mutation"
+  ],
+  "purpose": "Enforce exactly one owning writer per run, the new to open to closed / open to failed state machine, the documented flush/fsync/atomic-replace boundaries, and a bounded non-mutating recovery that never rewrites, upgrades or deletes original evidence bytes.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/writer.py",
+    "src/xverse/argus/recovery.py",
+    "tests/thesis_lite/argus/test_argus2_writer_unit.py",
+    "tests/thesis_lite/argus/test_argus2_recovery_unit.py"
+  ],
+  "state": "Owns the single-writer state, the open stream handle and the durable manifest/stream bytes for the run; no other component writes them.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; exclusive creation, mutually exclusive finalize/abort and a write-free recovery path are present",
+      "id": "ARGUS2-SR-006-U-STATIC",
+      "rule": "python ast parse of the planned writer/recovery sources plus a check that open uses exclusive creation, finalize and abort are mutually exclusive and the recovery path performs no write, rename or unlink",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    },
+    {
+      "expected": "ast analysis finds no Path.read_bytes()/unbounded read() on the manifest or stream and finds an O_NOFOLLOW bounded read helper used by both recovery and writer finalize/abort",
+      "id": "ARGUS2-SR-006-U-STATIC-READBOUND",
+      "rule": "no unbounded read()/read_bytes() is applied to the manifest or evidence stream; recovery and the writer's finalize/abort stream read use a bounded helper opened with O_NOFOLLOW and an explicit max_bytes; the manifest is republished only after the actual-byte bound check",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-006-U unit specification - Single-writer state, durability and non-mutating recovery",
+  "unit_cases": [
+    {
+      "expected": "writer_state is 'open' before finalize and 'closed' after; no other transition occurs",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_writer_state_transitions_from_open_to_closed",
+      "precondition": "a freshly opened run that finalizes cleanly",
+      "stimulus": "read run.writer_state before and after finalize()"
+    },
+    {
+      "expected": "ARGUS2-STATE-ILLEGAL-TRANSITION; the closed stream and manifest are unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_append_after_finalize_is_illegal_transition",
+      "precondition": "a finalized run",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='annotation')"
+    },
+    {
+      "expected": "ARGUS2-STATE-WRITER-CONFLICT; only one owning writer holds the run",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_second_in_process_writer_for_same_run_conflict",
+      "precondition": "an open run and a second writer opened on the same run root",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan) a second time"
+    },
+    {
+      "expected": "ARGUS2-STATE-RUN-EXISTS; no new file is created inside or outside the root",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_existing_run_root_rejected_before_any_write",
+      "precondition": "a pre-existing run root",
+      "stimulus": "open_run(existing_root, ...)"
+    },
+    {
+      "expected": "the appended lines are present on disk after the documented flush+fsync point; flush_buffer is recorded as the only appended-line durability boundary",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_flush_buffer_is_the_appended_line_durability_point",
+      "precondition": "appended events not yet flushed",
+      "stimulus": "run.flush_buffer() then inspect events.jsonl on disk"
+    },
+    {
+      "expected": "manifest.json is the complete closed manifest, no manifest.json.tmp-* residue remains and the stream is internally consistent",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_finalize_replaces_manifest_atomically_without_residue",
+      "precondition": "a run finalized normally",
+      "stimulus": "run.finalize() then inspect the run root"
+    },
+    {
+      "expected": "writer_state becomes 'failed'; the previous manifest bytes remain; a diagnostic ARGUS2-IO-FAILURE is reported; the stream bytes are unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_interrupted_finalize_publishes_failed_state",
+      "precondition": "os.replace patched to raise during the finalize manifest replacement",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "writerState is 'failed'; a best-effort run-failed record is appended when the stream is usable; evidenceStatus is not 'complete'",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_abort_publishes_failed_state_and_best_effort_event",
+      "precondition": "an open run aborted by the caller",
+      "stimulus": "run.abort(reason='caller-stop')"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-STREAM-TRUNCATED; the damaged line is not counted as an accepted event and is never repaired",
+      "id": "tests/thesis_lite/argus/test_argus2_recovery_unit.py::test_truncated_last_jsonl_record_detected_without_recount",
+      "precondition": "the trailing newline removed from the last JSONL line",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "valid records up to the damage are returned, the damage is reported, and every original file byte (stream and manifest) is unchanged after the read",
+      "id": "tests/thesis_lite/argus/test_argus2_recovery_unit.py::test_recovery_reads_a_bounded_prefix_and_writes_nothing",
+      "precondition": "a run root containing a truncated tail and several valid records",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-STATE-RUN-EXISTS; the reader path remains the only re-open and it is read-only",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_reopen_for_writing_is_refused",
+      "precondition": "a finalized run root",
+      "stimulus": "EvidenceStore.open_run(root, run_id=..., plan=plan)"
+    },
+    {
+      "expected": "only the versioned JSONL stream and the JSON manifest are created by the writer; no lock file, database, temporary residue or index is left behind",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_only_manifest_and_stream_are_written_by_the_writer",
+      "precondition": "an open run with appended events",
+      "stimulus": "enumerate the run root after flush_buffer"
+    },
+    {
+      "expected": "the symlink is rejected before I/O with ARGUS2-PATH-SYMLINK and the oversized stream with ARGUS2-BOUND-EXCEEDED naming max_event_bytes/max_events; no unbounded read()/read_bytes() of the stream occurs (ARGUS2-ADV-01, ARGUS2-ADV-02)",
+      "id": "tests/thesis_lite/argus/test_argus2_recovery_unit.py::test_recovery_uses_nofollow_and_bounded_reads_without_unbounded_read",
+      "precondition": "a stream/manifest path that is a symlink, and a stream larger than the caller event bound",
+      "stimulus": "recovery/recovery helper and EvidenceStore.read_run under the caller limits"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED naming max_manifest_bytes; the on-disk manifest bytes remain the prior open manifest; the writer is not reported 'closed' and no complete persistence is claimed (ARGUS2-ADV-06)",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_finalize_manifest_bound_exceeded_preserves_prior_manifest",
+      "precondition": "an open run with a valid open manifest and a caller max_manifest_bytes such that the closed manifest (with artifact index, obligations and finalized metadata) exceeds it",
+      "stimulus": "run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-BOUND-EXCEEDED naming max_manifest_bytes; the prior manifest bytes remain and no closed/complete claim is made (ARGUS2-ADV-06)",
+      "id": "tests/thesis_lite/argus/test_argus2_writer_unit.py::test_abort_manifest_bound_exceeded_preserves_prior_manifest",
+      "precondition": "an open run and a caller max_manifest_bytes such that the abort/failed manifest exceeds it",
+      "stimulus": "run.abort(reason='caller-stop')"
+    }
+  ]
+}

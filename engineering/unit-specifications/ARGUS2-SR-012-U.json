@@ -1,0 +1,111 @@
+{
+  "component_id": "ARGUS2-SR-012-CMP",
+  "concurrency": "Packaging is a build-time concern; installed import and CLI execution are single-process and offline.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-012-U",
+  "inputs": [
+    "built wheel artifact",
+    "isolated installed target",
+    "existing xverse_xdl API and xdl CLI"
+  ],
+  "interfaces": [
+    "xverse.argus package import",
+    "xverse-argus console entry point",
+    "xverse_xdl.experiment_plan (preserved)",
+    "xdl CLI (preserved)"
+  ],
+  "invariants": [
+    "ARGUS2-INV-12",
+    "ARGUS2-INV-16"
+  ],
+  "outputs": [
+    "additive wheel configuration and one xverse-argus entry point",
+    "preserved xverse_xdl imports and xdl CLI"
+  ],
+  "purpose": "Deliver Argus as an additive xverse namespace/package wheel configuration with one frozen additive consumer entry point that preserves the xverse-xdl name, the xdl CLI, the accepted xverse_xdl imports and the accepted C++ X-COM contracts, rejects unknown major versions and defines additive unknown-field behaviour explicitly.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/__init__.py",
+    "src/xverse/argus/__init__.py",
+    "src/xverse/argus/cli.py",
+    "pyproject.toml",
+    "tests/thesis_lite/argus/test_argus2_consumer_unit.py"
+  ],
+  "state": "Owns the additive packaging surface only; owns no accepted xverse_xdl or C++ state and changes no existing wheel entry.",
+  "static_checks": [
+    {
+      "expected": "the wheel contains xverse/argus and xverse_xdl, contains no xcom C++ member, and preserves the xverse-xdl name and xdl entry point while adding xverse-argus",
+      "id": "ARGUS2-SR-012-U-STATIC",
+      "rule": "wheel member inspection plus a diff-scope check that the wheel contains xverse.argus and xverse_xdl but no src/xverse/xcom member, that the xverse-xdl name and xdl entry point are unchanged, and that the xverse-argus entry point is present",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-012-U unit specification - Additive packaging, installed-wheel compatibility and preserved contracts",
+  "unit_cases": [
+    {
+      "expected": "the module resolves inside the installed target, not the source tree",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_argus_imports_from_installed_wheel",
+      "precondition": "the built wheel installed into an isolated target with an empty PYTHONPATH outside the source tree",
+      "stimulus": "import xverse.argus"
+    },
+    {
+      "expected": "the accepted plan API still resolves inside the installed target and is unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_xdl_imports_from_installed_wheel",
+      "precondition": "the built wheel installed into an isolated target",
+      "stimulus": "import xverse_xdl.experiment_plan"
+    },
+    {
+      "expected": "the 'xdl' entry point and the 'xverse-xdl' distribution name are unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_existing_xdl_console_entry_point_preserved",
+      "precondition": "the installed distribution metadata",
+      "stimulus": "inspect console entry points and distribution name"
+    },
+    {
+      "expected": "xverse-argus = xverse.argus.cli:main is present as the one additive consumer entry point",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_xverse_argus_console_entry_point_present",
+      "precondition": "the installed distribution metadata",
+      "stimulus": "inspect the 'xverse-argus' entry point"
+    },
+    {
+      "expected": "no src/xverse/xcom C++ header or source member is packaged; only the additive Argus package enters the wheel",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_wheel_does_not_package_the_xcom_cpp_tree",
+      "precondition": "the built wheel contents",
+      "stimulus": "enumerate wheel members"
+    },
+    {
+      "expected": "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED with a bounded partial result",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_unknown_major_schema_rejected_from_installed_wheel",
+      "precondition": "a run whose manifest/event schemaVersion major is not 1, read via the installed wheel",
+      "stimulus": "read_run(root) via the installed import"
+    },
+    {
+      "expected": "the outside-extensions key is rejected with ARGUS2-SCHEMA-UNKNOWN-FIELD; the extensions namespace is preserved verbatim and never interpreted",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_unknown_field_behaviour_is_explicit",
+      "precondition": "a record with an unknown key outside extensions and a record with an unknown extensions namespace",
+      "stimulus": "append/read both via the installed wheel"
+    },
+    {
+      "expected": "the owned Argus tests pass against the installed wheel; no source-tree sys.path entry is injected",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath",
+      "precondition": "the owned test directory copied outside the source tree and run with PYTHONPATH resolving only to the installed target",
+      "stimulus": "pytest the copied owned Argus tests"
+    },
+    {
+      "expected": "no file under src/xverse/xcom, src/xverse_xdl, xdl, proto or an existing test is modified",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_no_accepted_cpp_or_xdl_source_is_modified",
+      "precondition": "the additive implementation diff",
+      "stimulus": "repository static inspection of the changed path set"
+    },
+    {
+      "expected": "the accepted xdl CLI behaviour is unchanged by the additive packaging",
+      "id": "tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xdl_cli_behaviour_is_preserved",
+      "precondition": "the installed 'xdl' console script",
+      "stimulus": "invoke the existing xdl version/validate behaviour"
+    }
+  ]
+}

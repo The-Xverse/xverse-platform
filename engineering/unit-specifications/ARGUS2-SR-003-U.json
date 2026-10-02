@@ -1,0 +1,161 @@
+{
+  "component_id": "ARGUS2-SR-003-CMP",
+  "concurrency": "Single-threaded within the owning writer; duplicate detection and ordinal assignment are serialized.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-SCHEMA-UNKNOWN-FIELD",
+    "ARGUS2-INPUT-DUPLICATE-EVENT",
+    "ARGUS2-INPUT-IDENTITY-MISSING",
+    "ARGUS2-INPUT-FIELD-INVALID",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-CAUSAL-UNRESOLVED",
+    "ARGUS2-CORRUPT-DUPLICATE-EVENT",
+    "ARGUS2-CORRUPT-ORDINAL",
+    "ARGUS2-CORRUPT-RUN-ID-MISMATCH",
+    "ARGUS2-INPUT-NONFINITE"
+  ],
+  "id": "ARGUS2-SR-003-U",
+  "inputs": [
+    "caller event id, producer id, event kind and optional sequence/correlation/causation",
+    "caller limits",
+    "accepted run root and stream"
+  ],
+  "interfaces": [
+    "EvidenceRun.append_event",
+    "ARGUS2-EVENT schema v1.0",
+    "causal index"
+  ],
+  "invariants": [
+    "ARGUS2-INV-01",
+    "ARGUS2-INV-03",
+    "ARGUS2-INV-11",
+    "ARGUS2-INV-12",
+    "ARGUS2-INV-19"
+  ],
+  "outputs": [
+    "accepted JSONL event record with ingestionOrdinal",
+    "bounded causal/duplicate index state"
+  ],
+  "purpose": "Enforce the frozen versioned event record contract (schema version, run id, unique event id, producer id, ingestion ordinal, kind, optional sequence and correlation/causation references), assign the local deterministic ingestion ordinal and index causal references without inventing predecessors.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/schema.py",
+    "src/xverse/argus/causation.py",
+    "tests/thesis_lite/argus/test_argus2_identity_unit.py"
+  ],
+  "state": "Owns no durable state beyond the appended records; owns the in-memory duplicate-identity and causal-index sets bounded by the caller limits.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; the identity field set and the writer-only kind set are closed",
+      "id": "ARGUS2-SR-003-U-STATIC",
+      "rule": "python ast parse of the planned schema/causation sources plus a check that the event kind vocabulary, required identity fields and reserved writer-emitted kinds are closed and that the ingestion ordinal is assigned only by the writer",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-003-U unit specification - Event identity, producer sequence and causal references",
+  "unit_cases": [
+    {
+      "expected": "one accepted record with schemaVersion '1.0', runId, eventId, producerId, ingestionOrdinal, eventKind and every declared optional field preserved exactly",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_valid_event_persists_all_declared_identity_fields",
+      "precondition": "an open run and a fully declared event",
+      "stimulus": "run.append_event(event_id='e7', producer_id='p7', event_kind='annotation', producer_sequence=3, correlation_id='c7', causation_id='e6', annotation={'text': 'n'})"
+    },
+    {
+      "expected": "ingestionOrdinal is 1, 2, 3 in append order; the reader returns records in ordinal order and never reorders by clock value",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_ingestion_ordinal_follows_append_order_not_clock_order",
+      "precondition": "three appended events whose caller clock values descend",
+      "stimulus": "append e1, e2, e3 then read"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-DUPLICATE-EVENT; no second JSONL line is written and the writer state and stream bytes are unchanged",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_duplicate_event_identity_rejected_without_partial_record",
+      "precondition": "an event id already accepted in the same run",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='annotation')"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-IDENTITY-MISSING; no partial accepted record is retained",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_missing_required_identity_field_rejected",
+      "precondition": "an append whose run id, event id or producer id is absent or empty",
+      "stimulus": "run.append_event(event_id='', producer_id='p1', event_kind='annotation')"
+    },
+    {
+      "expected": "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED; the line is not silently accepted, upgraded or dropped",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_unknown_event_schema_major_version_rejected",
+      "precondition": "a persisted JSONL line carrying schemaVersion '2.0'",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "the reference resolves to the accepted event id; the causal-closure obligation is satisfied; the index holds no invented predecessor",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_causation_reference_indexed_without_invention",
+      "precondition": "event e2 declaring causationId equal to the accepted event id e1 and a required causal-closure obligation",
+      "stimulus": "run.append_event(... e2 ...); run.finalize()"
+    },
+    {
+      "expected": "ARGUS2-CAUSAL-UNRESOLVED reported; evidenceReasons contains ARGUS2-REASON-UNRESOLVED-CAUSATION; the missing predecessor is never repaired or invented",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_unresolved_causation_remains_visible",
+      "precondition": "event e2 declaring causationId 'e9' which was never appended",
+      "stimulus": "run.append_event(... e2 ...); run.finalize()"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-FIELD-INVALID; no line is written",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_unknown_event_kind_rejected",
+      "precondition": "an event kind outside the closed set",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='telemetry')"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-FIELD-INVALID; the writer-emitted kinds remain writer-only",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_caller_may_not_append_writer_emitted_kind",
+      "precondition": "an event kind reserved for the writer",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='run-opened')"
+    },
+    {
+      "expected": "rejected; ARGUS2-BOUND-EXCEEDED naming max_text_length; no line is written",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_annotation_text_bound_enforced",
+      "precondition": "annotation text longer than the caller max_text_length",
+      "stimulus": "run.append_event(event_id='e1', producer_id='p1', event_kind='annotation', annotation={'text': 'x' * (max_text_length + 1)})"
+    },
+    {
+      "expected": "ARGUS2-SCHEMA-UNKNOWN-FIELD; the unknown key is neither silently ignored nor discarded",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_unknown_top_level_field_rejected",
+      "precondition": "a raw JSONL line carrying an additional key outside extensions",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "records are returned in ingestion-ordinal order and the declared producer sequences are preserved unchanged and never presented as temporal or causal order",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_producer_sequence_is_not_used_for_ordering",
+      "precondition": "events appended with producer_sequence values out of append order",
+      "stimulus": "append e1(seq=5), e2(seq=1), e3(seq=3) then read"
+    },
+    {
+      "expected": "ARGUS2-INPUT-IDENTITY-MISSING; the record is excluded from the trusted result and the run is assessed incomplete; no TypeError/KeyError escapes the reader (ARGUS2-ADV-04)",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_reader_rejects_event_missing_required_identity",
+      "precondition": "a persisted stream line whose event omits runId, eventId or producerId",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-DUPLICATE-EVENT; the duplicate is excluded from the trusted result and the run is assessed incomplete (ARGUS2-ADV-04)",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_reader_rejects_duplicate_event_id_within_run",
+      "precondition": "a stream carrying the same eventId twice within one run",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-ORDINAL; the out-of-sequence record is excluded and the ordinal is never presented as temporal or causal order (ARGUS2-ADV-04)",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_reader_rejects_nonmonotonic_ingestion_ordinal",
+      "precondition": "a stream whose ingestionOrdinal repeats, skips a value or does not start at 1",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-CORRUPT-RUN-ID-MISMATCH; the mismatched record is excluded and the run is assessed incomplete (ARGUS2-ADV-04)",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_reader_rejects_event_runid_mismatch_with_manifest",
+      "precondition": "a stream event whose runId differs from the manifest runId",
+      "stimulus": "EvidenceStore.read_run(root)"
+    },
+    {
+      "expected": "ARGUS2-INPUT-NONFINITE (or ARGUS2-CLOCK-UNRESOLVED for a non-numeric clock); the value never enters the trusted result and no uncaught ValueError escapes (ARGUS2-ADV-04)",
+      "id": "tests/thesis_lite/argus/test_argus2_identity_unit.py::test_reader_rejects_nonfinite_clock_value_on_read",
+      "precondition": "a persisted stream clock value of NaN/Infinity, or a non-numeric clock value",
+      "stimulus": "EvidenceStore.read_run(root)"
+    }
+  ]
+}

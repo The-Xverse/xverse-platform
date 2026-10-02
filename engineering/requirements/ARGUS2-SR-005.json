@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: every accepted event and artifact is inside every applicable caller-configured finite bound (bytes, events, identities, diagnostics, manifest size, causal-index size, streaming reads) and produces no diagnostic.",
+    "Negative: each declared finite bound has at least one independent negative case that exceeds it and observes the bound-exceeded diagnostic; each diagnostic category is distinguishable from the others.",
+    "Bounds are caller-supplied implementation limits, not scientific, safety or performance thresholds, and no diagnostic is produced without an actual violation."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-005",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0185"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-005"
+  },
+  "statement": "Argus shall reject malformed or non-finite values, duplicate identities, unsupported versions, unsafe or oversized inputs and any violated caller-configured finite bound with a stable structured diagnostic that distinguishes input rejection, I/O failure, unsupported schema, corrupt artifact, missing evidence and known observation loss; it shall not silently discard a record, repair a timestamp, guess a producer, substitute an unknown version or accept a partial record.",
+  "status": "accepted",
+  "title": "Fail-closed validation with stable diagnostics and caller-configured finite bounds",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

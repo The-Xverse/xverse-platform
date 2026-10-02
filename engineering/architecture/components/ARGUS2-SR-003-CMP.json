@@ -1,0 +1,50 @@
+{
+  "boundaries": [
+    "ARGUS2-XB-02"
+  ],
+  "concurrency": "Single-threaded within the owning writer; duplicate detection and ordinal assignment are serialized.",
+  "dependencies": [
+    "docs/engineering/argus-lite/architecture.md rev 1",
+    "docs/engineering/argus-lite/detailed-design.md rev 1",
+    "docs/engineering/argus-lite/requirements.md rev 1",
+    "accepted xverse_xdl.experiment_plan public API/digest semantics (read-only, unchanged)",
+    "accepted C++ X-COM observation contract 1.0.0 (read-only, unchanged)"
+  ],
+  "deployment": "Offline, in-process Python library and console entry point inside the admitted ARGUS2 envelope: no process, service, container, network, device, provider handle, live tap, registry or oracle is created, started, probed or contacted.",
+  "errors": [
+    "ARGUS2-SCHEMA-MAJOR-UNSUPPORTED",
+    "ARGUS2-INPUT-DUPLICATE-EVENT",
+    "ARGUS2-INPUT-IDENTITY-MISSING",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-CAUSAL-UNRESOLVED"
+  ],
+  "id": "ARGUS2-SR-003-CMP",
+  "interfaces": [
+    "EvidenceRun.append_event",
+    "ARGUS2-EVENT schema v1.0",
+    "causal index"
+  ],
+  "logical_elements": [
+    "ARGUS2-ARCH-03",
+    "ARGUS2-ARCH-05"
+  ],
+  "planned_paths": [
+    "src/xverse/argus/schema.py",
+    "src/xverse/argus/causation.py"
+  ],
+  "rationale": "Source allocation from docs/engineering/argus-lite/requirements.md ARGUS2-SR-003, realized by ARGUS2-ARCH-03/ARGUS2-ARCH-05 in docs/engineering/argus-lite/architecture.md section 4 and frozen in docs/engineering/argus-lite/detailed-design.md.",
+  "requirements": [
+    "ARGUS2-SR-003"
+  ],
+  "responsibilities": [
+    "Freeze and enforce the versioned event record contract (schema version, run ID, unique event ID, producer ID, ingestion ordinal, kind).",
+    "Preserve optional producer sequence and optional correlation/causation references exactly.",
+    "Assign the local deterministic ingestion ordinal and never present it as temporal or causal order.",
+    "Reject an unknown event-schema major version, a duplicate event identity within one run, or a record missing a required identity field without retaining a partial accepted record.",
+    "Index causal references without inventing a missing predecessor."
+  ],
+  "revision": "1",
+  "schema_version": 1,
+  "state_ownership": "Owns no durable state beyond the appended records; owns the in-memory duplicate-identity and causal-index sets bounded by the caller limits.",
+  "title": "ARGUS2-SR-003-CMP allocation - Event identity, producer sequence and causal references"
+}

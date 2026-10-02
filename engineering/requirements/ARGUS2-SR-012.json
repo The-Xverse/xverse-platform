@@ -1,0 +1,28 @@
+{
+  "acceptance_criteria": [
+    "Positive: the built wheel installs offline and, outside the source tree, imports both xverse.argus and the existing xverse_xdl.experiment_plan from the installed wheel only, and the owned Argus tests run against that installed wheel with an empty PYTHONPATH.",
+    "Negative: an unknown major schema version is rejected, additive unknown-field behavior is defined explicitly rather than silently accepted, and no installed xverse_xdl import, CLI entry point or accepted C++ contract is broken by the additive packaging change.",
+    "The additive entry point is frozen by the design stage; no existing C++ API/source and no accepted XDL/X-COM validation is relaxed."
+  ],
+  "applicability": "Phase 2 Argus Lite bounded software allocation (bounded run evidence persistence, X-COM observation projection import and read-only reconstruction). status 'accepted' records internal engineering intent only; it is not implementation satisfaction, runtime evidence, scientific validity, or external delivery acceptance.",
+  "disposition": "allocated",
+  "full_system_requirement_claim": false,
+  "id": "ARGUS2-SR-012",
+  "level": "software",
+  "maturity": "planned",
+  "parents": [
+    "XVE-SYS-0211"
+  ],
+  "phase": "P2",
+  "planned_extent": "bounded_partial",
+  "revision": "1",
+  "schema_version": 1,
+  "source": {
+    "kind": "thesis_lite_phase2_software_allocation",
+    "reference": "docs/engineering/argus-lite/requirements.md ARGUS2-SR-012"
+  },
+  "statement": "Argus shall be delivered as an additive xverse namespace/package wheel configuration that does not rename xverse-xdl, change the existing xdl CLI or break installed imports, shall expose one frozen additive consumer entry point, and shall preserve the accepted XDL plan/Profile/API versions, the accepted XDL digest reuse and the accepted C++ X-COM implementation, namespaces and contracts without any existing C++ API or source edit.",
+  "status": "accepted",
+  "title": "Additive packaging, installed-wheel consumer compatibility and preserved contracts",
+  "verification_intent": "Planned to be exercised through the ARGUS2-UNIT, ARGUS2-STATIC, ARGUS2-INTEGRATION and ARGUS2-VALIDATION measures defined in the ARGUS2 verification-design stage, including the real accepted XDL compiler output, the owned C++ X-COM observation-record producer fixture, the offline built-and-installed wheel and the read-only reader. No runtime, live, availability, compatibility, parity or readiness claim is made."
+}

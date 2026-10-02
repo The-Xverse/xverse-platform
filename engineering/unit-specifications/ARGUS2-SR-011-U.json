@@ -1,0 +1,116 @@
+{
+  "component_id": "ARGUS2-SR-011-CMP",
+  "concurrency": "Single-threaded caller-driven execution; no service, daemon, thread or network is created.",
+  "errors": [
+    "ARGUS2-INPUT-AUTHORITY-MISSING",
+    "ARGUS2-INPUT-CLOCK-MISSING",
+    "ARGUS2-INPUT-FIELD-INVALID",
+    "ARGUS2-BOUND-EXCEEDED",
+    "ARGUS2-IO-FAILURE"
+  ],
+  "id": "ARGUS2-SR-011-U",
+  "inputs": [
+    "caller run id, clocks, limits and obligations",
+    "plan and envelope"
+  ],
+  "interfaces": [
+    "EvidenceStore.open_run(run_id, clocks, limits, obligations)",
+    "EvidenceLimits",
+    "obligation set"
+  ],
+  "invariants": [
+    "ARGUS2-INV-10",
+    "ARGUS2-INV-15",
+    "ARGUS2-INV-21"
+  ],
+  "outputs": [
+    "offline JSON/JSONL evidence inside the run root",
+    "authority/bound diagnostics"
+  ],
+  "purpose": "Require the caller to supply the run identity, clock identities/units, finite limits and evidence obligations; operate offline on JSON/JSONL only with no ambient clock, random identity, remote lookup or environment discovery and no control, metric, oracle, tap or network capability.",
+  "revision": "1",
+  "schema_version": 1,
+  "source_paths": [
+    "src/xverse/argus/api.py",
+    "src/xverse/argus/limits.py",
+    "tests/thesis_lite/argus/test_argus2_offline_unit.py"
+  ],
+  "state": "Owns only the caller-supplied authority values (identity, clocks, limits, obligations) and the offline run root.",
+  "static_checks": [
+    {
+      "expected": "ast.parse succeeds for every planned path; no ambient identity/clock/limit or network fallback exists",
+      "id": "ARGUS2-SR-011-U-STATIC",
+      "rule": "python ast parse of the planned api/limits sources plus a check that run id, limits, clocks and obligations are function parameters with no environment, locale, home-directory, random or network fallback",
+      "tool": "repository static inspection (python ast parse and diff/wheel scope check; consumed by the trusted ARGUS2-STATIC measure)"
+    }
+  ],
+  "title": "ARGUS2-SR-011-U unit specification - Caller authority, offline operation and absence of control authority",
+  "unit_cases": [
+    {
+      "expected": "rejected; ARGUS2-INPUT-AUTHORITY-MISSING; no identity is generated",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_caller_supplied_run_identity_is_required",
+      "precondition": "open_run called with no run id",
+      "stimulus": "EvidenceStore.open_run(root, run_id=None, plan=plan)"
+    },
+    {
+      "expected": "the effective caller limits are echoed into the manifest so the reader verifies under the same bounds",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_caller_supplied_limits_are_echoed_not_defaulted",
+      "precondition": "a caller limit set supplied explicitly",
+      "stimulus": "open_run(root, ..., limits=limits) then inspect manifest.limits"
+    },
+    {
+      "expected": "the declared obligations are recorded verbatim; no obligation is invented, defaulted or removed",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_caller_supplied_obligations_are_taken_verbatim",
+      "precondition": "a caller obligation set",
+      "stimulus": "open_run(root, ..., obligations=obligations) then inspect manifest.obligations"
+    },
+    {
+      "expected": "rejected; ARGUS2-INPUT-FIELD-INVALID; only the four frozen obligation kinds exist",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_unknown_obligation_kind_rejected",
+      "precondition": "an obligation whose kind is outside the closed set",
+      "stimulus": "open_run(root, ..., obligations=[{'obligationId': 'o1', 'kind': 'best-effort', 'required': True}])"
+    },
+    {
+      "expected": "the whole lifecycle completes with no socket or network access",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_no_network_access_during_open_append_finalize",
+      "precondition": "socket creation made to raise",
+      "stimulus": "open_run, append_event, finalize"
+    },
+    {
+      "expected": "no subprocess, service, daemon or background worker is started",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_no_subprocess_or_service_is_started",
+      "precondition": "subprocess creation made to raise",
+      "stimulus": "open_run, import, finalize, read_run"
+    },
+    {
+      "expected": "no metric-computation or evaluation-oracle entry point is exposed or importable",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_no_metric_computation_or_oracle_capability_is_exposed",
+      "precondition": "the public xverse.argus surface",
+      "stimulus": "inspect the exported names"
+    },
+    {
+      "expected": "only JSON/JSONL evidence artifacts are produced; no control, actuation or provider-delivery output exists",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_no_control_or_actuation_output_is_produced",
+      "precondition": "a full lifecycle",
+      "stimulus": "enumerate run-root artifacts and return values"
+    },
+    {
+      "expected": "every written artifact is JSON or JSONL; no database, socket, binary blob, parquet or side-channel file appears",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_only_json_and_jsonl_artifacts_are_written",
+      "precondition": "a run with events plus an imported observation and snapshot",
+      "stimulus": "enumerate the run root"
+    },
+    {
+      "expected": "no remote lookup, locale, environment or home-directory value influences identity, clocks, limits or verdicts",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_no_remote_lookup_or_environment_discovery",
+      "precondition": "an environment with proxy/user/home variables set",
+      "stimulus": "open_run and read_run"
+    },
+    {
+      "expected": "no admitted fact changes and the writer holds no reference to a caller-owned mutable object; admission deep-snapshots every caller value (ARGUS2-ADV-07)",
+      "id": "tests/thesis_lite/argus/test_argus2_offline_unit.py::test_admitted_caller_objects_are_not_aliased_after_admission",
+      "precondition": "caller-supplied run_envelope, source_byte_digests, clocks, extensions and obligations objects",
+      "stimulus": "open_run(...); mutate every caller-owned object after admission; inspect the manifest and the evaluated obligations"
+    }
+  ]
+}

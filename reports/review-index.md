@@ -1389,3 +1389,244 @@ separate read-only `internal_review` stage and the trusted host measures.
 The index points at `docs/engineering/xdl-lite/internal-review.json`, which the later read-only
 `internal_review` stage authors after host candidate sealing; this section records the pointer and
 claims no verdict.
+# Argus Lite Phase 2 review index — bounded run evidence persistence, projection import and read-only reconstruction (feature `ARGUS2`)
+
+**Current successor (2026-10-02):** [Direct Codex repair](../docs/engineering/argus-lite/codex-direct-repair.md) and its explicitly referenced exact-candidate external evidence bundle supersede the verification status below. The following Argus paragraphs and stage records are preserved predecessor history, not successor proof or acceptance.
+
+Candidate: `ARGUS2` (Argus Lite Phase 2) on accepted platform baseline
+`c1fd213cd00259b74f8308d8ca58157ea985aaa0` (accepted and merged Phase 1 XDL Lite), with the accepted
+XDL resolved-plan/`xverse_xdl` API and the owned C++ X-COM observation contract consumed read-only.
+
+This section is part of the mutable, append-only review index. All pre-existing T020 and T030–T038
+sections and the XDL Lite Phase 1 section above are preserved byte-for-byte and are not rewritten, and
+the inherited 103806-byte index prefix
+(`sha256=e8533ed505f5e0fdd7e842573bdb90657c4711d38872b454e9d5b41cb33ef51c`) is preserved
+byte-for-byte. This is a candidate review index only: the trusted unit/static/integration/validation
+measures, the assembled pinned `xverse-platform` target run, candidate sealing, the separate read-only
+`internal_review` and terminal author acceptance are separate gates, and none is claimed complete here.
+
+Revision note: this section was brought onto the terminal-review repair candidate after findings
+`AR-F01`–`AR-F05` (run `01M3WW66FB61DKFEPWFEH2BFJE`, candidate
+`2f7806599e7df6693b9899fb328762728dbf65d5`, verdict `rework`). The rejected candidate was never
+accepted, so no accepted revision is superseded; the earlier pre-rework Argus section is replaced by
+this one.
+
+Revision-4 note: the independent frozen review of the next snapshot (failed run
+`01M3XTPJ9MFBFX8S17X78E0AMS`, 2 977 files) returned rework and produced no candidate. Two residual
+defects were repaired additively within the authorized implementation scope and are proved by three new
+owned adversarial cases: (i) `NaN`/`Infinity`/`-Infinity` (and an overflowing `1e400` literal) anywhere
+in the parsed manifest are now rejected with a single bounded `ARGUS2-INPUT-NONFINITE` diagnostic before
+assessment or export (`AR-F03`), with the recorded manifest facts preserved separately and the run
+assessed `incomplete`; and (ii) every manifest publication and the `open_run` preflight now bound the
+exact serialized bytes written including the single trailing newline (`AR-F04`). No frozen design
+document, unit record, measure record or declared test identifier changed and no assertion was
+weakened. The prior revision note is preserved above. The trusted measures, the sealed candidate, the
+repeated frozen independent review and terminal acceptance remain separate gates and are not claimed
+here.
+
+Revision-5 note: the independent frozen review of the next snapshot (failed run
+`01M3XY5J8QSRV7V40Q98J73A4Q`, 2 977 files) returned rework with finding `AR-RVW-001` and produced no
+candidate. A *small* but deeply nested JSON document could exhaust the interpreter stack and raise an
+uncaught `RecursionError` at five boundaries: manifest parsing, event-line parsing, canonical
+serialization, `open_run` obligations and `append_event` extensions/observation. The repair is
+additive: an iterative, string-aware, linear nesting scan (`schema.MAX_JSON_NESTING = 128`, an internal
+defensive bound — not a caller `EvidenceLimits` field and not a scientific, safety or performance
+threshold) now rejects over-deep raw JSON before decoding; `canonical_json` checks a parsed value
+iteratively; and the reader, recovery and admission paths map the rejection to the existing bounded
+diagnostics `ARGUS2-CORRUPT-MANIFEST-SHAPE`, `ARGUS2-CORRUPT-STREAM-TRUNCATED` and
+`ARGUS2-INPUT-FIELD-INVALID`. Seven new owned adversarial cases prove the repair, while the nonfinite
+rejection and newline-inclusive exact-byte repairs and all inherited cases are preserved. No frozen
+design document, unit record, measure record or declared test identifier changed and no assertion was
+weakened. The trusted measures, the sealed candidate, the repeated frozen independent review and
+terminal acceptance remain separate gates and are not claimed here.
+
+Revision-6 note: the independent frozen review of the restored rework snapshot
+`01M3Y16BYA3QHRC6FTRDNAWPAM` (2 977 files) returned rework with two residual `AR-F03` enclosing-depth
+failures and produced no candidate; the previous implementation handler then timed out at failed run
+`01M3XPJS7MQEGRNEKA0WV3MXW7` and its files were preserved as unfinished draft evidence. The
+continuation repaired both failures additively: `reader._EXPORT_WRAP_DEPTH = 2` now accounts for the
+export-document wrap, so an event record admitted at the standalone parse bound but exceeding the
+wrapped document is withheld from `export_json` with one bounded `ARGUS2-BOUND-EXCEEDED` diagnostic and
+an assessed `incomplete` status (the JSON API and CLI `export` never raise and never report primary
+`complete`, while `records()` still exposes the admitted record); and `api.open_run`/`writer._publish`
+convert a manifest-preview nesting overflow into a bounded `ARGUS2-INPUT-FIELD-INVALID` `EvidenceError`
+before any run root or temporary file, preserving the prior manifest bytes and claiming no
+`closed`/`complete` persistence. Three new owned adversarial cases prove the repair at the last
+accepted and first rejected depths, and the prior deep-nesting, nonfinite and exact-on-disk-size repairs
+and all inherited cases are preserved. No frozen design document, unit record, measure record or
+declared test identifier changed and no assertion was weakened. The trusted measures, the sealed
+candidate, the repeated frozen independent review and terminal acceptance remain separate gates and are
+not claimed here.
+
+Documentation revision note (revision 5): the documentation stage re-ran after the revision-6
+implementation, integration and validation stages. It rewrote `maintenance.md` to revision 5 (bound to
+the revision-6 candidate) and refreshed this section's document and stage-record references, the
+worker-count statements and its forward pointer; it preserved `implementation.md` and the inherited
+index prefix byte-for-byte. It authored no source, test, schema, fixture or packaging code and
+performed no code repair. Every prior ARGUS2 stage record was re-verified read-only.
+
+## Declared ARGUS2 work products
+
+Documentation and work products (`docs/engineering/argus-lite/`):
+
+- `requirements.md` rev 1, `architecture.md` rev 1 rework, `detailed-design.md` rev 1 rework,
+  `unit-specifications.md` rev 1 rework, `verification-plan.md` rev 2, `implementation.md` rev 6
+  (delivered record `873b738f…`), `integration.md` rev 6 (`e59ab4b3…`), `validation.md` rev 5
+  (`6a794de8…`), `maintenance.md` rev 5 (documentation stage)
+- `planned-trace.json`
+- `internal-review.json` (authored by the separate read-only reviewer; **not** authored here, and no
+  verdict is claimed by this index)
+
+Engineering records:
+
+- `engineering/project.json` — project `xverse-platform`, current feature pointer `ARGUS2`, accepted
+  baseline `c1fd213cd00259b74f8308d8ca58157ea985aaa0`.
+- `engineering/requirements/` — twelve `ARGUS2-SR-001..012` software allocations plus the twelve
+  original `XVE-SYS-*` parent anchors (`XVE-SYS-00015`, `-0016`, `-0179`, `-0183`, `-0185`, `-0186`,
+  `-0188`, `-0194`, `-0198`, `-0201`, `-0203`, `-0211`) whose original text, provenance and
+  `disposition = allocated` are preserved; one bounded evidence allocation per parent in the admitted
+  order, no parent closed or promoted and no new system requirement ID created.
+- `engineering/architecture/components/` — twelve `ARGUS2-SR-0nn-CMP` components.
+- `engineering/unit-specifications/` — twelve `ARGUS2-SR-0nn-U` unit records with 172 frozen unit
+  cases (139 preserved plus 33 terminal-review repair cases) and 18 declaration-bound static checks.
+- `engineering/verification/measures/` — `ARGUS2-UNIT` (172 ids), `ARGUS2-INTEGRATION` (9 ids),
+  `ARGUS2-VALIDATION` (30 ids) and `ARGUS2-STATIC` (18 structural checks).
+- `engineering/validation/scenarios/` — eight intended-use scenarios `ARGUS2-VS-01..08`; their
+  `test_ids` union equals the `ARGUS2-VALIDATION` set and every `ARGUS2-SR-0nn` is validated by at
+  least one scenario. `ARGUS2-VS-08` is the additive adversarial scenario that binds all seven frozen
+  adversarial cases `ARGUS2-ADV-01..07` end to end.
+- `engineering/trace/links.json` — 261 additive ARGUS2 links, including 92 `implemented_by` links
+  (`ARGUS2-L-801`…`ARGUS2-L-892`) binding each requirement, allocation component and unit record to the
+  exact candidate files and SHA-256 values; the trusted `validate_trace` returns
+  `{'artifacts': 968, 'links': 3595}` with no stale endpoint.
+- `engineering/stage-results/` — `argus2-requirements.json`, `argus2-architecture.json`,
+  `argus2-unit_specification.json`, `argus2-verification_design.json`, `argus2-implementation.json`
+  (`b1c08083…`, revision 6), `argus2-integration.json` (rev 6, `4b02df9d…`), `argus2-validation.json`
+  (rev 5, `d614297e…`), `argus2-documentation.json` (rev 5, documentation stage). The separate reviewer
+  adds the `internal_review` stage record and `docs/engineering/argus-lite/internal-review.json`.
+
+Implementation change set (additive only; no accepted artifact rewritten):
+
+- `src/xverse/__init__.py` (**new** package marker; imports nothing from `xcom`)
+- `src/xverse/argus/**` (**new** package, 15 modules: `api`, `planbinding`, `diagnostics`, `limits`,
+  `schema`, `clocks`, `artifacts`, `causation`, `observation`, `snapshot`, `writer`, `reader`,
+  `recovery`, `cli` and `__init__`)
+- `pyproject.toml` (additive `xverse-argus` console entry point and wheel `force-include` for the Argus
+  package only; `xverse-xdl`, `xdl` and the accepted `xverse_xdl` API unchanged)
+- `tests/thesis_lite/argus/**` (17 test modules — 14 unit, one integration, one validation and the
+  additive `test_argus2_repair_unit.py` with 21 adversarial repair cases — plus neutral XDL fixtures
+  compiled by the real accepted compiler and the owned C++20 producer fixture
+  `fixtures/argus2_owned_record_producer.cpp`)
+
+## Recorded repairs (predecessor and terminal-review findings, closed before this candidate)
+
+- **RC-1** — the copied owned tests could not import their `support` helper because the trusted copied
+  directory (`<tmp>/tests`) is a package; all owned modules errored at collection. Each owned module now
+  resolves `support` through a layout-independent fallback that inserts **only its own owned test
+  directory** on `sys.path`; no platform `src` is ever injected.
+- **RC-2** — `support.wheel_and_target()` built the wheel with a `cwd` derived from the copied layout,
+  resolving to `/`. It now honours `ARGUS_PLATFORM_SOURCE_ROOT` and otherwise falls back to the
+  repository layout, so the offline rebuild never targets `/`.
+- **AR-F01** — pre-I/O confined reads and authoritative bounds: `os.lstat` traversal/symlink/escape
+  rejection and required regular file, `O_NOFOLLOW` open with a device/inode re-check, bounded manifest
+  and stream reads, per-line/total/record/diagnostic caps, and caller limits authoritative over a
+  damaged-manifest `limits` echo.
+- **AR-F02** — recorded versus assessed evidence status: a corrupt/truncated/loss run is exported as
+  assessed `incomplete` and never as primary `complete`; CLI exit code `0` requires an assessed
+  `complete` status.
+- **AR-F03** — complete closed nested-schema, required run/event/producer identity, per-run `eventId`
+  uniqueness, strictly increasing `ingestionOrdinal`, run-ID consistency and finite-value checks with
+  bounded stable diagnostics; no uncaught `TypeError`/`ValueError` escapes the reader or CLI. Revision-4
+  residual repair: a parsed manifest carrying `NaN`/`Infinity`/`-Infinity` anywhere — including an
+  overflowing literal such as `1e400` — is rejected with one bounded `ARGUS2-INPUT-NONFINITE` diagnostic
+  before the schema-version check, limits echo, assessment or export; the recorded manifest facts remain
+  separately visible and the run is assessed `incomplete`.
+- **AR-F04** — the actual manifest byte bound is enforced at every open/finalize/abort publication; a
+  bound or I/O failure preserves the prior manifest bytes and never claims closed/complete persistence.
+  Revision-4 residual repair: the measured value is the exact on-disk form (canonical encoding plus the
+  single trailing newline) and the `open_run` preflight applies the same rule before any run root is
+  created.
+- **AR-F05** — deep admission snapshots of obligations/envelope/digests/clocks/annotation/extensions and
+  internally owned artifact identity; returned views are defensive copies, so post-admission caller
+  mutation cannot lower an obligation, rewrite an indexed hash or change a returned view.
+- **AR-RVW-001** — bounded deep-nesting rejection: an iterative, string-aware, linear nesting scan
+  (`schema.json_text_depth_exceeded`, guarded by `schema.MAX_JSON_NESTING = 128`) refuses over-deep raw
+  JSON before any recursive decode, `schema.json_depth_exceeded`/`schema.canonical_json` do the same for
+  an already-parsed value, and `reader.read_run`, `recovery.recover_stream` and `writer.EvidenceRun._append`
+  convert the rejection into the existing bounded diagnostics (`ARGUS2-CORRUPT-MANIFEST-SHAPE`,
+  `ARGUS2-CORRUPT-STREAM-TRUNCATED`, `ARGUS2-INPUT-FIELD-INVALID`) instead of an uncaught
+  `RecursionError`. `MAX_JSON_NESTING` is an internal defensive bound, not a caller limit and not a
+  scientific/safety threshold.
+- **AR-F03 enclosing depth (revision 6)** — `reader._EXPORT_WRAP_DEPTH = 2` makes `reader.read_run` flag
+  any admitted event record exceeding `MAX_JSON_NESTING - 2` with one bounded `ARGUS2-BOUND-EXCEEDED`
+  diagnostic and assess the run `incomplete`; `export_json` withholds only that record so the JSON API
+  and the CLI `export` return a stable bounded diagnostic, never a primary `complete` status and never a
+  traceback, while `records()` still exposes the admitted record. `api.open_run` and `writer._publish`
+  convert a manifest-preview nesting overflow into a bounded `ARGUS2-INPUT-FIELD-INVALID` `EvidenceError`
+  before any run root or temporary file, preserving the prior manifest bytes and claiming no
+  `closed`/`complete` persistence. Three additive adversarial cases prove the last-accepted/first-rejected
+  boundary for JSON event export, CLI event export and obligation admission.
+- The predecessor integration revision 1 failed closed on RC-1/RC-2, the terminal review failed the
+  pre-rework candidate on AR-F01–AR-F05, the frozen review of the revision-3 rework snapshot returned
+  rework on the two residual AR-F03/AR-F04 defects, the frozen review of the revision-4 snapshot
+  returned rework on AR-RVW-001, and the frozen review of the revision-5 snapshot returned rework on the
+  two residual AR-F03 enclosing-depth failures; no assertion, identifier or frozen contract was
+  weakened, skipped or deleted to obtain these successor results.
+
+## Verification state and open limitations
+
+- Candidate-local preliminary worker checks (not trusted evidence): `python3 -m pytest -q
+  -p no:cacheprovider tests/thesis_lite/argus` reports `232 passed` (193 unit — 172 frozen plus 21
+  additive adversarial repair cases — plus 9 integration and 30 validation); `python3 -m pytest -q
+  -p no:cacheprovider tests` reports `527 passed`; the exact trusted installed-wheel consumer command
+  replicated over a bounded `/tmp` target reported `527 passed`, an offline wheel build/install of
+  `xverse-xdl-0.4.0`, `INSTALLED_CONSUMER_IMPORT_PASSED` with `xverse.argus` and
+  `xverse_xdl.experiment_plan` resolved under the installed target, and `232 passed` for the copied
+  owned tests with `PYTHONPATH` set only to the installed target and `ARGUS_PLATFORM_SOURCE_ROOT` set to
+  the target. All 211 frozen measure identifiers are collected with 0 missing and the revision-6 repair
+  passes the static AST check (`STATIC_CHECK_PASSED`).
+- Real interoperability is exercised, not simulated: the accepted XDL compiler compiles the owned
+  neutral fixtures, and the owned C++20 producer fixture is compiled with `g++ -std=c++20` against the
+  accepted `observation.hpp` and the accepted observation translation units, serializing owned
+  `ObservationRecord`/`ObservationSnapshot` values that are imported, finalized, read back and exported
+  by value. Synthetic dictionaries alone are not used, and no public C++ source was changed.
+- The trusted host must bind `unit → ARGUS2-UNIT`, `static_analysis → ARGUS2-STATIC`,
+  `integration → ARGUS2-INTEGRATION` and `validation → ARGUS2-VALIDATION`, then assemble the exact
+  candidate over the pinned `xverse-platform` revision and execute the trusted measures. Without those
+  bindings the gates fail closed rather than being papered over.
+- The separate read-only `internal_review` must independently confirm contract fidelity, all twelve
+  bounded parent allocations, clock/causal uncertainty, completeness, failure/durability/security, the
+  XDL and real C++ interoperability and the installed-wheel regression; terminal author acceptance
+  follows. Neither is claimed here.
+- **L-ARGUS2-1 (trusted gates pending).** Worker checks are candidate-local and must not be reported as
+  trusted verification; the sealed candidate, the mounted `/target`, the trusted `run_measure` wrapper
+  and the external assembly policy were not available to the worker.
+- **L-ARGUS2-2 (bounded local durability).** The durability guarantee is `flush`/`fsync`/atomic rename
+  on the local run root only; it is not a power-loss, hardware, distributed or network-filesystem
+  guarantee and no such claim is made.
+- **L-ARGUS2-3 (completeness is not success).** An assessed `complete` status means only that the
+  caller-declared capture obligations and integrity checks were satisfied; it never proves scientific
+  validity, safety, compatibility, parity or readiness. Known loss, degraded/invalid intervals,
+  unresolved causation and unclosed interval closure can never be upgraded to `complete` by
+  finalization alone.
+- **L-ARGUS2-4 (no decoder or metric claim).** `payloadSchemaState` is always `undecoded` in this slice,
+  and `metricInputs` are declared references only: Argus computes no metric and invokes no oracle.
+- **L-ARGUS2-5 (inherited admission limitation).** The admitted planning bundle names a required
+  launch-evidence `admission/review.md` that is not an admitted input for this run; it remains an
+  external, unverified later-gate input and is neither fabricated nor substituted.
+- **L-ARGUS2-6 (no REF-002 promotion).** No REF-002 parent disposition is promoted or closed and the
+  capability records no maturity promotion beyond an implemented, candidate-local classification.
+- **L-ARGUS2-7 (resolved record-consistency note).** The earlier revision-3/revision-4 presentation
+  discrepancy is resolved: the delivered `implementation.md` is now the revision-6 record
+  (`873b738f…`), whose header and section 5 worker table agree with the revision-6 totals (`232` owned
+  tests, `527` platform tests) recorded in `argus2-implementation.json` (`b1c08083…`), `integration.md`
+  rev 6 and `validation.md` rev 5, and it is bound by that implementation stage record.
+- **L-ARGUS2-8 (internal defensive nesting bound).** `schema.MAX_JSON_NESTING` (128) is an
+  implementation-internal guard against adversarial nesting (`AR-RVW-001`); it is not a caller
+  `EvidenceLimits` field and not a scientific, safety or performance threshold.
+- Public-safe: this section uses repository-relative locators only and contains no secret, credential,
+  host address, private source excerpt or sensitive deployment detail.
+
+The index points at `docs/engineering/argus-lite/internal-review.json`, which the later read-only
+`internal_review` stage authors after host candidate sealing; this section records the pointer and
+claims no verdict.
