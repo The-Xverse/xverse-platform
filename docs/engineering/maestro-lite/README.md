@@ -4,6 +4,38 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4; not accepted; n
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Catalog launcher candidate (LAUNCHER9)
+
+The successor composes real process-kind XDL/catalog actions, genuine M3/Argus
+intent, a native born-frozen child and the original one-use Release gate. Python
+retains C1 and an original issuing registry; the native helper copies and hashes
+the selected regular ELF into a sealed image, pins the declared cwd and uses only
+explicit argv/environment. LC09 authenticates each peer and exact recipe bytes,
+sequence, deadline, retained cgroup FD and returned child pidfd. A full issued
+OwnedResourceHandle is usable only through its live original registry.
+
+Build the packaged catalog_launcher.c explicitly with OpenSSL 3 libcrypto:
+`cc -std=c11 -O2 -Wall -Wextra -Werror catalog_launcher.c -lcrypto -o catalog-launcher`.
+The optional RG06 build additionally requires `-DMAESTRO_BOUNDARY_ACK=1`; it returns
+its actual cgroup FD during READY. Default RG06/LG05 behavior remains unchanged.
+Source and binary pins, explicit artifact/environment/FD admission and trusted
+helper bootstrap remain required; imports/installations never build/start helpers.
+
+Before Release, the child stub and workload remain frozen. After Release, an exec
+error pipe and original child pidfd distinguish pending exec, alive-after-pipe-EOF,
+failed exec and reaped leader. These observations do not establish lifecycle
+readiness or a successful normal outcome. Direct-child reap and C1 descendant
+kill/empty/release remain separate factual checks. Cancel never waits for Stage's
+lock. Closed or removed original boundaries cannot be used for late birth.
+
+See ADR-ML3-LAUNCHER-0001.md, unit-specification-launcher9.md, review-launcher9.md
+and evidence/launcher9/. verify-launcher9.py verifies installed source identity,
+full/copy regressions and original helper/root receipts. Whole bootstrap/caller
+bounds, dependency admission, provider facade/current-generation readiness,
+reverse teardown, restart/recovery, full normal M3/evidence/coverage/collection,
+independent full review and all nine runtime cases remain open. Full Lite phase 3
+is partial; this candidate neither updates accepted main nor admits experiments.
+
 ## Native Release gate successor
 
 `ML3-RELEASEGATE6-2026-10-18-v1` extends the packaged native source with an explicit

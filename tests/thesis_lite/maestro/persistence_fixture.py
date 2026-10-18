@@ -12,6 +12,7 @@ from xverse_xdl.lifecycle import FileEvidenceJournal
 channel_fd, input_fd, announce_fd, release_fd = map(int, sys.argv[1:5])
 mode = sys.argv[5]
 phase = None
+revalidations = 0
 receive = persistence_worker._receive
 
 
@@ -31,13 +32,18 @@ target, name = {
     "flush": (EvidenceRun, "flush_buffer"),
     "revalidate": (PermitSession, "revalidate_start_intent"),
     "abort": (EvidenceRun, "abort"),
-}[stage]
+}["revalidate" if stage == "revalidate3" else stage]
 original = getattr(target, name)
 
 
 def injected(*args, **kwargs):
-    if stage == "revalidate" and phase != "revalidate":
-        return original(*args, **kwargs)
+    global revalidations
+    if stage in ("revalidate", "revalidate3"):
+        if phase != "revalidate":
+            return original(*args, **kwargs)
+        revalidations += 1
+        if stage == "revalidate3" and revalidations < 3:
+            return original(*args, **kwargs)
     if disposition == "fail":
         os.write(announce_fd, b"F")
         raise OSError("owned injected storage failure")

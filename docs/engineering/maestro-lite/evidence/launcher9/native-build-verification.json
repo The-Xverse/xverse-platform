@@ -1,0 +1,94 @@
+{
+  "variants": [
+    {
+      "command": [
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wconversion",
+        "-Wshadow",
+        "-fanalyzer",
+        "src/xverse/maestro/native/lease_guard.c",
+        "-o",
+        "docs/engineering/maestro-lite/evidence/launcher9/lg05-strict.bin"
+      ],
+      "returncode": 0,
+      "source_sha256": "5bddac9e336ff82e9ad2fd41f234230573c955646b740df66372dc9a5c2485d6",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "binary_sha256": "b4621c6c68b79af03c45b1a6685fef86c6161ddb46c0593ca7ac2a3032427b24"
+    },
+    {
+      "command": [
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wconversion",
+        "-Wshadow",
+        "-fanalyzer",
+        "src/xverse/maestro/native/lease_guard.c",
+        "-DMAESTRO_RELEASE_GATE=1",
+        "-o",
+        "docs/engineering/maestro-lite/evidence/launcher9/rg06-strict.bin"
+      ],
+      "returncode": 0,
+      "source_sha256": "5bddac9e336ff82e9ad2fd41f234230573c955646b740df66372dc9a5c2485d6",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "binary_sha256": "9986cdb50ec169f66f074d264e8cb643582d9ec1c67cf2769ad6ad1e4f9b5961"
+    },
+    {
+      "command": [
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wconversion",
+        "-Wshadow",
+        "-fanalyzer",
+        "src/xverse/maestro/native/lease_guard.c",
+        "-DMAESTRO_RELEASE_GATE=1",
+        "-DMAESTRO_BOUNDARY_ACK=1",
+        "-o",
+        "docs/engineering/maestro-lite/evidence/launcher9/bound-rg06-strict.bin"
+      ],
+      "returncode": 0,
+      "source_sha256": "5bddac9e336ff82e9ad2fd41f234230573c955646b740df66372dc9a5c2485d6",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "binary_sha256": "528e41039afc9e6e4324719b2ed0efb0caa958a051fbde3aada2a54330b07458"
+    },
+    {
+      "command": [
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wconversion",
+        "-Wshadow",
+        "-fanalyzer",
+        "src/xverse/maestro/native/catalog_launcher.c",
+        "-lcrypto",
+        "-o",
+        "docs/engineering/maestro-lite/evidence/launcher9/catalog-strict.bin"
+      ],
+      "returncode": 0,
+      "source_sha256": "8616a088a3b56a25888129729bcf0771d39f71ddb3a8f79f5affa22665445289",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "binary_sha256": "3d935808479c5f973dd4a3ac66f58b6bce45517371dfbdbe44d1000f7fe6474c"
+    }
+  ],
+  "invalid_boundary_ack_without_release_rejected": true,
+  "compiler": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+  "openssl": "3.0.2",
+  "linked_catalog_libraries": "\tlinux-vdso.so.1 (0x00007ffe49798000)\n\tlibcrypto.so.3 => /lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007270e3c00000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007270e3800000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007270e4116000)\n",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "python": "3.13.13 (main, May 29 2026, 21:59:41) [GCC 11.4.0]"
+}

@@ -20,6 +20,12 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef MAESTRO_BOUNDARY_ACK
+#if MAESTRO_BOUNDARY_ACK != 1 || !defined(MAESTRO_RELEASE_GATE)
+#error "Boundary ACK requires explicit MAESTRO_RELEASE_GATE=1 and MAESTRO_BOUNDARY_ACK=1"
+#endif
+#endif
+
 #define NS UINT64_C(1000000000)
 #ifdef MAESTRO_RELEASE_GATE
 #if MAESTRO_RELEASE_GATE != 1
@@ -95,6 +101,19 @@ static int respond(struct guard *g, unsigned kind, unsigned reason) {
     if (kind==ARMED || kind==RELEASED) {
         put64(p+16,g->ticket_deadline);
         memcpy(p+72,g->ticket,sizeof(g->ticket));
+    }
+#endif
+#ifdef MAESTRO_BOUNDARY_ACK
+    if (kind==READY) {
+        union { struct cmsghdr alignment; unsigned char data[CMSG_SPACE(sizeof(int))]; } control;
+        memset(&control,0,sizeof(control));
+        struct iovec iov={ .iov_base=p, .iov_len=sizeof(p) };
+        struct msghdr msg={ .msg_iov=&iov, .msg_iovlen=1,
+                           .msg_control=control.data, .msg_controllen=sizeof(control.data) };
+        struct cmsghdr *c=CMSG_FIRSTHDR(&msg);
+        c->cmsg_level=SOL_SOCKET; c->cmsg_type=SCM_RIGHTS; c->cmsg_len=CMSG_LEN(sizeof(int));
+        memcpy(CMSG_DATA(c),&g->cg,sizeof(int));
+        return sendmsg(g->socket,&msg,MSG_DONTWAIT|MSG_NOSIGNAL)==PACKET ? 0 : -1;
     }
 #endif
     return send(g->socket,p,sizeof(p),MSG_DONTWAIT|MSG_NOSIGNAL)==PACKET ? 0 : -1;

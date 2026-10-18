@@ -333,6 +333,11 @@ class PersistenceClient(_Original):
         ):
             raise PersistenceError("ML-PERSIST-SOCKET")
         _verify_prepared(config.prepared, config.result, config.resources)
+        self._resources = config.resources
+        self._execution_ids = {
+            b["unit_id"]: b["execution_id"]
+            for b in _strict_json(config.private_bytes)["bindings"]
+        }
         self._retain()
         self.process, self.channel, self.latch = process, channel, latch
         self.prepared, self.run_id, self.session, self.generation_ns = (
@@ -533,6 +538,12 @@ class PersistenceClient(_Original):
         except Exception:
             self._fail()
             raise
+
+    def _claim_execution_id(self, receipt):
+        self._holder()
+        if self._claims.get(id(receipt)) is not receipt:
+            raise PersistenceError("ML-PERSIST-CLAIM")
+        return self._execution_ids[receipt.unit_id]
 
     def revalidate_intent(self, receipt, deadline):
         self._available()

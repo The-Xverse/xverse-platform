@@ -12,6 +12,7 @@ import hashlib
 import os
 import select
 import socket
+import stat
 import struct
 import subprocess
 import threading
@@ -88,6 +89,8 @@ class GateConnection(_Original):
         artifact_digest,
         latch,
         deadline,
+        boundaries=None,
+        descriptor=None,
     ):
         if (
             type(process) is not subprocess.Popen
@@ -104,6 +107,19 @@ class GateConnection(_Original):
             raise OwnerError("ML-OWNER-GATE-SOCKET")
         GatePacket(16, 0, lease_ns, scope, epoch)
         _pin(artifact_digest)
+        self._expect_boundary = None
+        self._boundary_proven = None
+        if boundaries is not None or descriptor is not None:
+            if (
+                type(boundaries) is not ProcessBoundaryOps
+                or type(descriptor) is not BoundaryDescriptor
+            ):
+                raise OwnerError("ML-OWNER-GATE-BOUNDARY")
+            boundaries._holder()
+            boundaries.residual_membership(descriptor)
+            entry = boundaries._entry(descriptor)
+            info = os.fstat(entry.fd)
+            self._expect_boundary = (info.st_dev, info.st_ino)
         self._retain()
         self.process, self.channel = process, channel
         self.scope, self.epoch, self.lease_ns = scope, epoch, lease_ns
@@ -180,6 +196,7 @@ class GateConnection(_Original):
             except BlockingIOError:
                 continue
             credentials = []
+            received = []
             valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
             for level, kind, payload in anc:
                 if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
@@ -187,9 +204,7 @@ class GateConnection(_Original):
                     values.frombytes(
                         payload[: len(payload) - len(payload) % values.itemsize]
                     )
-                    for fd in values:
-                        os.close(fd)
-                    valid = False
+                    received.extend(values)
                 elif (
                     level == socket.SOL_SOCKET
                     and kind == socket.SCM_CREDENTIALS
@@ -198,13 +213,31 @@ class GateConnection(_Original):
                     credentials.append(struct.unpack("3i", payload))
                 else:
                     valid = False
-            if (
-                not valid
-                or credentials != [(self._process_pid, os.getuid(), os.getgid())]
-                or time.monotonic_ns() >= until
-            ):
-                raise OwnerError("ML-OWNER-GATE-SENDER")
-            return GatePacket.decode(data)
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._process_pid, os.getuid(), os.getgid())]
+                    or time.monotonic_ns() >= until
+                ):
+                    raise OwnerError("ML-OWNER-GATE-SENDER")
+                packet = GatePacket.decode(data)
+                if self._expect_boundary is not None:
+                    if len(received) != 1 or packet.kind != 16:
+                        raise OwnerError("ML-OWNER-GATE-BOUNDARY")
+                    info = os.fstat(received[0])
+                    if (
+                        not stat.S_ISDIR(info.st_mode)
+                        or (info.st_dev, info.st_ino) != self._expect_boundary
+                    ):
+                        raise OwnerError("ML-OWNER-GATE-BOUNDARY")
+                    self._boundary_proven = self._expect_boundary
+                    self._expect_boundary = None
+                elif received:
+                    raise OwnerError("ML-OWNER-GATE-SENDER")
+                return packet
+            finally:
+                for fd in received:
+                    os.close(fd)
 
     def exchange(self, packet, expected, deadline):
         self._live()
@@ -460,6 +493,7 @@ class ReleaseOwner(_Original):
         self._prepared, self._run_id = permits._prepared, permits._run_id
         self._context_pin = (self._prepared, self._run_id)
         self._claims, self._attempted, self._gates = {}, set(), []
+        self._launchers = {}
         self._lock = threading.Lock()
         self._closed = False
 
@@ -496,8 +530,43 @@ class ReleaseOwner(_Original):
         owner._context_pin = (owner._prepared, owner._run_id)
         owner.session = client.session
         owner._claims, owner._attempted, owner._gates = {}, set(), []
+        owner._launchers = {}
         owner._lock, owner._closed = threading.Lock(), False
         return owner
+
+    def _stage_claim(self, unit_id, deadline):
+        self._check(deadline)
+        claim = self._claims.get(unit_id)
+        if (
+            claim is None
+            or claim.attempted
+            or self._check(deadline) > claim.deadline_ns
+        ):
+            raise OwnerError("ML-OWNER-CLAIM")
+        self._revalidate(claim, deadline)
+        self._check(deadline)
+        return claim
+
+    def _register_launcher(self, launcher):
+        from .launcher import CatalogLauncher
+
+        if (
+            type(launcher) is not CatalogLauncher
+            or launcher.owner is not self
+            or launcher.unit_id in self._launchers
+        ):
+            raise OwnerError("ML-OWNER-LAUNCHER")
+        self._holder()
+        self._launchers[launcher.unit_id] = launcher
+
+    def _check_launcher(self, unit_id, descriptor, gate):
+        if (
+            self._unit(unit_id).provider.kind == "process"
+            and unit_id not in self._launchers
+        ):
+            raise OwnerError("ML-OWNER-LAUNCHER-MISSING")
+        if unit_id in self._launchers:
+            self._launchers[unit_id]._validate_release(descriptor, gate)
 
     def _revalidate(self, claim, deadline):
         if self.persistence is None:
@@ -596,6 +665,8 @@ class ReleaseOwner(_Original):
         self._pins[3].cancel(reason)
         for gate in tuple(self._gates):
             gate.cancel(reason)
+        for launcher in tuple(self._launchers.values()):
+            launcher.cancel(reason)
 
     def commit_intent(self, unit_id, deadline):
         until = self._check(deadline)
@@ -653,7 +724,9 @@ class ReleaseOwner(_Original):
             if self._check(deadline) > claim.deadline_ns:
                 raise OwnerError("ML-OWNER-ORIGINAL-DEADLINE")
             claim.attempted = True
+            self._check_launcher(unit_id, descriptor, gate)
             self._revalidate(claim, deadline)
+            self._check_launcher(unit_id, descriptor, gate)
             ack = self.supervisor.acknowledge(descriptor, gate, deadline)
             self._check(deadline)
             until = min(_deadline(deadline, self.session), gate.lease_ns)
@@ -674,6 +747,7 @@ class ReleaseOwner(_Original):
             self._check(deadline)
             self._revalidate(claim, deadline)
             self.supervisor.revalidate(ack)
+            self._check_launcher(unit_id, descriptor, gate)
             response = gate.exchange(
                 replace(ticket, kind=4, sequence=gate._sequence + 1), 21, deadline
             )

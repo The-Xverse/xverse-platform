@@ -1,0 +1,36 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_actual_catalog_frozen_birth_bound_gate_exec_and_cleanup _________
+
+launch_stack = (<xverse.maestro.owner.ReleaseOwner object at 0x743b28872cf0>, <xverse.maestro.persistence.PersistenceClient object at...rson/pytest-828/test_actual_catalog_frozen_bir0/work'), <function launch_stack.<locals>.launch at 0x743b28510fe0>, ...)
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-828/test_actual_catalog_frozen_bir0')
+
+    def test_actual_catalog_frozen_birth_bound_gate_exec_and_cleanup(
+        launch_stack, tmp_path
+    ):
+        owner, client, manager, config, work, launch, gate = launch_stack
+        descriptor, launcher, handle, original = launch()
+        marker = work / "source-binding.marker"
+        assert not marker.exists()
+        before = launcher.observe(handle, deadline())
+        assert before.leader_alive and not before.exec_pipe_closed and not before.running
+        connection = gate(descriptor, original)
+        result = owner.release(descriptor.unit_id, descriptor, connection, original)
+        assert result.native_unfreeze_observed and not result.ready_for_execution
+        until = time.monotonic() + 1
+        while not marker.exists() and time.monotonic() < until:
+            time.sleep(0.005)
+        assert marker.read_text() == "EXEC\n"
+        observed = launcher.observe(replace(handle), deadline())
+        assert observed.running and not observed.ready_for_execution
+        owner.cancel()
+>       assert manager.force_cleanup(descriptor).termination_observed
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-...se, membership_complete=True, residual_count=0, termination_observed=False, diagnostic=None, ready_for_execution=False).termination_observed
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-...se, membership_complete=True, residual_count=0, termination_observed=False, diagnostic=None, ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='catalog-boundary', creation_epoch=0))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x743b28872a50>.force_cleanup
+
+tests/thesis_lite/maestro/test_launcher.py:369: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_launcher.py::test_actual_catalog_frozen_birth_bound_gate_exec_and_cleanup
+1 failed in 1.80s
