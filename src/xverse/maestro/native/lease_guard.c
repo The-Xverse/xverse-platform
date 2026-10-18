@@ -1,5 +1,6 @@
-/* Freeze-only original-parent lease guard. See unit-specification-leaseguard5.md.
- * No thaw, workload creation, cleanup authority, journal or provider callback. */
+/* Default: freeze-only LG05. Explicit MAESTRO_RELEASE_GATE=1: RG06 ticket gate.
+ * See unit-specification-{leaseguard5,releasegate6}.md. Neither creates children,
+ * grants C1, validates operator approval or fabricates lifecycle outcomes. */
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -10,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
+#include <sys/random.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -19,10 +21,24 @@
 #include <unistd.h>
 
 #define NS UINT64_C(1000000000)
+#ifdef MAESTRO_RELEASE_GATE
+#if MAESTRO_RELEASE_GATE != 1
+#error "Only explicit MAESTRO_RELEASE_GATE=1 is supported"
+#endif
+#define PACKET 256
+#define MAGIC "RG06"
+#define ARGUMENTS 8
+#else
 #define PACKET 64
+#define MAGIC "LG05"
+#define ARGUMENTS 7
+#endif
 #define CGROUP2_MAGIC 0x63677270
 
 enum { RENEW=1, CANCEL=2, READY=16, RENEWED=17, FROZEN=18, UNRESOLVED=19 };
+#ifdef MAESTRO_RELEASE_GATE
+enum { ARM=3, RELEASE=4, ARMED=20, RELEASED=21 };
+#endif
 enum { NONE=0, LEASE=1, OWNER=2, CONTROL=3, PROTOCOL=4, CANCELLED=5,
        FREEZE_FAILED=6, AUTHORITY_EXPIRED=7 };
 
@@ -32,6 +48,11 @@ struct guard {
     struct ucred peer;
     uint64_t generation, lease, reserve, sequence;
     unsigned char scope[32];
+#ifdef MAESTRO_RELEASE_GATE
+    int release_fd, ticket_state;
+    uint64_t epoch, ticket_deadline;
+    unsigned char ticket[160];
+#endif
 };
 
 static uint64_t now_ns(void) {
@@ -64,10 +85,18 @@ static void put64(unsigned char *p, uint64_t n) {
 }
 
 static int respond(struct guard *g, unsigned kind, unsigned reason) {
-    unsigned char p[PACKET] = { 'L','G','0','5',0,0,0,0 };
+    unsigned char p[PACKET] = {0};
+    memcpy(p,MAGIC,4);
     p[7]=(unsigned char)kind;
     put64(p+8,g->sequence); put64(p+16,g->lease);
     memcpy(p+24,g->scope,32); put64(p+56,reason);
+#ifdef MAESTRO_RELEASE_GATE
+    put64(p+64,g->epoch);
+    if (kind==ARMED || kind==RELEASED) {
+        put64(p+16,g->ticket_deadline);
+        memcpy(p+72,g->ticket,sizeof(g->ticket));
+    }
+#endif
     return send(g->socket,p,sizeof(p),MSG_DONTWAIT|MSG_NOSIGNAL)==PACKET ? 0 : -1;
 }
 
@@ -122,6 +151,11 @@ static int owner_alive(struct guard *g) {
 }
 
 static int freeze(struct guard *g, unsigned reason) {
+#ifdef MAESTRO_RELEASE_GATE
+    ++g->epoch;
+    g->ticket_state=3;
+    memset(g->ticket,0,sizeof(g->ticket));
+#endif
     uint64_t now=now_ns();
     if (!now || now >= g->generation) {
         respond(g,UNRESOLVED,AUTHORITY_EXPIRED); return 70;
@@ -183,7 +217,10 @@ static int receive(struct guard *g, unsigned char *packet) {
 }
 
 static int initialize(struct guard *g, int argc, char **argv) {
-    if (argc!=7) return -1;
+    if (argc!=ARGUMENTS) return -1;
+#ifdef MAESTRO_RELEASE_GATE
+    if (decimal(argv[7],&g->epoch) || g->epoch==UINT64_MAX) return -1;
+#endif
     uint64_t cg, socket;
     if (decimal(argv[1],&cg) || decimal(argv[2],&socket) || cg>INT_MAX || socket>INT_MAX ||
         cg<3 || socket<3 || cg==socket || decimal(argv[3],&g->generation) ||
@@ -227,8 +264,76 @@ static int initialize(struct guard *g, int argc, char **argv) {
     if (!now || g->reserve==0 || g->reserve>NS || g->generation<=now ||
         g->generation-now>394*NS || g->reserve>=g->generation-now ||
         g->lease<=now || g->lease-now>5*NS || g->lease>g->generation-g->reserve) return -1;
+#ifdef MAESTRO_RELEASE_GATE
+    g->release_fd=openat(g->cg,"cgroup.freeze",O_WRONLY|O_NOFOLLOW|O_CLOEXEC);
+    if (g->release_fd<0) return -1;
+#endif
     return 0;
 }
+
+#ifdef MAESTRO_RELEASE_GATE
+static int zero_bytes(const unsigned char *p, size_t size) {
+    unsigned char value=0;
+    for (size_t i=0;i<size;++i) value|=p[i];
+    return value==0;
+}
+
+static int staged_boundary(struct guard *g) {
+    uint64_t frozen, populated, descendants;
+    return same_boundary(g) &&
+        !field(g->cg,"cgroup.events","frozen",&frozen) && frozen==1 &&
+        !field(g->cg,"cgroup.events","populated",&populated) && populated==1 &&
+        !field(g->cg,"cgroup.stat","nr_descendants",&descendants) && descendants==0;
+}
+
+/* One original owner loop; no command can interleave this consume/write step. */
+static int ticket_command(struct guard *g, const unsigned char *p) {
+    uint64_t deadline=get64(p+16), now=now_ns();
+    if (!now || now>=g->lease) return freeze(g,LEASE);
+    if (!owner_alive(g)) return freeze(g,OWNER);
+    if (p[7]==ARM) {
+        if (g->ticket_state || deadline<=now || deadline>g->lease ||
+            !zero_bytes(p+200,32)) return freeze(g,PROTOCOL);
+        for (unsigned offset=72;offset<200;offset+=32)
+            if (zero_bytes(p+offset,32)) return freeze(g,PROTOCOL);
+        if (!staged_boundary(g)) return freeze(g,PROTOCOL);
+        memcpy(g->ticket,p+72,128);
+        if (getrandom(g->ticket+128,32,GRND_NONBLOCK)!=32 ||
+            zero_bytes(g->ticket+128,32)) return freeze(g,PROTOCOL);
+        now=now_ns();
+        if (!now || now>=g->lease || now>=deadline) return freeze(g,LEASE);
+        if (!owner_alive(g)) return freeze(g,OWNER);
+        g->ticket_state=1; g->ticket_deadline=deadline; ++g->sequence;
+        if (respond(g,ARMED,NONE)) return freeze(g,CONTROL);
+        return -1;
+    }
+    if (g->ticket_state!=1 || deadline!=g->ticket_deadline || deadline<=now ||
+        memcmp(g->ticket,p+72,sizeof(g->ticket))) return freeze(g,PROTOCOL);
+    if (!staged_boundary(g)) return freeze(g,PROTOCOL);
+    now=now_ns();
+    if (!now || now>=g->lease || now>=g->ticket_deadline) return freeze(g,LEASE);
+    if (!owner_alive(g)) return freeze(g,OWNER);
+    g->ticket_state=2; ++g->sequence; /* local Release linearization, ticket burned */
+    memset(g->ticket+128,0,32);
+    if (write(g->release_fd,"0",1)!=1) return freeze(g,FREEZE_FAILED);
+    for (;;) {
+        uint64_t frozen;
+        now=now_ns();
+        if (!now || now>=g->lease || now>=g->ticket_deadline) return freeze(g,LEASE);
+        if (!owner_alive(g)) return freeze(g,OWNER);
+        if (field(g->cg,"cgroup.events","frozen",&frozen) || frozen>1)
+            return freeze(g,FREEZE_FAILED);
+        now=now_ns();
+        if (!now || now>=g->lease || now>=g->ticket_deadline) return freeze(g,LEASE);
+        if (!owner_alive(g)) return freeze(g,OWNER);
+        if (!frozen) break;
+        struct timespec pause={ .tv_sec=0, .tv_nsec=1000000 };
+        nanosleep(&pause,NULL);
+    }
+    if (respond(g,RELEASED,NONE)) return freeze(g,CONTROL);
+    return -1;
+}
+#endif
 
 int main(int argc, char **argv) {
     struct guard g={ .cg=-1, .socket=-1, .owner=-1 };
@@ -255,10 +360,20 @@ int main(int argc, char **argv) {
         now=now_ns();
         if (!now || now>=g.lease) return freeze(&g,LEASE);
         if (!owner_alive(&g)) return freeze(&g,OWNER);
-        if (memcmp(p,"LG05",4) || p[4] || p[5] || p[6] ||
+        if (memcmp(p,MAGIC,4) || p[4] || p[5] || p[6] ||
             memcmp(p+24,g.scope,32) || get64(p+56) || g.sequence==UINT64_MAX ||
-            get64(p+8)!=g.sequence+1 || (p[7]!=RENEW && p[7]!=CANCEL))
+            get64(p+8)!=g.sequence+1)
             return freeze(&g,PROTOCOL);
+#ifdef MAESTRO_RELEASE_GATE
+        if (get64(p+64)!=g.epoch || !zero_bytes(p+232,24)) return freeze(&g,PROTOCOL);
+        if (p[7]==ARM || p[7]==RELEASE) {
+            int outcome=ticket_command(&g,p);
+            if (outcome>=0) return outcome;
+            continue;
+        }
+        if (!zero_bytes(p+72,160)) return freeze(&g,PROTOCOL);
+#endif
+        if (p[7]!=RENEW && p[7]!=CANCEL) return freeze(&g,PROTOCOL);
         uint64_t deadline=get64(p+16);
         if (p[7]==CANCEL) {
             if (deadline!=g.lease) return freeze(&g,PROTOCOL);

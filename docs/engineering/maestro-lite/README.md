@@ -4,6 +4,29 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4; not accepted; n
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Native Release gate successor
+
+`ML3-RELEASEGATE6-2026-10-18-v1` extends the packaged native source with an explicit
+`-DMAESTRO_RELEASE_GATE=1` build variant. Default LG05 stays freeze-only. The RG06
+variant uses a distinct 256-byte protocol and original creation epoch; it owns a
+single ticket slot, validates original-parent credentials, exact scope, operation,
+three acknowledgement digests, fixed TTL and private nonce, consumes once and
+unfreezes the original retained cgroup control FD. Cancel/expiry advances the epoch,
+burns the ticket and observes refreeze. Python `xverse.maestro.fence` is an inert
+strict codec; importing it performs no bootstrap, clock read or execution.
+
+The trusted original caller must verify actual durable M3, Argus public append+flush
+and supervisor Stage acknowledgements. Hash fields cannot prove their truth. The
+native gate does not create children, issue ordinary handles or gain C1. A Release
+ACK means unfreeze was observed, not lifecycle readiness or a successful M3 outcome.
+Actual kernel tests exercise both orderings, replay/TTL denial and a delayed gate
+after C1-confirmed removal, including rejection through a retained old freeze FD.
+Kernel I/O/scheduling stalls and guard/original-owner loss still require full outer
+integration; the nine ML3 runtime cases and complete M1 proof remain pending.
+See `ADR-ML3-RELEASEGATE-0001.md`, `unit-specification-releasegate6.md`,
+`review-releasegate6.md` and `evidence/releasegate6/`. Pin source, build mode and
+executable for any future admitted bootstrap; no runtime bootstrap facade is provided.
+
 ## Independent freeze-only lease guard successor
 
 `ML3-LEASEGUARD5-2026-10-18-v1` continues linearly from containment commit

@@ -136,7 +136,10 @@ def guards(guard_binary, tmp_path):
         ]
         if args:
             for index, value in args.items():
-                argv[index] = value
+                if index == len(argv):
+                    argv.append(value)
+                else:
+                    argv[index] = value
         identity = os.fstat(cgfd)
         receipt = {
             "command": argv,
