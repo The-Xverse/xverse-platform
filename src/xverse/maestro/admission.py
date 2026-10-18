@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 import hashlib
 import json
+import os
 
 from xverse_xdl.experiment_plan import ExperimentPlanResult
 from xverse_xdl.lifecycle import (
@@ -190,13 +191,14 @@ def _validate_one(
     binding: PermitBinding,
     approval: PermitApproval,
     now: datetime,
+    initial_generation: int = 0,
 ) -> None:
     _aware(now)
     _identifier(binding.execution_id)
-    if type(binding.generation) is not int or binding.generation != 0:
+    if type(binding.generation) is not int or binding.generation != initial_generation:
         _deny(
             "ML-PERMIT-GENERATION",
-            "initial admission requires generation zero; restart needs prior release evidence",
+            "binding must match explicit initial generation; restart needs prior release evidence",
         )
     permit = binding.permit
     if type(permit) is not ExecutionPermit:
@@ -301,10 +303,15 @@ def validate_permits(
     bindings: Iterable[PermitBinding],
     approvals: Iterable[PermitApproval],
     now: datetime,
+    initial_generation: int = 0,
 ) -> tuple[tuple[Unit, PermitBinding, PermitApproval], ...]:
     """Pure whole-set validation; no journal, provider, writer or ticket is invoked."""
 
     _identifier(run_id)
+    if type(initial_generation) is not int or initial_generation not in (0, 1):
+        _deny(
+            "ML-PERMIT-GENERATION", "only initial generation zero or one is supported"
+        )
     _aware(now)
     _verify_prepared(prepared, result, resources)
     bindings, approvals = tuple(bindings), tuple(approvals)
@@ -343,7 +350,9 @@ def validate_permits(
     checked = []
     for unit in prepared.units:
         binding, approval = by_unit[unit.unit_id], approval_by_unit[unit.unit_id]
-        _validate_one(prepared, run_id, unit, binding, approval, now)
+        _validate_one(
+            prepared, run_id, unit, binding, approval, now, initial_generation
+        )
         checked.append((unit, binding, approval))
     return tuple(checked)
 
@@ -362,6 +371,7 @@ class PermitSession:
         approvals: Iterable[PermitApproval],
         now: datetime,
         journal: FileEvidenceJournal,
+        initial_generation: int = 0,
     ) -> None:
         if type(journal) is not FileEvidenceJournal:
             _deny("ML-PERMIT-JOURNAL", "actual durable M3 FileEvidenceJournal required")
@@ -373,6 +383,7 @@ class PermitSession:
             bindings=bindings,
             approvals=approvals,
             now=now,
+            initial_generation=initial_generation,
         )
         for _, binding, _ in checked:
             if journal.permit_consumed(binding.permit.permit_id, binding.permit.nonce):
@@ -389,6 +400,93 @@ class PermitSession:
         self._journal = journal
         self._has_claimed = False
         self._claims_closed = False
+        self._original = self
+        self._pid = os.getpid()
+        self._initial_generation = initial_generation
+        self._journal_pin = journal
+        self._context_pin = (prepared, checked, run_id, initial_generation)
+        self._issued: dict[int, tuple] = {}
+
+    def _holder(self) -> None:
+        if (
+            self._original is not self
+            or self._pid != os.getpid()
+            or self._journal is not self._journal_pin
+        ):
+            _deny("ML-PERMIT-HOLDER", "original permit session and journal required")
+        prepared, checked, run_id, generation = self._context_pin
+        if (
+            self._prepared is not prepared
+            or self._checked is not checked
+            or self._run_id != run_id
+            or self._initial_generation != generation
+        ):
+            _deny("ML-PERMIT-HOLDER", "original permit context required")
+
+    def revalidate_start_intent(self, receipt: IntentReceipt, *, now: datetime) -> None:
+        """Revalidate only a genuine original claim; never consumes a fresh permit."""
+        self._holder()
+        saved = self._issued.get(id(receipt))
+        if saved is None or saved[0] is not receipt or self._claims_closed:
+            _deny("ML-PERMIT-RECEIPT", "original retained intent receipt required")
+        _, stored, unit, binding, approval = saved
+        _verify_prepared(self._prepared, self._result, self._resources)
+        _validate_one(
+            self._prepared,
+            self._run_id,
+            unit,
+            binding,
+            approval,
+            now,
+            self._initial_generation,
+        )
+        try:
+            records = self._journal.records
+            if not any(r.sequence == stored.sequence and r == stored for r in records):
+                raise EvidenceWriteError("original durable claim no longer exists")
+            if any(
+                r.kind == "outcome"
+                and (r.execution_id, r.action_id)
+                == (stored.execution_id, stored.action_id)
+                for r in records
+            ):
+                raise EvidenceWriteError(
+                    "original intent already has a terminal outcome"
+                )
+        except (EvidenceWriteError, OSError) as error:
+            self._claims_closed = True
+            raise AdmissionError(
+                "ML-PERMIT-DURABILITY", "original claim history is unavailable"
+            ) from error
+
+    def public_start_intent(self, receipt: IntentReceipt, *, now: datetime) -> dict:
+        """Read the genuine journal's redacted projection of this original claim."""
+        self.revalidate_start_intent(receipt, now=now)
+        stored = self._issued[id(receipt)][1]
+        try:
+            matches = [
+                record
+                for record in self._journal.public_records()
+                if record["sequence"] == stored.sequence
+            ]
+            if len(matches) != 1 or any(
+                matches[0][key] != expected
+                for key, expected in (
+                    ("executionId", stored.execution_id),
+                    ("actionId", stored.action_id),
+                    ("kind", "intent"),
+                )
+            ):
+                raise EvidenceWriteError(
+                    "original public intent projection unavailable"
+                )
+            self.revalidate_start_intent(receipt, now=now)
+            return copy.deepcopy(matches[0])
+        except (EvidenceWriteError, OSError, KeyError, TypeError) as error:
+            self._claims_closed = True
+            raise AdmissionError(
+                "ML-PERMIT-DURABILITY", "original public intent cannot be verified"
+            ) from error
 
     @property
     def ready_for_execution(self) -> bool:
@@ -401,6 +499,7 @@ class PermitSession:
     def claim_start_intent(self, unit_id: str, *, now: datetime) -> IntentReceipt:
         """Revalidate at use, atomically persist intent, return only after fsync."""
 
+        self._holder()
         if self._claims_closed:
             _deny(
                 "ML-PERMIT-CLOSED",
@@ -418,6 +517,7 @@ class PermitSession:
                 bindings=(b for _, b, _ in self._checked),
                 approvals=(a for _, _, a in self._checked),
                 now=now,
+                initial_generation=self._initial_generation,
             )
             try:
                 _check_unresolved_intents(self._journal.records, self._prepared.units)
@@ -434,7 +534,15 @@ class PermitSession:
         if selected is None:
             _deny("ML-PERMIT-SET", "unknown unit requested")
         unit, binding, _ = selected
-        _validate_one(self._prepared, self._run_id, unit, binding, selected[2], now)
+        _validate_one(
+            self._prepared,
+            self._run_id,
+            unit,
+            binding,
+            selected[2],
+            now,
+            self._initial_generation,
+        )
         permit, plan = binding.permit, unit.plan
         start = next(action for action in plan.actions if action.phase == "start")
         record = EvidenceRecord(
@@ -478,4 +586,6 @@ class PermitSession:
                 "intent persistence is failed or uncertain; no launch is authorized",
             ) from error
         self._has_claimed = True
-        return IntentReceipt(unit_id, binding.execution_id, stored.sequence)
+        receipt = IntentReceipt(unit_id, binding.execution_id, stored.sequence)
+        self._issued[id(receipt)] = (receipt, stored, unit, binding, selected[2])
+        return receipt

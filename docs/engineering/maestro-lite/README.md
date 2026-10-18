@@ -235,3 +235,26 @@ Evidence logs and the final verification record identify actual checks and failu
 The initial full-suite environment failures and earlier review failures are retained.
 No principal experiment, thesis result, PDF/DOCX generation, main update or external
 publication occurs in this increment. Acceptance and merge require explicit author action.
+
+## Original-owner integration candidate (OWNER7)
+
+The isolated successor composes real generation-one PermitSession claims, actual
+M3 public projection hashes, accepted Argus append_event/flush_buffer, original C1
+frozen membership and credential-checked native RG06 Arm/Release. Default generation
+zero admission remains compatible. Full XDL unit references remain logical data in
+BoundaryDescriptor, never cgroup paths. See ADR-ML3-OWNER-0001.md,
+unit-specification-owner7.md, review-owner7.md and evidence/owner7/.
+
+The private claim retains its original host deadline; later calls cannot extend
+that operation. The public evidence source hash covers the actual redacted M3
+record using accepted canonical JSON bytes. Copied/terminal/replaced claims,
+persistence failures, late acknowledgements and cancellation cannot register or
+revive launch authority. Public ReleaseObservation always reports readiness false.
+
+Trusted bootstrap still supplies the actual native child/socket/artifact pin and
+exclusive wait ownership. Synchronous M3/Argus/kernel operations are not whole-call
+bounded: disposable I/O workers and independently supervised bootstrap/launcher
+remain required. No ordinary handles, full readiness, reverse lifecycle teardown,
+restart/recovery, complete evidence assessment/collection or nine-case runtime
+acceptance is supplied. Prior component evidence is preserved; main is unchanged.
+Use verify-owner7.py with a newly built installed wheel, never stale editable imports.

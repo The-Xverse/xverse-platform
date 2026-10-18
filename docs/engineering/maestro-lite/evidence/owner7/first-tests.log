@@ -1,0 +1,40 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_real_claim_flush_stage_and_credential_checked_release __________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x79599a78e7b0>, <xverse.maestro.admission.PermitSession object at 0x795...9a4ac050>, <function environment.<locals>.spawn at 0x79599a4d27a0>, <function stack.<locals>.launch at 0x79599a4d2980>)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-796/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-796/releasegate-native0/release-gate')
+
+    def test_real_claim_flush_stage_and_credential_checked_release(
+        stack, native, guard_binary
+    ):
+        owner, permits, writer, manager, spawn, launch = stack
+        unit_id = permits._prepared.units[0].unit_id
+        descriptor = BoundaryDescriptor("fixture-run", unit_id, 1, "owned-boundary", 0)
+        event_id = owner.commit_intent(unit_id, deadline())
+        assert len(permits._journal.records) == 1
+        assert permits._journal.records[0].details["generation"] == 1
+        manager.create_frozen(descriptor)
+        child, marker, line = spawn(native, manager, descriptor)
+        assert line.startswith("CHILD ")
+        gate = launch(guard_binary, descriptor)
+        assert not select.select([marker], [], [], 0.02)[0]
+        result = owner.release(unit_id, descriptor, gate, deadline())
+        assert result.native_unfreeze_observed and not result.ready_for_execution
+        assert select.select([marker], [], [], 1)[0] and os.read(marker, 1) == b"M"
+        owner.cancel()
+        gate.process.wait(timeout=2)
+        assert manager.force_cleanup(descriptor).termination_observed
+        assert child.wait(timeout=2) == 0
+        manifest = writer.finalize()
+        reader = EvidenceStore.read_run(writer._root)
+        records = reader.records
+>       assert records[0]["eventId"] == event_id
+               ^^^^^^^^^^
+E       TypeError: 'method' object is not subscriptable
+
+tests/thesis_lite/maestro/test_owner.py:185: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_owner.py::test_real_claim_flush_stage_and_credential_checked_release
+1 failed, 1 passed in 1.37s

@@ -140,9 +140,9 @@ def environment(tmp_path):
     workers = []
     pipes = []
 
-    def factory(*, seconds=4, reservation=True, epoch=0, operation=2):
+    def factory(*, seconds=4, reservation=True, epoch=0, operation=2, run_id="run"):
         facts = BoundaryAdmission(
-            "run",
+            run_id,
             "supervisor",
             "affa",
             "bootstrap-approval",

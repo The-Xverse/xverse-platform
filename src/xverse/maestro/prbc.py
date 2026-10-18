@@ -53,8 +53,15 @@ class BoundaryDescriptor:
     creation_epoch: int
 
     def __post_init__(self) -> None:
-        for value in (self.run_id, self.unit_id, self.boundary_id):
+        for value in (self.run_id, self.boundary_id):
             _text(value)
+        # Logical XDL references are data, never filesystem paths or authority.
+        if (
+            type(self.unit_id) is not str
+            or not 0 < len(self.unit_id) <= 128
+            or any(not 33 <= ord(c) <= 126 for c in self.unit_id)
+        ):
+            raise BoundaryError("ML-ADMISSION-BOUNDARY-IDENTITY")
         _uint(self.generation, 2**32 - 1)
         _uint(self.creation_epoch, 2**64 - 1)
 

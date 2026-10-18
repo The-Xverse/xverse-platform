@@ -1,0 +1,35 @@
+.....F......................                                             [100%]
+=================================== FAILURES ===================================
+______________ test_late_actual_flush_does_not_register_authority ______________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x76b453c4fbb0>, <xverse.maestro.admission.PermitSession object at 0x76b...53c4fce0>, <function environment.<locals>.spawn at 0x76b453b01e40>, <function stack.<locals>.launch at 0x76b453ad3c40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76b453b04d50>
+
+    def test_late_actual_flush_does_not_register_authority(stack, monkeypatch):
+        owner, permits, writer, manager, spawn, launch = stack
+        actual = writer.flush_buffer
+    
+        def slow_flush():
+            actual()
+            time.sleep(0.08)
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(writer, "flush_buffer", slow_flush)
+            with pytest.raises(OwnerError, match="DEADLINE"):
+                owner.commit_intent(permits._prepared.units[0].unit_id, deadline(0.05))
+        assert owner.latch.cancelled and not owner._claims
+        assert len(permits._journal.records) == 1
+        writer.finalize()  # Seal this annotation-only test store for public readback.
+        assert (
+>           EvidenceStore.read_run(writer._root).records()[0]["extensions"][
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "xverse.maestro"
+            ]["action"]
+            == "intent"
+        )
+E       IndexError: list index out of range
+
+tests/thesis_lite/maestro/test_owner.py:269: IndexError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_owner.py::test_late_actual_flush_does_not_register_authority
+1 failed, 27 passed in 11.43s
