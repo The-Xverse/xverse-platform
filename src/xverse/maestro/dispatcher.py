@@ -522,7 +522,7 @@ class FiniteDispatcher(_Original):
                 unit, binding.launcher.recipe.descriptor, self.gates[unit], until
             )
         elif step.phase == "observe":
-            self.facade.check_health(until, force=True)
+            self.facade.check_unit_health(unit, until)
         else:
             if step.phase == "cleanup" and unit not in self.teardown._stopped:
                 stopped = self.teardown.phase(unit, "stop", until)

@@ -490,3 +490,19 @@ one-call path consumes the existing terminal abort reserve. No finalize, reopen,
 complete-lifecycle coverage or new launch authority. Initial bootstrap/environment
 admission, full global M1, restart/recovery, U7/U8, independent review/acceptance and
 phases 4–9 remain open. No factory run, main, canonical-note or scientific change.
+
+
+Surviving original-issuer reconciliation (increment16, partial candidate) is specified
+in ADR-ML3-RECOVERY-0001.md and unit-specification-recovery16.md. IssuerRecovery
+revalidates consumed intents, exact durable handle/mirror records and the actual
+original native issuers before reconstructing an observation/cleanup view. Previous
+positive readiness is retired; new health queries are mandatory. Claim/Stage/Release
+remain irreversibly closed. Failed checks invoke original bounded run closure with
+unknown facts preserved. This same-supervisor primitive does not supply process
+restart, new-host-session recovery, global M1, U7/U8 or runtime acceptance. All full
+P3 requirements and downstream phases remain binding.
+
+Finding8 integration repair: explicit scheduled observations now probe exactly their
+admitted unit under its operation end. Periodic health still scans all released
+units under the admitted scan budget. Original readiness/normal-record checks, all
+operation/fixture/lease limits and conservative event/request bounds are preserved.

@@ -181,6 +181,8 @@ class ProcessReadiness(_Original):
         self._sequence, self._guard = 0, None
         self._probe_failure = None
         self._lock = threading.Lock()
+        self._view_epoch = owner._view_epoch
+        owner._register_view(self)
 
     def _holder(self):
         super()._holder()
@@ -199,6 +201,12 @@ class ProcessReadiness(_Original):
         ):
             raise ReadinessError("ML-PROBE-REPLACED")
         owner._holder()
+        owner._view_registry()
+        if (
+            self._view_epoch != owner._view_epoch
+            or owner._views.get(id(self)) is not self
+        ):
+            raise ReadinessError("ML-PROBE-STALE-VIEW")
         owner.latch._check()
 
     def _check(self, deadline):
@@ -327,6 +335,8 @@ class ProcessReadiness(_Original):
         self._check(deadline)
 
     def start(self, unit_id, descriptor, gate, deadline):
+        self._holder()
+        self._owner._start_access()
         self._check(deadline)
         if not self._lock.acquire(blocking=False):
             raise ReadinessError("ML-PROBE-CONFLICT")
@@ -372,6 +382,26 @@ class ProcessReadiness(_Original):
             self._guard = None
             self._lock.release()
 
+    def check_unit_health(self, unit_id, deadline):
+        """Observe only the exact declared unit under its original operation end."""
+        self._check(deadline)
+        if type(unit_id) is not str or unit_id not in self._policies:
+            raise ReadinessError("ML-PROBE-UNIT")
+        if unit_id not in self._released:
+            raise ReadinessError("ML-PROBE-UNRELEASED")
+        if not self._lock.acquire(blocking=False):
+            raise ReadinessError("ML-PROBE-CONFLICT")
+        try:
+            self._probe_failure = None
+            if not self._query(unit_id, deadline).ready:
+                raise ReadinessError("ML-PROBE-HEALTH")
+            return self._fresh(unit_id)
+        except Exception:
+            self.cancel("readiness-health-failed")
+            raise
+        finally:
+            self._lock.release()
+
     def check_health(self, deadline, *, force=False):
         self._check(deadline)
         if type(force) is not bool:
@@ -384,9 +414,10 @@ class ProcessReadiness(_Original):
             for unit_id in self._prepared.resource_order:
                 if unit_id not in self._released:
                     continue
-                prior = self._observations[unit_id]
+                prior = self._observations.get(unit_id)
                 if (
                     force
+                    or prior is None
                     or time.monotonic() - prior.observed_at
                     >= self._policies[unit_id].cadence_seconds
                 ):

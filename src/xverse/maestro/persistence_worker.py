@@ -252,6 +252,7 @@ def serve(channel, input_fd):
                     "schedule",
                     "abort",
                     "closure",
+                    "recovery",
                 }
                 or not request["operation"].startswith("ml-")
                 or len(request["operation"]) != 35
@@ -290,6 +291,14 @@ def serve(channel, input_fd):
                     and kind not in ("schedule", "abort", "closure")
                 ):
                     raise PersistenceError("ML-SCHEDULE-CLOSING")
+                elif kind == "recovery":
+                    from .recovery_evidence import snapshot
+
+                    outcomes.request_sequence = sequence
+                    outcomes.request_limit = request_limit
+                    response = snapshot(
+                        outcomes, teardown, body, claims, deadline, check
+                    )
                 elif kind == "closure":
                     from .writer_closure import close_writer
 

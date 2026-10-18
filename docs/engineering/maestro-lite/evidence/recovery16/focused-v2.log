@@ -1,0 +1,64 @@
+......................F................................................. [ 75%]
+.......................                                                  [100%]
+=================================== FAILURES ===================================
+______ test_real_rpc_capacity_is_checked_before_retirement_on_both_sides _______
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x783922dd1590>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-943/test_real_rpc_capacity_is_chec0/work'), <function boot_stack.<locals>.boundary at 0x783922e12a20>, ...)
+
+    def test_real_rpc_capacity_is_checked_before_retirement_on_both_sides(boot_stack):
+        facade, owner, a, launcher, handle, gate, original = started(boot_stack)
+        recovery = reconciler(boot_stack, facade, owner)
+        while owner.persistence._sequence < 126:
+>           assert facade.check_health(deadline(1), force=True)[0].ready
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_recovery.py:307: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/providers.py:404: in check_health
+    if not self._query(unit_id, deadline).ready:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/providers.py:255: in _query
+    return self._query_original(unit_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/providers.py:306: in _query_original
+    self._owner.persistence.record_probe(self, value, deadline)
+src/xverse/maestro/persistence.py:672: in record_probe
+    operation, _, body = self._rpc(
+src/xverse/maestro/persistence.py:569: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:285: in _receive
+    check()
+src/xverse/maestro/persistence.py:552: in check
+    return self._live(
+src/xverse/maestro/persistence.py:491: in _live
+    check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+src/xverse/maestro/child.py:91: in check_child
+    process._ordinary()
+src/xverse/maestro/bootstrap.py:337: in _ordinary
+    self._root._live()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x783922dd1590>
+
+    def _live(self):
+        self._holder()
+        if (
+            self._closed
+            or self.latch.cancelled
+            or time.monotonic_ns() >= self._lease
+            or select.select([self._pidfd_capability.fileno()], [], [], 0)[0]
+            or os.waitid(
+                os.P_PIDFD,
+                self._pidfd_capability.fileno(),
+                os.WEXITED | os.WNOHANG | os.WNOWAIT,
+            )
+            is not None
+        ):
+>           raise BootstrapError("ML-BOOT-CLOSED")
+E           xverse.maestro.bootstrap.BootstrapError: ML-BOOT-CLOSED
+
+src/xverse/maestro/bootstrap.py:519: BootstrapError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_recovery.py::test_real_rpc_capacity_is_checked_before_retirement_on_both_sides
+1 failed, 94 passed in 96.03s (0:01:36)

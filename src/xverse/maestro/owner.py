@@ -516,6 +516,7 @@ class ReleaseOwner(_Original):
         self._lock = threading.Lock()
         self._closed = False
         self._dispatch_owner = self._dispatch_thread = None
+        self._init_views()
 
     @classmethod
     def from_persistence(cls, client, supervisor, latch):
@@ -553,9 +554,54 @@ class ReleaseOwner(_Original):
         owner._launchers = {}
         owner._lock, owner._closed = threading.Lock(), False
         owner._dispatch_owner = owner._dispatch_thread = None
+        owner._init_views()
         return owner
 
+    def _init_views(self):
+        self._views = {}
+        self._views_pin = self._views
+        self._view_log = ()
+        self._view_epoch = self._view_epoch_pin = 0
+        self._starts_retired = False
+
+    def _view_registry(self):
+        self._holder()
+        if (
+            self._views is not self._views_pin
+            or tuple(self._views.values()) != self._view_log
+            or self._view_epoch != self._view_epoch_pin
+        ):
+            raise OwnerError("ML-RECOVERY-VIEW-REGISTRY")
+
+    def _register_view(self, view):
+        self._dispatch_access()
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-OWNER-CONFLICT")
+        try:
+            self._view_registry()
+            if len(self._views) >= 32:
+                raise OwnerError("ML-RECOVERY-VIEW-LIMIT")
+            self._views[id(view)] = view
+            self._view_log = tuple(self._views.values())
+        finally:
+            self._lock.release()
+
+    def _retire_views(self):
+        self._view_registry()
+        if self._view_epoch >= 16:
+            raise OwnerError("ML-RECOVERY-VIEW-LIMIT")
+        self._starts_retired = True
+        self._view_epoch += 1
+        self._view_epoch_pin = self._view_epoch
+        return self._view_epoch
+
+    def _start_access(self):
+        self._view_registry()
+        if self._starts_retired or self._view_epoch:
+            raise OwnerError("ML-RECOVERY-NO-START")
+
     def _stage_claim(self, unit_id, deadline):
+        self._start_access()
         self._check(deadline)
         claim = self._claims.get(unit_id)
         if (
@@ -699,6 +745,7 @@ class ReleaseOwner(_Original):
             launcher.cancel(reason)
 
     def commit_intent(self, unit_id, deadline):
+        self._start_access()
         until = self._check(deadline)
         self._unit(unit_id)
         if not self._lock.acquire(blocking=False):
@@ -737,6 +784,7 @@ class ReleaseOwner(_Original):
             self._lock.release()
 
     def release(self, unit_id, descriptor, gate, deadline, *, readiness_guard=None):
+        self._start_access()
         self._check(deadline)
         if readiness_guard is not None:
             from .providers import DependencyGuard

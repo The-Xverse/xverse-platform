@@ -1,0 +1,58 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________ test_scheduled_observe_queries_only_its_declared_original_unit ________
+
+request = <FixtureRequest for <Function test_scheduled_observe_queries_only_its_declared_original_unit>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a3fb0075350>
+
+    def test_scheduled_observe_queries_only_its_declared_original_unit(request, monkeypatch):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        active = [None]
+        observed = []
+        effect = FiniteDispatcher._effect
+        query = ProcessReadiness._query
+    
+        def counted(self, unit, until):
+            if active[0] is not None:
+                observed.append((active[0], unit))
+            return query(self, unit, until)
+    
+        def scoped(self, step):
+            active[0] = step.unit_id if step.phase == "observe" else None
+            try:
+                return effect(self, step)
+            finally:
+                active[0] = None
+    
+        monkeypatch.setattr(ProcessReadiness, "_query", counted)
+        monkeypatch.setattr(FiniteDispatcher, "_effect", scoped)
+        result = driver.run(*ends(driver))
+        expected = [(s.unit_id, s.unit_id) for s in driver.prepared.steps if s.phase == "observe"]
+>       assert observed == expected
+E       AssertionError: assert [('xdl://org....nk-instance')] == [('xdl://org....nk-instance')]
+E         
+E         At index 1 diff: ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance') != ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance')
+E         Left contains 2 more items, first extra item: ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance')
+E         Use -v to get more diff
+
+tests/thesis_lite/maestro/test_dispatch_observe.py:40: AssertionError
+__ test_targeted_health_input_and_lock_conflicts_preserve_original_readiness ___
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7a3fb0025950>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-955/test_targeted_health_input_and0/work'), <function boot_stack.<locals>.boundary at 0x7a3fb001b7e0>, ...)
+
+    def test_targeted_health_input_and_lock_conflicts_preserve_original_readiness(boot_stack):
+        facade, owner, unit, launcher, handle, gate, original = started(boot_stack, two=True)
+        before = facade.observations
+        sequence = owner.persistence._sequence
+        for unknown in (True, "undeclared-unit"):
+            with pytest.raises(ValueError):
+>               facade.check_unit_health(unknown, deadline())
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'ProcessReadiness' object has no attribute 'check_unit_health'. Did you mean: 'check_health'?
+
+tests/thesis_lite/maestro/test_dispatch_observe.py:50: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatch_observe.py::test_scheduled_observe_queries_only_its_declared_original_unit
+FAILED tests/thesis_lite/maestro/test_dispatch_observe.py::test_targeted_health_input_and_lock_conflicts_preserve_original_readiness
+2 failed in 6.65s

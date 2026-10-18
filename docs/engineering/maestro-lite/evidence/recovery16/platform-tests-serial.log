@@ -1,0 +1,38 @@
+................................................ [  3%]
+........................................................................ [  9%]
+........................................................................ [ 15%]
+........................................................................ [ 21%]
+........................................................................ [ 27%]
+........................................................................ [ 33%]
+........................................................................ [ 39%]
+........................................................................ [ 45%]
+....F................................................................... [ 50%]
+........................................................................ [ 56%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 92%]
+........................................................................ [ 98%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+___________ test_full_dispatcher_result_precedes_full_helper_closure ___________
+
+request = <FixtureRequest for <Function test_full_dispatcher_result_precedes_full_helper_closure>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7531ba97ba80>
+
+    def test_full_dispatcher_result_precedes_full_helper_closure(request, monkeypatch):
+        from .test_dispatcher import full_stack, dispatcher, ends
+    
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        execution = driver.run(*ends(driver))
+>       assert execution.execution_succeeded
+E       AssertionError: assert False
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='175c6d95192cc878d96c75a7ca2a7365ec5c5d00498147e30bd17a4afc8d38b...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_closure.py:152: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_closure.py::test_full_dispatcher_result_precedes_full_helper_closure
+1 failed, 1223 passed, 24 subtests passed in 802.77s (0:13:22)

@@ -262,6 +262,7 @@ def _decode(data):
             "schedule",
             "abort",
             "closure",
+            "recovery",
             "ok",
             "error",
         }
@@ -413,6 +414,7 @@ class PersistenceClient(_Original):
         self._teardown_sequence = 0
         self._teardown_receipts, self._teardown_attempted = {}, set()
         self._schedule_used = {}
+        self._recovery_used = {}
         self._schedule_sequence = 0
         self._schedule_last_event = None
         self._drain_deadline = None
@@ -798,6 +800,32 @@ class PersistenceClient(_Original):
             self._evidence_ordinal = event["ingestionOrdinal"]
             self._evidence_m3 = body["m3_sequence"]
             return receipt
+        except Exception:
+            self._fail()
+            raise
+
+    def reconcile_snapshot(self, controller, statement, deadline):
+        from .recovery import IssuerRecovery, _RecoveryStatement, validate_snapshot
+
+        self._holder()
+        if (
+            type(controller) is not IssuerRecovery
+            or type(statement) is not _RecoveryStatement
+        ):
+            raise PersistenceError("ML-RECOVERY-STATEMENT")
+        controller._holder()
+        if (
+            controller.client is not self
+            or controller._active is not statement
+            or id(statement) in self._recovery_used
+        ):
+            raise PersistenceError("ML-RECOVERY-STATEMENT")
+        self._recovery_used[id(statement)] = statement
+        try:
+            body = _strict_json(statement.body)
+            _, _, reply = self._rpc("recovery", body, deadline)
+            validate_snapshot(controller, body, reply)
+            return reply
         except Exception:
             self._fail()
             raise
