@@ -258,3 +258,28 @@ remain required. No ordinary handles, full readiness, reverse lifecycle teardown
 restart/recovery, complete evidence assessment/collection or nine-case runtime
 acceptance is supplied. Prior component evidence is preserved; main is unchanged.
 Use verify-owner7.py with a newly built installed wheel, never stale editable imports.
+
+## Single-process persistence candidate (PERSISTENCE8)
+
+PersistenceClient and persistence_worker isolate the actual original M3/Argus owner
+in one child process. ReleaseOwner.from_persistence keeps C1, frozen Stage and RG06
+in the original supervisor. The RPC path performs no supervisor-side storage I/O.
+Actual RegisterIntent and journal revalidation acknowledgements, original receipt
+identity and the original deadline gate Release. Storage timeout/cancellation closes
+starts and permits exact pidfd termination/reaping; it creates no replacement writer.
+Healthy cancellation still permits bounded Abort. Abort records failure, not complete
+lifecycle evidence. The local owner API remains available for regression comparison.
+
+The private sealed input contains XDL declarations and original pins, not executable
+code/callbacks. Its scope does not authenticate a helper executable/environment or
+operator approval. Trusted helper creation, artifact/FD admission and exclusive wait
+ownership remain bootstrap obligations. Parent-death signaling is a best-effort
+creating-thread mechanism, not full owner-loss/kernel-stall proof. Kernel/scheduling
+stalls can leave explicit unresolved retained ownership. The bounded RPC tests cover
+interruptible storage stalls, not production real-time guarantees.
+
+See ADR-ML3-PERSISTENCE-0001.md, unit-specification-persistence8.md, separate review
+and evidence/persistence8/. verify-persistence8.py checks the exact installed wheel,
+full platform suite, copied consumers, all recorded helper/peer groups and partial
+trace. Full bootstrap/launcher, ordinary handles/readiness, reverse lifecycle teardown,
+restart/recovery, complete U7/U8 and the nine actual-runtime cases remain open.

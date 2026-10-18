@@ -347,6 +347,74 @@ class _Claim:
     attempted: bool = False
 
 
+def _persist_intent(permits, writer, session, unit_id, deadline, check, operation=None):
+    """Actual original-owner storage sequence, shared by local and isolated paths."""
+    until = check(deadline)
+    domains = ("host:" + session, "utc:" + session)
+    receipt = permits.claim_start_intent(unit_id, now=datetime.now(timezone.utc))
+    check(deadline)
+    operation = operation or "ml-" + uuid.uuid4().hex
+    public = permits.public_start_intent(receipt, now=datetime.now(timezone.utc))
+    check(deadline)
+    intent = _hash(public)
+    payload = {
+        "schemaVersion": "2.0",
+        "lifecycleDigest": "sha256:" + permits._prepared.lifecycle_digest,
+        "runId": permits._run_id,
+        "sessionId": session,
+        "scope": "unit",
+        "unitId": unit_id,
+        "generation": 1,
+        "operationId": operation,
+        "action": "intent",
+        "outcome": "pending",
+        "sourceRefs": [
+            {
+                "kind": "m3-record",
+                "id": "m3-intent-" + str(receipt.m3_sequence),
+                "sha256": "sha256:" + intent.hex(),
+                "sequence": receipt.m3_sequence,
+            }
+        ],
+        "dependencies": [],
+    }
+    event_id = operation + "-intent"
+    ordinal = writer.append_event(
+        event_id=event_id,
+        producer_id="maestro.owner7",
+        event_kind="annotation",
+        producer_sequence=receipt.m3_sequence,
+        correlation_id=permits._run_id,
+        clocks={
+            "host": {
+                "domain": domains[0],
+                "unit": "s",
+                "value": time.monotonic(),
+            },
+            "utc": {
+                "domain": domains[1],
+                "unit": "s",
+                "value": datetime.now(timezone.utc).timestamp(),
+            },
+        },
+        annotation={"text": "Maestro durable start intent"},
+        extensions={"xverse.maestro": payload},
+    )
+    check(deadline)
+    writer.flush_buffer()
+    check(deadline)
+    permits.revalidate_start_intent(receipt, now=datetime.now(timezone.utc))
+    check(deadline)
+    return _Claim(
+        receipt,
+        operation,
+        intent,
+        _hash([event_id, ordinal, payload]),
+        event_id,
+        until,
+    )
+
+
 class ReleaseOwner(_Original):
     def __init__(self, permits, writer, supervisor, latch):
         if (
@@ -388,9 +456,56 @@ class ReleaseOwner(_Original):
             writer.run_id,
             writer.declared_domains,
         )
+        self.persistence = self._persistence_pin = None
+        self._prepared, self._run_id = permits._prepared, permits._run_id
+        self._context_pin = (self._prepared, self._run_id)
         self._claims, self._attempted, self._gates = {}, set(), []
         self._lock = threading.Lock()
         self._closed = False
+
+    @classmethod
+    def from_persistence(cls, client, supervisor, latch):
+        from .persistence import PersistenceClient
+
+        if (
+            cls is not ReleaseOwner
+            or type(client) is not PersistenceClient
+            or type(supervisor) is not StageSupervisor
+            or type(latch) is not CancellationLatch
+        ):
+            raise OwnerError("ML-OWNER-INPUT")
+        client._available()
+        supervisor._holder()
+        facts = supervisor.boundaries._admission
+        if (
+            client.latch is not latch
+            or supervisor.latch is not latch
+            or client.run_id != facts.run_id
+            or client.session != facts.teardown_deadline.session
+            or client.generation_ns
+            > int(facts.teardown_deadline.monotonic_seconds * 1e9)
+        ):
+            raise OwnerError("ML-OWNER-SCOPE")
+        owner = cls.__new__(cls)
+        owner._retain()
+        owner.permits = owner.writer = None
+        owner.supervisor, owner.latch = supervisor, latch
+        owner.persistence = owner._persistence_pin = client
+        owner._pins = (None, None, supervisor, latch)
+        owner._prepared, owner._run_id = client.prepared, client.run_id
+        owner._context_pin = (owner._prepared, owner._run_id)
+        owner.session = client.session
+        owner._claims, owner._attempted, owner._gates = {}, set(), []
+        owner._lock, owner._closed = threading.Lock(), False
+        return owner
+
+    def _revalidate(self, claim, deadline):
+        if self.persistence is None:
+            self.permits.revalidate_start_intent(
+                claim.receipt, now=datetime.now(timezone.utc)
+            )
+        else:
+            self.persistence.revalidate_intent(claim.receipt, deadline)
 
     def _check(self, deadline):
         self._holder()
@@ -401,15 +516,41 @@ class ReleaseOwner(_Original):
             )
         ):
             raise OwnerError("ML-OWNER-REPLACED")
-        self.permits._holder()
-        self.supervisor._holder()
         if (
-            _hash(self.writer._plan_block),
-            self.writer.run_id,
-            self.writer.declared_domains,
-        ) != self._writer_pin or self.writer.run_id != self.permits._run_id:
+            self.persistence is not self._persistence_pin
+            or (self._prepared, self._run_id) != self._context_pin
+        ):
+            raise OwnerError("ML-OWNER-REPLACED")
+        self.supervisor._holder()
+        if self.persistence is not None:
+            self.persistence._available()
+            if (
+                self._prepared is not self.persistence.prepared
+                or self._run_id != self.persistence.run_id
+            ):
+                raise OwnerError("ML-OWNER-REPLACED")
+        else:
+            self.permits._holder()
+            if (
+                self._prepared is not self.permits._prepared
+                or self._run_id != self.permits._run_id
+            ):
+                raise OwnerError("ML-OWNER-REPLACED")
+        if (
+            self.persistence is None
+            and (
+                _hash(self.writer._plan_block),
+                self.writer.run_id,
+                self.writer.declared_domains,
+            )
+            != self._writer_pin
+        ):
             raise OwnerError("ML-OWNER-WRITER-REPLACED")
-        if self._closed or self.latch.cancelled or self.writer.writer_state != "open":
+        if (
+            self._closed
+            or self.latch.cancelled
+            or (self.writer is not None and self.writer.writer_state != "open")
+        ):
             raise OwnerError("ML-OWNER-CLOSED")
         until = _deadline(deadline, self.session)
         if until > int(
@@ -420,9 +561,7 @@ class ReleaseOwner(_Original):
         return until
 
     def _unit(self, unit_id):
-        unit = next(
-            (u for u in self.permits._prepared.units if u.unit_id == unit_id), None
-        )
+        unit = next((u for u in self._prepared.units if u.unit_id == unit_id), None)
         if unit is None:
             raise OwnerError("ML-OWNER-UNIT")
         return unit
@@ -434,7 +573,7 @@ class ReleaseOwner(_Original):
         facts = self.supervisor.boundaries._admission
         if (
             type(descriptor) is not BoundaryDescriptor
-            or descriptor.run_id != self.permits._run_id
+            or descriptor.run_id != self._run_id
             or descriptor.unit_id != unit_id
             or descriptor.generation != 1
             or descriptor.creation_epoch != facts.initial_epoch
@@ -443,7 +582,7 @@ class ReleaseOwner(_Original):
         return _hash(
             [
                 "xverse.maestro.owner7",
-                self.permits._prepared.lifecycle_digest,
+                self._prepared.lifecycle_digest,
                 list(descriptor.key),
                 self.session,
                 facts.supervisor_session,
@@ -467,75 +606,28 @@ class ReleaseOwner(_Original):
             if unit_id in self._attempted:
                 raise OwnerError("ML-OWNER-REPLAY")
             self._attempted.add(unit_id)
-            receipt = self.permits.claim_start_intent(
-                unit_id, now=datetime.now(timezone.utc)
-            )
-            self._check(deadline)
-            operation = "ml-" + uuid.uuid4().hex
-            public = self.permits.public_start_intent(
-                receipt, now=datetime.now(timezone.utc)
-            )
-            self._check(deadline)
-            intent = _hash(public)
-            payload = {
-                "schemaVersion": "2.0",
-                "lifecycleDigest": "sha256:" + self.permits._prepared.lifecycle_digest,
-                "runId": self.permits._run_id,
-                "sessionId": self.session,
-                "scope": "unit",
-                "unitId": unit_id,
-                "generation": 1,
-                "operationId": operation,
-                "action": "intent",
-                "outcome": "pending",
-                "sourceRefs": [
-                    {
-                        "kind": "m3-record",
-                        "id": "m3-intent-" + str(receipt.m3_sequence),
-                        "sha256": "sha256:" + intent.hex(),
-                        "sequence": receipt.m3_sequence,
-                    }
-                ],
-                "dependencies": [],
-            }
-            event_id = operation + "-intent"
-            ordinal = self.writer.append_event(
-                event_id=event_id,
-                producer_id="maestro.owner7",
-                event_kind="annotation",
-                producer_sequence=receipt.m3_sequence,
-                correlation_id=self.permits._run_id,
-                clocks={
-                    "host": {
-                        "domain": self._domains[0],
-                        "unit": "s",
-                        "value": time.monotonic(),
-                    },
-                    "utc": {
-                        "domain": self._domains[1],
-                        "unit": "s",
-                        "value": datetime.now(timezone.utc).timestamp(),
-                    },
-                },
-                annotation={"text": "Maestro durable start intent"},
-                extensions={"xverse.maestro": payload},
-            )
-            self._check(deadline)
-            self.writer.flush_buffer()
-            self._check(deadline)
-            self.permits.revalidate_start_intent(
-                receipt, now=datetime.now(timezone.utc)
-            )
-            self._check(deadline)
-            self._claims[unit_id] = _Claim(
-                receipt,
-                operation,
-                intent,
-                _hash([event_id, ordinal, payload]),
-                event_id,
-                until,
-            )
-            return event_id
+            if self.persistence is None:
+                claim = _persist_intent(
+                    self.permits,
+                    self.writer,
+                    self.session,
+                    unit_id,
+                    deadline,
+                    self._check,
+                )
+            else:
+                receipt = self.persistence.commit_intent(unit_id, deadline)
+                self._check(deadline)
+                claim = _Claim(
+                    receipt,
+                    receipt.operation,
+                    receipt.intent_digest,
+                    receipt.flush_digest,
+                    receipt.event_id,
+                    until,
+                )
+            self._claims[unit_id] = claim
+            return claim.event_id
         except Exception:
             self._closed = True
             self.cancel("intent-uncertain")
@@ -561,9 +653,7 @@ class ReleaseOwner(_Original):
             if self._check(deadline) > claim.deadline_ns:
                 raise OwnerError("ML-OWNER-ORIGINAL-DEADLINE")
             claim.attempted = True
-            self.permits.revalidate_start_intent(
-                claim.receipt, now=datetime.now(timezone.utc)
-            )
+            self._revalidate(claim, deadline)
             ack = self.supervisor.acknowledge(descriptor, gate, deadline)
             self._check(deadline)
             until = min(_deadline(deadline, self.session), gate.lease_ns)
@@ -582,9 +672,7 @@ class ReleaseOwner(_Original):
             if replace(ticket, kind=3, nonce=bytes(32)) != arm:
                 raise OwnerError("ML-OWNER-TICKET")
             self._check(deadline)
-            self.permits.revalidate_start_intent(
-                claim.receipt, now=datetime.now(timezone.utc)
-            )
+            self._revalidate(claim, deadline)
             self.supervisor.revalidate(ack)
             response = gate.exchange(
                 replace(ticket, kind=4, sequence=gate._sequence + 1), 21, deadline

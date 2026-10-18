@@ -1,0 +1,37 @@
+F............................                                            [100%]
+=================================== FAILURES ===================================
+_______________ test_isolated_actual_m3_argus_to_native_release ________________
+
+storage = (<function storage.<locals>.start at 0x7e838f7a2b60>, <function storage.<locals>.stage at 0x7e838f7a2c00>, Persistence...c.ProcessBoundaryOps object at 0x7e838fa36a50>, <xverse.maestro.supervisor.CancellationLatch object at 0x7e838fa36f90>)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-811/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-811/releasegate-native0/release-gate')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-811/test_isolated_actual_m3_argus_0')
+
+    def test_isolated_actual_m3_argus_to_native_release(
+        storage, native, guard_binary, tmp_path
+    ):
+        start, stage, config, manager, latch = storage
+        owner, client, announce, release = start()
+        unit_id = config.prepared.units[0].unit_id
+        original = deadline(3)
+        event_id = owner.commit_intent(unit_id, original)
+        unit_id, descriptor, child, marker, gate = stage(owner, guard_binary, native)
+        assert not select.select([marker], [], [], 0.02)[0]
+        result = owner.release(unit_id, descriptor, gate, original)
+        assert result.native_unfreeze_observed and not result.ready_for_execution
+        assert select.select([marker], [], [], 1)[0] and os.read(marker, 1) == b"M"
+        owner.cancel()
+        assert manager.force_cleanup(descriptor).termination_observed
+        assert child.wait(timeout=2) == 0
+        assert client.abort(deadline(1)) == "failed"
+        assert client.drain(deadline(1)).worker_reaped
+        reader = EvidenceStore.read_run(tmp_path / "argus" / "fixture-run")
+        records = reader.records()
+>       payload = records[0]["extensions"]["xverse.maestro"]
+                  ^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/thesis_lite/maestro/test_persistence.py:245: IndexError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_persistence.py::test_isolated_actual_m3_argus_to_native_release
+1 failed, 28 passed in 16.46s
