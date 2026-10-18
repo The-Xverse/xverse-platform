@@ -468,3 +468,25 @@ remain binding. Phases 1–2 accepted, phase 3 partial, phases 4–9 pending. No
 merge, canonical-note edit, factory run, scientific protocol or empirical change.
 Earlier working-state/working-traceability/continuation receipts under scheduler14
 are historical; verification.json and the committed thesis checkpoint supersede them.
+
+
+Original run closure increment 15 (partial, not accepted):
+[ADR](ADR-ML3-CLOSURE-0001.md), [unit contract](unit-specification-closure15.md),
+[tasks](tasks-closure15.md), [read-only findings](review-closure15.md), and
+[evidence](evidence/closure15/). Bootstrap retains original birth/client inventory
+before helper acknowledgement and after adapter construction. RunClosure closes
+issued units in original reverse dependency order, drains original helpers/root and
+releases all issued C1 boundaries within distinct shares of the original caller end.
+Normal conflicts reject; independent cancel bypasses locks. Unknown births, invalid
+ordinary adapters and missing direct-child waits stay explicit. Local control FDs
+remain retained for caller disposal; matching repeats return original facts.
+
+The original storage worker can make one bounded incomplete-closure attempt using
+public flush/abort/reader APIs. Before/after writer state, abort_usability established
+before abort, after_usability, actual durable manifest hash/recorded/assessed status,
+and missing RPC observations are separate. Flush failure forbids abort; abort errors
+never infer failed state or stream usability. Legacy abort is preserved; this new
+one-call path consumes the existing terminal abort reserve. No finalize, reopen,
+complete-lifecycle coverage or new launch authority. Initial bootstrap/environment
+admission, full global M1, restart/recovery, U7/U8, independent review/acceptance and
+phases 4–9 remain open. No factory run, main, canonical-note or scientific change.

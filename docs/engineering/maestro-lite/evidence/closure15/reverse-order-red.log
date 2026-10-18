@@ -1,0 +1,36 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_controllerless_owned_unit_cleanup_uses_original_reverse_graph ______
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7debb338b620>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-925/test_controllerless_owned_unit0/work'), <function boot_stack.<locals>.boundary at 0x7debb33ef420>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7debb335fce0>
+
+    def test_controllerless_owned_unit_cleanup_uses_original_reverse_graph(boot_stack, monkeypatch):
+        from .test_provider import second
+        from xverse.maestro.prbc import ProcessBoundaryOps
+        facade, owner, first, launcher, handle, gate, original = runtime(boot_stack)
+        second_unit, second_launcher, second_handle, second_gate = second(boot_stack, owner, original)
+        facade.bind(second_launcher, second_handle)
+        assert facade.start(first.unit_id, first, gate, original).ready
+        assert facade.start(second_unit.unit_id, second_unit, second_gate, original).ready
+        seen = []
+        cleanup = ProcessBoundaryOps.force_cleanup
+    
+        def observed(self, descriptor, **kwargs):
+            if descriptor.unit_id in owner._prepared.resource_order:
+                seen.append(descriptor.unit_id)
+            return cleanup(self, descriptor, **kwargs)
+    
+        monkeypatch.setattr(ProcessBoundaryOps, 'force_cleanup', observed)
+        result = RunClosure(boot_stack[0]).close(deadline(5))
+        assert result.cleanup_complete
+>       assert seen[:2] == list(reversed(owner._prepared.resource_order))
+E       AssertionError: assert ['xdl://org.x...ink-instance'] == ['xdl://org.x...rce-instance']
+E         
+E         At index 0 diff: 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance' != 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance'
+E         Use -v to get more diff
+
+tests/thesis_lite/maestro/test_closure.py:420: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_closure.py::test_controllerless_owned_unit_cleanup_uses_original_reverse_graph
+1 failed in 2.39s

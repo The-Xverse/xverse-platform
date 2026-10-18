@@ -1,0 +1,54 @@
+........................F............................................... [ 98%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_cancel_bypasses_active_closure_locks_and_real_blocked_storage ______
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x73b198df91d0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-924/test_cancel_bypasses_active_cl0/work'), <function boot_stack.<locals>.boundary at 0x73b197e3bc40>, ...)
+
+    def test_cancel_bypasses_active_closure_locks_and_real_blocked_storage(boot_stack):
+        import threading
+        import time
+    
+        owner, storage, descriptor, launcher, handle, gate, original = boot_stack[6]()
+        signal.pidfd_send_signal(storage.process._capability.fileno(), signal.SIGSTOP)
+        closer = RunClosure(boot_stack[0])
+        results, failures = [], []
+    
+        def closing():
+            try:
+                results.append(closer.close(deadline(4)))
+            except Exception as error:
+                failures.append(error)
+    
+        thread = threading.Thread(target=closing)
+        thread.start()
+        until = time.monotonic() + 1
+        while not closer._lock.locked() and thread.is_alive() and time.monotonic() < until:
+            time.sleep(0.005)
+        assert closer._lock.locked() and boot_stack[0]._lock.locked()
+>       closer.cancel("owned concurrent cancel")
+
+tests/thesis_lite/maestro/test_closure.py:375: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_closure.py:160: in cancel
+    self._pins[0]._pins[4].cancel(reason)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.supervisor.CancellationLatch object at 0x73b198e08bb0>
+reason = 'owned concurrent cancel'
+
+    def cancel(self, reason: str) -> int:
+        self._check()
+        if (
+            type(reason) is not str
+            or not reason
+            or len(reason) > 64
+            or any(not (c.isascii() and (c.isalnum() or c in "-_")) for c in reason)
+        ):
+>           raise SupervisionError("ML-ADMISSION-CANCEL-REASON")
+E           xverse.maestro.supervisor.SupervisionError: ML-ADMISSION-CANCEL-REASON
+
+src/xverse/maestro/supervisor.py:87: SupervisionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_closure.py::test_cancel_bypasses_active_closure_locks_and_real_blocked_storage
+1 failed, 72 passed in 86.79s (0:01:26)

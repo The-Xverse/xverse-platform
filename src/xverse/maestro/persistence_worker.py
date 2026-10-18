@@ -251,6 +251,7 @@ def serve(channel, input_fd):
                     "tick",
                     "schedule",
                     "abort",
+                    "closure",
                 }
                 or not request["operation"].startswith("ml-")
                 or len(request["operation"]) != 35
@@ -286,9 +287,17 @@ def serve(channel, input_fd):
                 elif (
                     schedule_journal is not None
                     and schedule_journal.closing
-                    and kind not in ("schedule", "abort")
+                    and kind not in ("schedule", "abort", "closure")
                 ):
                     raise PersistenceError("ML-SCHEDULE-CLOSING")
+                elif kind == "closure":
+                    from .writer_closure import close_writer
+
+                    if body != {}:
+                        raise PersistenceError("ML-CLOSURE-WRITER-REQUEST")
+                    response = close_writer(
+                        writer, config["evidence_root"], lambda: check(deadline)
+                    )
                 elif kind == "commit":
                     outcomes.reserve_event(claims)
                     if (
@@ -356,7 +365,7 @@ def serve(channel, input_fd):
                 check(deadline)
                 reply = dict(request, kind="ok", body=response)
                 _send(channel, reply)
-                if kind == "abort":
+                if kind in ("abort", "closure"):
                     return
             except Exception:
                 # No exception text/private path/permit material is serialized.

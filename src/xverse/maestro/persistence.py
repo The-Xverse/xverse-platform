@@ -261,6 +261,7 @@ def _decode(data):
             "tick",
             "schedule",
             "abort",
+            "closure",
             "ok",
             "error",
         }
@@ -418,6 +419,7 @@ class PersistenceClient(_Original):
         self._term_sent = self._kill_sent = False
         self._drained = None
         self.last_writer_state = "unknown"
+        self._closure_attempted, self._closure_result = False, None
         channel.setblocking(False)
         try:
             self._pidfd = open_child_pidfd(process)
@@ -538,14 +540,16 @@ class PersistenceClient(_Original):
     def _rpc(self, kind, body, deadline):
         if not self._lock.acquire(blocking=False):
             raise PersistenceError("ML-PERSIST-CONFLICT")
-        allow_cancel = kind == "abort" or (
+        allow_cancel = kind in ("abort", "closure") or (
             kind == "schedule"
             and body.get("kind")
             in ("failure", "step-disposition", "unit-disposition", "run-terminal")
         )
 
         def check():
-            return self._live(allow_cancel=allow_cancel, allow_exit=kind == "abort")
+            return self._live(
+                allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure")
+            )
 
         try:
             self._live(allow_cancel=allow_cancel)
@@ -797,6 +801,31 @@ class PersistenceClient(_Original):
         except Exception:
             self._fail()
             raise
+
+    def close_incomplete(self, deadline):
+        """One original-worker public-state/flush/abort/reader attempt; never finalize."""
+        from .writer_closure import decode_closure, unresolved
+
+        self._holder()
+        if self._closure_attempted:
+            return self._closure_result
+        self._closure_attempted = True
+        prior = self.last_writer_state
+        self._closure_result = unresolved(prior)
+        try:
+            _, _, body = self._rpc("closure", {}, deadline)
+            facts = decode_closure(body, prior)
+        except Exception:
+            self._fail()
+            return self._closure_result
+        self._closure_result = facts
+        self.last_writer_state = facts.after_state
+        if facts.abort_completed:
+            self._aborted = True
+        else:
+            self._fail()
+        self.latch.cancel("persistence-closure")
+        return facts
 
     def abort(self, deadline):
         self._holder()

@@ -422,7 +422,15 @@ class BootstrapSession(_Original):
         self._pidfd = os.pidfd_open(process.pid, 0)
         self._sequence, self._slot = 0, 0
         self._children, self._pending, self._birth_deadlines = {}, {}, {}
-        self._registries = (self._children, self._pending, self._birth_deadlines)
+        self._issued, self._clients = {}, {}
+        self._issued_log, self._client_log = (), ()
+        self._registries = (
+            self._children,
+            self._pending,
+            self._birth_deadlines,
+            self._issued,
+            self._clients,
+        )
         self._lock = threading.Lock()
         self._closed, self._drained, self._drain_end = False, None, None
         self._root_result = None
@@ -472,7 +480,14 @@ class BootstrapSession(_Original):
         if any(
             a is not b
             for a, b in zip(
-                (self._children, self._pending, self._birth_deadlines), self._registries
+                (
+                    self._children,
+                    self._pending,
+                    self._birth_deadlines,
+                    self._issued,
+                    self._clients,
+                ),
+                self._registries,
             )
         ):
             raise BootstrapError("ML-BOOT-REGISTRY-REPLACED")
@@ -481,6 +496,11 @@ class BootstrapSession(_Original):
         self._pidfd_capability.check(self._pidfd)
         self.boundaries._holder()
         self.latch._check()
+        if (
+            tuple(sorted(self._issued.items())) != self._issued_log
+            or tuple(sorted(self._clients.items())) != self._client_log
+        ):
+            raise BootstrapError("ML-BOOT-INVENTORY-REPLACED")
 
     def _live(self):
         self._holder()
@@ -637,6 +657,8 @@ class BootstrapSession(_Original):
                 raise BootstrapError("ML-BOOT-BIRTH-SCOPE")
             self._slot += 1
             self._birth_deadlines[self._slot] = self._until(deadline)
+            self._issued[self._slot] = (role, helper, unit)
+            self._issued_log = tuple(sorted(self._issued.items()))
             reply, fds = self._rpc(
                 1,
                 deadline,
@@ -847,9 +869,12 @@ class BootstrapSession(_Original):
             3, helper, helper, sealed_input_fd(config), deadline
         )
         try:
-            return PersistenceClient(
+            client = PersistenceClient(
                 child, channel, config, self.latch, deadline=deadline
             )
+            self._clients[child._slot] = client
+            self._client_log = tuple(sorted(self._clients.items()))
+            return client
         except Exception:
             self.cancel("bootstrap-client-failed")
             raise
@@ -872,7 +897,7 @@ class BootstrapSession(_Original):
             1, helper, recipe.descriptor, sealed_recipe_fd(recipe), deadline
         )
         try:
-            return CatalogLauncher(
+            client = CatalogLauncher(
                 child,
                 channel,
                 owner,
@@ -880,6 +905,9 @@ class BootstrapSession(_Original):
                 helper_artifact_digest=pin,
                 deadline=deadline,
             )
+            self._clients[child._slot] = client
+            self._client_log = tuple(sorted(self._clients.items()))
+            return client
         except Exception:
             self.cancel("bootstrap-client-failed")
             raise
@@ -922,7 +950,7 @@ class BootstrapSession(_Original):
         )
         child, channel = self._spawn_role(2, helper, unit, private, deadline)
         try:
-            return GateConnection(
+            client = GateConnection(
                 child,
                 channel,
                 scope=scope,
@@ -934,6 +962,9 @@ class BootstrapSession(_Original):
                 boundaries=self.boundaries,
                 descriptor=unit,
             )
+            self._clients[child._slot] = client
+            self._client_log = tuple(sorted(self._clients.items()))
+            return client
         except Exception:
             self.cancel("bootstrap-client-failed")
             raise
