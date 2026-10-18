@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-ADMISSION2-2026-10-18-v1",
+  "status": "verified_partial_candidate_not_accepted",
+  "baseline": "c2997c0f810d117cf45b2e34a4011b3ba7219494",
+  "parent_revision": "ML3-PREP1-2026-10-18-v1",
+  "source_manifest_sha256": "bb4c9e1a4c6eefbdf9c25a34833357e4ad67a12ec5c6d80398e1fbb7782a4eeb",
+  "source_unchanged_during_verification": true,
+  "platform_python_tests": {
+    "passed": 689,
+    "subtests_passed": 24,
+    "failed": 0,
+    "receipt": "platform-test-receipt.json"
+  },
+  "source_excluded_wheel_checks": {
+    "passed": 110,
+    "failed": 0,
+    "receipt": "wheel-consumer-receipt.json"
+  },
+  "wheel": {
+    "path": "wheel/xverse_xdl-0.4.0-py3-none-any.whl",
+    "sha256": "6650d3c1d3f36ba7696ef90979a208bb2008f7c62a046a9841ec6de56b2651ea"
+  },
+  "installed_identity": "installed-module-identity.json",
+  "installed_identity_sha256": "c54a52e2bb2bc92c6fcf11119f932bf57e5740e6ffc459733bc69fe774e150b6",
+  "traceability_sha256": "e30619b636ec1f7a18c81daf04875fd349fb838a46b5226ff6633b5853ecca96",
+  "partial_trace_endpoints_valid": true,
+  "inherited_packaging_trace_rebind": "packaging-trace-rebind.json",
+  "review": "../../review-admission2.md",
+  "review_sha256": "e32aba18dd0ac72f9b1a1bdbcd87cf71f0d52ae0fc969cb3165f09f94c92fcd1",
+  "static_analysis": {
+    "tool": "ruff 0.15.15",
+    "passed": true,
+    "log": "ruff.log"
+  },
+  "environment": {
+    "python": "3.13.13",
+    "PYTHONPATH": "unset",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "packages": "environment-packages.json"
+  },
+  "journal_component_process_race_exercised": true,
+  "operator_approval_authenticated": false,
+  "bootstrap_admitted": false,
+  "actual_ml3_runtime_cases_executed": false,
+  "full_cpp_xcom_suite_run": false,
+  "trusted_whole_project_trace_validated": false,
+  "factory_run_created": false,
+  "accepted": false,
+  "main_merged": false,
+  "limitations": [
+    "Partial U2; original approval-owner/run/store binding and actual executable/fence/environment/source gates remain pending.",
+    "Atomic claim guarantees are journal-scoped and do not retrofit legacy check-then-append clients.",
+    "Kernel/fsync host deadlines require U3 supervision; no watchdog guarantee is established.",
+    "Descriptor/C1 containment, Argus lifecycle flush/coverage and restart remain pending.",
+    "All 24 software requirements remain in scope and all 18 REF-002 parents remain allocation-only/unvalidated."
+  ]
+}

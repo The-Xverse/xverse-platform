@@ -1,0 +1,453 @@
+................................................ [  6%]
+........................................................................ [ 16%]
+........................................................................ [ 25%]
+.......................FFFFFFFF.F.........................FF............ [ 35%]
+........................................................................ [ 44%]
+..........................................FF............................ [ 54%]
+........................................................................ [ 64%]
+........................................................................ [ 73%]
+........................................................................ [ 83%]
+........................................................................ [ 92%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+________________ test_xverse_argus_imports_from_installed_wheel ________________
+
+    def test_xverse_argus_imports_from_installed_wheel():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_________________ test_xverse_xdl_imports_from_installed_wheel _________________
+
+    def test_xverse_xdl_imports_from_installed_wheel():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_______________ test_existing_xdl_console_entry_point_preserved ________________
+
+    def test_existing_xdl_console_entry_point_preserved():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+____________ test_additive_xverse_argus_console_entry_point_present ____________
+
+    def test_additive_xverse_argus_console_entry_point_present():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+________________ test_wheel_does_not_package_the_xcom_cpp_tree _________________
+
+    def test_wheel_does_not_package_the_xcom_cpp_tree():
+>       wheel, _target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+___________ test_unknown_major_schema_rejected_from_installed_wheel ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-754/test_unknown_major_schema_reje0')
+
+    def test_unknown_major_schema_rejected_from_installed_wheel(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+______________ test_additive_unknown_field_behaviour_is_explicit _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-754/test_additive_unknown_field_be0')
+
+    def test_additive_unknown_field_behaviour_is_explicit(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+___ test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath ___
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-754/test_owned_argus_tests_run_aga0')
+
+    def test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_____________________ test_xdl_cli_behaviour_is_preserved ______________________
+
+    def test_xdl_cli_behaviour_is_preserved():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_ test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree _
+
+    def test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_integration.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_ test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath __
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-754/test_owned_argus_tests_repeat_0')
+
+    def test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_integration.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+________ test_installed_wheel_imports_argus_and_preserved_xdl_contracts ________
+
+    def test_installed_wheel_imports_argus_and_preserved_xdl_contracts():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_validation.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_______ test_additive_unknown_field_and_unknown_major_behaviour_explicit _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-754/test_additive_unknown_field_an0')
+
+    def test_additive_unknown_field_and_unknown_major_behaviour_explicit(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_validation.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-supervision-verify-20261018/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_argus_imports_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_xdl_imports_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_existing_xdl_console_entry_point_preserved
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_xverse_argus_console_entry_point_present
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_wheel_does_not_package_the_xcom_cpp_tree
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_unknown_major_schema_rejected_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_unknown_field_behaviour_is_explicit
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xdl_cli_behaviour_is_preserved
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath
+FAILED tests/thesis_lite/argus/test_argus2_validation.py::test_installed_wheel_imports_argus_and_preserved_xdl_contracts
+FAILED tests/thesis_lite/argus/test_argus2_validation.py::test_additive_unknown_field_and_unknown_major_behaviour_explicit
+13 failed, 736 passed, 24 subtests passed in 114.83s (0:01:54)

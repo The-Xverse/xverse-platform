@@ -1,0 +1,38 @@
+...................FF.............................                       [100%]
+=================================== FAILURES ===================================
+__________ test_early_stop_cannot_outlive_a_still_required_dependent ___________
+
+    def test_early_stop_cannot_outlive_a_still_required_dependent():
+        docs = documents()
+        extra_step(docs, step_id="stop-source", phase="stop", at=2)
+        with pytest.raises(PreparationError, match="ML-TIME"):
+            prepared(docs, limits=Limits(horizon_ticks=10))
+        extra_step(docs, step_id="stop-sink", phase="stop", unit="sink-instance", at=1)
+        value = prepared(docs, limits=Limits(horizon_ticks=10))
+>       assert "stop-source" not in {
+            s.step_id for s in value.eligible_steps(2, ("start-source", "start-sink"))
+        }
+E       AssertionError: assert 'stop-source' not in {'stop-source'}
+
+tests/thesis_lite/maestro/test_preparation.py:306: AssertionError
+____________ test_source_json_pointers_resolve_to_original_records _____________
+
+    def test_source_json_pointers_resolve_to_original_records():
+        value = prepared()
+        docs = documents()
+        resources = {SYSTEM: docs["system.json"], SCENARIO: docs["scenario.json"]}
+        for edge in value.graph_edges:
+            if not edge.pointer:
+                continue
+            uri, pointer = edge.pointer.split("#", 1)
+            current = resources[uri]
+            for part in pointer.lstrip("/").split("/"):
+>               current = current[int(part)] if isinstance(current, list) else current[part]
+                                                                               ^^^^^^^^^^^^^
+E               KeyError: 'dependsOn'
+
+tests/thesis_lite/maestro/test_preparation.py:325: KeyError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_preparation.py::test_early_stop_cannot_outlive_a_still_required_dependent
+FAILED tests/thesis_lite/maestro/test_preparation.py::test_source_json_pointers_resolve_to_original_records
+2 failed, 48 passed in 5.97s

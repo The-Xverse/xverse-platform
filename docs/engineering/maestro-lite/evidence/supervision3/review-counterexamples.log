@@ -1,0 +1,55 @@
+...............................................F.F.                      [100%]
+=================================== FAILURES ===================================
+____________________ test_stolen_wait_ownership_is_unknown _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a815bfe3d10>
+children = <function children.<locals>.spawn at 0x7a815bfcb240>
+
+    def test_stolen_wait_ownership_is_unknown(monkeypatch, children):
+        worker = children("exit")
+        monitor = WorkerMonitor(CancellationLatch())
+        ref = monitor.retain(worker, limits(1))
+        worker.wait(timeout=2)  # forbidden concurrent waiter, injected integration fault
+        result = monitor.watch(ref)
+        assert result.disposition == "unresolved" and result.identity_retained
+        assert result.diagnostic == "ML-OWNERSHIP-WAIT"
+        assert not result.worker_reaped
+>       assert monitor.latch.cancelled
+E       assert False
+E        +  where False = <xverse.maestro.supervisor.CancellationLatch object at 0x7a815c1ab290>.cancelled
+E        +    where <xverse.maestro.supervisor.CancellationLatch object at 0x7a815c1ab290> = <xverse.maestro.supervisor.WorkerMonitor object at 0x7a815bf1b520>.latch
+
+tests/thesis_lite/maestro/test_supervisor.py:230: AssertionError
+__________________ test_dispose_reaps_confirmed_exited_worker __________________
+
+children = <function children.<locals>.spawn at 0x7a815be028e0>
+
+    def test_dispose_reaps_confirmed_exited_worker(children):
+        worker = children()
+        monitor = WorkerMonitor(CancellationLatch())
+        ref = monitor.retain(worker, limits(1))
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(os, "waitid", lambda *args: (_ for _ in ()).throw(OSError("failure")))
+            assert monitor.watch(ref).disposition == "unresolved"
+        with pytest.raises(SupervisionError, match="LIVE"):
+            monitor.dispose_reaped(ref)
+        worker.kill()
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            try:
+                monitor.dispose_reaped(ref)
+                break
+            except SupervisionError:
+                time.sleep(.005)
+        else:
+            pytest.fail("original child's exit was not observed")
+>       assert worker.returncode == -signal.SIGKILL
+E       AssertionError: assert None == -<Signals.SIGKILL: 9>
+E        +  where None = <Popen: returncode: None args: ['/tmp/maestro-lite-admission-verify-20261018...>.returncode
+E        +  and   <Signals.SIGKILL: 9> = signal.SIGKILL
+
+tests/thesis_lite/maestro/test_supervisor.py:264: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_supervisor.py::test_stolen_wait_ownership_is_unknown
+FAILED tests/thesis_lite/maestro/test_supervisor.py::test_dispose_reaps_confirmed_exited_worker
+2 failed, 49 passed in 1.74s
