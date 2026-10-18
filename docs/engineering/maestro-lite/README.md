@@ -1,8 +1,43 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **implementation candidate; U1/U6 plus partial U2/U3/U4; not accepted; no runtime admission**.
+Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5; not accepted; no runtime admission**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Process readiness and dependency candidate (PROVIDER11)
+
+ProcessReadiness composes the original ReleaseOwner with its actual isolated
+PersistenceClient, already staged CatalogLauncher handles and one ProbePolicy
+per prepared unit. It supports only the exact catalog observe condition `running`:
+process existence after observed exec, not application readiness. Plans declaring
+other conditions reject. Legacy synchronous-storage owners are not admitted by
+this facade; the existing primitive owner API remains compatible.
+
+Call bind(launcher, full_handle) for each original staged resource, then
+start(unit_id, original_boundary, original_gate, original_deadline). Prerequisites
+come from ancestors in the combined XDL projection, including step dependencies.
+Already released units are probed before new work. A private active-operation
+guard re-probes all prerequisites before Arm and again immediately before Release;
+all replies must match current generation/handle/session and remain fresh together.
+Release is single-attempt and never itself ready. Up to three bounded actual
+queries can satisfy the declared running condition. Failure/unknown/expiry cancels
+further starts; original C1 remains responsible for actual teardown.
+
+check_health(deadline, force=False) samples due units; next_health_deadline exposes
+the earliest next cadence. The caller must drive sampling. No autonomous health/
+tick scheduler, continuous health guarantee, application probe or full lifecycle
+provider compatibility is established. Observations are immutable historical facts,
+never transferable release authority. Exposed cached observations become non-ready
+when the original latch closes. Bootstrap finding 14 now rejects a changed public
+session alias before native dispatch.
+
+See ADR-ML3-PROVIDER-0001.md, unit-specification-provider11.md, provider-expected.json,
+review-provider11.md, verify-provider11.py and evidence/provider11/. Source/wheel
+verification is component evidence only. Initial-supervisor admission and durable
+bootstrap permits, exact environment/dependency admission, normal M3 outcomes,
+autonomous scheduling, reverse teardown/restart/recovery, U7/U8, full M1/runtime
+cases, independent full review and acceptance remain open. No factory run, main
+merge, scientific result or canonical-note edit is implied.
 
 ## Supervised helper bootstrap candidate (BOOTSTRAP10)
 

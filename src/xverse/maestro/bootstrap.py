@@ -463,6 +463,7 @@ class BootstrapSession(_Original):
                     self._pins,
                 )
             )
+            or self.session != self._pins[2].admission.generation.session
             or self.process.pid != self._pid_pin
             or BootstrapChild._fd_identity(self.channel.fileno())
             != self._socket_identity

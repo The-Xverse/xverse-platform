@@ -701,8 +701,14 @@ class ReleaseOwner(_Original):
         finally:
             self._lock.release()
 
-    def release(self, unit_id, descriptor, gate, deadline):
+    def release(self, unit_id, descriptor, gate, deadline, *, readiness_guard=None):
         self._check(deadline)
+        if readiness_guard is not None:
+            from .providers import DependencyGuard
+
+            if type(readiness_guard) is not DependencyGuard:
+                raise OwnerError("ML-OWNER-READINESS-GUARD")
+            readiness_guard.check(self, unit_id, deadline)
         if (
             type(gate) is not GateConnection
             or gate.latch is not self.latch
@@ -743,6 +749,8 @@ class ReleaseOwner(_Original):
             self._revalidate(claim, deadline)
             self.supervisor.revalidate(ack)
             self._check_launcher(unit_id, descriptor, gate)
+            if readiness_guard is not None:
+                readiness_guard.check(self, unit_id, deadline)
             response = gate.exchange(
                 replace(ticket, kind=4, sequence=gate._sequence + 1), 21, deadline
             )
