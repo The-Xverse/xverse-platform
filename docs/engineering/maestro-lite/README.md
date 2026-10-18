@@ -4,6 +4,32 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4; not accepted; n
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Independent freeze-only lease guard successor
+
+`ML3-LEASEGUARD5-2026-10-18-v1` continues linearly from containment commit
+`de6be649b8a633b8f92972b249b03271d11810ea`. The wheel now carries native C11
+source `xverse/maestro/native/lease_guard.c`. Build it explicitly with
+`cc -std=c11 -O2 -Wall -Wextra -Werror lease_guard.c -o lease-guard`; importing
+or installing the Python package does not compile or start it. There is no new
+public Python bootstrap or lifecycle facade. The native entry and fixed 64-byte
+protocol are defined in `unit-specification-leaseguard5.md`; build/hash-admit the
+exact binary before any future owner bootstrap.
+
+The independent process watches its original supervisor pidfd, a private
+credential-checked Unix socket and a fixed monotonic lease. Expiry, supervisor
+death, channel loss, malformed messages and Cancel request freeze of the exact
+retained cgroup and observe the kernel frozen event. Renewal is bounded, scoped,
+contiguous and cannot revive an expired lease. It never thaws, spawns workloads,
+kills, deletes or obtains C1 cleanup authority. The original external holder
+retains C1. Freeze alone is neither termination nor cleanup success.
+
+This is a partial helper component, not the M1 Release/cancel fence. A stopped or
+killed guard cannot enforce a lease, and kernel I/O can stall. Real tests expose
+those limits explicitly; original-owner loss/guard-loss integration and stale
+thaw prevention remain open. All process readiness flags stay false. See the
+lease-guard ADR, unit specification, separate review and `evidence/leaseguard5/`.
+The older sections below retain the exact earlier component context.
+
 ## U4 containment successor
 
 `ML3-CONTAINMENT4-2026-10-18-v4` adds `xverse.maestro.prbc` in

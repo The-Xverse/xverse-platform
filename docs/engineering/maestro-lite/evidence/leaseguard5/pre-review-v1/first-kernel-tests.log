@@ -1,0 +1,39 @@
+.....................F...............                                    [100%]
+=================================== FAILURES ===================================
+______________ test_queued_heartbeat_after_expiry_does_not_revive ______________
+
+environment = (<function environment.<locals>.factory at 0x7ab9b867f600>, <function environment.<locals>.spawn at 0x7ab9b867f560>, 12)
+guards = <function guards.<locals>.start at 0x7ab9b867f7e0>
+
+    def test_queued_heartbeat_after_expiry_does_not_revive(environment, guards):
+        factory, _, _ = environment
+        manager, _ = factory()
+        unit = descriptor()
+        manager.create_frozen(unit)
+        process, channel, _, fd = ready(guards, manager, unit, lease=.15)
+        os.kill(process.pid, signal.SIGSTOP)  # exact original test Popen, never discovered PID
+        os.waitid(os.P_PID, process.pid, os.WSTOPPED)
+        _write(fd, 'cgroup.freeze', b'0')
+        time.sleep(.2)
+        # This intentionally demonstrates that SIGSTOP is outside any bounded lease proof.
+        assert not frozen(fd)
+        channel.send(message(1, 1, time.monotonic_ns() + 500_000_000))
+        os.kill(process.pid, signal.SIGCONT)
+>       terminal = receive(channel)
+                   ^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_leaseguard.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=15, family=1, type=5, proto=0, raddr=b'\x00bdddd'>
+
+    def receive(channel):
+        assert select.select([channel], [], [], 3)[0], 'native guard reply deadline'
+>       packet = channel.recv(65)
+                 ^^^^^^^^^^^^^^^^
+E       ConnectionResetError: [Errno 104] Connection reset by peer
+
+tests/thesis_lite/maestro/test_leaseguard.py:32: ConnectionResetError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_leaseguard.py::test_queued_heartbeat_after_expiry_does_not_revive
+1 failed, 36 passed in 6.32s
