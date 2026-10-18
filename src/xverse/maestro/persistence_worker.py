@@ -18,6 +18,7 @@ from xverse_xdl.lifecycle import ExecutionPermit, FileEvidenceJournal
 from xverse_xdl.validate import validate_mappings
 from .admission import PermitApproval, PermitBinding, PermitSession, validate_permits
 from .owner import _persist_intent
+from .lifecycle_evidence import OutcomeJournal
 from .persistence import (
     PersistenceError,
     _frame,
@@ -196,6 +197,7 @@ def serve(channel, input_fd):
         HostDeadline(session, end / 1e9).__post_init__()
         scope = hashlib.sha256(private).hexdigest()
         sequence, permits, writer, claims, attempted = 0, None, None, {}, set()
+        outcomes = None
 
         def alive():
             if (
@@ -225,7 +227,8 @@ def serve(channel, input_fd):
                 sequence > 128
                 or request["sequence"] != sequence
                 or request["scope"] != scope
-                or request["kind"] not in {"init", "commit", "revalidate", "abort"}
+                or request["kind"]
+                not in {"init", "commit", "revalidate", "probe", "abort"}
                 or not request["operation"].startswith("ml-")
                 or len(request["operation"]) != 35
             ):
@@ -238,6 +241,7 @@ def serve(channel, input_fd):
                     if permits is not None or body != {}:
                         raise PersistenceError("ML-PERSIST-INIT")
                     permits, writer = _load(config, lambda: check(deadline))
+                    outcomes = OutcomeJournal(permits, writer, config["evidence_root"])
                     response = {
                         "run_id": config["run_id"],
                         "lifecycle_digest": permits._prepared.lifecycle_digest,
@@ -270,6 +274,10 @@ def serve(channel, input_fd):
                         "intent": "sha256:" + claim.intent_digest.hex(),
                         "flush": "sha256:" + claim.flush_digest.hex(),
                     }
+                elif kind == "probe":
+                    response = outcomes.record(
+                        body, claims, request["operation"], deadline, check
+                    )
                 elif kind == "revalidate":
                     if set(body) != {"unit", "claim"}:
                         raise PersistenceError("ML-PERSIST-CLAIM")

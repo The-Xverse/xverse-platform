@@ -1,8 +1,36 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5; not accepted; no runtime admission**.
+Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7; not accepted; no runtime admission**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Durable start/probe evidence candidate (OUTCOMES12)
+
+Every ProcessReadiness Query now requires a bounded acknowledgement from the
+original isolated persistence worker before it can satisfy readiness. The worker
+appends actual M3 records through public FileEvidenceJournal APIs, projects their
+exact public hashes, appends accepted Argus annotations and calls flush_buffer.
+The first observed running sample records one normal start outcome and a separate
+probe observation, with started/probe/ready annotations. Pending exec records a
+failed probe without invented start credit. Subsequent samples record health.
+Combined-graph predecessor references come from the worker's own latest acknowledged
+fresh probes. Original intents, known M3 history and mirrored events are rechecked.
+
+The coordinator performs no storage I/O in this path. It accepts only its exact
+current original observation/handle and validates the closed public reply against
+claim, run/unit/generation/session, actions, clocks, source references, dependencies,
+causation and global ordinals. LifecycleReceipt holds immutable public bytes and
+never transfers execution authority or claims complete lifecycle coverage.
+Storage failure, hung writes or lost acknowledgements close starts; retained normal
+records remain factual partial evidence and C1 cleanup stays independent.
+
+See ADR-ML3-OUTCOMES-0001.md, unit-specification-outcomes12.md,
+outcomes-expected.json, review-outcomes12.md and evidence/outcomes12/.
+The inherited private framing still caps a session at 128 requests; full scheduling
+admission must budget requests and events. Automatic tick/health scheduling, missing-
+observation failure/disposition records, normal stop/cleanup and reverse teardown,
+restart/recovery, U7 dual coverage/U8, full bootstrap/admission/M1/runtime validation,
+independent full review and acceptance remain open. No factory or experiment run.
 
 ## Process readiness and dependency candidate (PROVIDER11)
 

@@ -214,7 +214,7 @@ def test_sampled_health_loss_invalidates_ready(boot_stack):
 
 def test_expired_actual_reply_cannot_be_reused(boot_stack, monkeypatch):
     facade, owner, descriptor, launcher, handle, gate, original = runtime(
-        boot_stack, freshness=0.01
+        boot_stack, freshness=0.5
     )
     assert facade.start(descriptor.unit_id, descriptor, gate, original).ready
     b, lb, hb, gb = second(boot_stack, owner, original)

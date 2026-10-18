@@ -231,7 +231,16 @@ def _decode(data):
         or type(frame["version"]) is not int
         or frame["version"] != 1
         or frame["kind"]
-        not in {"hello", "init", "commit", "revalidate", "abort", "ok", "error"}
+        not in {
+            "hello",
+            "init",
+            "commit",
+            "revalidate",
+            "probe",
+            "abort",
+            "ok",
+            "error",
+        }
         or type(frame["sequence"]) is not int
         or not 0 <= frame["sequence"] <= 128
         or type(frame["deadline"]) is not int
@@ -363,6 +372,8 @@ class PersistenceClient(_Original):
         self._lock = threading.Lock()
         self._failed, self._aborted, self._ready = False, False, False
         self._claims, self._attempted = {}, set()
+        self._probe_receipts, self._probe_attempted = {}, set()
+        self._evidence_sequence = self._evidence_ordinal = self._evidence_m3 = 0
         self._drain_deadline = None
         self._term_sent = self._kill_sent = False
         self._drained = None
@@ -559,6 +570,78 @@ class PersistenceClient(_Original):
         if body != {}:
             self._fail()
             raise PersistenceError("ML-PERSIST-REVALIDATE-ACK")
+
+    def probe_receipt(self, unit_id):
+        self._holder()
+        return self._probe_receipts.get(unit_id)
+
+    def record_probe(self, facade, observed, deadline):
+        from .providers import ProcessReadiness, ReadinessObservation
+        from .lifecycle_evidence import LifecycleReceipt, validate_receipt
+        from .owner import _hash
+
+        self._available()
+        if (
+            type(facade) is not ProcessReadiness
+            or type(observed) is not ReadinessObservation
+        ):
+            raise PersistenceError("ML-EVIDENCE-ORIGINAL")
+        facade._holder()
+        binding = facade._bound(observed.unit_id)
+        key = observed.unit_id, observed.sequence
+        if (
+            facade._owner.persistence is not self
+            or facade._observations.get(observed.unit_id) is not observed
+            or observed.unit_id not in facade._released
+            or observed.host_session != self.session
+            or observed.generation != binding.launcher.recipe.descriptor.generation
+            or observed.handle_digest != _hash(asdict(binding.handle)).hex()
+            or key in self._probe_attempted
+        ):
+            raise PersistenceError("ML-EVIDENCE-ORIGINAL")
+        claim = facade._owner._claims[observed.unit_id].receipt
+        if self._claims.get(id(claim)) is not claim:
+            raise PersistenceError("ML-EVIDENCE-CLAIM")
+        self._probe_attempted.add(key)
+        operation, _, body = self._rpc(
+            "probe",
+            {
+                "unit": observed.unit_id,
+                "claim": claim.operation,
+                "generation": observed.generation,
+                "handle": asdict(binding.handle),
+                "sample_sequence": observed.sequence,
+                "session": observed.host_session,
+                "observed_at": observed.observed_at,
+                "ready": observed.ready,
+                "freshness": facade._policies[observed.unit_id].freshness_seconds,
+            },
+            deadline,
+        )
+        try:
+            validate_receipt(
+                body,
+                facade,
+                observed,
+                claim,
+                operation,
+                self._probe_receipts.get(observed.unit_id),
+            )
+            receipt = LifecycleReceipt(
+                observed.unit_id,
+                observed.sequence,
+                tuple(e["eventId"] for e in body["events"]),
+                tuple(body["m3_sequences"]),
+                canonical_bytes(body["events"]),
+            )
+            self._probe_receipts[observed.unit_id] = receipt
+            self._evidence_sequence = body["events"][-1]["producerSequence"]
+            self._evidence_ordinal = body["events"][-1]["ingestionOrdinal"]
+            self._evidence_m3 = body["m3_sequences"][-1]
+            return receipt
+        except Exception:
+            self._fail()
+            raise
 
     def abort(self, deadline):
         self._holder()

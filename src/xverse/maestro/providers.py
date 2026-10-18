@@ -276,6 +276,8 @@ class ProcessReadiness(_Original):
             bool(observed.running),
         )
         self._observations[unit_id] = value
+        self._owner.persistence.record_probe(self, value, deadline)
+        self._check(deadline)
         return value
 
     def _fresh(self, unit_id):
