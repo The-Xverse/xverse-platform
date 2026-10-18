@@ -15,11 +15,11 @@ import signal
 import socket
 import stat
 import struct
-import subprocess
 import threading
 import time
 
 from xverse_xdl.lifecycle import OwnedResourceHandle
+from .child import check_child, open_child_pidfd, wait_child
 from .owner import (
     OwnerError,
     ReleaseOwner,
@@ -154,7 +154,7 @@ class LaunchRecipe:
 def make_launch_recipe(
     owner, descriptor, *, environment, helper_artifact_digest, deadline
 ):
-    """Pure recipe after a genuine registered intent; no file lookup or process."""
+    """Observe original C1 and derive a recipe; delegate executable/cwd lookup."""
     if (
         type(owner) is not ReleaseOwner
         or type(descriptor) is not BoundaryDescriptor
@@ -323,9 +323,9 @@ class CatalogLauncher(_Original):
     def __init__(
         self, process, channel, owner, recipe, *, helper_artifact_digest, deadline
     ):
+        check_child(process, live=True)
         if (
-            type(process) is not subprocess.Popen
-            or type(channel) is not socket.socket
+            type(channel) is not socket.socket
             or type(owner) is not ReleaseOwner
             or type(recipe) is not LaunchRecipe
         ):
@@ -374,7 +374,7 @@ class CatalogLauncher(_Original):
         self._drain_end = None
         channel.setblocking(False)
         try:
-            self._pidfd = os.pidfd_open(process.pid, 0)
+            self._pidfd = open_child_pidfd(process)
             self._live()
             reply, fd = self._receive(_deadline(deadline, owner.session), 1)
             try:
@@ -420,6 +420,7 @@ class CatalogLauncher(_Original):
 
     def _live(self):
         self._holder()
+        check_child(self._pins[0], live=True)
         info = os.fstat(self._pins[1].fileno())
         if (info.st_dev, info.st_ino) != self._socket_identity:
             raise LauncherError("ML-LAUNCH-SOCKET-REPLACED")
@@ -431,8 +432,7 @@ class CatalogLauncher(_Original):
         ):
             raise LauncherError("ML-LAUNCH-CLOSED")
         if (
-            os.waitid(os.P_PIDFD, self._pidfd, os.WEXITED | os.WNOHANG | os.WNOWAIT)
-            is not None
+            wait_child(self._pins[0], self._pidfd) is not None
             or select.select([self._pidfd], [], [], 0)[0]
         ):
             raise LauncherError("ML-LAUNCH-ISSUER")
@@ -672,7 +672,7 @@ class CatalogLauncher(_Original):
         self._drain_end = min(self._drain_end or until, until)
         while True:
             try:
-                result = os.waitid(os.P_PIDFD, self._pidfd, os.WEXITED | os.WNOHANG)
+                result = wait_child(self._pins[0], self._pidfd, consume=True)
             except OSError:
                 self._drained = LauncherDrain(
                     False, False, True, "ML-LAUNCH-WAIT-UNRESOLVED"

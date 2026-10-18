@@ -14,7 +14,6 @@ import select
 import socket
 import stat
 import struct
-import subprocess
 import threading
 import time
 import uuid
@@ -22,6 +21,7 @@ import uuid
 from xverse.argus.schema import canonical_bytes
 from xverse.argus.writer import EvidenceRun
 from xverse.argus.planbinding import plan_identity
+from .child import check_child, open_child_pidfd, wait_child
 from .admission import PermitSession
 from .fence import GatePacket
 from .prbc import BoundaryDescriptor, ProcessBoundaryOps
@@ -92,11 +92,8 @@ class GateConnection(_Original):
         boundaries=None,
         descriptor=None,
     ):
-        if (
-            type(process) is not subprocess.Popen
-            or type(channel) is not socket.socket
-            or type(latch) is not CancellationLatch
-        ):
+        check_child(process, live=True)
+        if type(channel) is not socket.socket or type(latch) is not CancellationLatch:
             raise OwnerError("ML-OWNER-GATE-INPUT")
         if (
             channel.family != socket.AF_UNIX
@@ -134,7 +131,7 @@ class GateConnection(_Original):
         self._lock = threading.Lock()
         channel.setblocking(False)
         try:
-            self._pidfd = os.pidfd_open(process.pid, 0)
+            self._pidfd = open_child_pidfd(process)
             self._live()
             response = self._receive(_deadline(deadline, self.host_session))
             if response != GatePacket(16, 0, lease_ns, scope, epoch):
@@ -148,6 +145,7 @@ class GateConnection(_Original):
 
     def _live(self):
         self._holder()
+        check_child(self._process_pin, live=True)
         if (
             self.channel is not self._channel_pin
             or self.process is not self._process_pin
@@ -173,10 +171,7 @@ class GateConnection(_Original):
             raise OwnerError("ML-OWNER-GATE-IDENTITY")
         if self.latch.cancelled or select.select([self._pidfd], [], [], 0)[0]:
             raise OwnerError("ML-OWNER-GATE-CLOSED")
-        if (
-            os.waitid(os.P_PID, self._process_pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
-            is not None
-        ):
+        if wait_child(self._process_pin, self._pidfd) is not None:
             raise OwnerError("ML-OWNER-GATE-PARENT")
 
     def _receive(self, until):

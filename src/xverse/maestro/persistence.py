@@ -20,12 +20,12 @@ import signal
 import socket
 import stat
 import struct
-import subprocess
 import threading
 import time
 import uuid
 
 from xverse.argus.schema import canonical_bytes
+from .child import check_child, open_child_pidfd, wait_child, signal_child
 from .admission import _verify_prepared, validate_permits
 from .owner import OwnerError, _Original, _deadline, _pin
 from .projection import prepare_lifecycle
@@ -318,9 +318,9 @@ class PersistenceClient(_Original):
     """Original-child authority; actual creation/pins supplied by trusted bootstrap."""
 
     def __init__(self, process, channel, config, latch, *, deadline):
+        check_child(process, live=True)
         if (
-            type(process) is not subprocess.Popen
-            or type(channel) is not socket.socket
+            type(channel) is not socket.socket
             or type(config) is not PersistenceInput
             or type(latch) is not CancellationLatch
         ):
@@ -369,7 +369,7 @@ class PersistenceClient(_Original):
         self.last_writer_state = "unknown"
         channel.setblocking(False)
         try:
-            self._pidfd = os.pidfd_open(process.pid, 0)
+            self._pidfd = open_child_pidfd(process)
             self._live()
             hello = _receive(channel, self._peer, self._until(deadline), self._live)
             if hello != _frame("hello", 0, "", 0, self._scope, {}):
@@ -417,6 +417,7 @@ class PersistenceClient(_Original):
 
     def _live(self, *, allow_cancel=False, allow_exit=False):
         self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
         channel = self._pins[1]
         info = os.fstat(channel.fileno())
         if (
@@ -425,9 +426,7 @@ class PersistenceClient(_Original):
             or (info.st_dev, info.st_ino) != self._socket_identity
         ):
             raise PersistenceError("ML-PERSIST-CHILD")
-        exited = os.waitid(
-            os.P_PIDFD, self._pidfd, os.WEXITED | os.WNOHANG | os.WNOWAIT
-        )
+        exited = wait_child(self._pins[0], self._pidfd)
         if not allow_exit and (
             exited is not None or select.select([self._pidfd], [], [], 0)[0]
         ):
@@ -464,7 +463,7 @@ class PersistenceClient(_Original):
             pass
         if self._pidfd >= 0 and not self._term_sent:
             try:
-                signal.pidfd_send_signal(self._pidfd, signal.SIGTERM)
+                signal_child(self._pins[0], self._pidfd, signal.SIGTERM)
                 self._term_sent = True
             except ProcessLookupError:
                 pass
@@ -587,7 +586,7 @@ class PersistenceClient(_Original):
         kill_at = min(time.monotonic_ns() + 100_000_000, self._drain_deadline)
         while True:
             try:
-                result = os.waitid(os.P_PIDFD, self._pidfd, os.WEXITED | os.WNOHANG)
+                result = wait_child(self._pins[0], self._pidfd, consume=True)
             except OSError:
                 self._drained = PersistenceDrain(
                     False, True, None, "ML-PERSIST-WAIT-UNRESOLVED"
@@ -610,7 +609,7 @@ class PersistenceClient(_Original):
                 return self._drained
             if now >= kill_at and not self._kill_sent:
                 try:
-                    signal.pidfd_send_signal(self._pidfd, signal.SIGKILL)
+                    signal_child(self._pins[0], self._pidfd, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
                 self._kill_sent = True

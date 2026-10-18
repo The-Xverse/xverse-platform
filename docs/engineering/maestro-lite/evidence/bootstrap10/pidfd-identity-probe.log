@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_foreign_pidfd_replacement_must_not_retain_supervisor_liveness ______
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7c0e3d844c20>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-858/test_foreign_pidfd_replacement0/work'), <function boot_stack.<locals>.boundary at 0x7c0e3db97880>, ...)
+
+    def test_foreign_pidfd_replacement_must_not_retain_supervisor_liveness(boot_stack):
+        session, *_ = boot_stack
+        child, channel, _, _ = raw_storage(boot_stack)
+        original = os.dup(session._pidfd)
+        try:
+            root_info, child_info = os.fstat(session._pidfd), os.fstat(child._fd)
+            assert (root_info.st_dev, root_info.st_ino) == (child_info.st_dev, child_info.st_ino)
+            os.dup2(child._fd, session._pidfd)
+>           with pytest.raises(ValueError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+/tmp/test_bootstrap_pidfd_probe.py:17: Failed
+=========================== short test summary info ============================
+FAILED ../../../../tmp/test_bootstrap_pidfd_probe.py::test_foreign_pidfd_replacement_must_not_retain_supervisor_liveness
+1 failed in 1.47s

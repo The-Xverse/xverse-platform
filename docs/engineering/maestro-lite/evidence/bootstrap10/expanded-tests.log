@@ -1,0 +1,75 @@
+..........E.........                                                     [100%]
+==================================== ERRORS ====================================
+___ ERROR at setup of test_expired_native_lease_rejects_renewal[boot_stack0] ___
+
+environment = (<function environment.<locals>.factory at 0x727b94192200>, <function environment.<locals>.spawn at 0x727b94193100>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-845/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-845/catalog-launcher-native0/workload')}
+supervisor_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-845/bootstrap-native0/bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-845/test_expired_native_lease_reje0')
+request = <SubRequest 'boot_stack' for <Function test_expired_native_lease_rejects_renewal[boot_stack0]>>
+
+    @pytest.fixture
+    def boot_stack(environment, binaries, supervisor_binary, tmp_path, request):
+        options = getattr(request, "param", {})
+        factory, spawn, root = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, helper_pin, work = configured(tmp_path, manager, binaries)
+        images = tuple(
+            seal_helper_image(
+                source,
+                digest="sha256:" + hashlib.sha256(source.read_bytes()).hexdigest(),
+                argv0=argv0,
+            )
+            for source, argv0 in (
+                (binaries["launcher"], str(binaries["launcher"])),
+                (binaries["bound-gate"], str(binaries["bound-gate"])),
+                (Path(sys.executable).resolve(), sys.executable),
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + hashlib.sha256(b"owned-test-environment").hexdigest(),
+            "sha256:" + hashlib.sha256(supervisor_binary.read_bytes()).hexdigest(),
+            manager._admission.teardown_deadline,
+            deadline(options.get("lease_seconds", 4.9)),
+            images,
+        )
+        data = encode_bootstrap(admission)
+        input_fd = sealed_bootstrap_fd(data)
+        parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(supervisor_binary), str(peer.fileno()), str(input_fd)],
+            pass_fds=(peer.fileno(), input_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(input_fd)
+>       session = BootstrapSession(
+            process, parent, data, manager, latch, deadline=deadline()
+        )
+
+tests/thesis_lite/maestro/test_bootstrap.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:419: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                                ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x727b94fa1ba0>
+deadline = HostDeadline(session='host-session', monotonic_seconds=912777.535400957)
+
+    def _until(self, deadline):
+        until = _deadline(deadline, self.session)
+        if until > self._lease or until > self._generation - 2_000_000_000:
+>           raise BootstrapError("ML-BOOT-DEADLINE")
+E           xverse.maestro.bootstrap.BootstrapError: ML-BOOT-DEADLINE
+
+src/xverse/maestro/bootstrap.py:478: BootstrapError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_bootstrap.py::test_expired_native_lease_rejects_renewal[boot_stack0]
+19 passed, 1 error in 9.61s

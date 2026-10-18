@@ -4,6 +4,51 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4; not accepted; n
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Supervised helper bootstrap candidate (BOOTSTRAP10)
+
+The externally admitted runner supplies one genuine native bootstrap supervisor,
+its private seqpacket socket, sealed input and three sealed helper images. Runtime
+BootstrapSession methods create persistence, catalog-launcher and C1-bound gate
+helpers through bounded native requests, without coordinator Popen. Each helper
+is born frozen in an original, separately registered helper C1. Its actual clone
+pidfd and original direct-parent wait authority are retained before a separate
+one-use helper activation. Helper activation never thaws the workload C1.
+
+Build native/bootstrap.c explicitly with C11 and OpenSSL 3 libcrypto; installation
+and imports never build or execute it. BC10 binds original run/lifecycle/approval/
+environment/supervisor pin and three helper image/argv0 pins. Native initialization
+independently verifies image seals and hashes. seal_helper_image, input sealing,
+initial native Popen, root registration, interpreter/site/library/environment
+admission and exclusive original-parent wait ownership belong to the external
+supervised admission path. Approval fields are not an authentication service.
+
+BS10 birth/activation share one original deadline. Cancel bypasses the normal lock;
+native expiry/owner loss/EOF prevents further helper insertion, kills exact helper
+pidfds and refreezes retained workload C1 after helper exit. Original Python C1
+separately terminates/observes/releases workload and helper trees. BootstrapChild
+is an original native-issued capability, not a synthetic Popen; client and bootstrap
+drain share one actual wait result. Legacy genuine-Popen clients remain supported.
+Late genuine birth ACKs retain cleanup-only pidfds. An unrecoverable birth ACK stays
+unresolved; no PID/name recovery or broad wait is attempted. External controller
+supervision remains required across that gap and arbitrary kernel stalls.
+
+Use BootstrapAdmission/encode_bootstrap only with externally approved, hash-bound
+facts. The original C1 manager/latch/run/deadline/approval must match registration.
+Pre-register a separate empty frozen helper BoundaryDescriptor before each request.
+The fixed role adapters are persistence(config, helper, deadline), catalog(owner,
+recipe, helper, deadline), and gate(owner, unit, helper, deadline, lease_ns=...).
+Keep request deadlines and gate lease inside the current root lease. Renew before
+expiry, within the original generation; renewal cannot revive an expired issuer.
+After cancellation, drain typed clients and bootstrap with the original pidfds,
+then independently verify C1 cleanup. Preserve unresolved wait/birth/freeze facts.
+
+See ADR-ML3-BOOTSTRAP-0001.md, unit-specification-bootstrap10.md, bootstrap-expected.json,
+the separate review, verify-bootstrap10.py and evidence/bootstrap10/. Launcher
+finding 10 is corrected: recipe construction observes C1 and is not globally pure.
+Full original-owner/guard-loss/M1, provider facade/readiness/dependency scheduling,
+reverse lifecycle/recovery/normal outcomes, U7/U8, admission/source gates and all
+nine runtime cases remain open. No readiness, acceptance or main merge is implied.
+
 ## Catalog launcher candidate (LAUNCHER9)
 
 The successor composes real process-kind XDL/catalog actions, genuine M3/Argus
@@ -315,3 +360,9 @@ and evidence/persistence8/. verify-persistence8.py checks the exact installed wh
 full platform suite, copied consumers, all recorded helper/peer groups and partial
 trace. Full bootstrap/launcher, ordinary handles/readiness, reverse lifecycle teardown,
 restart/recovery, complete U7/U8 and the nine actual-runtime cases remain open.
+
+BOOTSTRAP10 v3 requires own-process KCMP_FILE for exact pidfd open-file-description
+checks. The registered root/child keeps a distinct private original duplicate; all
+signals/waits/duplicates use it. Inode equality is not a pidfd identity check on
+Linux 6.8. Comparison denial/unsupported hosts reject admission without fallback.
+This bundle tests x86-64; other architecture/environment admission remains external.
