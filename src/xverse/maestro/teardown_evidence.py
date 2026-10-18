@@ -174,6 +174,7 @@ class TeardownJournal:
                 phase == "cleanup" and state["cleaned"]
             ):
                 raise PersistenceError("ML-TEARDOWN-RECORD-ORDER")
+        self.evidence.reserve_event(claims)
         before = self.evidence._history(claims)
         self.evidence._mirrors(claims)
         check(deadline)

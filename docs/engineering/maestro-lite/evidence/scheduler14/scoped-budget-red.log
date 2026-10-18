@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_short_scoped_window_retains_emergency_c1_reserve _____________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x765ed0185940>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-915/test_short_scoped_window_retai0/work'), <function boot_stack.<locals>.boundary at 0x765ed0157240>, ...)
+
+    def test_short_scoped_window_retains_emergency_c1_reserve(boot_stack):
+        import fcntl
+        import os
+        from .test_provider import runtime
+    
+        facade, owner, descriptor, launcher, handle, gate, original = runtime(boot_stack)
+        lock = os.open(boot_stack[4].parent / "m3.jsonl.lock", os.O_RDWR)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            until = deadline(0.5)
+            result = ReverseTeardown(facade, per_unit_seconds=1).phase(
+                descriptor.unit_id, "stop", until
+            )
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+            os.close(lock)
+        assert result.emergency and not result.normal_records_complete
+>       assert result.boundary_released
+E       AssertionError: assert False
+E        +  where False = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1...se, boundary_released=False, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').boundary_released
+
+tests/thesis_lite/maestro/test_schedule_worker.py:253: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_short_scoped_window_retains_emergency_c1_reserve
+1 failed in 2.59s

@@ -1,0 +1,23 @@
+F.........................                                               [100%]
+=================================== FAILURES ===================================
+____ test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions ____
+
+request = <FixtureRequest for <Function test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2568e6ba80>
+
+    def test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        bounds = ends(driver)
+        result = driver.run(*bounds)
+>       assert result.execution_succeeded and result.terminal_recorded, result
+E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='8075ace56432a38e11c754813862b24d1566579436240048c5b4600d95f6050...nostic='ML-SCHEDULE-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False)
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='8075ace56432a38e11c754813862b24d1566579436240048c5b4600d95f6050...nostic='ML-SCHEDULE-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_dispatcher.py:129: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions
+1 failed, 25 passed in 8.57s

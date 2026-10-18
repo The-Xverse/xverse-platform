@@ -34,6 +34,7 @@ from .time import HostDeadline
 
 MAX_CONFIG = 1 << 20
 MAX_PACKET = 1 << 16
+MAX_REQUESTS = 8192
 SEALS = fcntl.F_SEAL_WRITE | fcntl.F_SEAL_GROW | fcntl.F_SEAL_SHRINK | fcntl.F_SEAL_SEAL
 
 
@@ -86,6 +87,7 @@ class PersistenceInput:
     private_bytes: bytes = field(repr=False)
     result: object = field(repr=False)
     resources: tuple = field(repr=False)
+    schedule: object = field(default=None, repr=False)
 
 
 def encode_configuration(
@@ -100,6 +102,7 @@ def encode_configuration(
     generation_deadline,
     journal_path,
     evidence_root,
+    schedule=None,
 ):
     """Pure private bootstrap serialization, not approval or worker creation."""
     if (
@@ -169,11 +172,28 @@ def encode_configuration(
         "bindings": [_plain(asdict(b)) for b in bindings],
         "approvals": [_plain(asdict(a)) for a in approvals],
     }
+    if schedule is not None:
+        from .schedule_plan import ScheduleAdmission, decode_schedule
+
+        if (
+            type(schedule) is not ScheduleAdmission
+            or decode_schedule(prepared, _strict_json(schedule.canonical_bytes))
+            != schedule
+        ):
+            raise PersistenceError("ML-PERSIST-SCHEDULE")
+        data["schedule"] = _strict_json(schedule.canonical_bytes)
     encoded = canonical_bytes(data)
     if len(encoded) > MAX_CONFIG:
         raise PersistenceError("ML-PERSIST-CONFIG-LIMIT")
     return PersistenceInput(
-        prepared, run_id, session, generation_ns, encoded, result, tuple(resources)
+        prepared,
+        run_id,
+        session,
+        generation_ns,
+        encoded,
+        result,
+        tuple(resources),
+        schedule,
     )
 
 
@@ -238,12 +258,14 @@ def _decode(data):
             "revalidate",
             "probe",
             "teardown",
+            "tick",
+            "schedule",
             "abort",
             "ok",
             "error",
         }
         or type(frame["sequence"]) is not int
-        or not 0 <= frame["sequence"] <= 128
+        or not 0 <= frame["sequence"] <= MAX_REQUESTS
         or type(frame["deadline"]) is not int
         or frame["deadline"] < 0
         or type(frame["operation"]) is not str
@@ -343,7 +365,19 @@ class PersistenceClient(_Original):
         ):
             raise PersistenceError("ML-PERSIST-SOCKET")
         _verify_prepared(config.prepared, config.result, config.resources)
+        serialized = _strict_json(config.private_bytes)
+        self.schedule = None
+        if "schedule" in serialized:
+            from .schedule_plan import decode_schedule
+
+            self.schedule = decode_schedule(config.prepared, serialized["schedule"])
+        if self.schedule != config.schedule:
+            raise PersistenceError("ML-PERSIST-SCHEDULE")
+        self._request_limit = self.schedule.request_limit if self.schedule else 128
+        self._schedule_pin = self.schedule, self._request_limit
         self._resources = config.resources
+        self._result_input = config.result
+        self._input_pins = self._resources, self._result_input
         self._execution_ids = {
             b["unit_id"]: b["execution_id"]
             for b in _strict_json(config.private_bytes)["bindings"]
@@ -377,6 +411,9 @@ class PersistenceClient(_Original):
         self._evidence_sequence = self._evidence_ordinal = self._evidence_m3 = 0
         self._teardown_sequence = 0
         self._teardown_receipts, self._teardown_attempted = {}, set()
+        self._schedule_used = {}
+        self._schedule_sequence = 0
+        self._schedule_last_event = None
         self._drain_deadline = None
         self._term_sent = self._kill_sent = False
         self._drained = None
@@ -389,12 +426,18 @@ class PersistenceClient(_Original):
             if hello != _frame("hello", 0, "", 0, self._scope, {}):
                 raise PersistenceError("ML-PERSIST-HELLO")
             _, _, facts = self._rpc("init", {}, deadline)
-            if facts != {
+            expected = {
                 "run_id": self.run_id,
                 "lifecycle_digest": self.prepared.lifecycle_digest,
                 "session": self.session,
                 "generation_ns": self.generation_ns,
-            }:
+            }
+            if self.schedule is not None:
+                expected.update(
+                    schedule_digest=self.schedule.digest,
+                    request_limit=self._request_limit,
+                )
+            if facts != expected:
                 raise PersistenceError("ML-PERSIST-INIT-ACK")
             self._ready = True
             self.last_writer_state = "open"
@@ -413,6 +456,16 @@ class PersistenceClient(_Original):
 
     def _holder(self):
         super()._holder()
+        if (
+            self._resources is not self._input_pins[0]
+            or self._result_input is not self._input_pins[1]
+        ):
+            raise PersistenceError("ML-PERSIST-INPUT-REPLACED")
+        if (
+            self.schedule is not self._schedule_pin[0]
+            or self._request_limit != self._schedule_pin[1]
+        ):
+            raise PersistenceError("ML-PERSIST-SCHEDULE-REPLACED")
         current = (
             self.process,
             self.channel,
@@ -485,10 +538,14 @@ class PersistenceClient(_Original):
     def _rpc(self, kind, body, deadline):
         if not self._lock.acquire(blocking=False):
             raise PersistenceError("ML-PERSIST-CONFLICT")
-        allow_cancel = kind == "abort"
+        allow_cancel = kind == "abort" or (
+            kind == "schedule"
+            and body.get("kind")
+            in ("failure", "step-disposition", "unit-disposition", "run-terminal")
+        )
 
         def check():
-            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+            return self._live(allow_cancel=allow_cancel, allow_exit=kind == "abort")
 
         try:
             self._live(allow_cancel=allow_cancel)
@@ -498,7 +555,7 @@ class PersistenceClient(_Original):
                     raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
                 self._attempted.add(body["unit"])
             sequence = self._sequence + 1
-            if sequence > 128:
+            if sequence > self._request_limit:
                 raise PersistenceError("ML-PERSIST-SEQUENCE")
             operation = "ml-" + uuid.uuid4().hex
             request = _frame(kind, sequence, operation, until, self._scope, body)
@@ -642,6 +699,36 @@ class PersistenceClient(_Original):
             self._evidence_ordinal = body["events"][-1]["ingestionOrdinal"]
             self._evidence_m3 = body["m3_sequences"][-1]
             return receipt
+        except Exception:
+            self._fail()
+            raise
+
+    def schedule_call(self, dispatcher, statement, deadline):
+        from .dispatcher import FiniteDispatcher, _Statement, validate_schedule_reply
+
+        self._holder()
+        if (
+            type(dispatcher) is not FiniteDispatcher
+            or type(statement) is not _Statement
+        ):
+            raise PersistenceError("ML-SCHEDULE-ORIGINAL")
+        dispatcher._holder()
+        if (
+            dispatcher.client is not self
+            or dispatcher._active is not statement
+            or id(statement) in self._schedule_used
+            or self._aborted
+            or not self._ready
+        ):
+            raise PersistenceError("ML-SCHEDULE-ORIGINAL")
+        self._schedule_used[id(statement)] = statement
+        request = _strict_json(statement.request_bytes)
+        operation, _, reply = self._rpc(statement.channel_kind, request, deadline)
+        try:
+            validate_schedule_reply(
+                reply, request, dispatcher, operation, statement.channel_kind
+            )
+            return reply
         except Exception:
             self._fail()
             raise

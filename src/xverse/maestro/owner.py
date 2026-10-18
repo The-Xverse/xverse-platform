@@ -268,6 +268,30 @@ class GateConnection(_Original):
         finally:
             self._lock.release()
 
+    def renew(self, lease, deadline):
+        """Renew only the original native lease, before its previous expiry."""
+        self._live()
+        next_lease = _deadline(lease, self.host_session)
+        if (
+            next_lease <= self.lease_ns
+            or next_lease - time.monotonic_ns() > 5_000_000_000
+        ):
+            raise OwnerError("ML-OWNER-GATE-LEASE")
+        packet = GatePacket(1, self._sequence + 1, next_lease, self.scope, self.epoch)
+        response = self.exchange(packet, 17, deadline)
+        if response != replace(packet, kind=17):
+            self.cancel("gate-renewal-uncertain")
+            raise OwnerError("ML-OWNER-GATE-LEASE-ACK")
+        self.lease_ns = next_lease
+        self._config_pin = (
+            self.scope,
+            self.epoch,
+            next_lease,
+            self.artifact_digest,
+            self.host_session,
+        )
+        return HostDeadline(self.host_session, next_lease / 1e9)
+
     def cancel(self, reason="owner-cancel"):
         self._holder()
         self._latch_pin.cancel(reason)
@@ -491,6 +515,7 @@ class ReleaseOwner(_Original):
         self._launchers = {}
         self._lock = threading.Lock()
         self._closed = False
+        self._dispatch_owner = self._dispatch_thread = None
 
     @classmethod
     def from_persistence(cls, client, supervisor, latch):
@@ -527,6 +552,7 @@ class ReleaseOwner(_Original):
         owner._claims, owner._attempted, owner._gates = {}, set(), []
         owner._launchers = {}
         owner._lock, owner._closed = threading.Lock(), False
+        owner._dispatch_owner = owner._dispatch_thread = None
         return owner
 
     def _stage_claim(self, unit_id, deadline):
@@ -571,8 +597,17 @@ class ReleaseOwner(_Original):
         else:
             self.persistence.revalidate_intent(claim.receipt, deadline)
 
+    def _dispatch_access(self):
+        self._holder()
+        if (
+            self._dispatch_owner is not None
+            and self._dispatch_thread != threading.get_ident()
+        ):
+            raise OwnerError("ML-OWNER-CONFLICT")
+
     def _check(self, deadline):
         self._holder()
+        self._dispatch_access()
         if any(
             a is not b
             for a, b in zip(

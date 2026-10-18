@@ -76,6 +76,13 @@ class _Binding:
     handle: OwnedResourceHandle
 
 
+@dataclass(frozen=True)
+class _ProbeFailure:
+    unit_id: str
+    host_session: str
+    observed_at: float
+
+
 _CREATE = object()
 
 
@@ -172,6 +179,7 @@ class ProcessReadiness(_Original):
         self._released, self._attempted = set(), set()
         self._state_pins = self._released, self._attempted
         self._sequence, self._guard = 0, None
+        self._probe_failure = None
         self._lock = threading.Lock()
 
     def _holder(self):
@@ -211,6 +219,7 @@ class ProcessReadiness(_Original):
 
     def bind(self, launcher, handle):
         self._holder()
+        self._owner._dispatch_access()
         if (
             type(launcher) is not CatalogLauncher
             or type(handle) is not OwnedResourceHandle
@@ -234,6 +243,16 @@ class ProcessReadiness(_Original):
             self._lock.release()
 
     def _query(self, unit_id, deadline):
+        try:
+            return self._query_original(unit_id, deadline)
+        except Exception:
+            if unit_id in self._policies:
+                self._probe_failure = _ProbeFailure(
+                    unit_id, self._pins[2], time.monotonic()
+                )
+            raise
+
+    def _query_original(self, unit_id, deadline):
         until = self._check(deadline)
         if unit_id not in self._released:
             raise ReadinessError("ML-PROBE-UNRELEASED")
@@ -312,6 +331,7 @@ class ProcessReadiness(_Original):
         if not self._lock.acquire(blocking=False):
             raise ReadinessError("ML-PROBE-CONFLICT")
         try:
+            self._probe_failure = None
             if unit_id not in self._policies or unit_id in self._attempted:
                 raise ReadinessError("ML-PROBE-START")
             binding = self._bound(unit_id)
@@ -359,6 +379,7 @@ class ProcessReadiness(_Original):
         if not self._lock.acquire(blocking=False):
             raise ReadinessError("ML-PROBE-CONFLICT")
         try:
+            self._probe_failure = None
             values = []
             for unit_id in self._prepared.resource_order:
                 if unit_id not in self._released:
@@ -382,14 +403,18 @@ class ProcessReadiness(_Original):
     @property
     def next_health_deadline(self):
         self._holder()
-        if self._owner.latch.cancelled or not self._observations:
+        if self._owner.latch.cancelled or not self._released:
+            return None
+        deadlines = tuple(
+            value.observed_at + self._policies[unit].cadence_seconds
+            for unit, value in self._observations.items()
+            if unit in self._released
+        )
+        if not deadlines:
             return None
         return HostDeadline(
             self._pins[2],
-            min(
-                value.observed_at + self._policies[unit].cadence_seconds
-                for unit, value in self._observations.items()
-            ),
+            min(deadlines),
         )
 
     def observation(self, unit_id):

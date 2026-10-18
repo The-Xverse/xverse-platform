@@ -96,6 +96,9 @@ class ReverseTeardown(_Original):
         self._intents = {}
         self._receipts = {}
         self._known_reaps = set()
+        self._stopped = {}
+        self._stop_results = {}
+        self._cleaned = {}
         self._result = None
         self._reason = None
 
@@ -156,6 +159,8 @@ class ReverseTeardown(_Original):
             }
         jobs = []
         for unit in self._order():
+            if unit in self._cleaned:
+                continue
             descriptor = entries.get(unit)
             launcher = self._registry.get(unit)
             handle = None
@@ -188,8 +193,10 @@ class ReverseTeardown(_Original):
             self._intents[unit, phase] = receipt
         return receipt
 
-    def _normal(self, job, deadline):
+    def _stop(self, job, deadline):
         unit, descriptor, launcher, handle = job
+        if unit in self._stop_results:
+            return self._stop_results[unit]
         if (
             type(launcher) is not CatalogLauncher
             or type(handle) is not OwnedResourceHandle
@@ -226,6 +233,28 @@ class ReverseTeardown(_Original):
             empty=True,
             force_observed=boundary.termination_observed,
         )
+        self._stopped[unit] = boundary
+        self.facade._released.discard(unit)
+        self.facade._attempted.add(unit)
+        if unit in self.facade._observations:
+            self.facade._observations[unit] = replace(
+                self.facade._observations[unit], ready=False
+            )
+        result = UnitTeardown(unit, 1, True, True, False, False, False, None)
+        self._stop_results[unit] = result
+        return result
+
+    def _cleanup(self, job, deadline):
+        unit, descriptor, launcher, handle = job
+        if unit in self._cleaned:
+            return self._cleaned[unit]
+        if unit not in self._stopped:
+            raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
+        launcher.revalidate_issued(handle)
+        current = self.manager.record(descriptor, deadline=deadline)
+        if current.state != "empty" or not current.identity_retained:
+            raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
+        boundary = self._stopped[unit]
         self._record(unit, "cleanup", "intent", descriptor, handle, deadline)
         released = self.manager.release_empty(descriptor, deadline=deadline)
         if not released.boundary_released or released.residual_count != 0:
@@ -242,7 +271,69 @@ class ReverseTeardown(_Original):
             released=True,
             force_observed=boundary.termination_observed,
         )
-        return UnitTeardown(unit, 1, True, True, True, True, False, None)
+        result = UnitTeardown(unit, 1, True, True, True, True, False, None)
+        self._cleaned[unit] = result
+        return result
+
+    def _normal(self, job, deadline):
+        self._stop(job, deadline)
+        return self._cleanup(job, deadline)
+
+    def phase(self, unit, phase, deadline):
+        """One original scoped stop or cleanup; other units retain admission."""
+        self._holder()
+        self.owner._dispatch_access()
+        if (
+            type(unit) is not str
+            or type(phase) is not str
+            or phase not in ("stop", "cleanup")
+        ):
+            raise TeardownError("ML-TEARDOWN-PHASE")
+        cache = self._stop_results if phase == "stop" else self._cleaned
+        self._deadline(deadline, cached=unit in cache)
+        if unit in cache:
+            return cache[unit]
+        if self._result is not None or self.owner._closed or self.owner.latch.cancelled:
+            raise TeardownError("ML-TEARDOWN-CLOSED")
+        if not self._lock.acquire(False):
+            raise TeardownError("ML-TEARDOWN-CONFLICT")
+        locks = []
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise TeardownError("ML-TEARDOWN-CONFLICT")
+                locks.append(lock)
+            jobs = self._jobs(deadline)
+            job = next((j for j in jobs if j[0] == unit), None)
+            if job is None:
+                raise TeardownError("ML-TEARDOWN-NO-HANDLE")
+            if phase == "stop" and any(
+                unit in _parents(self.owner._prepared, other)
+                and other not in self._cleaned
+                for other in self.owner._claims
+                if other != unit
+            ):
+                raise TeardownError("ML-TEARDOWN-DEPENDENTS")
+            if phase == "cleanup" and unit not in self._stopped:
+                raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
+            began = time.monotonic()
+            end = min(deadline.monotonic_seconds, began + self._cap)
+            normal_end = began + 0.6 * (end - began)
+            try:
+                return (self._stop if phase == "stop" else self._cleanup)(
+                    job, HostDeadline(self.session, normal_end)
+                )
+            except (ValueError, OSError):
+                return self._emergency(
+                    job,
+                    HostDeadline(self.session, end),
+                    "ML-TEARDOWN-NORMAL-INCOMPLETE",
+                )
+        finally:
+            self._active = None
+            for lock in reversed(locks):
+                lock.release()
+            self._lock.release()
 
     def _emergency(self, job, deadline, diagnostic):
         unit, descriptor, launcher, handle = job
@@ -291,6 +382,7 @@ class ReverseTeardown(_Original):
 
     def run(self, deadline, *, reason="normal-stop"):
         self._holder()
+        self.owner._dispatch_access()
         if (
             type(reason) is not str
             or not 0 < len(reason) <= 128
@@ -317,11 +409,11 @@ class ReverseTeardown(_Original):
             self.owner._closed = True
             for unit, value in tuple(self.facade._observations.items()):
                 self.facade._observations[unit] = replace(value, ready=False)
-            results = []
+            results = list(self._cleaned.values())
             for job in jobs:
                 began = time.monotonic()
                 unit_end = min(end, began + self._cap)
-                normal_end = min(unit_end, began + self._cap * 0.6)
+                normal_end = began + 0.6 * (unit_end - began)
                 try:
                     if self.owner.latch.cancelled:
                         raise TeardownError("ML-TEARDOWN-CANCELLED")
@@ -344,7 +436,7 @@ class ReverseTeardown(_Original):
                 self.owner._run_id,
                 self.owner._prepared.lifecycle_digest,
                 reason,
-                tuple(results),
+                tuple(sorted(results, key=lambda u: self._order().index(u.unit_id))),
                 True,
             )
             return self._result

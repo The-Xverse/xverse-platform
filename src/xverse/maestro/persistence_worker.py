@@ -20,6 +20,7 @@ from .admission import PermitApproval, PermitBinding, PermitSession, validate_pe
 from .owner import _persist_intent
 from .lifecycle_evidence import OutcomeJournal
 from .teardown_evidence import TeardownJournal
+from .schedule_evidence import ScheduleJournal
 from .persistence import (
     PersistenceError,
     _frame,
@@ -78,6 +79,11 @@ def _load(config, checkpoint):
         or prepared.lifecycle_digest != config["lifecycle_digest"]
     ):
         raise PersistenceError("ML-PERSIST-PREPARATION")
+    schedule = None
+    if "schedule" in config:
+        from .schedule_plan import decode_schedule
+
+        schedule = decode_schedule(prepared, config["schedule"])
     bindings = []
     for row in config["bindings"]:
         row = dict(row)
@@ -122,21 +128,24 @@ def _load(config, checkpoint):
     )
     checkpoint()
     session = config["session"]
+    clocks = {
+        "host": {"domain": "host:" + session, "unit": "s", "value": time.monotonic()},
+        "utc": {"domain": "utc:" + session, "unit": "s", "value": now.timestamp()},
+    }
+    if schedule is not None:
+        clocks["simulation"] = {
+            "domain": prepared.clock.domain,
+            "unit": "tick",
+            "value": 0,
+        }
     writer = EvidenceStore.open_run(
         config["evidence_root"],
         run_id=config["run_id"],
         plan=result.plan,
-        clocks={
-            "host": {
-                "domain": "host:" + session,
-                "unit": "s",
-                "value": time.monotonic(),
-            },
-            "utc": {"domain": "utc:" + session, "unit": "s", "value": now.timestamp()},
-        },
+        clocks=clocks,
     )
     checkpoint()
-    return permits, writer
+    return permits, writer, schedule
 
 
 def serve(channel, input_fd):
@@ -178,7 +187,7 @@ def serve(channel, input_fd):
         config = _strict_json(private)
         if (
             type(config) is not dict
-            or set(config) != CONFIG_KEYS
+            or set(config) not in (CONFIG_KEYS, CONFIG_KEYS | {"schedule"})
             or type(config["version"]) is not int
             or config["version"] != 1
             or type(config["generation_ns"]) is not int
@@ -200,6 +209,9 @@ def serve(channel, input_fd):
         sequence, permits, writer, claims, attempted = 0, None, None, {}, set()
         outcomes = None
         teardown = None
+        schedule = None
+        schedule_journal = None
+        request_limit = 128
 
         def alive():
             if (
@@ -226,11 +238,20 @@ def serve(channel, input_fd):
             request = _receive(channel, peer, end, alive)
             sequence += 1
             if (
-                sequence > 128
+                sequence > request_limit
                 or request["sequence"] != sequence
                 or request["scope"] != scope
                 or request["kind"]
-                not in {"init", "commit", "revalidate", "probe", "teardown", "abort"}
+                not in {
+                    "init",
+                    "commit",
+                    "revalidate",
+                    "probe",
+                    "teardown",
+                    "tick",
+                    "schedule",
+                    "abort",
+                }
                 or not request["operation"].startswith("ml-")
                 or len(request["operation"]) != 35
             ):
@@ -238,11 +259,13 @@ def serve(channel, input_fd):
             deadline = HostDeadline(session, request["deadline"] / 1e9)
             check(deadline)
             kind, body = request["kind"], request["body"]
+            if schedule_journal is not None:
+                schedule_journal.request_sequence = sequence
             try:
                 if kind == "init":
                     if permits is not None or body != {}:
                         raise PersistenceError("ML-PERSIST-INIT")
-                    permits, writer = _load(config, lambda: check(deadline))
+                    permits, writer, schedule = _load(config, lambda: check(deadline))
                     outcomes = OutcomeJournal(permits, writer, config["evidence_root"])
                     teardown = TeardownJournal(outcomes)
                     response = {
@@ -251,9 +274,23 @@ def serve(channel, input_fd):
                         "session": session,
                         "generation_ns": end,
                     }
+                    if schedule is not None:
+                        outcomes.event_limit = schedule.event_limit
+                        schedule_journal = ScheduleJournal(outcomes, schedule, teardown)
+                        request_limit = schedule.request_limit
+                        response.update(
+                            schedule_digest=schedule.digest, request_limit=request_limit
+                        )
                 elif permits is None or writer.writer_state != "open":
                     raise PersistenceError("ML-PERSIST-NOT-OPEN")
+                elif (
+                    schedule_journal is not None
+                    and schedule_journal.closing
+                    and kind not in ("schedule", "abort")
+                ):
+                    raise PersistenceError("ML-SCHEDULE-CLOSING")
                 elif kind == "commit":
+                    outcomes.reserve_event(claims)
                     if (
                         set(body) != {"unit", "generation"}
                         or type(body["generation"]) is not int
@@ -277,6 +314,16 @@ def serve(channel, input_fd):
                         "intent": "sha256:" + claim.intent_digest.hex(),
                         "flush": "sha256:" + claim.flush_digest.hex(),
                     }
+                elif kind in ("tick", "schedule"):
+                    if schedule_journal is None:
+                        raise PersistenceError("ML-SCHEDULE-NOT-ADMITTED")
+                    response = (
+                        schedule_journal.pull(body, deadline, check)
+                        if kind == "tick"
+                        else schedule_journal.record(
+                            body, claims, request["operation"], deadline, check
+                        )
+                    )
                 elif kind == "teardown":
                     response = teardown.record(
                         body, claims, request["operation"], deadline, check

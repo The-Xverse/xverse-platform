@@ -53,6 +53,12 @@ class OutcomeJournal:
         self.history = ()
         self.samples = {}
         self.events = {}
+        self.sequence = 0
+        self.event_limit = 8192
+
+    def reserve_event(self, claims):
+        if len(self.events) + len(claims) >= self.event_limit:
+            raise PersistenceError("ML-SCHEDULE-EVENT-CAPACITY")
 
     def _history(self, claims):
         records = self.permits._journal.records
@@ -248,6 +254,7 @@ class OutcomeJournal:
 
         def mirror(action, outcome, source, causation, probe=False):
             check(deadline)
+            self.reserve_event(claims)
             event_id = operation + "-" + action
             payload = {
                 "schemaVersion": "2.0",
@@ -271,7 +278,7 @@ class OutcomeJournal:
                 "eventId": event_id,
                 "producerId": "maestro.outcomes12",
                 "eventKind": "annotation",
-                "producerSequence": len(self.events) + 1,
+                "producerSequence": self.sequence + 1,
                 "correlationId": self.permits._run_id,
                 "causationId": causation,
                 "clocks": {
@@ -305,6 +312,7 @@ class OutcomeJournal:
             check(deadline)
             fields["ingestionOrdinal"] = ordinal
             self.events[event_id] = fields
+            self.sequence += 1
             emitted.append(fields)
             return event_id
 

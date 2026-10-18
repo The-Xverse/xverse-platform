@@ -445,3 +445,26 @@ tick scheduling, recovery, coverage/collection and admission/runtime remain pend
 All seven full P3 tasks, 24 ML-SR, 18 allocation-only source parents, 30 scenario
 pairs/90 declared endpoints and nine full runtime cases remain open. No factory
 run, main merge, canonical-note edit, scientific protocol or result change.
+
+
+Finite lifecycle dispatcher increment 14 (partial, not accepted):
+[ADR](ADR-ML3-SCHEDULER-0001.md), [unit contract](unit-specification-scheduler14.md),
+[tasks](tasks-scheduler14.md), [read-only findings](review-scheduler14.md), and
+[evidence](evidence/scheduler14/). ScheduleAdmission independently derives finite
+host health, call and event reserves on both sides of the original persistence
+channel. FiniteDispatcher executes declared prepare/start/observe/stop/cleanup,
+windows, durations and combined dependencies over already-staged original units.
+Its finite supervised tick source allows pauses while original host health and
+root/gate leases continue. Actual public M3/Argus phase and terminal dispositions
+remain separate from readiness and cleanup; unusable storage leaves explicit gaps.
+A shortened stop window retains an emergency share of that same original window.
+
+This adds no authenticated bootstrap/environment admission, external simulator
+adapter, restart/controller recovery, full helper closure or global epoch proof.
+Execution success never sets lifecycle_complete or ready_for_execution. U7/U8,
+all seven full P3 tasks, all 24 ML-SR and 18 unvalidated source parents, 30 pairs/
+90 declared endpoints, nine full runtime cases and independent review/acceptance
+remain binding. Phases 1–2 accepted, phase 3 partial, phases 4–9 pending. No main
+merge, canonical-note edit, factory run, scientific protocol or empirical change.
+Earlier working-state/working-traceability/continuation receipts under scheduler14
+are historical; verification.json and the committed thesis checkpoint supersede them.
