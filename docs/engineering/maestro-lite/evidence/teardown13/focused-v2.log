@@ -1,0 +1,30 @@
+.....................F..                                                 [100%]
+=================================== FAILURES ===================================
+____________ test_copied_active_step_cannot_authorize_normal_record ____________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7eb728325310>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-892/test_copied_active_step_cannot0/work'), <function boot_stack.<locals>.boundary at 0x7eb7274e5760>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7eb727467550>
+
+    def test_copied_active_step_cannot_authorize_normal_record(boot_stack, monkeypatch):
+        from dataclasses import replace
+        from xverse.maestro.persistence import PersistenceClient
+    
+        facade, owner, descriptor, launcher, handle, gate, original = runtime(boot_stack)
+        record = PersistenceClient.record_teardown
+        before = owner.persistence._sequence
+    
+        def forged(self, controller, step, until):
+            return record(self, controller, replace(step), until)
+    
+        monkeypatch.setattr(PersistenceClient, "record_teardown", forged)
+        result = ReverseTeardown(facade, per_unit_seconds=0.8).run(deadline(1))
+        assert owner.persistence._sequence == before
+        assert result.units[0].emergency and not result.normal_records_complete
+>       assert result.units[0].boundary_released
+E       AssertionError: assert False
+E        +  where False = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1...se, boundary_released=False, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').boundary_released
+
+tests/thesis_lite/maestro/test_teardown.py:281: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_teardown.py::test_copied_active_step_cannot_authorize_normal_record
+1 failed, 23 passed in 27.08s

@@ -308,8 +308,23 @@ class ProcessBoundaryOps(BoundaryOps):
             raise BoundaryError("ML-TIMEOUT-BOUNDARY-AUTHORITY")
 
     @contextmanager
-    def _operation(self):
+    def _operation(self, deadline=None):
+        explicit = self._admission.teardown_deadline.monotonic_seconds
+        if deadline is not None:
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self._admission.teardown_deadline.session
+            ):
+                raise BoundaryError("ML-TEARDOWN-DEADLINE")
+            deadline.__post_init__()
+            explicit = deadline.monotonic_seconds
+            if (
+                not 0 < explicit - time.monotonic() <= 5
+                or explicit > self._admission.teardown_deadline.monotonic_seconds
+            ):
+                raise BoundaryError("ML-TEARDOWN-DEADLINE")
         self._operation_deadline = min(
+            explicit,
             self._admission.teardown_deadline.monotonic_seconds,
             time.monotonic() + self._limits.operation_seconds,
         )
@@ -348,9 +363,11 @@ class ProcessBoundaryOps(BoundaryOps):
             entry.diagnostic,
         )
 
-    def record(self, descriptor: BoundaryDescriptor) -> BoundaryRecord:
+    def record(
+        self, descriptor: BoundaryDescriptor, *, deadline=None
+    ) -> BoundaryRecord:
         entry = self._entry(descriptor)
-        with self._lock:
+        with self._cleanup_lock(deadline):
             return entry.terminal or self._snapshot(entry)
 
     def _authority(self, entry: _Entry, *, reservation: bool = False) -> None:
@@ -594,9 +611,77 @@ class ProcessBoundaryOps(BoundaryOps):
             except (OSError, UnicodeError, BoundaryError) as exc:
                 raise self._error(entry, exc) from exc
 
-    def force_cleanup(self, descriptor: BoundaryDescriptor) -> BoundaryRecord:
+    @contextmanager
+    def _cleanup_lock(self, deadline):
+        if not self._lock.acquire(blocking=deadline is None):
+            raise BoundaryError("ML-TEARDOWN-CONFLICT")
+        try:
+            yield
+        finally:
+            self._lock.release()
+
+    def terminate(self, descriptor, *, deadline):
+        """Original C1 force/empty observation, retaining the frozen boundary."""
         entry = self._entry(descriptor)
-        with self._lock, self._operation():
+        with self._cleanup_lock(deadline), self._operation(deadline):
+            if entry.terminal is not None:
+                return entry.terminal
+            try:
+                self._authority(entry)
+                self._verify(entry)
+                self._freeze(entry)
+                members = self._members(entry)
+                if members:
+                    self._write(entry, "cgroup.kill", b"1")
+                    while self._events(entry)["populated"]:
+                        self._deadline()
+                        time.sleep(self._limits.poll_seconds)
+                    entry.terminated = True
+                if self._members(entry):
+                    raise BoundaryError("ML-TEARDOWN-BOUNDARY-LIVE")
+                entry.state, entry.diagnostic = "empty", None
+                self._deadline()
+                return self._snapshot(entry)
+            except (OSError, UnicodeError, BoundaryError) as exc:
+                raise self._error(entry, exc) from exc
+
+    def release_empty(self, descriptor, *, deadline):
+        """Remove only a previously observed empty original frozen boundary."""
+        entry = self._entry(descriptor)
+        with self._cleanup_lock(deadline), self._operation(deadline):
+            if entry.terminal is not None:
+                return entry.terminal
+            if entry.state != "empty":
+                raise BoundaryError("ML-TEARDOWN-BOUNDARY-NOT-STOPPED")
+            try:
+                self._authority(entry)
+                self._verify(entry)
+                if self._members(entry):
+                    raise BoundaryError("ML-TEARDOWN-BOUNDARY-LIVE")
+                self._deadline()
+                os.rmdir(entry.name, dir_fd=self._root_fd)
+                if not self._removed(entry):
+                    raise BoundaryError("ML-TEARDOWN-BOUNDARY-RELEASE")
+                try:
+                    os.stat(entry.name, dir_fd=self._root_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    pass
+                else:
+                    raise BoundaryError("ML-TEARDOWN-BOUNDARY-SUBSTITUTED")
+                self._deadline()
+                os.close(entry.fd)
+                entry.fd = -1
+                entry.state, entry.diagnostic = "released", None
+                entry.terminal = self._snapshot(entry)
+                return entry.terminal
+            except (OSError, UnicodeError, BoundaryError) as exc:
+                raise self._error(entry, exc) from exc
+
+    def force_cleanup(
+        self, descriptor: BoundaryDescriptor, *, deadline=None
+    ) -> BoundaryRecord:
+        entry = self._entry(descriptor)
+        with self._cleanup_lock(deadline), self._operation(deadline):
             if entry.terminal is not None:
                 return entry.terminal
             entry.state = "release_pending"

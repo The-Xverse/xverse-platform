@@ -26,7 +26,7 @@ original = getattr(EvidenceRun, name)
 
 
 def injected(*args, **kwargs):
-    if phase != "probe":
+    if phase != ("teardown" if mode.startswith("teardown-") else "probe"):
         return original(*args, **kwargs)
     if mode.endswith("-fail"):
         raise OSError("owned normal-outcome storage fault")

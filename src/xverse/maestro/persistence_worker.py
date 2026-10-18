@@ -19,6 +19,7 @@ from xverse_xdl.validate import validate_mappings
 from .admission import PermitApproval, PermitBinding, PermitSession, validate_permits
 from .owner import _persist_intent
 from .lifecycle_evidence import OutcomeJournal
+from .teardown_evidence import TeardownJournal
 from .persistence import (
     PersistenceError,
     _frame,
@@ -198,6 +199,7 @@ def serve(channel, input_fd):
         scope = hashlib.sha256(private).hexdigest()
         sequence, permits, writer, claims, attempted = 0, None, None, {}, set()
         outcomes = None
+        teardown = None
 
         def alive():
             if (
@@ -228,7 +230,7 @@ def serve(channel, input_fd):
                 or request["sequence"] != sequence
                 or request["scope"] != scope
                 or request["kind"]
-                not in {"init", "commit", "revalidate", "probe", "abort"}
+                not in {"init", "commit", "revalidate", "probe", "teardown", "abort"}
                 or not request["operation"].startswith("ml-")
                 or len(request["operation"]) != 35
             ):
@@ -242,6 +244,7 @@ def serve(channel, input_fd):
                         raise PersistenceError("ML-PERSIST-INIT")
                     permits, writer = _load(config, lambda: check(deadline))
                     outcomes = OutcomeJournal(permits, writer, config["evidence_root"])
+                    teardown = TeardownJournal(outcomes)
                     response = {
                         "run_id": config["run_id"],
                         "lifecycle_digest": permits._prepared.lifecycle_digest,
@@ -274,6 +277,10 @@ def serve(channel, input_fd):
                         "intent": "sha256:" + claim.intent_digest.hex(),
                         "flush": "sha256:" + claim.flush_digest.hex(),
                     }
+                elif kind == "teardown":
+                    response = teardown.record(
+                        body, claims, request["operation"], deadline, check
+                    )
                 elif kind == "probe":
                     response = outcomes.record(
                         body, claims, request["operation"], deadline, check

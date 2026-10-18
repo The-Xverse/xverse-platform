@@ -1,0 +1,71 @@
+F..FF................                                                    [100%]
+=================================== FAILURES ===================================
+___ test_normal_reverse_stop_reap_and_separate_release_with_durable_records ____
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x72cfc50fa7b0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-891/test_normal_reverse_stop_reap_0/work'), <function boot_stack.<locals>.boundary at 0x72cfc50beb60>, ...)
+
+    def test_normal_reverse_stop_reap_and_separate_release_with_durable_records(boot_stack):
+        facade, owner, a, b = pair(boot_stack)
+        controller = ReverseTeardown(facade, per_unit_seconds=0.8)
+        result = controller.run(deadline(2), reason="normal-stop")
+        assert [u.unit_id for u in result.units] == [b[0].unit_id, a[0].unit_id]
+>       assert (
+            result.starts_closed
+            and result.unit_cleanup_complete
+            and result.normal_records_complete
+        )
+E       AssertionError: assert (True and True and False)
+E        +  where True = TeardownResult(run_id='fixture-run', lifecycle_digest='6d9faf35a05aee79fd33ec344260a6763a79c4c91ccc4f220a341d881ad59b0... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).starts_closed
+E        +  and   True = TeardownResult(run_id='fixture-run', lifecycle_digest='6d9faf35a05aee79fd33ec344260a6763a79c4c91ccc4f220a341d881ad59b0... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).unit_cleanup_complete
+E        +  and   False = TeardownResult(run_id='fixture-run', lifecycle_digest='6d9faf35a05aee79fd33ec344260a6763a79c4c91ccc4f220a341d881ad59b0... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).normal_records_complete
+
+tests/thesis_lite/maestro/test_teardown.py:39: AssertionError
+___________ test_stage_only_teardown_never_fabricates_start_outcome ____________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x72cfc50af610>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-891/test_stage_only_teardown_never0/work'), <function boot_stack.<locals>.boundary at 0x72cfc50bfe20>, ...)
+
+    def test_stage_only_teardown_never_fabricates_start_outcome(boot_stack):
+        facade, owner, descriptor, launcher, handle, gate, original = runtime(boot_stack)
+        result = ReverseTeardown(facade, per_unit_seconds=1).run(deadline(2))
+>       assert result.unit_cleanup_complete and result.normal_records_complete
+E       AssertionError: assert (True and False)
+E        +  where True = TeardownResult(run_id='fixture-run', lifecycle_digest='c378d741c31e225f78b7ef7a7e8c9fca30b2be87ce06956c48e1b4d7d995b49...diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE'),), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).unit_cleanup_complete
+E        +  and   False = TeardownResult(run_id='fixture-run', lifecycle_digest='c378d741c31e225f78b7ef7a7e8c9fca30b2be87ce06956c48e1b4d7d995b49...diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE'),), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).normal_records_complete
+
+tests/thesis_lite/maestro/test_teardown.py:116: AssertionError
+_____ test_already_exited_leader_with_live_descendant_requires_c1_cleanup ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72cfc50ebe10>
+request = <FixtureRequest for <Function test_already_exited_leader_with_live_descendant_requires_c1_cleanup>>
+
+    def test_already_exited_leader_with_live_descendant_requires_c1_cleanup(
+        monkeypatch, request
+    ):
+        from . import test_bootstrap
+    
+        configured = test_bootstrap.configured
+        monkeypatch.setattr(
+            test_bootstrap,
+            "configured",
+            lambda path, manager, binaries: configured(
+                path, manager, binaries, mode="descendant"
+            ),
+        )
+        stack = request.getfixturevalue("boot_stack")
+        facade, owner, descriptor, launcher, handle, gate, original = runtime(stack)
+        owner.release(descriptor.unit_id, descriptor, gate, original)
+        until = time.monotonic() + 0.5
+        while not launcher.observe(handle, deadline(0.5)).leader_reaped:
+            assert time.monotonic() < until
+        result = ReverseTeardown(facade, per_unit_seconds=1).run(deadline(2))
+>       assert result.unit_cleanup_complete and result.normal_records_complete
+E       AssertionError: assert (True and False)
+E        +  where True = TeardownResult(run_id='fixture-run', lifecycle_digest='a6ba0ca0f4f40cfb245ee02e5af80790635be50c43abe43a9df16e27f05e86b...diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE'),), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).unit_cleanup_complete
+E        +  and   False = TeardownResult(run_id='fixture-run', lifecycle_digest='a6ba0ca0f4f40cfb245ee02e5af80790635be50c43abe43a9df16e27f05e86b...diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE'),), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).normal_records_complete
+
+tests/thesis_lite/maestro/test_teardown.py:146: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_teardown.py::test_normal_reverse_stop_reap_and_separate_release_with_durable_records
+FAILED tests/thesis_lite/maestro/test_teardown.py::test_stage_only_teardown_never_fabricates_start_outcome
+FAILED tests/thesis_lite/maestro/test_teardown.py::test_already_exited_leader_with_live_descendant_requires_c1_cleanup
+3 failed, 18 passed in 23.26s

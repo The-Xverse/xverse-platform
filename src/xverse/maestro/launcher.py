@@ -621,6 +621,17 @@ class CatalogLauncher(_Original):
         if self._check_boundary() != (self._child_pid,):
             raise LauncherError("ML-LAUNCH-MEMBERSHIP")
 
+    def revalidate_issued(self, handle):
+        """Original issuer/handle continuity; an exited child remains owned."""
+        self._live()
+        if (
+            type(handle) is not OwnedResourceHandle
+            or self._handle is None
+            or handle != self._handle
+        ):
+            raise LauncherError("ML-LAUNCH-HANDLE")
+        return True
+
     def observe(self, handle, deadline):
         self._holder()
         self._live()

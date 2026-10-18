@@ -237,6 +237,7 @@ def _decode(data):
             "commit",
             "revalidate",
             "probe",
+            "teardown",
             "abort",
             "ok",
             "error",
@@ -374,6 +375,8 @@ class PersistenceClient(_Original):
         self._claims, self._attempted = {}, set()
         self._probe_receipts, self._probe_attempted = {}, set()
         self._evidence_sequence = self._evidence_ordinal = self._evidence_m3 = 0
+        self._teardown_sequence = 0
+        self._teardown_receipts, self._teardown_attempted = {}, set()
         self._drain_deadline = None
         self._term_sent = self._kill_sent = False
         self._drained = None
@@ -638,6 +641,71 @@ class PersistenceClient(_Original):
             self._evidence_sequence = body["events"][-1]["producerSequence"]
             self._evidence_ordinal = body["events"][-1]["ingestionOrdinal"]
             self._evidence_m3 = body["m3_sequences"][-1]
+            return receipt
+        except Exception:
+            self._fail()
+            raise
+
+    def record_teardown(self, controller, step, deadline):
+        from .teardown import ReverseTeardown, _Step
+        from .teardown_evidence import TeardownReceipt, validate_teardown_reply
+        from .owner import _hash
+
+        self._available()
+        if type(controller) is not ReverseTeardown or type(step) is not _Step:
+            raise PersistenceError("ML-TEARDOWN-RECORD-ORIGINAL")
+        controller._holder()
+        if (
+            controller.owner.persistence is not self
+            or controller._active is not step
+            or step.step_id in self._teardown_attempted
+            or controller._registry.get(step.unit_id)
+            is not controller.owner._launchers.get(step.unit_id)
+        ):
+            raise PersistenceError("ML-TEARDOWN-RECORD-ORIGINAL")
+        launcher = controller._registry[step.unit_id]
+        launcher.revalidate_issued(step.handle)
+        if step.descriptor != launcher.recipe.descriptor:
+            raise PersistenceError("ML-TEARDOWN-RECORD-ORIGINAL")
+        claim = controller.owner._claims[step.unit_id].receipt
+        if self._claims.get(id(claim)) is not claim:
+            raise PersistenceError("ML-TEARDOWN-RECORD-CLAIM")
+        prior = controller._intents.get((step.unit_id, step.phase))
+        request = {
+            "unit": step.unit_id,
+            "claim": claim.operation,
+            "generation": 1,
+            "phase": step.phase,
+            "stage": step.stage,
+            "handle": asdict(step.handle),
+            "step": step.step_id,
+            "intent": prior.operation if prior is not None else None,
+            "session": self.session,
+            "observed_at": step.observed_at,
+            "boundary_digest": "sha256:" + _hash(list(step.descriptor.key)).hex(),
+            "leader_reaped": step.leader_reaped,
+            "empty": step.empty,
+            "released": step.released,
+            "force_observed": step.force_observed,
+        }
+        self._teardown_attempted.add(step.step_id)
+        operation, _, body = self._rpc("teardown", request, deadline)
+        try:
+            validate_teardown_reply(body, request, self, controller, operation)
+            event = body["event"]
+            receipt = TeardownReceipt(
+                step.unit_id,
+                step.phase,
+                step.stage,
+                operation,
+                event["eventId"],
+                body["m3_sequence"],
+                canonical_bytes(event),
+            )
+            self._teardown_receipts[step.unit_id] = receipt
+            self._teardown_sequence = event["producerSequence"]
+            self._evidence_ordinal = event["ingestionOrdinal"]
+            self._evidence_m3 = body["m3_sequence"]
             return receipt
         except Exception:
             self._fail()

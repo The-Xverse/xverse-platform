@@ -429,3 +429,19 @@ checks. The registered root/child keeps a distinct private original duplicate; a
 signals/waits/duplicates use it. Inode equality is not a pidfd identity check on
 Linux 6.8. Comparison denial/unsupported hosts reject admission without fallback.
 This bundle tests x86-64; other architecture/environment admission remains external.
+
+Reverse unit teardown increment 13 (partial, not accepted):
+[ADR](ADR-ML3-TEARDOWN-0001.md), [unit contract](unit-specification-teardown13.md),
+[tasks](tasks-teardown13.md), [read-only findings](review-teardown13.md), and
+[evidence](evidence/teardown13/). Original C1 termination now retains an observed
+empty frozen boundary for a separate original release. ReverseTeardown serializes
+with the original owner/facade, closes starts locally, and records normal stop and
+cleanup intent/outcome through the original isolated M3/Argus writer. Actual native
+leader reaping, C1 empty/release facts and missing normal evidence remain separate.
+Storage/identity faults use original cleanup-only authority under the original end;
+manager conflicts report unknown facts without blocking. Same-controller matching
+stop calls return retained facts. Full helper/global cancellation, automatic health/
+tick scheduling, recovery, coverage/collection and admission/runtime remain pending.
+All seven full P3 tasks, 24 ML-SR, 18 allocation-only source parents, 30 scenario
+pairs/90 declared endpoints and nine full runtime cases remain open. No factory
+run, main merge, canonical-note edit, scientific protocol or result change.
