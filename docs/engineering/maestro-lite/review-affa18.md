@@ -448,3 +448,17 @@ candidate/maestro-lite-affa18-20261020, worktree
     /home/jefferson/xverse-platform main, the remaining 024 scope, factory runs, canonical-note
     edits and any scientific claim. The candidate branch remains pushed to origin as a backup
     branch (no merge, no pull request).
+
+412. Merge of the accepted increments 17 and 18 into main, 2026-10-20 (author text "you can
+    merge to main", following the acceptance of finding 411). In /home/jefferson/xverse-platform,
+    main (c2997c0f8, equal to origin/main after a fresh fetch, and the merge base of the
+    candidate) received a --no-ff merge of candidate/maestro-lite-affa18-20261020 at d9abee03a,
+    following main's "Merge accepted …" convention: merge commit e65965a95211 (28 commits ahead of
+    origin/main). No conflict; the author's four untracked files in main do not collide with
+    candidate paths and are untouched. The merge tree 4d78cce7f791 is identical to the candidate's
+    tree, whose src and tests equal those exercised by clean run s (finding 410), so no further
+    full run was made. Smoke check from the main checkout with environment h (TMPDIR on tmpfs,
+    no cache or bytecode written): 2104 collected, the F-02 and F-01 control modules 7 passed.
+    Main is **not pushed** to origin; publishing main to the shared remote is a separate author
+    decision. Carried open unchanged (finding 411). Not covered: lane activation, M1, factory
+    runs, canonical-note edits and scientific claims.

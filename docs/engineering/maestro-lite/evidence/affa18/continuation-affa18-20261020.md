@@ -103,11 +103,27 @@ a2e751c6e6a1e257ddf9bc1805aac9f48f99b0e92b9965ac3cb91949784628ae (50/489; increm
 merged false). Canonical-note paragraph proposed in ../../canonical-note-update-proposal-affa18.md,
 not applied. Next finding: 412 (span 411 is bound by the next successor).
 
-## Next (current)
+## Next (superseded by step 7 below)
 
-1. AUTHOR: merges of increments 17 and 18 into /home/jefferson/xverse-platform main (separate
-   decision; main untouched at c2997c0f).
+1. ~~AUTHOR: merges of increments 17 and 18 into main~~ done locally (finding 412).
 2. AUTHOR: approve or amend the canonical-note paragraph.
 3. Lane activation and M1 stay blocked by their own readiness check (ten unknown causes, lane
    activation not approved, M1 not admitted). Later increments: F02D-01 hardening, F-05 wire
    revision, the remaining 024 scope.
+
+## Step 7 done: merge into local main (finding 412)
+
+Author text "you can merge to main". /home/jefferson/xverse-platform main c2997c0f8 → merge commit
+e65965a952118166f3a2ff85763781fdb59d97bc (--no-ff of d9abee03a; tree 4d78cce7 identical to the
+candidate; smoke 2104 collected, 7 F-01/F-02 controls passed). Not pushed to origin. CAPA successor
+capa-20261020-affa18-merge/register.json
+64579304880cd7c1791f68b2800ea3fb42dd533614406ec06820c5ab685f291f (50/491; merged true). Next
+finding: 413 (span 412 is bound by the next successor).
+
+## Next (current)
+
+1. AUTHOR: push main to origin (git@github.com:The-Xverse/xverse-platform.git); main is 28 commits
+   ahead of origin/main. Optionally bring this candidate branch's findings 412+ into main afterwards.
+2. AUTHOR: approve or amend the canonical-note paragraph (../../canonical-note-update-proposal-affa18.md).
+3. Lane activation and M1 stay blocked by the readiness check (ten unknown causes). Later increments:
+   F02D-01 hardening, F-05 wire revision, the remaining 024 scope.

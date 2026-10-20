@@ -1,8 +1,21 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increment18 accepted by the author (finding 411) on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes; clean full runs o, p, s); not merged; increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increments 17 and 18 accepted (findings 392, 411) and merged into local main as e65965a95 (finding 412; main not pushed to origin); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increments 17 and 18 merged into main (2026-10-20, finding 412)
+
+On the author's instruction, main in /home/jefferson/xverse-platform (c2997c0f8, equal to
+origin/main) received a --no-ff merge of candidate/maestro-lite-affa18-20261020 at d9abee03a. The
+merge commit is e65965a95, with no conflicts. Its tree is identical to the candidate tree that clean
+run s exercised. A smoke check from the main checkout collected 2104 tests and passed the 7 F-01/F-02
+controls. Main is **not pushed** to origin. Merge record
+[main-merge-increments17-18-20261020.json](evidence/affa18/main-merge-increments17-18-20261020.json);
+CAPA successor [capa-20261020-affa18-merge](evidence/affa18/capa-20261020-affa18-merge/register.json)
+(50 records/491 bindings, parent preserved; merged true). The validator's own `merged`/`accepted`
+output fields are fixed claim-boundary constants and do not read the register. Main contains the
+record through finding 411; this section and finding 412 live on the candidate branch.
 
 ## Increment18 accepted (2026-10-20, finding 411)
 
