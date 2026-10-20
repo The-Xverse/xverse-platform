@@ -332,3 +332,10 @@ unrelated host load) and the A/B load discrimination (paused-shared case 5/10 fa
 the pre-F-02 and F-02 bytes) are added to 222, 357, 359-CHILD, 364, 374, 379, 381-F01 and 389 as
 observations, and to 359's next action; run r is not a clean run. Review spans 402-408 are bound;
 409 goes to the next successor. Ten causes remain unknown; manual OBSERVE_ONLY.
+
+Increment18: the [run-s successor](evidence/affa18/capa-20261020-affa18-run-s/register.json)
+(4fd92f3fb2b9af81…) validates 50 records/487 bindings and preserves all 478 run-r parent bindings.
+It adds the clean full run s on the F-02 bytes (2103 passed/1 skipped/0 failed under the
+finding-409 host load, recorded at launch) as a prevention observation on 222, 357, 359-CHILD,
+364, 374, 379, 381-F01, 381-F02 and 389, and binds review span 409. No state, cause or
+effectiveness changes; ten causes remain unknown; manual OBSERVE_ONLY.

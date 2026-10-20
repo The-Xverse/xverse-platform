@@ -72,11 +72,25 @@ product's own readiness check.
 - CAPA successor capa-20261020-affa18-run-r/register.json
   7f46df79cbcee43791a10b1a924ff5959c0d64e480a27ae8ba3cda02a22935f2 (50/478; F-02 FIX_CANDIDATE).
 
-## Next (current)
+## Next (superseded by step 5 below)
 
-1. Clean full run on e290ce78c when the host is quiet (driver s = driver r pattern, environment h,
-   2104 collected); check the load average and that no foreign simulator is running before launch.
+1. ~~Clean full run on e290ce78c~~ done as run s (finding 410).
 2. Re-examine readiness: five blocking entries remain (ten unknown causes in two entries, lane
    activation not approved, M1 not admitted, increment18 acceptance open).
 3. AUTHOR: acceptance of increment18; merges of increments 17/18 into main; lane activation; M1;
    optional F02D-01 hardening; F-05 wire revision.
+
+## Step 5 done: clean full run s (finding 410)
+
+Run s (driver verify-platform-regression-20261020s.py, HEAD b1dc99792 with src/tests identical to
+e290ce78c): **2103 passed/1 skipped/0 failed**, child clean, F-02/F-01 controls passed, launched on
+the author's go with the CARLA load still present (host_condition_at_launch in configuration.json;
+61 stalls > 0.5 s, 0 fsync spikes). CAPA successor capa-20261020-affa18-run-s/register.json
+4fd92f3fb2b9af81e229f8393193bb1e518c68820c95614c2463f59138014b20 (50/487). Next finding: 411.
+
+## Next (current)
+
+1. Readiness re-examination: five blocking entries remain (ten unknown causes in two entries, lane
+   activation not approved, M1 not admitted, increment18 acceptance open).
+2. AUTHOR: acceptance of increment18 (an acceptance record on the increment17 pattern, finding 392);
+   merges of increments 17/18 into main; lane activation; M1; optional F02D-01 hardening; F-05.

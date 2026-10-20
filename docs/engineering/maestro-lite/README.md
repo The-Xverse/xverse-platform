@@ -1,8 +1,19 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes implemented; F-02 full run r failed under an unrelated host load, clean run owed; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes implemented and verified; clean full run s on the F-02 bytes; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increment18 step 5: clean full run s on the F-02 bytes (2026-10-20, finding 410)
+
+Run s (same src and tests as e290ce78c) ends **2103 passed, 1 skipped, 0 failed**, nested child
+clean, all F-02 and F-01 controls passing. That is the first clean full run on the F-02 bytes. It
+ran under the same and heavier unrelated CARLA load as run r (recorded at launch; 61 operation
+stalls over 0.5 s, 0 fsync spikes). Run r failed 3 and run s none at comparable stall levels,
+which fits the A/B finding of an intermittent thin-margin fixture under load rather than a
+regression. CAPA successor
+[capa-20261020-affa18-run-s](evidence/affa18/capa-20261020-affa18-run-s/register.json)
+(50 records/487 bindings, parent preserved; no state change, effectiveness NOT_DEMONSTRATED).
 
 ## Increment18 step 4: native F-02 watch proof (2026-10-20, findings 403-409)
 

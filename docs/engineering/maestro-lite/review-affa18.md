@@ -396,3 +396,25 @@ candidate/maestro-lite-affa18-20261020, worktree
     inside run r, lane admission f, runtime lane e, crash-point f); effectiveness remains
     NOT_DEMONSTRATED. A clean full run on e290ce78c is owed once the host is quiet; no
     product or fixture edit follows from this finding.
+
+410. Terminal read-only review of run s (driver verify-platform-regression-20261020s.py
+    6589301d…a9ba, pytest 2496450, environment h, 2104 collected, TMPDIR on tmpfs; HEAD
+    b1dc99792, whose src and tests are identical to e290ce78c): returncode 0, 3198.23 s,
+    **2103 passed / 1 skipped / 0 failed**, the nested Argus child clean, no outer timeout,
+    frozen inputs unchanged, descendants gone. Receipt bbabbbb3…9b16, log 654f67f0…d80e,
+    triage eaa82ab9…db4, correlation edd489d8…1b48. All six F-02 controls and the F-01
+    control passed. This is the first clean full run on the F-02 bytes. It was launched on
+    the author's go ("safe to go") with the finding-409 host load still present and heavier:
+    the driver now records the host at launch (`host_condition_at_launch`: load average
+    7.58/7.52/7.56; the CARLA server PID 3540156 at ~111 % CPU plus an unrelated CARLA render
+    job PID 1615721 at ~279 %), and both were still running at the receipt. Operation stalls
+    > 0.5 s: 61 (r: 65; clean runs i–o: 7–21); 0 fsync spikes (12 787 samples, worst
+    0.0001 s). Reading together with 409: at comparable stall levels run r failed 3 and run s
+    failed none, which is consistent with the A/B (the paused-shared case fails
+    intermittently, about half the time in isolation under this load) and not with a
+    deterministic regression. Host contention raises the failure probability of the
+    thin-margin fixtures; it is still not proven as a cause, and the margin observation stays
+    on ML-CAPA-364. Run s is a prevention observation for 222, 357, 359-CHILD, 364, 374, 379,
+    381-F01, 381-F02 and 389; effectiveness remains NOT_DEMONSTRATED everywhere (one clean run
+    is not a demonstration), and no state, cause or product change follows. The owed clean
+    full run on the F-02 bytes is discharged. Increment18 remains not accepted.
