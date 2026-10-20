@@ -51,3 +51,17 @@ Component verification of this module runs in the source phase (candidate `src` 
 verification environment, tests copied outside the source tree). See
 `evidence/affa17/runtime-lane-20261020a/` when present; counts there are the authority,
 not this page. Scratch iterations before integration are not evidence.
+
+## IR-ML3-04 prerequisites: status 2026-10-20 (finding 381)
+
+- Independent frozen review of the exact helper bytes: **recorded**,
+  `evidence/affa17/helper-bytes-independent-review-20261020.{json,md}` (separate agent session,
+  read-only; six properties ENFORCED, independent-watchdog PARTIALLY_ENFORCED; 0 HIGH, 2 MEDIUM,
+  5 LOW, 9 NOTE). The two MEDIUM observations (authority refreeze skipped once the request
+  deadline elapsed; ADVANCE without native watch proof) await the author's disposition.
+- Separately admitted bounded lane with pinned identities: **proposed, not activated**,
+  `evidence/affa17/lane-admission-proposal-20261020.json` carries real helper digests, the nine
+  case receipts (two as composed-case indexes), environment/implementation/design pins, the
+  kernel identity and both review digests through the product's own canonicalisation; it calls no
+  admission function and keeps execution_approved false. Activating a bounded lane admission
+  test, M1 admission and acceptance remain author decisions.

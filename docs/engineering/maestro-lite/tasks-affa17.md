@@ -723,3 +723,11 @@ second clean full run (2096 passed/0 failed, finding380); CAPA successor capa-20
 5442b543… (47/343) adds ML-CAPA-379 FIX_CANDIDATE. The ext4 reference run k (disposition d) is
 live on the same snapshot. Second checkpoint commit of the product change follows. IR-ML3-04,
 M1, independent complete review, acceptance and merge remain open.
+
+2026-10-20 run k and IR-ML3-04: ext4 reference run k ends2 failed/2094 passed (host-condition
+observations under disposition d; finding383: the outer expiry is a0.3s unit-disposition
+statement, bounding finding379; extension proposed). Helper-bytes independent review recorded
+(finding381), dispositions F-01/F-02 as documented preconditions with owned controls and a
+non-activating lane admission proposal (finding382). CAPA successor capa-20261020-run-k
+7bac7f7c… (49/359). Next: lane admission driver, full run l, third checkpoint; author gates
+unchanged.

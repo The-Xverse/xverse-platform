@@ -122,3 +122,44 @@ collected, TMPDIR/basetemp/probe on the ext4 root (/tmp, 91 percent full). Termi
 observations (triage, correlate with the ext4 probe, finding 381, CAPA successor from run-j),
 not acceptance failures. Second checkpoint commit of the product change (dispatcher.py, docs,
 run-j evidence, CAPA j) is made while k runs, excluding k's live directory.
+Second checkpoint commit created: **36e6bf132** (product change, run-j evidence, CAPA j, driver k)
+on top of 1e081a1b; only run k's live directory and driver log remain untracked until k is terminal.
+
+## IR-ML3-04 prerequisites (finding 381)
+
+Helper-bytes independent review recorded (dddbec1c…; 6 ENFORCED / 1 PARTIAL; 0 HIGH, 2 MEDIUM
+verified by this session, 5 LOW, 9 NOTE) and lane admission proposal built from real pins
+(325f3286…; facility 419c46e2…, readiness cdeebd4d…; not an admission). Pending author:
+disposition of F-01/F-02 and the partial watchdog verdict; activation of a bounded lane
+admission test. Run k still live; its CAPA successor will add F-01/F-02 as UNRESOLVED
+observations and bind the review and proposal.
+
+## Finding 382 work in progress (author: "propose something and go")
+
+Dispositions acted on: F-01/F-02 = documented Python-side precondition for increment17 with owned
+tests; native strengthening queued for the next increment. New untracked controls (not yet
+committed): `tests/thesis_lite/maestro/test_affa_release_timeout_fence.py` (F-01: REJECTED after
+the ticket under a frozen ancestor, cleanup-only fence before any thaw, no marker; passes locally)
+and `tests/thesis_lite/maestro/test_runtime_lane_admission.py` (real pins through
+MAESTRO_LANE_PROPOSAL; skipped without it). F-02 is already covered by
+test_affa_client.py::test_advance_requires_actual_original_watched_C1_before_send. Driver
+`verify-lane-admission-20261020a.py` prepared (OUT lane-admission-20261020a). PENDING until run k
+is terminal (frozen-input manifest): a one-line edit of test_runtime_entry.py introducing a
+module constant ENVIRONMENT_DIGEST (used at the bootstrap admission) so the lane test can pin the
+verification-environment digest; then run the lane driver, record finding 383, and include
+test_runtime_entry.py in the next full-run driver's REPAIRED tuple.
+
+## Run k terminal (finding 383), lane admission verified (finding 384), run l LIVE
+
+Run k (ext4 reference): 2 failed/2094 passed; probe 9 spikes (worst 1.18 s); outer expiry a 0.3 s
+unit-disposition statement in the terminal section (bounds 379; extension proposed for the
+author); child 3 failures of the stall class; host-condition observations per disposition d.
+CAPA successor `capa-20261020-run-k/register.json` 7bac7f7c01f6b32c7839d2c595d6b667391662607a7d4cbf8b399fb288290ba5
+(49 records/359 bindings; adds ML-CAPA-381-F01/F02). Lane admission driver b: 23 passed per
+phase (receipt 622c92db…); driver a retained with its fixture-import harness error.
+test_runtime_entry.py now carries ENVIRONMENT_DIGEST. **Run l LIVE**: driver
+verify-platform-regression-20261020l.py (REPAIRED adds test_runtime_entry.py; ADDED adds the two
+new modules; 2098 collected). Commits: evidence/docs of run k and the IR-ML3-04 records as the
+third checkpoint now; tests and lane evidence as the fourth checkpoint after a clean run l.
+Pending author: extension of the per-unit budget to the terminal section's unit statements
+(finding 383 d); lane activation; M1; acceptance; merge.

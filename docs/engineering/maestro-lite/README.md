@@ -4,6 +4,22 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not ac
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## ext4 reference run k and IR-ML3-04 prerequisites (2026-10-20)
+
+Run k, the persistent-media reference run of disposition d, ends **2 failed, 2094 passed** on
+the 91-percent-full ext4 root with 9 fsync spikes (worst 1.18 s) where the tmpfs runs i and j had
+none (finding 383). The outer expiry is a 0.3 s unit-disposition statement in the terminal
+section, overrun by 0.4 ms; it bounds finding 379, which widened only the run-terminal statement,
+and a further extension is proposed for the author. The child's three failures are the same
+durable-write stall class. Per disposition d these are host-condition observations, not
+acceptance failures. IR-ML3-04: the independent frozen review of the helper bytes is recorded
+(six fence properties enforced, independent-watchdog partial, 0 HIGH, 2 MEDIUM; finding 381) and
+a non-activating [lane admission proposal](runtime-lane.md) carries real pins; the two MEDIUM
+observations are dispositioned as documented Python-side preconditions with owned controls
+(finding 382) and the native strengthening is queued for the next increment. CAPA successor
+[capa-20261020-run-k](evidence/affa17/capa-20261020-run-k/register.json) validates 49 records/359
+bindings preserving the run-j parent. No acceptance, M1 claim or merge.
+
 ## Product change verified by clean run j; ext4 reference run k live (2026-10-20)
 
 The author-authorized product change (finding 377/379: the dispatcher's run-terminal statement

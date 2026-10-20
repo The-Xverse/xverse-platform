@@ -1,0 +1,266 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+..................................................................F..... [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: eceipt = os.environ.get("MAESTRO_BOUNDARY_RECEIPTS")
+E                 if receipt:
+E                     (Path(receipt) / "dispatcher-operation-observations.json").write_text(
+E                         json.dumps(trace, indent=2)
+E                     )
+E         >       assert result.execution_succeeded and result.terminal_recorded, result
+E         E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='c4fabf57f9ea86251f5f4561e7f92639793148b2f8306846fa8025a321d935c...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=3, lifecycle_complete=False, ready_for_execution=False)
+E         E       assert (False)
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='c4fabf57f9ea86251f5f4561e7f92639793148b2f8306846fa8025a321d935c...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=3, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_dispatcher.py:239: AssertionError
+E         _ test_native_stream_fault_preserves_public_writer_and_original_cleanup[close-after] _
+E         
+E         request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[close-after]>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f083d936820>
+E         run_bootstrap_binary = PosixPath('/tmp/maestro-platform-20261020k-tmpdir-1v9cm0ad/pytest-of-jefferson/pytest-2/test_native_stream_fault_prese3/owned-stream-helper/run-bootstrap')
+E         
+E             @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+E             def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+E                 mode = request.node.callspec.params['run_bootstrap_binary']
+E                 stack, _, driver = scheduled(request, monkeypatch)
+E                 broker, _, client, work = stack
+E                 result = closure = None
+E                 output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+E                 if output:
+E                     with (Path(output) / ('stream-inputs-' + mode + '.json')).open('x') as stream:
+E                         json.dump(dict(original_admission=json.loads(client.coverage.public_bytes), admission_digest=client.coverage_digest,
+E                             original_collection=json.loads(client.collection.canonical_bytes), original_schedule=json.loads(client.schedule.canonical_bytes),
+E                             generation_ns=client.generation_ns, runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+E                             native_bootstrap_digest=broker.session.config.admission.supervisor_artifact_digest,
+E                             bootstrap_configuration_sha256=hashlib.sha256(broker.session.config.private_bytes).hexdigest(),
+E                             original_fixture=str(work.parent), fixture_source_sha256=sha(Path(__file__))), stream, indent=2)
+E                         stream.write('\n')
+E                 try:
+E                     result = run(driver)
+E                     retain(stack, result, 'native-stream-' + mode)
+E         >           assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E         E           AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E         E           assert (False)
+E         E            +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='06f9b94ea9b9d2fa9526e20f1b9047a804dd1fe2973cd0bee7c21e5f695599a...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_native_writer_stream_faults.py:129: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+E         FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[close-after]
+E         3 failed, 1809 passed, 24 subtests passed in 1415.52s (0:23:35)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020d/bin/python', '-m', 'pytest', '-q', '-p'...riter_and_original_cleanup[close-after]\n3 failed, 1809 passed, 24 subtests passed in 1415.52s (0:23:35)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+____ test_original_control_rejection_keeps_unspent_authority[past-restart] _____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7159fdcc0ef0>
+control = 'restart', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+            result = run(driver)
+            assert submitted and len(queue_facts) == 1, result.diagnostic
+            if tickets:
+                value = outcome(tickets[0])
+                assert value is not None and value.disposition == 'rejected', value
+                assert any(t['outcome'] == asdict(value) for t in transitions), transitions
+                if mode == 'expire-queued':
+                    assert value.diagnostic == 'ML-SCHEDULE-' + ('RESTART' if control == 'restart' else 'RECOVERY') + '-DEADLINE'
+                assert submit(tickets[0].deadline) is tickets[0]
+                before = frontier()
+                with pytest.raises(ValueError, match='REPEAT'):
+                    submit(HostDeadline(client.session, tickets[0].deadline.monotonic_seconds + .01))
+                assert frontier() == before
+            else:
+                assert len(errors) == 1 and not transitions
+            before = frontier()
+            with pytest.raises(ValueError, match='CLOSED'):
+                submit(HostDeadline(client.session, driver._active_end), late=True)
+            assert frontier() == before
+            assert len(broker._controllers) == 1 and driver._controller is controller and driver.facade is facade
+            assert not driver._teardown_history and broker._current_controller is controller
+            assert client.process is original_worker and broker.connection.child is original_authority
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').records
+            assert {r.details['generation'] for r in records} == {1}
+            journal = FileEvidenceJournal(work.parent / 'm3.jsonl')
+            assert all(not journal.permit_consumed(c.binding.permit.permit_id, c.binding.permit.nonce)
+                       for c in client._future_contexts)
+            if mode == 'cancel-queued':
+                assert not result.execution_succeeded and result.diagnostic == 'ML-SCHEDULE-CANCELLED'
+                assert broker.owner.latch.cancelled
+            else:
+>               assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E               AssertionError: ML-SCHEDULE-TERMINAL-INCOMPLETE
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='81080b28967561092a60f6f2cd186995312bce3c45bd374df2574b4aa354c83...L-SCHEDULE-TERMINAL-INCOMPLETE', health_scans=1, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:177: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+2 failed, 2094 passed, 24 subtests passed in 2915.90s (0:48:35)

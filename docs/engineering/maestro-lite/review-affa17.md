@@ -4666,3 +4666,133 @@ independent full-candidate review or acceptance. Full selected M1 is still open.
     the persistent-media reference run k (disposition d) on the same snapshot,
     and the second checkpoint commit of the product change. No acceptance, M1
     or merge claim.
+
+381. IR-ML3-04 prerequisites: independent frozen review of the helper bytes and a
+    non-activating lane admission proposal. (a) Review record
+    `helper-bytes-independent-review-20261020.json` (sha256 dddbec1c…68aa; .md
+    4ea8165c…c04c; reviewer: a separate agent session counted as independent
+    per finding 373; read-only, nothing compiled or executed; the four helper
+    sources verified against their frozen hashes before and after:
+    bootstrap.c 21c2f70f…, catalog_launcher.c 8616a088…, lease_guard.c
+    5bddac9e…, run_authority.c 2a2ee830…). Seven fence properties: six
+    ENFORCED (frozen-before-child conditional on kernel fork-into-frozen-cgroup
+    semantics; original-pidfd-waits via Python waitid/kcmp), one
+    PARTIALLY_ENFORCED (independent-watchdog: coverage equals the WATCH
+    inventory; ADVANCE'd boundaries are admitted natively without watch proof,
+    Python-only check; terminal_fence freezes without first killing the live
+    authority). Findings: 0 HIGH, 2 MEDIUM, 5 LOW, 9 NOTE. (b) The two MEDIUM
+    findings were checked by this session against the source and stand as
+    observations: F-01 run_authority.c:161/391/517, freeze_all writes a freeze
+    only while now < end and close_authority is called with the request's own
+    deadline, so in the release-timeout path the refreeze is skipped,
+    freeze_failed is set but the REJECTED reply carries no mask and the
+    authority never retries; fencing then depends on Python revoke followed by
+    supervisor cleanup. F-02 run_authority.c:365-385, advance_unit verifies the
+    parent identity, epoch, proof and uniqueness of the fresh generation but not
+    its membership in the supervisor's watch inventory; only affa_client's
+    `_watched` enforces it. Both are recorded for author disposition (helper
+    change with new frozen hashes and a fresh review, or a documented
+    Python-side precondition); no helper edit. They enter the CAPA chain as
+    UNRESOLVED observations in the next successor. (c) Lane admission proposal
+    `lane-admission-proposal-20261020.json` (sha256 325f3286…4fb6, builder
+    build-lane-admission-proposal-20261020.py) replaces the synthetic
+    placeholders with real pins: helper artifact digests from the binaries the
+    lane run compiled and retained (sources unchanged since), the seven lane
+    receipts plus two composed-case indexes (crash-matrix b), environment
+    (preparation.json fad839af…), implementation (git archive of
+    src/xverse/maestro at 36e6bf13), design (ML-DESIGN v2 manifest 48d85a79…),
+    kernel 6.8.0-138-generic, source review = author-confirmed register v4,
+    verification review = the helper-bytes review; the product's own
+    FacilityAttestation and RuntimeReadiness canonicalisation accept the values
+    (facility digest 419c46e2…, readiness digest cdeebd4d…) with
+    execution_approved false, verification_complete false and seven blocking
+    findings carried. Not an admission: validate_run_admission,
+    verify_runtime_evidence and RuntimeService are not called. Activation of a
+    bounded lane admission test remains the author's decision.
+
+382. Proposed dispositions under the author's "propose something and go"
+    (2026-10-20) for the finding-381 items; acted on from here, labelled
+    agent proposals. (a) F-01 and F-02: increment17 disposition = DOCUMENTED
+    PYTHON-SIDE PRECONDITION, each proven by an owned test (F-02 already:
+    test_affa_client.py::test_advance_requires_actual_original_watched_C1_
+    before_send rejects an ADVANCE whose boundary is not in the watch inventory
+    with UNWATCHED; test_run_bootstrap.py::test_unwatched_initial_scope_closes_
+    without_issuance_ack, WATCH-SCOPE; F-01: coverage of the release-timeout
+    fence path to be confirmed or added as a test); the native strengthening
+    (close_authority with a close-specific grace deadline; ADVANCE requiring
+    native watch proof) is queued as a change-spec item for the next increment
+    with new frozen hashes and a fresh independent review. The reviewed helper
+    bytes stay unchanged in increment17. (b) Lane admission: ACTIVATE a bounded
+    component-harness admission test (`test_runtime_lane_admission.py`) that
+    supplies the real pins of the lane admission proposal to
+    validate_run_admission and verify_runtime_evidence, asserts the freshly
+    compiled helpers reproduce the retained lane binaries byte for byte, binds
+    the real lane receipt files, and asserts fail-closed behaviour:
+    ready_for_execution stays false, RuntimeService refuses to start with
+    execution_approved false, and no process, boundary entry or journal is
+    created. The test reads the proposal through MAESTRO_LANE_PROPOSAL and is
+    skipped when that variable is absent (full platform runs), so lane
+    admission evidence comes from its own two-phase driver. Not M1, not
+    acceptance, not merge.
+
+383. Terminal read-only review of run k (pytest 4170570, environment d, the
+    persistent-media reference run of disposition d: session TMPDIR, private
+    basetemp and probe on the ext4 root at 91 percent, 2096 collected, snapshot
+    = checkpoint 36e6bf13): returncode 1, 2916.55 s, **2 failed, 2094 passed**,
+    inputs unchanged. Receipt c8c3a1ec…6984; log d7da7073…0219; triage
+    358d6e48…43af. (a) Host condition reproduced: probe 11057 samples, 9 spikes
+    over 150 ms, worst 1.1804 s (tmpfs runs i and j: 0); 21 durable-write stalls
+    inside the probe window, one coincident with a spike; GC max 0.067 s.
+    (b) Outer failure test_active_control_deadlines::test_original_control_
+    rejection_keeps_unspent_authority[past-restart], ML-SCHEDULE-TERMINAL-
+    INCOMPLETE: the retained operation timeline shows the expired statement is
+    `schedule unit-disposition` for the source unit (began 701.4454, deadline
+    701.7453, ended 701.7457 — a 0.300 s operation budget overrun by 0.4 ms),
+    not the run-terminal statement that finding 379 moved to the per-unit
+    budget. The terminal section keeps per-unit diagnostic/disposition
+    statements at operation_seconds (dispatcher.py:1356/1415/1447 region); on
+    persistent media under this host condition they can expire. Nested child:
+    3 failed/1809 passed (test_composed_persistence_termination[disabled]
+    ML-PERSIST-TIMEOUT at init, health_scans 0; test_dispatcher five-phase
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE; test_native_writer_stream_faults
+    [close-after], tail only), all of the durable-write stall class. (c) Per
+    disposition d these are host-condition observations, not acceptance
+    failures; they bound ML-CAPA-379 (the change covers the run-terminal
+    statement only) and ML-CAPA-364 (tmpfs hides a stall class that persistent
+    media exposes at roughly 2 cases in 2096 plus 3 in the child). (d) Proposal
+    for author decision, not applied: extend the per-unit budget to the
+    terminal section's unit diagnostic/disposition statements, under the same
+    reserve accounting, with its own finding and runs. (e) CAPA successor
+    `capa-20261020-run-k/register.json` 7bac7f7c01f6b32c7839d2c595d6b667391662607a7d4cbf8b399fb288290ba5
+    (49 records/359 bindings, parent run-j 47/343 preserved) adds ML-CAPA-381-F01
+    and ML-CAPA-381-F02 as UNRESOLVED review observations, binds the helper
+    review, the lane admission proposal and the composed-case indexes, and adds
+    run k to 222/357/359-CHILD/364/374/379. No product, test or environment
+    change in this run; no acceptance, M1 or merge claim.
+
+384. Lane admission and F-01 controls verified in two phases (finding 382
+    dispositions). `lane-admission-20261020b/` (driver
+    verify-lane-admission-20261020b.py; receipt 622c92db…2f53): source 23
+    passed, installed wheel 23 passed, over test_runtime_lane_admission.py
+    (c7804730…43ca), test_affa_release_timeout_fence.py (f33d4394…0570) and
+    test_affa_client.py (F-02 precondition). (a) Lane admission with real pins:
+    the helpers compiled by the harness equal the lane run's retained binaries
+    byte for byte (reproducible build, verified separately with cc 11.4.0), the
+    nine runtime-case receipt files are read through RuntimeEvidenceFiles,
+    validate_run_admission and verify_runtime_evidence accept the pins with
+    ready_for_execution false and no process, boundary entry, journal or store
+    effect; RuntimeService.inspect refuses with READINESS-BLOCKED, the
+    default-closed service refuses register with SERVICE-DISABLED and an
+    execution-enabled service with READINESS-BLOCKED (execution_approved false,
+    seven blocking findings). (b) F-01 control: under a frozen ancestor the
+    authority replies REJECTED (reason 4) after the 2 s ticket, the pre-exec
+    child is still a member, cleanup-only termination before any thaw is
+    observed, and no marker appears after the thaw. (c) Harness defect recorded:
+    driver a (lane-admission-20261020a, retained) ended 22 passed/1 error in
+    both phases because the lane module did not import the `runtime` fixture;
+    corrected in the module, no product change. (d) test_runtime_entry.py gains
+    the module constant ENVIRONMENT_DIGEST (603361be…8e8e) so the lane control
+    can pin the verification-environment digest; the owned fixture's value is
+    unchanged. Full run l (2098 collected) follows to carry these modules in the
+    whole suite; the lane test is skipped there by design. Not M1, not lane
+    activation, not acceptance.

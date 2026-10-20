@@ -260,3 +260,13 @@ finding379 with dispatcher.py bound as the candidate patch; prevention = run j,2
 expiries; cause HYPOTHESIS; effectiveness NOT_DEMONSTRATED), points ML-CAPA-366 (REJECTED
 fixture-level correction) at it, and adds run j as a prevention observation on222,357,
 359-CHILD,364 and374. Ten causes remain unknown; manual OBSERVE_ONLY.
+
+The [run-k successor](evidence/affa17/capa-20261020-run-k/register.json) (7bac7f7c01f6b32c…)
+validates49 records/359 bindings and preserves all343 run-j parent bindings. It adds the ext4
+reference run k (2 failed/2094 passed; probe9 spikes, worst1.18s; outer expiry a0.3s
+unit-disposition statement in the terminal section) as a host-condition observation on222,357,
+359-CHILD,364,374 and379, binds the independent helper-bytes review, the lane admission proposal
+and the composed-case indexes, and adds ML-CAPA-381-F01 and ML-CAPA-381-F02 (independent review
+observations on run_authority.c, UNRESOLVED, author disposition recorded as documented Python-side
+preconditions with owned controls, finding382). Ten causes remain unknown; all effectiveness
+NOT_DEMONSTRATED; manual OBSERVE_ONLY.
