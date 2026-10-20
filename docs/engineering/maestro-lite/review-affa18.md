@@ -167,3 +167,20 @@ candidate/maestro-lite-affa18-20261020, worktree
     longer than runs l and m on the same harness; no failure or expiry is
     associated with it and no cause is claimed. Next: checkpoint 18-1 commit,
     proposal c from that commit, lane admission driver e, CAPA successor.
+
+401. Lane admission proposal c and lane driver e (finding 399 order). Proposal
+    `evidence/affa18/lane-admission-proposal-20261020c.json` (sha256
+    a8eefbb6…1482) is built from checkpoint 18-1 7abdb9dc0 with a clean src
+    (guard added to the builder): helper digests from runtime lane c
+    (authority 17f2476a…), composed-case indexes from crash-point d,
+    environment f, implementation pin = git archive of src/xverse/maestro at
+    7abdb9dc0, verification review = the two-pass review; facility digest
+    097dd735…, readiness digest 11641661…, execution_approved false, six
+    blocking findings (ten unknown causes in two entries, lane activation not
+    approved, M1 not admitted, increment18 acceptance open, F-02 native
+    deferred). Lane driver e (`lane-admission-20261020e/`, receipt
+    68b9ad66…6fb5): source 23 passed, installed wheel 23 passed, the wheel
+    phase on environment f's wheel of this tree (closing the finding-393 gap
+    for these modules); preflight accepts the real pins read-only, the service
+    refuses with READINESS-BLOCKED, and the compiled helpers equal the lane
+    run's binaries. Not M1, not lane activation, not acceptance.

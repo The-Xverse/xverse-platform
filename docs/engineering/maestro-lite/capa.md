@@ -305,3 +305,13 @@ acceptance of increment17 (finding392, author-acceptance-increment17-20261020.js
 register's accepted flag with an increment17_acceptance block naming the carried-open items (ten
 unknown causes, effectiveness NOT_DEMONSTRATED everywhere) and leaves merged and
 full_increment17_complete false. No record state, cause or effectiveness changes.
+
+Increment18: the [run-o successor](evidence/affa18/capa-20261020-affa18-run-o/register.json)
+(2f25a62ace2633e0…) validates50 records/437 bindings and preserves all408 parent bindings of the
+increment17 acceptance register. ML-CAPA-381-F01 moves to FIX_CANDIDATE: the native correction of
+findings394-397 (refreeze never skipped, two-pass wait, independent close budget) with the
+strengthened control, its negative check against the increment17 helper, lane admission driver e
+and full run o as prevention observations; effectiveness NOT_DEMONSTRATED (the reason-6 and
+bounded-wait branches are not exercised). ML-CAPA-381-F02 records the deferral with the two design
+options. Run o is added to222,357,359-CHILD,364,374,379 and389. The register's increment18 block
+is not accepted. Ten causes remain unknown; manual OBSERVE_ONLY.

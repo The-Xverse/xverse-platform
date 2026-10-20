@@ -1,8 +1,26 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increment17 accepted by the author as an engineering increment (2026-10-20, finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (step 1, native F-01 fix, verified; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increment18 step 1: native F-01 fix verified (2026-10-20, review-affa18.md findings 393-401)
+
+The authority helper no longer skips its refreeze once a request deadline has elapsed: on the
+rejection path and on CANCEL it writes cgroup.freeze for every live generation, then waits once over
+all units within an independent close budget (run_authority.c 2a2ee830… → b29a5239…; checkpoint
+18-1 7abdb9dc0). The F-01 control now asserts the native refreeze and fails against the
+increment17 helper. Two independent reviews of the changed bytes found no HIGH or MEDIUM issue.
+Evidence on the final bytes: environment f with a wheel of this tree (closing the finding-393 gap,
+the earlier wheel predated the increment17 dispatcher changes), runtime lane c and crash-point d
+17/17 per phase, lane admission driver e 23/23 per phase, full run o **2097 passed, 1 skipped,
+0 failed**. CAPA successor [capa-20261020-affa18-run-o](evidence/affa18/capa-20261020-affa18-run-o/register.json)
+(50 records/437 bindings, increment17 acceptance parent preserved; ML-CAPA-381-F01 → FIX_CANDIDATE).
+Deferred with reasons (finding 394): F-02 native watch proof (author choice between a
+supervisor-keyed WATCH token and supervisor-routed ADVANCE), F-05 distinct release-timeout reason
+(wire revision), F-07 unchanged (a closed authority cannot thaw). Increment18 is not accepted; lane
+activation, M1 and merges remain the author's. Follow
+[the increment18 continuation](evidence/affa18/continuation-affa18-20261020.md).
 
 ## Increment17 accepted (2026-10-20, finding 392)
 
