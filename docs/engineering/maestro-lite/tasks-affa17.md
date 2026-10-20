@@ -717,3 +717,9 @@ mapping independently reviewed (finding376) and the90 obligations re-bound (find
 successor capa-20261020-run-i49bd43ab… (46/332). Checkpoint commit of the run-i snapshot
 authorized and performed next; the product change follows as run j. IR-ML3-04, M1, independent
 complete review, acceptance and merge remain open.
+
+2026-10-20 run j: the authorized terminal-budget product change (finding379) is verified by a
+second clean full run (2096 passed/0 failed, finding380); CAPA successor capa-20261020-run-j
+5442b543… (47/343) adds ML-CAPA-379 FIX_CANDIDATE. The ext4 reference run k (disposition d) is
+live on the same snapshot. Second checkpoint commit of the product change follows. IR-ML3-04,
+M1, independent complete review, acceptance and merge remain open.

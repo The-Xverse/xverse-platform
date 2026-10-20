@@ -252,3 +252,11 @@ redesign is admissible (finding375) with the authorized product change pending r
 i (2096 passed,0 outer expiries,0 child failures,0 probe spikes) as a prevention observation on
 222,357,359-CHILD and364. Ten causes remain unknown; all effectiveness NOT_DEMONSTRATED; manual
 OBSERVE_ONLY.
+
+The [run-j successor](evidence/affa17/capa-20261020-run-j/register.json) (5442b5438788fe28…)
+validates47 records/343 bindings and preserves all332 run-i parent bindings. It adds ML-CAPA-379
+(transitive run-terminal statement margin; correction = the author-authorized product change of
+finding379 with dispatcher.py bound as the candidate patch; prevention = run j,2096 passed,0
+expiries; cause HYPOTHESIS; effectiveness NOT_DEMONSTRATED), points ML-CAPA-366 (REJECTED
+fixture-level correction) at it, and adds run j as a prevention observation on222,357,
+359-CHILD,364 and374. Ten causes remain unknown; manual OBSERVE_ONLY.

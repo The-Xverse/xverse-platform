@@ -4,6 +4,19 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not ac
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Product change verified by clean run j; ext4 reference run k live (2026-10-20)
+
+The author-authorized product change (finding 377/379: the dispatcher's run-terminal statement
+takes `per_unit_seconds`, as teardown and cleanup already do, instead of the cadence-bound
+operation budget) was applied after checkpoint 1e081a1b and verified by run j: **2096 passed,
+0 failed**, frozen inputs unchanged, 0 probe spikes (finding 380), the second consecutive clean
+full run. CAPA successor [capa-20261020-run-j](evidence/affa17/capa-20261020-run-j/register.json)
+validates 47 records/343 bindings preserving the run-i parent and adds ML-CAPA-379
+(FIX_CANDIDATE, one prevention observation; effectiveness NOT_DEMONSTRATED). The persistent-media
+reference run k (disposition d: TMPDIR, basetemp and probe on the ext4 root) runs on the same
+snapshot; its expiries, if any, are host-condition observations. Second checkpoint commit of the
+product change follows run j. No acceptance, M1 claim or merge.
+
 ## Clean full run i and author sign-off (2026-10-20)
 
 Run i (2096 collected, TMPDIR on tmpfs) ends **2096 passed, 0 failed** with frozen inputs

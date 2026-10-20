@@ -1462,7 +1462,9 @@ class FiniteDispatcher(_Original):
                         self.owner.session,
                         min(
                             self._work_end,
-                            time.monotonic() + self.plan.operation_seconds,
+                            # Terminal statement takes the per-unit budget like teardown and
+                            # cleanup (finding 379); the operation budget is cadence-bound.
+                            time.monotonic() + self.plan.per_unit_seconds,
                         ),
                     ),
                     outcome="succeeded"

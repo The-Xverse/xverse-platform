@@ -93,3 +93,32 @@ upstream; nothing is pushed or merged. Next: apply the product change (own findi
 transitive and crash-point modules, launch run j with REPAIRED extended to dispatcher.py, then
 the ext4 reference run (disposition d), IR-ML3-04 prerequisites, full 024 scope. No run is live
 at this point.
+
+Checkpoint commit created: **1e081a1ba37a8ea9fdf0f5230ffb61a4157652d3** on
+candidate/maestro-lite-affa17-20261018 (123,339 files; sources, tests, docs, evidence, CAPA chain of
+the run-i snapshot; no upstream, nothing pushed). Product change of finding 379 applied after the
+commit (dispatcher.py run-terminal statement budget → per_unit_seconds); driver
+`verify-platform-regression-20261020j.py` prepared (REPAIRED adds dispatcher.py).
+Targeted verification of the change (source phase, candidate): transitive restart, control
+deadlines, controller recovery, shared dispatcher, post-release loss and dispatch diagnostics
+modules, **37 passed** in 244 s. **Run j LIVE** (driver verify-platform-regression-20261020j.py,
+2096 collected); terminal receipt `platform-regression-20261020j/source-receipt.json`. Then:
+triage, finding 380, CAPA successor from capa-20261020-run-i (binds dispatcher.py as the
+candidate patch of ML-CAPA-366's authorized correction), docs; commit the product change as a
+second checkpoint only if run j is clean.
+
+## Run j terminal (finding 380); run k LIVE
+
+Run j: **2096 passed, 0 failed**, 2477 s, inputs unchanged (receipt c844c684…, log a18e4702…,
+triage f32bd56c…; probe 9901 samples/0 spikes; GC max 0.054 s). The product change is full-suite
+verified on tmpfs. CAPA successor `capa-20261020-run-j/register.json`
+5442b5438788fe280d9a4b73137d56c631ec900f4aa9bc4f5d28c2f97173d976 (47 records/343 bindings,
+parent 46/332 preserved; adds ML-CAPA-379).
+
+**Run k LIVE** (persistent-media reference run, disposition d): driver
+`verify-platform-regression-20261020k.py`, driver PID 4166655, pytest PID 4170570, 2096
+collected, TMPDIR/basetemp/probe on the ext4 root (/tmp, 91 percent full). Terminal receipt:
+`platform-regression-20261020k/source-receipt.json`. Its expiries are host-condition
+observations (triage, correlate with the ext4 probe, finding 381, CAPA successor from run-j),
+not acceptance failures. Second checkpoint commit of the product change (dispatcher.py, docs,
+run-j evidence, CAPA j) is made while k runs, excluding k's live directory.

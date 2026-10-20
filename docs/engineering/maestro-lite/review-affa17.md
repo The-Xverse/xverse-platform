@@ -4632,3 +4632,37 @@ independent full-candidate review or acceptance. Full selected M1 is still open.
     the commit will capture exactly this verified snapshot plus its evidence and
     CAPA successor, before the product change is applied. No product change in
     this run; no acceptance, M1 or merge claim.
+
+379. Authorized product change applied after the checkpoint commit 1e081a1b
+    (finding 377): dispatcher.py run-terminal statement budget changed from
+    `min(work_end, now + operation_seconds)` to `min(work_end, now +
+    per_unit_seconds)`, the budget the teardown and cleanup statements already
+    use. Rationale (finding 375): the terminal statement of a four-unit
+    transitive cohort measured ~0.13 s typical and 0.22 s p99 against a 0.3 s
+    operation budget that the 5 s probe cap, the 2 s restart budget and the
+    period invariant force; per_unit_seconds (2 s transitive, 1 s otherwise)
+    is already reserved per unit in the evidence-capacity formula
+    (schedule_plan.py reserve term), so no admission constant changes and no
+    budget is extended beyond the admitted work window. Verification order:
+    source-phase run of the transitive, shared-dispatcher and crash-point
+    modules in the candidate, then full run j with REPAIRED extended to
+    dispatcher.py; a terminal statement that still expires would now be an
+    observation outside the fixture-margin class. No other product line
+    changes; no acceptance, M1 or merge claim.
+
+380. Terminal read-only review of run j (pytest 3594386, environment d, TMPDIR on
+    tmpfs, 2096 collected; snapshot = checkpoint 1e081a1b plus the finding-379
+    product change in dispatcher.py): returncode 0, 2476.71 s, **2096 passed,
+    0 failed, 0 errors**, 24 subtests passed, frozen inputs unchanged. Receipt
+    c844c684…e935; log a18e4702…ad5f; triage f32bd56c…407b (0 failures).
+    (a) Second consecutive clean full run; the nested child suite passed
+    completely again; the transitive cohort cases pass under the per-unit
+    terminal budget. (b) Probe terminal: 9901 samples, 0 spikes, worst
+    0.0001 s; GC 59 collections, max 0.054 s; correlation: 6854 durable-write
+    operations, 12 stalls over the threshold, none coincident with a spike.
+    (c) The change is therefore full-suite verified on tmpfs; ML-CAPA-379 is
+    FIX_CANDIDATE with run j as its single prevention observation (the expiry
+    class was rare, so one clean run does not demonstrate closure). (d) Next:
+    the persistent-media reference run k (disposition d) on the same snapshot,
+    and the second checkpoint commit of the product change. No acceptance, M1
+    or merge claim.
