@@ -4,6 +4,16 @@ Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (ste
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Increment18 step 2: clean persistent-media reference run p (2026-10-20, finding 402)
+
+Run p puts the session TMPDIR, private basetemp and probe on the ext4 root (94 percent full at
+launch) and ends **2097 passed, 1 skipped, 0 failed**, inputs unchanged: the first clean full run
+on persistent media in increments 17–18. The host was quiet during it (0 fsync spikes over
+150 ms, worst 0.053 s, against 9 spikes up to 1.18 s in run k), so the stall class that
+ML-CAPA-379/389 target was not exercised and their effectiveness stays NOT_DEMONSTRATED. CAPA
+successor [capa-20261020-affa18-run-p](evidence/affa18/capa-20261020-affa18-run-p/register.json)
+(50 records/446 bindings, parent preserved).
+
 ## Increment18 step 1: native F-01 fix verified (2026-10-20, review-affa18.md findings 393-401)
 
 The authority helper no longer skips its refreeze once a request deadline has elapsed: on the

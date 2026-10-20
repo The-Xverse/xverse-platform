@@ -184,3 +184,19 @@ candidate/maestro-lite-affa18-20261020, worktree
     for these modules); preflight accepts the real pins read-only, the service
     refuses with READINESS-BLOCKED, and the compiled helpers equal the lane
     run's binaries. Not M1, not lane activation, not acceptance.
+
+402. Terminal read-only review of run p, the persistent-media reference run of
+    disposition d on checkpoint 18-2 (pytest 2714672, environment f, session
+    TMPDIR, private basetemp and probe on the ext4 root, which stood at 94
+    percent at launch; 2098 collected): returncode 0, 3067.62 s, **2097
+    passed, 1 skipped, 0 failed**, 24 subtests passed, frozen inputs unchanged.
+    Receipt b10eb61a…bbc3; log 865a7bff…f05b; triage da6d75b0…352c (0
+    failures). First clean full run on persistent media in increments 17–18.
+    Bounded reading: the host condition that run k exposed did not occur —
+    probe 11659 samples, 0 spikes over 150 ms, worst 0.0533 s (run k: 9 spikes,
+    worst 1.18 s); 33 durable-write stalls over the correlator threshold, none
+    coincident with a spike; GC 59, max 0.055 s. The run therefore shows that
+    the increment18 bytes pass on persistent media under a quiet host; it does
+    not exercise the stall class that ML-CAPA-389 and ML-CAPA-379 target, whose
+    effectiveness stays NOT_DEMONSTRATED. Elapsed time is about 5.5 minutes
+    longer than run o on tmpfs, consistent with persistent-media writes.

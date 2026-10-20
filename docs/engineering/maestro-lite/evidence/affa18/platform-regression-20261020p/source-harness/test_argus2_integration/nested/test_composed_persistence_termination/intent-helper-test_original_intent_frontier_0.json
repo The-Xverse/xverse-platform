@@ -1,0 +1,29 @@
+{
+  "mode": "disabled",
+  "command": [
+    "cc",
+    "-DRUN_BOOTSTRAP",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "/tmp/maestro-platform-20261020p-tmpdir-itjqe3op/pytest-of-jefferson/pytest-2/test_original_intent_frontier_0/owned-intent-helper/bootstrap.c",
+    "-lcrypto",
+    "-o",
+    "/tmp/maestro-platform-20261020p-tmpdir-itjqe3op/pytest-of-jefferson/pytest-2/test_original_intent_frontier_0/owned-intent-helper/run-bootstrap"
+  ],
+  "returncode": 0,
+  "source_sha256": "579e086ff74750bb4f4c74281598c31b114a3f140726b2b78e73b60c2742566b",
+  "original_native_source_sha256": "21c2f70f6fbb1dec66fca39c9a44e4086f4496d46d30f28671ecd31f007cc38b",
+  "fixed_role3_code": "import json,os,signal,time\nfrom xverse.argus.writer import EvidenceRun\nfrom xverse.maestro import persistence_worker\nmode='disabled'\nfd=os.open('/tmp/maestro-platform-20261020p-tmpdir-itjqe3op/pytest-of-jefferson/pytest-2/test_original_intent_frontier_0/owned-intent-frontier.jsonl',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)\nappend=EvidenceRun.append_event\nflush=EvidenceRun.flush_buffer\npending=None\ndef log(action,payload):\n    os.write(fd,(json.dumps(dict(action=action,observed_ns=time.monotonic_ns(),payload=payload))+'\\n').encode())\n    os.fsync(fd)\ndef appended(self,*args,**kwargs):\n    global pending\n    payload=kwargs.get('extensions',{}).get('xverse.maestro',{})\n    intent=(payload.get('scope')=='unit' and payload.get('action')=='intent'\n        and kwargs.get('producer_id')=='maestro.owner7')\n    if intent:\n        log('before-intent-append',payload)\n        if mode=='before-intent-append':os.kill(os.getpid(),signal.SIGSTOP)\n    result=append(self,*args,**kwargs)\n    if intent:\n        log('intent-append-returned',payload)\n        pending=payload\n    return result\ndef flushed(self,*args,**kwargs):\n    global pending\n    result=flush(self,*args,**kwargs)\n    if pending is not None:\n        payload=pending;pending=None\n        log('after-intent-flush',payload)\n        if mode=='after-intent-flush':os.kill(os.getpid(),signal.SIGSTOP)\n    return result\nEvidenceRun.append_event=appended\nEvidenceRun.flush_buffer=flushed\nstatus=persistence_worker.main()\nos.close(fd)\nos._exit(status)\n",
+  "compiled_source_sha256": "ed5b987a217068a88b4fb0808760d90d37348ceb15011f07d8c89a94c72e1b1a",
+  "binary_sha256": "f1cde0bcd75d308470636d360672ad79a85b2b1ad4028db63893b8e10ad6a9d1",
+  "original_fixture": "/tmp/maestro-platform-20261020p-tmpdir-itjqe3op/pytest-of-jefferson/pytest-2/test_original_intent_frontier_0",
+  "trace": "/tmp/maestro-platform-20261020p-tmpdir-itjqe3op/pytest-of-jefferson/pytest-2/test_original_intent_frontier_0/owned-intent-frontier.jsonl",
+  "private_stream_access": false,
+  "production_fault_mode": false,
+  "admission_precedes_birth": true
+}

@@ -37,3 +37,19 @@ Gates unchanged: acceptance, M1, lane activation, merges, factory runs (only via
 Thesis: /home/jefferson/distributed_safety_critical_thesis, branch
 agent/synchronize-thesis-obsidian-notes, HEAD d97fdd1, note sha256
 a1bbca901651a20dd6d2aacdce9ed760bae80bd1c6f5a8a83211586a5a7437e8.
+
+## Step 2 done: ext4 reference run p (finding 402)
+
+Run p (driver verify-platform-regression-20261020p.py): **2097 passed/1 skipped/0 failed** on the
+ext4 root, inputs unchanged; probe 0 spikes (worst 0.053 s), so the host was quiet and the
+ML-CAPA-379/389 stall class was not exercised. CAPA successor
+`capa-20261020-affa18-run-p/register.json` 552f79f8e846ed7adbc29eca57d80e17a6a199240d0260835f5e4502df44693d
+(50 records/446 bindings). Host disk: the root filesystem stood at 94 percent at launch.
+
+## Step 3: readiness re-examination (result)
+
+The lane admission readiness statement still lists six blocking entries: ten unknown-cause CAPA
+records (in two entries), lane activation not approved, M1 not admitted, increment18 acceptance
+open, and F-02 native deferred. None is cleared by steps 1–2: no unknown cause was explained, and
+F-02 awaits the author's design choice. Lane activation therefore remains correctly refused by the
+product's own readiness check.

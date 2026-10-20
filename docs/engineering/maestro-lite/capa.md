@@ -315,3 +315,9 @@ and full run o as prevention observations; effectiveness NOT_DEMONSTRATED (the r
 bounded-wait branches are not exercised). ML-CAPA-381-F02 records the deferral with the two design
 options. Run o is added to222,357,359-CHILD,364,374,379 and389. The register's increment18 block
 is not accepted. Ten causes remain unknown; manual OBSERVE_ONLY.
+
+Increment18: the [run-p successor](evidence/affa18/capa-20261020-affa18-run-p/register.json)
+(552f79f8e846ed7a…) validates50 records/446 bindings and preserves all437 run-o parent bindings.
+It adds the ext4 reference run p (2097 passed/1 skipped/0 failed; probe0 spikes, worst0.053s, a
+quiet host) as a host-condition observation on222,357,359-CHILD,364,374,379,381-F01 and389; the
+stall class of379/389 was not exercised. No state, cause or effectiveness changes.
