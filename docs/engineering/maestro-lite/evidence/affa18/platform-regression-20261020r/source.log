@@ -1,0 +1,157 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 74%]
+................................................................s....... [ 77%]
+........................................................................ [ 80%]
+..........................................................F............. [ 84%]
+........................................................................ [ 87%]
+.....F.................................................................. [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ................................................. [ 65%]
+E         ........................................................................ [ 69%]
+E         ....................................................................s... [ 73%]
+E         ........................................................................ [ 77%]
+E         ........................................................................ [ 81%]
+E         ........................................................................ [ 85%]
+E         ........................................................................ [ 89%]
+E         ........................................................................ [ 93%]
+E         ........................................................................ [ 97%]
+E         ............................................                             [100%]
+E         =================================== FAILURES ===================================
+E         _______ test_paused_ticks_still_service_host_health_and_original_leases ________
+E         
+E         request = <FixtureRequest for <Function test_paused_ticks_still_service_host_health_and_original_leases>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7300183aaa50>
+E         
+E             def test_paused_ticks_still_service_host_health_and_original_leases(
+E                 request, monkeypatch
+E             ):
+E                 stack = full_stack(request, monkeypatch, pauses=40)
+E                 driver = dispatcher(stack)
+E                 result = driver.run(*ends(driver))
+E         >       assert result.execution_succeeded, result
+E         E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='8a8f572daa4ccca599e806029b65290b6adcca1b8f0a746c1e99ba57519e124...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=3, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False)
+E         E       assert False
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='8a8f572daa4ccca599e806029b65290b6adcca1b8f0a746c1e99ba57519e124...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=3, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_dispatcher.py:313: AssertionError
+E         ___ test_actual_original_startup_through_terminal_and_helper_closure[closed] ___
+E         
+E         request = <FixtureRequest for <Function test_actual_original_startup_through_terminal_and_helper_closure[closed]>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73001884c830>
+E         case = 'closed'
+E         
+E             @pytest.mark.parametrize('case',['closed','lost-close-ack'])
+E             def test_actual_original_startup_through_terminal_and_helper_closure(request,monkeypatch,case):
+E                 stack,_,driver=scheduled(request,monkeypatch)
+E                 broker,_,client,work=stack
+E                 launcher=broker._owned_test_startup
+E                 original=PersistenceClient._rpc
+E                 def rpc(self,kind,body,end,**kw):
+E                     reply=original(self,kind,body,end,**kw)
+E                     if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+E                         raise PersistenceError('ML-TEST-LOST-ACK')
+E                     return reply
+E                 monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+E                 result=run(driver)
+E         >       assert result.execution_succeeded and result.terminal is not None,result.diagnostic
+E         E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E         E       assert (False)
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='7a5db6aa0bdcc07c405754f3d297870647bdb9a1f34ef231e0e65366778aefa...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_launcher_composition.py:97: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+E         FAILED tests/thesis_lite/maestro/test_launcher_composition.py::test_actual_original_startup_through_terminal_and_helper_closure[closed]
+E         2 failed, 1817 passed, 1 skipped, 24 subtests passed in 1782.47s (0:29:42)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020h/bin/python', '-m', 'pytest', '-q', '-p'...l_and_helper_closure[closed]\n2 failed, 1817 passed, 1 skipped, 24 subtests passed in 1782.47s (0:29:42)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75f46dc9c750>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='00043d432efdb8a9aaa6ea7b1113c7fa67c0a710be52b451ae160ba61e15d95...diagnostic='ML-PERSIST-TIMEOUT', health_scans=4, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:152: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[True-closed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[True-closed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75f46da2fd90>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261020r-private-caommxf7/test_actual_nonopen_writer_clo3/owned-report-fault-helper/run-bootstrap')
+changed_receipt = True
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='e0bb521eb8acc4f89e5782a4c1870cc48127b5cf5d72882aa2ddb5812cf1cb8...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/thesis_lite/maestro/test_runtime_lane_admission.py:55: MAESTRO_LANE_PROPOSAL not set: lane admission evidence runs under its own driver
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[True-closed]
+3 failed, 2100 passed, 1 skipped, 24 subtests passed in 3489.36s (0:58:09)

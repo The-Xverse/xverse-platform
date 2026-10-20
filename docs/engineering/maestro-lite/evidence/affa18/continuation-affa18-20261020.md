@@ -53,3 +53,30 @@ records (in two entries), lane activation not approved, M1 not admitted, increme
 open, and F-02 native deferred. None is cleared by steps 1–2: no unknown cause was explained, and
 F-02 awaits the author's design choice. Lane activation therefore remains correctly refused by the
 product's own readiness check.
+
+## Step 4 done: native F-02 watch proof (findings 403-409; checkpoint 18-4 e290ce78c)
+
+- Author choice: option (i), supervisor-keyed WATCH token. bootstrap.c c1f2885d… (binary
+  b47d1a01…), run_authority.c ffdc632e… (binary c0c162ea…), affa_protocol/bootstrap/affa_client/
+  run_broker Python changes; new tests/thesis_lite/maestro/test_affa_watch_token.py (6 tests).
+- Three independent reviews: 0 HIGH/MEDIUM; F02D-01 LOW recorded as a non-claim (no key
+  confidentiality against a hostile same-uid peer); optional hardening: owner-unreadable
+  authority image. The comment at run_authority.c:510 will be corrected with the next helper change.
+- Environment h (wheel eca0939d…), runtime lane e, crash-point f 17/17 per phase, proposal d
+  7b454c1d…, lane admission f 23/23 per phase. Run q aborted at preflight (2104 vs 2102 declared).
+- Run r: **3 failed/2100 passed/1 skipped**, all F-02/F-01 controls passed; it ran under an unrelated
+  CARLA simulator load (PID 3540156, started 16 min before), 65 operation stalls > 0.5 s against
+  7–21 in clean runs, 0 fsync spikes. A/B `ab-load-discrimination-20261020a/` (10 interleaved
+  iterations per arm): the paused-shared case failed 5/10 on d52683ad (pre-F-02) and 5/10 on e290ce78c;
+  F-02 is not the discriminator; host contention supported, not proven (finding 409).
+- CAPA successor capa-20261020-affa18-run-r/register.json
+  7f46df79cbcee43791a10b1a924ff5959c0d64e480a27ae8ba3cda02a22935f2 (50/478; F-02 FIX_CANDIDATE).
+
+## Next (current)
+
+1. Clean full run on e290ce78c when the host is quiet (driver s = driver r pattern, environment h,
+   2104 collected); check the load average and that no foreign simulator is running before launch.
+2. Re-examine readiness: five blocking entries remain (ten unknown causes in two entries, lane
+   activation not approved, M1 not admitted, increment18 acceptance open).
+3. AUTHOR: acceptance of increment18; merges of increments 17/18 into main; lane activation; M1;
+   optional F02D-01 hardening; F-05 wire revision.

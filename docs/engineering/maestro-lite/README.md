@@ -1,8 +1,27 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (step 1, native F-01 fix, verified; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes implemented; F-02 full run r failed under an unrelated host load, clean run owed; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increment18 step 4: native F-02 watch proof (2026-10-20, findings 403-409)
+
+The author chose option (i). RUN_BOOTSTRAP generates a key at init and answers every WATCH with
+HMAC-SHA256(key, "MLWT"‖st_dev‖st_ino); the authority receives the key in a sealed memfd at
+birth and rejects any ADVANCE whose ticket does not match the HMAC of the boundary descriptor it
+is sent (constant-time compare). Both helpers make themselves non-dumpable first. Python carries
+the token but cannot mint it. Three independent reviews: 0 HIGH, 0 MEDIUM; F02D-01 (LOW) is
+recorded as a non-claim, since key confidentiality against a hostile same-uid peer is not
+claimed (finding 407). Evidence on checkpoint 18-4 e290ce78c: six new controls, environment h, runtime lane e,
+crash-point f 17/17 per phase, lane admission f 23/23 per phase. **Full run r: 3 failed / 2100
+passed / 1 skipped**, with all F-02 and F-01 controls passing. It ran under an unrelated CARLA
+simulator load started 16 min earlier: operation stalls over 0.5 s were 65, against 7–21 in clean
+runs, with 0 fsync spikes. An interleaved A/B on the failing cases failed the paused-shared case 5/10
+on the pre-F-02 bytes and 5/10 on the F-02 bytes, so F-02 is not the discriminator (finding 409).
+A clean full run on e290ce78c is owed once the host is quiet. CAPA successor
+[capa-20261020-affa18-run-r](evidence/affa18/capa-20261020-affa18-run-r/register.json)
+(50 records/478 bindings, parent preserved; ML-CAPA-381-F02 → FIX_CANDIDATE, effectiveness
+NOT_DEMONSTRATED).
 
 ## Increment18 step 2: clean persistent-media reference run p (2026-10-20, finding 402)
 

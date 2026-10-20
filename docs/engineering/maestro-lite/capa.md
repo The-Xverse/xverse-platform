@@ -321,3 +321,14 @@ Increment18: the [run-p successor](evidence/affa18/capa-20261020-affa18-run-p/re
 It adds the ext4 reference run p (2097 passed/1 skipped/0 failed; probe0 spikes, worst0.053s, a
 quiet host) as a host-condition observation on222,357,359-CHILD,364,374,379,381-F01 and389; the
 stall class of379/389 was not exercised. No state, cause or effectiveness changes.
+
+Increment18: the [run-r successor](evidence/affa18/capa-20261020-affa18-run-r/register.json)
+(7f46df79cbcee434…) validates 50 records/478 bindings and preserves all 446 run-p parent bindings.
+ML-CAPA-381-F02 moves to FIX_CANDIDATE with the native watch proof of findings 403-407
+(supervisor HMAC token verified by the authority on ADVANCE); prevention = the six F-02 controls,
+lane admission f, runtime lane e and crash-point f; limits name F02D-01 and the reviewed
+non-claims; effectiveness NOT_DEMONSTRATED. Run r (3 failed/2100 passed/1 skipped under an
+unrelated host load) and the A/B load discrimination (paused-shared case 5/10 failures on both
+the pre-F-02 and F-02 bytes) are added to 222, 357, 359-CHILD, 364, 374, 379, 381-F01 and 389 as
+observations, and to 359's next action; run r is not a clean run. Review spans 402-408 are bound;
+409 goes to the next successor. Ten causes remain unknown; manual OBSERVE_ONLY.

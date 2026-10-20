@@ -1,0 +1,61 @@
+{
+  "checks": {
+    "build": {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020h/bin/python",
+        "-m",
+        "build",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "build 1.6.1 (/tmp/maestro-lite-platform-regression-target-20261020h/lib/python3.13/site-packages/build)",
+      "stderr": ""
+    },
+    "hatchling": {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020h/bin/python",
+        "-I",
+        "-c",
+        "import hatchling, importlib.metadata as m; print(m.version('hatchling'))"
+      ],
+      "returncode": 0,
+      "stdout": "1.32.4",
+      "stderr": ""
+    },
+    "pytest": {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020h/bin/python",
+        "-m",
+        "pytest",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "pytest 9.0.3",
+      "stderr": ""
+    },
+    "plugin": {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020h/bin/python",
+        "-I",
+        "-c",
+        "import maestro_receipt_namespace as m, hashlib; print(hashlib.sha256(open(m.__file__,'rb').read()).hexdigest())"
+      ],
+      "returncode": 0,
+      "stdout": "8aef024ccf5f34f36196e6217cee8d666d84b1866cfa0b9eeb25696d8a42ad10",
+      "stderr": ""
+    }
+  },
+  "build_versions": {
+    "build": "1.6.1",
+    "hatchling": "1.32.4",
+    "packaging": "26.3",
+    "pathspec": "1.1.1",
+    "pluggy": "1.7.0",
+    "pyproject-hooks": "1.3.3",
+    "trove-classifiers": "2026.9.21.13"
+  },
+  "plugin_sha256": "8aef024ccf5f34f36196e6217cee8d666d84b1866cfa0b9eeb25696d8a42ad10",
+  "preparation_sha256": "c520fdc04b6ee817bde4826e9890f25dd044f078b0e2b8b3570cb927609d4c49",
+  "pip_list_sha256": "330288ed4796b5407813539adee9beec68a9faa41347a46cda91bfbbcba48506",
+  "passed": true
+}

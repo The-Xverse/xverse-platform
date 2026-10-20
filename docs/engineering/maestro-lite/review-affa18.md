@@ -338,3 +338,61 @@ candidate/maestro-lite-affa18-20261020, worktree
     reply naming a child, rejected by the WATCH rule (test module re-run: 6
     passed). F02D-04 confirms the supervisor closure. F-02 stands as addressed
     for its stated scope.
+
+408. Checkpoint 18-4 e290ce78c (the F-02 change, findings 403-407) and its
+    lane admission evidence. Proposal `evidence/affa18/lane-admission-proposal-20261020d.json`
+    (sha256 7b454c1d…9edf) is built from e290ce78c with a clean src: helper
+    digests from runtime lane e (authority c0c162ea…, RUN_BOOTSTRAP supervisor
+    b47d1a01…), composed-case indexes from crash-point f, environment h (wheel
+    eca0939d… of this tree), verification review = the F-02 review; facility
+    digest f19d534a…, readiness digest 4056f582…, execution_approved false,
+    five blocking findings (the F-02 deferral entry is removed because F-02 is
+    implemented; ten unknown causes in two entries, lane activation not
+    approved, M1 not admitted, increment18 acceptance open). Lane admission
+    driver f (`lane-admission-20261020f/`, receipt 0551f2c5…f212): source 23
+    passed, installed wheel 23 passed. Full-run driver q stopped at its
+    collection preflight (2104 collected against a declared 2102, the six new
+    F-02 tests); no test ran; its directory is retained as an aborted preflight
+    and run r (driver verify-platform-regression-20261020r.py, 2104) is live.
+
+409. Terminal read-only review of run r (driver verify-platform-regression-20261020r.py,
+    pytest 3801780, environment h, e290ce78c, 2104 collected, TMPDIR on tmpfs):
+    returncode 1, 3489.36 s, **3 failed / 2100 passed / 1 skipped**, no outer timeout,
+    frozen inputs unchanged, descendants gone. Receipt 68a937cb…505d, log 381cb93d…0cdc,
+    triage `failure-triage.json` 6cf8b857…bd88, correlation
+    `stall-fsync-correlation.json` b03e62a6…bdd8. Run r is not a clean run.
+    (a) Failures: test_shared_dispatcher::test_paused_shared_ticks_renew_both_original_
+    leases_and_observe_health (ML-PERSIST-TIMEOUT, health_scans 4, lease_renewals 8);
+    test_terminal_faults::test_actual_nonopen_writer_close_requires_original_report_
+    receipt[True-closed] (ML-PERSIST-TIMEOUT, renewals 2); and the nested Argus case, whose
+    child reports 2 failed / 1817 passed / 1 skipped (test_dispatcher::test_paused_ticks_
+    still_service_host_health_and_original_leases; test_launcher_composition::test_actual_
+    original_startup_through_terminal_and_helper_closure[closed]; tail only). All six F-02
+    controls (test_affa_watch_token.py) and the F-01 control passed.
+    (b) Host condition: a CARLA 0.9.16 simulator of an unrelated project
+    (CarlaUE4-Linux-Shipping, PID 3540156, ~116 % CPU, 3 GB RSS) started at 14:22:03 +0100,
+    16 min before run r started (14:38:22), and was still running at its end, alongside
+    live factory collectors; load average 7.4/9.6/9.9 on 32 CPUs at the receipt. Elapsed
+    time of the full run has risen monotonically m 2409 s, o 2735 s, p 3068 s, r 3490 s;
+    operation stalls > 0.5 s (same correlation tool) were 7–21 in clean runs i–o, 33 in p and
+    65 in r, with 0 fsync spikes in r (13 951 probe samples, worst 0.0001 s), so the storage
+    hypothesis does not apply to r. The process is not ours and was not stopped.
+    (c) Discrimination (`evidence/affa18/ab-load-discrimination-20261020a.py` dc64d985…77fe,
+    receipt 03462b0d…7112): the four failing node IDs, ten interleaved iterations per arm,
+    each from a `git archive` snapshot on tmpfs with driver r's selected environment, arm A =
+    d52683ad (pre-F-02, environment f, run p's configuration), arm B = e290ce78c (F-02,
+    environment h). test_paused_shared_ticks failed **5/10 in A and 5/10 in B**; the other
+    three failed 0/10 in each arm. Both diagnostics occur in the pre-F-02 arm (A: 2
+    ML-PERSIST-TIMEOUT, 3 ML-SCHEDULE-TEARDOWN-INCOMPLETE; B: 5
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE). The same case passed in all nine full runs i–p before
+    the load appeared. Conclusion: the F-02 change is not the discriminator (identical
+    failure rate on the pre-F-02 bytes under the same load); a host-contention cause is
+    supported, not proven (no run after the load ended). The paused-shared fixture fails at
+    50 % under moderate load in isolation, which is a thin-margin observation for
+    ML-CAPA-364, not a product defect claim; fixture margins remain capped (findings 362/367).
+    (d) Disposition: run r is retained as a failed run under a changed host condition and as
+    a prevention observation; it does not count as the clean full run owed on the F-02
+    bytes. ML-CAPA-381-F02 may still move to FIX_CANDIDATE on its native controls (passed
+    inside run r, lane admission f, runtime lane e, crash-point f); effectiveness remains
+    NOT_DEMONSTRATED. A clean full run on e290ce78c is owed once the host is quiet; no
+    product or fixture edit follows from this finding.
