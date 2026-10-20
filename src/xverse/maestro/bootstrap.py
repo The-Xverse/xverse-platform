@@ -260,12 +260,13 @@ class BootstrapPacket:
             raise BootstrapError("ML-BOOT-WIRE-HEADER")
         if any(type(v) is not bytes or len(v) != 32 for v in (self.scope, self.token)):
             raise BootstrapError("ML-BOOT-WIRE-DIGEST")
-        if (self.pid == 0) != (self.token == ZERO) or self.pid == 1:
+        # F-02 (finding 403): a v2 WATCH reply (kind 20) carries the supervisor's watch token with pid 0.
+        if ((self.pid == 0) != (self.token == ZERO) and not (watch and self.kind == 20)) or self.pid == 1:
             raise BootstrapError("ML-BOOT-WIRE-CHILD")
         if watch and (
             not self.slot
             or self.pid
-            or self.token != ZERO
+            or (self.token == ZERO) != (self.kind == 4)
             or self.state
             or not self.sequence
         ):
@@ -483,6 +484,8 @@ class BootstrapSession(_Original):
         self._authority_input = None
         self._watches, self._watch_log = {}, ()
         self._watch_registry = self._watches
+        self._watch_tokens, self._watch_token_log = {}, ()
+        self._watch_token_registry = self._watch_tokens
         self._registries = (
             self._children,
             self._pending,
@@ -567,6 +570,8 @@ class BootstrapSession(_Original):
             or tuple(sorted(self._clients.items())) != self._client_log
             or self._watches is not self._watch_registry
             or tuple(self._watches.items()) != self._watch_log
+            or self._watch_tokens is not self._watch_token_registry
+            or tuple(self._watch_tokens.items()) != self._watch_token_log
         ):
             raise BootstrapError("ML-BOOT-INVENTORY-REPLACED")
 
@@ -801,11 +806,13 @@ class BootstrapSession(_Original):
                 raise BootstrapError("ML-BOOT-WATCH-SCOPE")
             slot = len(self._watches) + 1
             reply, _ = self._rpc(4, deadline, slot=slot, fds=(entry.fd,))
-            if reply.pid or reply.token != ZERO or reply.state:
+            if reply.pid or reply.token == ZERO or reply.state:
                 self.cancel("bootstrap-watch-uncertain")
                 raise BootstrapError("ML-BOOT-WATCH-ACK")
             self._watches[identity] = descriptor
             self._watch_log = tuple(self._watches.items())
+            self._watch_tokens[identity] = reply.token  # F-02: echoed on ADVANCE, verified natively
+            self._watch_token_log = tuple(self._watch_tokens.items())
         finally:
             self._lock.release()
 

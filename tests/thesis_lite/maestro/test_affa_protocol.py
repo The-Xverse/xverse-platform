@@ -100,14 +100,18 @@ def test_register_and_query_issued_do_not_fabricate_resource_handles():
         dataclasses.replace(issued, handle=b"h" * 32)
 
 
-def test_selective_generation_advance_has_no_old_handle_or_release_ticket():
+def test_selective_generation_advance_has_no_old_handle_and_carries_only_the_watch_token():
+    # F-02 (finding 403): the ADVANCE request's ticket field carries the supervisor's WATCH token;
+    # it is mandatory on the request and absent from the ADVANCED reply.
+    with pytest.raises(ProtocolError, match="TICKET"):
+        AuthorityFrame(AuthorityKind.ADVANCE, 10, 123456790, SCOPE, 2, 3, 2, b"n" * 16, *DIGESTS)
     advance = AuthorityFrame(AuthorityKind.ADVANCE, 10, 123456790, SCOPE, 2, 3, 2,
-                             b"n" * 16, *DIGESTS)
+                             b"n" * 16, *DIGESTS, ticket=b"w" * 32)
     assert AuthorityFrame.decode(advance.encode()) == advance
     assert struct.unpack_from("!I", advance.encode(), 4)[0] == 12
-    acknowledged = dataclasses.replace(advance, kind=AuthorityKind.ADVANCED, epoch=4)
+    acknowledged = dataclasses.replace(advance, kind=AuthorityKind.ADVANCED, epoch=4, ticket=bytes(32))
     assert AuthorityFrame.decode(acknowledged.encode()) == acknowledged
     with pytest.raises(ProtocolError):
         dataclasses.replace(advance, handle=b"h" * 32)
     with pytest.raises(ProtocolError):
-        dataclasses.replace(advance, ticket=b"t" * 32)
+        dataclasses.replace(acknowledged, ticket=b"t" * 32)

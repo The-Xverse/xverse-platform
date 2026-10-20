@@ -6,7 +6,9 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/sched.h>
+#include <openssl/crypto.h>
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdint.h>
@@ -49,7 +51,7 @@ struct authority {
  int channel,parent; struct ucred peer;
  uint64_t generation,lease,epoch,sequence,deadline;
  unsigned count,registered,closed,freeze_failed;
- unsigned char scope[32],session[32];
+ unsigned char scope[32],session[32],watch_key[32]; /* F-02 (finding 403): supervisor watch key */
  struct unit units[16];
 };
 static uint64_t now_ns(void) { struct timespec t;if(clock_gettime(CLOCK_MONOTONIC,&t)||t.tv_sec<0)return 0;return (uint64_t)t.tv_sec*NS+(uint64_t)t.tv_nsec; }
@@ -278,9 +280,12 @@ static int recipe(struct unit *u,int fd) {
     return offset==(size_t)size?0:-1;
 }
 static int initialize(struct authority *g,int argc,char **argv) {
-    if(argc!=3)return -1;
-    int channel=decimal(argv[1]),input=decimal(argv[2]);off_t size;
-    if(channel<0||input<0||channel==input||sealed(input,2688,&size)||size<288)return -1;
+    if(argc!=4)return -1;
+    int channel=decimal(argv[1]),input=decimal(argv[2]),key=decimal(argv[3]);off_t size,key_size;
+    if(channel<0||input<0||key<0||channel==input||key==channel||key==input||sealed(input,2688,&size)||size<288)return -1;
+    /* F-02: the supervisor-generated watch key arrives only in this sealed memfd. */
+    if(sealed(key,32,&key_size)||key_size!=32||pread(key,g->watch_key,32,0)!=32||zero(g->watch_key,32))return -1;
+    close(key);
     unsigned char data[2688];if(pread(input,data,(size_t)size,0)!=size)return -1;
     if(memcmp(data,"AC17",4)||get32(data+4)!=2||!zero(data+104,24))return -1;
     g->generation=get64(data+8);g->lease=get64(data+16);g->deadline=g->lease;g->epoch=get64(data+24);
@@ -370,11 +375,18 @@ static int stop_child(struct authority *g,struct generation *e) {
     }
     return -1;
 }
+/* F-02 (finding 403): ADVANCE carries the supervisor's WATCH token for its boundary in the ticket field. */
+static int watched(struct authority *g,const struct stat *st,const unsigned char *token) {
+    unsigned char message[20],expected[32];unsigned length=0;
+    memcpy(message,"MLWT",4);put64(message+4,(uint64_t)st->st_dev);put64(message+12,(uint64_t)st->st_ino);
+    int ok=HMAC(EVP_sha256(),g->watch_key,32,message,sizeof(message),expected,&length)&&length==32&&!CRYPTO_memcmp(expected,token,32);
+    OPENSSL_cleanse(expected,32);return ok;
+}
 static int advance_unit(struct authority *g,struct unit *u,const unsigned char *p,int fd) {
     struct generation *old=&u->history[u->used-1];struct stat next;
     if(!enabled(g)||old->number==UINT64_MAX||get64(p+72)!=old->number+1||get64(p+72)>u->maximum||
        u->used>=128||g->epoch>=UINT64_MAX-1||!old->retired||!old->reaped||!removed(old)||memcmp(p+96,old->proof+16,32)||
-       !fresh(g,p)||!zero(p+224,64)||cgroup(fd,1)||fstat(fd,&next))return -1;
+       !fresh(g,p)||zero(p+224,32)||!zero(p+256,32)||cgroup(fd,1)||fstat(fd,&next)||!watched(g,&next,p+224))return -1;
     int parent=openat(fd,"..",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
     int valid=parent>=0&&same(parent,u->parent);if(parent>=0)close(parent);if(!valid)return -1;
     for(unsigned i=0;i<g->count;++i){struct unit *other=&g->units[i];
@@ -495,6 +507,8 @@ static int cleanup(struct authority *g) {
     return unresolved?70:0;
 }
 int main(int argc,char **argv) {
+    /* F02R-01 (finding 406): not dumpable before any secret exists in this process. */
+    if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;
     struct authority *g=calloc(1,sizeof(*g));if(!g)return 64;
     g->channel=g->parent=-1;
     for(unsigned i=0;i<16;++i){g->units[i].image=g->units[i].cwd=g->units[i].parent=-1;

@@ -758,6 +758,7 @@ class RunBroker(_Original):
                 prepared.receipt.intent_digest,
                 prepared.receipt.flush_digest,
                 c1,
+                ticket=self.connection.watch_token(entry.fd),  # F-02: supervisor WATCH token
             )
             self.connection._exchange(frame, fds=(entry.fd,))
             advance = self.connection._advance_receipts[-1]

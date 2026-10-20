@@ -3,6 +3,7 @@
 from dataclasses import replace
 import array
 import hashlib
+import hmac
 from importlib.resources import files
 import json
 import os
@@ -68,12 +69,18 @@ def authority_binary(tmp_path_factory):
     return binary
 
 
+# F-02 (finding 403): ADVANCE frames must carry a nonzero ticket; rpc() replaces this placeholder
+# with the supervisor-equivalent WATCH token of the boundary descriptor being sent.
+WATCH_PLACEHOLDER = b"W" * 32
+
+
 class Harness:
     def __init__(self, manager, cwd, image, units):
         self.manager, self.cwd, self.image, self.units = manager, cwd, image, units
         self.fds, self.childfds, self.sequence, self.epoch = [], [], 0, 0
         self.config = self.channel = self.process = None
         self.closed = False
+        self.watch_key = None
 
     def end(self):
         return min(
@@ -81,7 +88,15 @@ class Harness:
             self.config.generation_ns if self.closed else self.lease,
         )
 
+    def watch_token(self, fd):
+        """The supervisor's WATCH token for a boundary descriptor (F-02, finding 403)."""
+        st = os.fstat(fd)
+        return hmac.new(self.watch_key, b"MLWT" + st.st_dev.to_bytes(8, "big") + st.st_ino.to_bytes(8, "big"),
+                        hashlib.sha256).digest()
+
     def rpc(self, frame, fds=()):
+        if frame.kind is K.ADVANCE and fds and frame.ticket == WATCH_PLACEHOLDER:
+            frame = replace(frame, ticket=self.watch_token(fds[0]))
         self.sequence += 1
         end = self.end()
         if frame.kind is K.RELEASE:
@@ -145,7 +160,8 @@ class Harness:
             u["intent"],
             u["mirror"],
             u["boundary"],
-            ticket=u.get("ticket", bytes(32)) if kind is K.RELEASE else bytes(32),
+            ticket=(u.get("ticket", bytes(32)) if kind is K.RELEASE
+                    else WATCH_PLACEHOLDER if kind is K.ADVANCE else bytes(32)),
             handle=u.get("handle", bytes(32)),
         )
 
@@ -241,13 +257,17 @@ def authority(environment, authority_binary, binaries, tmp_path):
         )
         config_fd = _sealed(h.config.encode(), "owned-affa-config")
         h.fds.append(config_fd)
+        # F-02 (finding 403): a direct launch plays the supervisor and supplies its own sealed watch key.
+        h.watch_key = os.urandom(32)
+        key_fd = _sealed(h.watch_key, "owned-affa-watch-key")
+        h.fds.append(key_fd)
         parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
         parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
         parent.settimeout(3)
         h.channel = parent
         h.process = subprocess.Popen(
-            [str(authority_binary), str(peer.fileno()), str(config_fd)],
-            pass_fds=(peer.fileno(), config_fd),
+            [str(authority_binary), str(peer.fileno()), str(config_fd), str(key_fd)],
+            pass_fds=(peer.fileno(), config_fd, key_fd),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
         )
@@ -463,6 +483,7 @@ def test_generation_advance_cannot_change_the_original_action_digest(authority):
         digest(b"new-intent"),
         digest(b"new-mirror"),
         digest(b"new-boundary"),
+        ticket=WATCH_PLACEHOLDER,
     )
     assert h.rpc(frame, (fd,)).kind is K.REJECTED
     assert (work / "u0.marker").read_bytes() == b"EXEC\n"

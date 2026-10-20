@@ -200,3 +200,141 @@ candidate/maestro-lite-affa18-20261020, worktree
     not exercise the stall class that ML-CAPA-389 and ML-CAPA-379 target, whose
     effectiveness stays NOT_DEMONSTRATED. Elapsed time is about 5.5 minutes
     longer than run o on tmpfs, consistent with persistent-media writes.
+
+403. Author decision 2026-10-20 ("go with your recommendation") on finding
+    394(d): F-02 is implemented natively with option (i). Change specification,
+    recorded before any edit:
+    (a) Supervisor (bootstrap.c, RUN_BOOTSTRAP build only): at initialisation it
+    draws a 32-byte watch key with getrandom; each successful WATCH (kind 4)
+    replies (kind 20) with token = HMAC-SHA256(key, "MLWT" || st_dev || st_ino)
+    of the retained boundary descriptor in the reply's token field (p+72); at
+    the authority's birth (role 4) it passes the key in a sealed memfd as a
+    third argument and closes its copy after clone. Python never receives the
+    key.
+    (b) Authority (run_authority.c): initialize requires the third argument,
+    reads exactly 32 bytes from the sealed memfd and closes it; advance_unit
+    additionally requires the request's ticket field (p+224) to equal the
+    HMAC over the ADVANCE boundary descriptor's st_dev/st_ino, compared with
+    CRYPTO_memcmp, and keeps the handle field (p+256) zero. An ADVANCE with no
+    or a wrong token is rejected natively, so an unwatched boundary can no
+    longer be admitted even if the Python precondition is bypassed.
+    (c) Python: affa_protocol.py requires a nonzero ticket on ADVANCE requests
+    (ADVANCED replies stay zero); bootstrap.py accepts a nonzero token on v2
+    WATCH replies (kind 20, pid 0) and retains it per watched identity;
+    affa_client.py checks before sending that an ADVANCE carries the retained
+    token of its descriptor (the existing _watched precondition stays);
+    run_broker.py puts that token into the ADVANCE frame.
+    (d) Tests: the native harness supplies its own sealed key and computes
+    tokens as the supervisor would; new native controls show that ADVANCE
+    without a token and with the token of a different boundary are REJECTED
+    with no generation admitted, and that the correct token is ADVANCED; the
+    client test for unwatched boundaries carries a nonzero ticket so it still
+    reaches the UNWATCHED check; end-to-end generation tests through the real
+    supervisor exercise the whole flow.
+    (e) Wire compatibility: AF17 and BS17 packet layouts are unchanged; field
+    semantics change for ADVANCE tickets and WATCH reply tokens, and the
+    authority's argv gains one argument, so old and new helpers do not
+    interoperate (both are built from the same tree in every harness).
+    (f) Verification: compile both helpers with the harness flags; source
+    phase over the AFFA, bootstrap, generation and composed modules; an
+    independent review of the changed bytes; environment g; runtime lane,
+    crash-point and lane admission re-runs from a committed tree; full run.
+
+404. F-02 implemented as specified in finding 403, with two Python details found
+    while testing and recorded here: the client's expected-reply builder no
+    longer copies the request ticket into the expected ADVANCED reply (an
+    ADVANCED reply carries no ticket), and test harnesses that build ADVANCE
+    frames use a nonzero placeholder ticket that the direct-launch harness
+    replaces with its own HMAC and the client-routed harness with the
+    supervisor's retained token. Changed bytes (sha256): bootstrap.c 83b10177…,
+    run_authority.c 5938cd01…, affa_protocol.py 4c0e8eb0…, bootstrap.py
+    48e38bec…, affa_client.py f88a4bc9…, run_broker.py 29ebeba8…; tests
+    test_affa_native.py, test_affa_client.py, test_affa_protocol.py changed;
+    test_affa_watch_token.py new. Both helpers compile warning-free with the
+    harness flags (authority 05314aa505b3…, RUN_BOOTSTRAP supervisor
+    500b8b6f2160…; the plain supervisor build is clean too). Source
+    phase, candidate src, environment f interpreter: the AFFA native, epoch,
+    client, protocol, F-01 and F-02 modules with the run-bootstrap and bootstrap
+    modules — 115 passed; twenty generation, run-broker, composed, runtime lane,
+    runtime entry/service, launcher-composition, bootstrap-launcher, runtime
+    admission and recovery modules that exercise WATCH and ADVANCE through the
+    real supervisor — 224 passed, 1 skipped (the lane admission control, by
+    design). The F-02 controls observe: correct token ADVANCED and the new
+    generation released; missing (zeroed below the protocol layer), foreign
+    (the other unit's real boundary) and forged tokens REJECTED with reason 4,
+    an empty new boundary and a rejected late Stage. Pending: the independent
+    review of these bytes, environment g, runtime lane d, crash-point e, a
+    committed checkpoint, proposal d, lane driver f, full run q.
+
+405. Independent review of the F-02 bytes received (separate agent session,
+    read-only; `evidence/affa18/helper-change-f02-independent-review-20261020.{json,md}`):
+    verdict "F-02 addressed"; 22 PASS, 0 FAIL, 3 NOTE checks; 0 HIGH, 0 MEDIUM,
+    3 LOW, 4 NOTE; all six frozen hashes verified. Confirmed: Python holds tokens
+    but never the key; the authority recomputes the token from the same open
+    descriptor it then admits, before any state change; inode reuse cannot occur
+    while the supervisor keeps its watched descriptors open. Dispositions:
+    F02R-01 (LOW: the authority is dumpable, so its Python parent could ptrace it
+    or read the key fd through /proc, until PR_SET_DUMPABLE(0) at the end of
+    initialize) — FIXED next under finding 406 by making the authority
+    non-dumpable as the first statement of main; the supervisor holds the key
+    from initialisation under the same pattern, so it is made non-dumpable
+    first as well. F02R-02 (LOW: no packet-level test of the kind-20 token rule)
+    and F02R-03 (LOW: the client's ML-AFFA-WATCH-TOKEN check never exercised) —
+    tests added under finding 406. NOTEs recorded without change: F02R-04 a
+    token proves the boundary was watched, not that the supervisor still lives;
+    after abrupt supervisor death the authority accepts tokens until its lease
+    ends (the supervisor's death also ends the run's lease renewal); F02R-05 the
+    negative controls' late-Stage rejection is not independent proof of
+    non-admission and there is no negative control through a supervisor-born
+    authority; F02R-06 finding 403 omits the zero-key, seal and size checks, the
+    forged control and the F02R-01/04 caveats, which this finding now records;
+    F02R-07 a token is bound to a boundary identity, not to a unit, slot or
+    generation.
+
+406. F02R-01..03 addressed (finding 405). Both helpers call
+    prctl(PR_SET_DUMPABLE, 0) as the first statement of main, before any secret
+    exists in the process (authority: before the key memfd is read; supervisor:
+    before the watch key is generated); the later calls in initialize stay.
+    run_authority.c 5938cd01… → ffdc632ed58b796031d25eac0dfe739cf3ba151344d91dc60ed4be27cc2a5344,
+    bootstrap.c 83b10177… → c1f2885db167852b93d207b1051421e44610efa2f88bfe45309f4a944e8dfe05;
+    all three builds warning-free (authority c0c162ea…, RUN_BOOTSTRAP
+    supervisor b47d1a01…, plain supervisor). Tests added in
+    test_affa_watch_token.py (5880f335…): the packet rule (a v2 kind-20 reply
+    must carry a token with pid 0; a WATCH request with a token and any other
+    child-less reply with a token are rejected — the request by the general
+    token-without-child rule, which precedes the WATCH rule; v1 has no WATCH
+    reply), and the client's pre-send check (an ADVANCE whose ticket differs
+    from the retained supervisor token raises ML-AFFA-WATCH-TOKEN, nothing is
+    sent, the connection is not revoked). Source phase: AFFA native, epoch,
+    client, protocol, F-01, F-02, run-bootstrap, bootstrap and bootstrap-value
+    modules — 127 passed. Evidence produced before this change (environment g,
+    runtime lane d, crash-point e) is superseded for the final bytes.
+
+407. Independent review of the finding-406 delta received (separate agent
+    session, read-only; `evidence/affa18/helper-change-dumpable-independent-review-20261020.{json,md}`):
+    verdict "partially addressed"; 7 PASS, 1 FAIL, 2 NOTE checks; 0 HIGH, 0
+    MEDIUM, 1 LOW, 3 NOTE; removing the two added lines reproduces the
+    previously reviewed blobs exactly; binary hashes of finding 406 reproduced.
+    The supervisor side is closed (non-dumpable before the key is generated).
+    F02D-01 (LOW, authority): exec of a readable image makes the authority
+    dumpable again from execveat until main, while it already holds the
+    inherited key memfd, so a hostile same-uid process (including the Python
+    peer, which controls the boundary's thaw timing) could read the key in that
+    window. Disposition: RECORDED AS A NON-CLAIM, no helper change. Key
+    confidentiality against a hostile same-uid peer is not claimed; the
+    containment design never defended against a hostile same-uid owner, which
+    already owns every boundary's cgroup.freeze and can signal every child
+    directly. F-02 is claimed only against a buggy, regressed or bypassed Python
+    precondition, which it closes natively. The reviewer's alternative (an
+    owner-unreadable authority image enforced by the supervisor, so exec starts
+    non-dumpable) is recorded as an option for a later hardening increment.
+    F02D-02 (NOTE): the comment at run_authority.c:510 and finding 406 say
+    "before any secret exists in this process"; precisely, the key bytes reach
+    memory only after the process is non-dumpable, while the key memfd is
+    already open from exec — this finding corrects the record; the comment is
+    left unchanged to avoid another helper-byte change for wording alone and
+    will be corrected with the next helper change. F02D-03 (NOTE): the packet
+    test now pins the v1 rejection to ML-BOOT-WIRE-HEADER and adds a kind-20
+    reply naming a child, rejected by the WATCH rule (test module re-run: 6
+    passed). F02D-04 confirms the supervisor closure. F-02 stands as addressed
+    for its stated scope.

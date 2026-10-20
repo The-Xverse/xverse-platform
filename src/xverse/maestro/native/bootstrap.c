@@ -6,6 +6,7 @@
 #include <linux/memfd.h>
 #include <linux/sched.h>
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdint.h>
@@ -44,6 +45,7 @@ struct supervisor {
     unsigned char scope[32]; unsigned char *config; struct image images[IMAGES]; struct child children[64];
 #ifdef RUN_BOOTSTRAP
     int boundary_parent, watched[128]; unsigned watch_count, authority_slot, storage_slot, terminal;
+    unsigned char watch_key[32], watch_reply[32]; /* F-02 (finding 403): never sent to the Python peer */
 #endif
 };
 static uint64_t now_ns(void) { struct timespec t;if(clock_gettime(CLOCK_MONOTONIC,&t)||t.tv_sec<0)return 0;return (uint64_t)t.tv_sec*NS+(uint64_t)t.tv_nsec; }
@@ -97,6 +99,9 @@ static int respond(struct supervisor *s,unsigned kind,uint64_t slot,struct child
     unsigned char p[PACKET]={0};memcpy(p,WIRE_MAGIC,4);p[7]=(unsigned char)kind;put64(p+8,s->sequence);put64(p+16,s->deadline);memcpy(p+24,s->scope,32);put64(p+56,slot);
     if(c){put64(p+64,(uint64_t)c->pid);memcpy(p+72,c->token,32);put64(p+104,c->active);}
     else if(kind!=20)put64(p+104,s->lease);
+#ifdef RUN_BOOTSTRAP
+    if(!c&&kind==20)memcpy(p+72,s->watch_reply,32);
+#endif
     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(int))];} control;
     struct iovec iov={.iov_base=p,.iov_len=sizeof(p)};struct msghdr msg={.msg_iov=&iov,.msg_iovlen=1};
     if(fd>=0){memset(&control,0,sizeof(control));msg.msg_control=control.data;msg.msg_controllen=sizeof(control.data);
@@ -124,6 +129,9 @@ static int initialize(struct supervisor *s,int argc,char **argv) {
     if(s->channel<0||sealed(input,65536,&size)||size<56)return -1;
     s->config=malloc((size_t)size);if(!s->config||pread(input,s->config,(size_t)size,0)!=size||memcmp(s->config,CONFIG_MAGIC,4)||get32(s->config+4)!=VERSION)return -1;
     unsigned length=0;if(EVP_Digest(s->config,(size_t)size,s->scope,&length,EVP_sha256(),NULL)!=1||length!=32)return -1;
+#ifdef RUN_BOOTSTRAP
+    if(getrandom(s->watch_key,32,0)!=32)return -1;
+#endif
     s->generation=get64(s->config+8);s->lease=get64(s->config+16);s->deadline=s->lease;uint64_t now=now_ns();
     if(!now||s->generation<=now+2*NS||s->generation-now>394*NS||s->lease<=now||s->lease-now>5*NS||s->lease>s->generation-2*NS)return -1;
     size_t offset=56;
@@ -171,6 +179,12 @@ static int terminal_fence(struct supervisor *s) {
     }
     return enabled(s)?0:-1;
 }
+/* F-02 (finding 403): WATCH proof the authority verifies natively on ADVANCE. */
+static int watch_token(const unsigned char *key,int fd,unsigned char *out) {
+    struct stat st;if(fstat(fd,&st))return -1;
+    unsigned char message[20];memcpy(message,"MLWT",4);put64(message+4,(uint64_t)st.st_dev);put64(message+12,(uint64_t)st.st_ino);
+    unsigned length=0;return HMAC(EVP_sha256(),key,32,message,sizeof(message),out,&length)&&length==32?0:-1;
+}
 static int watch_boundary(struct supervisor *s,int fd,uint64_t slot) {
     if(slot!=(uint64_t)s->watch_count+1||s->watch_count>=128||!enabled(s)||cgroup(fd,1))return -1;
     int parent=openat(fd,"..",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
@@ -179,6 +193,7 @@ static int watch_boundary(struct supervisor *s,int fd,uint64_t slot) {
     for(unsigned i=0;i<s->watch_count;++i)if(same(fd,s->watched[i]))return -1;
     for(unsigned i=0;i<64;++i)if(s->children[i].pid>0&&same(fd,s->children[i].cg))return -1;
     int retained=fcntl(fd,F_DUPFD_CLOEXEC,3);if(retained<0)return -1;
+    if(watch_token(s->watch_key,retained,s->watch_reply)){close(retained);return -1;}
     s->watched[s->watch_count++]=retained;return 0;
 }
 static int authority_input(struct supervisor *s,int fd,off_t size) {
@@ -233,15 +248,27 @@ static int birth(struct supervisor *s,struct child *c,unsigned role,int *fds) {
     }else if(role==3){args[1]="-I";args[2]="-m";args[3]="xverse.maestro.persistence_worker";args[4]=channel;args[5]=input;}
     else if(role==5){args[1]="-I";args[2]="-m";args[3]="xverse.maestro.controller_worker";args[4]=channel;args[5]=input;}
     else{args[1]=channel;args[2]=input;}
-    if(getrandom(c->token,32,0)!=32||!enabled(s))return -1;
+    int keyfd=-1;
+#ifdef RUN_BOOTSTRAP
+    char key[32];
+    if(role==4){ /* F-02: the watch key reaches only the authority, in a sealed memfd */
+        keyfd=(int)syscall(SYS_memfd_create,"maestro-watch-key",MFD_CLOEXEC|MFD_ALLOW_SEALING);
+        if(keyfd<0)return -1;
+        if(write(keyfd,s->watch_key,32)!=32||fcntl(keyfd,F_ADD_SEALS,SEALS)){close(keyfd);return -1;}
+        snprintf(key,sizeof(key),"%d",keyfd);args[3]=key;
+    }
+#endif
+    if(getrandom(c->token,32,0)!=32||!enabled(s)){if(keyfd>=0)close(keyfd);return -1;}
     struct clone_args clone={0};clone.flags=CLONE_PARENT|CLONE_PIDFD|CLONE_INTO_CGROUP;clone.cgroup=(__u64)(unsigned)c->cg;clone.pidfd=(uint64_t)(uintptr_t)&c->pidfd;clone.exit_signal=0;
     long pid=syscall(SYS_clone3,&clone,sizeof(clone));
     if(pid==0){
         if(syscall(SYS_close_range,3U,UINT_MAX,4U))_exit(126);
         if(fcntl(fds[2],F_SETFD,0)<0||(role!=2&&fcntl(fds[3],F_SETFD,0)<0)||(role<3&&fcntl(fds[1],F_SETFD,0)<0))_exit(126);
+        if(keyfd>=0&&fcntl(keyfd,F_SETFD,0)<0)_exit(126);
         int null=open("/dev/null",O_RDWR|O_CLOEXEC);if(null<0)_exit(126);for(int fd=0;fd<3;++fd)if(dup2(null,fd)<0)_exit(126);
         char *environment[]={NULL};syscall(SYS_execveat,s->images[image].fd,"",args,environment,AT_EMPTY_PATH);_exit(127);
     }
+    if(keyfd>=0)close(keyfd);
     if(pid<0)return -1;
     c->pid=(pid_t)pid;
 #ifdef RUN_BOOTSTRAP
@@ -278,6 +305,8 @@ static int cleanup(struct supervisor *s) {
     return unresolved?70:0;
 }
 int main(int argc,char **argv) {
+    /* F02R-01 (finding 406): not dumpable before the watch key is generated. */
+    if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;
     struct supervisor s={.channel=-1,.parent=-1};for(unsigned i=0;i<64;++i)s.children[i].cg=s.children[i].unit=s.children[i].pidfd=-1;
     if(initialize(&s,argc,argv))return 64;
     if(respond(&s,16,0,NULL,-1))return cleanup(&s);

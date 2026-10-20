@@ -37,6 +37,9 @@ def connect(stack, monkeypatch, *, maximum_generation=None):
     h.config = config
 
     def exchange(frame, fds=()):
+        from .test_affa_native import WATCH_PLACEHOLDER
+        if frame.kind is K.ADVANCE and fds and frame.ticket == WATCH_PLACEHOLDER:
+            frame = replace(frame, ticket=client.watch_token(fds[0]))  # F-02: real supervisor token
         until = h.end()
         if frame.kind is K.RELEASE:
             until = min(until, h.units[frame.slot - 1]["ticket_end"])
@@ -227,6 +230,7 @@ def test_advance_requires_actual_original_watched_C1_before_send(
         generation=2,
         sequence=client.sequence + 1,
         deadline_ns=h.end(),
+        ticket=b"\x01" * 32,  # F-02: an ADVANCE carries a WATCH token; the UNWATCHED check still precedes it
     )
     before = client.sequence
     with pytest.raises(ValueError, match="UNWATCHED"):

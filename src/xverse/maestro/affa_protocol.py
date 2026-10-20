@@ -121,7 +121,8 @@ class AuthorityFrame:
                 no_handle = kind in (AuthorityKind.INTENT, AuthorityKind.STAGE, AuthorityKind.QUERY_ISSUED, AuthorityKind.INTENT_RECORDED, AuthorityKind.ADVANCE, AuthorityKind.ADVANCED)
                 if no_handle != (self.handle == _ZERO32):
                     raise ProtocolError("ML-AFFA-HANDLE")
-                needs_ticket = kind in (AuthorityKind.RELEASE, AuthorityKind.ARMED, AuthorityKind.RELEASED)
+                # F-02 (finding 403): an ADVANCE request carries the supervisor's WATCH token here.
+                needs_ticket = kind in (AuthorityKind.RELEASE, AuthorityKind.ARMED, AuthorityKind.RELEASED, AuthorityKind.ADVANCE)
                 if needs_ticket != (self.ticket != _ZERO32):
                     raise ProtocolError("ML-AFFA-TICKET")
             if kind.value < 16 and (self.state or self.reason):

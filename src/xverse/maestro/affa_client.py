@@ -239,6 +239,14 @@ class AuthorityConnection(_Original):
             raise BootstrapError("ML-AFFA-C1-IDENTITY")
         return descriptor
 
+    def watch_token(self, fd):
+        """The supervisor's WATCH token for an exact watched original C1 (F-02, finding 403)."""
+        self._watched(fd)
+        token = self.child._root._watch_tokens.get(BootstrapChild._fd_identity(fd))
+        if token is None:
+            raise BootstrapError("ML-AFFA-UNWATCHED")
+        return token
+
     def _validate(self, request, fds):
         self._holder()
         if (
@@ -272,6 +280,8 @@ class AuthorityConnection(_Original):
             raise BootstrapError("ML-AFFA-RIGHTS")
         if fds:
             self._watched(fds[0])
+            if request.kind is K.ADVANCE and request.ticket != self.watch_token(fds[0]):
+                raise BootstrapError("ML-AFFA-WATCH-TOKEN")
         if request.kind is K.RELEASE:
             ticket = self._tickets.get(
                 (request.slot, request.generation, request.handle)
@@ -310,7 +320,8 @@ class AuthorityConnection(_Original):
                 state=reply.state,
                 reason=0,
                 handle=reply.handle if kind is K.STAGED else request.handle,
-                ticket=reply.ticket if kind is K.ARMED else request.ticket,
+                # F-02 (finding 403): the ADVANCE watch token is never echoed in ADVANCED.
+                ticket=reply.ticket if kind is K.ARMED else bytes(32) if kind is K.ADVANCED else request.ticket,
                 lease_ns=request.lease_ns if kind is K.RENEWED else 0,
             )
             if reply.state & ~511:

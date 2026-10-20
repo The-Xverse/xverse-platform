@@ -1,0 +1,98 @@
+{
+  "phases": [
+    {
+      "phase": "source",
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020g/bin/python",
+        "-m",
+        "pytest",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020/tests/thesis_lite/maestro/test_composed_post_release_loss.py",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020/tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+        "-q",
+        "-ra",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "/dev/shm/crash-matrix-source-private-5dpb1sxp"
+      ],
+      "cwd": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+      "returncode": 0,
+      "elapsed_seconds": 40.355,
+      "private_basetemp": "/dev/shm/crash-matrix-source-private-5dpb1sxp",
+      "log_sha256": "8d107880b7cb5c720494f0563e0a4369b3db1a2d06118d0693d34acbf2ea4cdf",
+      "summary": "17 passed in 40.11s",
+      "receipts": [
+        "release-before-send-loss-test_release_before_send_loss_0.json",
+        "release-before-send-loss-test_release_before_send_loss_1.json",
+        "post-release-loss-test_post_release_loss_before_0.json",
+        "post-release-loss-test_post_release_loss_before_1.json",
+        "post-release-loss-test_post_release_loss_before_2.json",
+        "post-release-loss-test_post_release_loss_before_3.json",
+        "composed-authority-test_atomic_release_cancel_sta0.json",
+        "composed-authority-test_atomic_release_cancel_sta1.json",
+        "composed-authority-test_atomic_release_cancel_sta2.json",
+        "composed-authority-test_atomic_release_cancel_sta3.json",
+        "composed-authority-test_atomic_release_cancel_sta4.json",
+        "composed-authority-test_pre_handle_crash_survival0.json",
+        "composed-authority-test_pre_handle_crash_survival1.json",
+        "composed-authority-test_pre_handle_crash_survival2.json",
+        "composed-authority-test_pre_handle_crash_survival3.json",
+        "composed-authority-test_spawn_time_storage_loss_s0.json",
+        "composed-authority-test_spawn_time_storage_loss_s1.json"
+      ]
+    },
+    {
+      "phase": "wheel",
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020g/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "/dev/shm/crash-matrix-consumer-y52lxyvf/tests/thesis_lite/maestro/test_composed_post_release_loss.py",
+        "/dev/shm/crash-matrix-consumer-y52lxyvf/tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+        "-q",
+        "-ra",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "/dev/shm/crash-matrix-wheel-private-it8wflvw"
+      ],
+      "cwd": "/dev/shm/crash-matrix-consumer-y52lxyvf",
+      "returncode": 0,
+      "elapsed_seconds": 40.355,
+      "private_basetemp": "/dev/shm/crash-matrix-wheel-private-it8wflvw",
+      "log_sha256": "6599c9fc57e5af5487ac5aac3db590c8daf69cdf8e574247f997d77943df7e8b",
+      "summary": "17 passed in 40.06s",
+      "receipts": [
+        "release-before-send-loss-test_release_before_send_loss_0.json",
+        "release-before-send-loss-test_release_before_send_loss_1.json",
+        "post-release-loss-test_post_release_loss_before_0.json",
+        "post-release-loss-test_post_release_loss_before_1.json",
+        "post-release-loss-test_post_release_loss_before_2.json",
+        "post-release-loss-test_post_release_loss_before_3.json",
+        "composed-authority-test_atomic_release_cancel_sta0.json",
+        "composed-authority-test_atomic_release_cancel_sta1.json",
+        "composed-authority-test_atomic_release_cancel_sta2.json",
+        "composed-authority-test_atomic_release_cancel_sta3.json",
+        "composed-authority-test_atomic_release_cancel_sta4.json",
+        "composed-authority-test_pre_handle_crash_survival0.json",
+        "composed-authority-test_pre_handle_crash_survival1.json",
+        "composed-authority-test_pre_handle_crash_survival2.json",
+        "composed-authority-test_pre_handle_crash_survival3.json",
+        "composed-authority-test_spawn_time_storage_loss_s0.json",
+        "composed-authority-test_spawn_time_storage_loss_s1.json"
+      ]
+    }
+  ],
+  "changed_frozen_inputs": [],
+  "passed": true,
+  "crash_point_gaps_exercised": [
+    "before Release send (authority, storage)",
+    "after Release before M3 outcome (authority, storage)",
+    "during spawn (storage)"
+  ],
+  "admitted_m1_run": false,
+  "full_crash_matrix_complete": false,
+  "accepted": false,
+  "merged": false
+}

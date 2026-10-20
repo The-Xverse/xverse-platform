@@ -1,0 +1,163 @@
+{
+ "review": "helper-change-dumpable-independent-review",
+ "reviewer": "separate agent session (Claude, independent of the change author)",
+ "date": "2026-10-20",
+ "repository": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+ "base": "HEAD 18547fd6c (change uncommitted)",
+ "subject": "Finding 406: early PR_SET_DUMPABLE(0) in both helpers (F02R-01) and the two new tests for F02R-02/F02R-03",
+ "method": "Read-only source reading. I reconstructed the delta from the F-02-reviewed blobs (removing the new lines reproduces their sha256), read the helper sources, the bootstrap.py/affa_client.py paths, the test module and review-affa18.md findings 405-406, and compiled the authority and both supervisor variants in /dev/shm without executing them. No pytest run, no state-changing git command, no existing file modified.",
+ "frozen_inputs": [
+  {
+   "path": "src/xverse/maestro/native/run_authority.c",
+   "sha256": "ffdc632ed58b796031d25eac0dfe739cf3ba151344d91dc60ed4be27cc2a5344",
+   "verified": true
+  },
+  {
+   "path": "src/xverse/maestro/native/bootstrap.c",
+   "sha256": "c1f2885db167852b93d207b1051421e44610efa2f88bfe45309f4a944e8dfe05",
+   "verified": true
+  },
+  {
+   "path": "tests/thesis_lite/maestro/test_affa_watch_token.py",
+   "sha256": "5880f335ae8e7603edd5158e9d771d50f938dded0e98296152bcd4a52774c6d4",
+   "verified": true
+  }
+ ],
+ "prior_reviewed_inputs": [
+  {
+   "path": "src/xverse/maestro/native/run_authority.c",
+   "sha256": "5938cd01dcd46669ec91de942fdf6df39d53802b3ac329eb3eaf58d9a3e00932",
+   "reconstructed": true
+  },
+  {
+   "path": "src/xverse/maestro/native/bootstrap.c",
+   "sha256": "83b10177ad792bf6ebda663ce11bcc07bff17fb9eb2807aa5270f0a02c2849f0",
+   "reconstructed": true
+  }
+ ],
+ "host_context": {
+  "kernel": "6.8.0-138-generic",
+  "kernel.yama.ptrace_scope": 1,
+  "fs.suid_dumpable": 2
+ },
+ "checks": [
+  {
+   "item": "0. Frozen inputs and delta reconstruction",
+   "verdict": "PASS",
+   "evidence": "sha256sum: src/xverse/maestro/native/run_authority.c=ffdc632e...2cc5344, src/xverse/maestro/native/bootstrap.c=c1f2885d...e8dfe05, tests/thesis_lite/maestro/test_affa_watch_token.py=5880f335ae8e7603edd5158e9d771d50f938dded0e98296152bcd4a52774c6d4 (prefix 5880f335 as required). Deleting exactly the two new lines from each file (comment plus `if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;` at src/xverse/maestro/native/run_authority.c:510-511 and src/xverse/maestro/native/bootstrap.c:308-309) reproduces the previously reviewed blobs byte for byte: run_authority.c 5938cd01dcd46669ec91de942fdf6df39d53802b3ac329eb3eaf58d9a3e00932, bootstrap.c 83b10177ad792bf6ebda663ce11bcc07bff17fb9eb2807aa5270f0a02c2849f0.",
+   "note": "So the native delta since the F-02 review is exactly one prctl statement and one comment at the start of each main. Line numbers inside initialize are unchanged from the prior review."
+  },
+  {
+   "item": "0b. Builds",
+   "verdict": "PASS",
+   "evidence": "Compiled in /dev/shm and never executed. Authority: cc -std=c11 -O2 -Wall -Wextra -Werror (clean, binary c0c162eaecd75a922d8a0c2ec184e6c13a517bad163a150ae1ae015482d86845). Supervisor with -DRUN_BOOTSTRAP ... -Wconversion -Wshadow (clean, b47d1a010f5661ef989a85e26304cfc606fb5d3ea27740ad513642a285337e7b). Plain supervisor (clean, 33efb896dfae7c222167be1c349b98315a1ed7dd5573b573591457db4e0cd0c1).",
+   "note": "The authority and RUN_BOOTSTRAP binary hashes match those cited in finding 406 (c0c162ea..., b47d1a01...). The authority is dynamically linked (NEEDED libcrypto.so.3, libc.so.6; interpreter /lib64/ld-linux-x86-64.so.2), which matters for item 1c."
+  },
+  {
+   "item": "1a. Supervisor: non-dumpable before the watch key exists",
+   "verdict": "PASS",
+   "evidence": "src/xverse/maestro/native/bootstrap.c:309 prctl(PR_SET_DUMPABLE,0) is the first statement of main. It runs before initialize (src/xverse/maestro/native/bootstrap.c:311), and initialize is the only place the key is generated (getrandom at src/xverse/maestro/native/bootstrap.c:133). The supervisor is exec'd by the Python peer and inherits no key, so before main it holds no F-02 secret. The later call at src/xverse/maestro/native/bootstrap.c:162 is redundant and harmless.",
+   "note": "For the supervisor, F02R-01 is closed. Children cloned for roles 2-5 copy the supervisor mm, including watch_key, together with its dumpable=0 flag (mm flags are inherited under MMF_INIT_MASK). They stay non-dumpable until execveat replaces the mm. This was already true before the change, because births happen only after initialize."
+  },
+  {
+   "item": "1b. Authority: non-dumpable before the key bytes are in memory",
+   "verdict": "PASS",
+   "evidence": "src/xverse/maestro/native/run_authority.c:511 prctl runs before calloc (src/xverse/maestro/native/run_authority.c:512) and before initialize (src/xverse/maestro/native/run_authority.c:516). The key is pread into g->watch_key only at src/xverse/maestro/native/run_authority.c:287, and the fd is closed at src/xverse/maestro/native/run_authority.c:288.",
+   "note": "True for the key bytes in authority memory. Not true for the key-bearing descriptor (see 1c)."
+  },
+  {
+   "item": "1c. Authority: remaining window from execveat to the first statement of main",
+   "verdict": "FAIL",
+   "evidence": "In the supervisor child, src/xverse/maestro/native/bootstrap.c:265 marks all fds CLOEXEC, and src/xverse/maestro/native/bootstrap.c:267 then clears CLOEXEC on keyfd only so that it survives src/xverse/maestro/native/bootstrap.c:269 execveat. Up to execveat the child is non-dumpable, because it inherits the supervisor's flag. begin_new_exec then sets dumpable back to SUID_DUMP_USER. ENFORCE_NONDUMP would prevent that, but it applies only to an unreadable image, and the authority image is a readable memfd: src/xverse/maestro/native/bootstrap.c:255 and bootstrap.py:39-40/89 create memfds with no fchmod, so their mode is 0777. The authority therefore stays dumpable, with the key memfd open at fd argv[3], through the rest of exec, ld.so loading and relocation of libcrypto.so.3/libc.so.6, and libc init. That lasts until src/xverse/maestro/native/run_authority.c:511 runs.",
+   "note": "During that window, any same-uid process can open /proc/<pid>/fd/<argv[3]> and pread the 32-byte key. Opening that link is a PTRACE_MODE_READ_FSCREDS check, which Yama does not restrict. The Python peer is the real parent through CLONE_PARENT ({B}:262), so ptrace_scope=1 (this host) also lets it PTRACE_SEIZE or pidfd_getfd the process. The peer controls the timing. It receives the pid in reply 17 ({B}:334) while the child is still frozen before exec: CLONE_INTO_CGROUP into a cgroup that {B}:225 and {B}:82-87 require to be frozen. It triggers the thaw itself with kind 2 ({B}:336, {B}:281), and it owns the helper cgroup's cgroup.freeze (prbc.py:559, 664: mkdir 0700 and writes cgroup.freeze). The window is narrower than F02R-01's, but it is open and attacker-steerable. See F02D-01."
+  },
+  {
+   "item": "1d. Does birth()'s memfd CLOEXEC/seal handling limit the window?",
+   "verdict": "NOTE",
+   "evidence": "src/xverse/maestro/native/bootstrap.c:255 MFD_CLOEXEC protects only the supervisor's own copy, which src/xverse/maestro/native/bootstrap.c:271 closes on both the success and failure paths. The supervisor is single-threaded, so no other child inherits the fd. src/xverse/maestro/native/bootstrap.c:257 seals WRITE|GROW|SHRINK|SEAL, and src/xverse/maestro/native/run_authority.c:287 checks them; this protects integrity, not confidentiality. In the authority child, CLOEXEC is deliberately cleared (src/xverse/maestro/native/bootstrap.c:267), because the fd must survive exec.",
+   "note": "These measures confine the fd to the one authority process, but they do nothing about reads of that fd during the authority's dumpable window."
+  },
+  {
+   "item": "1e. Side effects of earlier non-dumpability (pidfd, /proc, ptrace, core dumps)",
+   "verdict": "PASS",
+   "evidence": "pidfd_open, pidfd_send_signal, waitid and SO_PEERCRED do not depend on dumpability. Both helpers were already non-dumpable from the end of initialize ({A}:316, {B}:162), so the only new effect is during initialize: /proc/<pid> entries become root-owned, ptrace and pidfd_getfd are denied without CAP_SYS_PTRACE, and initialize crashes leave no core. A grep of src/xverse/maestro/*.py and tests/thesis_lite/maestro/*.py for /proc/, ptrace, pidfd_getfd, TracerPid, core_pattern, RLIMIT_CORE and dumpable finds only /proc/self uses (bootstrap_launcher.py:200, test fd counts), none of which touch a helper pid.",
+   "note": "Nothing relied on early dumpability. prctl(PR_SET_DUMPABLE,0) cannot fail with valid arguments, so the new `return 64` is unreachable in practice and matches the initialize failure code."
+  },
+  {
+   "item": "2a. test_only_a_v2_watch_reply_may_carry_a_token_without_a_child matches finding 406",
+   "verdict": "PASS",
+   "evidence": "tests/thesis_lite/maestro/test_affa_watch_token.py:105-117 against bootstrap.py:246-273. (i) A v2 kind 20 with a token and pid 0 is valid and round-trips through decode(version=2); the CHILD rule is exempt at :264 and the WATCH rule passes at :269. (ii) A v2 kind 20 without a token raises ML-BOOT-WIRE-WATCH at :269 (match 'WATCH'). (iii) A v2 kind 4 with a token raises ML-BOOT-WIRE-CHILD at :264, before the WATCH rule, exactly as 406 states. (iv) Kind 19 with a token and no child raises ML-BOOT-WIRE-CHILD. (v) A v1 kind 20 raises (ML-BOOT-WIRE-HEADER, because kind 20 is not in the v1 set at :250-255). BootstrapError subclasses ValueError (owner.py:33).",
+   "note": "See F02D-03 for the minor gaps: case (v) is matched only as bare ValueError, and no kind-20 case has pid != 0."
+  },
+  {
+   "item": "2b. test_client_refuses_an_advance_without_the_retained_watch_token matches finding 406",
+   "verdict": "PASS",
+   "evidence": "tests/thesis_lite/maestro/test_affa_watch_token.py:120-135. A real supervisor WATCH produces a non-zero retained token (tests/thesis_lite/maestro/test_affa_watch_token.py:126-129). The ADVANCE ticket is that token with every byte XOR 1. The test requires ML-AFFA-WATCH-TOKEN specifically (match 'WATCH-TOKEN'), so an earlier validation failure would fail it. affa_client.py:283-284 raises inside _validate, which is called at :339 before sent=True (:345) and before sendmsg (:346). Asserting `client.sequence == before` (sequence is updated only at :348 after send) and `not client._revoked` (revoke runs only when sent, :399-401) shows that nothing was sent and the connection was not revoked.",
+   "note": "The oracle is client.watch_token itself, which is what F02R-03 asked to exercise. The positive client path, and an all-zero ticket at the client layer, are not covered by this test. The native side is covered by the parametrised test at :49-99."
+  },
+  {
+   "item": "2c. Finding 406 accuracy",
+   "verdict": "NOTE",
+   "evidence": "406 says both prctl calls run 'before any secret exists in the process (authority: before the key memfd is read)', and src/xverse/maestro/native/run_authority.c:510 repeats this. Both statements are accurate about key bytes in memory. They are inaccurate about the key-bearing descriptor, which exists in the authority from execveat onward. 406 also omits F02R-01's second recommendation, to state that key confidentiality against a hostile same-uid peer is not claimed.",
+   "note": "See F02D-02."
+  }
+ ],
+ "findings": [
+  {
+   "id": "F02D-01",
+   "severity": "LOW",
+   "file": "src/xverse/maestro/native/run_authority.c",
+   "line": 511,
+   "title": "Authority is dumpable from execveat until the first statement of main while holding the inherited watch-key memfd",
+   "scenario": "The supervisor clears CLOEXEC on keyfd (src/xverse/maestro/native/bootstrap.c:267) and execs the authority image (src/xverse/maestro/native/bootstrap.c:269), a readable memfd. Exec therefore resets dumpable to SUID_DUMP_USER, and the authority stays dumpable through ld.so loading of libcrypto.so.3/libc.so.6 until src/xverse/maestro/native/run_authority.c:511. A hostile Python peer gets the pid in reply 17 while the child is still frozen before exec. It is the real parent (CLONE_PARENT) and owns the helper cgroup's cgroup.freeze. It can thaw the child (kind 2, or by writing cgroup.freeze directly) and race, or step with freeze/thaw cycles, to open /proc/<pid>/fd/<argv[3]>. That open is a PTRACE_MODE_READ check, which Yama scope 1 does not restrict. The peer can also PTRACE_SEIZE or pidfd_getfd as an ancestor. It then preads the 32-byte key and can forge F-02 watch tokens for any boundary. The residual is far narrower than F02R-01's (initialize no longer runs dumpable) but is not closed.",
+   "recommendation": "Make the exec itself non-dumpable. One way: create the authority image memfd without read permission for its owner (e.g. fchmod 0111 before sealing in bootstrap.py seal_helper_image for the authority image). Then have the supervisor reject image 4 when st_mode has any read bit, so that begin_new_exec applies BINPRM_FLAGS_ENFORCE_NONDUMP. Here fs.suid_dumpable=2, so the process starts as SUID_DUMP_ROOT and same-uid /proc and ptrace access is denied. The supervisor's own pread of the image is not affected, because permission is checked at open. This does not hold if the uid has CAP_DAC_OVERRIDE. Alternatively, record explicitly, as F02R-01 recommended, that key confidentiality against a hostile same-uid peer is not claimed, and that F-02 binds a well-behaved or buggy Python caller only."
+  },
+  {
+   "id": "F02D-02",
+   "severity": "NOTE",
+   "file": "docs/engineering/maestro-lite/review-affa18.md",
+   "line": 295,
+   "title": "Finding 406 and the run_authority.c:510 comment overstate the guarantee ('before any secret exists')",
+   "scenario": "The key-bearing descriptor is present in the authority from execveat onward, before main. Only the key bytes are absent from memory until :287. The non-claim recommended in F02R-01 is not recorded in 406.",
+   "recommendation": "Reword 406 and the comment to say 'before the key is read into memory'. Then either cite the closed exec window (F02D-01 fix) or state the hostile-peer non-claim."
+  },
+  {
+   "id": "F02D-03",
+   "severity": "NOTE",
+   "file": "tests/thesis_lite/maestro/test_affa_watch_token.py",
+   "line": 116,
+   "title": "Packet-rule test leaves two minor cases unpinned",
+   "scenario": "The v1 kind-20 case uses bare pytest.raises(ValueError), so it would also pass on an unrelated validation error. No case checks a v2 kind-20 reply with a token and pid != 0, which finding 406's 'with pid 0' wording implies is rejected (it is, by ML-BOOT-WIRE-WATCH at bootstrap.py:268).",
+   "recommendation": "Optionally use match='HEADER' for the v1 case and add a kind-20, pid=5, token-bearing case with match='WATCH'."
+  },
+  {
+   "id": "F02D-04",
+   "severity": "NOTE",
+   "file": "src/xverse/maestro/native/bootstrap.c",
+   "line": 309,
+   "title": "Supervisor side of F02R-01 is fully closed",
+   "scenario": "The supervisor is exec'd by Python with no key. It becomes non-dumpable at src/xverse/maestro/native/bootstrap.c:309, before getrandom at src/xverse/maestro/native/bootstrap.c:133. Its children copy watch_key only into a non-dumpable mm, which execveat replaces.",
+   "recommendation": "None."
+  }
+ ],
+ "counts": {
+  "checks": {
+   "PASS": 7,
+   "FAIL": 1,
+   "NOTE": 2
+  },
+  "findings": {
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 1,
+   "NOTE": 3
+  }
+ },
+ "verdict": "partially addressed",
+ "verdict_detail": "F02R-02 and F02R-03 are addressed by tests that assert what finding 406 claims. F02R-01 is closed for the supervisor and narrowed for the authority, which remains dumpable, holding the key memfd, from execveat until the first statement of main (F02D-01, LOW). The hostile-peer non-claim recommended in F02R-01 is not recorded.",
+ "authority_limits": {
+  "activation_approved": false,
+  "m1_admission": false,
+  "acceptance": false
+ }
+}
