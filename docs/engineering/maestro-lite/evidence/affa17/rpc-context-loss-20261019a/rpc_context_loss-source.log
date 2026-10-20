@@ -1,0 +1,158 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[owner-tag] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7aed73465e80>, RuntimeScope(startup=HostDeadline(sessio...tmp/maestro-rpc-context-loss-20261019a-rpc_context_loss-source-private-9sg8otco/test_diagnostic_metadata_loss_0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aed73565480>
+fault = 'owner-tag'
+
+    @pytest.mark.parametrize('fault',['owner-tag','context-reference','context-content'])
+    def test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result(runtime,monkeypatch,fault):
+        entry,scope,work=runtime;statement=FiniteDispatcher._statement;close=RunClosure.close
+        stopped=[];observed={};original={};errors=[];result=None
+        def blocked(self,*a,**kw):
+            if not stopped:
+                os.kill(entry._storage.process.pid,signal.SIGSTOP);stopped.append(True)
+            return statement(self,*a,**kw)
+        def closed(self,*a,**kw):
+            outcome=close(self,*a,**kw);client=entry._runtime_pins[1]
+            assert outcome.root_reaped and all(h.process_reaped for h in outcome.helpers)
+            assert all(b.empty and b.released for b in outcome.boundaries)
+            failure=client.rpc_failure;assert failure.diagnostic=='ML-PERSIST-TIMEOUT'
+            original.update(client=client,owner=client._original,record=failure,stage=failure.stage)
+            observed.update(original_failure=asdict(failure),actual_root_wait=True,actual_helpers_reaped=True,
+                original_C1_released=True,no_workload_output=not list(work.glob('*.marker')))
+            if fault=='owner-tag':client._original=object()
+            elif fault=='context-reference':client._rpc_failure=object()
+            else:object.__setattr__(failure,'stage','counterfeit-stage')
+            return outcome
+        monkeypatch.setattr(FiniteDispatcher,'_statement',blocked)
+        monkeypatch.setattr(RunClosure,'close',closed)
+        try:
+            try:result=entry.start(scope)
+            except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        finally:
+            assert observed.get('actual_root_wait') and observed.get('original_C1_released')
+            # Restore only original local metadata after factual cleanup, for disposal.
+            client=original['client'];client._original=original['owner'];client._rpc_failure=original['record']
+            object.__setattr__(original['record'],'stage',original['stage'])
+            if result is None and entry._runtime_pins[2] is not None:entry._runtime_pins[2].dispose()
+            output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            if output:
+                (Path(output)/('rpc-context-loss-'+fault+'.json')).write_text(json.dumps(dict(
+                    fault=fault,primary_returned=result is not None,primary_errors=errors,
+                    observation_unavailable=result is not None and result.persistence_failure is None,
+                    diagnostics=list(result.diagnostics) if result is not None else [],
+                    original_metadata_restored_after_actual_cleanup=True,actual_M1_admissions=0,**observed),indent=2)+'\n')
+>       assert not errors,errors
+E       AssertionError: ['OwnerError: ML-OWNER-HOLDER']
+E       assert not ['OwnerError: ML-OWNER-HOLDER']
+
+tests/thesis_lite/maestro/test_rpc_context_loss.py:55: AssertionError
+_ test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[context-reference] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7aed732520d0>, RuntimeScope(startup=HostDeadline(sessio...tmp/maestro-rpc-context-loss-20261019a-rpc_context_loss-source-private-9sg8otco/test_diagnostic_metadata_loss_1/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aed744a5a70>
+fault = 'context-reference'
+
+    @pytest.mark.parametrize('fault',['owner-tag','context-reference','context-content'])
+    def test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result(runtime,monkeypatch,fault):
+        entry,scope,work=runtime;statement=FiniteDispatcher._statement;close=RunClosure.close
+        stopped=[];observed={};original={};errors=[];result=None
+        def blocked(self,*a,**kw):
+            if not stopped:
+                os.kill(entry._storage.process.pid,signal.SIGSTOP);stopped.append(True)
+            return statement(self,*a,**kw)
+        def closed(self,*a,**kw):
+            outcome=close(self,*a,**kw);client=entry._runtime_pins[1]
+            assert outcome.root_reaped and all(h.process_reaped for h in outcome.helpers)
+            assert all(b.empty and b.released for b in outcome.boundaries)
+            failure=client.rpc_failure;assert failure.diagnostic=='ML-PERSIST-TIMEOUT'
+            original.update(client=client,owner=client._original,record=failure,stage=failure.stage)
+            observed.update(original_failure=asdict(failure),actual_root_wait=True,actual_helpers_reaped=True,
+                original_C1_released=True,no_workload_output=not list(work.glob('*.marker')))
+            if fault=='owner-tag':client._original=object()
+            elif fault=='context-reference':client._rpc_failure=object()
+            else:object.__setattr__(failure,'stage','counterfeit-stage')
+            return outcome
+        monkeypatch.setattr(FiniteDispatcher,'_statement',blocked)
+        monkeypatch.setattr(RunClosure,'close',closed)
+        try:
+            try:result=entry.start(scope)
+            except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        finally:
+            assert observed.get('actual_root_wait') and observed.get('original_C1_released')
+            # Restore only original local metadata after factual cleanup, for disposal.
+            client=original['client'];client._original=original['owner'];client._rpc_failure=original['record']
+            object.__setattr__(original['record'],'stage',original['stage'])
+            if result is None and entry._runtime_pins[2] is not None:entry._runtime_pins[2].dispose()
+            output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            if output:
+                (Path(output)/('rpc-context-loss-'+fault+'.json')).write_text(json.dumps(dict(
+                    fault=fault,primary_returned=result is not None,primary_errors=errors,
+                    observation_unavailable=result is not None and result.persistence_failure is None,
+                    diagnostics=list(result.diagnostics) if result is not None else [],
+                    original_metadata_restored_after_actual_cleanup=True,actual_M1_admissions=0,**observed),indent=2)+'\n')
+        assert not errors,errors
+        assert result is not None and result.closure.root_reaped and not result.execution_succeeded
+>       assert result.persistence_failure is None
+E       AssertionError: assert <object object at 0x7aed75b83210> is None
+E        +  where <object object at 0x7aed75b83210> = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='32154eadb9e77ce848...nostics=(), persistence_failure=<object object at 0x7aed75b83210>, lifecycle_complete=False, ready_for_execution=False).persistence_failure
+
+tests/thesis_lite/maestro/test_rpc_context_loss.py:57: AssertionError
+_ test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[context-content] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7aed732502d0>, RuntimeScope(startup=HostDeadline(sessio...tmp/maestro-rpc-context-loss-20261019a-rpc_context_loss-source-private-9sg8otco/test_diagnostic_metadata_loss_2/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aed731ef650>
+fault = 'context-content'
+
+    @pytest.mark.parametrize('fault',['owner-tag','context-reference','context-content'])
+    def test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result(runtime,monkeypatch,fault):
+        entry,scope,work=runtime;statement=FiniteDispatcher._statement;close=RunClosure.close
+        stopped=[];observed={};original={};errors=[];result=None
+        def blocked(self,*a,**kw):
+            if not stopped:
+                os.kill(entry._storage.process.pid,signal.SIGSTOP);stopped.append(True)
+            return statement(self,*a,**kw)
+        def closed(self,*a,**kw):
+            outcome=close(self,*a,**kw);client=entry._runtime_pins[1]
+            assert outcome.root_reaped and all(h.process_reaped for h in outcome.helpers)
+            assert all(b.empty and b.released for b in outcome.boundaries)
+            failure=client.rpc_failure;assert failure.diagnostic=='ML-PERSIST-TIMEOUT'
+            original.update(client=client,owner=client._original,record=failure,stage=failure.stage)
+            observed.update(original_failure=asdict(failure),actual_root_wait=True,actual_helpers_reaped=True,
+                original_C1_released=True,no_workload_output=not list(work.glob('*.marker')))
+            if fault=='owner-tag':client._original=object()
+            elif fault=='context-reference':client._rpc_failure=object()
+            else:object.__setattr__(failure,'stage','counterfeit-stage')
+            return outcome
+        monkeypatch.setattr(FiniteDispatcher,'_statement',blocked)
+        monkeypatch.setattr(RunClosure,'close',closed)
+        try:
+            try:result=entry.start(scope)
+            except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        finally:
+            assert observed.get('actual_root_wait') and observed.get('original_C1_released')
+            # Restore only original local metadata after factual cleanup, for disposal.
+            client=original['client'];client._original=original['owner'];client._rpc_failure=original['record']
+            object.__setattr__(original['record'],'stage',original['stage'])
+            if result is None and entry._runtime_pins[2] is not None:entry._runtime_pins[2].dispose()
+            output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            if output:
+                (Path(output)/('rpc-context-loss-'+fault+'.json')).write_text(json.dumps(dict(
+                    fault=fault,primary_returned=result is not None,primary_errors=errors,
+                    observation_unavailable=result is not None and result.persistence_failure is None,
+                    diagnostics=list(result.diagnostics) if result is not None else [],
+                    original_metadata_restored_after_actual_cleanup=True,actual_M1_admissions=0,**observed),indent=2)+'\n')
+        assert not errors,errors
+        assert result is not None and result.closure.root_reaped and not result.execution_succeeded
+>       assert result.persistence_failure is None
+E       AssertionError: assert PersistenceRPCFailure(kind='schedule', stage='receive', session='host-session', sequence=4, operation='ml-a30783dfbe30...started_ns=1019169775499614, deadline_ns=1019170275349654, failed_ns=1019170275791652, diagnostic='ML-PERSIST-TIMEOUT') is None
+E        +  where PersistenceRPCFailure(kind='schedule', stage='receive', session='host-session', sequence=4, operation='ml-a30783dfbe30...started_ns=1019169775499614, deadline_ns=1019170275349654, failed_ns=1019170275791652, diagnostic='ML-PERSIST-TIMEOUT') = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='0a4d0adad4289b6cbc...654, failed_ns=1019170275791652, diagnostic='ML-PERSIST-TIMEOUT'), lifecycle_complete=False, ready_for_execution=False).persistence_failure
+
+tests/thesis_lite/maestro/test_rpc_context_loss.py:57: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[owner-tag]
+FAILED tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[context-reference]
+FAILED tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result[context-content]
+3 failed in 7.37s

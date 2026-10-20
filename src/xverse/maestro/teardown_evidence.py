@@ -49,6 +49,8 @@ class TeardownJournal:
         self.pending = {}
         self.states = {}
         self.handles = {}
+        self._generation_states = {}
+        self._generation_handles = {}
         self.sequence = 0
 
     def record(self, body, claims, operation, deadline, check):
@@ -81,9 +83,12 @@ class TeardownJournal:
             or stage not in ("intent", "outcome")
         ):
             raise PersistenceError("ML-TEARDOWN-RECORD-SCOPE")
+        permits = self.evidence.permits
+        saved = permits._issued[id(claim.receipt)][1]
+        generation = saved.details["generation"]
         if (
             type(body["generation"]) is not int
-            or body["generation"] != 1
+            or body["generation"] != generation
             or body["session"] != deadline.session
             or type(body["step"]) is not str
             or re.fullmatch("td-[0-9a-f]{32}", body["step"]) is None
@@ -132,14 +137,22 @@ class TeardownJournal:
             is None
         ):
             raise PersistenceError("ML-TEARDOWN-RECORD-HANDLE")
-        previous = self.handles.get(unit_id)
+        identity = unit_id, generation
+        if getattr(self.evidence, 'collection_source', None) is not None:
+            issued = self.evidence.issued_handles.get(identity)
+            if issued is None or issued[0] != handle:
+                raise PersistenceError('ML-TEARDOWN-ORIGINAL-HANDLE')
+        previous = self._generation_handles.get(identity)
         sample = self.evidence.samples.get(unit_id)
         if (previous is not None and previous != (handle, body["boundary_digest"])) or (
             sample is not None and sample["handle"] != handle
         ):
             raise PersistenceError("ML-TEARDOWN-RECORD-HANDLE")
-        state = self.states.setdefault(unit_id, {"stopped": False, "cleaned": False})
-        key = unit_id, phase
+        state = self._generation_states.setdefault(
+            identity, {"stopped": False, "cleaned": False}
+        )
+        self.states[unit_id] = state
+        key = unit_id, generation, phase
         if stage == "intent":
             if (
                 body["intent"] is not None
@@ -203,7 +216,7 @@ class TeardownJournal:
                 {
                     "maestroRunId": permits._run_id,
                     "maestroUnitId": unit_id,
-                    "generation": 1,
+                    "generation": generation,
                     "lifecycleDigest": permits._prepared.lifecycle_digest,
                     "teardown": proof,
                 }
@@ -250,7 +263,7 @@ class TeardownJournal:
             "sessionId": body["session"],
             "scope": "unit",
             "unitId": unit_id,
-            "generation": 1,
+            "generation": generation,
             "operationId": operation,
             "action": "intent" if stage == "intent" else phase,
             "outcome": "pending" if stage == "intent" else "succeeded",
@@ -300,7 +313,8 @@ class TeardownJournal:
         self.evidence._mirrors(claims)
         check(deadline)
         self.sequence += 1
-        self.handles[unit_id] = handle, body["boundary_digest"]
+        self._generation_handles[identity] = handle, body["boundary_digest"]
+        self.handles[unit_id] = self._generation_handles[identity]
         state["event"] = event_id
         if stage == "intent":
             self.pending[key] = operation
@@ -383,7 +397,7 @@ def validate_teardown_reply(body, request, client, controller, operation):
         "sessionId": client.session,
         "scope": "unit",
         "unitId": request["unit"],
-        "generation": 1,
+        "generation": request["generation"],
         "operationId": operation,
         "action": "intent" if stage == "intent" else phase,
         "outcome": "pending" if stage == "intent" else "succeeded",

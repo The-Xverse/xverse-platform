@@ -18,6 +18,19 @@ def _digest(value):
     return "sha256:" + hashlib.sha256(canonical_bytes(value)).hexdigest()
 
 
+def _same_json(left, right):
+    """Exact decoded JSON comparison without repeatedly serializing old fields."""
+    if type(left) is not type(right):
+        return False
+    if type(left) is dict:
+        return left.keys() == right.keys() and all(_same_json(v, right[k]) for k, v in left.items())
+    if type(left) is list:
+        return len(left) == len(right) and all(_same_json(a, b) for a, b in zip(left, right))
+    if type(left) is float and left == right == 0:
+        return math.copysign(1, left) == math.copysign(1, right)
+    return left == right
+
+
 @dataclass(frozen=True)
 class LifecycleReceipt:
     unit_id: str
@@ -48,16 +61,39 @@ def _parents(prepared, unit_id):
 class OutcomeJournal:
     """Lives only inside the original persistence process; no control authority."""
 
-    def __init__(self, permits, writer, evidence_root):
+    def __init__(self, permits, writer, evidence_root, public_exports=()):
         self.permits, self.writer, self.root = permits, writer, evidence_root
         self.history = ()
         self.samples = {}
+        self.generation_samples = {}
+        self.retained_claims = {}
         self.events = {}
         self.sequence = 0
         self.event_limit = 8192
+        self.issued_handles = {}
+        self.issuance_sequence = 0
+        self.artifact_receipts = {}
+        from .evidence import export_declarations, pin_export_root
+        self.public_exports = export_declarations(public_exports)
+        self.export_attempted = set()
+        self.export_root = pin_export_root(self) if self.public_exports else None
+
+    def retain_claim(self, claim):
+        previous = self.retained_claims.get(claim.operation)
+        if previous is not None and previous is not claim:
+            raise PersistenceError("ML-EVIDENCE-CLAIM-REPLACED")
+        self.retained_claims[claim.operation] = claim
+
+    def _all_claims(self, claims):
+        values = dict(self.retained_claims)
+        for claim in claims.values():
+            if claim.operation in values and values[claim.operation] is not claim:
+                raise PersistenceError("ML-EVIDENCE-CLAIM-REPLACED")
+            values[claim.operation] = claim
+        return tuple(values.values())
 
     def reserve_event(self, claims):
-        if len(self.events) + len(claims) >= self.event_limit:
+        if len(self.events) + len(self._all_claims(claims)) >= self.event_limit:
             raise PersistenceError("ML-SCHEDULE-EVENT-CAPACITY")
 
     def _history(self, claims):
@@ -65,7 +101,7 @@ class OutcomeJournal:
         if records[: len(self.history)] != self.history:
             raise PersistenceError("ML-EVIDENCE-HISTORY")
         allowed = list(self.history)
-        for claim in claims.values():
+        for claim in self._all_claims(claims):
             saved = self.permits._issued.get(id(claim.receipt))
             if (
                 saved is None
@@ -86,8 +122,12 @@ class OutcomeJournal:
             if event["eventId"] in indexed:
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
             indexed[event["eventId"]] = event
-        for claim in claims.values():
+        for claim in self._all_claims(claims):
             event = indexed.get(claim.event_id, {})
+            from .evidence import retained_intent
+            retained = retained_intent(claim)
+            if any(canonical_bytes(event.get(k)) != canonical_bytes(v) for k, v in retained.items()):
+                raise PersistenceError("ML-EVIDENCE-MIRROR")
             payload = event.get("extensions", {}).get("xverse.maestro", {})
             refs = payload.get("sourceRefs", [])
             if (
@@ -101,7 +141,7 @@ class OutcomeJournal:
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
         for event_id, expected in self.events.items():
             actual = indexed.get(event_id, {})
-            if any(actual.get(k) != v for k, v in expected.items()):
+            if any(not _same_json(actual.get(k), v) for k, v in expected.items()):
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
 
     def record(self, body, claims, operation, deadline, check):
@@ -122,9 +162,10 @@ class OutcomeJournal:
         claim = claims.get(unit_id)
         if claim is None or body["claim"] != claim.operation:
             raise PersistenceError("ML-EVIDENCE-INTENT")
+        generation = self.permits._issued[id(claim.receipt)][1].details["generation"]
         if (
             type(body["generation"]) is not int
-            or body["generation"] != 1
+            or body["generation"] != generation
             or body["session"] != deadline.session
             or type(body["ready"]) is not bool
             or type(body["sample_sequence"]) is not int
@@ -196,7 +237,11 @@ class OutcomeJournal:
             ):
                 raise PersistenceError("ML-EVIDENCE-DEPENDENCY")
             dependencies.append(
-                {"unitId": parent, "generation": 1, "probeEventId": sample["event"]}
+                {
+                    "unitId": parent,
+                    "generation": sample["generation"],
+                    "probeEventId": sample["event"],
+                }
             )
         emitted = []
         sequences = []
@@ -206,7 +251,7 @@ class OutcomeJournal:
             {
                 "maestroRunId": self.permits._run_id,
                 "maestroUnitId": unit_id,
-                "generation": 1,
+                "generation": generation,
                 "lifecycleDigest": self.permits._prepared.lifecycle_digest,
                 "sampleSequence": body["sample_sequence"],
                 "hostSession": body["session"],
@@ -263,7 +308,7 @@ class OutcomeJournal:
                 "sessionId": body["session"],
                 "scope": "unit",
                 "unitId": unit_id,
-                "generation": 1,
+                "generation": generation,
                 "operationId": operation,
                 "action": action,
                 "outcome": outcome,
@@ -317,7 +362,10 @@ class OutcomeJournal:
             return event_id
 
         started = bool(prior and prior["started"])
-        cause = prior["event"] if prior else claim.event_id
+        issuance = self.issued_handles.get((unit_id, generation))
+        if issuance is not None and issuance[0] != handle:
+            raise PersistenceError("ML-EVIDENCE-ISSUED-HANDLE")
+        cause = prior["event"] if prior else issuance[1] if issuance else claim.event_id
         if body["ready"] and not started:
             source = append_m3("outcome", start.action_id, "running")
             cause = mirror("started", "succeeded", source, cause)
@@ -338,6 +386,7 @@ class OutcomeJournal:
         self._mirrors(claims)
         check(deadline)
         self.samples[unit_id] = {
+            "generation": generation,
             "handle": handle,
             "sequence": body["sample_sequence"],
             "observed_at": body["observed_at"],
@@ -410,14 +459,21 @@ def validate_receipt(body, facade, observed, claim, operation, prior):
         ):
             raise PersistenceError("ML-EVIDENCE-ACK")
         dependencies.append(
-            {"unitId": parent, "generation": 1, "probeEventId": matching[0]["eventId"]}
+            {
+                "unitId": parent,
+                "generation": facade._bindings[
+                    parent
+                ].launcher.recipe.descriptor.generation,
+                "probeEventId": matching[0]["eventId"],
+            }
         )
     prior_probes = [
         e
         for e in old
         if e["extensions"]["xverse.maestro"]["action"] in ("probe", "health")
     ]
-    cause = prior_probes[0]["eventId"] if prior_probes else claim.event_id
+    issuance = client._issued_receipts.get((unit, observed.generation))
+    cause = prior_probes[0]["eventId"] if prior_probes else issuance.event_id if issuance else claim.event_id
     last_ordinal = client._evidence_ordinal
     expected_producer = client._evidence_sequence + 1
     if body["m3_sequences"][0] <= client._evidence_m3:
@@ -455,7 +511,7 @@ def validate_receipt(body, facade, observed, claim, operation, prior):
             "sessionId": client.session,
             "scope": "unit",
             "unitId": unit,
-            "generation": 1,
+            "generation": observed.generation,
             "operationId": operation,
             "action": action,
             "outcome": outcome,

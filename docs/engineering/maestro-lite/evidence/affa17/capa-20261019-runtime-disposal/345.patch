@@ -1,0 +1,39 @@
+--- before/driver
++++ after/driver
+@@ -11,15 +11,15 @@
+ import time
+ 
+ CANDIDATE = Path(__file__).resolve().parents[5]
+-OUT = Path(__file__).resolve().parent / 'runtime-disposal-20261019b'
+-PYTHON = '/tmp/maestro-lite-runtime-disposal-target-20261019a/bin/python'
++OUT = Path(__file__).resolve().parent / 'runtime-disposal-20261019c'
++PYTHON = '/tmp/maestro-lite-runtime-disposal-target-20261019c/bin/python'
+ OUT.mkdir(exist_ok=False)
+ sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+ def save(name, data):
+     with (OUT / name).open('x') as stream:
+         stream.write(json.dumps(data, indent=2) + '\n')
+ 
+-ROOT = Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019b-source-'))
++ROOT = Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019c-source-'))
+ for name in ('src', 'xdl'):
+     shutil.copytree(CANDIDATE / name, ROOT / name, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+ (ROOT / 'tests/thesis_lite').mkdir(parents=True)
+@@ -42,7 +42,7 @@
+ wheel = next((OUT/'dist').glob('*.whl'))
+ with (OUT/'install.log').open('x') as log:
+     subprocess.run([PYTHON, '-m', 'pip', 'install', '--no-deps', '--force-reinstall', str(wheel)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=60)
+-consumer = Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019b-consumer-'))
++consumer = Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019c-consumer-'))
+ shutil.copytree(ROOT / 'tests', consumer / 'tests')
+ shutil.copytree(ROOT / 'xdl', consumer / 'xdl')
+ env = dict(os.environ, PYTEST_DISABLE_PLUGIN_AUTOLOAD='1', PYTHONDONTWRITEBYTECODE='1')
+@@ -74,7 +74,7 @@
+     cohort=name.removeprefix('test_').removesuffix('.py')
+     for phase,cwd,isolated in [('source',ROOT,False),('wheel',consumer,True)]:
+         label=cohort+'-'+phase
+-        private=Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019b-'+label+'-private-'))
++        private=Path(tempfile.mkdtemp(prefix='maestro-runtime-disposal-20261019c-'+label+'-private-'))
+         environment=dict(env,MAESTRO_BOUNDARY_RECEIPTS=str(OUT/(label+'-harness')))
+         if not isolated:environment['PYTHONPATH']=str(ROOT/'src')
+         command=[PYTHON,*(['-I'] if isolated else []),'-m','pytest',str(cwd/'tests/thesis_lite/maestro'/name),'-q','--basetemp',str(private)]

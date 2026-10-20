@@ -1,0 +1,2409 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-20-endpoint-rebound-v1",
+  "parent_trace": {
+    "path": "runtime-lane-partial-traceability.json",
+    "sha256": "cb8f6eba9afe3ba90aa072346a2142d1545feb45d7c3417c17e486bb1bec1178"
+  },
+  "accepted_proposal": {
+    "path": "endpoint-reconciliation-proposal-20261020-v2.json",
+    "sha256": "7e869069d96a53fbdcb74e33c7fdb99c374de5b6e52ed0cd87f8514e87b484fc",
+    "independent_review": {
+      "path": "endpoint-reconciliation-independent-review-20261020.json",
+      "sha256": "530444249dcb2f167cdd7ee740ccb458e29aeed6800ffee658ec68a584710339",
+      "reviewer": "separate agent session (Claude, independent of the mapping author)",
+      "counts": {
+        "AGREE": 32,
+        "AGREE_WITH_NOTE": 20,
+        "PREFER_ALTERNATIVE": 1,
+        "DISAGREE": 9,
+        "CANNOT_JUDGE": 0
+      },
+      "labelled": "separate agent session; counts as independent per author sign-off 2026-10-20 (finding 373)"
+    },
+    "author_ruling": "accepted 2026-10-20 (finding 377)"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.admit",
+              "line": 285,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.dispose",
+              "line": 295,
+              "file_sha256": "857e8121c43ddd86e030e8f680f41d7340c3a34e5d26f26db5abdd1d5f616223",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_unrelated_sentinel"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false,
+    "author_confirmed_successor": {
+      "path": "specs/024-maestro-lite-lifecycle/engineering/successors/ML-SOURCE-PARENT-2026-10-20-v4/source-parent-register.json",
+      "sha256": "41e28ad0f5f440ab87dad014205a8ffc3780427aa6311c4745be765f4554115d"
+    }
+  },
+  "runtime_cases": {
+    "test_affa": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-011",
+        "ML-SR-012"
+      ],
+      "receipt_file": "runtime-actual-test_affa.json"
+    },
+    "test_trusted_launcher": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-012"
+      ],
+      "receipt_file": "runtime-actual-test_trusted_launcher.json"
+    },
+    "test_prbc": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_prbc.json"
+    },
+    "test_bounded_bootstrap": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-009",
+        "ML-SR-024"
+      ],
+      "receipt_file": "runtime-actual-test_bounded_bootstrap.json"
+    },
+    "test_atomic_release_cancel_stage": {
+      "module": "tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-011"
+      ],
+      "receipt_file": "composed-authority-<fixture>.json"
+    },
+    "test_lease_loss": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-009",
+        "ML-SR-010"
+      ],
+      "receipt_file": "runtime-actual-test_lease_loss.json"
+    },
+    "test_pre_handle_crash_survival": {
+      "module": "tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+      "requirements": [
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "composed-authority-<fixture>.json"
+    },
+    "test_residual_membership": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_residual_membership.json"
+    },
+    "test_unrelated_sentinel": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_unrelated_sentinel.json"
+    }
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/persistence.py::PersistenceClient.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-019",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.admit": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.dispose": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa": [
+      "ML-SR-010",
+      "ML-SR-011",
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher": [
+      "ML-SR-010",
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc": [
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap": [
+      "ML-SR-009",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss": [
+      "ML-SR-009",
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership": [
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_unrelated_sentinel": [
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/projection.py::prepare_lifecycle": [
+      "ML-SR-001",
+      "ML-SR-002",
+      "ML-SR-003",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/projection.py::PreparedLifecycle": [
+      "ML-SR-001",
+      "ML-SR-003"
+    ],
+    "src/xverse/maestro/projection.py::PreparedStep": [
+      "ML-SR-004"
+    ],
+    "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal.record": [
+      "ML-SR-004",
+      "ML-SR-016",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/admission.py::validate_permits": [
+      "ML-SR-005"
+    ],
+    "src/xverse/maestro/admission.py::PermitSession.claim_start_intent": [
+      "ML-SR-005",
+      "ML-SR-006"
+    ],
+    "src/xverse/maestro/admission.py::PermitSession": [
+      "ML-SR-005",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.restart": [
+      "ML-SR-006",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/dispatcher.py::FiniteDispatcher": [
+      "ML-SR-006",
+      "ML-SR-007",
+      "ML-SR-011",
+      "ML-SR-014"
+    ],
+    "src/xverse/maestro/providers.py::ProcessReadiness.start": [
+      "ML-SR-007",
+      "ML-SR-008"
+    ],
+    "src/xverse/maestro/providers.py::ReadinessObservation": [
+      "ML-SR-007"
+    ],
+    "src/xverse/maestro/providers.py::ProbePolicy": [
+      "ML-SR-008"
+    ],
+    "src/xverse/maestro/supervisor.py::WorkerMonitor": [
+      "ML-SR-009",
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/supervisor.py::WorkerMonitor.watch": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/supervisor.py::CancellationLatch": [
+      "ML-SR-009",
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/affa_client.py::AuthorityConnection": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/affa_client.py::AuthorityEpochAdvance": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.release": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/affa_client.py::AuthorityConnection.revoke": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.issuers": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/launcher.py::CatalogLauncher": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/owner.py::ReleaseOwner.release": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/prbc.py::ProcessBoundaryOps.force_cleanup": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/prbc.py::BoundaryDescriptor": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run": [
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/run_broker.py::RunUnitIssuer.revalidate_issued": [
+      "ML-SR-012",
+      "ML-SR-014"
+    ],
+    "src/xverse/maestro/prbc.py::ProcessBoundaryOps.create_frozen": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/prbc.py::ProcessBoundaryOps.terminate": [
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/prbc.py::ProcessBoundaryOps.residual_membership": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/teardown.py::ReverseTeardown.run": [
+      "ML-SR-013",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/recovery.py::IssuerRecovery.reconcile": [
+      "ML-SR-014",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/time.py::ClockContext": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::TickDomain": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::advance_tick": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::HostDeadline": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal": [
+      "ML-SR-016",
+      "ML-SR-018"
+    ],
+    "src/xverse/maestro/owner.py::_persist_intent": [
+      "ML-SR-016"
+    ],
+    "src/xverse/maestro/coverage.py::assess_preclosure": [
+      "ML-SR-017",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/coverage.py::verify_closed": [
+      "ML-SR-017",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/coverage.py::admit_coverage": [
+      "ML-SR-017"
+    ],
+    "src/xverse/maestro/coverage.py::CoverageResult": [
+      "ML-SR-017",
+      "ML-SR-018"
+    ],
+    "src/xverse/maestro/writer_closure.py::WriterClosure": [
+      "ML-SR-018",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/admission.py::PermitSession.claims_closed": [
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/terminal_runtime.py::finish_run": [
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/writer_closure.py::unresolved": [
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.collect": [
+      "ML-SR-021",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/artifacts.py::CollectionAdmission.collect": [
+      "ML-SR-021"
+    ],
+    "src/xverse/maestro/artifacts.py::CollectionAdmission._read": [
+      "ML-SR-021"
+    ],
+    "src/xverse/maestro/artifacts.py::CollectionResult": [
+      "ML-SR-021"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.stop": [
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.start": [
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/__init__.py": [
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/runtime_admission.py::validate_run_admission": [
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_admission.py::admission_digest": [
+      "ML-SR-024"
+    ]
+  },
+  "endpoint_obligations": [
+    {
+      "unit_id": "ML-SR-001-U",
+      "requirement_id": "ML-SR-001",
+      "declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-001-U",
+      "requirement_id": "ML-SR-001",
+      "declared_endpoint": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "accepted_identity": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-001-U",
+      "requirement_id": "ML-SR-001",
+      "declared_endpoint": "src/xverse/maestro/projection.py::lifecycle_digest",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::lifecycle_digest",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-002-U",
+      "requirement_id": "ML-SR-002",
+      "declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-002-U",
+      "requirement_id": "ML-SR-002",
+      "declared_endpoint": "src/xverse/maestro/projection.py::select_binding_plan",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::select_binding_plan",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-002-U",
+      "requirement_id": "ML-SR-002",
+      "declared_endpoint": "src/xverse/maestro/projection.py::build_combined_graph",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::build_combined_graph",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-003-U",
+      "requirement_id": "ML-SR-003",
+      "declared_endpoint": "src/xverse/maestro/projection.py::build_combined_graph",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::build_combined_graph",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-003-U",
+      "requirement_id": "ML-SR-003",
+      "declared_endpoint": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "accepted_identity": "src/xverse/maestro/projection.py::PreparedLifecycle",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-004-U",
+      "requirement_id": "ML-SR-004",
+      "declared_endpoint": "src/xverse/maestro/projection.py::freeze_phase_action_map",
+      "captured_declared_endpoint": "src/xverse/maestro/projection.py::freeze_phase_action_map",
+      "accepted_identity": "src/xverse/maestro/projection.py::PreparedStep",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-004-U",
+      "requirement_id": "ML-SR-004",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "accepted_identity": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal.record",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/lifecycle_evidence.py",
+      "target_file_sha256": "af75c0de371946409a837c351cb2c21c1eb1c81c4cff04f69cb5beeb87d351ed",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-005-U",
+      "requirement_id": "ML-SR-005",
+      "declared_endpoint": "src/xverse/maestro/admission.py::validate_permits",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::validate_permits",
+      "accepted_identity": "src/xverse/maestro/admission.py::validate_permits",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-005-U",
+      "requirement_id": "ML-SR-005",
+      "declared_endpoint": "src/xverse/maestro/admission.py::consume_permit_once",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::consume_permit_once",
+      "accepted_identity": "src/xverse/maestro/admission.py::PermitSession.claim_start_intent",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-005-U",
+      "requirement_id": "ML-SR-005",
+      "declared_endpoint": "src/xverse/maestro/admission.py::Admission",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::Admission",
+      "accepted_identity": "src/xverse/maestro/admission.py::PermitSession",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-006-U",
+      "requirement_id": "ML-SR-006",
+      "declared_endpoint": "src/xverse/maestro/api.py::restart",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::restart",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.restart",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-006-U",
+      "requirement_id": "ML-SR-006",
+      "declared_endpoint": "src/xverse/maestro/admission.py::consume_permit_once",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::consume_permit_once",
+      "accepted_identity": "src/xverse/maestro/admission.py::PermitSession.claim_start_intent",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-006-U",
+      "requirement_id": "ML-SR-006",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "accepted_identity": "src/xverse/maestro/dispatcher.py::FiniteDispatcher",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/dispatcher.py",
+      "target_file_sha256": "ae9c5c35332127cc41caa0572baf30130cf537c70021b42bd5e410c19bb43249",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-007-U",
+      "requirement_id": "ML-SR-007",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::await_readiness",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::await_readiness",
+      "accepted_identity": "src/xverse/maestro/providers.py::ProcessReadiness.start",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "PREFER_ALTERNATIVE",
+      "target_file": "src/xverse/maestro/providers.py",
+      "target_file_sha256": "b90b8c614f04baab50c5c1895759648c91160362dc04d422f8fe269c3fc3277b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-007-U",
+      "requirement_id": "ML-SR-007",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::ReadinessObservation",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::ReadinessObservation",
+      "accepted_identity": "src/xverse/maestro/providers.py::ReadinessObservation",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/providers.py",
+      "target_file_sha256": "b90b8c614f04baab50c5c1895759648c91160362dc04d422f8fe269c3fc3277b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-007-U",
+      "requirement_id": "ML-SR-007",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "accepted_identity": "src/xverse/maestro/dispatcher.py::FiniteDispatcher",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/dispatcher.py",
+      "target_file_sha256": "ae9c5c35332127cc41caa0572baf30130cf537c70021b42bd5e410c19bb43249",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-008-U",
+      "requirement_id": "ML-SR-008",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::HealthCadence",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::HealthCadence",
+      "accepted_identity": "src/xverse/maestro/providers.py::ProbePolicy",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/providers.py",
+      "target_file_sha256": "b90b8c614f04baab50c5c1895759648c91160362dc04d422f8fe269c3fc3277b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-008-U",
+      "requirement_id": "ML-SR-008",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::await_readiness",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::await_readiness",
+      "accepted_identity": "src/xverse/maestro/providers.py::ProcessReadiness.start",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "PREFER_ALTERNATIVE",
+      "target_file": "src/xverse/maestro/providers.py",
+      "target_file_sha256": "b90b8c614f04baab50c5c1895759648c91160362dc04d422f8fe269c3fc3277b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::Supervisor",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::Supervisor",
+      "accepted_identity": "src/xverse/maestro/supervisor.py::WorkerMonitor",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/supervisor.py",
+      "target_file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::Watchdog",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::Watchdog",
+      "accepted_identity": "src/xverse/maestro/supervisor.py::WorkerMonitor.watch",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/supervisor.py",
+      "target_file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::cancellation_latch",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::cancellation_latch",
+      "accepted_identity": "src/xverse/maestro/supervisor.py::CancellationLatch",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/supervisor.py",
+      "target_file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/affa.py::FenceAuthority",
+      "captured_declared_endpoint": "src/xverse/maestro/affa.py::FenceAuthority",
+      "accepted_identity": "src/xverse/maestro/affa_client.py::AuthorityConnection",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/affa_client.py",
+      "target_file_sha256": "b05c0d5be89318eb09a9171b331623ffc92e39a44e22adcdb35c2054a18a33ae",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/affa.py::ReleaseEpoch",
+      "captured_declared_endpoint": "src/xverse/maestro/affa.py::ReleaseEpoch",
+      "accepted_identity": "src/xverse/maestro/affa_client.py::AuthorityEpochAdvance",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/affa_client.py",
+      "target_file_sha256": "b05c0d5be89318eb09a9171b331623ffc92e39a44e22adcdb35c2054a18a33ae",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/affa.py::issue_ticket",
+      "captured_declared_endpoint": "src/xverse/maestro/affa.py::issue_ticket",
+      "accepted_identity": "src/xverse/maestro/run_broker.py::RunBroker.release",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/run_broker.py",
+      "target_file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-009-U",
+      "requirement_id": "ML-SR-009",
+      "declared_endpoint": "src/xverse/maestro/affa.py::cancel",
+      "captured_declared_endpoint": "src/xverse/maestro/affa.py::cancel",
+      "accepted_identity": "src/xverse/maestro/affa_client.py::AuthorityConnection.revoke",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/affa_client.py",
+      "target_file_sha256": "b05c0d5be89318eb09a9171b331623ffc92e39a44e22adcdb35c2054a18a33ae",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/broker.py::Broker",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::Broker",
+      "accepted_identity": "src/xverse/maestro/run_broker.py::RunBroker",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/run_broker.py",
+      "target_file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/broker.py::IssueRegistry",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::IssueRegistry",
+      "accepted_identity": "src/xverse/maestro/run_broker.py::RunBroker.issuers",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/run_broker.py",
+      "target_file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/launcher.py::TrustedLauncher",
+      "captured_declared_endpoint": "src/xverse/maestro/launcher.py::TrustedLauncher",
+      "accepted_identity": "src/xverse/maestro/launcher.py::CatalogLauncher",
+      "confidence": "mapped+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/launcher.py",
+      "target_file_sha256": "209c59740340d7833e5aac7be8be1bcce8b7f5800aebf2d29131e65ca8116aad",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/affa.py::consume_ticket",
+      "captured_declared_endpoint": "src/xverse/maestro/affa.py::consume_ticket",
+      "accepted_identity": "src/xverse/maestro/owner.py::ReleaseOwner.release",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/owner.py",
+      "target_file_sha256": "41bcc359afdc403946041a77243deb75979e763fb6fcfaa7102ff73b7f1309ce",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::CleanupOnlyCapability",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::CleanupOnlyCapability",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.force_cleanup",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-010-U",
+      "requirement_id": "ML-SR-010",
+      "declared_endpoint": "src/xverse/maestro/fence.py::BoundaryDescriptor",
+      "captured_declared_endpoint": "src/xverse/maestro/fence.py::BoundaryDescriptor",
+      "accepted_identity": "src/xverse/maestro/prbc.py::BoundaryDescriptor",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-011-U",
+      "requirement_id": "ML-SR-011",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "accepted_identity": "src/xverse/maestro/dispatcher.py::FiniteDispatcher",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/dispatcher.py",
+      "target_file_sha256": "ae9c5c35332127cc41caa0572baf30130cf537c70021b42bd5e410c19bb43249",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-011-U",
+      "requirement_id": "ML-SR-011",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::mutation_lock",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::mutation_lock",
+      "accepted_identity": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/dispatcher.py",
+      "target_file_sha256": "ae9c5c35332127cc41caa0572baf30130cf537c70021b42bd5e410c19bb43249",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-011-U",
+      "requirement_id": "ML-SR-011",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::cancellation_latch",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::cancellation_latch",
+      "accepted_identity": "src/xverse/maestro/supervisor.py::CancellationLatch",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/supervisor.py",
+      "target_file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-012-U",
+      "requirement_id": "ML-SR-012",
+      "declared_endpoint": "src/xverse/maestro/broker.py::revalidate_handle",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::revalidate_handle",
+      "accepted_identity": "src/xverse/maestro/run_broker.py::RunUnitIssuer.revalidate_issued",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/run_broker.py",
+      "target_file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-012-U",
+      "requirement_id": "ML-SR-012",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::register_capability",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::register_capability",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.create_frozen",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-012-U",
+      "requirement_id": "ML-SR-012",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.terminate",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-012-U",
+      "requirement_id": "ML-SR-012",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::create_frozen",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.create_frozen",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.create_frozen",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-012-U",
+      "requirement_id": "ML-SR-012",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::residual_membership",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.residual_membership",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.residual_membership",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-013-U",
+      "requirement_id": "ML-SR-013",
+      "declared_endpoint": "src/xverse/maestro/broker.py::teardown_reverse",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::teardown_reverse",
+      "accepted_identity": "src/xverse/maestro/teardown.py::ReverseTeardown.run",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/teardown.py",
+      "target_file_sha256": "bd02d17e3dc0090d2f4bd5ef8276c0f4cec0b0d7c6a2dc914f33583f3264cc2f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-013-U",
+      "requirement_id": "ML-SR-013",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.terminate",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-013-U",
+      "requirement_id": "ML-SR-013",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::observe_empty_membership",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::observe_empty_membership",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.terminate",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-013-U",
+      "requirement_id": "ML-SR-013",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::Supervisor",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::Supervisor",
+      "accepted_identity": "src/xverse/maestro/supervisor.py::WorkerMonitor",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/supervisor.py",
+      "target_file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-014-U",
+      "requirement_id": "ML-SR-014",
+      "declared_endpoint": "src/xverse/maestro/api.py::reconcile",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::reconcile",
+      "accepted_identity": "src/xverse/maestro/recovery.py::IssuerRecovery.reconcile",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/recovery.py",
+      "target_file_sha256": "f6731ac4790696b5f31bad5ea673f4bf315d945dd9e18bd76ea700af0f4e053a",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-014-U",
+      "requirement_id": "ML-SR-014",
+      "declared_endpoint": "src/xverse/maestro/broker.py::revalidate_handle",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::revalidate_handle",
+      "accepted_identity": "src/xverse/maestro/run_broker.py::RunUnitIssuer.revalidate_issued",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/run_broker.py",
+      "target_file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-014-U",
+      "requirement_id": "ML-SR-014",
+      "declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "captured_declared_endpoint": "src/xverse/maestro/lifecycle.py::Coordinator",
+      "accepted_identity": "src/xverse/maestro/dispatcher.py::FiniteDispatcher",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/dispatcher.py",
+      "target_file_sha256": "ae9c5c35332127cc41caa0572baf30130cf537c70021b42bd5e410c19bb43249",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-015-U",
+      "requirement_id": "ML-SR-015",
+      "declared_endpoint": "src/xverse/maestro/time.py::ClockContext",
+      "captured_declared_endpoint": "src/xverse/maestro/time.py::ClockContext",
+      "accepted_identity": "src/xverse/maestro/time.py::ClockContext",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/time.py",
+      "target_file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-015-U",
+      "requirement_id": "ML-SR-015",
+      "declared_endpoint": "src/xverse/maestro/time.py::TickDomain",
+      "captured_declared_endpoint": "src/xverse/maestro/time.py::TickDomain",
+      "accepted_identity": "src/xverse/maestro/time.py::TickDomain",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/time.py",
+      "target_file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-015-U",
+      "requirement_id": "ML-SR-015",
+      "declared_endpoint": "src/xverse/maestro/time.py::advance_tick",
+      "captured_declared_endpoint": "src/xverse/maestro/time.py::advance_tick",
+      "accepted_identity": "src/xverse/maestro/time.py::advance_tick",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/time.py",
+      "target_file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-015-U",
+      "requirement_id": "ML-SR-015",
+      "declared_endpoint": "src/xverse/maestro/time.py::host_monotonic",
+      "captured_declared_endpoint": "src/xverse/maestro/time.py::host_monotonic",
+      "accepted_identity": "src/xverse/maestro/time.py::HostDeadline",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/time.py",
+      "target_file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-016-U",
+      "requirement_id": "ML-SR-016",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::JournalAdapter",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::JournalAdapter",
+      "accepted_identity": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/lifecycle_evidence.py",
+      "target_file_sha256": "af75c0de371946409a837c351cb2c21c1eb1c81c4cff04f69cb5beeb87d351ed",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-016-U",
+      "requirement_id": "ML-SR-016",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "accepted_identity": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal.record",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/lifecycle_evidence.py",
+      "target_file_sha256": "af75c0de371946409a837c351cb2c21c1eb1c81c4cff04f69cb5beeb87d351ed",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-016-U",
+      "requirement_id": "ML-SR-016",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::mirror_acknowledgement",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::mirror_acknowledgement",
+      "accepted_identity": "src/xverse/maestro/owner.py::_persist_intent",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/owner.py",
+      "target_file_sha256": "41bcc359afdc403946041a77243deb75979e763fb6fcfaa7102ff73b7f1309ce",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-017-U",
+      "requirement_id": "ML-SR-017",
+      "declared_endpoint": "src/xverse/maestro/api.py::assess_lifecycle",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::assess_lifecycle",
+      "accepted_identity": "src/xverse/maestro/coverage.py::assess_preclosure",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-017-U",
+      "requirement_id": "ML-SR-017",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::PreClosureAssessor",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::PreClosureAssessor",
+      "accepted_identity": "src/xverse/maestro/coverage.py::assess_preclosure",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-017-U",
+      "requirement_id": "ML-SR-017",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::OfflineVerifier",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::OfflineVerifier",
+      "accepted_identity": "src/xverse/maestro/coverage.py::verify_closed",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-017-U",
+      "requirement_id": "ML-SR-017",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::derive_obligations",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::derive_obligations",
+      "accepted_identity": "src/xverse/maestro/coverage.py::admit_coverage",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-017-U",
+      "requirement_id": "ML-SR-017",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::CoverageResult",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::CoverageResult",
+      "accepted_identity": "src/xverse/maestro/coverage.py::CoverageResult",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-018-U",
+      "requirement_id": "ML-SR-018",
+      "declared_endpoint": "src/xverse/maestro/results.py::WriterStateReport",
+      "captured_declared_endpoint": "src/xverse/maestro/results.py::WriterStateReport",
+      "accepted_identity": "src/xverse/maestro/writer_closure.py::WriterClosure",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/writer_closure.py",
+      "target_file_sha256": "c25c06dfc5ea478ccc7dd284523337dd8b4fcf2aa8f869f7b6d132fac862a930",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-018-U",
+      "requirement_id": "ML-SR-018",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::CoverageResult",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::CoverageResult",
+      "accepted_identity": "src/xverse/maestro/coverage.py::CoverageResult",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-018-U",
+      "requirement_id": "ML-SR-018",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::JournalAdapter",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::JournalAdapter",
+      "accepted_identity": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/lifecycle_evidence.py",
+      "target_file_sha256": "af75c0de371946409a837c351cb2c21c1eb1c81c4cff04f69cb5beeb87d351ed",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-019-U",
+      "requirement_id": "ML-SR-019",
+      "declared_endpoint": "src/xverse/maestro/supervisor.py::close_start_latch",
+      "captured_declared_endpoint": "src/xverse/maestro/supervisor.py::close_start_latch",
+      "accepted_identity": "src/xverse/maestro/admission.py::PermitSession.claims_closed",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-019-U",
+      "requirement_id": "ML-SR-019",
+      "declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "captured_declared_endpoint": "src/xverse/maestro/prbc.py::terminate_exact_scope",
+      "accepted_identity": "src/xverse/maestro/prbc.py::ProcessBoundaryOps.terminate",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/prbc.py",
+      "target_file_sha256": "068e6323f63beacd70b856267063d4a2c13b09cfc3b58eecb4269fd1b69715e5",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-019-U",
+      "requirement_id": "ML-SR-019",
+      "declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "captured_declared_endpoint": "src/xverse/maestro/evidence.py::emit_annotation",
+      "accepted_identity": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal.record",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/lifecycle_evidence.py",
+      "target_file_sha256": "af75c0de371946409a837c351cb2c21c1eb1c81c4cff04f69cb5beeb87d351ed",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-019-U",
+      "requirement_id": "ML-SR-019",
+      "declared_endpoint": "src/xverse/maestro/broker.py::teardown_reverse",
+      "captured_declared_endpoint": "src/xverse/maestro/broker.py::teardown_reverse",
+      "accepted_identity": "src/xverse/maestro/teardown.py::ReverseTeardown.run",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/teardown.py",
+      "target_file_sha256": "bd02d17e3dc0090d2f4bd5ef8276c0f4cec0b0d7c6a2dc914f33583f3264cc2f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-020-U",
+      "requirement_id": "ML-SR-020",
+      "declared_endpoint": "src/xverse/maestro/results.py::terminal_report",
+      "captured_declared_endpoint": "src/xverse/maestro/results.py::terminal_report",
+      "accepted_identity": "src/xverse/maestro/terminal_runtime.py::finish_run",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/terminal_runtime.py",
+      "target_file_sha256": "f542a20bbea8bf572389ed5c696a7380c50f5238d2054ca0501dc24d41605dde",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-020-U",
+      "requirement_id": "ML-SR-020",
+      "declared_endpoint": "src/xverse/maestro/results.py::in_memory_incomplete",
+      "captured_declared_endpoint": "src/xverse/maestro/results.py::in_memory_incomplete",
+      "accepted_identity": "src/xverse/maestro/writer_closure.py::unresolved",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/writer_closure.py",
+      "target_file_sha256": "c25c06dfc5ea478ccc7dd284523337dd8b4fcf2aa8f869f7b6d132fac862a930",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-020-U",
+      "requirement_id": "ML-SR-020",
+      "declared_endpoint": "src/xverse/maestro/results.py::WriterStateReport",
+      "captured_declared_endpoint": "src/xverse/maestro/results.py::WriterStateReport",
+      "accepted_identity": "src/xverse/maestro/writer_closure.py::WriterClosure",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/writer_closure.py",
+      "target_file_sha256": "c25c06dfc5ea478ccc7dd284523337dd8b4fcf2aa8f869f7b6d132fac862a930",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-021-U",
+      "requirement_id": "ML-SR-021",
+      "declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-021-U",
+      "requirement_id": "ML-SR-021",
+      "declared_endpoint": "src/xverse/maestro/artifacts.py::collect_declared_artifacts",
+      "captured_declared_endpoint": "src/xverse/maestro/artifacts.py::collect_declared_artifacts",
+      "accepted_identity": "src/xverse/maestro/artifacts.py::CollectionAdmission.collect",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/artifacts.py",
+      "target_file_sha256": "98dce3cb0d2ede7430d5639bec69d6f22e89137cf0ffc93eebf697e63be1624f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-021-U",
+      "requirement_id": "ML-SR-021",
+      "declared_endpoint": "src/xverse/maestro/artifacts.py::confined_read",
+      "captured_declared_endpoint": "src/xverse/maestro/artifacts.py::confined_read",
+      "accepted_identity": "src/xverse/maestro/artifacts.py::CollectionAdmission._read",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/artifacts.py",
+      "target_file_sha256": "98dce3cb0d2ede7430d5639bec69d6f22e89137cf0ffc93eebf697e63be1624f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-021-U",
+      "requirement_id": "ML-SR-021",
+      "declared_endpoint": "src/xverse/maestro/results.py::CollectionResult",
+      "captured_declared_endpoint": "src/xverse/maestro/artifacts.py::CollectionResult",
+      "accepted_identity": "src/xverse/maestro/artifacts.py::CollectionResult",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/artifacts.py",
+      "target_file_sha256": "98dce3cb0d2ede7430d5639bec69d6f22e89137cf0ffc93eebf697e63be1624f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-022-U",
+      "requirement_id": "ML-SR-022",
+      "declared_endpoint": "src/xverse/maestro/api.py::stop",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::stop",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-022-U",
+      "requirement_id": "ML-SR-022",
+      "declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-022-U",
+      "requirement_id": "ML-SR-022",
+      "declared_endpoint": "src/xverse/maestro/coverage.py::OfflineVerifier",
+      "captured_declared_endpoint": "src/xverse/maestro/coverage.py::OfflineVerifier",
+      "accepted_identity": "src/xverse/maestro/coverage.py::verify_closed",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::prepare",
+      "accepted_identity": "src/xverse/maestro/projection.py::prepare_lifecycle",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/projection.py",
+      "target_file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::start",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::start",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.start",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::stop",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::stop",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::collect",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::reconcile",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::reconcile",
+      "accepted_identity": "src/xverse/maestro/recovery.py::IssuerRecovery.reconcile",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/recovery.py",
+      "target_file_sha256": "f6731ac4790696b5f31bad5ea673f4bf315d945dd9e18bd76ea700af0f4e053a",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::restart",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::restart",
+      "accepted_identity": "src/xverse/maestro/runtime_service.py::RuntimeService.restart",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_service.py",
+      "target_file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/api.py::assess_lifecycle",
+      "captured_declared_endpoint": "src/xverse/maestro/api.py::assess_lifecycle",
+      "accepted_identity": "src/xverse/maestro/coverage.py::assess_preclosure",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/coverage.py",
+      "target_file_sha256": "a03951b0d2f69366659c693de6b0f7fdf1d1ff35e788d3dd3dcf95ee5756431c",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-023-U",
+      "requirement_id": "ML-SR-023",
+      "declared_endpoint": "src/xverse/maestro/__init__.py",
+      "captured_declared_endpoint": "src/xverse/maestro/__init__.py",
+      "accepted_identity": "src/xverse/maestro/__init__.py",
+      "confidence": "present",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/__init__.py",
+      "target_file_sha256": "0fed5a8a12900c29dc55d6920aa25d645d1e1988635b4b2ed29d3e477fbb0c3f",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-024-U",
+      "requirement_id": "ML-SR-024",
+      "declared_endpoint": "src/xverse/maestro/admission.py::Admission",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::Admission",
+      "accepted_identity": "src/xverse/maestro/admission.py::PermitSession",
+      "confidence": "mapped_candidate+reviewer_note",
+      "review_verdict": "AGREE_WITH_NOTE",
+      "target_file": "src/xverse/maestro/admission.py",
+      "target_file_sha256": "639bacc3b84d5a8cac264e39134c931aca4230c13e94bcd93a7ce78fc3b92452",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-024-U",
+      "requirement_id": "ML-SR-024",
+      "declared_endpoint": "src/xverse/maestro/admission.py::bind_identities",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::bind_identities",
+      "accepted_identity": "src/xverse/maestro/runtime_admission.py::validate_run_admission",
+      "confidence": "mapped_candidate",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_admission.py",
+      "target_file_sha256": "fe1054fe75562e636f48c1f242de4a3512a2d15234e558900b26723f7879fc2d",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-024-U",
+      "requirement_id": "ML-SR-024",
+      "declared_endpoint": "src/xverse/maestro/admission.py::fence_capability_required",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::fence_capability_required",
+      "accepted_identity": "src/xverse/maestro/runtime_admission.py::validate_run_admission",
+      "confidence": "reviewer_corrected",
+      "review_verdict": "DISAGREE",
+      "target_file": "src/xverse/maestro/runtime_admission.py",
+      "target_file_sha256": "fe1054fe75562e636f48c1f242de4a3512a2d15234e558900b26723f7879fc2d",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    },
+    {
+      "unit_id": "ML-SR-024-U",
+      "requirement_id": "ML-SR-024",
+      "declared_endpoint": "src/xverse/maestro/admission.py::admission_digest",
+      "captured_declared_endpoint": "src/xverse/maestro/admission.py::admission_digest",
+      "accepted_identity": "src/xverse/maestro/runtime_admission.py::admission_digest",
+      "confidence": "mapped",
+      "review_verdict": "AGREE",
+      "target_file": "src/xverse/maestro/runtime_admission.py",
+      "target_file_sha256": "fe1054fe75562e636f48c1f242de4a3512a2d15234e558900b26723f7879fc2d",
+      "rebound": true,
+      "implementation_verified": false,
+      "closed_by_acceptance": false
+    }
+  ],
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "endpoint_obligations_rebound": 90,
+  "endpoint_obligations_closed_by_acceptance": 0,
+  "full_runtime_cases_retained": 9,
+  "distinct_accepted_identities": 55,
+  "open_findings": [
+    135,
+    222,
+    286,
+    287,
+    318,
+    324,
+    330,
+    331,
+    332,
+    337,
+    338,
+    344,
+    345,
+    359,
+    364,
+    375
+  ],
+  "authority_limits": {
+    "actual_M1_admissions": 0,
+    "full_runtime_cases_complete": false,
+    "full_increment17_complete": false,
+    "full_maestro_regression_passed": false,
+    "whole_platform_regression": false,
+    "stable_increment17": false,
+    "source_parent_semantics_validated": false,
+    "independent_complete_review": false,
+    "CAPA_effectiveness_demonstrated": false,
+    "accepted": false,
+    "merged": false,
+    "scientific_result": false,
+    "ir_ml3_04_activation_prerequisites_met": false,
+    "runtime_case_receipts_bound_into_admission": false,
+    "crash_point_matrices_complete": false,
+    "endpoint_mapping_independently_reviewed": true,
+    "endpoint_mapping_author_accepted": true,
+    "trace_rebound": true,
+    "implementation_accepted": false,
+    "m1_complete": false
+  }
+}

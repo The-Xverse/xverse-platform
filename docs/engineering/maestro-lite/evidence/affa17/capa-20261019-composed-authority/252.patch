@@ -1,0 +1,40 @@
+--- before/docs/engineering/maestro-lite/evidence/affa17/audit-composed-authority-20261019.py
++++ after/docs/engineering/maestro-lite/evidence/affa17/audit-composed-authority-20261019.py
+@@ -8,6 +8,7 @@
+ import sysconfig
+ import zipfile
+ from xverse.argus import EvidenceStore
++from xverse.argus.schema import canonical_bytes
+ from xverse.maestro.coverage import CoverageAdmission, canonical
+ from xverse.maestro.collection_plan import decode_collection
+ from xverse.maestro.runtime_verification import runtime_admission_digest, verify_runtime_closed
+@@ -65,13 +66,28 @@
+             'storage_reaped', 'original_C1_released'))
+         phase_waits.append(dict(path=str(path.relative_to(out)), sha256=sha(path)))
+     for item in read(out/(label+'-public-evidence-index.json')):
+-        assert sha(out/item['snapshot']) == item['sha256'] and not item['reader_gaps']
++        assert sha(out/item['snapshot']) == item['sha256']
+         projection = read(out/item['snapshot'])
+         fixture = Path(projection['original_fixture'])
+         assert str(fixture) not in seen_fixtures
+         seen_fixtures.add(str(fixture))
+         assert projection['m3'] == list(FileEvidenceJournal(fixture/'m3.jsonl').public_records())
+         assert projection['argus'] == list(EvidenceStore.read_run(fixture/'argus').records())
++        by_sequence = {r['sequence']: r for r in projection['m3']}
++        mirrored, links = set(), 0
++        for event in projection['argus']:
++            for ref in event.get('extensions', {}).get('xverse.maestro', {}).get('sourceRefs', []):
++                if ref.get('kind') == 'm3-record':
++                    assert ref['sequence'] in by_sequence
++                    assert ref['sha256'] == 'sha256:'+hashlib.sha256(canonical_bytes(by_sequence[ref['sequence']])).hexdigest()
++                    mirrored.add(ref['sequence'])
++                    links += 1
++        missing = by_sequence.keys()-mirrored
++        assert links == item['source_links']
++        assert projection['reader_gaps'] == item['reader_gaps']
++        assert {g['m3_sequence'] for g in item['reader_gaps']} == missing
++        assert all(g['source'] == 'Argus mirror' and g['error'] ==
++            'original M3 record lacks an actual Argus reference' for g in item['reader_gaps'])
+         phase_snapshots.append(dict(phase=phase, **item))
+     compiler = read(harness/'heartbeat-compiler.json')
+     assert compiler['source_sha256'] == frozen['tests/thesis_lite/maestro/unrelated_heartbeat_fixture.c']

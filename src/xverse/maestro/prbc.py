@@ -112,6 +112,7 @@ class BoundaryLimits:
     poll_seconds: float = 0.005
     max_members: int = 128
     max_control_bytes: int = 16384
+    max_boundaries: int = 16
 
     def __post_init__(self) -> None:
         for value, maximum in (
@@ -131,7 +132,12 @@ class BoundaryLimits:
                 raise BoundaryError("ML-ADMISSION-BOUNDARY-LIMIT")
         _uint(self.max_members, 128)
         _uint(self.max_control_bytes, 16384)
-        if self.max_members < 1 or self.max_control_bytes < 128:
+        _uint(self.max_boundaries, 192)
+        if (
+            self.max_members < 1
+            or self.max_control_bytes < 128
+            or self.max_boundaries < 1
+        ):
             raise BoundaryError("ML-ADMISSION-BOUNDARY-LIMIT")
 
 
@@ -155,7 +161,7 @@ class BoundaryRecord:
 class BoundaryOps(ABC):
     @abstractmethod
     def create_frozen(
-        self, descriptor: BoundaryDescriptor, **options: Any
+        self, descriptor: BoundaryDescriptor, *, deadline=None, **options: Any
     ) -> BoundaryRecord:
         raise NotImplementedError
 
@@ -242,6 +248,7 @@ class ProcessBoundaryOps(BoundaryOps):
             limits.poll_seconds,
             limits.max_members,
             limits.max_control_bytes,
+            limits.max_boundaries,
         )
         remaining = deadline.monotonic_seconds - time.monotonic()
         if not 0 < remaining <= 300 + 16 * 5 + 10 + 2 + 2:
@@ -282,6 +289,10 @@ class ProcessBoundaryOps(BoundaryOps):
         self._caps: dict[tuple, object] = {}
         self._lock = threading.Lock()
         self._operation_deadline: float | None = None
+        self._epoch_authority = self._epoch_authority_pin = None
+        self._creation_epochs = self._creation_epochs_pin = (
+            (admission.initial_epoch, None),
+        )
 
     def __reduce_ex__(self, protocol: int):
         raise TypeError("original boundary registries cannot be serialized")
@@ -290,11 +301,74 @@ class ProcessBoundaryOps(BoundaryOps):
         if self._original is not self or self._pid != os.getpid() or self._root_fd < 0:
             raise BoundaryError("ML-OWNERSHIP-BOUNDARY-HOLDER")
         self._latch._check()
+        if (
+            self._epoch_authority is not self._epoch_authority_pin
+            or self._creation_epochs is not self._creation_epochs_pin
+        ):
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-REGISTRY")
+
+    def bind_authority(self, connection):
+        """Bind only the same original BS17 authority after its actual READY."""
+        from .affa_client import AuthorityConnection
+        from .affa_protocol import AuthorityKind
+
+        self._holder()
+        if (
+            type(connection) is not AuthorityConnection
+            or self._epoch_authority is not None
+        ):
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-AUTHORITY")
+        connection._holder()
+        root = connection.child._root
+        if (
+            root.boundaries is not self
+            or root.latch is not self._latch
+            or self._latch.cancelled
+            or len(connection._epoch_history) != 1
+            or connection._epoch_history[0].kind is not AuthorityKind.READY
+            or connection.epoch != self._admission.initial_epoch
+        ):
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-AUTHORITY")
+        self._epoch_authority = self._epoch_authority_pin = connection
+
+    def admit_epoch(self, receipt):
+        """Consume a genuine retained original ADVANCE, never a numeric epoch."""
+        from .affa_client import AuthorityEpochAdvance
+        from .affa_protocol import AuthorityKind
+
+        self._holder()
+        if type(receipt) is not AuthorityEpochAdvance or self._epoch_authority is None:
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-RECEIPT")
+        connection, request, reply, descriptor = receipt._holder()
+        if connection is not self._epoch_authority:
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-AUTHORITY")
+        for epoch, original in self._creation_epochs:
+            if original is receipt:
+                return epoch
+        if (
+            self._latch.cancelled
+            or connection._starts_closed
+            or connection._revoked
+            or reply.kind is not AuthorityKind.ADVANCED
+            or request.kind is not AuthorityKind.ADVANCE
+            or reply.epoch != self._creation_epochs[-1][0] + 1
+            or connection._epoch_history[-1] is not reply
+            or request.epoch + 1 != reply.epoch
+            or descriptor.creation_epoch != self._creation_epochs[-1][0]
+        ):
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-TRANSITION")
+        entry = self._entry(descriptor)
+        self._authority(entry)
+        self._verify(entry)
+        connection.child._ordinary()
+        self._creation_epochs = (*self._creation_epochs, (reply.epoch, receipt))
+        self._creation_epochs_pin = self._creation_epochs
+        return reply.epoch
 
     @property
     def release_epoch(self) -> int:
         self._holder()
-        return self._admission.initial_epoch + self._latch.epoch
+        return self._creation_epochs[-1][0] + self._latch.epoch
 
     @property
     def ready_for_execution(self) -> bool:
@@ -337,10 +411,9 @@ class ProcessBoundaryOps(BoundaryOps):
         if type(descriptor) is not BoundaryDescriptor:
             raise BoundaryError("ML-ADMISSION-BOUNDARY-DESCRIPTOR")
         value = BoundaryDescriptor(*descriptor.key)
-        if (
-            value.run_id != self._admission.run_id
-            or value.creation_epoch != self._admission.initial_epoch
-        ):
+        if value.run_id != self._admission.run_id or value.creation_epoch not in {
+            e for e, _ in self._creation_epochs
+        }:
             raise BoundaryError("ML-OWNERSHIP-BOUNDARY-SCOPE")
         return value
 
@@ -350,6 +423,21 @@ class ProcessBoundaryOps(BoundaryOps):
         if value.key not in self._entries:
             raise BoundaryError("ML-OWNERSHIP-BOUNDARY-UNKNOWN")
         return self._entries[value.key]
+
+    def _creation_epoch(self, value, *, live=True):
+        if value.creation_epoch != self._creation_epochs[-1][0]:
+            raise BoundaryError("ML-OWNERSHIP-EPOCH-STALE-CREATION")
+        if self._epoch_authority is not None:
+            connection = self._epoch_authority
+            if live:
+                connection._holder()
+                connection.child._ordinary()
+            if (
+                connection._starts_closed
+                or connection._revoked
+                or connection.epoch != value.creation_epoch
+            ):
+                raise BoundaryError("ML-OWNERSHIP-EPOCH-STALE-CREATION")
 
     def _snapshot(self, entry: _Entry) -> BoundaryRecord:
         return BoundaryRecord(
@@ -538,13 +626,13 @@ class ProcessBoundaryOps(BoundaryOps):
         return BoundaryError(entry.diagnostic, self._snapshot(entry))
 
     def create_frozen(
-        self, descriptor: BoundaryDescriptor, **options: Any
+        self, descriptor: BoundaryDescriptor, *, deadline=None, **options: Any
     ) -> BoundaryRecord:
         self._holder()
         value = self._descriptor(descriptor)
         if options:
             raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
-        with self._lock, self._operation():
+        with self._lock, self._operation(deadline):
             self._deadline()
             if self._latch.cancelled:
                 raise BoundaryError("ML-CANCELLED-BOUNDARY-STAGE")
@@ -561,7 +649,8 @@ class ProcessBoundaryOps(BoundaryOps):
                     except (OSError, UnicodeError, BoundaryError) as exc:
                         raise self._error(entry, exc) from exc
                 raise BoundaryError("ML-CONFLICT-BOUNDARY-STAGE", self._snapshot(entry))
-            if len(self._entries) >= 16 or any(
+            self._creation_epoch(value)
+            if len(self._entries) >= self._limits.max_boundaries or any(
                 (e.descriptor.unit_id, e.descriptor.generation)
                 == (value.unit_id, value.generation)
                 for e in self._entries.values()
@@ -591,9 +680,11 @@ class ProcessBoundaryOps(BoundaryOps):
                 self._write(entry, "cgroup.max.descendants", b"0")
                 self._freeze(entry)
                 self._members(entry)
+                self._creation_epoch(value)
                 with self._latch._lock:
                     if self._latch.cancelled:
                         raise BoundaryError("ML-CANCELLED-BOUNDARY-LATE-STAGE")
+                    self._creation_epoch(value, live=False)
                     self._deadline()
                     entry.state = "frozen"
                     return self._snapshot(entry)

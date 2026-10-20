@@ -1,0 +1,30 @@
+--- docs/engineering/maestro-lite/evidence/affa17/check-runtime-pending-stop-work-products-20261019.py
++++ docs/engineering/maestro-lite/evidence/affa17/check-runtime-pending-stop-work-products-20261019-v2.py
+@@ -13,7 +13,8 @@
+ assert all(sha(root / name) == digest for name, digest in manifest.items())
+ prior = read(base / 'startup-ownership-20261019c/frozen-inputs.json')
+ production = {n: h for n, h in manifest.items() if n.startswith('src/')}
+-assert len(production) == 81
++assert len(production) == 118
++assert len([n for n in production if n.endswith(('.py', '.c'))]) == 81
+ assert production == {n: h for n, h in prior.items() if n.startswith('src/')}
+ 
+ trace_path = base / 'runtime-pending-stop-partial-traceability.json'
+@@ -116,7 +117,7 @@
+ products = [root / 'docs/engineering/maestro-lite/runtime-pending-stop.md',
+             root / 'docs/engineering/maestro-lite/README.md', handoff, tasks]
+ result = dict(checker_sha256=sha(Path(__file__)), frozen_files_checked=len(manifest),
+-    unchanged_production_sources=81, partial_requirement_rows=24, source_parent_rows=18,
++    unchanged_source_tree_files=118, unchanged_packaged_python_c_files=81, partial_requirement_rows=24, source_parent_rows=18,
+     new_endpoints=8, endpoint_links=56, new_checks_per_phase=3, selected_checks_per_phase=78,
+     actual_original_product_waits=6, owned_reservations_absent=6,
+     unregistered_helper_unknowns_preserved=True, draft_input_bindings_checked=8,
+@@ -124,7 +125,7 @@
+     combined_regression_state_is_historical_snapshot=True, full_regression_proven=False,
+     work_product_hashes={str(p): sha(p) for p in products},
+     actual_M1_admissions=0, stable_increment17=False, accepted=False, merged=False)
+-with (base / 'runtime-pending-stop-work-products-check.json').open('x') as stream:
++with (base / 'runtime-pending-stop-work-products-check-v2.json').open('x') as stream:
+     json.dump(result, stream, indent=2)
+     stream.write('\n')
+ print(json.dumps(result))

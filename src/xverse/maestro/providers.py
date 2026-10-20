@@ -99,7 +99,8 @@ class DependencyGuard(_Original):
             deadline,
         )
 
-    def check(self, owner, unit_id, deadline):
+    def _validate(self, owner, unit_id, deadline):
+        """Validate original operation identity without taking a new sample."""
         self._holder()
         coordinator = self._coordinator
         coordinator._holder()
@@ -110,6 +111,10 @@ class DependencyGuard(_Original):
             or deadline != self._deadline
         ):
             raise ReadinessError("ML-PROBE-GUARD")
+        return coordinator
+
+    def check(self, owner, unit_id, deadline):
+        coordinator = self._validate(owner, unit_id, deadline)
         coordinator._check_prerequisites(unit_id, deadline)
 
 
@@ -123,7 +128,7 @@ class ProcessReadiness(_Original):
 
     ready_for_execution = False
 
-    def __init__(self, owner, *, policies):
+    def __init__(self, owner, *, policies, _cleanup_recovery=None):
         if type(owner) is not ReleaseOwner or type(policies) is not tuple:
             raise ReadinessError("ML-PROBE-INPUT")
         owner._holder()
@@ -131,7 +136,22 @@ class ProcessReadiness(_Original):
 
         if type(owner.persistence) is not PersistenceClient:
             raise ReadinessError("ML-PROBE-PERSISTENCE")
-        owner.persistence._available()
+        if _cleanup_recovery is None:
+            owner.persistence._available()
+        else:
+            from .recovery import IssuerRecovery
+            if type(_cleanup_recovery) is not IssuerRecovery:
+                raise ReadinessError('ML-PROBE-CLEANUP-CAPABILITY')
+            _Original._holder(_cleanup_recovery)
+            if (_cleanup_recovery.owner is not owner or not owner.latch.cancelled
+                or _cleanup_recovery._coordinator is None or _cleanup_recovery._view is not None
+                or _cleanup_recovery._scope is None or _cleanup_recovery._retired_view_epoch is None
+                or _cleanup_recovery._retired_view_epoch != owner._view_epoch
+                or _cleanup_recovery.controller._recovery is not _cleanup_recovery):
+                raise ReadinessError('ML-PROBE-CLEANUP-CAPABILITY')
+            _cleanup_recovery._coordinator._validate_controller_borrow(
+                _cleanup_recovery.controller, _cleanup_recovery._request)
+            owner.persistence._holder()
         prepared = owner._prepared
         units = prepared.units
         if any(type(p) is not ProbePolicy for p in policies):
@@ -142,6 +162,11 @@ class ProcessReadiness(_Original):
             u.unit_id for u in units
         }:
             raise ReadinessError("ML-PROBE-POLICY-SET")
+        if owner.persistence.coverage is not None:
+            admission = owner.persistence.coverage
+            expected = {u['unitId']: (u['cadence'], u['freshness']) for u in admission.data(owner.persistence.coverage_digest)['units']}
+            if any((p.cadence_seconds, p.freshness_seconds) != expected.get(p.unit_id) for p in policies):
+                raise ReadinessError("ML-COVERAGE-RUNTIME-POLICY")
         for unit in units:
             actions = [a for a in unit.plan.actions if a.phase == "observe"]
             if (
@@ -151,6 +176,9 @@ class ProcessReadiness(_Original):
             ):
                 raise ReadinessError("ML-PROBE-UNSUPPORTED")
         self._retain()
+        self._cleanup_only = _cleanup_recovery is not None
+        self._cleanup_source = _cleanup_recovery
+        self._cleanup_pin = self._cleanup_only, _cleanup_recovery
         self._owner, self._prepared = owner, prepared
         self._pins = owner, prepared, owner.session
         self._policies = {p.unit_id: p for p in policies}
@@ -198,6 +226,7 @@ class ProcessReadiness(_Original):
             or self._attempted is not self._state_pins[1]
             or tuple(self._policies.values()) != self._policy_pin
             or tuple(self._prerequisites.items()) != self._prerequisite_pin
+            or (self._cleanup_only, self._cleanup_source) != self._cleanup_pin
         ):
             raise ReadinessError("ML-PROBE-REPLACED")
         owner._holder()
@@ -211,6 +240,8 @@ class ProcessReadiness(_Original):
 
     def _check(self, deadline):
         self._holder()
+        if self._cleanup_only:
+            raise ReadinessError('ML-PROBE-CLEANUP-ONLY')
         return self._owner._check(deadline)
 
     def _bound(self, unit_id):
@@ -226,10 +257,14 @@ class ProcessReadiness(_Original):
         return binding
 
     def bind(self, launcher, handle):
+        from .run_broker import RunUnitIssuer
+
         self._holder()
+        if self._cleanup_only:
+            raise ReadinessError('ML-PROBE-CLEANUP-ONLY')
         self._owner._dispatch_access()
         if (
-            type(launcher) is not CatalogLauncher
+            type(launcher) not in (CatalogLauncher, RunUnitIssuer)
             or type(handle) is not OwnedResourceHandle
         ):
             raise ReadinessError("ML-PROBE-BINDING")
@@ -243,7 +278,8 @@ class ProcessReadiness(_Original):
                 or self._owner._launchers.get(unit) is not launcher
                 or unit not in self._policies
                 or unit in self._bindings
-                or launcher.recipe.descriptor.generation != 1
+                or type(launcher) is CatalogLauncher
+                and launcher.recipe.descriptor.generation != 1
             ):
                 raise ReadinessError("ML-PROBE-BINDING")
             self._bindings[unit] = _Binding(launcher, handle)
@@ -351,9 +387,14 @@ class ProcessReadiness(_Original):
             ):
                 raise ReadinessError("ML-PROBE-BOUNDARY")
             self._attempted.add(unit_id)
-            # Recheck sampled health for all already released units before new work.
+            # Native prerequisites are observed by the mandatory original broker
+            # guard after ARM, immediately before RELEASE. Keep early live checks
+            # for unrelated units; legacy release retains the full preflight.
+            from .run_broker import RunUnitIssuer
+            final_parents = self._prerequisites[unit_id] if type(binding.launcher) is RunUnitIssuer else ()
             for active in self._prepared.resource_order:
-                if active in self._released and not self._query(active, deadline).ready:
+                if (active in self._released and active not in final_parents
+                    and not self._query(active, deadline).ready):
                     raise ReadinessError("ML-PROBE-HEALTH")
             self._guard = DependencyGuard(_CREATE, self, unit_id, deadline)
             self._owner.release(

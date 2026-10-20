@@ -9,6 +9,7 @@ import uuid
 from xverse_xdl.lifecycle import OwnedResourceHandle
 from .owner import _Original, OwnerError
 from .launcher import CatalogLauncher
+from .run_broker import RunUnitIssuer
 from .lifecycle_evidence import _parents
 from .providers import ProcessReadiness
 from .time import HostDeadline
@@ -151,24 +152,30 @@ class ReverseTeardown(_Original):
         units = set(self._order())
         with self.manager._cleanup_lock(deadline):
             entries = {
-                e.descriptor.unit_id: e.descriptor
+                e.descriptor.key: e.descriptor
                 for e in self.manager._entries.values()
-                if e.descriptor.unit_id in units
-                and e.descriptor.generation == 1
-                and e.fd >= 0
+                if e.descriptor.unit_id in units and e.fd >= 0
             }
         jobs = []
         for unit in self._order():
             if unit in self._cleaned:
                 continue
-            descriptor = entries.get(unit)
             launcher = self._registry.get(unit)
+            descriptor = next((d for d in entries.values() if d.unit_id == unit), None)
             handle = None
-            if type(launcher) is CatalogLauncher:
+            if type(launcher) in (CatalogLauncher, RunUnitIssuer):
                 launcher._holder()
-                if launcher.owner is not self.owner or launcher.recipe.unit_id != unit:
+                if launcher.owner is not self.owner:
                     raise TeardownError("ML-TEARDOWN-ISSUER")
-                if descriptor != launcher.recipe.descriptor:
+                original = (
+                    launcher._image.admission.descriptor
+                    if type(launcher) is RunUnitIssuer and launcher.recipe is None
+                    else launcher.recipe.descriptor
+                )
+                if original.unit_id != unit:
+                    raise TeardownError("ML-TEARDOWN-ISSUER")
+                descriptor = entries.get(original.key)
+                if descriptor != original:
                     raise TeardownError("ML-TEARDOWN-BOUNDARY")
                 handle = launcher._handle
             if descriptor is not None:
@@ -193,17 +200,30 @@ class ReverseTeardown(_Original):
             self._intents[unit, phase] = receipt
         return receipt
 
+    def _terminal_scope(self):
+        broker = self.owner._run_broker_pin
+        if broker is None or broker.storage.collection is None or not broker.session._terminal:
+            return False
+        broker._holder()
+        from .affa_protocol import AuthorityKind
+        return (self.owner._closed and self.owner.latch.cancelled
+                and any(r.kind is AuthorityKind.CANCELLED for r in broker.connection._epoch_history))
+
     def _stop(self, job, deadline):
         unit, descriptor, launcher, handle = job
         if unit in self._stop_results:
             return self._stop_results[unit]
         if (
-            type(launcher) is not CatalogLauncher
+            type(launcher) not in (CatalogLauncher, RunUnitIssuer)
             or type(handle) is not OwnedResourceHandle
         ):
             raise TeardownError("ML-TEARDOWN-NO-HANDLE")
         launcher.revalidate_issued(handle)
         self._record(unit, "stop", "intent", descriptor, handle, deadline)
+        native = type(launcher) is RunUnitIssuer
+        if native:
+            observed = launcher.stop_owned(handle, deadline)
+            self._known_reaps.add(unit)
         boundary = self.manager.terminate(descriptor, deadline=deadline)
         empty = (
             boundary.membership_complete
@@ -212,7 +232,7 @@ class ReverseTeardown(_Original):
         )
         if not empty:
             raise TeardownError("ML-TEARDOWN-NOT-EMPTY")
-        while True:
+        while not native:
             observed = launcher.observe(handle, deadline)
             if observed.leader_reaped and not observed.leader_alive:
                 break
@@ -240,7 +260,9 @@ class ReverseTeardown(_Original):
             self.facade._observations[unit] = replace(
                 self.facade._observations[unit], ready=False
             )
-        result = UnitTeardown(unit, 1, True, True, False, False, False, None)
+        result = UnitTeardown(
+            unit, descriptor.generation, True, True, False, False, False, None
+        )
         self._stop_results[unit] = result
         return result
 
@@ -256,6 +278,8 @@ class ReverseTeardown(_Original):
             raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
         boundary = self._stopped[unit]
         self._record(unit, "cleanup", "intent", descriptor, handle, deadline)
+        if type(launcher) is RunUnitIssuer:
+            launcher.retire_owned(handle, deadline)
         released = self.manager.release_empty(descriptor, deadline=deadline)
         if not released.boundary_released or released.residual_count != 0:
             raise TeardownError("ML-TEARDOWN-NOT-RELEASED")
@@ -271,13 +295,41 @@ class ReverseTeardown(_Original):
             released=True,
             force_observed=boundary.termination_observed,
         )
-        result = UnitTeardown(unit, 1, True, True, True, True, False, None)
+        result = UnitTeardown(
+            unit, descriptor.generation, True, True, True, True, False, None
+        )
         self._cleaned[unit] = result
         return result
 
     def _normal(self, job, deadline):
         self._stop(job, deadline)
         return self._cleanup(job, deadline)
+
+    def _mutation_locks(self):
+        locks = (self.facade._lock, self.owner._lock)
+        broker = self.owner._run_broker_pin
+        return locks + ((broker._lock,) if broker is not None else ())
+
+    def _released_current(self, unit, deadline):
+        """An old cached terminal result does not release a replacement."""
+        self._holder()
+        cleaned = self._cleaned.get(unit)
+        launcher = self._registry.get(unit)
+        if type(launcher) not in (CatalogLauncher, RunUnitIssuer):
+            return False
+        launcher._holder()
+        descriptor = (
+            launcher._image.admission.descriptor
+            if type(launcher) is RunUnitIssuer and launcher.recipe is None
+            else launcher.recipe.descriptor
+        )
+        return (
+            type(cleaned) is UnitTeardown
+            and cleaned.generation == descriptor.generation
+            and cleaned.unit_cleanup_complete
+            and cleaned.normal_records_complete
+            and self.manager.record(descriptor, deadline=deadline).boundary_released
+        )
 
     def phase(self, unit, phase, deadline):
         """One original scoped stop or cleanup; other units retain admission."""
@@ -299,7 +351,7 @@ class ReverseTeardown(_Original):
             raise TeardownError("ML-TEARDOWN-CONFLICT")
         locks = []
         try:
-            for lock in (self.facade._lock, self.owner._lock):
+            for lock in self._mutation_locks():
                 if not lock.acquire(False):
                     raise TeardownError("ML-TEARDOWN-CONFLICT")
                 locks.append(lock)
@@ -309,7 +361,7 @@ class ReverseTeardown(_Original):
                 raise TeardownError("ML-TEARDOWN-NO-HANDLE")
             if phase == "stop" and any(
                 unit in _parents(self.owner._prepared, other)
-                and other not in self._cleaned
+                and not self._released_current(other, deadline)
                 for other in self.owner._claims
                 if other != unit
             ):
@@ -337,9 +389,42 @@ class ReverseTeardown(_Original):
 
     def _emergency(self, job, deadline, diagnostic):
         unit, descriptor, launcher, handle = job
+        native = type(launcher) is RunUnitIssuer
+        fenced = True
+        if native:
+            cancelled = launcher.broker.cancel(
+                "teardown-normal-incomplete", deadline=deadline
+            )
+            fenced = cancelled.native_epoch_confirmed or (
+                cancelled.issuer_dead and cancelled.issuer_reaped
+            )
+            if (
+                cancelled.native_epoch_confirmed
+                and not launcher.broker.connection._revoked
+            ):
+                try:
+                    launcher.stop_owned(handle, deadline)
+                    self._known_reaps.add(unit)
+                    launcher.retire_owned(handle, deadline)
+                except (ValueError, OSError):
+                    pass
+            if not fenced:
+                revoked = launcher.broker.connection.revoke(deadline)
+                fenced = revoked.issuer_dead and revoked.issuer_reaped
         self.owner.cancel("teardown-normal-incomplete")
         reaped = unit in self._known_reaps
         boundary = None
+        if not fenced:
+            return UnitTeardown(
+                unit,
+                descriptor.generation,
+                reaped,
+                False,
+                False,
+                False,
+                True,
+                "ML-TEARDOWN-ISSUER-UNFENCED",
+            )
         for attempt in range(3):
             try:
                 boundary = self.manager.force_cleanup(descriptor, deadline=deadline)
@@ -371,7 +456,7 @@ class ReverseTeardown(_Original):
         )
         return UnitTeardown(
             unit,
-            1,
+            descriptor.generation,
             reaped,
             empty,
             boundary is not None and boundary.boundary_released,
@@ -398,7 +483,7 @@ class ReverseTeardown(_Original):
             raise TeardownError("ML-TEARDOWN-CONFLICT")
         locks = []
         try:
-            for lock in (self.facade._lock, self.owner._lock):
+            for lock in self._mutation_locks():
                 if not lock.acquire(False):
                     raise TeardownError("ML-TEARDOWN-CONFLICT")
                 locks.append(lock)
@@ -415,7 +500,7 @@ class ReverseTeardown(_Original):
                 unit_end = min(end, began + self._cap)
                 normal_end = began + 0.6 * (unit_end - began)
                 try:
-                    if self.owner.latch.cancelled:
+                    if self.owner.latch.cancelled and not self._terminal_scope():
                         raise TeardownError("ML-TEARDOWN-CANCELLED")
                     results.append(
                         self._normal(job, HostDeadline(self.session, normal_end))

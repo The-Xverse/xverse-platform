@@ -1,0 +1,119 @@
+...FF                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_selective_generation_advance_keeps_unrelated_original_resource_running __
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7e748473c9d0>, PosixPath('/tmp/pytest-of-jefferson/pytest-968/test_selective_generation_adva0'))
+
+    def test_selective_generation_advance_keeps_unrelated_original_resource_running(
+        authority,
+    ):
+        h, work = authority
+        for i in range(2):
+            h.stage(i)
+            h.arm(i)
+            assert h.release(i).kind is K.RELEASED
+        wait_marker(work / "u0.marker")
+        wait_marker(work / "u1.marker")
+        old = h.frame(K.QUERY, 0)
+        h.stop_retire(0)
+        retained = os.dup(h.units[0]["cg"])
+        h.fds.append(retained)
+        assert h.manager.force_cleanup(h.units[0]["descriptor"]).boundary_released
+        info = os.fstat(retained)
+        missing = []
+        for name in ("cgroup.events", "cgroup.procs", "cgroup.freeze"):
+            try:
+                control = os.open(
+                    name, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=retained
+                )
+            except FileNotFoundError as error:
+                missing.append(error.errno)
+            else:
+                os.close(control)
+                raise AssertionError("original boundary control still present")
+        output = os.environ.get("MAESTRO_BOUNDARY_RECEIPTS")
+        if output:
+            (Path(output) / f"affa-removed-observation-{os.getpid()}.json").write_text(
+                json.dumps(
+                    {
+                        "original_identity": [info.st_dev, info.st_ino],
+                        "actual_nlink": info.st_nlink,
+                        "missing_control_errno": missing,
+                        "original_C1_release_observed": True,
+                    }
+                )
+            )
+        desc = BoundaryDescriptor("run", "u0", 2, "next-0", 0)
+        h.manager.create_frozen(desc)
+        fd = h.manager._entries[desc.key].fd
+        u = h.units[0]
+        u.update(
+            generation=2,
+            operation=b"n" * 16,
+            intent=digest(b"new-intent"),
+            mirror=digest(b"new-mirror"),
+            boundary=digest(b"new-boundary"),
+        )
+        u.pop("handle")
+        u.pop("ticket")
+        advanced = h.rpc(h.frame(K.ADVANCE, 0), (fd,))
+        assert advanced.kind is K.ADVANCED and advanced.epoch == 1
+        u["descriptor"], u["cg"] = desc, fd
+        h.stage(0)
+        h.arm(0)
+        assert h.release(0).kind is K.RELEASED
+        wait_marker(work / "u0.marker", 2)
+        assert h.rpc(h.frame(K.QUERY, 1)).state & 4
+        cached = h.rpc(old)
+        assert cached.generation == 1 and cached.state & 256 and not cached.state & 4
+        assert h.rpc(h.frame(K.QUERY, 0)).state & 4
+>       assert h.rpc(replace(old, kind=K.STOP)).state == u["stop_state"]
+E       assert 459 == 107
+E        +  where 459 = AuthorityFrame(kind=<AuthorityKind.STOPPED: 23>, sequence=20, deadline_ns=934395385341545, slot=1, epoch=1, generation=1, state=459, reason=0, lease_ns=0).state
+E        +    where AuthorityFrame(kind=<AuthorityKind.STOPPED: 23>, sequence=20, deadline_ns=934395385341545, slot=1, epoch=1, generation=1, state=459, reason=0, lease_ns=0) = rpc(AuthorityFrame(kind=<AuthorityKind.STOP: 7>, sequence=1, deadline_ns=934395380798106, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0))
+E        +      where rpc = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7e748473c9d0>.rpc
+E        +      and   AuthorityFrame(kind=<AuthorityKind.STOP: 7>, sequence=1, deadline_ns=934395380798106, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0) = replace(AuthorityFrame(kind=<AuthorityKind.QUERY: 6>, sequence=1, deadline_ns=934395380798106, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0), kind=<AuthorityKind.STOP: 7>)
+E        +        where <AuthorityKind.STOP: 7> = K.STOP
+
+tests/thesis_lite/maestro/test_affa_native.py:433: AssertionError
+_______ test_generation_advance_cannot_change_the_original_action_digest _______
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7e74846cf950>, PosixPath('/tmp/pytest-of-jefferson/pytest-968/test_generation_advance_cannot0'))
+
+    def test_generation_advance_cannot_change_the_original_action_digest(authority):
+        h, work = authority
+        h.stage(0)
+        h.arm(0)
+        assert h.release(0).kind is K.RELEASED
+        wait_marker(work / "u0.marker")
+        h.stop_retire(0)
+        assert h.manager.force_cleanup(h.units[0]["descriptor"]).boundary_released
+        desc = BoundaryDescriptor("run", "u0", 2, "next-action-negative", 0)
+        h.manager.create_frozen(desc)
+        fd = h.manager._entries[desc.key].fd
+        frame = AuthorityFrame(
+            K.ADVANCE,
+            1,
+            h.end(),
+            h.config.scope,
+            1,
+            h.epoch,
+            2,
+            b"n" * 16,
+            digest(b"wrong-action"),
+            digest(b"new-intent"),
+            digest(b"new-mirror"),
+            digest(b"new-boundary"),
+        )
+>       assert h.rpc(frame, (fd,)).kind is K.REJECTED
+E       assert <AuthorityKind.ADVANCED: 28> is <AuthorityKind.REJECTED: 27>
+E        +  where <AuthorityKind.ADVANCED: 28> = AuthorityFrame(kind=<AuthorityKind.ADVANCED: 28>, sequence=10, deadline_ns=934395517526836, slot=1, epoch=1, generation=2, state=96, reason=0, lease_ns=0).kind
+E        +    where AuthorityFrame(kind=<AuthorityKind.ADVANCED: 28>, sequence=10, deadline_ns=934395517526836, slot=1, epoch=1, generation=2, state=96, reason=0, lease_ns=0) = rpc(AuthorityFrame(kind=<AuthorityKind.ADVANCE: 12>, sequence=1, deadline_ns=934395517496494, slot=1, epoch=0, generation=2, state=0, reason=0, lease_ns=0), (15,))
+E        +      where rpc = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7e74846cf950>.rpc
+E        +  and   <AuthorityKind.REJECTED: 27> = K.REJECTED
+
+tests/thesis_lite/maestro/test_affa_native.py:466: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_generation_advance_cannot_change_the_original_action_digest
+2 failed, 3 passed in 1.95s

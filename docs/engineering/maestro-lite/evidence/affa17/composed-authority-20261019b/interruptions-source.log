@@ -1,0 +1,109 @@
+......F..                                                                [100%]
+=================================== FAILURES ===================================
+_________ test_pre_handle_crash_survival[stage-ack-pending-authority] __________
+
+request = <FixtureRequest for <Function test_pre_handle_crash_survival[stage-ack-pending-authority]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74a902cc8a50>
+sentinel = <function sentinel.<locals>.observe at 0x74a902284040>
+window = 'stage-ack-pending', fault = 'authority'
+
+    @pytest.mark.parametrize('window,fault', [('stage-before-send', 'authority'),
+        ('stage-ack-pending', 'authority'), ('issuance-before-record', 'storage'),
+        ('issuance-after-record', 'storage')])
+    def test_pre_handle_crash_survival(request, monkeypatch, sentinel, window, fault):
+>       execute(request, monkeypatch, sentinel, window, fault)
+
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:270: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+request = <FixtureRequest for <Function test_pre_handle_crash_survival[stage-ack-pending-authority]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74a902cc8a50>
+sentinel = <function sentinel.<locals>.observe at 0x74a902284040>
+window = 'stage-ack-pending', fault = 'authority'
+
+    def execute(request, monkeypatch, sentinel, window, fault):
+        before_sentinel = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        unit = driver.prepared.resource_order[0]
+        issuer = broker.issuer(unit)
+        barrier = Barrier()
+        instrument(monkeypatch, stack, window, barrier)
+        results, failures = [], []
+    
+        def coordinate():
+            try:
+                results.append(run(driver))
+            except BaseException as error:
+                failures.append(repr(error))
+    
+        coordinator = threading.Thread(target=coordinate, name='original-run-coordinator')
+        coordinator.start()
+        observations = {}
+        try:
+            assert barrier.reached.wait(3), failures
+            descriptor = issuer._image.admission.descriptor
+            manager = broker.session.boundaries
+            if window == 'stage-ack-pending':
+                wait_for(lambda: len(manager.residual_membership(descriptor)) == 1)
+            if window.startswith('release-') and window != 'release-before-send':
+                wait_for(lambda: len(list(work.glob('*.marker'))) == 1)
+            observations.update(at_barrier=time.monotonic(),
+                members=list(observed_members(manager._entries[descriptor.key].fd)),
+                marker_names=sorted(p.name for p in work.glob('*.marker')),
+                issued_receipts=len(client._issued_receipts), host_handle_retained=issuer._handle is not None)
+            if fault == 'cancel':
+                driver.cancel('owned-composed-cancel')
+                observations['cancellation'] = asdict(broker.cancel('owned-composed-cancel'))
+            else:
+                child = broker.connection.child if fault == 'authority' else client.process
+                signal.pidfd_send_signal(child._capability.fileno(), signal.SIGKILL)
+                observations['killed_original_role'] = 4 if fault == 'authority' else 3
+            observations['effect_completed'] = time.monotonic()
+        finally:
+            barrier.resume.set()
+            coordinator.join(timeout=18)
+        assert not coordinator.is_alive(), 'original dispatcher has not reached terminal state'
+        assert not failures and len(results) == 1, failures
+        result = results[0]
+        closure = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+        after_sentinel = sentinel()
+        events = EvidenceStore.read_run(work.parent / 'argus').records()
+        m3 = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+        markers = {p.name: p.read_text() for p in work.glob('*.marker')}
+        facts = asdict(closure)
+        facts['terminal_reports'] = [r.public_data() for r in closure.terminal_reports]
+        retain('composed-authority-' + work.parent.name + '.json', dict(window=window, fault=fault,
+            original_fixture=str(work.parent), barrier=barrier.observations, observations=observations,
+            execution_succeeded=result.execution_succeeded, diagnostic=result.diagnostic,
+            terminal_recorded=result.terminal_recorded,
+            terminal=result.terminal.public_data() if result.terminal else None,
+            closure=facts, cleanup_complete=closure.cleanup_complete, public_m3=m3,
+            argus_events=events, markers=markers, sentinel_before=before_sentinel, sentinel_after=after_sentinel,
+            source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            full_runtime_case_complete=False, full_M1_complete=False, accepted=False))
+        assert not result.execution_succeeded and not closure.lifecycle_complete
+        assert closure.authority_fenced and closure.root_reaped
+        assert all(h.process_reaped for h in closure.helpers)
+        assert all(b.empty and b.released for b in closure.boundaries)
+        assert broker.owner.latch.cancelled
+        assert not any(e.get('extensions', {}).get('xverse.maestro', {}).get('action') == 'started' for e in events)
+        released = window.startswith('release-') and window != 'release-before-send'
+        assert len(markers) == int(released), markers
+        assert not facade._bindings or set(facade._bindings) <= {unit}
+        # A real issued fact is allowed to survive. It cannot authorize a late start.
+        sequence = broker.connection.sequence
+        with pytest.raises(ValueError):
+            issuer.stage(deadline(.3))
+        assert broker.connection.sequence == sequence
+        assert {p.name: p.read_text() for p in work.glob('*.marker')} == markers
+        if window == 'stage-ack-pending':
+            first = next(f for f in closure.native_units if f.unit_id == unit)
+>           assert first.issued is None and first.direct_child_reaped is None
+E           AssertionError: assert (True is None)
+E            +  where True = NativeGenerationClosure(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, issued=True, direct_child_reaped=None, native_retired=None).issued
+
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:251: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-ack-pending-authority]
+1 failed, 8 passed in 19.95s

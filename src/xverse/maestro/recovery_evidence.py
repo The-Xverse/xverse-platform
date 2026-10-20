@@ -106,17 +106,43 @@ def snapshot(evidence, teardown, body, claims, deadline, check):
                     and r.status == "running"
                 ]
                 if sample is not None or matching:
+                    state = teardown.states.get(unit.unit_id, {})
+                    released = bool(state.get('stopped') and state.get('cleaned'))
+                    stopped = bool(state.get('stopped') and not state.get('cleaned'))
                     if (
                         not matching
                         or not started
                         or sample is None
                         or sample["handle"] != handle
                         or not sample["started"]
-                        or teardown.states.get(unit.unit_id, {})
+                        or state and not (released or stopped)
                     ):
                         raise PersistenceError("ML-RECOVERY-HANDLE-DURABILITY")
                     digest = _digest(asdict(handle))
                     last = matching[-1]
+                    if released or stopped:
+                        identity = unit.unit_id, original.details['generation']
+                        if (teardown._generation_states.get(identity) is not state
+                            or teardown._generation_handles.get(identity, (None,))[0] != handle):
+                            raise PersistenceError('ML-RECOVERY-RELEASE-DURABILITY')
+                        phase = 'cleanup' if released else 'stop'
+                        terminal = [r for r in records if _record_handle(r) == expected
+                            and r.kind == 'outcome' and r.status == ('cleaned' if released else 'stopped')
+                            and r.plan_digest == original.plan_digest and r.catalog_identity == original.catalog_identity
+                            and r.details.get('maestroUnitId') == unit.unit_id
+                            and r.details.get('generation') == identity[1]
+                            and r.details.get('teardown', {}).get('phase') == phase
+                            and r.details.get('teardown', {}).get('stage') == 'outcome'
+                            and all(r.details.get('teardown', {}).get(k) is True for k in ('leader_reaped', 'empty'))
+                            and r.details.get('teardown', {}).get('released') is released]
+                        if len(terminal) != 1:
+                            raise PersistenceError('ML-RECOVERY-RELEASE-DURABILITY')
+                        last = terminal[0]
+                        event = evidence.events.get(state.get('event'))
+                        refs = event['extensions']['xverse.maestro']['sourceRefs'] if event else []
+                        if not any(ref.get('kind') == 'm3-record' and ref.get('sequence') == last.sequence
+                                   and ref.get('sha256') == _digest(public[last.sequence]) for ref in refs):
+                            raise PersistenceError('ML-RECOVERY-RELEASE-DURABILITY')
                     sources.append(
                         {
                             "kind": "m3-record",
@@ -125,7 +151,7 @@ def snapshot(evidence, teardown, body, claims, deadline, check):
                             "sha256": _digest(public[last.sequence]),
                         }
                     )
-                    status = "owned"
+                    status = "released" if released else "stopped" if stopped else "owned"
         rows.append(
             {
                 "unit": unit.unit_id,

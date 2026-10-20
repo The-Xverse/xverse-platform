@@ -1,0 +1,436 @@
+......FFFFFFFF......................................................     [100%]
+=================================== FAILURES ===================================
+_ test_native_malformed_or_forged_release_never_executes_workload[wrong-ticket] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f33bce0>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge0'))
+mode = 'wrong-ticket'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/195936/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+_ test_native_malformed_or_forged_release_never_executes_workload[forged-handle] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f33b130>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge1'))
+mode = 'forged-handle'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/195973/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+_ test_native_malformed_or_forged_release_never_executes_workload[changed-proof] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f1ad850>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge2'))
+mode = 'changed-proof'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196004/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+_ test_native_malformed_or_forged_release_never_executes_workload[extra-rights] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f1ae450>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge3'))
+mode = 'extra-rights'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196017/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+_ test_native_malformed_or_forged_release_never_executes_workload[stale-epoch] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f0a0aa0>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge4'))
+mode = 'stale-epoch'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196026/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+____ test_native_malformed_or_forged_release_never_executes_workload[short] ____
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f0a16d0>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge5'))
+mode = 'short'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196041/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+__ test_native_malformed_or_forged_release_never_executes_workload[reserved] ___
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f207070>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge6'))
+mode = 'reserved'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196046/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+_ test_native_malformed_or_forged_release_never_executes_workload[unknown-kind] _
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7b379f15f150>, PosixPath('/tmp/pytest-of-jefferson/pytest-970/test_native_malformed_or_forge7'))
+mode = 'unknown-kind'
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "wrong-ticket",
+            "forged-handle",
+            "changed-proof",
+            "extra-rights",
+            "stale-epoch",
+            "short",
+            "reserved",
+            "unknown-kind",
+        ],
+    )
+    def test_native_malformed_or_forged_release_never_executes_workload(authority, mode):
+        import struct
+    
+        h, work = authority
+        for index in range(2):
+            h.stage(index)
+            h.arm(index)
+        frame = replace(
+            h.frame(K.RELEASE, 0),
+            sequence=h.sequence + 1,
+            deadline_ns=min(h.end(), h.units[0]["ticket_end"]),
+        )
+        data = bytearray(frame.encode())
+        extra = ()
+        if mode == "wrong-ticket":
+            data[224] ^= 1
+        elif mode == "forged-handle":
+            data[256] ^= 1
+        elif mode == "changed-proof":
+            data[128] ^= 1
+        elif mode == "extra-rights":
+            extra = [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", [h.cwd]))]
+        elif mode == "stale-epoch":
+            data[64:72] = struct.pack("!Q", h.epoch + 1)
+        elif mode == "short":
+            data.pop()
+        elif mode == "reserved":
+            data[-1] = 1
+        else:
+            data[4:8] = struct.pack("!I", 15)
+>       descriptors = len(os.listdir(f"/proc/{h.process.pid}/fd"))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: '/proc/196055/fd'
+
+tests/thesis_lite/maestro/test_affa_native.py:522: PermissionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[wrong-ticket]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[forged-handle]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[changed-proof]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[extra-rights]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[stale-epoch]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[short]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[reserved]
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[unknown-kind]
+8 failed, 60 passed in 4.53s

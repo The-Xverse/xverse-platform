@@ -1,0 +1,106 @@
+F.FFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+______________________ test_distinct_watch_packet_literal ______________________
+
+    def test_distinct_watch_packet_literal():
+>       packet = BootstrapPacket(4, 1, 123, bytes(range(32)), slot=128, version=2)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:11: TypeError
+________________ test_successor_birth_has_explicit_fourth_role _________________
+
+    def test_successor_birth_has_explicit_fourth_role():
+>       value = BootstrapPacket(1, 1, 123, bytes(32), slot=1, state=4, version=2)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:27: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes0] _________
+
+changes = {'pid': 2}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes1] _________
+
+changes = {'token': b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes2] _________
+
+changes = {'state': 1}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes3] _________
+
+changes = {'slot': 0}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes4] _________
+
+changes = {'slot': 129}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+_________ test_watch_rejects_nonempty_or_out_of_range_fields[changes5] _________
+
+changes = {'sequence': 0}
+
+    @pytest.mark.parametrize("changes", [dict(pid=2), dict(token=b"x"*32),
+        dict(state=1), dict(slot=0), dict(slot=129), dict(sequence=0)])
+    def test_watch_rejects_nonempty_or_out_of_range_fields(changes):
+        with pytest.raises(ValueError):
+>           replace(BootstrapPacket(4, 1, 123, bytes(32), slot=1, version=2), **changes)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: BootstrapPacket.__init__() got an unexpected keyword argument 'version'
+
+tests/thesis_lite/maestro/test_run_bootstrap_values.py:37: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_distinct_watch_packet_literal
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_successor_birth_has_explicit_fourth_role
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes0]
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes1]
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes2]
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes3]
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes4]
+FAILED tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields[changes5]
+8 failed, 1 passed in 0.16s

@@ -4,8 +4,14 @@ from dataclasses import dataclass, field
 import math
 import threading
 import time
+import signal
+import select
 
 from .bootstrap import BootstrapSession
+from .affa_client import AuthorityConnection
+from .affa_protocol import AuthorityFrame, AuthorityKind as K
+from .controller import ControllerSession
+from .run_broker import NativeGenerationClosure, RunBroker
 from .dispatcher import FiniteDispatcher
 from .launcher import CatalogLauncher
 from .owner import _Original, OwnerError, GateConnection
@@ -13,6 +19,7 @@ from .persistence import PersistenceClient
 from .teardown import ReverseTeardown
 from .time import HostDeadline
 from .writer_closure import WriterClosure, unresolved
+from .terminal_runtime import TerminalReceipt
 
 
 class ClosureError(OwnerError):
@@ -56,6 +63,9 @@ class RunClosureResult:
     lifecycle_complete: bool = field(default=False, init=False)
     ready_for_execution: bool = field(default=False, init=False)
     local_control_disposed: bool = field(default=False, init=False)
+    native_units: tuple[NativeGenerationClosure, ...] = ()
+    authority_fenced: bool | None = None
+    terminal_reports: tuple[TerminalReceipt, ...] = ()
 
     @property
     def cleanup_complete(self):
@@ -64,10 +74,11 @@ class RunClosureResult:
             and self.root_reaped
             and self.unacknowledged_births == 0
             and all(
-                h.process_reaped and (h.role != 1 or h.direct_child_reaped)
+                h.process_reaped and (h.role not in (1, 4) or h.direct_child_reaped)
                 for h in self.helpers
             )
             and all(b.empty and b.released for b in self.boundaries)
+            and (not any(h.role == 4 for h in self.helpers) or self.authority_fenced is True)
         )
 
 
@@ -78,6 +89,7 @@ class RunClosure(_Original):
         *,
         dispatcher=None,
         teardown=None,
+        broker=None,
         terminal_seconds=0.5,
         drain_seconds=0.75,
         boundary_seconds=0.75,
@@ -102,6 +114,14 @@ class RunClosure(_Original):
                 is not bootstrap
             ):
                 raise ClosureError("ML-CLOSURE-ISSUER")
+        derived = teardown.owner._run_broker_pin if teardown else None
+        if broker is not None:
+            if type(broker) is not RunBroker or broker.session is not bootstrap:
+                raise ClosureError("ML-CLOSURE-BROKER")
+            broker._cleanup_context()
+            if derived is not None and derived is not broker:
+                raise ClosureError("ML-CLOSURE-BROKER")
+        self._broker = broker if broker is not None else derived
         for value, maximum in (
             (terminal_seconds, 2),
             (drain_seconds, 2),
@@ -129,6 +149,7 @@ class RunClosure(_Original):
             bootstrap._children,
             bootstrap.boundaries._entries,
             self._budgets,
+            self._broker,
         )
         self._lock = threading.Lock()
         self._scope = self._result = None
@@ -148,16 +169,38 @@ class RunClosure(_Original):
                     root._children,
                     root.boundaries._entries,
                     self._budgets,
+                    self._broker,
                 ),
                 self._pins,
             )
         ):
             raise ClosureError("ML-CLOSURE-REPLACED")
 
+    @staticmethod
+    def _fence(connection, end):
+        try:
+            connection._holder()
+            if connection._epoch_history[-1].kind is K.CANCELLED:
+                return True
+            connection._exchange(AuthorityFrame(K.CANCEL, connection.sequence+1,
+                int(end*1e9), connection.config.scope, epoch=connection.epoch))
+            return True
+        except (ValueError, OSError):
+            try:
+                result = connection.revoke(HostDeadline(connection.child._root.session, end))
+                return result.issuer_dead and result.issuer_reaped
+            except (ValueError, OSError):
+                return False
+
     def cancel(self, reason="run-closure-cancel"):
         super()._holder()
         # No normal mutation lock or storage operation precedes cancellation.
-        self._pins[0]._pins[4].cancel(reason)
+        root = self._pins[0]
+        root._pins[4].cancel(reason)
+        for slot, client in tuple(root._clients.items()):
+            if type(client) is AuthorityConnection and root._issued.get(slot, (None,))[0] == 4:
+                if not self._fence(client, min(time.monotonic()+0.5, root._generation/1e9)):
+                    root.cancel(reason)
 
     def close(self, deadline, *, reason="run-closure"):
         self._holder()
@@ -198,15 +241,19 @@ class RunClosure(_Original):
                         1: CatalogLauncher,
                         2: GateConnection,
                         3: PersistenceClient,
+                        4: AuthorityConnection,
+                        5: ControllerSession,
                     }[role]
                 ):
                     raise ClosureError("ML-CLOSURE-ISSUER")
-                original = client._process_pin if role == 2 else client._pins[0]
+                original = (client._process_pin if role == 2 else
+                    client._pins[1] if role == 5 else client._pins[0])
                 if original is not root._children.get(slot):
                     raise ClosureError("ML-CLOSURE-ISSUER")
                 try:
                     client._holder()
-                    if client.process is not original or (
+                    current = client.child if role == 4 else client.process
+                    if current is not original or (
                         role == 2 and client.channel is not client._channel_pin
                     ):
                         raise ClosureError("ML-CLOSURE-ADAPTER-UNRESOLVED")
@@ -221,6 +268,7 @@ class RunClosure(_Original):
                         self.teardown._lock,
                         self.teardown.facade._lock,
                         owner._lock,
+                        *((owner._run_broker_pin._lock,) if owner._run_broker_pin else ()),
                     ):
                         if not lock.acquire(False):
                             raise ClosureError("ML-CLOSURE-CONFLICT")
@@ -237,7 +285,7 @@ class RunClosure(_Original):
                         lock.release()
             self._scope = scope
             terminal_budget, drain_budget, boundary_budget = self._budgets
-            diagnostics, writers = [], []
+            diagnostics, writers, terminal_reports = [], [], []
             units = self.teardown._result if self.teardown else None
             if self.teardown and units is None:
                 unit_end = min(
@@ -251,6 +299,25 @@ class RunClosure(_Original):
                 except Exception:
                     diagnostics.append("ML-CLOSURE-UNIT-UNRESOLVED")
             self.cancel(reason)
+            native_units = []
+            native_inventory_complete = True
+            broker = self._broker
+            if broker is not None:
+                try:
+                    broker._cleanup_context()
+                    registry = broker._generation_issuer_registry
+                    if type(registry) is not dict or tuple(registry.items()) != broker._generation_issuer_log:
+                        raise ClosureError("ML-CLOSURE-INVENTORY-UNRESOLVED")
+                    generations = tuple(registry.items())
+                except (ValueError, OSError, AttributeError, TypeError):
+                    generations = ()
+                    native_inventory_complete = False
+                    diagnostics.append("ML-CLOSURE-INVENTORY-UNRESOLVED")
+                for (unit, generation), issuer in generations:
+                    try:
+                        native_units.append(issuer._closure_fact())
+                    except (ValueError, OSError):
+                        native_units.append(NativeGenerationClosure(unit, generation, None, None, None))
             if invalid_adapters:
                 diagnostics.append("ML-CLOSURE-ADAPTER-UNRESOLVED")
             # Root birth adapters are serialized by root._lock; all inventories
@@ -258,7 +325,7 @@ class RunClosure(_Original):
             issued = tuple(sorted(root._issued.items()))
             clients = tuple(sorted(root._clients.items()))
             manager = root.boundaries
-            inventory_complete = True
+            inventory_complete = native_inventory_complete
             descriptors = ()
             try:
                 with manager._cleanup_lock(deadline):
@@ -293,23 +360,53 @@ class RunClosure(_Original):
                     ),
                 )
             )
-            unit_end = min(
-                end - terminal_budget - 2 * drain_budget - boundary_budget,
-                time.monotonic() + 80,
-            )
-            for descriptor in descriptors:
-                if descriptor.unit_id not in rank and descriptor.key not in unit_keys:
+            # Close actual shared native starts before any fallback C1 release.
+            fenced_slots = set()
+            fence_end = min(end-terminal_budget-2*drain_budget-boundary_budget,
+                            time.monotonic()+drain_budget)
+            for slot, (role, helper, unit) in issued:
+                if role != 4:
                     continue
+                connection = root._clients.get(slot)
                 try:
-                    manager.force_cleanup(
-                        descriptor, deadline=HostDeadline(root.session, unit_end)
-                    )
-                except Exception:
-                    diagnostics.append("ML-CLOSURE-UNIT-UNRESOLVED")
+                    if slot in invalid_adapters or type(connection) is not AuthorityConnection:
+                        raise ClosureError("ML-CLOSURE-ADAPTER-UNRESOLVED")
+                    if self._fence(connection, fence_end):
+                        fenced_slots.add(slot)
+                    else:
+                        raise ClosureError("ML-CLOSURE-AUTHORITY-UNRESOLVED")
+                except (ValueError, OSError):
+                    child = root._children.get(slot)
+                    if child is not None:
+                        try:
+                            child._holder()
+                            signal.pidfd_send_signal(child._capability.fileno(), signal.SIGKILL)
+                            while time.monotonic() < fence_end:
+                                if child._wait(child._capability.fileno(), consume=True) is not None:
+                                    fenced_slots.add(slot)
+                                    break
+                                select.select([child._capability.fileno()], [], [], 0.005)
+                        except (ValueError, OSError):
+                            pass
             for slot, client in clients:
                 if slot in invalid_adapters:
                     continue
                 if type(client) is PersistenceClient:
+                    if client._terminal_outcome is not None:
+                        original, _, outcome, _ = client._terminal_outcome
+                        if (type(original) is not RunBroker or original.storage is not client
+                            or original.session is not root or self._broker is not None and original is not self._broker):
+                            diagnostics.append('ML-CLOSURE-WRITER-UNRESOLVED')
+                            continue
+                        # _holder validated the original pinned outcome above.
+                        # Retain its ACK/unknown facts without an abort-only replay.
+                        terminal_reports.append(outcome)
+                        facts = outcome.public_data()
+                        if (facts['diagnostic'] is not None or facts['writer'] is None
+                            or facts['report'] is None or not facts['report']['eligible']
+                            or not facts['writer']['evidence_complete']):
+                            diagnostics.append('ML-CLOSURE-REPORT-INCOMPLETE')
+                        continue
                     until = min(
                         end - 2 * drain_budget - boundary_budget,
                         time.monotonic() + terminal_budget,
@@ -342,6 +439,12 @@ class RunClosure(_Original):
                         if not (client._failed or client._aborted):
                             client._fail()
                         client.drain(HostDeadline(root.session, graceful_end))
+                    elif type(client) is AuthorityConnection:
+                        client.revoke(HostDeadline(root.session, graceful_end))
+                    elif type(client) is ControllerSession:
+                        # Root owns the original helper wait; no live broker channel
+                        # is required after the original writer has been closed.
+                        pass
                     else:
                         client.cancel(reason)
                 except Exception:
@@ -379,12 +482,14 @@ class RunClosure(_Original):
                     )
                     direct = (
                         known
-                        or bool(
-                            slot in launcher_facts
-                            and launcher_facts[slot].direct_child_reaped
-                        )
+                        or bool(slot in launcher_facts and launcher_facts[slot].direct_child_reaped)
                         or (reaped and code == 0)
                     )
+                elif role == 4:
+                    if reaped:
+                        fenced_slots.add(slot)
+                    direct = bool(native_units) and all(
+                        u.issued is False or u.direct_child_reaped is True for u in native_units)
                 helpers.append(
                     HelperClosure(
                         slot,
@@ -397,12 +502,24 @@ class RunClosure(_Original):
                     )
                 )
             boundaries = []
+            authority_slots = {slot for slot, (role, _, _) in issued if role == 4}
+            authority_fenced = (authority_slots <= fenced_slots) if authority_slots else None
+            if root_result and root_result.final_workload_freeze_acknowledged:
+                authority_fenced = True if authority_slots else None
+            if authority_slots and not authority_fenced:
+                diagnostics.append("ML-CLOSURE-AUTHORITY-UNRESOLVED")
+            if authority_slots and (not native_units or any(
+                u.issued is None or u.issued is True and u.direct_child_reaped is not True
+                for u in native_units)):
+                diagnostics.append("ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN")
             boundary_end = min(end, time.monotonic() + boundary_budget)
             for descriptor in descriptors:
                 record = None
                 try:
                     record = manager._entry(descriptor).terminal
                     if record is None:
+                        if authority_slots and not authority_fenced:
+                            raise ClosureError("ML-CLOSURE-AUTHORITY-UNRESOLVED")
                         record = manager.force_cleanup(
                             descriptor,
                             deadline=HostDeadline(root.session, boundary_end),
@@ -444,6 +561,9 @@ class RunClosure(_Original):
                 pending,
                 inventory_complete,
                 tuple(sorted(set(diagnostics))),
+                native_units=tuple(native_units),
+                authority_fenced=authority_fenced,
+                terminal_reports=tuple(terminal_reports),
             )
             return self._result
         finally:

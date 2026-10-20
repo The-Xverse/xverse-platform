@@ -1,0 +1,534 @@
+EEEEE.                                                                   [100%]
+==================================== ERRORS ====================================
+__ ERROR at setup of test_actual_two_unit_global_release_and_durable_outcomes __
+
+environment = (<function environment.<locals>.factory at 0x706348dc7a60>, <function environment.<locals>.spawn at 0x706348dc7b00>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-983/test_actual_two_unit_global_re0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p, digest="sha256:" + digest(p.read_bytes()).hex(), argv0=str(p)
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+>           storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+
+tests/thesis_lite/maestro/test_run_broker.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:1026: in persistence
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:429: in __init__
+    hello = _receive(channel, self._peer, self._until(deadline), self._live)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:318: in _receive
+    check()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x706348db6e40>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+>           raise PersistenceError("ML-PERSIST-CHILD")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CHILD
+
+src/xverse/maestro/persistence.py:504: PersistenceError
+_ ERROR at setup of test_mirror_loss_before_stage_revokes_without_workload_birth _
+
+environment = (<function environment.<locals>.factory at 0x706348cee5c0>, <function environment.<locals>.spawn at 0x706348cee660>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-983/test_mirror_loss_before_stage_0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p, digest="sha256:" + digest(p.read_bytes()).hex(), argv0=str(p)
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+>           storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+
+tests/thesis_lite/maestro/test_run_broker.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:1026: in persistence
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:429: in __init__
+    hello = _receive(channel, self._peer, self._until(deadline), self._live)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:318: in _receive
+    check()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x706348c92850>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+>           raise PersistenceError("ML-PERSIST-CHILD")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CHILD
+
+src/xverse/maestro/persistence.py:504: PersistenceError
+________ ERROR at setup of test_cancel_fences_both_already_staged_units ________
+
+environment = (<function environment.<locals>.factory at 0x706348dc7a60>, <function environment.<locals>.spawn at 0x706348ceeac0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-983/test_cancel_fences_both_alread0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p, digest="sha256:" + digest(p.read_bytes()).hex(), argv0=str(p)
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+>           storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+
+tests/thesis_lite/maestro/test_run_broker.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:1026: in persistence
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:429: in __init__
+    hello = _receive(channel, self._peer, self._until(deadline), self._live)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:318: in _receive
+    check()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x706348c90a50>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+>           raise PersistenceError("ML-PERSIST-CHILD")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CHILD
+
+src/xverse/maestro/persistence.py:504: PersistenceError
+_ ERROR at setup of test_worker_stall_does_not_hold_independent_native_cancel __
+
+environment = (<function environment.<locals>.factory at 0x706348cef740>, <function environment.<locals>.spawn at 0x706348cef7e0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-983/test_worker_stall_does_not_hol0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p, digest="sha256:" + digest(p.read_bytes()).hex(), argv0=str(p)
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+>           storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+
+tests/thesis_lite/maestro/test_run_broker.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:1026: in persistence
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:429: in __init__
+    hello = _receive(channel, self._peer, self._until(deadline), self._live)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:318: in _receive
+    check()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x706348c90690>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+>           raise PersistenceError("ML-PERSIST-CHILD")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CHILD
+
+src/xverse/maestro/persistence.py:504: PersistenceError
+_ ERROR at setup of test_original_issuer_and_registry_cannot_be_reconstructed __
+
+environment = (<function environment.<locals>.factory at 0x706348ceec00>, <function environment.<locals>.spawn at 0x706348ceda80>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-983/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-983/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-983/test_original_issuer_and_regis0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p, digest="sha256:" + digest(p.read_bytes()).hex(), argv0=str(p)
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+>           storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+
+tests/thesis_lite/maestro/test_run_broker.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:1026: in persistence
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:429: in __init__
+    hello = _receive(channel, self._peer, self._until(deadline), self._live)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:318: in _receive
+    check()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x706348d07890>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+>           raise PersistenceError("ML-PERSIST-CHILD")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CHILD
+
+src/xverse/maestro/persistence.py:504: PersistenceError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_run_broker.py::test_actual_two_unit_global_release_and_durable_outcomes
+ERROR tests/thesis_lite/maestro/test_run_broker.py::test_mirror_loss_before_stage_revokes_without_workload_birth
+ERROR tests/thesis_lite/maestro/test_run_broker.py::test_cancel_fences_both_already_staged_units
+ERROR tests/thesis_lite/maestro/test_run_broker.py::test_worker_stall_does_not_hold_independent_native_cancel
+ERROR tests/thesis_lite/maestro/test_run_broker.py::test_original_issuer_and_registry_cannot_be_reconstructed
+1 passed, 5 errors in 5.28s

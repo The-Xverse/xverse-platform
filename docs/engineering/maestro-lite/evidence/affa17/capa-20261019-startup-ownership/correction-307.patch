@@ -1,0 +1,238 @@
+--- original/src/xverse/maestro/bootstrap_launcher.py
++++ corrected/src/xverse/maestro/bootstrap_launcher.py
+@@ -86,6 +86,11 @@
+         self._diagnostic = None
+         self._drain_end = None
+         self._start_window=self._start_window_pin=None
++        self._process_pin = self._channel_pin = self._session_pin = None
++        self._pidfd_pin = self._capability_pin = None
++        self._process_pid_pin = self._stderr_pin = None
++        self._cleanup_session = config.admission.generation.session
++        self._cleanup_end = config.admission.generation.monotonic_seconds
+ 
+     def _holder(self):
+         super()._holder()
+@@ -96,6 +101,18 @@
+             or self._supervisor_fd != self._fd_pin):
+             raise BootstrapError('ML-BOOT-LAUNCH-REPLACED')
+         self.boundaries._holder()
++        if (any(a is not b for a,b in zip(
++                (self._process,self._channel,self._session,self._capability),
++                (self._process_pin,self._channel_pin,self._session_pin,self._capability_pin)))
++            or self._pidfd != self._pidfd_pin
++            or self._process_pin is not None and self._process_pin.pid != self._process_pid_pin):
++            raise BootstrapError('ML-BOOT-LAUNCH-RUNTIME-REPLACED')
++        if self._capability_pin is not None and not self._disposed:
++            self._capability_pin.check(self._pidfd_pin)
++
++    def _cleanup_holder(self):
++        _Original._holder(self)
++        self._pins[2]._holder()
+ 
+     def bind_start_authorization(self,window):
+         from .runtime_service import _StartWindow
+@@ -136,9 +153,9 @@
+ 
+     @property
+     def outcome(self):
+-        self._holder()
+-        drained = self._session._drained if self._session is not None else None
+-        return BootstrapLaunchOutcome(self._birth_attempted, self._process_returned, self._session is not None,
++        self._cleanup_holder()
++        drained = self._session_pin._drained if self._session_pin is not None else None
++        return BootstrapLaunchOutcome(self._birth_attempted, self._process_pin is not None, self._session_pin is not None,
+             bool(drained.supervisor_reaped) if drained else True if self._failed_wait is not None else None,
+             bool(drained.registered_children_reaped) if drained else None,
+             drained.unacknowledged_births if drained else None, self._diagnostic)
+@@ -160,50 +177,56 @@
+         try:
+             self._scope = deadline
+             self._check(deadline)
+-            boot, manager = self.config.admission, self.boundaries
++            config, manager = self._pins[0], self._pins[2]
++            boot = config.admission
+             if (boot.boundary_parent != manager._root_fd or boot.run_id != manager._admission.run_id
+                 or boot.approval_ref != manager._admission.bootstrap_approval_ref
+                 or boot.generation != manager._admission.teardown_deadline
+                 or self.supervisor_image.digest != boot.supervisor_artifact_digest
+                 or encode_bootstrap(boot) != self.config):
+                 raise BootstrapError('ML-BOOT-LAUNCH-CONTEXT')
+-            _image(self._supervisor_fd, boot.supervisor_artifact_digest, deadline)
++            _image(self._fd_pin, boot.supervisor_artifact_digest, deadline)
+             for image in (*boot.images, boot.authority_image):
+                 _image(image.descriptor, image.digest, deadline)
+             self._check(deadline)
+-            private = sealed_bootstrap_fd(self.config)
+-            self._channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+-            self._channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
++            private = sealed_bootstrap_fd(config)
++            channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
++            self._channel_pin = self._channel = channel
++            channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+             self._check(deadline)
+             self._birth_attempted = True
+-            self._process = subprocess.Popen(
+-                [self.supervisor_image.argv0, str(peer.fileno()), str(private)],
+-                executable='/proc/self/fd/'+str(self._supervisor_fd),
+-                pass_fds=tuple(dict.fromkeys((self._supervisor_fd, peer.fileno(), private,
++            process = subprocess.Popen(
++                [self._image_pin[2], str(peer.fileno()), str(private)],
++                executable='/proc/self/fd/'+str(self._fd_pin),
++                pass_fds=tuple(dict.fromkeys((self._fd_pin, peer.fileno(), private,
+                     manager._root_fd, *(i.descriptor for i in (*boot.images,boot.authority_image))))),
+                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
++            self._process_pid_pin, self._stderr_pin = process.pid, process.stderr
++            self._process_pin = self._process = process
+             self._process_returned = True
+-            self._pidfd = os.pidfd_open(self._process.pid, 0)
+-            self._capability = _PidfdCapability(self._pidfd)
+-            self._check(deadline)
+-            self._session = BootstrapSession(self._process, self._channel, self.config,
++            self._pidfd_pin = self._pidfd = os.pidfd_open(self._process_pid_pin, 0)
++            capability = _PidfdCapability(self._pidfd_pin)
++            self._capability_pin = self._capability = capability
++            self._check(deadline)
++            session = BootstrapSession(process, channel, config,
+                 manager, manager._latch, deadline=deadline)
+-            if self._start_window is not None:self._session.bind_start_authorization(self._start_window)
+-            self._check(deadline)
+-            return self._session
++            self._session_pin = self._session = session
++            if self._start_window_pin is not None:session.bind_start_authorization(self._start_window_pin)
++            self._check(deadline)
++            return session
+         except BaseException as error:
+             code = str(error)
+             self._diagnostic = code if re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-BOOT-LAUNCH-FAILED'
+             if type(self._scope) is HostDeadline:
+-                end = min(self.config.admission.generation.monotonic_seconds,
++                end = min(self._cleanup_end,
+                     self._scope.monotonic_seconds+2, time.monotonic()+2)
+                 self._drain_end = end
+                 try:
+                     if self._birth_attempted:
+                         self.cancel('bootstrap-launch-failed')
+                     if self._birth_attempted and end > time.monotonic():
+-                        if self._session is not None:
+-                            self._session.drain(HostDeadline(self._scope.session,end))
++                        if self._session_pin is not None:
++                            self._session_pin.drain(HostDeadline(self._cleanup_session,end))
+                         else:
+                             self._reap_failed(end)
+                 except (ValueError, OSError):
+@@ -219,50 +242,50 @@
+             self._lock.release()
+ 
+     def cancel(self, reason='bootstrap-launch-cancel'):
+-        self._holder()
+-        self.boundaries._latch.cancel(reason)  # independent of the startup lock
+-        if self._session is not None:
+-            self._session.cancel(reason)
+-        elif self._capability is not None and time.monotonic() < self.config.admission.generation.monotonic_seconds:
++        self._cleanup_holder()
++        self._pins[2]._latch.cancel(reason)  # independent of the startup lock
++        if self._session_pin is not None:
++            self._session_pin.cancel(reason)
++        elif self._capability_pin is not None and time.monotonic() < self._cleanup_end:
+             try:
+-                signal.pidfd_send_signal(self._capability.fileno(), signal.SIGKILL)
++                signal.pidfd_send_signal(self._capability_pin.fileno(), signal.SIGKILL)
+             except ProcessLookupError:
+                 pass
+ 
+     def _reap_failed(self, end):
+-        if self._capability is None:
++        if self._capability_pin is None:
+             return  # no discovered PID/path fallback for a missing original pidfd
+         while self._failed_wait is None:
+-            self._failed_wait = os.waitid(os.P_PIDFD,self._capability.fileno(),os.WEXITED|os.WNOHANG)
++            self._failed_wait = os.waitid(os.P_PIDFD,self._capability_pin.fileno(),os.WEXITED|os.WNOHANG)
+             if self._failed_wait is not None:
+                 observed = self._failed_wait
+-                self._process.returncode = observed.si_status if observed.si_code == os.CLD_EXITED else -observed.si_status
++                self._process_pin.returncode = observed.si_status if observed.si_code == os.CLD_EXITED else -observed.si_status
+                 return
+             if time.monotonic() >= end:
+                 return
+-            select.select([self._capability.fileno()],[],[],min(.01,max(0,end-time.monotonic())))
++            select.select([self._capability_pin.fileno()],[],[],min(.01,max(0,end-time.monotonic())))
+ 
+     def drain(self, deadline):
+-        self._holder()
++        self._cleanup_holder()
+         if not self._lock.acquire(False):
+             raise BootstrapError('ML-BOOT-LAUNCH-CONFLICT')
+         try:
+             if self._disposed:
+                 raise BootstrapError('ML-BOOT-LAUNCH-DISPOSED')
+-            end = _deadline(deadline,self.config.admission.generation.session)/1e9
+-            if end-time.monotonic() > 2 or end > self.config.admission.generation.monotonic_seconds:
++            end = _deadline(deadline,self._cleanup_session)/1e9
++            if end-time.monotonic() > 2 or end > self._cleanup_end:
+                 raise BootstrapError('ML-BOOT-LAUNCH-DRAIN-END')
+             self._drain_end = min(self._drain_end or end, end)
+             end = self._drain_end
+             self.cancel()
+-            if self._session is not None:
++            if self._session_pin is not None:
+                 # Session pins its own first end too; never extend the launcher's.
+-                if self._session._drained is None or not (
+-                    self._session._drained.supervisor_reaped
+-                    and self._session._drained.registered_children_reaped
+-                    and not self._session._drained.unacknowledged_births
++                if self._session_pin._drained is None or not (
++                    self._session_pin._drained.supervisor_reaped
++                    and self._session_pin._drained.registered_children_reaped
++                    and not self._session_pin._drained.unacknowledged_births
+                 ):
+-                    self._session.drain(HostDeadline(deadline.session,end))
++                    self._session_pin.drain(HostDeadline(deadline.session,end))
+             else:
+                 self._reap_failed(end)
+             return self.outcome
+@@ -270,30 +293,30 @@
+             self._lock.release()
+ 
+     def dispose(self):
+-        self._holder()
++        self._cleanup_holder()
+         if self._disposed:
+             return
+         if not self._lock.acquire(False):
+             raise BootstrapError('ML-BOOT-LAUNCH-CONFLICT')
+         try:
+-            if self._session is not None:
+-                drained = self._session._drained
+-                if not drained or not drained.supervisor_reaped or not drained.registered_children_reaped or self._session._pending:
++            if self._session_pin is not None:
++                drained = self._session_pin._drained
++                if not drained or not drained.supervisor_reaped or not drained.registered_children_reaped or self._session_pin._pending:
+                     raise BootstrapError('ML-BOOT-LAUNCH-RETAINED')
+-                for client in self._session._clients.values():
++                for client in self._session_pin._clients.values():
+                     client.dispose()
+-                self._session.dispose()
++                self._session_pin.dispose()
+             elif self._birth_attempted and self._failed_wait is None:
+                 raise BootstrapError('ML-BOOT-LAUNCH-RETAINED')
+-            elif self._channel is not None:
+-                self._channel.close()
+-            if self._process is not None:
+-                self._process.stderr.close()
+-            if self._capability is not None:
+-                self._capability.close()
+-            if self._pidfd is not None:
+-                os.close(self._pidfd)
+-            os.close(self._supervisor_fd)
++            elif self._channel_pin is not None:
++                self._channel_pin.close()
++            if self._stderr_pin is not None:
++                self._stderr_pin.close()
++            if self._capability_pin is not None:
++                self._capability_pin.close()
++            if self._pidfd_pin is not None:
++                os.close(self._pidfd_pin)
++            os.close(self._fd_pin)
+             self._supervisor_fd = self._fd_pin = -1
+             self._disposed = True
+         finally:

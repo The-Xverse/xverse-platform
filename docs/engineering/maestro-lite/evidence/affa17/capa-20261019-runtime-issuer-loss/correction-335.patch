@@ -1,0 +1,36 @@
+--- a/src/xverse/maestro/run_closure.py
++++ b/src/xverse/maestro/run_closure.py
+@@ -118,7 +118,7 @@
+         if broker is not None:
+             if type(broker) is not RunBroker or broker.session is not bootstrap:
+                 raise ClosureError("ML-CLOSURE-BROKER")
+-            broker._holder()
++            broker._cleanup_context()
+             if derived is not None and derived is not broker:
+                 raise ClosureError("ML-CLOSURE-BROKER")
+         self._broker = broker if broker is not None else derived
+--- a/tests/thesis_lite/maestro/test_runtime_issuer_loss.py
++++ b/tests/thesis_lite/maestro/test_runtime_issuer_loss.py
+@@ -9,6 +9,7 @@
+ from xverse.maestro.affa_client import AuthorityConnection
+ from xverse.maestro.affa_protocol import AuthorityKind as K
+ from xverse.maestro.dispatcher import FiniteDispatcher
++from xverse.maestro.run_broker import RunBroker
+ from xverse.maestro.run_closure import RunClosure
+ from xverse.maestro.runtime_entry import _OriginalRuntimeRegistry
+ from .test_runtime_entry import runtime as runtime
+@@ -103,6 +104,14 @@
+             assert (work / 'source-binding.marker').read_bytes() == b'EXEC\n'
+         broker._generation_issuers = {}
+         sequence = broker.connection.sequence
++        forged = object.__new__(RunBroker)
++        forged.__dict__.update(broker.__dict__)
++        with pytest.raises(ValueError):
++            RunClosure(broker.session, broker=forged)
++        closer = RunClosure(broker.session, broker=broker)
++        assert closer._broker is broker and broker.connection.sequence == sequence
++        facts['explicit_original_cleanup_constructor_accepted_without_IO'] = True
++        facts['copied_broker_rejected_without_IO'] = True
+         with pytest.raises(ValueError):
+             broker.issuer(source)
+         with pytest.raises(ValueError):

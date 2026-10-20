@@ -1,0 +1,88 @@
+FF..                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7de6fa4ed6e0>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-fault-red-20261019b-source-private-p7jkdzhf/test_actual_nonopen_writer_clo0/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();report=facts['report']
+        assert report is not None and report['entry'] is None and not report['eligible'],facts
+        assert report['stage']=='report-write' and report['blockers']==['publication']
+        reader=EvidenceStore.read_run(stack[3].parent/'argus');actual=reader.manifest['writerState']
+        assert actual in ('closed','failed')
+        system=[e for e in reader.records() if e['eventKind'] in ('run-failed','run-closed')]
+        # Accepted abort appends run-failed; finalize publishes its manifest without
+        # appending run-closed. Closed/failed public APIs cannot reopen the writer.
+        assert len(system)==(1 if actual=='failed' else 0)
+        if changed_receipt:
+            assert facts['writer'] is None and facts['diagnostic'] is not None
+            assert facts['lastAcknowledgedWriterState']==client.last_writer_state=='open'
+            assert client._failed
+        else:
+>           assert facts['diagnostic'] is None,facts
+E           AssertionError: {'diagnostic': 'ML-PERSIST-ACK', 'lastAcknowledgedWriterState': 'open', 'report': {'admissionDigest': 'sha256:951c2ac7...73', 'annotationCount': 64, 'blockers': ['publication'], 'collectionComplete': True, ...}, 'schemaVersion': '1.0', ...}
+E           assert 'ML-PERSIST-ACK' is None
+
+tests/thesis_lite/maestro/test_terminal_faults.py:95: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7de6fb239ba0>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-fault-red-20261019b-source-private-p7jkdzhf/test_actual_nonopen_writer_clo1/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();report=facts['report']
+        assert report is not None and report['entry'] is None and not report['eligible'],facts
+        assert report['stage']=='report-write' and report['blockers']==['publication']
+        reader=EvidenceStore.read_run(stack[3].parent/'argus');actual=reader.manifest['writerState']
+        assert actual in ('closed','failed')
+        system=[e for e in reader.records() if e['eventKind'] in ('run-failed','run-closed')]
+        # Accepted abort appends run-failed; finalize publishes its manifest without
+        # appending run-closed. Closed/failed public APIs cannot reopen the writer.
+        assert len(system)==(1 if actual=='failed' else 0)
+        if changed_receipt:
+            assert facts['writer'] is None and facts['diagnostic'] is not None
+            assert facts['lastAcknowledgedWriterState']==client.last_writer_state=='open'
+            assert client._failed
+        else:
+>           assert facts['diagnostic'] is None,facts
+E           AssertionError: {'diagnostic': 'ML-PERSIST-ACK', 'lastAcknowledgedWriterState': 'open', 'report': {'admissionDigest': 'sha256:06c92206...8b', 'annotationCount': 64, 'blockers': ['publication'], 'collectionComplete': True, ...}, 'schemaVersion': '1.0', ...}
+E           assert 'ML-PERSIST-ACK' is None
+
+tests/thesis_lite/maestro/test_terminal_faults.py:95: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]
+2 failed, 2 passed in 20.50s

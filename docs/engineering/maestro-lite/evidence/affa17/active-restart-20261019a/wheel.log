@@ -1,0 +1,64 @@
+F..............................                                          [100%]
+=================================== FAILURES ===================================
+__ test_original_active_explicit_restart_and_closed_generation_universe[leaf] __
+
+request = <FixtureRequest for <Function test_original_active_explicit_restart_and_closed_generation_universe[leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7819dbea2190>
+mode = 'leaf'
+
+    @pytest.mark.parametrize('mode',['leaf','parent-reject','controller-loss'])
+    def test_original_active_explicit_restart_and_closed_generation_universe(request,monkeypatch,mode):
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=mode=='leaf')
+        broker,facade,client,work=stack
+        source,leaf=driver.prepared.resource_order
+        unit=source if mode=='parent-reject' else leaf
+        context=next(c for c in client._future_contexts if c.binding.unit_id==unit)
+        other=next(c for c in client._future_contexts if c.binding.unit_id!=unit)
+        original_worker=client.process
+        tickets=[];old_handles={};execution_threads=[];retired=None;result=None;closed=None
+        statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            if kind=='step-complete' and step.step_id=='observe-sink':
+                old_handles.update({u:broker.issuer(u)._handle for u in (source,leaf)})
+                end=HostDeadline(client.session,driver._active_end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart(client.run_id,unit,permit=replace(context.binding.permit),generation=2,deadline=end)
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart(client.run_id,unit,permit=context.binding.permit,generation=True,deadline=end)
+                ticket=driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end)
+                tickets.append(ticket)
+                assert driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end) is ticket
+                assert driver.restart_result(ticket) is None
+                with pytest.raises(ValueError,match='RESTART-ORIGINAL'):
+                    driver.restart_result(RestartRequest(ticket.run_id,ticket.unit_id,ticket.generation,ticket.deadline))
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,other.binding.unit_id,permit=other.binding.permit,generation=2,deadline=end)
+                if mode=='controller-loss':
+                    signal.pidfd_send_signal(controller.process._capability.fileno(),signal.SIGKILL)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(*a,**kw):
+            execution_threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+            return prepare(*a,**kw)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        target=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result=run(driver)
+            assert len(tickets)==1,result.diagnostic
+            outcome=driver.restart_result(tickets[0])
+            assert outcome is not None
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if mode=='leaf':
+>               assert outcome.disposition=='completed',outcome
+E               AssertionError: RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='failed', execution_id=None, diagnostic='ML-SCHEDULE-RESTART-TEARDOWN')
+E               assert 'failed' == 'completed'
+E                 
+E                 - completed
+E                 + failed
+
+tests/thesis_lite/maestro/test_active_restart.py:70: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]
+1 failed, 30 passed in 32.13s

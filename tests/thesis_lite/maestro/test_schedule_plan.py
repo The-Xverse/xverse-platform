@@ -35,6 +35,48 @@ def test_exact_pure_admission_and_round_trip():
         plan.digest = "forged"
 
 
+def test_separately_admitted_restart_round_trip_preserves_phase_caps():
+    value,old=admitted()
+    _,new=admitted(restart_operation_seconds=.3)
+    assert new.operation_seconds==old.operation_seconds==.1
+    assert new.active_seconds==old.active_seconds==1
+    assert new.terminal_reserve_seconds==old.terminal_reserve_seconds
+    assert new.restart_operation_seconds==.3
+    assert json.loads(old.canonical_bytes)['version']==1
+    assert json.loads(new.canonical_bytes)['version']==3
+    assert new.digest!=old.digest
+    assert decode_schedule(value,json.loads(new.canonical_bytes))==new
+    body=json.loads(new.canonical_bytes);body['restart_operation_seconds']=5
+    with pytest.raises(ValueError):decode_schedule(value,body)
+
+
+def test_action_bounds_are_rederived_from_original_catalog_and_old_versions_stay_fixed():
+    value,old=admitted(restart_operation_seconds=.3)
+    _,new=admitted(restart_operation_seconds=.3,use_action_timeouts=True)
+    assert new.operation_seconds==old.operation_seconds==.1
+    assert new.active_seconds==old.active_seconds==1
+    assert json.loads(old.canonical_bytes)['version']==3
+    assert json.loads(new.canonical_bytes)['version']==4
+    assert new.use_action_timeouts is True
+    expected=tuple((u.unit_id,a.phase,a.timeout_seconds) for u in value.units for a in u.plan.actions)
+    assert new.action_timeouts==expected
+    assert decode_schedule(value,json.loads(new.canonical_bytes))==new
+    body=json.loads(new.canonical_bytes);body['action_timeouts'][0][2]+=.01
+    with pytest.raises(ValueError):decode_schedule(value,body)
+    body=json.loads(old.canonical_bytes);body['use_action_timeouts']=False
+    with pytest.raises(ValueError):decode_schedule(value,body)
+
+
+@pytest.mark.parametrize('flag',[1,None,'true',(),[]])
+def test_action_timeout_mode_requires_explicit_boolean(flag):
+    with pytest.raises(ValueError):admitted(use_action_timeouts=flag)
+
+
+@pytest.mark.parametrize('timeout',[True,0,-1,float('nan'),float('inf'),5,10**500])
+def test_restart_cap_is_finite_and_fits_original_health_period(timeout):
+    with pytest.raises(ValueError):admitted(restart_operation_seconds=timeout)
+
+
 @pytest.mark.parametrize(
     "name,value",
     [
@@ -128,3 +170,43 @@ def test_admission_itself_has_no_storage_or_process_effect(monkeypatch):
         operation_seconds=0.1,
     )
     assert result.required_requests == 75
+
+
+def test_explicit_shared_controller_service_budget_is_rederived_and_v1_stays_exact():
+    value, original = admitted()
+    _, current = admitted(service_operation_count=4)
+    old = json.loads(original.canonical_bytes)
+    body = json.loads(current.canonical_bytes)
+    assert old['version'] == 1 and 'service_operation_count' not in old
+    assert original.service_operation_count is None
+    assert body['version'] == 2 and body['service_operation_count'] == 4
+    assert current.health_slots == 22 and current.required_requests == 109
+    assert current.required_events == 186
+    assert decode_schedule(value, body) == current
+    for change in [dict(version=1),dict(version=3),dict(service_operation_count=True),dict(required_requests=108)]:
+        with pytest.raises(ValueError):
+            decode_schedule(value, dict(body, **change))
+    for count in (0,33,True,1.5):
+        with pytest.raises(ValueError):
+            admitted(service_operation_count=count)
+
+
+def test_recovery_bound_is_sealed_and_old_action_admission_remains_version4():
+    value=prepared()
+    options=dict(policies=tuple(ProbePolicy(u.unit_id,5,5,.5) for u in value.units),
+                 ticks=(0,value.clock.horizon_ticks),active_seconds=20,operation_seconds=.3,
+                 request_limit=1024,use_action_timeouts=True)
+    old=admit_schedule(value,**options)
+    fresh=admit_schedule(value,**options,recovery_operation_seconds=3)
+    assert json.loads(old.canonical_bytes)['version']==4
+    assert json.loads(fresh.canonical_bytes)['version']==5
+    assert fresh.recovery_operation_seconds==3 and fresh.operation_seconds==old.operation_seconds
+    assert fresh.action_timeouts==old.action_timeouts
+    assert decode_schedule(value,json.loads(fresh.canonical_bytes))==fresh
+    body=json.loads(fresh.canonical_bytes);body['recovery_operation_seconds']=.5
+    with pytest.raises(ValueError):decode_schedule(value,body)
+
+
+@pytest.mark.parametrize('cap',[True,0,5.1,float('nan'),float('inf')])
+def test_recovery_bound_rejects_invalid_or_unusable_caps(cap):
+    with pytest.raises(ValueError):admitted(recovery_operation_seconds=cap)

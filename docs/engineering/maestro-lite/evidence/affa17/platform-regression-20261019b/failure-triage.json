@@ -1,0 +1,119 @@
+{
+  "run_directory": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/platform-regression-20261019b",
+  "log_sha256": "5187cf0d7752991161d30479fb02c499347c3f50c25400209f847d1bdfeba5fc",
+  "log_bytes": 18114,
+  "receipt_present": true,
+  "receipt": {
+    "command": [
+      "/tmp/maestro-lite-platform-regression-target-20261019b/bin/python",
+      "-c",
+      "import importlib.util,pytest; spec=importlib.util.spec_from_file_location('owned_receipt_namespace','/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/integrated-maestro-20261019b/receipt_namespace.py'); module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module); raise SystemExit(pytest.main(['/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/tests', '-q', '-ra', '--basetemp', '/tmp/maestro-platform-20261019b-private-19t3za0o'],plugins=[module]))"
+    ],
+    "cwd": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018",
+    "returncode": 1,
+    "original_pid": 2355112,
+    "elapsed_seconds": 2887.0613552409923,
+    "original_private_basetemp": "/tmp/maestro-platform-20261019b-private-19t3za0o",
+    "outer_timeout": false,
+    "outer_deadline_seconds": 7200,
+    "descendant_cleanup_unknown": false,
+    "log_sha256": "5187cf0d7752991161d30479fb02c499347c3f50c25400209f847d1bdfeba5fc",
+    "input_manifest_sha256": "3c2d860be3f964a38e03d608a979293deeb09f2e6f396186f5b6ee2fac084198",
+    "changed_frozen_inputs": [],
+    "passed_exit_status": false,
+    "verification_python": "/tmp/maestro-lite-platform-regression-target-20261019b/bin/python",
+    "successor_of": "platform-regression-20261019a",
+    "terminal_evidence_audit_pending": true,
+    "full_runtime_cases_complete": false,
+    "actual_M1_admissions": 0,
+    "stable_increment17": false,
+    "accepted": false,
+    "merged": false
+  },
+  "pytest_summary_line": null,
+  "short_summary_count": 3,
+  "failed_count": 3,
+  "error_count": 0,
+  "traceback_sections_found": 3,
+  "failures": [
+    {
+      "outcome": "FAILED",
+      "nodeid": "tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target",
+      "message": null,
+      "traceback_found": true,
+      "traceback_sha256": "1d13865c8184cbbf5396fee3c224c610d1491bed73f8682d3cf4d8e2b0965ccd",
+      "mentions_missing_build_module": false,
+      "mentions_wheel_build_failed": false,
+      "traceback_last_lines": [
+        "E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-before-send]",
+        "E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-ack-pending]",
+        "E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-after-reply]",
+        "E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]",
+        "E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]",
+        "E         1782 passed, 14 errors, 24 subtests passed in 1389.51s (0:23:09)",
+        "E         ",
+        "E         ",
+        "E       assert 1 == 0",
+        "E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261019b/bin/python', '-m', 'pytest', '-q', '-p'...eanup_after_issuer_loss[after-release]\\n1782 passed, 14 errors, 24 subtests passed in 1389.51s (0:23:09)\\n', stderr='').returncode",
+        "",
+        "tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError"
+      ]
+    },
+    {
+      "outcome": "FAILED",
+      "nodeid": "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]",
+      "message": null,
+      "traceback_found": true,
+      "traceback_sha256": "e357bd26a198730d395a09a2af35211aaa22ad1a4e751d660c96111a1f603801",
+      "mentions_missing_build_module": false,
+      "mentions_wheel_build_failed": false,
+      "traceback_last_lines": [
+        "            if mode=='mid-storage-loss':",
+        "                assert [r.disposition for r in outcomes]==['completed','failed','cancelled'],outcomes",
+        "                assert prepared_order==[source,middle] and not result.execution_succeeded",
+        "            else:",
+        "                expected='rejected' if mode=='omitted-dependent' else 'completed'",
+        "                assert all(r.disposition==expected for r in outcomes),outcomes",
+        ">               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic",
+        "E               AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE",
+        "E               assert (False)",
+        "E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='822bed3ffb9854b5244cf8e724000138f3049ea92f9ce3b32ac18a69d6f2703...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded",
+        "",
+        "tests/thesis_lite/maestro/test_active_transitive_restart.py:130: AssertionError"
+      ]
+    },
+    {
+      "outcome": "FAILED",
+      "nodeid": "tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions",
+      "message": null,
+      "traceback_found": true,
+      "traceback_sha256": "0f369c2967d97292c4ab0e3c98853a28d7bfd3262da9ea7e88c8b335b493ab9e",
+      "mentions_missing_build_module": false,
+      "mentions_wheel_build_failed": false,
+      "traceback_last_lines": [
+        "        result = driver.run(*bounds)",
+        "        receipt = os.environ.get(\"MAESTRO_BOUNDARY_RECEIPTS\")",
+        "        if receipt:",
+        "            (Path(receipt) / \"dispatcher-operation-observations.json\").write_text(",
+        "                json.dumps(trace, indent=2)",
+        "            )",
+        ">       assert result.execution_succeeded and result.terminal_recorded, result",
+        "E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='6a7030f20133178f4ae70e8d0d4895418acdf1d378a1eec11fd46794ed1d144...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False)",
+        "E       assert (False)",
+        "E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='6a7030f20133178f4ae70e8d0d4895418acdf1d378a1eec11fd46794ed1d144...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded",
+        "",
+        "tests/thesis_lite/maestro/test_dispatcher.py:239: AssertionError"
+      ]
+    }
+  ],
+  "all_failures_carry_missing_build_signature": false,
+  "failures_without_build_signature": [
+    "tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target",
+    "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]",
+    "tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions"
+  ],
+  "textual_classification_only": true,
+  "cause_confirmed": false,
+  "repair_applied": false,
+  "successor_run_started": false
+}

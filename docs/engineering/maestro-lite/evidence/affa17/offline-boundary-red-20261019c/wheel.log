@@ -1,0 +1,92 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_closed_verification_in_fresh_process_has_no_runtime_imports[False] ____
+
+tmp_path = PosixPath('/tmp/maestro-offline-boundary-red-20261019c-wheel-private-2hdzdk_y/test_closed_verification_in_fr0')
+late_teardown = False
+
+    @pytest.mark.parametrize('late_teardown',[False,True])
+    def test_closed_verification_in_fresh_process_has_no_runtime_imports(tmp_path,late_teardown):
+        fixture=ClockFixture(tmp_path,late_teardown=late_teardown)
+        fixture.close()
+        assert fixture.verify().complete
+        before={str(p.relative_to(fixture.root)):hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in fixture.root.rglob('*') if p.is_file()}
+        inputs=tmp_path/'offline-inputs.json'
+        inputs.write_text(json.dumps(dict(admission=fixture.ad,collection=fixture.collection_plan.configuration(),
+                                          root=str(fixture.root),pins=fixture.pins)))
+        command=[sys.executable,*(['-I'] if sys.flags.isolated else []),'-c',CHILD,str(inputs)]
+        result=subprocess.run(command,capture_output=True,text=True,timeout=15)
+        after={str(p.relative_to(fixture.root)):hashlib.sha256(p.read_bytes()).hexdigest()
+               for p in fixture.root.rglob('*') if p.is_file()}
+        assert before==after
+        out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if out:
+            target=Path(out);target.mkdir(parents=True,exist_ok=True)
+            (target/('offline-boundary-'+str(late_teardown)+'.json')).write_text(json.dumps(dict(
+                late_teardown=late_teardown,returncode=result.returncode,stdout=result.stdout,stderr=result.stderr,
+                command=command,original_inputs=str(inputs),input_sha256=hashlib.sha256(inputs.read_bytes()).hexdigest(),
+                evidence_sha256=before,unchanged_evidence=before==after,
+                source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                synthetic_facts=True,scientific_result=False),indent=2)+'\n')
+>       assert result.returncode==0,result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 13, in <module>
+E             from xverse.maestro.runtime_verification import verify_runtime_closed
+E           File "/tmp/maestro-lite-affa-terminal-primary-20261019b/lib/python3.13/site-packages/xverse/maestro/runtime_verification.py", line 9, in <module>
+E             from .collection_runtime import decode_context, document, output_available, validate_item
+E           File "<string>", line 9, in find_spec
+E             raise ImportError('Offline verifier imported runtime component: '+fullname)
+E         ImportError: Offline verifier imported runtime component: xverse.maestro.collection_runtime
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-affa-terminal-primary-20261019b/bin/python', '-I', '-c', "\nimport importlib...omponent: \'+fullname)\nImportError: Offline verifier imported runtime component: xverse.maestro.collection_runtime\n').returncode
+
+tests/thesis_lite/maestro/test_offline_boundary.py:62: AssertionError
+____ test_closed_verification_in_fresh_process_has_no_runtime_imports[True] ____
+
+tmp_path = PosixPath('/tmp/maestro-offline-boundary-red-20261019c-wheel-private-2hdzdk_y/test_closed_verification_in_fr1')
+late_teardown = True
+
+    @pytest.mark.parametrize('late_teardown',[False,True])
+    def test_closed_verification_in_fresh_process_has_no_runtime_imports(tmp_path,late_teardown):
+        fixture=ClockFixture(tmp_path,late_teardown=late_teardown)
+        fixture.close()
+        assert fixture.verify().complete
+        before={str(p.relative_to(fixture.root)):hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in fixture.root.rglob('*') if p.is_file()}
+        inputs=tmp_path/'offline-inputs.json'
+        inputs.write_text(json.dumps(dict(admission=fixture.ad,collection=fixture.collection_plan.configuration(),
+                                          root=str(fixture.root),pins=fixture.pins)))
+        command=[sys.executable,*(['-I'] if sys.flags.isolated else []),'-c',CHILD,str(inputs)]
+        result=subprocess.run(command,capture_output=True,text=True,timeout=15)
+        after={str(p.relative_to(fixture.root)):hashlib.sha256(p.read_bytes()).hexdigest()
+               for p in fixture.root.rglob('*') if p.is_file()}
+        assert before==after
+        out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if out:
+            target=Path(out);target.mkdir(parents=True,exist_ok=True)
+            (target/('offline-boundary-'+str(late_teardown)+'.json')).write_text(json.dumps(dict(
+                late_teardown=late_teardown,returncode=result.returncode,stdout=result.stdout,stderr=result.stderr,
+                command=command,original_inputs=str(inputs),input_sha256=hashlib.sha256(inputs.read_bytes()).hexdigest(),
+                evidence_sha256=before,unchanged_evidence=before==after,
+                source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                synthetic_facts=True,scientific_result=False),indent=2)+'\n')
+>       assert result.returncode==0,result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 13, in <module>
+E             from xverse.maestro.runtime_verification import verify_runtime_closed
+E           File "/tmp/maestro-lite-affa-terminal-primary-20261019b/lib/python3.13/site-packages/xverse/maestro/runtime_verification.py", line 9, in <module>
+E             from .collection_runtime import decode_context, document, output_available, validate_item
+E           File "<string>", line 9, in find_spec
+E             raise ImportError('Offline verifier imported runtime component: '+fullname)
+E         ImportError: Offline verifier imported runtime component: xverse.maestro.collection_runtime
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-affa-terminal-primary-20261019b/bin/python', '-I', '-c', "\nimport importlib...omponent: \'+fullname)\nImportError: Offline verifier imported runtime component: xverse.maestro.collection_runtime\n').returncode
+
+tests/thesis_lite/maestro/test_offline_boundary.py:62: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_offline_boundary.py::test_closed_verification_in_fresh_process_has_no_runtime_imports[False]
+FAILED tests/thesis_lite/maestro/test_offline_boundary.py::test_closed_verification_in_fresh_process_has_no_runtime_imports[True]
+2 failed in 2.36s

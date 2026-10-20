@@ -1,0 +1,783 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+.......................FFFFFFFF.F.........................FFF........... [ 12%]
+........................................................................ [ 16%]
+..........................................FF...........................F [ 19%]
+..............F......................................................... [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+....................................................................F... [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+________________ test_xverse_argus_imports_from_installed_wheel ________________
+
+    def test_xverse_argus_imports_from_installed_wheel():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_________________ test_xverse_xdl_imports_from_installed_wheel _________________
+
+    def test_xverse_xdl_imports_from_installed_wheel():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_______________ test_existing_xdl_console_entry_point_preserved ________________
+
+    def test_existing_xdl_console_entry_point_preserved():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+____________ test_additive_xverse_argus_console_entry_point_present ____________
+
+    def test_additive_xverse_argus_console_entry_point_present():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+________________ test_wheel_does_not_package_the_xcom_cpp_tree _________________
+
+    def test_wheel_does_not_package_the_xcom_cpp_tree():
+>       wheel, _target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+___________ test_unknown_major_schema_rejected_from_installed_wheel ____________
+
+tmp_path = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_unknown_major_schema_reje0')
+
+    def test_unknown_major_schema_rejected_from_installed_wheel(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+______________ test_additive_unknown_field_behaviour_is_explicit _______________
+
+tmp_path = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_additive_unknown_field_be0')
+
+    def test_additive_unknown_field_behaviour_is_explicit(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+___ test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath ___
+
+tmp_path = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_owned_argus_tests_run_aga0')
+
+    def test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_____________________ test_xdl_cli_behaviour_is_preserved ______________________
+
+    def test_xdl_cli_behaviour_is_preserved():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_consumer_unit.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_ test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree _
+
+    def test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_integration.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_ test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath __
+
+tmp_path = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_owned_argus_tests_repeat_0')
+
+    def test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_integration.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: se;counterexamples=[]
+E                 try:
+E                     result=run(driver)
+E         >           assert len(transitions)==len(current)==1
+E         E           assert 0 == 1
+E         E            +  where 0 = len([])
+E         
+E         tests/thesis_lite/maestro/test_terminal_controller_inventory.py:126: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_actual_shared_renewal_keeps_original_live_handles_past_old_lease
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_invalid_renewal_rejects_before_rpc_or_cancellation[unchanged]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_invalid_renewal_rejects_before_rpc_or_cancellation[session]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_invalid_renewal_rejects_before_rpc_or_cancellation[too-long]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_renewal_lock_conflict_has_no_effects[owner]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_renewal_lock_conflict_has_no_effects[broker]
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_stopped_storage_prevents_shared_renewal_and_fences_authority
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_cancellation_before_native_renewal_ack_commit_cannot_succeed
+E         FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_missing_actual_mirror_prevents_renewal_without_claiming_either_lease
+E         FAILED tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-live]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[current-copy]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-copy]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-empty]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-nonmapping]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[stage]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[release]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[before-intent-append]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[after-intent-flush]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-before-send]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-ack-pending]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-after-reply]
+E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]
+E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]
+E         12 failed, 1770 passed, 14 errors, 24 subtests passed in 1440.06s (0:24:00)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python', '-m', 'pytest', '-q', '-p',..._issuer_loss[after-release]\n12 failed, 1770 passed, 14 errors, 24 subtests passed in 1440.06s (0:24:00)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+________ test_installed_wheel_imports_argus_and_preserved_xdl_contracts ________
+
+    def test_installed_wheel_imports_argus_and_preserved_xdl_contracts():
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_validation.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_______ test_additive_unknown_field_and_unknown_major_behaviour_explicit _______
+
+tmp_path = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_additive_unknown_field_an0')
+
+    def test_additive_unknown_field_and_unknown_major_behaviour_explicit(tmp_path):
+>       _wheel, target = S.wheel_and_target()
+                         ^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/argus/test_argus2_validation.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def wheel_and_target() -> tuple[Path, Path]:
+        """Build the wheel offline once and install it into an isolated target with no dependencies."""
+    
+        if "wheel" in _WHEEL_CACHE:
+            return Path(_WHEEL_CACHE["wheel"]), Path(_WHEEL_CACHE["target"])
+        base = Path(tempfile.mkdtemp(prefix="argus2-wheel-"))
+        dist = base / "dist"
+        target = base / "site"
+        dist.mkdir()
+        target.mkdir()
+        build = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(dist)],
+            cwd=str(platform_source_root()),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if build.returncode != 0:
+>           raise AssertionError(f"wheel build failed: {build.stdout}\n{build.stderr}")
+E           AssertionError: wheel build failed: 
+E           /tmp/maestro-lite-integrated-maestro-target-20261019b/bin/python: No module named build
+
+tests/thesis_lite/argus/support.py:321: AssertionError
+_ test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x701406bf39d0>
+control = 'recovery', mode = 'beyond-active'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+            result = run(driver)
+>           assert submitted and len(queue_facts) == 1, result.diagnostic
+E           AssertionError: ML-PERSIST-TIMEOUT
+E           assert (False)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:147: AssertionError
+__ test_original_active_explicit_restart_and_closed_generation_universe[leaf] __
+
+request = <FixtureRequest for <Function test_original_active_explicit_restart_and_closed_generation_universe[leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x701406eb4750>
+mode = 'leaf'
+
+    @pytest.mark.parametrize('mode',['leaf','external-thread','parent-reject','controller-loss','stage-storage-loss'])
+    def test_original_active_explicit_restart_and_closed_generation_universe(request,monkeypatch,mode):
+        successful=mode in ('leaf','external-thread')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+        broker,facade,client,work=stack
+        assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==4.8
+        assert driver.plan.restart_operation_seconds==1.0
+        source,leaf=driver.prepared.resource_order
+        unit=source if mode=='parent-reject' else leaf
+        context=next(c for c in client._future_contexts if c.binding.unit_id==unit)
+        other=next(c for c in client._future_contexts if c.binding.unit_id!=unit)
+        original_worker=client.process
+        tickets=[];old_handles={};execution_threads=[];retired=None;result=None;closed=None
+        statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            if kind=='step-complete' and step.step_id=='observe-sink':
+                old_handles.update({u:broker.issuer(u)._handle for u in (source,leaf)})
+                end=HostDeadline(client.session,driver._active_end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart(client.run_id,unit,permit=replace(context.binding.permit),generation=2,deadline=end)
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart(client.run_id,unit,permit=context.binding.permit,generation=True,deadline=end)
+                submitted=[];submit_errors=[]
+                def submit():
+                    try:submitted.append(driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end))
+                    except BaseException as e:submit_errors.append(e)
+                if mode=='external-thread':
+                    thread=threading.Thread(target=submit);thread.start();thread.join(.2)
+                    assert not thread.is_alive() and not submit_errors,submit_errors
+                    assert thread.ident!=broker.owner._dispatch_thread
+                else:submit()
+                assert not submit_errors and len(submitted)==1,submit_errors
+                ticket=submitted[0]
+                tickets.append(ticket)
+                assert driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end) is ticket
+                assert driver.restart_result(ticket) is None
+                with pytest.raises(ValueError,match='RESTART-ORIGINAL'):
+                    driver.restart_result(RestartRequest(ticket.run_id,ticket.unit_id,ticket.generation,ticket.deadline))
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,other.binding.unit_id,permit=other.binding.permit,generation=2,deadline=end)
+                if mode=='controller-loss':
+                    signal.pidfd_send_signal(controller.process._capability.fileno(),signal.SIGKILL)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(*a,**kw):
+            execution_threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+            return prepare(*a,**kw)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def native_advance(*a,**kw):
+            issuer=advance(*a,**kw)
+            if mode=='stage-storage-loss':
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',native_advance)
+        target=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if target:
+            path=Path(target);path.mkdir(parents=True,exist_ok=True)
+            with (path/('active-restart-inputs-'+mode+'.json')).open('x') as f:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest,original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+                    original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),f,indent=2)
+                f.write('\n')
+        try:
+            result=run(driver)
+            assert len(tickets)==1,result.diagnostic
+            outcome=driver.restart_result(tickets[0])
+            assert outcome is not None
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if successful:
+                assert outcome.disposition=='completed',outcome
+>               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E               AssertionError: ML-PERSIST-TIMEOUT
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='b6e6e25ce7b11b29b7897a70170f3d4eea291a2586b5dea452c538af03ee047...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_restart.py:120: AssertionError
+_ test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent] _
+
+request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7014071b03d0>
+run_bootstrap_binary = PosixPath('/tmp/maestro-platform-20261019a-private-9wtsvpep/test_native_stream_fault_prese2/owned-stream-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+    def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+        mode = request.node.callspec.params['run_bootstrap_binary']
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        result = closure = None
+        output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            with (Path(output) / ('stream-inputs-' + mode + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes), admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes), original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns, runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    native_bootstrap_digest=broker.session.config.admission.supervisor_artifact_digest,
+                    bootstrap_configuration_sha256=hashlib.sha256(broker.session.config.private_bytes).hexdigest(),
+                    original_fixture=str(work.parent), fixture_source_sha256=sha(Path(__file__))), stream, indent=2)
+                stream.write('\n')
+        try:
+            result = run(driver)
+            retain(stack, result, 'native-stream-' + mode)
+>           assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E           AssertionError: ML-PERSIST-TIMEOUT
+E           assert (False)
+E            +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='7699c817ee1def838a4f4cd271b5bd527b4f5c68ae1168cd54a0f6f42a5c00f...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_native_writer_stream_faults.py:129: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_argus_imports_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xverse_xdl_imports_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_existing_xdl_console_entry_point_preserved
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_xverse_argus_console_entry_point_present
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_wheel_does_not_package_the_xcom_cpp_tree
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_unknown_major_schema_rejected_from_installed_wheel
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_additive_unknown_field_behaviour_is_explicit
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_owned_argus_tests_run_against_installed_wheel_with_empty_pythonpath
+FAILED tests/thesis_lite/argus/test_argus2_consumer_unit.py::test_xdl_cli_behaviour_is_preserved
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_installed_wheel_imports_xverse_argus_and_xverse_xdl_outside_source_tree
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_owned_argus_tests_repeat_against_installed_wheel_with_empty_pythonpath
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/argus/test_argus2_validation.py::test_installed_wheel_imports_argus_and_preserved_xdl_contracts
+FAILED tests/thesis_lite/argus/test_argus2_validation.py::test_additive_unknown_field_and_unknown_major_behaviour_explicit
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]
+FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]
+FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]
+17 failed, 2063 passed, 24 subtests passed in 2979.15s (0:49:39)

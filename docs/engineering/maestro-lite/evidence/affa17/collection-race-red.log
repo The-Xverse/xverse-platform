@@ -1,0 +1,133 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+__________ test_missing_lookup_race_is_error_for_optional_file[root] ___________
+
+directories = (PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er0/source'), PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er0/evidence'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x750a09be3ce0>
+mutation = 'root'
+
+    @pytest.mark.parametrize('mutation',['root','parent','timeout'])
+    def test_missing_lookup_race_is_error_for_optional_file(directories,monkeypatch,mutation):
+        source,target=directories
+        (source/'nested').mkdir()
+        original=end()
+        real_open=os.open
+        changed=False
+        def changed_open(path,*args,**kwargs):
+            nonlocal changed
+            if path=='item' and 'dir_fd' in kwargs and not changed:
+                changed=True
+                if mutation=='root':
+                    source.rename(source.with_name('old-source')); source.mkdir()
+                elif mutation=='parent':
+                    (source/'nested').rename(source/'old-nested'); (source/'nested').mkdir()
+                else:
+                    monkeypatch.setattr(time,'monotonic',lambda:original.monotonic_seconds+1)
+                raise FileNotFoundError('actual missing lookup after boundary change')
+            return real_open(path,*args,**kwargs)
+        with CollectionAdmission(source,target,[declaration(source='nested/item',required=False)],original) as admission:
+            monkeypatch.setattr(os,'open',changed_open)
+            result=admission.collect(original)
+>       assert changed and not result.collection_complete
+E       AssertionError: assert (True and not True)
+E        +  where True = CollectionResult(artifacts=(CollectedArtifact(declaration=ArtifactDeclaration(unit_id='unit-a', generation=1, source='...ed=False, media_type='application/octet-stream'), status='missing', sha256=None, diagnostic='ML-COLLECTION-MISSING'),)).collection_complete
+
+tests/thesis_lite/maestro/test_collection.py:291: AssertionError
+_________ test_missing_lookup_race_is_error_for_optional_file[parent] __________
+
+directories = (PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er1/source'), PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er1/evidence'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x750a0a9016e0>
+mutation = 'parent'
+
+    @pytest.mark.parametrize('mutation',['root','parent','timeout'])
+    def test_missing_lookup_race_is_error_for_optional_file(directories,monkeypatch,mutation):
+        source,target=directories
+        (source/'nested').mkdir()
+        original=end()
+        real_open=os.open
+        changed=False
+        def changed_open(path,*args,**kwargs):
+            nonlocal changed
+            if path=='item' and 'dir_fd' in kwargs and not changed:
+                changed=True
+                if mutation=='root':
+                    source.rename(source.with_name('old-source')); source.mkdir()
+                elif mutation=='parent':
+                    (source/'nested').rename(source/'old-nested'); (source/'nested').mkdir()
+                else:
+                    monkeypatch.setattr(time,'monotonic',lambda:original.monotonic_seconds+1)
+                raise FileNotFoundError('actual missing lookup after boundary change')
+            return real_open(path,*args,**kwargs)
+        with CollectionAdmission(source,target,[declaration(source='nested/item',required=False)],original) as admission:
+            monkeypatch.setattr(os,'open',changed_open)
+            result=admission.collect(original)
+>       assert changed and not result.collection_complete
+E       AssertionError: assert (True and not True)
+E        +  where True = CollectionResult(artifacts=(CollectedArtifact(declaration=ArtifactDeclaration(unit_id='unit-a', generation=1, source='...ed=False, media_type='application/octet-stream'), status='missing', sha256=None, diagnostic='ML-COLLECTION-MISSING'),)).collection_complete
+
+tests/thesis_lite/maestro/test_collection.py:291: AssertionError
+_________ test_missing_lookup_race_is_error_for_optional_file[timeout] _________
+
+directories = (PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er2/source'), PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_missing_lookup_race_is_er2/evidence'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x750a09af69f0>
+mutation = 'timeout'
+
+    @pytest.mark.parametrize('mutation',['root','parent','timeout'])
+    def test_missing_lookup_race_is_error_for_optional_file(directories,monkeypatch,mutation):
+        source,target=directories
+        (source/'nested').mkdir()
+        original=end()
+        real_open=os.open
+        changed=False
+        def changed_open(path,*args,**kwargs):
+            nonlocal changed
+            if path=='item' and 'dir_fd' in kwargs and not changed:
+                changed=True
+                if mutation=='root':
+                    source.rename(source.with_name('old-source')); source.mkdir()
+                elif mutation=='parent':
+                    (source/'nested').rename(source/'old-nested'); (source/'nested').mkdir()
+                else:
+                    monkeypatch.setattr(time,'monotonic',lambda:original.monotonic_seconds+1)
+                raise FileNotFoundError('actual missing lookup after boundary change')
+            return real_open(path,*args,**kwargs)
+        with CollectionAdmission(source,target,[declaration(source='nested/item',required=False)],original) as admission:
+            monkeypatch.setattr(os,'open',changed_open)
+            result=admission.collect(original)
+>       assert changed and not result.collection_complete
+E       AssertionError: assert (True and not True)
+E        +  where True = CollectionResult(artifacts=(CollectedArtifact(declaration=ArtifactDeclaration(unit_id='unit-a', generation=1, source='...ed=False, media_type='application/octet-stream'), status='missing', sha256=None, diagnostic='ML-COLLECTION-MISSING'),)).collection_complete
+
+tests/thesis_lite/maestro/test_collection.py:291: AssertionError
+_____ test_destination_disappearing_during_copy_is_error_for_optional_file _____
+
+directories = (PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_destination_disappearing_0/source'), PosixPath('/tmp/maestro-collection-race-red-consumer-4mpja59c/private/test_destination_disappearing_0/evidence'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x750a09dbfdf0>
+
+    def test_destination_disappearing_during_copy_is_error_for_optional_file(directories,monkeypatch):
+        source,target=directories
+        (source/'item').write_bytes(b'copied actual bytes')
+        original=end()
+        real_write=os.write
+        changed=False
+        def unlinked(fd,data):
+            nonlocal changed
+            count=real_write(fd,data)
+            if not changed:
+                changed=True
+                (target/'copied').unlink()
+            return count
+        with CollectionAdmission(source,target,[declaration(required=False)],original) as admission:
+            monkeypatch.setattr(os,'write',unlinked)
+            result=admission.collect(original)
+>       assert changed and not result.collection_complete
+E       AssertionError: assert (True and not True)
+E        +  where True = CollectionResult(artifacts=(CollectedArtifact(declaration=ArtifactDeclaration(unit_id='unit-a', generation=1, source='...ed=False, media_type='application/octet-stream'), status='missing', sha256=None, diagnostic='ML-COLLECTION-MISSING'),)).collection_complete
+
+tests/thesis_lite/maestro/test_collection.py:311: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_collection.py::test_missing_lookup_race_is_error_for_optional_file[root]
+FAILED tests/thesis_lite/maestro/test_collection.py::test_missing_lookup_race_is_error_for_optional_file[parent]
+FAILED tests/thesis_lite/maestro/test_collection.py::test_missing_lookup_race_is_error_for_optional_file[timeout]
+FAILED tests/thesis_lite/maestro/test_collection.py::test_destination_disappearing_during_copy_is_error_for_optional_file
+4 failed, 28 deselected in 0.32s

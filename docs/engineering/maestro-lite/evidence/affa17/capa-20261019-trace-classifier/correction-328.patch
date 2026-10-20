@@ -1,0 +1,29 @@
+--- docs/engineering/maestro-lite/evidence/affa17/classify-integrated-trace-20261019.py
++++ docs/engineering/maestro-lite/evidence/affa17/classify-integrated-trace-20261019-v2.py
+@@ -22,6 +22,7 @@
+         self.scope, self.nodes, self.constants = [], {}, set()
+ 
+     def visit_ClassDef(self, node):
++        self.nodes['.'.join([*self.scope, node.name])] = node
+         self.scope.append(node.name)
+         self.generic_visit(node)
+         self.scope.pop()
+@@ -74,7 +75,8 @@
+                     endpoint=file + '::' + candidate, line=node.lineno,
+                     end_line=node.end_lineno, file_sha256=manifest[file]))
+             if name in indexed.nodes:
+-                record['kind'] = 'exact_qualified_python_callable'
++                record['kind'] = ('exact_qualified_python_class' if isinstance(indexed.nodes[name], ast.ClassDef)
++                    else 'exact_qualified_python_function')
+             elif len(candidates) == 1:
+                 record['kind'] = 'unqualified_historical_name_with_one_current_candidate'
+             elif candidates:
+@@ -100,7 +102,7 @@
+     missing_implementations_inferred=False, missing_tests_inferred=False,
+     full_requirements_closed=False, native_execution_repeated=False,
+     actual_M1_admissions=0, stable_increment17=False, accepted=False, merged=False)
+-with (out / 'trace-reference-classification-source-checkpoint.json').open('x') as stream:
++with (out / 'trace-reference-classification-source-checkpoint-v2.json').open('x') as stream:
+     json.dump(result, stream, indent=2)
+     stream.write('\n')
+ print(json.dumps(dict(unique_role_endpoint_references=len(records), classifications=dict(counts),

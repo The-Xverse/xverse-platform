@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_stopped_storage_after_preparation_fences_original_native _________
+
+request = <FixtureRequest for <Function test_stopped_storage_after_preparation_fences_original_native>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7376d90a8e90>
+
+    def test_stopped_storage_after_preparation_fences_original_native(request, monkeypatch):
+        import signal
+    
+        stack, controller, unit, _ = ready(request, monkeypatch)
+        broker, _, client, _ = stack
+        release(controller, unit)
+        descriptor = BoundaryDescriptor(
+            client.run_id,
+            unit,
+            2,
+            "storage-stall-generation2",
+            broker.session.boundaries.release_epoch,
+        )
+        broker.session.boundaries.create_frozen(descriptor)
+        prepared = broker._prepare_generation(controller, unit, descriptor, deadline(1))
+        signal.pidfd_send_signal(client.process._capability.fileno(), signal.SIGSTOP)
+        with pytest.raises(ValueError):
+            broker.advance_generation(prepared, deadline(0.35))
+>       assert broker._cancel_result is not None
+E       assert None is not None
+E        +  where None = <xverse.maestro.run_broker.RunBroker object at 0x7376d929b0e0>._cancel_result
+
+tests/thesis_lite/maestro/test_generation_restart.py:145: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_generation_restart.py::test_stopped_storage_after_preparation_fences_original_native
+1 failed in 3.32s

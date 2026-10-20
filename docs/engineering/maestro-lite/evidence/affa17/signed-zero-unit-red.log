@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_original_preparation_proof_preserves_exact_signed_zero __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1012/test_original_preparation_proo0')
+
+    def test_original_preparation_proof_preserves_exact_signed_zero(tmp_path):
+        ctx = context()
+        ctx = (ctx[0], replace(ctx[1], run=freeze({"pin_probe": -0.0})), *ctx[2:])
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        receipt = holder.claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+        object.__setattr__(holder._result, "run", freeze({"pin_probe": 0.0}))
+>       with pytest.raises(AdmissionError, match="ML-PERMIT-PLAN"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'xverse.maestro.admission.AdmissionError'>
+
+tests/thesis_lite/maestro/test_admission.py:740: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_admission.py::test_original_preparation_proof_preserves_exact_signed_zero
+1 failed in 0.47s

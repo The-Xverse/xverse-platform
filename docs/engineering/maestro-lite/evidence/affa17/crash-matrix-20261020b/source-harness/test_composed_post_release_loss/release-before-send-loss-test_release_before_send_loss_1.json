@@ -1,0 +1,223 @@
+{
+  "window": "release-before-send",
+  "fault": "storage",
+  "expected": {
+    "released_markers_max": 1,
+    "execution_succeeded": false,
+    "late_stage_rejected": true,
+    "started_events": 0,
+    "unit_outcome_action_records": 0,
+    "sentinel_untouched": true
+  },
+  "original_fixture": "/dev/shm/crash-matrix-source-private-dok2am__/test_release_before_send_loss_1",
+  "barrier": [
+    {
+      "label": "release-before-send",
+      "reached": 1059085.478212075,
+      "resumed": 1059085.478414357
+    }
+  ],
+  "original_exchange_returns": [
+    {
+      "request": "INTENT",
+      "reply": "INTENT_RECORDED",
+      "sequence": 3,
+      "state": 96,
+      "returned": 1059085.421978045
+    },
+    {
+      "request": "STAGE",
+      "reply": "STAGED",
+      "sequence": 4,
+      "state": 37,
+      "returned": 1059085.436675655
+    },
+    {
+      "request": "ARM",
+      "reply": "ARMED",
+      "sequence": 5,
+      "state": 37,
+      "returned": 1059085.462691952
+    },
+    {
+      "request": "RELEASE",
+      "reply": "RELEASED",
+      "sequence": 6,
+      "state": 7,
+      "returned": 1059085.479946279
+    }
+  ],
+  "observations": {
+    "window": "release-before-send",
+    "fault": "storage",
+    "at_barrier": 1059085.478250974,
+    "marker_names": [],
+    "issued_receipts": 1,
+    "release_exchanges_before_fault": 0,
+    "killed_original_role": 3,
+    "killed_at": 1059085.478340079
+  },
+  "execution_succeeded": false,
+  "diagnostic": "ML-PERSIST-CHILD",
+  "terminal_recorded": false,
+  "closure": {
+    "run_id": "fixture-run",
+    "lifecycle_digest": "29ecec86a3ccaa93598dca52ef0dfd8f5392d39bb092fb693da4edb0ccd05475",
+    "execution_succeeded": false,
+    "normal_unit_records_complete": false,
+    "helpers": [
+      {
+        "slot": 1,
+        "role": 3,
+        "unit_id": "helper:storage",
+        "process_reaped": true,
+        "returncode": -9,
+        "direct_child_reaped": null,
+        "client_retained": true
+      },
+      {
+        "slot": 2,
+        "role": 4,
+        "unit_id": "helper:authority",
+        "process_reaped": true,
+        "returncode": -9,
+        "direct_child_reaped": false,
+        "client_retained": true
+      },
+      {
+        "slot": 3,
+        "role": 5,
+        "unit_id": "helper:controller:1",
+        "process_reaped": true,
+        "returncode": -9,
+        "direct_child_reaped": null,
+        "client_retained": true
+      }
+    ],
+    "boundaries": [
+      {
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance",
+        "generation": 1,
+        "empty": true,
+        "released": true,
+        "diagnostic": null
+      },
+      {
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance",
+        "generation": 1,
+        "empty": true,
+        "released": true,
+        "diagnostic": null
+      },
+      {
+        "unit_id": "helper:authority",
+        "generation": 1,
+        "empty": true,
+        "released": true,
+        "diagnostic": null
+      },
+      {
+        "unit_id": "helper:controller:1",
+        "generation": 1,
+        "empty": true,
+        "released": true,
+        "diagnostic": null
+      },
+      {
+        "unit_id": "helper:storage",
+        "generation": 1,
+        "empty": true,
+        "released": true,
+        "diagnostic": null
+      }
+    ],
+    "writers": [
+      {
+        "acknowledged": false,
+        "last_acknowledged_state": "open",
+        "before_state": null,
+        "after_state": null,
+        "abort_usability": "unknown",
+        "after_usability": "unknown",
+        "abort_attempted": false,
+        "abort_completed": false,
+        "stage": "rpc-unresolved",
+        "manifest_sha256": null,
+        "durable_writer_state": null,
+        "durable_recorded_status": null,
+        "durable_assessed_status": null,
+        "reader_diagnostics": []
+      }
+    ],
+    "root_reaped": true,
+    "final_freeze_acknowledged": true,
+    "unacknowledged_births": 0,
+    "inventory_complete": true,
+    "diagnostics": [
+      "ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN"
+    ],
+    "lifecycle_complete": false,
+    "ready_for_execution": false,
+    "local_control_disposed": false,
+    "native_units": [
+      {
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance",
+        "generation": 1,
+        "issued": true,
+        "direct_child_reaped": null,
+        "native_retired": null
+      },
+      {
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance",
+        "generation": 1,
+        "issued": false,
+        "direct_child_reaped": null,
+        "native_retired": null
+      }
+    ],
+    "authority_fenced": true,
+    "terminal_reports": []
+  },
+  "cleanup_complete": false,
+  "started_events": 0,
+  "unit_outcome_action_records": 0,
+  "unit_stop_cleanup_records_observed": 0,
+  "markers": {
+    "source-binding.marker": "EXEC\n"
+  },
+  "late_stage_rejected": true,
+  "sentinel_before": {
+    "boundary_identity": [
+      29,
+      43134247
+    ],
+    "members": [
+      2828949
+    ],
+    "fresh_heartbeat_began": 1059084.189628623,
+    "fresh_heartbeat_observed": 1059084.199124398,
+    "parent_alive": true,
+    "unfrozen": true,
+    "cancellation_latch": false,
+    "membership_observation_only": true
+  },
+  "sentinel_after": {
+    "boundary_identity": [
+      29,
+      43134247
+    ],
+    "members": [
+      2828949
+    ],
+    "fresh_heartbeat_began": 1059085.497079202,
+    "fresh_heartbeat_observed": 1059085.50318765,
+    "parent_alive": true,
+    "unfrozen": true,
+    "cancellation_latch": false,
+    "membership_observation_only": true
+  },
+  "source_sha256": "eacef17a2b733e4bf75f05ea9ba687c2859bcf615203fbd361bb32473769ccdd",
+  "full_crash_matrix_complete": false,
+  "full_M1_complete": false,
+  "accepted": false
+}

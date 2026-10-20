@@ -1,0 +1,96 @@
+--- before/src/xverse/maestro/run_broker.py
++++ after/src/xverse/maestro/run_broker.py
+@@ -414,7 +414,8 @@
+                     os.close(fd)
+             raise
+ 
+-    def _holder(self):
++    def _cleanup_context(self):
++        """Original fencing context, without ordinary issuer/adoption rights."""
+         super()._holder()
+         session, storage, connection, owner, images = self._pins
+         if (
+@@ -424,7 +425,17 @@
+             or self.owner is not owner
+             or owner._run_broker is not self
+             or owner._run_broker_pin is not self
+-            or self._issuers is not self._issuer_registry
++        ):
++            raise OwnerError("ML-RUN-REPLACED")
++        session._holder()
++        storage._holder()
++        connection._holder()
++        owner._holder()
++
++    def _holder(self):
++        self._cleanup_context()
++        if (
++            self._issuers is not self._issuer_registry
+             or self._generation_issuers is not self._generation_issuer_registry
+             or tuple(self._generation_issuers.items()) != self._generation_issuer_log
+             or tuple(self._issuers.items()) != self._issuer_log
+@@ -436,10 +447,6 @@
+             )
+         ):
+             raise OwnerError("ML-RUN-REPLACED")
+-        session._holder()
+-        storage._holder()
+-        connection._holder()
+-        owner._holder()
+ 
+     def _until(self, deadline, *, claim=None, cleanup=False):
+         until = _deadline(deadline, self.session.session)
+@@ -856,7 +863,7 @@
+             self._lock.release()
+ 
+     def cancel(self, reason="run-cancel", *, deadline=None):
+-        self._holder()
++        self._cleanup_context()
+         if self._cancel_result is not None:
+             return self._cancel_result
+         if deadline is not None:
+@@ -1227,5 +1234,9 @@
+         return self._retire_ack
+ 
+     def cancel(self, reason="run-issuer-cancel"):
+-        self._holder()
+-        return self.broker.cancel(reason)
++        super()._holder()
++        broker, slot, image, owner, unit, process = self._pins
++        if (self.broker is not broker or self.slot != slot or self._image is not image
++            or self.owner is not owner or self.unit_id != unit or self.process is not process):
++            raise OwnerError("ML-RUN-ISSUER-REPLACED")
++        return broker.cancel(reason)
+--- before/src/xverse/maestro/run_closure.py
++++ after/src/xverse/maestro/run_closure.py
+@@ -300,9 +300,20 @@
+                     diagnostics.append("ML-CLOSURE-UNIT-UNRESOLVED")
+             self.cancel(reason)
+             native_units = []
++            native_inventory_complete = True
+             broker = self._broker
+             if broker is not None:
+-                for (unit, generation), issuer in broker._generation_issuers.items():
++                try:
++                    broker._cleanup_context()
++                    registry = broker._generation_issuer_registry
++                    if type(registry) is not dict or tuple(registry.items()) != broker._generation_issuer_log:
++                        raise ClosureError("ML-CLOSURE-INVENTORY-UNRESOLVED")
++                    generations = tuple(registry.items())
++                except (ValueError, OSError, AttributeError, TypeError):
++                    generations = ()
++                    native_inventory_complete = False
++                    diagnostics.append("ML-CLOSURE-INVENTORY-UNRESOLVED")
++                for (unit, generation), issuer in generations:
+                     try:
+                         native_units.append(issuer._closure_fact())
+                     except (ValueError, OSError):
+@@ -314,7 +325,7 @@
+             issued = tuple(sorted(root._issued.items()))
+             clients = tuple(sorted(root._clients.items()))
+             manager = root.boundaries
+-            inventory_complete = True
++            inventory_complete = native_inventory_complete
+             descriptors = ()
+             try:
+                 with manager._cleanup_lock(deadline):

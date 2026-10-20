@@ -1,0 +1,73 @@
+--- b/src/xverse/maestro/persistence.py
++++ c/src/xverse/maestro/persistence.py
+@@ -632,18 +632,19 @@
+     def rpc_failure(self):
+         # Failure/cleanup observations must not depend on ordinary live aliases.
+         _Original._holder(self)
+-        if self._rpc_failure is not self._rpc_failure_pin:
+-            raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+-        if self._rpc_failure is not None:
+-            if type(self._rpc_failure) is not PersistenceRPCFailure:
++        try:
++            record = self._rpc_failure
++            if record is not self._rpc_failure_pin:
+                 raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+-            try:
+-                values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
+-            except AttributeError:
+-                raise PersistenceError('ML-PERSIST-RPC-CONTEXT') from None
+-            if values != self._rpc_failure_values:
+-                raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+-        return self._rpc_failure
++            if record is not None:
++                if type(record) is not PersistenceRPCFailure:
++                    raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
++                values = tuple(getattr(record, n) for n in PersistenceRPCFailure.__dataclass_fields__)
++                if values != self._rpc_failure_values:
++                    raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
++        except (AttributeError, TypeError):
++            raise PersistenceError('ML-PERSIST-RPC-CONTEXT') from None
++        return record
+ 
+     @property
+     def _peer(self):
+@@ -809,21 +810,24 @@
+                 raise PersistenceError("ML-PERSIST-LATE")
+             return operation, until, reply["body"]
+         except Exception as error:
+-            if self._rpc_failure_pin is None:
+-                code = str(error)
+-                safe = code if len(code) <= 128 and re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-PERSIST-RPC-FAILED'
+-                kinds = ('init','commit','generation','issued','public-export','public-blob',
+-                         'collect','terminal-report','revalidate','audit','probe','teardown',
+-                         'tick','schedule','abort','closure','recovery')
+-                self._rpc_failure = PersistenceRPCFailure(
+-                    kind if type(kind) is str and kind in kinds else 'unknown', stage,
+-                    self._pins[5], sequence, operation, started_ns, until,
+-                    time.monotonic_ns(), safe)
+-                self._rpc_failure_pin = self._rpc_failure
+-                self._rpc_failure_values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
+-            if isinstance(error, PersistenceError):
+-                try:error.rpc_failure = self.rpc_failure
+-                except (ValueError, AttributeError):pass
++            try:
++                if self._rpc_failure_pin is None:
++                    code = str(error)
++                    safe = code if len(code) <= 128 and re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-PERSIST-RPC-FAILED'
++                    kinds = ('init','commit','generation','issued','public-export','public-blob',
++                             'collect','terminal-report','revalidate','audit','probe','teardown',
++                             'tick','schedule','abort','closure','recovery')
++                    self._rpc_failure = PersistenceRPCFailure(
++                        kind if type(kind) is str and kind in kinds else 'unknown', stage,
++                        self._pins[5], sequence, operation, started_ns, until,
++                        time.monotonic_ns(), safe)
++                    self._rpc_failure_pin = self._rpc_failure
++                    self._rpc_failure_values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
++                if isinstance(error, PersistenceError):
++                    try:error.rpc_failure = self.rpc_failure
++                    except (ValueError, AttributeError):pass
++            except Exception:
++                pass  # Optional observations never bypass original fail-closed cleanup.
+             self._fail()
+             raise
+         finally:

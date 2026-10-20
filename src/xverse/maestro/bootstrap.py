@@ -101,6 +101,8 @@ class BootstrapAdmission:
     generation: HostDeadline
     lease: HostDeadline
     images: tuple[HelperImage, HelperImage, HelperImage] = field(repr=False)
+    authority_image: HelperImage | None = field(default=None, repr=False)
+    boundary_parent: int | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -111,6 +113,10 @@ class BootstrapInput:
     @property
     def scope(self):
         return hashlib.sha256(self.private_bytes).digest()
+
+    @property
+    def version(self):
+        return 2 if self.admission.authority_image is not None else 1
 
 
 def encode_bootstrap(admission):
@@ -155,8 +161,31 @@ def encode_bootstrap(admission):
             admission.supervisor_artifact_digest,
         ]
     )
-    parts = [HEADER.pack(b"BC10", 1, generation, lease, context)]
-    for image in admission.images:
+    successor = admission.authority_image is not None
+    if successor:
+        if type(admission.boundary_parent) is not int or admission.boundary_parent < 3:
+            raise BootstrapError("ML-BOOT-PARENT")
+        info = os.fstat(admission.boundary_parent)
+        if not stat.S_ISDIR(info.st_mode):
+            raise BootstrapError("ML-BOOT-PARENT")
+        parent = struct.pack(
+            "!QQQ", admission.boundary_parent, info.st_dev, info.st_ino
+        )
+    elif admission.boundary_parent is not None:
+        raise BootstrapError("ML-BOOT-PARENT")
+    parts = [
+        HEADER.pack(
+            b"BC17" if successor else b"BC10",
+            2 if successor else 1,
+            generation,
+            lease,
+            context,
+        )
+    ]
+    if successor:
+        parts.append(parent)
+    images = admission.images + ((admission.authority_image,) if successor else ())
+    for image in images:
         if (
             type(image) is not HelperImage
             or type(image.descriptor) is not int
@@ -198,6 +227,7 @@ class BootstrapPacket:
     token: bytes = field(default=ZERO, repr=False)
     state: int = 0
     reason: int = 0
+    version: int = 1
 
     def __post_init__(self):
         if any(
@@ -213,29 +243,48 @@ class BootstrapPacket:
             )
         ):
             raise BootstrapError("ML-BOOT-WIRE-INTEGER")
+        watch = self.kind in (4, 20) and self.version == 2
         if (
-            self.kind not in (1, 2, 3, 16, 17, 18, 19)
+            type(self.version) is not int
+            or self.version not in (1, 2)
+            or self.kind
+            not in (
+                (1, 2, 3, 4, 5, 6, 16, 17, 18, 19, 20, 21, 22)
+                if self.version == 2
+                else (1, 2, 3, 16, 17, 18, 19)
+            )
             or not self.deadline
             or self.reason
-            or self.slot > 64
+            or self.slot > (128 if watch else 64)
         ):
             raise BootstrapError("ML-BOOT-WIRE-HEADER")
         if any(type(v) is not bytes or len(v) != 32 for v in (self.scope, self.token)):
             raise BootstrapError("ML-BOOT-WIRE-DIGEST")
         if (self.pid == 0) != (self.token == ZERO) or self.pid == 1:
             raise BootstrapError("ML-BOOT-WIRE-CHILD")
+        if watch and (
+            not self.slot
+            or self.pid
+            or self.token != ZERO
+            or self.state
+            or not self.sequence
+        ):
+            raise BootstrapError("ML-BOOT-WIRE-WATCH")
         if self.kind in (1, 2, 17, 18) and not self.slot:
             raise BootstrapError("ML-BOOT-WIRE-SLOT")
         if self.kind in (2, 17, 18) and not self.pid:
             raise BootstrapError("ML-BOOT-WIRE-CHILD")
-        if self.kind in (3, 16, 19) and (self.slot or self.pid):
+        if self.kind in (3, 5, 6, 16, 19, 21, 22) and (self.slot or self.pid):
             raise BootstrapError("ML-BOOT-WIRE-GLOBAL")
-        if self.kind in (1, 2, 3, 17, 18, 19) and not self.sequence:
+        if self.kind in (1, 2, 3, 5, 6, 17, 18, 19, 21, 22) and not self.sequence:
             raise BootstrapError("ML-BOOT-WIRE-SEQUENCE")
         if (
             self.kind == 1
-            and (self.pid or self.state not in (1, 2, 3))
-            or self.kind == 2
+            and (
+                self.pid
+                or self.state not in ((1, 2, 3, 4, 5) if self.version == 2 else (1, 2, 3))
+            )
+            or self.kind in (2, 5)
             and self.state
             or self.kind == 17
             and self.state
@@ -249,7 +298,7 @@ class BootstrapPacket:
     def encode(self):
         self.__post_init__()
         return WIRE.pack(
-            b"BS10",
+            b"BS17" if self.version == 2 else b"BS10",
             self.kind,
             self.sequence,
             self.deadline,
@@ -263,15 +312,20 @@ class BootstrapPacket:
         )
 
     @classmethod
-    def decode(cls, data):
+    def decode(cls, data, *, version=1):
         if type(data) is not bytes or len(data) != 128:
             raise BootstrapError("ML-BOOT-WIRE-SIZE")
         magic, kind, seq, until, scope, slot, pid, token, state, reason, reserved = (
             WIRE.unpack(data)
         )
-        if magic != b"BS10" or reserved:
+        if (
+            type(version) is not int
+            or version not in (1, 2)
+            or magic != (b"BS17" if version == 2 else b"BS10")
+            or reserved
+        ):
             raise BootstrapError("ML-BOOT-WIRE-MAGIC")
-        return cls(kind, seq, until, scope, slot, pid, token, state, reason)
+        return cls(kind, seq, until, scope, slot, pid, token, state, reason, version)
 
 
 class BootstrapChild(_Original):
@@ -403,6 +457,8 @@ class BootstrapSession(_Original):
             or admission.run_id != config.admission.run_id
             or admission.bootstrap_approval_ref != config.admission.approval_ref
             or admission.teardown_deadline != config.admission.generation
+            or config.version == 2
+            and config.admission.boundary_parent != boundaries._root_fd
         ):
             raise BootstrapError("ML-BOOT-ORIGINAL-C1")
         self._retain()
@@ -424,6 +480,9 @@ class BootstrapSession(_Original):
         self._children, self._pending, self._birth_deadlines = {}, {}, {}
         self._issued, self._clients = {}, {}
         self._issued_log, self._client_log = (), ()
+        self._authority_input = None
+        self._watches, self._watch_log = {}, ()
+        self._watch_registry = self._watches
         self._registries = (
             self._children,
             self._pending,
@@ -434,6 +493,8 @@ class BootstrapSession(_Original):
         self._lock = threading.Lock()
         self._closed, self._drained, self._drain_end = False, None, None
         self._root_result = None
+        self._terminal = self._terminal_attempted = False
+        self._start_window=self._start_window_pin=None
         self._pidfd_capability = None
         channel.setblocking(False)
         try:
@@ -442,7 +503,12 @@ class BootstrapSession(_Original):
             self._live()
             packet, fds = self._receive(self._until(deadline))
             if fds or packet != BootstrapPacket(
-                16, 0, self._lease, config.scope, state=self._lease
+                16,
+                0,
+                self._lease,
+                config.scope,
+                state=self._lease,
+                version=config.version,
             ):
                 for fd in fds:
                     os.close(fd)
@@ -499,14 +565,17 @@ class BootstrapSession(_Original):
         if (
             tuple(sorted(self._issued.items())) != self._issued_log
             or tuple(sorted(self._clients.items())) != self._client_log
+            or self._watches is not self._watch_registry
+            or tuple(self._watches.items()) != self._watch_log
         ):
             raise BootstrapError("ML-BOOT-INVENTORY-REPLACED")
 
-    def _live(self):
+    def _live(self, *, terminal=False):
         self._holder()
         if (
             self._closed
-            or self.latch.cancelled
+            or terminal != self._terminal
+            or self.latch.cancelled and not terminal
             or time.monotonic_ns() >= self._lease
             or select.select([self._pidfd_capability.fileno()], [], [], 0)[0]
             or os.waitid(
@@ -524,9 +593,9 @@ class BootstrapSession(_Original):
             raise BootstrapError("ML-BOOT-DEADLINE")
         return until
 
-    def _receive(self, until, *, cleanup=False):
+    def _receive(self, until, *, cleanup=False, terminal=False):
         while True:
-            self._holder() if cleanup else self._live()
+            self._holder() if cleanup else self._live(terminal=terminal)
             remaining = (until - time.monotonic_ns()) / 1e9
             if remaining <= 0:
                 raise BootstrapError("ML-BOOT-TIMEOUT")
@@ -564,7 +633,7 @@ class BootstrapSession(_Original):
                     or not data
                 ):
                     raise BootstrapError("ML-BOOT-SENDER")
-                packet = BootstrapPacket.decode(data)
+                packet = BootstrapPacket.decode(data, version=self.config.version)
                 if packet.scope != self.config.scope:
                     raise BootstrapError("ML-BOOT-SCOPE")
                 result = received[:]
@@ -574,8 +643,18 @@ class BootstrapSession(_Original):
                 for fd in received:
                     os.close(fd)
 
-    def _rpc(self, kind, deadline, *, slot=0, child=None, state=0, fds=()):
-        self._live()
+    def _rpc(self, kind, deadline, *, slot=0, child=None, state=0, fds=(), terminal=False):
+        if terminal and (self.config.version != 2 or kind not in (5, 6)
+                         or slot or child is not None or fds):
+            raise BootstrapError("ML-BOOT-TERMINAL-OPERATION")
+        # Entry5 is allowed only after the original latch closes; reply receipt
+        # still checks original liveness/lease. Ordinary RPCs remain prohibited.
+        if terminal and kind == 5:
+            self._holder()
+            if not self.latch.cancelled or self._terminal or self._closed:
+                raise BootstrapError("ML-BOOT-TERMINAL-STATE")
+        else:
+            self._live(terminal=terminal)
         until = self._until(deadline)
         packet = BootstrapPacket(
             kind,
@@ -586,6 +665,7 @@ class BootstrapSession(_Original):
             child.pid if child else 0,
             child._token if child else ZERO,
             state,
+            version=self.config.version,
         )
         if kind == 1:
             self._pending[slot] = packet
@@ -598,8 +678,13 @@ class BootstrapSession(_Original):
             if self.channel.sendmsg([packet.encode()], anc) != 128:
                 raise BootstrapError("ML-BOOT-SEND")
             self._sequence = packet.sequence
-            reply, received = self._receive(until)
-            expected = {1: 17, 2: 18, 3: 19}[kind]
+            if not terminal:
+                reply, received = self._receive(until)  # Retain default observation hook.
+            elif kind == 5:
+                reply, received = self._receive(until, cleanup=True)
+            else:
+                reply, received = self._receive(until, terminal=True)
+            expected = {1: 17, 2: 18, 3: 19, 4: 20, 5: 21, 6: 22}[kind]
             if (reply.kind, reply.sequence, reply.deadline, reply.slot) != (
                 expected,
                 packet.sequence,
@@ -629,15 +714,34 @@ class BootstrapSession(_Original):
             self.cancel("bootstrap-uncertain")
             raise
 
+    def bind_start_authorization(self,window):
+        from .runtime_service import _StartWindow
+        self._holder()
+        if self._start_window is not self._start_window_pin:
+            raise BootstrapError('ML-BOOT-AUTHORIZATION-REPLACED')
+        if type(window) is not _StartWindow or window.bootstrap is not self.config:
+            raise BootstrapError('ML-BOOT-AUTHORIZATION')
+        window._holder()
+        if self._start_window is not None and self._start_window is not window:
+            raise BootstrapError('ML-BOOT-AUTHORIZATION-REPEAT')
+        self._start_window=self._start_window_pin=window
+
+    def check_start_authorization(self):
+        self._holder()
+        if self._start_window is not self._start_window_pin:
+            raise BootstrapError('ML-BOOT-AUTHORIZATION-REPLACED')
+        if self._start_window is not None:self._start_window.check()
+
     def birth(self, role, helper, unit, peer, input_fd, deadline):
         """Trusted role adapters supply original registered boundaries/private FDs."""
         if not self._lock.acquire(False):
             raise BootstrapError("ML-BOOT-CONFLICT")
         try:
             self._live()
+            self.check_start_authorization()
             if (
                 type(role) is not int
-                or role not in (1, 2, 3)
+                or role not in ((3, 4, 5) if self.config.version == 2 else (1, 2, 3))
                 or type(helper) is not BoundaryDescriptor
                 or type(unit) is not BoundaryDescriptor
                 or type(peer) is not socket.socket
@@ -649,12 +753,15 @@ class BootstrapSession(_Original):
             unit_fd = self.boundaries._entry(unit).fd
             if (
                 helper == unit
-                and role != 3
+                and role not in (3, 4, 5)
                 or helper != unit
-                and role == 3
+                and role in (3, 4, 5)
                 or self._slot >= 64
+                or role == 4
+                and (not self._watches or any(v[0] == 4 for v in self._issued.values()))
             ):
                 raise BootstrapError("ML-BOOT-BIRTH-SCOPE")
+            self.check_start_authorization()
             self._slot += 1
             self._birth_deadlines[self._slot] = self._until(deadline)
             self._issued[self._slot] = (role, helper, unit)
@@ -675,6 +782,30 @@ class BootstrapSession(_Original):
                 os.close(fds[0])
                 self.cancel("bootstrap-birth-invalid")
                 raise
+        finally:
+            self._lock.release()
+
+    def watch(self, descriptor, deadline):
+        """Retain an exact original C1 leaf in the independent native watchdog."""
+        if not self._lock.acquire(False):
+            raise BootstrapError("ML-BOOT-CONFLICT")
+        try:
+            self._live()
+            if self.config.version != 2 or type(descriptor) is not BoundaryDescriptor:
+                raise BootstrapError("ML-BOOT-WATCH-INPUT")
+            entry = self.boundaries._entry(descriptor)
+            self.boundaries._authority(entry)
+            self.boundaries._verify(entry)
+            identity = BootstrapChild._fd_identity(entry.fd)
+            if identity in self._watches or len(self._watches) >= 128:
+                raise BootstrapError("ML-BOOT-WATCH-SCOPE")
+            slot = len(self._watches) + 1
+            reply, _ = self._rpc(4, deadline, slot=slot, fds=(entry.fd,))
+            if reply.pid or reply.token != ZERO or reply.state:
+                self.cancel("bootstrap-watch-uncertain")
+                raise BootstrapError("ML-BOOT-WATCH-ACK")
+            self._watches[identity] = descriptor
+            self._watch_log = tuple(self._watches.items())
         finally:
             self._lock.release()
 
@@ -711,6 +842,51 @@ class BootstrapSession(_Original):
                 self.cancel("bootstrap-lease-mismatch")
                 raise BootstrapError("ML-BOOT-LEASE-ACK")
             self._lease = next_lease
+        finally:
+            self._lock.release()
+
+    def _service_terminal(self, deadline, *, authority):
+        """Irreversible original BS17 cleanup service; no ordinary authority renewal."""
+        from .affa_client import AuthorityConnection
+        from .affa_protocol import AuthorityKind
+        self._holder()
+        if (self.config.version != 2 or not self.latch.cancelled
+            or type(authority) is not AuthorityConnection):
+            raise BootstrapError("ML-BOOT-TERMINAL-STATE")
+        authority._holder()
+        child = authority.child
+        if (child._root is not self or self._clients.get(child._slot) is not authority
+            or not (any(r.kind is AuthorityKind.CANCELLED for r in authority._epoch_history)
+                    or child._result is not None and select.select(
+                        [child._capability.fileno()], [], [], 0)[0])):
+            raise BootstrapError("ML-BOOT-TERMINAL-FENCE")
+        until = self._until(deadline)
+        if not self._lock.acquire(False):
+            raise BootstrapError("ML-BOOT-CONFLICT")
+        try:
+            if not self._terminal:
+                if self._terminal_attempted:
+                    raise BootstrapError("ML-BOOT-TERMINAL-UNCERTAIN")
+                self._terminal_attempted = True
+                reply, _ = self._rpc(5, deadline, terminal=True)
+                if reply.state != self._lease:
+                    self.cancel("terminal-fence-ack-mismatch")
+                    raise BootstrapError("ML-BOOT-TERMINAL-ACK")
+                self._terminal = True
+            self._live(terminal=True)
+            # Each renewal is short; fixed generation and caller ends never move.
+            target = min(time.monotonic_ns() + 4_900_000_000,
+                         self._generation - 2_000_000_000)
+            if target > self._lease:
+                reply, _ = self._rpc(6, deadline, state=target, terminal=True)
+                if reply.state != target:
+                    self.cancel("terminal-lease-ack-mismatch")
+                    raise BootstrapError("ML-BOOT-LEASE-ACK")
+                self._lease = target
+            if time.monotonic_ns() >= until:
+                self.cancel("terminal-service-late")
+                raise BootstrapError("ML-BOOT-LATE-ACK")
+            return self._lease
         finally:
             self._lock.release()
 
@@ -856,12 +1032,81 @@ class BootstrapSession(_Original):
             peer.close()
             os.close(private_fd)
 
+    @property
+    def authority_scope(self):
+        self._holder()
+        return _hash(
+            ["AF17", self.config.scope.hex(), self.boundaries._admission.affa_session]
+        )
+
+    @property
+    def authority_supervisor(self):
+        self._holder()
+        return _hash(
+            [
+                self.config.scope.hex(),
+                self.boundaries._admission.supervisor_session,
+                self.session,
+            ]
+        )
+
+    def authority(self, config, helper, deadline):
+        """Original private transport only; actual M3/Argus broker still required."""
+        from .affa_protocol import AuthorityConfig
+        from .affa_client import AuthorityConnection
+
+        self._live()
+        if (
+            self.config.version != 2
+            or type(config) is not AuthorityConfig
+            or self._authority_input is not None
+            or config.generation_ns != self._generation
+            or config.lease_ns > self._lease
+            or config.epoch != self.boundaries.release_epoch
+            or config.scope != self.authority_scope
+            or config.supervisor_session != self.authority_supervisor
+        ):
+            raise BootstrapError("ML-AFFA-BOOTSTRAP-CONFIG")
+        if (
+            sum(u.max_generation - u.generation + 1 for u in config.units) + 2
+            > self.boundaries._limits.max_boundaries
+        ):
+            raise BootstrapError("ML-AFFA-C1-CAPACITY")
+        for unit in config.units:
+            descriptor = self._watches.get((unit.boundary_device, unit.boundary_inode))
+            if descriptor is None:
+                raise BootstrapError("ML-AFFA-UNWATCHED")
+            entry = self.boundaries._entry(descriptor)
+            self.boundaries._authority(entry)
+            self.boundaries._verify(entry)
+        self._authority_input = config
+        child, channel = self._spawn_role(
+            4,
+            helper,
+            helper,
+            _sealed(config.encode(), "maestro-original-authority"),
+            deadline,
+        )
+        try:
+            client = AuthorityConnection(_CREATE, child, channel, config)
+            self._clients[child._slot] = client
+            self._client_log = tuple(sorted(self._clients.items()))
+            client._ready(deadline)
+            self.boundaries.bind_authority(client)
+            return client
+        except Exception:
+            channel.close()
+            self.cancel("bootstrap-authority-client-failed")
+            raise
+
     def persistence(self, config, helper, deadline):
         from .persistence import PersistenceClient, PersistenceInput, sealed_input_fd
 
         if (
             type(config) is not PersistenceInput
             or config.run_id != self.config.admission.run_id
+            or type(config.private_bytes) is not bytes
+            or not 0 < len(config.private_bytes) <= 65536
         ):
             raise BootstrapError("ML-BOOT-PERSISTENCE")
         self._context(config.prepared.lifecycle_digest)

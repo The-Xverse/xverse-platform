@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 import array
 import hashlib
+import json
 import os
 import select
 import socket
@@ -397,13 +398,17 @@ class _Claim:
     event_id: str
     deadline_ns: int
     attempted: bool = False
+    public_event_bytes: bytes = field(default=b"", repr=False)
 
 
-def _persist_intent(permits, writer, session, unit_id, deadline, check, operation=None):
+def _persist_intent(
+    permits, writer, session, unit_id, deadline, check, operation=None, *, receipt=None
+):
     """Actual original-owner storage sequence, shared by local and isolated paths."""
     until = check(deadline)
     domains = ("host:" + session, "utc:" + session)
-    receipt = permits.claim_start_intent(unit_id, now=datetime.now(timezone.utc))
+    if receipt is None:
+        receipt = permits.claim_start_intent(unit_id, now=datetime.now(timezone.utc))
     check(deadline)
     operation = operation or "ml-" + uuid.uuid4().hex
     public = permits.public_start_intent(receipt, now=datetime.now(timezone.utc))
@@ -416,7 +421,7 @@ def _persist_intent(permits, writer, session, unit_id, deadline, check, operatio
         "sessionId": session,
         "scope": "unit",
         "unitId": unit_id,
-        "generation": 1,
+        "generation": permits._issued[id(receipt)][1].details["generation"],
         "operationId": operation,
         "action": "intent",
         "outcome": "pending",
@@ -431,12 +436,13 @@ def _persist_intent(permits, writer, session, unit_id, deadline, check, operatio
         "dependencies": [],
     }
     event_id = operation + "-intent"
-    ordinal = writer.append_event(
-        event_id=event_id,
-        producer_id="maestro.owner7",
-        event_kind="annotation",
-        producer_sequence=receipt.m3_sequence,
-        correlation_id=permits._run_id,
+    fields = dict(
+        eventId=event_id,
+        producerId="maestro.owner7",
+        eventKind="annotation",
+        producerSequence=receipt.m3_sequence,
+        correlationId=permits._run_id,
+        causationId=None,
         clocks={
             "host": {
                 "domain": domains[0],
@@ -452,6 +458,13 @@ def _persist_intent(permits, writer, session, unit_id, deadline, check, operatio
         annotation={"text": "Maestro durable start intent"},
         extensions={"xverse.maestro": payload},
     )
+    supplied = canonical_bytes(fields)
+    ordinal = writer.append_event(
+        event_id=fields["eventId"], producer_id=fields["producerId"],
+        event_kind=fields["eventKind"], producer_sequence=fields["producerSequence"],
+        correlation_id=fields["correlationId"], causation_id=None,
+        clocks=fields["clocks"], annotation=fields["annotation"], extensions=fields["extensions"],
+    )
     check(deadline)
     writer.flush_buffer()
     check(deadline)
@@ -464,6 +477,7 @@ def _persist_intent(permits, writer, session, unit_id, deadline, check, operatio
         _hash([event_id, ordinal, payload]),
         event_id,
         until,
+        public_event_bytes=canonical_bytes(dict(json.loads(supplied), ingestionOrdinal=ordinal)),
     )
 
 
@@ -558,6 +572,7 @@ class ReleaseOwner(_Original):
         return owner
 
     def _init_views(self):
+        self._run_broker = self._run_broker_pin = None
         self._views = {}
         self._views_pin = self._views
         self._view_log = ()
@@ -597,8 +612,11 @@ class ReleaseOwner(_Original):
 
     def _start_access(self):
         self._view_registry()
-        if self._starts_retired or self._view_epoch:
+        if self._starts_retired or self._view_epoch and self._run_broker_pin is None:
             raise OwnerError("ML-RECOVERY-NO-START")
+        broker = self._run_broker_pin
+        if broker is not None and broker._current_controller is not None:
+            broker._current_controller._start_access()
 
     def _stage_claim(self, unit_id, deadline):
         self._start_access()
@@ -616,11 +634,14 @@ class ReleaseOwner(_Original):
 
     def _register_launcher(self, launcher):
         from .launcher import CatalogLauncher
+        from .run_broker import RunUnitIssuer
 
         if (
-            type(launcher) is not CatalogLauncher
+            type(launcher) not in (CatalogLauncher, RunUnitIssuer)
             or launcher.owner is not self
             or launcher.unit_id in self._launchers
+            or type(launcher) is RunUnitIssuer
+            and launcher.broker is not self._run_broker_pin
         ):
             raise OwnerError("ML-OWNER-LAUNCHER")
         self._holder()
@@ -664,6 +685,7 @@ class ReleaseOwner(_Original):
         if (
             self.persistence is not self._persistence_pin
             or (self._prepared, self._run_id) != self._context_pin
+            or self._run_broker is not self._run_broker_pin
         ):
             raise OwnerError("ML-OWNER-REPLACED")
         self.supervisor._holder()
@@ -739,6 +761,8 @@ class ReleaseOwner(_Original):
     def cancel(self, reason="owner-cancel"):
         self._holder()
         self._pins[3].cancel(reason)
+        if self._run_broker_pin is not None:
+            self._run_broker_pin.cancel(reason)
         for gate in tuple(self._gates):
             gate.cancel(reason)
         for launcher in tuple(self._launchers.values()):
@@ -791,7 +815,16 @@ class ReleaseOwner(_Original):
 
             if type(readiness_guard) is not DependencyGuard:
                 raise OwnerError("ML-OWNER-READINESS-GUARD")
-            readiness_guard.check(self, unit_id, deadline)
+            if self._run_broker_pin is not None:
+                # The original broker takes its live sample after ARM, directly
+                # before RELEASE. Delegation needs identity validation only.
+                readiness_guard._validate(self, unit_id, deadline)
+            else:
+                readiness_guard.check(self, unit_id, deadline)
+        if self._run_broker_pin is not None:
+            return self._run_broker_pin.release(
+                unit_id, descriptor, gate, deadline, readiness_guard=readiness_guard
+            )
         if (
             type(gate) is not GateConnection
             or gate.latch is not self.latch

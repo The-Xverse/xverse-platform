@@ -1,0 +1,79 @@
+.FF.....F...................F.                                           [100%]
+=================================== FAILURES ===================================
+_ test_actual_closed_writer_independent_coverage_separates_execution_outcome[False] _
+
+tmp_path = PosixPath('/tmp/maestro-affa17-coverage-v1-source-private-mvckqyqs/test_actual_closed_writer_inde0')
+failed = False
+
+    @pytest.mark.parametrize('failed',[False,True])
+    def test_actual_closed_writer_independent_coverage_separates_execution_outcome(tmp_path,failed):
+        f=Fixture(tmp_path,failed=failed);f.close()
+        before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in f.root.iterdir() if p.is_file()}
+        result=verify_closed(f.admission,f.root,expected_admission_digest=f.admission.digest);report=result.coverage.report()
+        VALIDATOR.validate(report)
+>       assert report['overallStatus']=='complete' and report['normalRecordStatus']=='complete'
+E       AssertionError: assert ('unverifiable' == 'complete'
+E         
+E         - complete
+E         + unverifiable)
+
+tests/thesis_lite/maestro/test_coverage.py:167: AssertionError
+_ test_actual_closed_writer_independent_coverage_separates_execution_outcome[True] _
+
+tmp_path = PosixPath('/tmp/maestro-affa17-coverage-v1-source-private-mvckqyqs/test_actual_closed_writer_inde1')
+failed = True
+
+    @pytest.mark.parametrize('failed',[False,True])
+    def test_actual_closed_writer_independent_coverage_separates_execution_outcome(tmp_path,failed):
+        f=Fixture(tmp_path,failed=failed);f.close()
+        before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in f.root.iterdir() if p.is_file()}
+        result=verify_closed(f.admission,f.root,expected_admission_digest=f.admission.digest);report=result.coverage.report()
+        VALIDATOR.validate(report)
+>       assert report['overallStatus']=='complete' and report['normalRecordStatus']=='complete'
+E       AssertionError: assert ('unverifiable' == 'complete'
+E         
+E         - complete
+E         + unverifiable)
+
+tests/thesis_lite/maestro/test_coverage.py:167: AssertionError
+__ test_missing_normal_outcome_remains_missing_with_complete_emergency_facts ___
+
+tmp_path = PosixPath('/tmp/maestro-affa17-coverage-v1-source-private-mvckqyqs/test_missing_normal_outcome_re0')
+
+    def test_missing_normal_outcome_remains_missing_with_complete_emergency_facts(tmp_path):
+        f=Fixture(tmp_path);args=f.arguments()
+        args['annotations']=[e for e in args['annotations'] if not (e['extensions']['xverse.maestro']['action']=='started' and e['extensions']['xverse.maestro']['unitId']==f.a)]
+        for e in args['annotations']:
+            p=e['extensions']['xverse.maestro']
+            if p['scope']=='unit' and p['unitId']==f.a and p['action']=='disposition':p['cause']='journal-failure'
+        result=assess_preclosure(f.admission,**args).report()
+        assert row(result,'outcome',f.a,1)['status']=='missing'
+>       assert result['normalRecordStatus']=='incomplete' and result['emergencyFactStatus']=='complete'
+E       AssertionError: assert ('incomplete' == 'incomplete'
+E         
+E           incomplete and 'unverifiable' == 'complete'
+E         
+E         - complete
+E         + unverifiable)
+
+tests/thesis_lite/maestro/test_coverage.py:198: AssertionError
+____ test_optional_missing_output_does_not_create_false_offline_corruption _____
+
+tmp_path = PosixPath('/tmp/maestro-affa17-coverage-v1-source-private-mvckqyqs/test_optional_missing_output_d0')
+
+    def test_optional_missing_output_does_not_create_false_offline_corruption(tmp_path):
+        f=Fixture(tmp_path,optional_output=True);f.close()
+        result=verify_closed(f.admission,f.root,expected_admission_digest=f.admission.digest)
+>       assert result.coverage.report()['overallStatus']=='complete'
+E       AssertionError: assert 'unverifiable' == 'complete'
+E         
+E         - complete
+E         + unverifiable
+
+tests/thesis_lite/maestro/test_coverage.py:294: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_coverage.py::test_actual_closed_writer_independent_coverage_separates_execution_outcome[False]
+FAILED tests/thesis_lite/maestro/test_coverage.py::test_actual_closed_writer_independent_coverage_separates_execution_outcome[True]
+FAILED tests/thesis_lite/maestro/test_coverage.py::test_missing_normal_outcome_remains_missing_with_complete_emergency_facts
+FAILED tests/thesis_lite/maestro/test_coverage.py::test_optional_missing_output_does_not_create_false_offline_corruption
+4 failed, 26 passed in 16.89s

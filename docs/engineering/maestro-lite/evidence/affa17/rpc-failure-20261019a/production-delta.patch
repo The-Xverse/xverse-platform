@@ -1,0 +1,151 @@
+--- service-c/src/xverse/maestro/persistence.py
++++ rpc-failure-a/src/xverse/maestro/persistence.py
+@@ -15,6 +15,7 @@
+ import math
+ import os
+ from pathlib import Path
++import re
+ from types import SimpleNamespace
+ import select
+ import signal
+@@ -41,6 +42,20 @@
+ 
+ class PersistenceError(OwnerError):
+     pass
++
++
++@dataclass(frozen=True)
++class PersistenceRPCFailure:
++    """One local observation; never a durable outcome, ACK or cause attribution."""
++    kind: str
++    stage: str
++    session: str
++    sequence: int | None
++    operation: str | None
++    started_ns: int
++    deadline_ns: int | None
++    failed_ns: int
++    diagnostic: str
+ 
+ 
+ def _plain(value):
+@@ -517,6 +532,7 @@
+         self._terminal_lock = self._terminal_lock_pin = threading.Lock()
+         self._terminal_attempted = False
+         self._terminal_outcome = self._terminal_outcome_pin = None
++        self._rpc_failure = None
+         self._export_receipts = self._export_receipts_pin = {}
+         self._request_limit = self.schedule.request_limit if self.schedule else 128
+         self._schedule_pin = self.schedule, self._request_limit
+@@ -612,6 +628,12 @@
+         return self._coverage_pin[1]
+ 
+     @property
++    def rpc_failure(self):
++        # Failure/cleanup observations must not depend on ordinary live aliases.
++        _Original._holder(self)
++        return self._rpc_failure
++
++    @property
+     def _peer(self):
+         return self._pid_pin, os.getuid(), os.getgid()
+ 
+@@ -724,6 +746,8 @@
+     def _rpc(self, kind, body, deadline, *, public_blob_fd=None):
+         if not self._lock.acquire(blocking=False):
+             raise PersistenceError("ML-PERSIST-CONFLICT")
++        started_ns = time.monotonic_ns()
++        stage, sequence, operation, until = 'validation', None, None, None
+         allow_cancel = kind in ("abort", "closure", "public-export", "public-blob", "collect", "terminal-report") or (
+             kind == 'teardown' and self.collection is not None
+         ) or (
+@@ -750,11 +774,14 @@
+                 raise PersistenceError("ML-PERSIST-SEQUENCE")
+             operation = "ml-" + uuid.uuid4().hex
+             request = _frame(kind, sequence, operation, until, self._scope, body)
++            stage = 'send'
+             if public_blob_fd is None:_send(self._pins[1], request)
+             elif kind=='public-blob' and self._broker_artifact is not None:
+                 _send_public_blob(self._pins[1],request,public_blob_fd)
+             else:raise PersistenceError('ML-EVIDENCE-BLOB-RIGHTS')
++            stage = 'receive'
+             reply = _receive(self._pins[1], self._peer, until, check)
++            stage = 'acknowledgement'
+             self._sequence = sequence
+             if (
+                 any(
+@@ -764,11 +791,24 @@
+                 or reply["kind"] != "ok"
+             ):
+                 raise PersistenceError("ML-PERSIST-ACK")
++            stage = 'post-ack'
+             check()
+             if time.monotonic_ns() >= until:
+                 raise PersistenceError("ML-PERSIST-LATE")
+             return operation, until, reply["body"]
+-        except Exception:
++        except Exception as error:
++            if self._rpc_failure is None:
++                code = str(error)
++                safe = code if len(code) <= 128 and re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-PERSIST-RPC-FAILED'
++                kinds = ('init','commit','generation','issued','public-export','public-blob',
++                         'collect','terminal-report','revalidate','audit','probe','teardown',
++                         'tick','schedule','abort','closure','recovery')
++                self._rpc_failure = PersistenceRPCFailure(
++                    kind if type(kind) is str and kind in kinds else 'unknown', stage,
++                    self._pins[5], sequence, operation, started_ns, until,
++                    time.monotonic_ns(), safe)
++            if isinstance(error, PersistenceError):
++                error.rpc_failure = self._rpc_failure
+             self._fail()
+             raise
+         finally:
+--- service-c/src/xverse/maestro/runtime_entry.py
++++ rpc-failure-a/src/xverse/maestro/runtime_entry.py
+@@ -12,7 +12,7 @@
+ from .bootstrap_launcher import OriginalBootstrapLauncher
+ from .dispatcher import FiniteDispatcher
+ from .owner import _Original, _deadline, OwnerError
+-from .persistence import PersistenceInput
++from .persistence import PersistenceInput, PersistenceRPCFailure
+ from .prbc import BoundaryDescriptor
+ from .providers import ProcessReadiness
+ from .run_broker import RunBroker, UnitAdmission
+@@ -35,6 +35,7 @@
+     closure: object
+     startup: object
+     diagnostics: tuple[str,...]
++    persistence_failure: PersistenceRPCFailure | None = None
+     lifecycle_complete: bool = field(default=False,init=False)
+     ready_for_execution: bool = field(default=False,init=False)
+ 
+@@ -128,7 +129,7 @@
+             self._validate_scope(scope)
+             if self._launcher.boundaries._latch.cancelled:raise OwnerError('ML-RUNTIME-ENTRY-CANCELLED')
+             self._scope=scope
+-            dispatch=closure=None;diagnostics=[];fatal=None
++            dispatch=closure=None;diagnostics=[];fatal=None;persistence_failure=None
+             try:
+                 self._session=self._launcher.launch(self._startup_end())
+                 self._runtime_pins=(self._session,None,None,None)
+@@ -154,6 +155,8 @@
+                 dispatch=self._driver.run(scope.active,scope.terminal)
+             except BaseException as error:
+                 code=str(error);diagnostics.append(code if re.fullmatch(r'ML-[A-Z0-9-]+',code) else 'ML-RUNTIME-ENTRY-FAILED')
++                failure=getattr(error,'rpc_failure',None)
++                if type(failure) is PersistenceRPCFailure:persistence_failure=failure
+                 if not isinstance(error,Exception):fatal=error
+             finally:
+                 try:
+@@ -166,7 +169,10 @@
+                         end=min(scope.closure.monotonic_seconds,time.monotonic()+1.8)
+                         launcher.drain(HostDeadline(self._pins[0].session,end))
+                 except (ValueError,OSError):diagnostics.append('ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED')
+-            self._result=RuntimeResult(self._pins[0].run_id,dispatch,closure,self._pins[1].outcome,tuple(diagnostics))
++            original_storage=self._runtime_pins[1]
++            if original_storage is not None:
++                persistence_failure=original_storage.rpc_failure
++            self._result=RuntimeResult(self._pins[0].run_id,dispatch,closure,self._pins[1].outcome,tuple(diagnostics),persistence_failure)
+             if fatal is not None:raise fatal
+             return self._result
+         finally:self._lock.release()

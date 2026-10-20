@@ -1,0 +1,69 @@
+F......                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_two_actual_advances_extend_only_original_creation_epochs _________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7bb80c5441a0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7bb80c52d0f0>
+
+    def test_two_actual_advances_extend_only_original_creation_epochs(
+        run_stack, monkeypatch
+    ):
+        client = connect(run_stack, monkeypatch, maximum_generation=3)
+        session, manager, h, _, _, _, work = run_stack
+        admission = manager._admission
+        for i in range(2):
+            h.stage(i)
+            h.arm(i)
+            h.release(i)
+            wait_marker(work / f"u{i}.marker")
+        initial = h.frame(K.QUERY, 0)
+        retained = []
+        for generation in (2, 3):
+            h.stop_retire(0)
+            old_descriptor = h.units[0]["descriptor"]
+            terminal = manager.force_cleanup(old_descriptor)
+            assert terminal.boundary_released
+            next_scope = BoundaryDescriptor(
+                "run", "u0", generation, f"next-{generation}", generation - 2
+            )
+            manager.create_frozen(next_scope)
+            session.watch(next_scope, deadline(2))
+            unit = h.units[0]
+            unit.update(
+                generation=generation,
+                operation=bytes([generation + 10]) * 16,
+                intent=digest(b"intent" + bytes([generation])),
+                mirror=digest(b"mirror" + bytes([generation])),
+                boundary=digest(b"boundary" + bytes([generation])),
+            )
+            unit.pop("handle")
+            unit.pop("ticket")
+            fd = manager._entry(next_scope).fd
+            reply = h.rpc(h.frame(K.ADVANCE, 0), (fd,))
+            assert reply.kind is K.ADVANCED and reply.epoch == generation - 1
+            assert (
+                manager.release_epoch == generation - 1 and manager._admission is admission
+            )
+            receipt = client._advance_receipts[-1]
+            assert manager.admit_epoch(receipt) == generation - 1
+            retained.append(receipt)
+            assert manager.force_cleanup(old_descriptor) == terminal
+            unit["descriptor"], unit["cg"] = next_scope, fd
+            h.stage(0)
+            h.arm(0)
+            h.release(0)
+            wait_marker(work / "u0.marker", generation)
+            assert h.rpc(h.frame(K.QUERY, 1)).state & 4
+        assert manager.admit_epoch(retained[0]) == 1 and manager.release_epoch == 2
+        assert h.rpc(initial).state & 256
+        assert (work / "u1.marker").read_bytes() == b"EXEC\n"
+        stale = BoundaryDescriptor("run", "extra", 1, "stale", 0)
+        before = len(manager._entries)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_affa_epoch.py:73: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_two_actual_advances_extend_only_original_creation_epochs
+1 failed, 6 passed in 1.73s

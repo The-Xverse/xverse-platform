@@ -1,8 +1,329 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7; not accepted; no runtime admission**.
+Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not accepted; no runtime admission**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Clean full run i and author sign-off (2026-10-20)
+
+Run i (2096 collected, TMPDIR on tmpfs) ends **2096 passed, 0 failed** with frozen inputs
+unchanged: the first clean full platform run of this increment, including the nested Argus case
+whose child Maestro suite passed completely (finding 378). The residual child failure of run h
+was a nanosecond-rounding test defect, repaired in test_schedule_worker.py (finding 374, ML-CAPA-374
+FIX_CANDIDATE); the transitive terminal margin cannot be widened by any fixture (finding 375), and
+the author authorized the product change at the run-terminal statement (finding 377), which
+follows as run j. The author signed off the four dispositions, a separate review agent as
+independent, the increment17 checkpoint commit after a clean run, the canonical-note Note 23 and
+the thesis push (finding 373). The [endpoint reconciliation](endpoint-reconciliation-gap.md) v1
+mapping was independently reviewed (32 agree, 20 with note, 1 alternative, 9 disagree; finding
+376), v2 adopts the corrections and the author accepted it; the 90 obligations are re-bound in
+`evidence/affa17/endpoint-rebound-traceability-20261020.json` (finding 377) without acceptance of
+the implementation. The [crash-point matrix](crash-point-matrix.md) before-Release-send item is
+closed (crash-matrix-20261020b, 17/17 per phase, finding 372). CAPA successor
+[capa-20261020-run-i](evidence/affa17/capa-20261020-run-i/register.json) validates 46 records/332
+bindings preserving the author-decisions parent. Follow the
+[current continuation](evidence/affa17/continuation-author-decisions-20261020.md). No acceptance,
+M1 claim or merge; the checkpoint commit captures exactly the run-i snapshot.
+
+## Author decisions proposed and acted on (2026-10-20, provisional)
+
+Under the author's instruction to propose dispositions and proceed, finding 369 records four
+agent proposals, none an explicit author approval: (a) the source-parent projection v2 is accepted
+provisionally into the thesis successor register ML-SOURCE-PARENT-2026-10-20-v3 (18 identities,
+76 proposed links, semantics `proposed_public_safe_summary_provisional`; immutable inputs
+unchanged); (b) an [endpoint reconciliation proposal](endpoint-reconciliation-gap.md) maps all
+62 declared endpoints onto the current composition (7 present, 16 mapped, 38 candidates, 1
+superseded; all targets resolve) with 0 of 90 obligations closed pending independent review;
+(c) the transitive cadence redesign is deferred behind an explicit recurrence trigger; (d) tmpfs
+stays the declared harness filesystem with one persistent-media reference run per increment.
+CAPA successor [capa-20261020-author-decisions](evidence/affa17/capa-20261020-author-decisions/register.json)
+validates 45 records/307 bindings preserving the run-h parent. Findings 369–371. Follow the
+[current continuation](evidence/affa17/continuation-author-decisions-20261020.md). No product
+change, no commit, no acceptance, no M1 claim, no canonical-note edit.
+
+## Harness repairs verified and runtime lane integrated (2026-10-20, unfinished)
+
+Five full platform runs (a–e) isolate and repair the broader-regression failures:
+build tooling (357), nested-child receipt collisions (359-CHILD) and the CAPA-222
+window squeeze (362/364) are fix candidates with local evidence; collector pauses
+are refuted; fsync stalls on the shared ext4 root are supported, not proven, and
+mitigated in the harness by a tmpfs basetemp (364, declared fidelity change). Runs e
+and f end1 failed/2079 and1 failed/2087 passed with no outer Maestro expiry (the
+nested child's residual expiries trace to the transitive fixture's0.3s budget, which
+the5s probe cadence forces: the attempted0.5s repair was rejected at schedule
+admission in run g and reverted; run h at the reverted baseline ends1 failed/2093 passed with zero outer expiries,2094 collected, and is the current baseline). CAPA successor
+[capa-20261020-harness-repairs](evidence/affa17/capa-20261020-harness-repairs/register.json)
+validates44 records/275 bindings preserving all245 parent bindings; ten causes remain
+unknown. The [runtime lane](runtime-lane.md) implements seven of the nine
+RUNTIME_CASES identifiers with real children and receipts (two remain in the composed
+authority module); bounded evidence runtime-lane-20261020a passes17/17 in source and
+installed-wheel phases. The [crash-point matrix](crash-point-matrix.md) closes its two gaps with
+test_composed_post_release_loss.py (crash-matrix-20261020a:15/15 per phase); the
+[endpoint reconciliation gap](endpoint-reconciliation-gap.md) records that7 of62
+declared endpoints resolve (author-gated successor). Findings361–368. Follow the
+[current continuation](evidence/affa17/continuation-harness-repairs-20261020.md).
+No product change, no commit, no acceptance, no M1 claim; IR-ML3-04 prerequisites open.
+
+## Broader platform regression triaged (2026-10-20, unfinished)
+
+The original2080-case platform run (exec33408) is terminal:17 failed/2063 passed.
+Thirteen Argus packaging cases failed only because the verification environment
+lacked `build`/`hatchling` (finding357); successor run b in a separate,
+preflight-bound build-capable environment on the identical1903-file snapshot
+passes all13 and ends3 failed/2077 passed. The accepted nested platform case
+fails in both runs with the same14 child setup errors (receipt-namespace
+hypothesis, not confirmed), and five different Maestro first-RPC deadline
+expiries occurred across the two runs without recurrence (UNKNOWN). Neither run
+is a whole-platform pass. CAPA successor
+[capa-20261019-platform-regression](evidence/affa17/capa-20261019-platform-regression/register.json)
+validates43 records/245 bindings and preserves all216 parent bindings; all
+effectiveness NOT_DEMONSTRATED. Findings358–360 record the review before and
+after the successor. Follow the
+[current continuation](evidence/affa17/continuation-platform-regression-20261019b.md).
+No product/test change, no commit, no acceptance, no M1 claim.
+
+## Active increment17 continuation (2026-10-19, unfinished)
+
+Current [complete Maestro regression passed](integrated-regression-terminal-20261019b.md):
+source1501/1501 and installed wheel1501/1501. Both audits pass, retaining1718
+recorded owned roots absent,14189 M3 links and496 explicit reader/reference gaps.
+The broader platform Python regression now has2080 collected tests and is live
+under original exec33408/PID1669996; failures are already visible, with details
+pending terminal output. This is not a whole-platform passing result.
+Follow the [latest continuation](evidence/affa17/continuation-integrated-terminal-20261019b.md).
+
+Current [local disposal repair](runtime-disposal.md) preserves original late-wait
+facts and prevents repeated image closes from retargeting reused descriptors.
+Four new controls and157 affected checks pass per source/wheel phase. The separate
+audit retains298 absent roots,1264 M3 links and28 explicit projection gaps. Its
+historical CAPA39/210 preserves198 parent bindings. Latest reviewer-shape CAPA40/
+216 preserves210 parent bindings; effectiveness remains NOT_DEMONSTRATED.
+Follow the [current continuation](evidence/affa17/continuation-runtime-disposal-20261019.md).
+The complete current Maestro regression now passes; whole-platform,M1,stable17
+and acceptance remain open.
+
+Source-parent review now has a concrete external proposal: the original REF-002
+DOCX was found locally and matches its registered hash. The corrected
+[18-row projection](/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/review/source-parent-semantics-proposal-20261019-v2/README.md)
+records76 candidate links to23 software IDs,explicit wider-parent residuals and
+an unmapped ML-SR-021 retaining its FR-011 basis. Author approval of information
+classification and semantics is pending. Canonical allocation/design inputs and
+runtime readiness remain unchanged. See the
+[source-review continuation](evidence/affa17/continuation-source-parent-proposal-20261019.md).
+
+Preceding [whole-entry issuer-loss repair](runtime-issuer-loss.md) restores primary
+cleanup using the original cleanup context; two new cases pass per source/wheel
+phase without fallback. Selected affected source85 pass,wheel84 pass/one failure/
+one teardown error; timeout337 and disposal338 remain open. Corrected CAPA37/198
+also passes170-parent-binding preservation; rejected intermediate remains evidence.
+Follow the [current continuation](evidence/affa17/continuation-runtime-issuer-loss-20261019.md).
+Earlier counts below are exact historical snapshots,not current full-regression passes.
+
+Historical pre-disposal [combined regression is terminal](integrated-regression-terminal-20261019.md):
+source1493 passed/two failed; installed wheel1492 passed/three failed. The five
+timeout causes remain UNKNOWN. Both audits confirm1706 recorded owned reservations
+absent and13508 M3 reference links; they do not make the regression pass. Latest
+CAPA32 records/170 bindings, all effectiveness NOT_DEMONSTRATED. No stable17,M1
+or acceptance claim. Follow the [terminal continuation](evidence/affa17/continuation-integrated-terminal-20261019.md).
+
+Latest verification: [late return/unknown startup birth](startup-late-birth.md)
+adds4 low-level and2 whole-entry source/wheel controls on unchanged81 production
+files. External actual reap never upgrades unknown product cleanup. Prior69 plus
+new6 describe selected75 per phase; full matrices and four stability gates remain open.
+
+Latest startup repair: [original startup resource ownership](startup-ownership.md)
+rejects substituted aliases while cancellation/waits use original retained resources.
+Fresh source/wheel69 checks pass each; guarded red failures and first harness
+acknowledgement gaps remain retained. CAPA25 records/133 bindings validate;
+135/222/286/287 remain unresolved. Older counts below describe historical snapshots.
+
+Latest repair: [optional RPC diagnostic loss](rpc-context-loss.md) preserves actual
+terminal results and fail-closed cancellation when diagnostic metadata is unavailable.
+Fresh source/wheel61 checks each pass; original3-fail-per-phase evidence is retained.
+CAPA now validates23 records/117 bindings;135/222/286/287 remain unresolved. Older
+57/73-check statements below describe their respective frozen historical sources.
+
+Latest diagnostic delta: [first RPC failure context](rpc-failure-context.md) retains
+generated request/stage/original deadline in the private RuntimeResult after cleanup.
+Fresh source/wheel57 checks each pass; exact trace and audit are linked there.
+This does not explain or resolve135/222/286/287. Service73 below describes its prior
+frozen component snapshot, before this additive diagnostic change.
+
+Latest partial layer: [candidate runtime service](runtime-service.md),
+[trace](evidence/affa17/runtime-service-partial-traceability.json) and
+[continuation](evidence/affa17/continuation-runtime-service-20261019.md).
+Fixed externally approved pins/default-deny and actual expiry/cleanup guards have
+selected73 source/wheel checks per phase. Positive service vectors remain inert;
+actual admitted service/M1 executions0. CAPA validates22 records/104 bindings;
+135/222/286/287 remain unresolved. Older snapshots below describe their historical
+revisions. Full17 remains unfinished and uncommitted.
+
+Current: [explicit active restart handoff](evidence/affa17/continuation-active-restart-20261019.md).
+Actual source46/46 and wheel46/46 plus legacy readiness35/35 in each phase are
+audited against original inputs. A separately sealed version3 restart budget
+supports leaf generation2 in the original blocking lifecycle. Full17 is still
+unfinished; successful transitive restart and productive controller recovery are
+next. Old half-second failures and teardown135 remain recorded, not waived.
+See [partial traceability](evidence/affa17/active-restart-partial-traceability.json).
+
+Earlier continuation: original storage stop/death and source/evidence-root loss after
+collection pass4/4 source and4/4 installed wheel. Eight actual cleanup receipt sets
+and448 M3 links are audited; the two unavailable original evidence paths remain
+explicit alongside retained original-directory byte/identity verification. Production
+code is unchanged; broader timing failures/full17 remain open. See the
+[current handoff](evidence/affa17/continuation-terminal-loss-20261019.md),
+[loss audit](evidence/affa17/terminal-loss-20261019a/verification.json) and
+[partial trace](evidence/affa17/terminal-loss-partial-traceability.json).
+
+Previous continuation: actual native worker writer-failure controls and default test
+compatibility pass17/17 source and17/17 installed wheel. The audit retains12 explicit
+original wait/root receipts,672 M3 links and12 external runtime-pin recomputations.
+No production source/XDL changed from the guard snapshot; its three source timeouts
+remain open. See [current handoff](evidence/affa17/continuation-native-writer-stages-20261019.md),
+[stage audit](evidence/affa17/native-writer-stages-20261019c/verification.json) and
+[partial trace](evidence/affa17/native-writer-stages-partial-traceability.json).
+W-02/W-03, full TR03/TR06 and all full-increment gates remain open.
+
+Previous successor: native guard delegation removes one duplicate prerequisite probe
+while retaining the final live native check and both legacy checks. Targeted source/
+wheel controls pass3/3 each; complete affected scope is source262/265, wheel265/265.
+Three source persistence timeouts remain. See the [current handoff](evidence/affa17/continuation-guard-delegation-20261019.md),
+[audit](evidence/affa17/guard-delegation-20261019e/verification.json) and
+[partial trace](evidence/affa17/guard-delegation-partial-traceability.json).
+Increment17 remains unfinished and uncommitted; older snapshots below retain their
+original scope and outcomes. No broad unchanged-code rerun is warranted.
+
+The selected shared-authority/controller/generation/evidence/runtime increment remains
+uncommitted. The exact shared-v4-full snapshot passes621 source and621 outside-source
+installed-wheel checks; its audit verifies786 removed owned roots,142 public snapshots,
+28 explicit generation/controller/shared exports and1664 actual public source hash
+links. These counts describe that frozen snapshot, before issuance/collection additions.
+See [shared regression evidence](evidence/affa17/shared-regression-verification.json).
+
+Native frozen Stage now records an actual normal M3 staged observation and a separate
+public issued annotation; its durable receipt is bound to both pre-Arm and pre-Release
+worker revalidations. First started/probe causation follows that issued event. Six
+source and six installed-wheel controls pass, including missing mirrors, malformed
+actual ACKs and original generation1→2. Two intentionally deleted issuance mirrors
+per phase remain explicit gaps. See [issuance audit](evidence/affa17/issuance-component-verification.json).
+The subsequent issued-v1-full snapshot passes627 source/627 installed-wheel checks;
+its audit verifies798 removed roots and1996 actual public source hash links. This
+snapshot predates the retained-input export/broker-projection continuation below.
+
+Confined declared-file collection now pins original source/destination directories,
+rejects no-follow traversal/substitution/nonregular/oversized inputs, preserves
+missing/error dispositions, verifies copied bytes and accepted public index ACKs,
+and returns original outcomes on matching repeat.34 source and34 outside-source
+wheel checks pass, including rejection of unbounded declaration iterables,
+nonblocking collection/index/disposal conflicts,
+optional-file lookup/copy races, the actual sixteen-MiB
+total cap, mutation and closed-reader
+artifact verification. See [collection audit](evidence/affa17/collection-current-verification.json).
+This is a U8 component, not runtime collection or complete U7/U8. It needs quiescent
+owned outputs after actual teardown; host/kernel stalls or adversarial simultaneous
+renames are not converted into a containment guarantee by Python checks.
+
+See [the current continuation handoff](evidence/affa17/continuation-scope-offline-20261019.md),
+[the runtime closure design](coverage-runtime-closure.md) and the broader
+[composition contract](affa-coverage-runtime-composition.md).
+
+Original retained-input continuation: optional sealed persistence v3 declares bounded
+single-use original-worker public artifacts and preserves default v1/v2 bytes. Intent
+claims now retain their actual caller-supplied fields/ordinal; export uses those fields
+and actual public M3, never reader reconstruction. The real worker writes/indexes only
+the declared public file; parent receives the bounded accepted public index ACK. Original
+cancelled starts remain closed. An inert broker projection preserves all admitted units,
+future contexts, native epoch history, genuine issuance/Release brackets and actual old
+wait/RETIRE/C1 terminal facts. Generation registry deletion, copied claims/ACKs, unknown
+Stage and cancellation races cannot turn into fabricated known success.
+
+The combined retained-v4 component has29 source/29 wheel checks,24 original roots
+removed per phase and actual indexed public snapshots. The later eight source/eight
+wheel projection delta separates local control/revocation flags from genuine native
+cancellation ACKs. See [retained-input audit](evidence/affa17/retained-component-verification.json),
+[projection delta](evidence/affa17/retained-projection-delta-verification.json),
+[exact partial trace](evidence/affa17/retained-public-inputs-partial-traceability.json)
+and [producer contract](affa-retained-input-export.md). The focused delta briefly
+overlapped the running broader source suite; finding92/its observation records that
+host contention. These are functional component observations, not isolated timing
+measurements. The retained-v4-full snapshot finished690 source/690 wheel passes;
+its audit verifies846 removed roots,202 public snapshots and2214 actual source
+links. This frozen evidence predates the last field-name delta and coverage code.
+See [retained regression audit](evidence/affa17/retained-regression-verification.json).
+
+Admission-derived coverage now freezes all logical units/steps, admitted generation
+contexts, fixed health slots and artifacts before execution. Pure assessment requires
+the original externally pinned digest and always remains provisional. Independent
+closed-reader verification checks actual retained fields, indexed bytes and the stored
+report without rewriting evidence. Coverage-v5 passes41 source/41 installed checks;
+its audit independently rereads four closed synthetic fixtures and two actual native
+gap controls, with six removed original roots. Synthetic fixtures are not scientific
+results. See [coverage audit](evidence/affa17/coverage-component-verification.json),
+[33-endpoint partial trace](evidence/affa17/coverage-assessment-partial-traceability.json)
+and [coverage contract](coverage-assessment.md).
+
+The subsequent coverage-v5-full snapshot fails one missed-tick terminal assertion
+with730 source passes; its wheel phase never ran. Its audit verifies424 removed roots,
+102 retained public snapshots and1128 actual source links. A bounded isolated diagnostic
+passes and does not explain that historical failure. See [failed regression audit](evidence/affa17/coverage-regression-failure-verification.json).
+
+The successor adds original Stop brackets, separate original C1 termination/empty
+facts and optional sealed v4 original validation before Init ACK. Compact metadata
+regenerates the full admission templates/digest within the unchanged64-KiB helper
+input bound. V1 has184 source passes/21 failures and no wheel phase; v2 has198 passes/
+nine failures and no wheel phase. Both remain failed evidence. Preserve unknown
+births and missing wait receipts separately from removed roots. V3 passes213/213,
+audited with270 removed roots,140 public snapshots and1266 source links, but has
+false U7 conflicts for real normal teardown proof references discovered afterward.
+
+The corrected producer-v4 snapshot passes223 source/223 installed-wheel checks.
+Its audit verifies274 removed roots,144 original helper wait receipts/retained
+public snapshots,1266 actual source links and zero lost public fixture directories.
+It binds the original admission identity AND its original digest, rejects changed
+bytes/copies before RPC, retains actual Stop bounds, and checks genuine teardown
+proofs against their paired original public M3 records. The actual control's input
+integrity, run validation and Stop/cleanup rows now satisfy; missing dispositions,
+collection/terminal and full closure keep overall coverage incomplete. The34-endpoint
+producer trace retains all24/18 requirements/parents without closing any full clause.
+See [producer audit](evidence/affa17/coverage-producers-v4-verification.json),
+[producer trace](evidence/affa17/coverage-runtime-producers-partial-traceability.json),
+[producer design](coverage-runtime-producers.md) and findings102–115.
+
+The broader producer-v4-full2 snapshot finished772 source/772 wheel passes; its
+audit verifies900 removed roots,254 public snapshots,48 explicit generation/
+controller/coverage exports and2478 actual source links, with no lost public fixture
+directories. See [broader audit](evidence/affa17/coverage-producers-regression-verification.json).
+This is exact affected-snapshot evidence before the newer descriptor transport.
+The initial full attempt's predicted771 collection guard failure remains retained.
+No historical timing failure is erased or fully explained by passing controls.
+
+The next runtime input now has optional sealed v5 admission for original public
+broker artifact publication. Immutable data descriptors carry complete public
+inventories beyond64KiB to the original worker; no productive ownership is adopted.
+The worker validates the original declared scope and actual bytes, writes only its
+pinned declared path, and verifies the accepted public index entry before ACK.
+Matching repeats retain the original snapshot; malformed/lost ACK closes starts.
+Default v1–v4 metadata and zero-rights behavior remain covered by verification.
+See [ADR](ADR-ML3-EVIDENCE-0001.md) and [transport contract](public-evidence-transport.md).
+Public-blob-v1 has260 source passes/three failures and no wheel phase; preserve it.
+The corrected successor restores the original request-observation boundary for real
+legacy and v5 revalidation failure controls. Public-blob-v2 passes265 source/265
+installed-wheel checks, including42 new descriptor/publication controls. Its audit
+verifies300 absent roots,166 original helper wait receipts/public snapshots,1308
+actual source links and two actual indexed original broker artifacts, with no lost
+public fixture directories.35 Python modules/four C resources match exact source.
+See [transport audit](evidence/affa17/public-blob-v2-verification.json) and
+[28-endpoint partial trace](evidence/affa17/original-public-blob-partial-traceability.json).
+A new frozen814-case source/wheel regression is live (public-blob-v2-full); preserve
+its inputs/installation and inspect actual process state before waiting/resuming.
+No broader current result is claimed. Full runtime closure remains unfinished.
+
+Remaining work includes verified producer/runtime integration, collection/result/
+terminal ordering, blocked/never-claimed dispositions, full environment/bootstrap/M1
+admission, all nine runtime cases and separate full-candidate review.24 software
+requirements,18 unresolved source parents,30 verification pairs/90 endpoints and all
+seven full P3 tasks remain binding. No acceptance, merge, factory/experiment run,
+scientific result or canonical-note update is claimed.
 
 ## Durable start/probe evidence candidate (OUTCOMES12)
 
@@ -506,3 +827,226 @@ Finding8 integration repair: explicit scheduled observations now probe exactly t
 admitted unit under its operation end. Periodic health still scans all released
 units under the admitted scan budget. Original readiness/normal-record checks, all
 operation/fixture/lease limits and conservative event/request bounds are preserved.
+
+
+Current increment17 continuation: [runtime collection contract](runtime-collection.md)
+and [handoff](evidence/affa17/continuation-runtime-collection-20261019.md).
+Original worker admission and incremental collection/index primitives are verified
+in distinct224/224 and63/63 source/wheel snapshots. Full runtime collection/terminal/
+coverage closure remains unfinished. The broader813/1 failure is retained; historical
+collection-v6 archive loss is disclosed in
+[evidence recovery](evidence/affa17/collection-v6-evidence-recovery-20261019.json).
+No stable increment17, full P3 completion, acceptance or integration is claimed.
+
+
+Latest terminal-service continuation (2026-10-19): actual runtime collection and
+original cleanup-only BS17 service are implemented as partial full17 components.
+The latest affected boundary snapshot passes37 source/37 installed-wheel checks;
+its [audit](evidence/affa17/terminal-service-boundary-20261019d/verification.json)
+checks52 absent test roots,50 original broker waits and518 actual source links.
+Historical broader b80/80 and test-only c14/14 snapshots retain their exact scope.
+[Finding135](review-affa17.md) defers the earlier unrelated teardown regression
+from immediate repair at the author's direction; it remains a stable17/release gate.
+See the [new handoff](evidence/affa17/continuation-terminal-service-20261019.md)
+and [lazy issuance design](lazy-issuance-runtime.md) for the next complete-runtime
+work. No stable17 commit, full P3/M1 completion, acceptance or main integration.
+
+
+Latest lazy/fenced-normal continuation (2026-10-19): v6 now creates real start
+claims/Stage only at an eligible scheduled start, independently checks this in the
+original worker, retains generation0 logical bookkeeping and unknown acknowledgements,
+and collects before terminal records. Original native cancellation/root terminal
+scope precedes implicit normal teardown; cleanup past the old productive lease
+retains actual waits/normal records without renewing start authority. Component
+checks15/15 and identical-source affected compatibility88/88 pass source/wheel.
+See the [current audit](evidence/affa17/fenced-teardown-regression-20261019b/verification.json),
+[partial trace](evidence/affa17/fenced-normal-teardown-partial-traceability.json) and
+[new handoff](evidence/affa17/continuation-lazy-fenced-normal-20261019.md).
+Previous failed paused/horizon/timing scopes remain open. Next is
+[terminal report/writer closure](terminal-report-closure-runtime.md), followed by
+independent original closed-reader verification and the remaining full17 gates.
+No stable17 commit, full P3/M1 completion, acceptance or main integration is claimed.
+
+Latest report-closure preparation (2026-10-19): runtime_verification.py independently
+checks externally pinned original collection inputs against actual accepted closed
+records, original context/final broker and confined file/index bytes. terminal_writer.py
+records public finalize/abort failure stages and requires a fresh successful flush
+before aborting a writer still marked open. Synthetic actual-Argus component checks
+pass72 source/72 installed wheel; no native helper was started in this scope. See
+[exact evidence](evidence/affa17/terminal-writer-20261019b/verification.json) and
+[continuation](evidence/affa17/continuation-terminal-writer-20261019.md).
+Original report protocol, automatic dispatcher closure and full runtime validation
+remain unfinished. Earlier88/88 teardown evidence applies to its preceding snapshot;
+these overlapping scopes are not a combined unique-test count. Increment17 remains
+uncommitted, unaccepted and unmerged.
+
+Current report-runtime integration (2026-10-19): v6 FiniteDispatcher now publishes
+actual final broker/retained inputs and a provisional report in the original worker,
+then binds writer close to the exact retained report receipt under one fixed end.
+Required coverage, uncertain applicability, optional corruption, collection and
+normal terminal success independently gate finalize. Matching repeated finish_run
+returns its original immutable outcome; missing/changed ACK retains unknown state.
+Scheduler productive step records now retain original handle/source/dependency proof.
+
+The earlier terminal-runtime-b candidate had95 passed/1 persistence timeout in source checks and
+96/96 in the first installed-wheel phase against identical frozen code. The timeout
+occurred before second-unit ready and report attempt; its cause remains unknown.
+See [source evidence](evidence/affa17/terminal-runtime-20261019b/verification.json),
+[wheel evidence](evidence/affa17/terminal-runtime-wheel-20261019c/verification.json)
+and [current handoff](evidence/affa17/continuation-terminal-runtime-20261019.md).
+The failed-writer close guard was subsequently repaired and tested as recorded below.
+No stable17 commit, full lifecycle/M1 validation, acceptance or merge is claimed.
+
+Non-open writer and helper continuation (2026-10-19): authenticated terminal close
+can now observe a failed/closed original writer without another writer operation;
+parent validation retains actual state and missing report ACK separately. Fixed
+owned helper controls pass100/100 source/installed-wheel in the preceding exact
+[snapshot](evidence/affa17/terminal-nonopen-20261019c/verification.json). RunClosure
+now retains original terminal_reports instead of replaying abort-only closure, with
+legacy writers separate and all original helper/root/C1 waits preserved.
+
+The earlier helper-e expanded116-case scope had114 pass/2 fail source and109 pass/7 fail wheel;
+see [its audit](evidence/affa17/terminal-helper-20261019e/verification.json).
+New helper controls passed three source/one wheel cases; other failures included fixed
+persistence timeouts and a concrete active/terminal evidence clock mismatch. Factual
+run-terminal records within reserved terminal time were rejected by the generic active
+end check. Original active/operation deadlines have not been widened. See the
+[clock review](evidence/affa17/terminal-clock-scope-review.json) and
+[handoff](evidence/affa17/continuation-terminal-nonopen-helper-20261019.md).
+Increment17 remains uncommitted; full lifecycle/M1/regression/acceptance/merge remain open.
+
+Current scoped/offline snapshot (2026-10-19): source226/0 and installed-wheel223/3 of226 each
+(passed/failed), original tool18492 terminal1.
+RuntimeEvidenceScope binds the original collection/generation context before I/O,
+keeps productive evidence inside active time and permits bounded terminal facts.
+The dispatcher retains a primary execution error through secondary cleanup failure.
+collection_evidence.py separates inert decoders from runtime transport; original
+runtime APIs preserve their exception identity. Fresh-process ordinary/after-active
+closed evidence controls deny U3–U5 imports and verify unchanged original bytes.
+Both source and wheel execute all selected tests once; failures remain retained.
+See [current audit](evidence/affa17/offline-boundary-20261019d/verification.json),
+[partial trace](evidence/affa17/terminal-scope-offline-partial-traceability.json) and
+[current handoff](evidence/affa17/continuation-scope-offline-20261019.md).
+Full increment17, nine complete runtime cases, full M1/environment/global regression,
+independent complete-candidate review and acceptance/main integration remain open.
+
+Convergence checkpoint: freeze the current snapshot and follow
+[evidence/affa17/increment17-closure-map-20261019.md](evidence/affa17/increment17-closure-map-20261019.md).
+The next step is a targeted review of ten original RPCs sharing a start-effect end,
+with seconds still left in active time; paused-tick timeout requires separate diagnosis.
+No broad unchanged-code rerun or additional incidental scope is planned. Full17 scope remains intact.
+
+Transitive active-run continuation (2026-10-19, partial17): explicit cohorts now
+compose reverse normal quiescence and forward fresh generations through the
+original coordinator/writer. Four cohort modes pass in source and installed wheel;
+six original-input closed recomputations and byte-identical public roots retained.
+Latest affected scope source58/59,wheel59/59 still fails the old4.8s source leaf
+teardown (finding222); no stable17 claim or commit. See
+evidence/affa17/continuation-active-transitive-20261019.md and
+evidence/affa17/active-transitive-partial-traceability.json. Productive controller
+recovery and the full24/18/30/90/nine-case/seven-task scope remain open.
+
+Active controller recovery continuation (2026-10-19, partial17): explicit queued
+replacement now retains the original mutation coordinator, handles and writer
+across startup/running/stopped/released/generation2 states and a real heartbeat
+race.94 primary plus42 affected standalone checks pass in each phase;18 closed
+original-input recomputations retained. See
+evidence/affa17/continuation-active-controller-recovery-20261019.md and
+evidence/affa17/active-controller-recovery-verified-scope-traceability.json.
+
+Active-control deadlines/cancellation (2026-10-19, partial17): native controls
+now verify past/foreign/beyond-active admission rejection, actual queued expiry
+and external cancellation before drain, with unchanged authority/resource
+frontiers and unspent future contexts. A queued restart cancelled before any
+effect now reports rejected rather than post-mutation failed. Source13/13 and
+wheel13/13;20 original cleanup contexts and16 normal closed roots audited. See
+evidence/affa17/active-control-deadlines-20261019c/verification.json and
+evidence/affa17/active-control-deadlines-partial-traceability.json. Complete
+failure/race/runtime coverage and stable17 remain open; old135/222 are not waived.
+
+Affected restart compatibility uses the same immutable package:source8/9,
+wheel9/9; all transitive modes pass. The source v3 leaf repeats222 after successful
+restart, so the whole affected scope is21/22 source and22/22 wheel. See
+evidence/affa17/active-control-deadlines-verified-scope.json and
+evidence/affa17/active-control-deadlines-verified-scope-traceability.json.
+
+CAPA clarification and initial explicit register: see [capa.md](capa.md).
+Three selected records distinguish local correction/prevention evidence from
+independent cause confirmation and effectiveness.135/222 remain UNRESOLVED;
+238 is FIX_CANDIDATE. This is observation-only work-product tracking, not an
+implemented CRE engine or a CAPA extension already delivered by capability025.
+
+Owned native writer-stream fixture now verifies actual role3 loader/sealed-image
+identity, role5 isolation, preconditioned internal-flush failure and real successful
+close followed by EIO:4/4 source and4/4 installed wheel. Production sources remain
+unchanged. Eight original native contexts/440 M3 links and two normal closed roots
+are audited. The original successful-append W02 mechanism failed and is preserved;
+isolated healthy-prefix W02 and full W/TR03/TR06/M1/full17 remain open. See
+evidence/affa17/native-writer-stream-partial-traceability.json and the continuation
+record. CAPA246/247 retain both fixture defects as local fix candidates, not closed
+or effective records;135/222 remain unresolved.
+These bounded results do not close full17 or waive old timing findings135/222.
+
+Selected composed authority continuation: nine original v6 Stage/Release/Cancel
+and issuance/helper-loss controls pass9/9 source and9/9 installed-wheel. An active
+unrelated heartbeat survives all18 contexts;14 retain unknown workload waits.
+No production source changes. See [controls](composed-authority-interruptions.md),
+[trace](evidence/affa17/composed-authority-partial-traceability-v2.json), and
+[handoff](evidence/affa17/continuation-composed-authority-20261019.md). Original
+failed controls remain retained. Full runtime cases/M1/stable17 and135/222 remain
+open; the CAPA successor validates8 records/36 bindings without effectiveness.
+
+Selected intent/termination continuation: public start-intent append/flush-loss
+and live-leader+descendant STOP controls pass6/6 source and6/6 wheel, including
+the disabled observer. Original b51741/audit9db731 retain12 contexts,298 M3 links,
+2 normal closed roots and6 genuine unknown workload waits. Production unchanged.
+See [controls](composed-intent-termination.md), [trace](evidence/affa17/composed-intent-termination-partial-traceability.json)
+and [handoff](evidence/affa17/continuation-intent-termination-20261019.md).
+Full CP/matrix/M1/stable17 and CAPA135/222 remain open.
+
+Original issuer-loss repair: cancellation now uses the original pinned cleanup
+context despite ordinary registry-reference loss; ordinary adoption still rejects.
+Closure retains original inventory/unknown waits and completes exact root/C1
+cleanup.54/54 source and54/54 wheel affected checks pass; see
+[repair](issuer-loss-cleanup.md), [trace](evidence/affa17/issuer-loss-partial-traceability.json)
+and [handoff](evidence/affa17/continuation-issuer-loss-20261019.md). Full17 and135/222
+remain open. The new immutable issuer-loss-c wheel contains this two-file repair;
+older trace deltas retain their original source hashes.
+
+Complete-entry continuation: the read-only joint runtime preflight is implemented,
+binding existing v6/BS17 inputs and external approval/facility/design/helper pins.
+40/40 new and146/146 total checks pass per source/wheel phase. Unit attestations
+are synthetic/inert; zero actual M1 admissions or runtime helpers are claimed.
+All76 prior sources remain unchanged. See [entry work](runtime-entry.md),
+[trace](evidence/affa17/runtime-admission-partial-traceability.json) and
+[handoff](evidence/affa17/continuation-runtime-admission-20261019.md). Next implement
+the original launcher/run registry and bounded entry. Full17/135/222 remain open.
+
+Original startup ownership is now implemented internally: sealed live-byte checks,
+single retained descriptor execution, bounded original reservation, independent
+cancellation and exact pidfd wait ownership.74 selected checks pass per source/
+wheel phase across two frozen runs with identical78 production files. Unknown
+births retain unknown runtime waits despite separate external owned cleanup.
+See [launcher](bootstrap-launcher.md) and its linked audits/partial trace. The
+collector-name gap and correction are retained as CAPA269;13 records/64 bindings
+validate, with no effectiveness closure. Full public entry/facility/M1, full17
+and135/222 remain open.
+
+Actual pinned evidence-file/current-host checks and a private whole-lifecycle
+composer now advance runtime entry. It returns original dispatch/collection/
+terminal/RunClosure results with separate physical cleanup and evidence facts.
+Current selected verification is19 evidence/window checks from b plus67 affected
+entry/adjacent checks from c per source/wheel phase on identical80 production
+files. Original window/counterexample/oracle failures remain retained. See
+[composition](runtime-entry-composition.md) and
+[trace](evidence/affa17/runtime-entry-partial-traceability.json). CAPA validates
+16 records/76 bindings without effectiveness closure. No synthetic file vector
+authorizes execution; complete public admission/control/M1/full17/135/222 remain open.
+
+Private run/control registry and startup original-pin repair: see
+[runtime-controls.md](runtime-controls.md) and
+[partial trace](evidence/affa17/runtime-controls-partial-traceability.json).
+Startup14/14 checks pass per phase withzero fallback; all79 other production
+sources remain unchanged. Registry/control implementation has retained wheel
+recovery and source nominal failures286/287,not resolved by the instrumented
+positive probes. CAPA20/88 validates;135/222/286/287 and full17 remain open.

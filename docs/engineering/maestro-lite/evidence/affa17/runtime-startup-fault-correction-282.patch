@@ -1,0 +1,24 @@
+--- original/src/xverse/maestro/runtime_entry.py
++++ corrected/src/xverse/maestro/runtime_entry.py
+@@ -150,14 +150,16 @@
+                 if not isinstance(error,Exception):fatal=error
+             finally:
+                 try:
+-                    if self._session is not None:
+-                        closer=RunClosure(self._session,dispatcher=self._driver,broker=self._broker)
++                    session,storage,broker,driver=self._runtime_pins
++                    launcher=self._pins[1]
++                    if session is not None:
++                        closer=RunClosure(session,dispatcher=driver,broker=broker)
+                         closure=closer.close(scope.closure)
+-                    elif self._launcher._birth_attempted:
++                    elif launcher._birth_attempted:
+                         end=min(scope.closure.monotonic_seconds,time.monotonic()+1.8)
+-                        self._launcher.drain(HostDeadline(self._persistence.session,end))
++                        launcher.drain(HostDeadline(self._pins[0].session,end))
+                 except (ValueError,OSError):diagnostics.append('ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED')
+-            self._result=RuntimeResult(self._persistence.run_id,dispatch,closure,self._launcher.outcome,tuple(diagnostics))
++            self._result=RuntimeResult(self._pins[0].run_id,dispatch,closure,self._pins[1].outcome,tuple(diagnostics))
+             if fatal is not None:raise fatal
+             return self._result
+         finally:self._lock.release()

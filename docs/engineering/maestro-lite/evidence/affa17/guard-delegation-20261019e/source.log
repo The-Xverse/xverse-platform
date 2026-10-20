@@ -1,0 +1,72 @@
+........................................................................ [ 27%]
+...........................................F.F...........F.............. [ 54%]
+........................................................................ [ 81%]
+.................................................                        [100%]
+=================================== FAILURES ===================================
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x709db3916e40>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='75c01079f50405bed5d29ba5ecf8eaf3a96dfd082b0c7a33bde429230a7bf00...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=4, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:125: AssertionError
+_ test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal _
+
+request = <FixtureRequest for <Function test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x709db33f4ad0>
+
+    def test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal(request,monkeypatch):
+        stack,controller,driver=scheduled(request,monkeypatch)
+        broker,view,client,work=stack
+        assert driver._lazy and not view._bindings and not broker.owner._claims and not client._attempted
+        assert not FileEvidenceJournal(work.parent/'m3.jsonl').records
+        checkpoints=[]; original=broker.owner.commit_intent
+        def commit(unit,end):
+            earlier=events(stack)
+            checkpoints.append((unit,earlier))
+            assert any(payload(e).get('stepId')=='start-'+('source' if 'source-instance' in unit else 'sink')
+                       and payload(e)['action']=='validate' and payload(e)['generation']==0 for e in earlier)
+            assert broker.issuer(unit)._handle is None and unit not in broker.owner._claims
+            return original(unit,end)
+        monkeypatch.setattr(broker.owner,'commit_intent',commit)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='778a5da1c01e1843f754838f7229a15af492099618c47ce566eaadf189661ba...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:141: AssertionError
+___ test_actual_implicit_normal_teardown_occurs_after_original_native_cancel ___
+
+request = <FixtureRequest for <Function test_actual_implicit_normal_teardown_occurs_after_original_native_cancel>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x709db358e040>
+
+    def test_actual_implicit_normal_teardown_occurs_after_original_native_cancel(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=True);broker=stack[0]
+        cancel=broker.cancel;fenced=[]
+        def observed(reason='run-cancel',**kw):
+            reply=cancel(reason,**kw)
+            if reason=='dispatcher-terminal-fence':
+                assert reply.native_epoch_confirmed;fenced.append(time.monotonic())
+            return reply
+        monkeypatch.setattr(broker,'cancel',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='b8317c7c90735ffbb6fbaf87a07a0ea6529dd75f46f5fae7a343890d76a6b77...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:296: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_implicit_normal_teardown_occurs_after_original_native_cancel
+3 failed, 262 passed in 314.22s (0:05:14)

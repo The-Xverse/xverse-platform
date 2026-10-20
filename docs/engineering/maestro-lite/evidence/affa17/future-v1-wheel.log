@@ -1,0 +1,37 @@
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+.F...................................................................... [ 39%]
+........................................................................ [ 52%]
+........................................................................ [ 65%]
+........................................................................ [ 78%]
+........................................................................ [ 91%]
+..............................................                           [100%]
+=================================== FAILURES ===================================
+____ test_unexpected_effect_failure_records_honest_dispositions_and_cleanup ____
+
+request = <FixtureRequest for <Function test_unexpected_effect_failure_records_honest_dispositions_and_cleanup>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x771bce425e10>
+
+    def test_unexpected_effect_failure_records_honest_dispositions_and_cleanup(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        original = FiniteDispatcher._effect
+    
+        def failing(self, step):
+            if step.step_id == "start-source":
+                raise RuntimeError("owned unexpected effect failure")
+            return original(self, step)
+    
+        monkeypatch.setattr(FiniteDispatcher, "_effect", failing)
+        result = driver.run(*ends(driver))
+>       assert not result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (not False and False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='5b4c885c8fb95aa48df408cd74f2d1a9531047e0dae9e3916a59c0bcd6da1f9...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E        +  and   False = DispatchResult(run_id='fixture-run', lifecycle_digest='5b4c885c8fb95aa48df408cd74f2d1a9531047e0dae9e3916a59c0bcd6da1f9...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal_recorded
+
+tests/thesis_lite/maestro/test_dispatcher.py:332: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_unexpected_effect_failure_records_honest_dispositions_and_cleanup
+1 failed, 549 passed in 322.54s (0:05:22)

@@ -1,0 +1,28 @@
+{
+  "late_teardown": false,
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 13, in <module>\n    from xverse.maestro.runtime_verification import verify_runtime_closed\n  File \"/tmp/maestro-lite-affa-terminal-primary-20261019b/lib/python3.13/site-packages/xverse/maestro/runtime_verification.py\", line 9, in <module>\n    from .collection_runtime import decode_context, document, output_available, validate_item\n  File \"<string>\", line 9, in find_spec\n    raise ImportError('Offline verifier imported runtime component: '+fullname)\nImportError: Offline verifier imported runtime component: xverse.maestro.collection_runtime\n",
+  "command": [
+    "/tmp/maestro-lite-affa-terminal-primary-20261019b/bin/python",
+    "-I",
+    "-c",
+    "\nimport importlib.abc,json,sys\nfrom pathlib import Path\nforbidden = {'persistence','owner','providers','bootstrap','run_broker','fence','prbc',\n             'supervisor','controller','collection_runtime','public_blobs','terminal_runtime','child'}\nclass DenyRuntime(importlib.abc.MetaPathFinder):\n    def find_spec(self,fullname,path=None,target=None):\n        if fullname.startswith('xverse.maestro.') and fullname.split('.')[2] in forbidden:\n            raise ImportError('Offline verifier imported runtime component: '+fullname)\nsys.meta_path.insert(0,DenyRuntime())\nfrom xverse.maestro.coverage import CoverageAdmission,canonical\nfrom xverse.maestro.collection_plan import decode_collection\nfrom xverse.maestro.runtime_verification import verify_runtime_closed\nbody=json.loads(Path(sys.argv[1]).read_bytes())\nad=CoverageAdmission(canonical(body['admission']))\nplan=decode_collection(body['collection'],ad,body['pins']['expected_admission_digest'])\nresult=verify_runtime_closed(ad,plan,Path(body['root']),**body['pins'])\nassert result.complete, result.diagnostics\nloaded=sorted(n for n in sys.modules if n.startswith('xverse.maestro.'))\nassert not any(n.split('.')[2] in forbidden for n in loaded)\nprint(json.dumps(dict(complete=result.complete,modules=loaded,denied_modules=sorted(forbidden))))\n",
+    "/tmp/maestro-offline-boundary-red-20261019c-wheel-private-2hdzdk_y/test_closed_verification_in_fr0/offline-inputs.json"
+  ],
+  "original_inputs": "/tmp/maestro-offline-boundary-red-20261019c-wheel-private-2hdzdk_y/test_closed_verification_in_fr0/offline-inputs.json",
+  "input_sha256": "7815e9870fe972a815cf5d331d862c7d250d8727eca2eed18b04273d1a77d3cd",
+  "evidence_sha256": {
+    "broker-projection.json": "e1b6e3dd0f00f788141b2bf29a65cbd36ff7071d8d441df1b6898106c810446b",
+    "retained-inputs.json": "dd86b40fb07d0183fd86a6872dbe64949e3e6a49c4889b6b28b8b2b7c937e0ab",
+    "manifest.json": "dd9385d85d085e2ab93b565be5947c7d4b63a9592e7b95da02887975d21f1213",
+    "lifecycle-coverage.json": "bf9c24b124951f040520fa1b7c8a7f1651d20c7aa068b2eed045eae4215a85de",
+    "synthetic-output.json": "a8198524f58e72b56283ab71ebddada22840f108b46ef7165bb3fca9919c5558",
+    "events.jsonl": "77f177d68fde9a4fcf83baa7cab75e7cca198250363f6cc95e89857d59510147",
+    "collection.json": "6f8eb042bfb82d50e1725f8d12e41ae4100e8881b104f014e7cd3e6d337e5d59"
+  },
+  "unchanged_evidence": true,
+  "source_sha256": "9373e4381bd38e40bd4ee4e7839ab92a659c9f1567ec73421bd0311d7bd36a4d",
+  "synthetic_facts": true,
+  "scientific_result": false
+}

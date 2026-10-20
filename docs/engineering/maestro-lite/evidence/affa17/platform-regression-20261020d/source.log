@@ -1,0 +1,2303 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+..................................................................FFFFFF [ 19%]
+FFFFFFFFFFFFFF.....FFFF................................................. [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: operation_seconds=None) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7856641cc910>.plan
+E         
+E         tests/thesis_lite/maestro/test_active_transitive_restart.py:53: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+E         24 failed, 1772 passed, 24 subtests passed in 1155.46s (0:19:15)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020d/bin/python', '-m', 'pytest', '-q', '-p'...ated_and_all_generations[cleaned-leaf]\n24 failed, 1772 passed, 24 subtests passed in 1155.46s (0:19:15)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+____ test_original_control_rejection_keeps_unspent_authority[past-restart] _____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae779be64e0>
+control = 'restart', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae7791778c0>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041386.156028172)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041409.166028172)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+____ test_original_control_rejection_keeps_unspent_authority[past-recovery] ____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77935ef90>
+control = 'recovery', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa57750>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041388.013160667)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041411.023160667)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[foreign-session-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7790ed910>
+control = 'restart', mode = 'foreign-session'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae779253750>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041389.888251664)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041412.898251664)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7786d59c0>
+control = 'recovery', mode = 'foreign-session'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab187d0>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041391.369368998)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041414.379368998)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[beyond-active-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7787852e0>
+control = 'restart', mode = 'beyond-active'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab19bd0>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041392.79595827)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041415.80595827)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7786a3610>
+control = 'recovery', mode = 'beyond-active'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab19810>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041394.278550415)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041417.288550415)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[expire-queued-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7786a2df0>
+control = 'restart', mode = 'expire-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa57610>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041395.769740524)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041418.779740524)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77867e690>
+control = 'recovery', mode = 'expire-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa574d0>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041397.217549032)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041420.227549032)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7790ba1d0>
+control = 'restart', mode = 'cancel-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55f90>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041398.897061675)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041421.907061675)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77851b5d0>
+control = 'recovery', mode = 'cancel-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+>           result = run(driver)
+                     ^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:97: in run
+    return driver.run(active,terminal)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55590>
+active_deadline = HostDeadline(session='host-session', monotonic_seconds=1041400.686736595)
+terminal_deadline = HostDeadline(session='host-session', monotonic_seconds=1041423.696736595)
+
+    def run(self, active_deadline, terminal_deadline):
+        self._holder()
+        for deadline in (active_deadline, terminal_deadline):
+            if (
+                type(deadline) is not HostDeadline
+                or deadline.session != self.owner.session
+            ):
+                raise OwnerError("ML-SCHEDULE-SESSION")
+            deadline.__post_init__()
+        scope = (active_deadline, terminal_deadline)
+        if self._result is not None:
+            if scope != self._scope:
+                raise OwnerError("ML-SCHEDULE-REPEAT")
+            return self._result
+        if not self._lock.acquire(False):
+            raise OwnerError("ML-SCHEDULE-CONFLICT")
+        locks = []
+        claimed = False
+        try:
+            for lock in (self.facade._lock, self.owner._lock):
+                if not lock.acquire(False):
+                    raise OwnerError("ML-SCHEDULE-CONFLICT")
+                locks.append(lock)
+            if self.owner._dispatch_owner is not None:
+                raise OwnerError("ML-SCHEDULE-CONFLICT")
+            now = time.monotonic()
+            reserve = self.plan.terminal_reserve_seconds
+            if self._lazy:
+                reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+                admission = self.client.coverage.data(self.client.coverage_digest)
+                if active_deadline.monotonic_seconds > admission['end']:
+                    raise OwnerError("ML-SCHEDULE-COVERAGE-END")
+            if (
+                not 0
+                < active_deadline.monotonic_seconds - now
+                <= self.plan.active_seconds
+                or terminal_deadline.monotonic_seconds
+                < active_deadline.monotonic_seconds + reserve
+                or terminal_deadline.monotonic_seconds
+                > self.bootstrap._generation / 1e9
+                or self.client._sequence
+                + self.plan.required_requests
+                - self._initial_requests
+                + self._restart_reserve
+                > self.client._request_limit
+                or self.facade._released
+                or self.facade._attempted
+            ):
+>               raise OwnerError("ML-SCHEDULE-DEADLINE")
+E               xverse.maestro.owner.OwnerError: ML-SCHEDULE-DEADLINE
+
+src/xverse/maestro/dispatcher.py:1239: OwnerError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[before-start] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae778fdfd90>
+mode = 'before-start'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='aeabce216fbd45fcc9d725eae70a33616cf15db25717ab35267aa6bf4076d7de', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='aeabce216fbd45fcc9d725eae70a33616cf15db25717ab35267aa6bf4076d7de', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa54410>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='aeabce216fbd45fcc9d725eae70a33616cf15db25717ab35267aa6bf4076d7de', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='aeabce216fbd45fcc9d725eae70a33616cf15db25717ab35267aa6bf4076d7de', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa54410>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7791472a0>
+mode = 'mixed-initial'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='07a5dfa22e1920aabd9b0c9b4d003e9f26908bbf2f65d3add0e3030d6914e797', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='07a5dfa22e1920aabd9b0c9b4d003e9f26908bbf2f65d3add0e3030d6914e797', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1a990>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='07a5dfa22e1920aabd9b0c9b4d003e9f26908bbf2f65d3add0e3030d6914e797', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='07a5dfa22e1920aabd9b0c9b4d003e9f26908bbf2f65d3add0e3030d6914e797', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1a990>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[planned] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[planned]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae772eb1010>
+mode = 'planned'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='ded496a68bd0e40c8a43a692217c40ae43acafb21a83337d215e67ff65d5e76a', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='ded496a68bd0e40c8a43a692217c40ae43acafb21a83337d215e67ff65d5e76a', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1a0d0>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='ded496a68bd0e40c8a43a692217c40ae43acafb21a83337d215e67ff65d5e76a', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='ded496a68bd0e40c8a43a692217c40ae43acafb21a83337d215e67ff65d5e76a', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1a0d0>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7730b0fa0>
+mode = 'dead-before-drain'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='9bb503db993e5073266ae4bcb4cb4846c12bb422e245311091483c8cc275c2c1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='9bb503db993e5073266ae4bcb4cb4846c12bb422e245311091483c8cc275c2c1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab191d0>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='9bb503db993e5073266ae4bcb4cb4846c12bb422e245311091483c8cc275c2c1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='9bb503db993e5073266ae4bcb4cb4846c12bb422e245311091483c8cc275c2c1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab191d0>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7730b0910>
+mode = 'heartbeat-race'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='e5e9ae926097c648f15ead91f0ea34b9d1e23a5f1621fcfad60458fbacb8cbe4', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='e5e9ae926097c648f15ead91f0ea34b9d1e23a5f1621fcfad60458fbacb8cbe4', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ac87ed0>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='e5e9ae926097c648f15ead91f0ea34b9d1e23a5f1621fcfad60458fbacb8cbe4', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='e5e9ae926097c648f15ead91f0ea34b9d1e23a5f1621fcfad60458fbacb8cbe4', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ac87ed0>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[generation2] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae773529940>
+mode = 'generation2'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='d7c49b1c9541804b7b13e842f1906301e0cdb27b5bb3796a59120c1fcaa54fee', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='d7c49b1c9541804b7b13e842f1906301e0cdb27b5bb3796a59120c1fcaa54fee', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae779253d90>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='d7c49b1c9541804b7b13e842f1906301e0cdb27b5bb3796a59120c1fcaa54fee', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='d7c49b1c9541804b7b13e842f1906301e0cdb27b5bb3796a59120c1fcaa54fee', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae779253d90>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77352baf0>
+mode = 'restart-after'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='ae6e360c85307b24b2c114681c071b37e68a5b0f319e68cda7e2d374f345a8bb', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='ae6e360c85307b24b2c114681c071b37e68a5b0f319e68cda7e2d374f345a8bb', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55310>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='ae6e360c85307b24b2c114681c071b37e68a5b0f319e68cda7e2d374f345a8bb', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='ae6e360c85307b24b2c114681c071b37e68a5b0f319e68cda7e2d374f345a8bb', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55310>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7730b23c0>
+mode = 'stopped-then-recovery'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='3735115d369c2825ea682c4c81350579bdfe6268d7541b2b0eff2e532e20d0d1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='3735115d369c2825ea682c4c81350579bdfe6268d7541b2b0eff2e532e20d0d1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55d10>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='3735115d369c2825ea682c4c81350579bdfe6268d7541b2b0eff2e532e20d0d1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='3735115d369c2825ea682c4c81350579bdfe6268d7541b2b0eff2e532e20d0d1', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa55d10>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae773273770>
+mode = 'cleaned-then-restart'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='dd9f904dfd3d112bbd6d7d3a8d2b8e2c9bb8a1505cff6240b0efd100f617095e', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='dd9f904dfd3d112bbd6d7d3a8d2b8e2c9bb8a1505cff6240b0efd100f617095e', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa56710>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='dd9f904dfd3d112bbd6d7d3a8d2b8e2c9bb8a1505cff6240b0efd100f617095e', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='dd9f904dfd3d112bbd6d7d3a8d2b8e2c9bb8a1505cff6240b0efd100f617095e', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa56710>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7730b1be0>
+mode = 'snapshot-loss'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+>       assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+E       AssertionError: assert (3.0 == 3 and 25.0 == 20)
+E        +  where 3.0 = ScheduleAdmission(lifecycle_digest='db453931844c4ff7b7909b5e8b6823574f22ecb0ef7b039dfe15b9ba6f92bf02', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).recovery_operation_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='db453931844c4ff7b7909b5e8b6823574f22ecb0ef7b039dfe15b9ba6f92bf02', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa57750>.plan
+E        +  and   25.0 = ScheduleAdmission(lifecycle_digest='db453931844c4ff7b7909b5e8b6823574f22ecb0ef7b039dfe15b9ba6f92bf02', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='db453931844c4ff7b7909b5e8b6823574f22ecb0ef7b039dfe15b9ba6f92bf02', policies=(Probe...experiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=3.0) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77aa57750>.plan
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:53: AssertionError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae773108ec0>
+mode = 'cohort'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+>       assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+E       AssertionError: assert (22.0 == 20)
+E        +  where 22.0 = ScheduleAdmission(lifecycle_digest='6a0a7292c6d4044b5c2346b2aaaaf96431c6728af7614534a49dd5d6738bb06d', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='6a0a7292c6d4044b5c2346b2aaaaf96431c6728af7614534a49dd5d6738bb06d', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ac87750>.plan
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:53: AssertionError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77314da20>
+mode = 'omitted-dependent'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+>       assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+E       AssertionError: assert (22.0 == 20)
+E        +  where 22.0 = ScheduleAdmission(lifecycle_digest='9cec2ca23d7da2ac515df62cdb3eb0366df8a70c11e0e35b51a57b80e044cd16', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='9cec2ca23d7da2ac515df62cdb3eb0366df8a70c11e0e35b51a57b80e044cd16', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1aad0>.plan
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:53: AssertionError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae7731088a0>
+mode = 'mid-storage-loss'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+>       assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+E       AssertionError: assert (22.0 == 20)
+E        +  where 22.0 = ScheduleAdmission(lifecycle_digest='fa3b139eb6f358410afd64e4764b2c14cbf4126faf2b123da2d33f2e94de8c4d', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='fa3b139eb6f358410afd64e4764b2c14cbf4126faf2b123da2d33f2e94de8c4d', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab19d10>.plan
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:53: AssertionError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ae77314e0b0>
+mode = 'cleaned-leaf'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+>       assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+E       AssertionError: assert (22.0 == 20)
+E        +  where 22.0 = ScheduleAdmission(lifecycle_digest='e2accbf7d532eeb143b17fe7fdf1662af00583cca98ad6d8e432d5c6b9e103ec', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None).active_seconds
+E        +    where ScheduleAdmission(lifecycle_digest='e2accbf7d532eeb143b17fe7fdf1662af00583cca98ad6d8e432d5c6b9e103ec', policies=(Probe...xperiment/system/sample-loop#componentInstances/unrelated-instance', 'cleanup', 1.0)), recovery_operation_seconds=None) = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7ae77ab1a490>.plan
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:53: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+25 failed, 2055 passed, 24 subtests passed in 2433.54s (0:40:33)

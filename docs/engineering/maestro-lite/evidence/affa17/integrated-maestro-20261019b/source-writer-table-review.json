@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "reviewer_sha256": "92c5990e740c50c5bd30085ccb97a823f0349694bddcdba2200864ee36a7ce9c",
+  "source_audit_sha256": "af369ca283ea91d2071727765f15cd83fc853e035b33df4351055ec0539188d2",
+  "table": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/writer-closure-tables.json",
+    "sha256": "2c985f915ccaa84ac8d08eb22597da02add7d361a46633a3ff764e1d89c07e6a"
+  },
+  "rows": [
+    {
+      "id": "W-01",
+      "expected_stage": "early flush_buffer/fsync error",
+      "observations": [
+        {
+          "mode": "fsync-once",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_terminal_native_writer_failures/native-writer-result-fsync-once.json",
+            "sha256": "071193509f33b23ced53c5c0f95200589c606e93b2f2157af8ed3a158ddd1387"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_native_writer_fail0/original-writer-faults.jsonl",
+            "sha256": "2ff3de77119d8e56813d71230651f51f669875f90e5a0a03ecdd4b602e0f8aa5"
+          },
+          "native_trace": null,
+          "finalize_exit_state": "open",
+          "after_policy_state": "failed",
+          "abort_usability": "usable",
+          "abort_attempted": true,
+          "abort_completed": true,
+          "observed_manifest_sha256": "d0657bf410bf76ddbda20a16f4622d294142467627209d4cfbb47407c2c5a0a5",
+          "observed_manifest_state": "failed",
+          "reader_diagnostics": [],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        },
+        {
+          "mode": "fsync-persistent",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_terminal_native_writer_failures/native-writer-result-fsync-persistent.json",
+            "sha256": "779797f3b7042d1ef12adbeed580112aaf52bc52bfa678741ddcd99c8a838c36"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_native_writer_fail1/original-writer-faults.jsonl",
+            "sha256": "737df35a1a65524e313b7570714cb564bef2b4a27d7dbc0e6fea548f843bfe49"
+          },
+          "native_trace": null,
+          "finalize_exit_state": "open",
+          "after_policy_state": "open",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "f26671586861f5f7ad305536a25d08575b7df2f8366a62641c48f4edb46bd06d",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-02",
+      "expected_stage": "early stream flush error",
+      "observations": [
+        {
+          "mode": "seeded-flush-once",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_native_writer_stream_faults/stream-result-seeded-flush-once.json",
+            "sha256": "8d4682ab089c489348324565c9bc2715d47bcee1e5bcbbed2f1df081a0b890dd"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese1/owned-stream-public.jsonl",
+            "sha256": "873a861dbffa1d5cb94290ad8c78d8b2ad5a5c9ecdde02c1d31c8d3fd6f0ca56"
+          },
+          "native_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese1/owned-stream-syscalls.jsonl",
+            "sha256": "0eb22e00f063772cd1fa45a9cc5ef3b07af28a076d3059a769cb936cbd1e5d5a"
+          },
+          "finalize_exit_state": "open",
+          "after_policy_state": "failed",
+          "abort_usability": "usable",
+          "abort_attempted": true,
+          "abort_completed": true,
+          "observed_manifest_sha256": "a26d3116c21c4fccb2bafaa30f3e4aec17cdf70007ed7b1f403f0fe7b9fc0a16",
+          "observed_manifest_state": "failed",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ORDINAL"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": true,
+          "healthy_prefix_claim": false
+        },
+        {
+          "mode": "seeded-flush-persistent",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_native_writer_stream_faults/stream-result-seeded-flush-persistent.json",
+            "sha256": "0fb10c485209a8bc6fab377d58422b3df724f885bc5bdf1d21732de73ec25d39"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese2/owned-stream-public.jsonl",
+            "sha256": "16032515d1c5c8e2add79cd3c7f79d08373d881f9d29ec4a39c024d53a65b262"
+          },
+          "native_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese2/owned-stream-syscalls.jsonl",
+            "sha256": "06830ef2b6168d548f179ede6eebbeaaeaaa9eaecf0ced20220c2b58bc2db364"
+          },
+          "finalize_exit_state": "open",
+          "after_policy_state": "open",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "0895f290973c54e2e9b57f94bef002c959ecc522a091b371d13a521ce0028f5c",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": true,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-03",
+      "expected_stage": "early stream close error",
+      "observations": [
+        {
+          "mode": "close-after",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_native_writer_stream_faults/stream-result-close-after.json",
+            "sha256": "0e2a69f9171aa36ac89dcca6e4df14c7af1362c7c176037ebb13fe7122d34926"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese3/owned-stream-public.jsonl",
+            "sha256": "863095e8b8f8294b0363a161240a113ed73a7985dad7edd2f5324ceb3e8d2a51"
+          },
+          "native_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese3/owned-stream-syscalls.jsonl",
+            "sha256": "27ca7b6813a27a921c046f750288f6df90113ed10d05ac11d472944b07fe179b"
+          },
+          "finalize_exit_state": "open",
+          "after_policy_state": "open",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "9d6cacedce0a3f0c946ab7c70daf7d2cb6828d31a85daedddc0d5f08e8dec1df",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-04",
+      "expected_stage": "post-close recovery error",
+      "observations": [
+        {
+          "mode": "recovery",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_terminal_native_writer_failures/native-writer-result-recovery.json",
+            "sha256": "a956a004543072ed48f51356ad2fcccf09504fc5b76f06f5b296f8d3901a836f"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_native_writer_fail2/original-writer-faults.jsonl",
+            "sha256": "d4d77a962536e99d21ce80026ef19937d3648d0230dc50fc9dae504a80f3a7e3"
+          },
+          "native_trace": null,
+          "finalize_exit_state": "failed",
+          "after_policy_state": "failed",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "23479163a95868b21dee497e71c087de5a09008c4bb5d809295cbf70e7bf3717",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-05",
+      "expected_stage": "post-close artifact verification error",
+      "observations": [
+        {
+          "mode": "artifact-check",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_terminal_native_writer_failures/native-writer-result-artifact-check.json",
+            "sha256": "dafa27a200c4b7cf31c664bc11faa9afe649f96d41d82d84ffa7cde9b39952a6"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_native_writer_fail3/original-writer-faults.jsonl",
+            "sha256": "cf069f0c764c1e57f76389a9419ecaeeed2d61dbf2be65c8c2f766349c8fb1f9"
+          },
+          "native_trace": null,
+          "finalize_exit_state": "failed",
+          "after_policy_state": "failed",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "a053247be9d54ec9766ee196cbc31bf23a88dd65bd0fc11e678f4c089f816719",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-06",
+      "expected_stage": "post-close publication error",
+      "observations": [
+        {
+          "mode": "manifest-replace",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_terminal_native_writer_failures/native-writer-result-manifest-replace.json",
+            "sha256": "1b57d1e593ea86cf4a9bebf635d6fb551f5bb0f98dd08f3ecacb3954280fb061"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_native_writer_fail4/original-writer-faults.jsonl",
+            "sha256": "5062c1d4cc89711dc2766efda30096fc18865e9382454f14849f9e2f6f567723"
+          },
+          "native_trace": null,
+          "finalize_exit_state": "failed",
+          "after_policy_state": "failed",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "e8a05ca3e7a96d537f1f69ae1ff1b1f11883873dc3cfd2a6c053edbf7f8238a4",
+          "observed_manifest_state": "open",
+          "reader_diagnostics": [
+            "ARGUS2-CORRUPT-ARTIFACT-SIZE",
+            "ARGUS2-CORRUPT-ARTIFACT-HASH",
+            "ARGUS2-CORRUPT-MANIFEST-SHAPE",
+            "ML-RUNTIME-CLOSED-READER"
+          ],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    },
+    {
+      "id": "W-07",
+      "expected_stage": "successful finalize",
+      "observations": [
+        {
+          "mode": "loader-only",
+          "receipt": {
+            "path": "maestro_full-source-harness/test_native_writer_stream_faults/stream-result-loader-only.json",
+            "sha256": "5f3566a5159b0aad8eee91f77124fca6084d57e9b6d29998baac5334be6df068"
+          },
+          "public_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese0/owned-stream-public.jsonl",
+            "sha256": "47cec90ea3dccbc74db5fa3c0be873b9471d33ec6d8320a464bab6c255fe631d"
+          },
+          "native_trace": {
+            "path": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_native_stream_fault_prese0/owned-stream-syscalls.jsonl",
+            "sha256": "45fd7d884ccdaed329db98247471c4769ee1a4635744a940c3b1268320e6a3ab"
+          },
+          "finalize_exit_state": "closed",
+          "after_policy_state": "closed",
+          "abort_usability": "unknown",
+          "abort_attempted": false,
+          "abort_completed": false,
+          "observed_manifest_sha256": "86e4f0eb1c82a9eabcb8fdb48d70ba60a652a08325fcda635eb32b0f4c628f0b",
+          "observed_manifest_state": "closed",
+          "reader_diagnostics": [],
+          "original_helpers_reaped_and_C1_released": true,
+          "failed_annotation_seed_precondition": false,
+          "healthy_prefix_claim": false
+        }
+      ],
+      "disposition": "scoped_branch_support_not_full_runtime_case_closure",
+      "full_row_universe_proven": false
+    }
+  ],
+  "stage_rows_with_scoped_support": 7,
+  "supporting_control_executions": 9,
+  "W01_persistent_usability_requires_positive_probe": true,
+  "W02_healthy_prefix_not_stated_in_frozen_row": true,
+  "W02_healthy_prefix_demonstrated": false,
+  "stage_exit_and_post_policy_states_kept_separate": true,
+  "actual_final_manifest_observations_retained": true,
+  "manifest_bytes_at_exact_failure_boundary_retained": false,
+  "full_TR03_complete": false,
+  "full_TR06_complete": false,
+  "full_M1_complete": false,
+  "gate_waiver": false,
+  "native_execution_performed": false,
+  "product_source_changed": false,
+  "independent_semantic_confirmation": false,
+  "accepted": false,
+  "merged": false,
+  "scientific_result": false
+}

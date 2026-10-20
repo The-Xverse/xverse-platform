@@ -18,9 +18,10 @@ receive = persistence_worker._receive
 
 def receiving(*args, **kwargs):
     global phase
-    frame = receive(*args, **kwargs)
+    packet = receive(*args, **kwargs)
+    frame = packet[0] if isinstance(packet, tuple) else packet
     phase = frame["kind"]
-    return frame
+    return packet
 
 
 persistence_worker._receive = receiving

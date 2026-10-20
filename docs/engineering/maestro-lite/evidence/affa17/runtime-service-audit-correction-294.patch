@@ -1,0 +1,39 @@
+--- audit-runtime-service-20261019.py
++++ audit-runtime-service-20261019-v2.py
+@@ -33,7 +33,7 @@
+             assert hashlib.sha256(wheel.read(entry)).hexdigest()==h==sha(installed/entry)
+             packaged.append(entry)
+ assert len(packaged)==81
+-phases=[];roots=[];launchers=[];root_waits=[];broker_waits=[];denials=[];cases=[];snapshots=[];closed=[];seen=set()
++phases=[];roots=[];launchers=[];root_waits=[];broker_waits=[];denials=[];cases=[];snapshots=[];closed=[];seen=set();classification={}
+ for p in sorted(out.glob('*-receipt.json')):
+     receipt=read(p)
+     if 'cohort' not in receipt:continue
+@@ -78,6 +78,9 @@
+         denials.append(dict(path=str(path.relative_to(out)),sha256=sha(path),case=row['case']))
+     for path in harness.glob('runtime-entry-waits-*.json'):
+         row=read(path);closure=row['closure']
++        identity=row['original_fixture']
++        assert identity not in classification
++        classification[identity]=not ('concurrent_stop' in row['case'] or 'registry_loss_stop' in row['case'])
+         assert row['original_root_wait'] and row['actual_original_helper_waits'] and row['all_original_C1_released']
+         assert closure['root_reaped'] and all(h['process_reaped'] for h in closure['helpers'])
+         assert all(b['empty'] and b['released'] for b in closure['boundaries']) and not closure['lifecycle_complete']
+@@ -110,8 +113,8 @@
+         assert runtime_admission_digest(admission,plan,inputs['generation_ns'])==inputs['runtime_digest']
+         verified=verify_runtime_closed(admission,plan,fixture/'argus',expected_admission_digest=inputs['admission_digest'],
+             generation_ns=inputs['generation_ns'],expected_runtime_digest=inputs['runtime_digest'])
+-        cancelled='concurrent_stop' in fixture.name or 'registry_loss_stop' in fixture.name
+-        assert verified.complete is (not cancelled)
++        assert str(fixture) in classification
++        assert verified.complete is classification[str(fixture)]
+         if verified.complete:
+             original=fixture/'argus';assert not any(p.is_symlink() for p in original.rglob('*'))
+             files={str(p.relative_to(original)):sha(p) for p in original.rglob('*') if p.is_file()}
+@@ -144,5 +147,5 @@
+     source_parent_semantics_validated=False,real_operator_approval_verified=False,top_level_start_exported=False,
+     full_M1_complete=False,whole_platform_regression=False,stable_increment17=False,
+     unresolved_findings=[135,222,286,287],accepted=False,merged=False)
+-with (out/'verification.json').open('x') as stream:json.dump(result,stream,indent=2);stream.write('\n')
++with (out/'verification-v2.json').open('x') as stream:json.dump(result,stream,indent=2);stream.write('\n')
+ print(json.dumps(dict(counts=counts,roots=len(roots),source_links=result['source_links'],closed=len(closed),actual_service_runtime_runs=0)))

@@ -1,0 +1,32 @@
+...F................                                                     [100%]
+=================================== FAILURES ===================================
+___ test_retained_export_preserves_original_and_successor_generation_sources ___
+
+request = <FixtureRequest for <Function test_retained_export_preserves_original_and_successor_generation_sources>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6a38790d10>
+
+    def test_retained_export_preserves_original_and_successor_generation_sources(request,monkeypatch):
+        future_prepare(request,monkeypatch)
+        saved=prepare(monkeypatch)
+        stack=request.getfixturevalue('broker_stack')
+        broker,_,client,_=stack
+        end=stage_all(stack)
+        for target in broker.owner._prepared.resource_order:
+            issuer=broker.issuer(target)
+            assert stack[1].start(target,issuer.recipe.descriptor,broker.connection,end).ready
+        controller=ReverseTeardown(stack[1],per_unit_seconds=0.8)
+        unit=broker.owner._prepared.resource_order[-1]
+        release(controller,unit);advance(stack,controller,unit)
+        receipt=client.export_public_inputs(saved['declaration'],deadline(2))
+        body=read_export(stack,receipt)
+        intents=[e for e in body['annotations'] if e['extensions']['xverse.maestro']['unitId']==unit
+            and e['extensions']['xverse.maestro']['action']=='intent']
+        assert {e['extensions']['xverse.maestro']['generation'] for e in intents}=={1,2}
+>       assert len({e['eventId'] for e in intents})==2
+E       AssertionError: assert 4 == 2
+E        +  where 4 = len({'ml-3f21ebf005a744b98905e1e31185ea3e-stop-intent', 'ml-4fe4f7c95da445239a7a11617107d58f-intent', 'ml-988956f02ddc4e76a43b0620d11fa806-cleanup-intent', 'ml-c99704d92f874c02b098bbbc1f61f46a-intent'})
+
+tests/thesis_lite/maestro/test_retained_inputs.py:139: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_retained_inputs.py::test_retained_export_preserves_original_and_successor_generation_sources
+1 failed, 19 passed in 15.00s

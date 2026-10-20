@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "record": "author-decisions-proposed-20261020",
+  "date_utc": "2026-10-20",
+  "author_instruction": "for the author decisions, propose something and proceed",
+  "mode": "agent proposals acted on under the author's proceed instruction; none is an explicit author approval; every derived artefact carries a provisional status that only an explicit author confirmation can advance",
+  "review_finding": 369,
+  "decisions": [
+    {
+      "id": "AD-2026-10-20-a",
+      "subject": "source-parent projection v2 (18 public-safe summaries, 76 bounded links)",
+      "inputs": {
+        "proposal": "specs/024-maestro-lite-lifecycle/review/source-parent-semantics-proposal-20261019-v2/proposal.json",
+        "proposal_sha256": "0183f57a7977a3d7ce4021e06ea0dfe56293552a66d910474224a16ce6960caf",
+        "canonical_register": "specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+        "canonical_register_sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f"
+      },
+      "proposal": "ACCEPT_PROVISIONALLY",
+      "rationale": "No original text is copied; each row binds an exact source paragraph hash; finding 350 reviewed the corrected wording; ML-SR-021 is not force-mapped; structural checks pass.",
+      "action_taken": "successor register ML-SOURCE-PARENT-2026-10-20-v3 built with semantics_status proposed_public_safe_summary_provisional; canonical v2 register, v2 proposal and immutable inputs unchanged",
+      "remaining_author_gate": "explicit public-safe classification and semantic-fidelity confirmation; without it the status stays provisional and the G4 waiver stays draft-only",
+      "does_not_approve": ["implementation", "execution", "M1", "acceptance", "merge", "canonical-note change", "scientific claim"]
+    },
+    {
+      "id": "AD-2026-10-20-b",
+      "subject": "endpoint-reconciliation successor for the 90 declared obligations (7 of 62 endpoints resolve)",
+      "inputs": {
+        "gap_record": "docs/engineering/maestro-lite/evidence/affa17/endpoint-reconciliation-gap-20261020.json",
+        "change_spec_matrix": "specs/024-maestro-lite-lifecycle/review/ml3-successor-change-spec-2026-10-03-v1/validation-matrix.json",
+        "change_spec_matrix_sha256": "566a5152b5e4b663eb9fc1fae61440817330465f789b32289df35a4770d4cd8a"
+      },
+      "proposal": "AUTHORIZE_AGENT_DRAFTED_RECONCILIATION_PROPOSAL",
+      "rationale": "The declared endpoint set predates the current composition; a mapping to current qualified interface identities, each mechanically checked against the AST, is the prerequisite for the independent review the change spec requires. Drafting it closes no obligation.",
+      "action_taken": "endpoint-reconciliation-proposal-20261020.json built: every declared endpoint mapped to a current identity or recorded as superseded with rationale; confidence per row; AST resolution per target",
+      "remaining_author_gate": "independent review and acceptance of the mapping before any obligation is closed or the 24/18/30/90 trace is re-bound",
+      "does_not_approve": ["trace closure", "acceptance", "merge"]
+    },
+    {
+      "id": "AD-2026-10-20-c",
+      "subject": "transitive cadence/scan redesign (ML-CAPA-366 REJECTED, 0.3 s budget forced by 5 s cadence)",
+      "proposal": "DEFER_WITH_TRIGGER",
+      "trigger": "a transitive-cohort expiry in two of the next three baseline runs, or two transitive-cohort expiries in one run",
+      "redesign_shape_if_triggered": {
+        "cadence_seconds": 8, "operation_seconds": 0.5, "units": 4, "service_operation_count": 4,
+        "admission_check": {"scan": 2.0, "period": 3.5, "period_exceeds_scan": true, "poll_0.05_within_period": true, "horizon": 45.0, "slots": 15, "restart_bound": 3.5, "recovery_bound": 5.0, "recovery_minimum": 2.75},
+        "today": {"cadence_seconds": 5, "operation_seconds": 0.3, "scan": 1.2, "period": 2.3, "horizon": 39.0, "slots": 19},
+        "cost": "asserted health-scan and slot counts in the transitive modules must be re-authored under their own finding; it is a reviewed fixture redesign, not a budget bump"
+      },
+      "rationale": "Run h had no transitive expiry; the only child expiry was in the schedule-worker fixture. Redesigning now would change asserted counts without an observed need.",
+      "action_taken": "trigger and shape recorded in the CAPA successor on ML-CAPA-366; no fixture edit"
+    },
+    {
+      "id": "AD-2026-10-20-d",
+      "subject": "tmpfs as the declared harness filesystem (ML-CAPA-364 fidelity change)",
+      "proposal": "KEEP_TMPFS_WITH_PERSISTENT_MEDIA_REFERENCE_RUN",
+      "terms": [
+        "baseline regression runs keep TMPDIR and the private basetemp on tmpfs; each run's configuration.json declares it",
+        "the fsync probe stays enabled and outside the basetemp",
+        "one persistent-media (ext4) reference run per increment is required before acceptance evidence is assembled; its expiries are triaged as observations, not as acceptance failures",
+        "tmpfs is a harness choice; it is never cited as a product durability property"
+      ],
+      "rationale": "Three consecutive tmpfs runs (e, f, h) show zero outer expiries while the ext4 host condition (90 percent full, shared write load) is external to the product; a periodic ext4 reference run keeps the fidelity gap observable.",
+      "action_taken": "terms recorded in the CAPA successor on ML-CAPA-364 and in the continuation; no run started"
+    }
+  ],
+  "authority": {"author_approved": false, "explicit_author_confirmation_pending": true, "canonical_note_changed": false, "acceptance": false, "M1": false, "merge": false, "factory_run": false}
+}

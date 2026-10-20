@@ -1,0 +1,39 @@
+{
+  "mode": "recovery",
+  "expected_public_states": [
+    "finalize-error",
+    "failed",
+    "open",
+    "unknown",
+    false,
+    false,
+    "W-04"
+  ],
+  "command": [
+    "cc",
+    "-DRUN_BOOTSTRAP",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "/tmp/maestro-native-writer-stages-20261019b-wheel-private-9yxnqliz/test_actual_native_writer_fail2/owned-writer-stage-helper/bootstrap.c",
+    "-lcrypto",
+    "-o",
+    "/tmp/maestro-native-writer-stages-20261019b-wheel-private-9yxnqliz/test_actual_native_writer_fail2/owned-writer-stage-helper/run-bootstrap"
+  ],
+  "returncode": 0,
+  "original_native_source_sha256": "21c2f70f6fbb1dec66fca39c9a44e4086f4496d46d30f28671ecd31f007cc38b",
+  "fixed_fault_code": "import os,json\nfrom xverse.argus import recovery,writer as module\nfrom xverse.argus.writer import EvidenceRun\nfrom xverse.maestro import persistence_worker\nmode='recovery'\nfd=os.open('/tmp/maestro-native-writer-stages-20261019b-wheel-private-9yxnqliz/test_actual_native_writer_fail2/original-writer-faults.jsonl',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)\nphase=None\nwriter=None\nfaults=0\ndef log(operation,result):\n    os.write(fd,(json.dumps(dict(operation=operation,result=result,phase=phase,\n        writer_state=writer.writer_state if writer is not None else None))+'\\n').encode())\nfinalize=EvidenceRun.finalize\nflush=EvidenceRun.flush_buffer\nabort=EvidenceRun.abort\nfsync=os.fsync\nreplace=os.replace\nrecover=recovery.recover_stream\ncheck_artifact=module.verify_index_entry\ndef failure(operation):\n    global faults\n    faults+=1;log(operation,'injected-error');raise OSError('owned exact writer failure')\ndef sync(*args,**kwargs):\n    if (phase=='finalize' and mode in ('fsync-once','fsync-persistent','abort-entry')\n        and (faults==0 or mode=='fsync-persistent')):\n        failure('os.fsync')\n    if phase=='flush' and mode=='fsync-persistent':failure('os.fsync')\n    return fsync(*args,**kwargs)\ndef publication(*args,**kwargs):\n    if phase=='finalize' and mode=='manifest-replace':failure('os.replace')\n    return replace(*args,**kwargs)\ndef recover_run(*args,**kwargs):\n    if phase=='finalize' and mode=='recovery':failure('recover_stream')\n    return recover(*args,**kwargs)\ndef artifact(*args,**kwargs):\n    if phase=='finalize' and mode=='artifact-check':failure('verify_index_entry')\n    return check_artifact(*args,**kwargs)\ndef final(self,*args,**kwargs):\n    global phase,writer\n    writer=self;phase='finalize';log('finalize','entered')\n    try:\n        result=finalize(self,*args,**kwargs);log('finalize','returned');return result\n    except BaseException:\n        log('finalize','raised');raise\n    finally:phase=None\ndef flushed(self,*args,**kwargs):\n    global phase,writer\n    # A finalize's own public flush retains finalize context; the later fresh\n    # policy flush is distinct. Ordinary productive flushes are untouched.\n    if phase=='finalize':return flush(self,*args,**kwargs)\n    if writer is not self:return flush(self,*args,**kwargs)\n    phase='flush';log('flush_buffer','entered')\n    try:\n        result=flush(self,*args,**kwargs);log('flush_buffer','returned');return result\n    except BaseException:\n        log('flush_buffer','raised');raise\n    finally:phase=None\ndef aborted(self,*args,**kwargs):\n    global phase\n    phase='abort';log('abort','entered')\n    try:\n        if mode=='abort-entry':failure('abort-entry')\n        result=abort(self,*args,**kwargs);log('abort','returned');return result\n    except BaseException:\n        log('abort','raised');raise\n    finally:phase=None\nos.fsync=sync\nos.replace=publication\nrecovery.recover_stream=recover_run\nmodule.verify_index_entry=artifact\nEvidenceRun.finalize=final\nEvidenceRun.flush_buffer=flushed\nEvidenceRun.abort=aborted\nstatus=persistence_worker.main()\nos.close(fd)\nos._exit(status)\n",
+  "fixed_fault_code_sha256": "53734862d61a1f66d91b06416d1a2bd1fcf01c1add0e5323ccad199f2e681d59",
+  "compiled_source_sha256": "337c4a0eda2a3687be67d781d9713fdb722fd664311fca48b4cc60d2fc5e4555",
+  "binary_sha256": "888e6268e3d9a42da017193e940eb4f5f20fb94dde4a073430e3ac7ff7e5dac2",
+  "original_fixture": "/tmp/maestro-native-writer-stages-20261019b-wheel-private-9yxnqliz/test_actual_native_writer_fail2",
+  "trace_file": "/tmp/maestro-native-writer-stages-20261019b-wheel-private-9yxnqliz/test_actual_native_writer_fail2/original-writer-faults.jsonl",
+  "source_sha256": "4e22f1a7b4ebdf57986700340c110f26970f68b2b6da26368cb6fccbed398d1e",
+  "production_fault_mode_added": false,
+  "admission_precedes_birth": true,
+  "private_stream_access": false
+}

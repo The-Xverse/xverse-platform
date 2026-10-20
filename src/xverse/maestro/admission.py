@@ -5,10 +5,12 @@ does not authenticate an operator, invent approval, admit containment or create
 a bootstrap permit. Its return values are not capabilities or launch tickets.
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 import copy
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field, fields, is_dataclass, replace
 from datetime import datetime
+from enum import Enum
+import math
 import hashlib
 import json
 import os
@@ -357,6 +359,158 @@ def validate_permits(
     return tuple(checked)
 
 
+@dataclass(frozen=True)
+class GenerationContext:
+    """Owner-supplied inert successor approval facts, never launch authority."""
+
+    binding: PermitBinding = field(repr=False)
+    approval: PermitApproval = field(repr=False)
+    ready_for_execution: bool = field(default=False, init=False)
+
+    def __post_init__(self):
+        if (
+            type(self.binding) is not PermitBinding
+            or type(self.approval) is not PermitApproval
+        ):
+            _deny("ML-PERMIT-TYPE", "exact future binding and approval values required")
+
+
+def _validate_successors(prepared, run_id, initial, future_contexts, now):
+    if type(future_contexts) is not tuple:
+        _deny("ML-PERMIT-TYPE", "future contexts must be an immutable tuple")
+    if len(initial) + len(future_contexts) > 128:
+        _deny("ML-PERMIT-CAPACITY", "joint admitted generation capacity exceeded")
+    if any(type(c) is not GenerationContext for c in future_contexts):
+        _deny("ML-PERMIT-TYPE", "exact future contexts required")
+    units = {unit.unit_id: unit for unit, _, _ in initial}
+    for context in future_contexts:
+        context.__post_init__()
+        binding, approval = context.binding, context.approval
+        if binding.unit_id not in units:
+            _deny("ML-PERMIT-SET", "future context has an undeclared unit")
+        if type(binding.generation) is not int or not 2 <= binding.generation <= 128:
+            _deny(
+                "ML-PERMIT-GENERATION",
+                "future context needs an explicit successor generation",
+            )
+        _identifier(binding.execution_id)
+        _permit_shape(binding.permit)
+        _approval_shape(approval)
+    all_bindings = [b for _, b, _ in initial] + [c.binding for c in future_contexts]
+    for values in (
+        [b.execution_id for b in all_bindings],
+        [b.permit.permit_id for b in all_bindings],
+        [b.permit.nonce for b in all_bindings],
+    ):
+        if len(set(values)) != len(values):
+            _deny(
+                "ML-PERMIT-REPLAY", "initial and future identities must all be unique"
+            )
+    rank = {unit.unit_id: i for i, (unit, _, _) in enumerate(initial)}
+    ordered = tuple(
+        sorted(
+            future_contexts,
+            key=lambda c: (rank[c.binding.unit_id], c.binding.generation),
+        )
+    )
+    next_generation = {unit: 2 for unit in units}
+    for context in ordered:
+        binding, approval = context.binding, context.approval
+        generation = next_generation[binding.unit_id]
+        if binding.generation != generation:
+            _deny(
+                "ML-PERMIT-GENERATION", "future contexts must be consecutive per unit"
+            )
+        _validate_one(
+            prepared, run_id, units[binding.unit_id], binding, approval, now, generation
+        )
+        next_generation[binding.unit_id] += 1
+    return ordered
+
+
+def validate_generation_contexts(
+    prepared,
+    result,
+    resources,
+    *,
+    run_id,
+    bindings,
+    approvals,
+    future_contexts=(),
+    now,
+):
+    """Pure initial1/future approval validation; no consumption or release proof."""
+    initial = validate_permits(
+        prepared,
+        result,
+        resources,
+        run_id=run_id,
+        bindings=bindings,
+        approvals=approvals,
+        now=now,
+        initial_generation=1,
+    )
+    return _validate_successors(prepared, run_id, initial, future_contexts, now)
+
+
+def _preparation_data(value):
+    """Private complete typed snapshot; not a public digest or permission."""
+    active = set()
+
+    def visit(item):
+        kind = type(item)
+        if isinstance(item, Enum):
+            return kind, visit(item.value)
+        if item is None or kind in (bool, int, str, bytes):
+            return kind, item
+        if kind is float:
+            if not math.isfinite(item):
+                raise ValueError("nonfinite preparation input")
+            return kind, item.hex()
+        identity = id(item)
+        if identity in active:
+            raise ValueError("cyclic preparation input")
+        active.add(identity)
+        try:
+            if is_dataclass(item) and not isinstance(item, type):
+                return kind, tuple(
+                    (f.name, visit(getattr(item, f.name))) for f in fields(item)
+                )
+            if isinstance(item, Mapping):
+                if any(type(key) is not str for key in item):
+                    raise ValueError("non-string preparation key")
+                return kind, tuple((key, visit(item[key])) for key in sorted(item))
+            if kind in (tuple, list):
+                return kind, tuple(visit(v) for v in item)
+            raise ValueError("unsupported preparation input")
+        finally:
+            active.remove(identity)
+
+    try:
+        return visit(value)
+    except (ValueError, TypeError, AttributeError, RecursionError) as error:
+        raise AdmissionError(
+            "ML-PERMIT-PLAN", "invalid original preparation fields"
+        ) from error
+
+
+@dataclass(frozen=True)
+class _PreparationProof:
+    prepared: object = field(repr=False)
+    result: object = field(repr=False)
+    resources: tuple = field(repr=False)
+    snapshot: tuple = field(repr=False)
+
+    def check(self, prepared, result, resources):
+        if (
+            prepared is not self.prepared
+            or result is not self.result
+            or resources is not self.resources
+            or _preparation_data((prepared, result, resources)) != self.snapshot
+        ):
+            _deny("ML-PERMIT-PLAN", "original validated preparation input changed")
+
+
 class PermitSession:
     """Private coordinator-side permit context; durable claims grant no launch rights."""
 
@@ -372,20 +526,39 @@ class PermitSession:
         now: datetime,
         journal: FileEvidenceJournal,
         initial_generation: int = 0,
+        future_contexts: tuple[GenerationContext, ...] = (),
     ) -> None:
         if type(journal) is not FileEvidenceJournal:
             _deny("ML-PERMIT-JOURNAL", "actual durable M3 FileEvidenceJournal required")
+        # Own mutable compiler data before its full validation, and bracket that
+        # verification with an exact typed snapshot. Never pin an unvalidated copy.
+        owned_result = replace(result, plan=copy.deepcopy(result.plan))
+        owned_resources = tuple(resources)
+        proof = _PreparationProof(
+            prepared,
+            owned_result,
+            owned_resources,
+            _preparation_data((prepared, owned_result, owned_resources)),
+        )
         checked = validate_permits(
             prepared,
-            result,
-            resources,
+            owned_result,
+            owned_resources,
             run_id=run_id,
             bindings=bindings,
             approvals=approvals,
             now=now,
             initial_generation=initial_generation,
         )
-        for _, binding, _ in checked:
+        if future_contexts and initial_generation != 1:
+            _deny(
+                "ML-PERMIT-GENERATION", "future contexts require initial generation one"
+            )
+        futures = _validate_successors(prepared, run_id, checked, future_contexts, now)
+        admitted_bindings = [binding for _, binding, _ in checked] + [
+            c.binding for c in futures
+        ]
+        for binding in admitted_bindings:
             if journal.permit_consumed(binding.permit.permit_id, binding.permit.nonce):
                 _deny(
                     "ML-PERMIT-REPLAY",
@@ -393,10 +566,13 @@ class PermitSession:
                 )
         _check_unresolved_intents(journal.records, prepared.units)
         self._prepared = prepared
-        self._result = replace(result, plan=copy.deepcopy(result.plan))
-        self._resources = tuple(resources)
+        proof.check(prepared, owned_result, owned_resources)
+        self._result = owned_result
+        self._resources = owned_resources
+        self._preparation_proof = self._preparation_proof_pin = proof
         self._run_id = run_id
         self._checked = checked
+        self._future_contexts = self._future_contexts_pin = futures
         self._journal = journal
         self._has_claimed = False
         self._claims_closed = False
@@ -412,6 +588,8 @@ class PermitSession:
             self._original is not self
             or self._pid != os.getpid()
             or self._journal is not self._journal_pin
+            or self._preparation_proof is not self._preparation_proof_pin
+            or self._future_contexts is not self._future_contexts_pin
         ):
             _deny("ML-PERMIT-HOLDER", "original permit session and journal required")
         prepared, checked, run_id, generation = self._context_pin
@@ -430,7 +608,7 @@ class PermitSession:
         if saved is None or saved[0] is not receipt or self._claims_closed:
             _deny("ML-PERMIT-RECEIPT", "original retained intent receipt required")
         _, stored, unit, binding, approval = saved
-        _verify_prepared(self._prepared, self._result, self._resources)
+        self._preparation_proof.check(self._prepared, self._result, self._resources)
         _validate_one(
             self._prepared,
             self._run_id,
@@ -438,7 +616,7 @@ class PermitSession:
             binding,
             approval,
             now,
-            self._initial_generation,
+            binding.generation,
         )
         try:
             records = self._journal.records
@@ -506,7 +684,7 @@ class PermitSession:
                 "durability failure has permanently closed this session's claims",
             )
         _aware(now)
-        _verify_prepared(self._prepared, self._result, self._resources)
+        self._preparation_proof.check(self._prepared, self._result, self._resources)
         if not self._has_claimed:
             # The first mutation follows a fresh check of all initial permits.
             checked = validate_permits(
@@ -543,6 +721,66 @@ class PermitSession:
             now,
             self._initial_generation,
         )
+        return self._claim_selected(unit, binding, selected[2], now)
+
+    def _claim_successor(self, unit_id, generation, prior, cleanup, *, now):
+        """Worker-internal: actual original cleanup record, never a counter permit."""
+        self._holder()
+        self._preparation_proof.check(self._prepared, self._result, self._resources)
+        old = self._issued.get(id(prior))
+        if (
+            self._claims_closed
+            or old is None
+            or old[0] is not prior
+            or prior.unit_id != unit_id
+        ):
+            _deny("ML-PERMIT-RECEIPT", "original prior generation claim required")
+        _, stored, unit, _, _ = old
+        old_generation = stored.details["generation"]
+        history = self._journal.records
+        details = cleanup.details.get("teardown", {})
+        if (
+            type(generation) is not int
+            or generation != old_generation + 1
+            or stored not in history
+            or cleanup not in history
+            or cleanup.kind != "outcome"
+            or cleanup.status != "cleaned"
+            or cleanup.execution_id != stored.execution_id
+            or cleanup.action_id
+            != next(a.action_id for a in unit.plan.actions if a.phase == "cleanup")
+            or cleanup.details.get("generation") != old_generation
+            or details.get("phase") != "cleanup"
+            or details.get("stage") != "outcome"
+            or any(
+                details.get(k) is not True
+                for k in ("leader_reaped", "empty", "released")
+            )
+        ):
+            _deny("ML-PERMIT-PRIOR-RELEASE", "actual original normal cleanup required")
+        selected = next(
+            (
+                c
+                for c in self._future_contexts
+                if c.binding.unit_id == unit_id and c.binding.generation == generation
+            ),
+            None,
+        )
+        if selected is None:
+            _deny("ML-PERMIT-GENERATION", "no exact admitted successor context")
+        _validate_one(
+            self._prepared,
+            self._run_id,
+            unit,
+            selected.binding,
+            selected.approval,
+            now,
+            generation,
+        )
+        return self._claim_selected(unit, selected.binding, selected.approval, now)
+
+    def _claim_selected(self, unit, binding, approval, now):
+        unit_id = unit.unit_id
         permit, plan = binding.permit, unit.plan
         start = next(action for action in plan.actions if action.phase == "start")
         record = EvidenceRecord(
@@ -587,5 +825,5 @@ class PermitSession:
             ) from error
         self._has_claimed = True
         receipt = IntentReceipt(unit_id, binding.execution_id, stored.sequence)
-        self._issued[id(receipt)] = (receipt, stored, unit, binding, selected[2])
+        self._issued[id(receipt)] = (receipt, stored, unit, binding, approval)
         return receipt

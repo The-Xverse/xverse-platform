@@ -1,0 +1,53 @@
+--- c/tests/thesis_lite/maestro/test_shared_dispatcher.py
++++ h/tests/thesis_lite/maestro/test_shared_dispatcher.py
+@@ -77,9 +77,21 @@
+         lambda *a, **kw: prepare(*a, limits=Limits(horizon_ticks=5 if transitive else 3), **kw))
+     encode = test_launcher.encode_configuration
+     def configuration(prepared, *a, **kw):
++        # The admitted active window is created here, before worker init (~0.4 s) and
++        # before the first schedule statement. Measured over 305 clean runs of this
++        # fixture, the span after init-begin reaches p99 4.55 s; restart-capable runs
++        # additionally spend their restart/recovery budget inside the same window, so a
++        # 4.8 s window left no margin for ordinary jitter (finding 362, CAPA-222 class).
++        # The window therefore reserves the explicit restart/recovery budgets; no
++        # statement budget, lease, health cadence or product constant changes.
++        base_active_seconds = 20 if transitive else 8 if pauses>1 else 4.8
++        # Only the tight 4.8 s base window reserves the explicit restart/recovery budgets; the
++        # 20 s transitive and 8 s paused windows hold ample margin and are asserted literally.
++        reserved_seconds = ((restart_operation_seconds or 0)+(recovery_operation_seconds or 0)
++                            if base_active_seconds == 4.8 else 0)
+         plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+             ticks=(0,)*pauses+((1,2,3,4,5) if transitive else (1,2,3)),
+-            active_seconds=20 if transitive else 8 if pauses>1 else 4.8,
++            active_seconds=base_active_seconds+reserved_seconds,
+             operation_seconds=.3 if transitive else .5, per_unit_seconds=2 if transitive else 1,
+             poll_seconds=.05, request_limit=1024, service_operation_count=4,
+             restart_operation_seconds=restart_operation_seconds,use_action_timeouts=transitive,
+--- c/tests/thesis_lite/maestro/test_active_restart.py
++++ h/tests/thesis_lite/maestro/test_active_restart.py
+@@ -47,7 +47,7 @@
+     successful=mode in ('leaf','external-thread')
+     stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+     broker,facade,client,work=stack
+-    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==4.8
++    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==5.8
+     assert driver.plan.restart_operation_seconds==1.0
+     source,leaf=driver.prepared.resource_order
+     unit=source if mode=='parent-reject' else leaf
+--- c/tests/thesis_lite/maestro/test_schedule_worker.py
++++ h/tests/thesis_lite/maestro/test_schedule_worker.py
+@@ -147,7 +147,13 @@
+         owner.session, min(boot_stack[0]._lease / 1e9, time.monotonic() + 4.5)
+     )
+     receipt = gate.renew(lease, deadline(1))
+-    assert gate.lease_ns > prior and receipt == lease
++    # The gate quantizes the requested lease to integer nanoseconds (owner._deadline) and reports
++    # that quantized value; a float round trip through nanoseconds may differ from the requested
++    # float by one unit in the last place (run h, finding 374), so the receipt is compared with the
++    # retained nanosecond lease, and with the request at nanosecond resolution.
++    assert gate.lease_ns > prior
++    assert receipt == HostDeadline(owner.session, gate.lease_ns / 1e9)
++    assert abs(receipt.monotonic_seconds - lease.monotonic_seconds) <= 1e-9
+     # Renewal did not Release the staged workload or change its original scope.
+     assert not list(boot_stack[4].glob("*.marker"))
+     facade = ProcessReadiness(

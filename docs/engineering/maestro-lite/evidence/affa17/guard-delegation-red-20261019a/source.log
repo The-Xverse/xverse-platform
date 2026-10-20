@@ -1,0 +1,145 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe[normal] _
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x711d695cdd30>, <xverse.maestro.providers.ProcessReadiness object at ... PosixPath('/tmp/maestro-guard-delegation-red-20261019a-source-private-hpncvyi9/test_native_delegation_keeps_f0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x711d695caea0>
+mode = 'normal'
+
+    @pytest.mark.parametrize('mode',['normal','parent-dies-after-arm','changed-end'])
+    def test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe(broker_stack,monkeypatch,mode):
+        broker,facade,client,work=broker_stack
+        end=stage_all(broker_stack)
+        parent,unit=broker.owner._prepared.resource_order
+        source=broker.issuer(parent);sink=broker.issuer(unit)
+        assert facade.start(parent,source.recipe.descriptor,broker.connection,end).ready
+        token,capability=broker.connection._handles[(source.slot,source.recipe.descriptor.generation)]
+        assert token.hex()==source._handle.opaque_id
+        events=[]
+        rpc=client._rpc;exchange=broker.connection._exchange;release=broker.owner.release
+    
+        def observe_rpc(kind,body,deadline,**kwargs):
+            began=time.monotonic()
+            try:
+                return rpc(kind,body,deadline,**kwargs)
+            finally:
+                events.append(dict(channel='rpc',kind=kind,unit=body.get('unit'),
+                    end=deadline.monotonic_seconds,began=began,ended=time.monotonic()))
+    
+        def observe_native(frame,**kwargs):
+            began=time.monotonic()
+            result=exchange(frame,**kwargs)
+            events.append(dict(channel='native',kind=frame.kind.name,slot=frame.slot,
+                               began=began,ended=time.monotonic()))
+            if frame.kind is K.ARM and frame.slot==sink.slot and mode=='parent-dies-after-arm':
+                signal.pidfd_send_signal(capability.fileno(),signal.SIGKILL)
+                assert select.select([capability.fileno()],[],[],.5)[0]
+            return result
+    
+        def changed(unit_id,descriptor,gate,deadline,**kwargs):
+            return release(unit_id,descriptor,gate,HostDeadline(deadline.session,deadline.monotonic_seconds-.001),**kwargs)
+    
+        monkeypatch.setattr(client,'_rpc',observe_rpc)
+        monkeypatch.setattr(broker.connection,'_exchange',observe_native)
+        if mode=='changed-end':monkeypatch.setattr(broker.owner,'release',changed)
+        succeeded=False
+        if mode=='normal':
+            succeeded=facade.start(unit,sink.recipe.descriptor,broker.connection,end).ready
+            assert succeeded
+        else:
+            with pytest.raises(ValueError):
+                facade.start(unit,sink.recipe.descriptor,broker.connection,end)
+            assert broker.owner.latch.cancelled
+        probes=[e for e in events if e['channel']=='rpc' and e['kind']=='probe' and e['unit']==parent]
+        arms=[e for e in events if e['channel']=='native' and e['kind']=='ARM' and e['slot']==sink.slot]
+        releases=[e for e in events if e['channel']=='native' and e['kind']=='RELEASE' and e['slot']==sink.slot]
+        assert all(e['end']==end.monotonic_seconds for e in probes)
+        if mode=='changed-end':
+            assert not arms and not releases
+        else:
+            assert len(arms)==1
+            assert any(e['began']>=arms[0]['ended'] for e in probes)
+            assert len(releases)==(1 if mode=='normal' else 0)
+            if releases:assert probes[-1]['ended']<=releases[0]['began']
+        assert (work/(sink.owner._unit(unit).binding_id+'.marker')).exists() is succeeded
+        out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if out:
+            root=Path(out);root.mkdir(parents=True,exist_ok=True)
+            (root/('dependency-delegation-'+mode+'.json')).write_text(json.dumps(dict(
+                mode=mode,parent=parent,unit=unit,events=events,parent_probes=len(probes),
+                native_arms=len(arms),native_releases=len(releases),execution_succeeded=succeeded,
+                original_fixed_end=end.monotonic_seconds,original_fixture=str(work.parent),
+                source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                deadlines_unchanged=True,scientific_result=False),indent=2)+'\n')
+>       assert len(probes)==(1 if mode=='changed-end' else 2)
+E       AssertionError: assert 3 == 2
+E        +  where 3 = len([{'began': 990928.79312264, 'channel': 'rpc', 'end': 990931.451883027, 'ended': 990928.822596395, ...}, {'began': 9909...53192293, ...}, {'began': 990928.883367052, 'channel': 'rpc', 'end': 990931.451883027, 'ended': 990928.920854266, ...}])
+
+tests/thesis_lite/maestro/test_dependency_delegation.py:86: AssertionError
+_ test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe[parent-dies-after-arm] _
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x711d6953b4d0>, <xverse.maestro.providers.ProcessReadiness object at ... PosixPath('/tmp/maestro-guard-delegation-red-20261019a-source-private-hpncvyi9/test_native_delegation_keeps_f1/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x711d694b0e90>
+mode = 'parent-dies-after-arm'
+
+    @pytest.mark.parametrize('mode',['normal','parent-dies-after-arm','changed-end'])
+    def test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe(broker_stack,monkeypatch,mode):
+        broker,facade,client,work=broker_stack
+        end=stage_all(broker_stack)
+        parent,unit=broker.owner._prepared.resource_order
+        source=broker.issuer(parent);sink=broker.issuer(unit)
+        assert facade.start(parent,source.recipe.descriptor,broker.connection,end).ready
+        token,capability=broker.connection._handles[(source.slot,source.recipe.descriptor.generation)]
+        assert token.hex()==source._handle.opaque_id
+        events=[]
+        rpc=client._rpc;exchange=broker.connection._exchange;release=broker.owner.release
+    
+        def observe_rpc(kind,body,deadline,**kwargs):
+            began=time.monotonic()
+            try:
+                return rpc(kind,body,deadline,**kwargs)
+            finally:
+                events.append(dict(channel='rpc',kind=kind,unit=body.get('unit'),
+                    end=deadline.monotonic_seconds,began=began,ended=time.monotonic()))
+    
+        def observe_native(frame,**kwargs):
+            began=time.monotonic()
+            result=exchange(frame,**kwargs)
+            events.append(dict(channel='native',kind=frame.kind.name,slot=frame.slot,
+                               began=began,ended=time.monotonic()))
+            if frame.kind is K.ARM and frame.slot==sink.slot and mode=='parent-dies-after-arm':
+                signal.pidfd_send_signal(capability.fileno(),signal.SIGKILL)
+                assert select.select([capability.fileno()],[],[],.5)[0]
+            return result
+    
+        def changed(unit_id,descriptor,gate,deadline,**kwargs):
+            return release(unit_id,descriptor,gate,HostDeadline(deadline.session,deadline.monotonic_seconds-.001),**kwargs)
+    
+        monkeypatch.setattr(client,'_rpc',observe_rpc)
+        monkeypatch.setattr(broker.connection,'_exchange',observe_native)
+        if mode=='changed-end':monkeypatch.setattr(broker.owner,'release',changed)
+        succeeded=False
+        if mode=='normal':
+            succeeded=facade.start(unit,sink.recipe.descriptor,broker.connection,end).ready
+            assert succeeded
+        else:
+            with pytest.raises(ValueError):
+                facade.start(unit,sink.recipe.descriptor,broker.connection,end)
+            assert broker.owner.latch.cancelled
+        probes=[e for e in events if e['channel']=='rpc' and e['kind']=='probe' and e['unit']==parent]
+        arms=[e for e in events if e['channel']=='native' and e['kind']=='ARM' and e['slot']==sink.slot]
+        releases=[e for e in events if e['channel']=='native' and e['kind']=='RELEASE' and e['slot']==sink.slot]
+        assert all(e['end']==end.monotonic_seconds for e in probes)
+        if mode=='changed-end':
+            assert not arms and not releases
+        else:
+            assert len(arms)==1
+>           assert any(e['began']>=arms[0]['ended'] for e in probes)
+E           assert False
+E            +  where False = any(<generator object test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe.<locals>.<genexpr> at 0x711d69613140>)
+
+tests/thesis_lite/maestro/test_dependency_delegation.py:73: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dependency_delegation.py::test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe[normal]
+FAILED tests/thesis_lite/maestro/test_dependency_delegation.py::test_native_delegation_keeps_final_live_guard_without_duplicate_owner_probe[parent-dies-after-arm]
+2 failed, 1 passed in 5.71s

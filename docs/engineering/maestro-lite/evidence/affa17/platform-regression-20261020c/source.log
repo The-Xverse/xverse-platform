@@ -1,0 +1,163 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+.............F.......................................................... [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+..................................F..................................... [ 85%]
+..........................................................F............. [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ................................................ [  2%]
+E         ........................................................................ [  6%]
+E         ........................................................................ [ 10%]
+E         ........................................................................ [ 14%]
+E         ........................................................................ [ 18%]
+E         ........................................................................ [ 22%]
+E         ........................................................................ [ 26%]
+E         ........................................................................ [ 30%]
+E         ........................................................................ [ 34%]
+E         ........................................................................ [ 38%]
+E         ........................................................................ [ 42%]
+E         ........................................................................ [ 46%]
+E         ........................................................................ [ 50%]
+E         ........................................................................ [ 54%]
+E         ........................................................................ [ 58%]
+E         ........................................................................ [ 62%]
+E         ........................................................................ [ 66%]
+E         ........................................................................ [ 70%]
+E         .........F.............................................................. [ 74%]
+E         ........................................................................ [ 78%]
+E         ........................................................................ [ 82%]
+E         ........................................................................ [ 86%]
+E         ........................................................................ [ 90%]
+E         ........................................................................ [ 94%]
+E         ........................................................................ [ 98%]
+E         ....................                                                     [100%]
+E         =================================== FAILURES ===================================
+E         _______ test_original_registry_whole_run_replay_and_retained_collection ________
+E         
+E         runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x76a3fe355e10>, RuntimeScope(startup=HostDeadline(sessio...c_seconds=1038119.4831750571)), PosixPath('/tmp/pytest-of-jefferson/pytest-1214/test_original_registry_whole_r0/work'))
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76a3fe7ef8c0>
+E         
+E             def test_original_registry_whole_run_replay_and_retained_collection(runtime,monkeypatch):
+E                 entry,scope,work=runtime;registry=_OriginalRuntimeRegistry(1);registry.reserve(entry)
+E                 result=registry.start('fixture-run',scope)
+E         >       assert result.execution_succeeded and result.cleanup_complete
+E         E       AssertionError: assert (False)
+E         E        +  where False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='9da9b22b41b7908985...711, failed_ns=1038097939735208, diagnostic='ML-PERSIST-TIMEOUT'), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_runtime_control_registry.py:60: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection
+E         1 failed, 1795 passed, 24 subtests passed in 1374.17s (0:22:54)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020c/bin/python', '-m', 'pytest', '-q', '-p'...hole_run_replay_and_retained_collection\n1 failed, 1795 passed, 24 subtests passed in 1374.17s (0:22:54)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+_ test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal _
+
+request = <FixtureRequest for <Function test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b363fbde900>
+
+    def test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal(request,monkeypatch):
+        stack,controller,driver=scheduled(request,monkeypatch)
+        broker,view,client,work=stack
+        assert driver._lazy and not view._bindings and not broker.owner._claims and not client._attempted
+        assert not FileEvidenceJournal(work.parent/'m3.jsonl').records
+        checkpoints=[]; original=broker.owner.commit_intent
+        def commit(unit,end):
+            earlier=events(stack)
+            checkpoints.append((unit,earlier))
+            assert any(payload(e).get('stepId')=='start-'+('source' if 'source-instance' in unit else 'sink')
+                       and payload(e)['action']=='validate' and payload(e)['generation']==0 for e in earlier)
+            assert broker.issuer(unit)._handle is None and unit not in broker.owner._claims
+            return original(unit,end)
+        monkeypatch.setattr(broker.owner,'commit_intent',commit)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='687c4d370ef7bc76d7771582a840921c8f9c3fa16880118cf5bda6ae7746986...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:141: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b36404abd20>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='17f83182aa0da00e9d1afaa940ff91c7009ba78523c5e5bf5f0b7728bd48ee4...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=4, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:140: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b363d76dc50>
+run_bootstrap_binary = PosixPath('/tmp/maestro-platform-20261020c-private-y3db54kr/test_actual_native_writer_fail1/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='8911ac04b742c21c6f4180d0acc22a9d1fb2f508c22606da1e2b0684f7429ff...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]
+4 failed, 2076 passed, 24 subtests passed in 2825.80s (0:47:05)

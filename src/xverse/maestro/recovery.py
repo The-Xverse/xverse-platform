@@ -10,6 +10,7 @@ import uuid
 from xverse.argus.schema import canonical_bytes
 from .bootstrap import BootstrapSession
 from .launcher import CatalogLauncher, ProcessObservation
+from .run_broker import RunUnitIssuer
 from .lifecycle_evidence import _digest
 from .owner import _Original, ReleaseOwner, OwnerError
 from .providers import ProcessReadiness, ProbePolicy, _Binding
@@ -94,16 +95,16 @@ def validate_snapshot(controller, request, reply):
                 "sources",
             }
             or row["unit"] != sent["unit"]
-            or row["status"] not in ("owned", "cleanup-only", "never-issued")
+            or row["status"] not in ("owned", "stopped", "released", "cleanup-only", "never-issued")
             or type(row["permit_consumed"]) is not bool
             or type(row["last_sample_sequence"]) is not int
             or not 0 <= row["last_sample_sequence"] <= reply["last_sample_sequence"]
             or type(row["sources"]) is not list
             or len(row["sources"])
-            != {"owned": 2, "cleanup-only": 1, "never-issued": 0}[row["status"]]
+            != {"owned": 2, "stopped": 2, "released": 2, "cleanup-only": 1, "never-issued": 0}[row["status"]]
         ):
             raise RecoveryError("ML-RECOVERY-ACK")
-        if row["status"] == "owned":
+        if row["status"] in ("owned", "stopped", "released"):
             if (
                 sent["handle"] is None
                 or row["handle_digest"] != _digest(sent["handle"])
@@ -142,7 +143,8 @@ def validate_snapshot(controller, request, reply):
 
 
 class IssuerRecovery(_Original):
-    def __init__(self, bootstrap, owner, *, policies, operation_seconds=0.25):
+    def __init__(self, bootstrap, owner, *, policies, operation_seconds=0.25, controller=None,
+                 _coordinator=None, _request=None):
         if type(bootstrap) is not BootstrapSession or type(owner) is not ReleaseOwner:
             raise RecoveryError("ML-RECOVERY-INPUT")
         from .persistence import PersistenceClient
@@ -175,6 +177,42 @@ class IssuerRecovery(_Original):
             policy.__post_init__()
         self._retain()
         self.bootstrap, self.owner, self.client = bootstrap, owner, owner.persistence
+        if controller is not None:
+            from .controller import ControllerSession
+
+            if (type(controller) is not ControllerSession
+                or controller.broker.owner is not owner
+                or controller.broker.session is not bootstrap
+                or controller.broker._current_controller is not controller
+                or controller is controller.broker._controllers[0]):
+                raise RecoveryError("ML-RECOVERY-CONTROLLER")
+            controller._ordinary()
+        self.controller = self._controller_pin = controller
+        if _coordinator is not None or _request is not None:
+            from .dispatcher import FiniteDispatcher
+            if type(_coordinator) is not FiniteDispatcher:
+                raise RecoveryError("ML-RECOVERY-COORDINATOR")
+            _coordinator._validate_controller_borrow(controller, _request)
+        self._coordinator, self._request = _coordinator, _request
+        self._borrow_pins = (_coordinator, _request)
+        self._released_units = ()
+        if _coordinator is not None:
+            self._released_units = tuple(unit for unit in owner._launchers
+                if _coordinator.teardown._released_current(unit, _coordinator._recovery_end))
+        self._released_pin = self._released_units
+        self._stopped_units = ()
+        if _coordinator is not None:
+            stopped = []
+            for unit, result in _coordinator.teardown._stop_results.items():
+                issuer = owner._launchers[unit]
+                descriptor = issuer.recipe.descriptor
+                if (unit not in self._released_units and result.generation == descriptor.generation
+                    and not result.emergency and result.leader_reaped and result.boundary_empty):
+                    record = bootstrap.boundaries.record(descriptor, deadline=_coordinator._recovery_end)
+                    if record.state == 'empty' and record.identity_retained:
+                        stopped.append(unit)
+            self._stopped_units = tuple(stopped)
+        self._stopped_pin = self._stopped_units
         self.policies, self.operation_seconds = policies, operation_seconds
         self._pins = (
             bootstrap,
@@ -189,6 +227,7 @@ class IssuerRecovery(_Original):
         self._lock = threading.Lock()
         self._active = self._scope = self._result = self._view = None
         self._id = uuid.uuid4().hex
+        self._retired_view_epoch = None
 
     def _holder(self):
         super()._holder()
@@ -212,6 +251,14 @@ class IssuerRecovery(_Original):
         self.bootstrap._holder()
         self.owner._view_registry()
         self.client._holder()
+        if self.controller is not self._controller_pin:
+            raise RecoveryError("ML-RECOVERY-CONTROLLER")
+        if (self._coordinator, self._request) != self._borrow_pins:
+            raise RecoveryError("ML-RECOVERY-COORDINATOR")
+        if self._released_units is not self._released_pin or self._stopped_units is not self._stopped_pin:
+            raise RecoveryError("ML-RECOVERY-COORDINATOR")
+        if self.controller is not None:
+            self.controller._ordinary()
 
     @property
     def view(self):
@@ -233,7 +280,14 @@ class IssuerRecovery(_Original):
     def _query(self, unit, launcher, handle, active):
         launcher.revalidate_issued(handle)
         began = time.monotonic()
-        value = launcher.observe(handle, self._until(active))
+        if unit in (*self._released_units, *self._stopped_units) and type(launcher) is RunUnitIssuer:
+            from .affa_protocol import AuthorityKind
+            self._coordinator._validate_controller_borrow(self.controller, self._request)
+            reply = launcher._native(AuthorityKind.QUERY, self._until(active), cleanup=True)
+            value = ProcessObservation(handle, self.owner.session, time.monotonic(),
+                bool(reply.state & 2), bool(reply.state & 4), bool(reply.state & 8), bool(reply.state & 16), None)
+        else:
+            value = launcher.observe(handle, self._until(active))
         if (
             type(value) is not ProcessObservation
             or value.handle != handle
@@ -255,6 +309,9 @@ class IssuerRecovery(_Original):
             raise RecoveryError("ML-RECOVERY-REPEAT")
         if self._result is not None:
             return self._result
+        borrowed = self._coordinator is not None
+        if borrowed:
+            self._coordinator._validate_controller_borrow(self.controller, self._request)
         n = len(self.owner._prepared.units)
         remaining = active_deadline.monotonic_seconds - time.monotonic()
         if (
@@ -285,27 +342,37 @@ class IssuerRecovery(_Original):
                 if not lock.acquire(False):
                     raise RecoveryError("ML-RECOVERY-CONFLICT")
                 locks.append(lock)
-            if self.owner._dispatch_owner is not None:
+            if self.owner._dispatch_owner is not None and not borrowed:
                 raise RecoveryError("ML-RECOVERY-CONFLICT")
             self._scope = scope
-            self.owner._dispatch_owner, self.owner._dispatch_thread = (
-                self,
-                threading.get_ident(),
-            )
-            reserved = True
+            if borrowed:
+                self._coordinator._validate_controller_borrow(self.controller, self._request)
+            else:
+                self.owner._dispatch_owner, self.owner._dispatch_thread = (
+                    self,
+                    threading.get_ident(),
+                )
+                reserved = True
             try:
                 self.bootstrap._live()
                 self.owner._check(active_deadline)
                 self.owner._retire_views()
+                self._retired_view_epoch = self.owner._view_epoch
                 bindings = {}
                 for unit, launcher in self.owner._launchers.items():
                     if (
-                        type(launcher) is not CatalogLauncher
+                        type(launcher) not in (CatalogLauncher, RunUnitIssuer)
                         or launcher.owner is not self.owner
-                        or launcher.process._root is not self.bootstrap
-                        or self.bootstrap._clients.get(launcher.process._slot)
-                        is not launcher
                     ):
+                        raise RecoveryError("ML-RECOVERY-ISSUER")
+                    if type(launcher) is RunUnitIssuer:
+                        connection = launcher.broker.connection
+                        if (launcher.broker is not self.owner._run_broker_pin
+                            or connection.child._root is not self.bootstrap
+                            or self.bootstrap._clients.get(connection.child._slot) is not connection):
+                            raise RecoveryError("ML-RECOVERY-ISSUER")
+                    elif (launcher.process._root is not self.bootstrap
+                          or self.bootstrap._clients.get(launcher.process._slot) is not launcher):
                         raise RecoveryError("ML-RECOVERY-ISSUER")
                     handle = launcher._handle
                     if handle is not None:
@@ -356,7 +423,10 @@ class IssuerRecovery(_Original):
                             ),
                         )
                     )
-                if not bindings or any(
+                empty_original = (borrowed and not bindings and not self.owner._claims
+                    and all(row.status == 'never-issued' for row in result_rows)
+                    and all(launcher._handle is None for launcher in self.owner._launchers.values()))
+                if not bindings and not empty_original or any(
                     row.status == "cleanup-only" for row in result_rows
                 ):
                     raise RecoveryError("ML-RECOVERY-CLEANUP-ONLY")
@@ -389,7 +459,11 @@ class IssuerRecovery(_Original):
                 lock.release()
         try:
             cleanup = None
-            if not successful:
+            if not successful and borrowed and self._view is None and self._retired_view_epoch is not None:
+                # A genuine empty view restores cleanup access after epoch retirement;
+                # it neither adopts handles nor grants ordinary reconciliation/readiness.
+                self._view = ProcessReadiness(self.owner, policies=self.policies, _cleanup_recovery=self)
+            if not successful and not borrowed:
                 try:
                     cleanup = RunClosure(self.bootstrap).close(
                         cleanup_deadline, reason="recovery-incomplete"

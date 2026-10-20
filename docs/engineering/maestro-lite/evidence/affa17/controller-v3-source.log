@@ -1,0 +1,266 @@
+FFFFFFF....                                                              [100%]
+=================================== FAILURES ===================================
+________ test_actual_role5_channel_inherits_no_productive_capabilities _________
+
+request = <FixtureRequest for <Function test_actual_role5_channel_inherits_no_productive_capabilities>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb61412d70>
+
+    def test_actual_role5_channel_inherits_no_productive_capabilities(request, monkeypatch):
+        stack, _, unit = setup(request, monkeypatch)
+        broker = stack[0]
+        def forbidden(*a, **kw):
+            pytest.fail('runtime controller Popen')
+        monkeypatch.setattr(subprocess, 'Popen', forbidden)
+>       controller = broker.admit_controller('controller-host-one', deadline(1))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb615a02f0>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-cda19c6ed6b2476ea23fc57d5e05e409', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945682.689374292)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+_ test_actual_controller_death_preserves_original_storage_authority_and_workloads _
+
+request = <FixtureRequest for <Function test_actual_controller_death_preserves_original_storage_authority_and_workloads>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb6245dba0>
+
+    def test_actual_controller_death_preserves_original_storage_authority_and_workloads(request, monkeypatch):
+        stack, _, _ = setup(request, monkeypatch)
+        broker, facade, client, _ = stack
+        handles = [(i, i._handle) for i in broker.issuers]
+        authority = broker.connection.child
+>       old = broker.admit_controller('controller-host-one', deadline(1))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb61563890>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-b98454f7f1b94445aca2fe02bc2b3c98', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945683.92326667)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+__ test_actual_replacement_reconciles_original_handles_and_new_probes[False] ___
+
+request = <FixtureRequest for <Function test_actual_replacement_reconciles_original_handles_and_new_probes[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb61388170>
+fresh_generation = False
+
+    @pytest.mark.parametrize('fresh_generation', [False, True])
+    def test_actual_replacement_reconciles_original_handles_and_new_probes(request, monkeypatch, fresh_generation):
+        stack, teardown, unit = setup(request, monkeypatch)
+        broker, facade, client, work = stack
+        if fresh_generation:
+            release(teardown, unit)
+            advance(stack, teardown, unit)
+            broker.renew(target(broker), deadline(1))
+>       old = broker.admit_controller('controller-host-one', deadline(1))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb613ace10>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-9f5edc947ec747e8b6cb378c74b219c5', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945685.202414773)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+___ test_actual_replacement_reconciles_original_handles_and_new_probes[True] ___
+
+request = <FixtureRequest for <Function test_actual_replacement_reconciles_original_handles_and_new_probes[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb61671590>
+fresh_generation = True
+
+    @pytest.mark.parametrize('fresh_generation', [False, True])
+    def test_actual_replacement_reconciles_original_handles_and_new_probes(request, monkeypatch, fresh_generation):
+        stack, teardown, unit = setup(request, monkeypatch)
+        broker, facade, client, work = stack
+        if fresh_generation:
+            release(teardown, unit)
+            advance(stack, teardown, unit)
+            broker.renew(target(broker), deadline(1))
+>       old = broker.admit_controller('controller-host-one', deadline(1))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb6159bce0>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-d22c54535b2d4e338638312c80e54f52', creation_epoch=1)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945686.966734442)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+_ test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect _
+
+request = <FixtureRequest for <Function test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb614ea7a0>
+
+    def test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect(request, monkeypatch):
+        stack, _, _ = setup(request, monkeypatch)
+        broker = stack[0]
+>       old = broker.admit_controller('controller-host-one', deadline(1))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb61413e10>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-3da3c809c3e24ea59ca6238666e7c2c7', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945688.243442361)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+__________ test_missing_durable_mirror_does_not_reconcile_controller ___________
+
+request = <FixtureRequest for <Function test_missing_durable_mirror_does_not_reconcile_controller>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb613de650>
+
+    def test_missing_durable_mirror_does_not_reconcile_controller(request, monkeypatch):
+        stack, _, _ = setup(request, monkeypatch)
+        broker, facade, _, work = stack
+>       old = broker.admit_controller('controller-host-one', deadline(1))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb614a7890>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-5fe24deb99df4b75a57204ab1af22124', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945689.506791187)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+__ test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired ___
+
+request = <FixtureRequest for <Function test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79fb61247550>
+
+    def test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired(request, monkeypatch):
+        stack, _, _ = setup(request, monkeypatch)
+        broker, facade, _, _ = stack
+>       controller = broker.admit_controller('controller-host-one', deadline(1))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_controller.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:440: in admit_controller
+    return admit_controller(self, session_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/controller.py:351: in admit_controller
+    broker.session.boundaries.create_frozen(descriptor, deadline=deadline)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79fb614e85a0>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='helper:controller:1', generation=1, boundary_id='controller-13daf95dacdf4f4f88ac1ff5026b0ada', creation_epoch=0)
+options = {'deadline': HostDeadline(session='host-session', monotonic_seconds=945690.713379322)}
+
+    def create_frozen(
+        self, descriptor: BoundaryDescriptor, **options: Any
+    ) -> BoundaryRecord:
+        self._holder()
+        value = self._descriptor(descriptor)
+        if options:
+>           raise BoundaryError("ML-ADMISSION-BOUNDARY-OPTIONS")
+E           xverse.maestro.prbc.BoundaryError: ML-ADMISSION-BOUNDARY-OPTIONS
+
+src/xverse/maestro/prbc.py:634: BoundaryError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_controller.py::test_actual_role5_channel_inherits_no_productive_capabilities
+FAILED tests/thesis_lite/maestro/test_controller.py::test_actual_controller_death_preserves_original_storage_authority_and_workloads
+FAILED tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[False]
+FAILED tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[True]
+FAILED tests/thesis_lite/maestro/test_controller.py::test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect
+FAILED tests/thesis_lite/maestro/test_controller.py::test_missing_durable_mirror_does_not_reconcile_controller
+FAILED tests/thesis_lite/maestro/test_controller.py::test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired
+7 failed, 4 passed in 14.28s

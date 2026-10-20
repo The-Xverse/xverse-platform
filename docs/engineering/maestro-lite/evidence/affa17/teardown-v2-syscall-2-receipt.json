@@ -1,0 +1,53 @@
+{
+  "command": [
+    "strace",
+    "-f",
+    "-ttt",
+    "-T",
+    "-e",
+    "trace=fsync,fdatasync,poll,ppoll,pselect6,waitid",
+    "-o",
+    "/tmp/maestro-affa17-private-syscall-kvby0ipb/syscalls.log",
+    "/tmp/maestro-lite-affa-verify-20261018/bin/python",
+    "-I",
+    "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/diagnose-teardown-timing.py",
+    "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/teardown-v2-syscall-2-rpc.json",
+    "/tmp/maestro-affa17-broker-installed-qhhq8do5/tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions",
+    "/tmp/maestro-affa17-private-syscall-kvby0ipb/pytest"
+  ],
+  "cwd": "/tmp/maestro-affa17-broker-installed-qhhq8do5",
+  "returncode": 1,
+  "elapsed_seconds": 5.142557704006322,
+  "explicit_private_directory": "/tmp/maestro-affa17-private-syscall-kvby0ipb",
+  "private_trace_sha256": "ca28a691dcd69c6d83169000880cf53b86bb5e8350c8b05d9aee53e77a7d41c9",
+  "private_trace_not_committed": true,
+  "syscall_durations": {
+    "fsync": {
+      "count": 6,
+      "maximum_seconds": 0.020708,
+      "total_seconds": 0.109204,
+      "over_20ms": 1
+    },
+    "pselect6": {
+      "count": 1200,
+      "maximum_seconds": 0.000144,
+      "total_seconds": 0.010585,
+      "over_20ms": 0
+    },
+    "waitid": {
+      "count": 915,
+      "maximum_seconds": 9.5e-05,
+      "total_seconds": 0.005864,
+      "over_20ms": 0
+    },
+    "poll": {
+      "count": 724,
+      "maximum_seconds": 0.01034,
+      "total_seconds": 0.13311900000000002,
+      "over_20ms": 0
+    }
+  },
+  "diagnostic_instrumentation_can_affect_timing": true,
+  "log_sha256": "7ca654a78e47ea344fb8a2109665796b2190d89985dfc4263eb539d6a1f60e4a",
+  "rpc_sha256": "95a90f9cc435416f34ac8a84967b1252ef27c23c6ba64fe731dbc88ed13e4041"
+}

@@ -1,0 +1,42 @@
+...F                                                                     [100%]
+=================================== FAILURES ===================================
+__________ test_independent_revocation_during_stopped_native_exchange __________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x78a49f730f50>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78a49f6bf9b0>
+
+    def test_independent_revocation_during_stopped_native_exchange(run_stack, monkeypatch):
+        client = connect(run_stack, monkeypatch)
+        session, _, h, _, _, _, _ = run_stack
+        h.stage(0)
+        child = client.child
+        signal.pidfd_send_signal(child._capability.fileno(), signal.SIGSTOP)
+        entered = threading.Event()
+        original = client._receive
+        errors = []
+    
+        def receive(*args, **kwargs):
+            entered.set()
+            return original(*args, **kwargs)
+    
+        monkeypatch.setattr(client, "_receive", receive)
+    
+        def query():
+            try:
+                h.rpc(h.frame(K.QUERY, 0))
+            except ValueError as error:
+                errors.append(str(error))
+    
+        thread = threading.Thread(target=query)
+        thread.start()
+        try:
+            assert entered.wait(1)
+            result = client.revoke(deadline(1))
+>           assert result.issuer_reaped and result.issuer_dead
+E           AssertionError: assert (False)
+E            +  where False = AuthorityRevocation(issuer_dead=True, issuer_reaped=False, diagnostic='ML-AFFA-WAIT-UNRESOLVED', workload_waits_known=False, boundaries_released=False).issuer_reaped
+
+tests/thesis_lite/maestro/test_affa_client.py:150: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_client.py::test_independent_revocation_during_stopped_native_exchange
+1 failed, 3 passed in 1.90s

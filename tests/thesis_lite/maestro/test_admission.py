@@ -642,3 +642,100 @@ def test_consumption_read_failure_latches_the_original_session_closed(
     with pytest.raises(AdmissionError, match="ML-PERMIT-CLOSED"):
         holder.claim_start_intent(ctx[0].units[1].unit_id, now=NOW)
     assert FileEvidenceJournal(path).records == ()
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "compiled-plan",
+        "prepared-fields",
+        "resource-fields",
+        "equal-result",
+        "equal-resources",
+    ],
+)
+def test_original_compilation_proof_rejects_every_changed_input_before_use(
+    tmp_path, mutation
+):
+    ctx = context()
+    holder = session(ctx, tmp_path / "m3.jsonl")
+    unit = ctx[0].units[0].unit_id
+    receipt = holder.claim_start_intent(unit, now=NOW)
+    before = (tmp_path / "m3.jsonl").read_bytes()
+    if mutation == "compiled-plan":
+        holder._result.plan["status"] = "forged-after-admission"
+    elif mutation == "prepared-fields":
+        object.__setattr__(
+            holder._prepared,
+            "resource_order",
+            tuple(reversed(holder._prepared.resource_order)),
+        )
+    elif mutation == "resource-fields":
+        object.__setattr__(holder._resources[0], "revision", "forged-after-admission")
+    elif mutation == "equal-result":
+        holder._result = replace(holder._result)
+    else:
+        holder._resources = tuple(list(holder._resources))
+    with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+        holder.revalidate_start_intent(receipt, now=NOW)
+    with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+        holder.claim_start_intent(ctx[0].units[1].unit_id, now=NOW)
+    assert (tmp_path / "m3.jsonl").read_bytes() == before
+
+
+def test_unchanged_original_preparation_proof_revalidates_without_recompilation(
+    tmp_path, monkeypatch
+):
+    from xverse.maestro import admission
+
+    ctx = context()
+    holder = session(ctx, tmp_path / "m3.jsonl")
+    receipt = holder.claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError(
+            "unchanged original inputs must reuse their validated preparation proof"
+        )
+
+    monkeypatch.setattr(admission, "_verify_prepared", unexpected)
+    holder.revalidate_start_intent(receipt, now=NOW)
+    fresh = holder.claim_start_intent(ctx[0].units[1].unit_id, now=NOW)
+    assert fresh.execution_id != receipt.execution_id
+
+
+def test_preparation_proof_brackets_full_admission_verification(tmp_path, monkeypatch):
+    from xverse.maestro import admission
+
+    ctx = context()
+    original = admission.validate_permits
+
+    def changed_after_verification(*args, **kwargs):
+        result = original(*args, **kwargs)
+        prepared = args[0]
+        object.__setattr__(
+            prepared, "resource_order", tuple(reversed(prepared.resource_order))
+        )
+        return result
+
+    monkeypatch.setattr(admission, "validate_permits", changed_after_verification)
+    with pytest.raises(AdmissionError, match="ML-PERMIT-PLAN"):
+        session(ctx, tmp_path / "m3.jsonl")
+    assert FileEvidenceJournal(tmp_path / "m3.jsonl").records == ()
+
+
+def test_preparation_proof_owns_compiler_plan_before_validation(tmp_path):
+    ctx = context()
+    holder = session(ctx, tmp_path / "m3.jsonl")
+    ctx[1].plan["status"] = "caller-mutation-after-owned-copy"
+    receipt = holder.claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+    holder.revalidate_start_intent(receipt, now=NOW)
+
+
+def test_original_preparation_proof_preserves_exact_signed_zero(tmp_path):
+    ctx = context()
+    ctx = (ctx[0], replace(ctx[1], run=freeze({"pin_probe": -0.0})), *ctx[2:])
+    holder = session(ctx, tmp_path / "m3.jsonl")
+    receipt = holder.claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+    object.__setattr__(holder._result, "run", freeze({"pin_probe": 0.0}))
+    with pytest.raises(AdmissionError, match="ML-PERMIT-PLAN"):
+        holder.revalidate_start_intent(receipt, now=NOW)

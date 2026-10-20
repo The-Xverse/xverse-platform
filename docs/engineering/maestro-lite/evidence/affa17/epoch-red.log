@@ -1,0 +1,132 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_two_actual_advances_extend_only_original_creation_epochs _________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x72e7ec813a10>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72e7ec6b0640>
+
+    def test_two_actual_advances_extend_only_original_creation_epochs(
+        run_stack, monkeypatch
+    ):
+        client = connect(run_stack, monkeypatch, maximum_generation=3)
+        session, manager, h, _, _, _, work = run_stack
+        admission = manager._admission
+        for i in range(2):
+            h.stage(i)
+            h.arm(i)
+            h.release(i)
+            wait_marker(work / f"u{i}.marker")
+        initial = h.frame(K.QUERY, 0)
+        retained = []
+        for generation in (2, 3):
+            h.stop_retire(0)
+            old_descriptor = h.units[0]["descriptor"]
+            terminal = manager.force_cleanup(old_descriptor)
+            assert terminal.boundary_released
+            next_scope = BoundaryDescriptor(
+                "run", "u0", generation, f"next-{generation}", generation - 2
+            )
+            manager.create_frozen(next_scope)
+            session.watch(next_scope, deadline(2))
+            unit = h.units[0]
+            unit.update(
+                generation=generation,
+                operation=bytes([generation + 10]) * 16,
+                intent=digest(b"intent" + bytes([generation])),
+                mirror=digest(b"mirror" + bytes([generation])),
+                boundary=digest(b"boundary" + bytes([generation])),
+            )
+            unit.pop("handle")
+            unit.pop("ticket")
+            fd = manager._entry(next_scope).fd
+            reply = h.rpc(h.frame(K.ADVANCE, 0), (fd,))
+            assert reply.kind is K.ADVANCED and reply.epoch == generation - 1
+>           assert (
+                manager.release_epoch == generation - 1 and manager._admission is admission
+            )
+E           assert (0 == (2 - 1))
+E            +  where 0 = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x72e7ec6ac050>.release_epoch
+
+tests/thesis_lite/maestro/test_affa_epoch.py:56: AssertionError
+___________ test_raw_epoch_or_parsed_ack_is_not_an_original_receipt ____________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x72e7ec60fd90>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72e7ec6b0c30>
+
+    def test_raw_epoch_or_parsed_ack_is_not_an_original_receipt(run_stack, monkeypatch):
+        client = connect(run_stack, monkeypatch)
+        manager = run_stack[1]
+>       for value in (1, client.config, client._epoch_history[-1]):
+                                        ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'AuthorityConnection' object has no attribute '_epoch_history'
+
+tests/thesis_lite/maestro/test_affa_epoch.py:87: AttributeError
+_______________ test_capacity_is_checked_before_authority_birth ________________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x72e7ec6c5090>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+
+    def test_capacity_is_checked_before_authority_birth(run_stack):
+        session, manager, h, helper, _, _, _ = run_stack
+        for unit in h.units:
+            session.watch(unit["descriptor"], deadline(2))
+        config = replace(
+            h.config,
+            scope=session.authority_scope,
+            supervisor_session=session.authority_supervisor,
+            units=tuple(replace(u, max_generation=8) for u in h.config.units),
+        )
+>       with pytest.raises(ValueError, match="CAPACITY"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_affa_epoch.py:105: Failed
+_______________ test_explicit_boundary_capacity_is_bounded[True] _______________
+
+count = True
+
+    @pytest.mark.parametrize("count", [True, 0, 193])
+    def test_explicit_boundary_capacity_is_bounded(count):
+        with pytest.raises(ValueError):
+>           BoundaryLimits(2, max_boundaries=count)
+E           TypeError: BoundaryLimits.__init__() got an unexpected keyword argument 'max_boundaries'
+
+tests/thesis_lite/maestro/test_affa_epoch.py:113: TypeError
+________________ test_explicit_boundary_capacity_is_bounded[0] _________________
+
+count = 0
+
+    @pytest.mark.parametrize("count", [True, 0, 193])
+    def test_explicit_boundary_capacity_is_bounded(count):
+        with pytest.raises(ValueError):
+>           BoundaryLimits(2, max_boundaries=count)
+E           TypeError: BoundaryLimits.__init__() got an unexpected keyword argument 'max_boundaries'
+
+tests/thesis_lite/maestro/test_affa_epoch.py:113: TypeError
+_______________ test_explicit_boundary_capacity_is_bounded[193] ________________
+
+count = 193
+
+    @pytest.mark.parametrize("count", [True, 0, 193])
+    def test_explicit_boundary_capacity_is_bounded(count):
+        with pytest.raises(ValueError):
+>           BoundaryLimits(2, max_boundaries=count)
+E           TypeError: BoundaryLimits.__init__() got an unexpected keyword argument 'max_boundaries'
+
+tests/thesis_lite/maestro/test_affa_epoch.py:113: TypeError
+____________ test_explicit_boundary_capacity_keeps_original_default ____________
+
+    def test_explicit_boundary_capacity_keeps_original_default():
+>       assert BoundaryLimits(2).max_boundaries == 16
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'BoundaryLimits' object has no attribute 'max_boundaries'
+
+tests/thesis_lite/maestro/test_affa_epoch.py:117: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_two_actual_advances_extend_only_original_creation_epochs
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_raw_epoch_or_parsed_ack_is_not_an_original_receipt
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_capacity_is_checked_before_authority_birth
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_explicit_boundary_capacity_is_bounded[True]
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_explicit_boundary_capacity_is_bounded[0]
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_explicit_boundary_capacity_is_bounded[193]
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_explicit_boundary_capacity_keeps_original_default
+7 failed in 1.70s

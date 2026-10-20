@@ -1,0 +1,32 @@
+........................................................................ [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 29%]
+........................................................................ [ 39%]
+.........................................F.............................. [ 49%]
+........................................................................ [ 59%]
+........................................................................ [ 68%]
+........................................................................ [ 78%]
+........................................................................ [ 88%]
+........................................................................ [ 98%]
+...........                                                              [100%]
+=================================== FAILURES ===================================
+_______ test_missed_tick_window_has_no_fabricated_step_or_probe_success ________
+
+request = <FixtureRequest for <Function test_missed_tick_window_has_no_fabricated_step_or_probe_success>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b7772dd1b00>
+
+    def test_missed_tick_window_has_no_fabricated_step_or_probe_success(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch, skip=True)
+        driver = dispatcher(stack)
+        result = driver.run(*ends(driver))
+>       assert not result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (not False and False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='2e96f595a6d7131f8df7aa1a63630b8b2c0f42c945289c8429c0b9e5ec37b80...tic='ML-SCHEDULE-WINDOW-MISSED', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E        +  and   False = DispatchResult(run_id='fixture-run', lifecycle_digest='2e96f595a6d7131f8df7aa1a63630b8b2c0f42c945289c8429c0b9e5ec37b80...tic='ML-SCHEDULE-WINDOW-MISSED', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal_recorded
+
+tests/thesis_lite/maestro/test_dispatcher.py:427: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_missed_tick_window_has_no_fabricated_step_or_probe_success
+1 failed, 730 passed in 479.57s (0:07:59)

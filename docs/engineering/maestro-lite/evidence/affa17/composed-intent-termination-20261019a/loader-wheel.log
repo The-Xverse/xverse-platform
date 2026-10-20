@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_original_intent_frontier_loader_and_loss[disabled] ____________
+
+request = <FixtureRequest for <Function test_original_intent_frontier_loader_and_loss[disabled]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7950122663f0>
+sentinel = <function sentinel.<locals>.observe at 0x7950126d22a0>
+mode = 'disabled'
+
+    @pytest.mark.parametrize('mode', ['disabled', 'before-intent-append', 'after-intent-flush'])
+    def test_original_intent_frontier_loader_and_loss(request, monkeypatch, sentinel, mode):
+        before = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        trace = work.parent/'owned-intent-frontier.jsonl'
+        exchanges = []
+        exchange = broker.connection._exchange
+        def observe(frame, **kw):
+            exchanges.append(dict(kind=frame.kind.name, began=time.monotonic()))
+            return exchange(frame, **kw)
+        monkeypatch.setattr(broker.connection, '_exchange', observe)
+        thread, results, failures = threaded_run(driver)
+        observations = dict(mode=mode, exchanges=exchanges)
+        if mode != 'disabled':
+            fd = client.process._capability.fileno()
+            end = min(time.monotonic()+2, client.coverage.data(client.coverage_digest)['end'])
+            stopped = None
+            while time.monotonic() < end:
+                stopped = os.waitid(os.P_PIDFD, fd, os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                if stopped is not None:
+                    break
+                time.sleep(.001)
+            assert stopped is not None and stopped.si_code == os.CLD_STOPPED and stopped.si_status == signal.SIGSTOP
+            observations['original_pidfd_stop'] = dict(code=stopped.si_code, status=stopped.si_status,
+                observed=time.monotonic())
+            signal.pidfd_send_signal(fd, signal.SIGKILL)
+            observations['original_helper_killed'] = time.monotonic()
+        result, closure, row = finish(stack, driver, sentinel, before, thread, results, failures,
+            'intent-'+mode, observations)
+        actual = [json.loads(line) for line in trace.read_text().splitlines()]
+        retain('intent-frontier-trace-'+work.parent.name+'.json', dict(original_fixture=str(work.parent),
+            trace=actual, trace_sha256=hashlib.sha256(trace.read_bytes()).hexdigest()))
+        if mode == 'disabled':
+            assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+            assert row['original_runtime_verification_complete'] and closure.cleanup_complete
+>           assert len(actual) == 6
+E           AssertionError: assert 18 == 6
+E            +  where 18 = len([{'action': 'before-intent-append', 'observed_ns': 1009669811200566, 'payload': {'action': 'intent', 'dependencies': [...neration': 1, 'lifecycleDigest': 'sha256:2a2c0bb664ddc83a8793919724abd5efad1cb79b05be27babf5d272acb142294', ...}}, ...])
+
+tests/thesis_lite/maestro/test_composed_persistence_termination.py:187: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+1 failed, 5 deselected in 6.21s

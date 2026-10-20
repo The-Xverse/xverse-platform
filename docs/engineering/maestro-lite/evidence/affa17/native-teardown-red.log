@@ -1,0 +1,72 @@
+FF.FF                                                                    [100%]
+=================================== FAILURES ===================================
+______ test_native_reverse_teardown_has_original_wait_and_normal_records _______
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x75aa8242acf0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x75aa8242a7b0>, PosixPath('/tmp/pytest-of-jefferson/pytest-998/test_native_reverse_teardown_h0/work'))
+
+    def test_native_reverse_teardown_has_original_wait_and_normal_records(broker_stack):
+        broker, facade, _, work = broker_stack
+        controller = ready(broker_stack)
+        result = controller.run(deadline(2))
+>       assert result.unit_cleanup_complete and result.normal_records_complete
+E       AssertionError: assert (False)
+E        +  where False = TeardownResult(run_id='fixture-run', lifecycle_digest='6d04ffb1e83dd25a45a290b4aafb1824aad821453efa8faaf617ecee70b7477... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).unit_cleanup_complete
+
+tests/thesis_lite/maestro/test_run_teardown.py:36: AssertionError
+________ test_scoped_native_leaf_cleanup_keeps_other_original_unit_live ________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x75aa82453b10>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x75aa82453610>, PosixPath('/tmp/pytest-of-jefferson/pytest-998/test_scoped_native_leaf_cleanu0/work'))
+
+    def test_scoped_native_leaf_cleanup_keeps_other_original_unit_live(broker_stack):
+        broker, facade, _, work = broker_stack
+        controller = ready(broker_stack)
+        source, sink = broker.owner._prepared.resource_order
+        stopped = controller.phase(sink, "stop", deadline(1))
+>       assert stopped.leader_reaped and stopped.boundary_empty and not stopped.emergency
+E       AssertionError: assert (False)
+E        +  where False = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, ...rue, boundary_released=True, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').leader_reaped
+
+tests/thesis_lite/maestro/test_run_teardown.py:81: AssertionError
+_________ test_stalled_native_stop_is_revoked_before_fallback_release __________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x75aa82318050>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x75aa82450550>, PosixPath('/tmp/pytest-of-jefferson/pytest-998/test_stalled_native_stop_is_re0/work'))
+
+    def test_stalled_native_stop_is_revoked_before_fallback_release(broker_stack):
+        broker, _, _, _ = broker_stack
+        controller = ready(broker_stack)
+        sink = broker.owner._prepared.resource_order[-1]
+        signal.pidfd_send_signal(
+            broker.connection.child._capability.fileno(), signal.SIGSTOP
+        )
+        result = controller.phase(sink, "stop", deadline(1))
+>       assert result.emergency and result.boundary_released
+E       AssertionError: assert (True and False)
+E        +  where True = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, ...ue, boundary_released=False, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').emergency
+E        +  and   False = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, ...ue, boundary_released=False, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').boundary_released
+
+tests/thesis_lite/maestro/test_run_teardown.py:112: AssertionError
+_____ test_bad_cleanup_ack_retains_actual_wait_but_no_normal_completeness ______
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x75aa8231aea0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x75aa82451810>, PosixPath('/tmp/pytest-of-jefferson/pytest-998/test_bad_cleanup_ack_retains_a0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75aa8231b100>
+
+    def test_bad_cleanup_ack_retains_actual_wait_but_no_normal_completeness(
+        broker_stack, monkeypatch
+    ):
+        broker, _, storage, _ = broker_stack
+        controller = ready(broker_stack)
+        sink = broker.owner._prepared.resource_order[-1]
+>       assert not controller.phase(sink, "stop", deadline(1)).emergency
+E       AssertionError: assert not True
+E        +  where True = UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, ...rue, boundary_released=True, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE').emergency
+E        +    where UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, ...rue, boundary_released=True, normal_records_complete=False, emergency=True, diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE') = phase('xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'stop', HostDeadline(session='host-session', monotonic_seconds=938810.309750855))
+E        +      where phase = <xverse.maestro.teardown.ReverseTeardown object at 0x75aa8231b230>.phase
+E        +      and   HostDeadline(session='host-session', monotonic_seconds=938810.309750855) = deadline(1)
+
+tests/thesis_lite/maestro/test_run_teardown.py:127: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_teardown.py::test_native_reverse_teardown_has_original_wait_and_normal_records
+FAILED tests/thesis_lite/maestro/test_run_teardown.py::test_scoped_native_leaf_cleanup_keeps_other_original_unit_live
+FAILED tests/thesis_lite/maestro/test_run_teardown.py::test_stalled_native_stop_is_revoked_before_fallback_release
+FAILED tests/thesis_lite/maestro/test_run_teardown.py::test_bad_cleanup_ack_retains_actual_wait_but_no_normal_completeness
+4 failed, 1 passed in 11.33s

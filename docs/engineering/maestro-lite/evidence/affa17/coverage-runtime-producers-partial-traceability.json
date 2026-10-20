@@ -1,0 +1,1337 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-19-coverage-runtime-producers-partial",
+  "scope": "additive component trace; full integrated increment17 trace remains required",
+  "parent_trace": {
+    "path": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/recovery16/traceability.json",
+    "sha256": "e1651cad4268c8dfc2d700bf7010a203b15e06984a133d4af181c9b0147a2809"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::bind_runtime_coverage",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::decode_runtime_coverage",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::runtime_coverage_input",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::encode_configuration",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient._holder",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.coverage_digest",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::_load",
+              "file_sha256": "f70b5b23dfb1d45afae693cc8d6b10f28b68ab999cb1f3ccb1c2555e3aed8b4d",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.persistence",
+              "file_sha256": "972d51f37514f9a0f0ac6c5e51afd862d48157d3f1ca18692bc7ac16690eeb91",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/providers.py::ProcessReadiness.__init__",
+              "file_sha256": "bc2efff86f4b9e12d0fb8dfc3a4dc03af898ca15367375c4974da9f8b901e1a4",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_bad_sealed_coverage_rejects_before_journal_writer_or_workload",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_worker_independently_rejects_coverage_before_creating_any_sink",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_original_runtime_admission_pin_rejects_replaced_object_or_bytes_before_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_reserved_run_identity_and_root_event_capacity_reject_purely",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_policy_mismatch_cannot_release_workloads",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::record_validation",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::_same_json",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal._mirrors",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_validation_init_ack_failure_closes_starts_and_retains_original_cleanup",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_validation_caller_field_mutation_is_not_hidden_by_boolean_integer_alias",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_typed_mirror_comparison_preserves_canonical_json_distinctions",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_original_teardown_proof_references_bind_paired_m3_and_exact_context",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_other_run_validation_records_do_not_replace_or_duplicate_original_root",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::record_validation",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::_same_json",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal._mirrors",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_validation_init_ack_failure_closes_starts_and_retains_original_cleanup",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_validation_caller_field_mutation_is_not_hidden_by_boolean_integer_alias",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_typed_mirror_comparison_preserves_canonical_json_distinctions",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity",
+              "file_sha256": "676366a4f44c29dc75e9d7eefd30b89af4b6823daaaf306c69927ad96c268fba",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::broker_projection",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.health_window",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::assess_preclosure",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.assess",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_original_teardown_proof_references_bind_paired_m3_and_exact_context",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_other_run_validation_records_do_not_replace_or_duplicate_original_root",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::assess_preclosure",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.assess",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.teardown_reference",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_original_teardown_proof_references_bind_paired_m3_and_exact_context",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage.py::test_other_run_validation_records_do_not_replace_or_duplicate_original_root",
+              "file_sha256": "fda5131f08560a5746840d45fb96e8175026e59fe348fc0198f073126b858aff",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/evidence.py::record_validation",
+              "file_sha256": "da2dfa0e0b5520a6cb45248904d74dffffb1e91e3417e4107119453a0c802da5",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::_same_json",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal._mirrors",
+              "file_sha256": "28515b21b2aa696c65044432907f82a2c1bcffe7780c99487aaa29529168b992",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_validation_init_ack_failure_closes_starts_and_retains_original_cleanup",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_validation_caller_field_mutation_is_not_hidden_by_boolean_integer_alias",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_typed_mirror_comparison_preserves_canonical_json_distinctions",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::assess_preclosure",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::_Assessment.assess",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::bind_runtime_coverage",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::decode_runtime_coverage",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/coverage.py::runtime_coverage_input",
+              "file_sha256": "a5b76ceb5bc0ed222af7c2bcd7713499dcbe3e0b4f999c664d0ad969838517d2",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::encode_configuration",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient._holder",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.coverage_digest",
+              "file_sha256": "f64ab270a16cec4e69f62c18cbea99af76378054c291d213e84fe37807d049a3",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::_load",
+              "file_sha256": "f70b5b23dfb1d45afae693cc8d6b10f28b68ab999cb1f3ccb1c2555e3aed8b4d",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.persistence",
+              "file_sha256": "972d51f37514f9a0f0ac6c5e51afd862d48157d3f1ca18692bc7ac16690eeb91",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/providers.py::ProcessReadiness.__init__",
+              "file_sha256": "bc2efff86f4b9e12d0fb8dfc3a4dc03af898ca15367375c4974da9f8b901e1a4",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_bad_sealed_coverage_rejects_before_journal_writer_or_workload",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_worker_independently_rejects_coverage_before_creating_any_sink",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_original_runtime_admission_pin_rejects_replaced_object_or_bytes_before_rpc",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_reserved_run_identity_and_root_event_capacity_reject_purely",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_policy_mismatch_cannot_release_workloads",
+              "file_sha256": "4d5624aa8bf3041e8c33ca1d674113a449d1151ee170013b872900e07ef56ec7",
+              "frozen_manifest": "coverage-producers-v4-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "coverage-producers-v4-verification.json",
+            "sha256": "38b7005d103b1fa55d0c043df36cef3cc56b00a10284d0ebd5f23883889bd7eb"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/coverage.py::bind_runtime_coverage": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/coverage.py::decode_runtime_coverage": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/coverage.py::runtime_coverage_input": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::encode_configuration": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient._holder": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient.coverage_digest": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence_worker.py::_load": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap.py::BootstrapSession.persistence": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/providers.py::ProcessReadiness.__init__": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_bad_sealed_coverage_rejects_before_journal_writer_or_workload": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_worker_independently_rejects_coverage_before_creating_any_sink": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_original_runtime_admission_pin_rejects_replaced_object_or_bytes_before_rpc": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_reserved_run_identity_and_root_event_capacity_reject_purely": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_policy_mismatch_cannot_release_workloads": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/evidence.py::record_validation": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/lifecycle_evidence.py::_same_json": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/lifecycle_evidence.py::OutcomeJournal._mirrors": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient.__init__": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_validation_init_ack_failure_closes_starts_and_retains_original_cleanup": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_validation_caller_field_mutation_is_not_hidden_by_boolean_integer_alias": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_typed_mirror_comparison_preserves_canonical_json_distinctions": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/run_broker.py::RunUnitIssuer.stop_owned": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "src/xverse/maestro/run_broker.py::RunUnitIssuer._identity": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "src/xverse/maestro/evidence.py::broker_projection": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "src/xverse/maestro/coverage.py::_Assessment.teardown_reference": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018"
+    ],
+    "src/xverse/maestro/coverage.py::_Assessment.health_window": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_stop_bracket_repeat_is_identical_and_projection_adds_no_rpc": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_unacknowledged_stop_exports_open_original_bracket_without_normal_wait": [
+      "ML-SR-006",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-016",
+      "ML-SR-017"
+    ],
+    "src/xverse/maestro/coverage.py::assess_preclosure": [
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/coverage.py::_Assessment.assess": [
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records": [
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_coverage.py::test_original_teardown_proof_references_bind_paired_m3_and_exact_context": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018"
+    ],
+    "tests/thesis_lite/maestro/test_coverage.py::test_other_run_validation_records_do_not_replace_or_duplicate_original_root": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018"
+    ]
+  },
+  "source_parent_semantics_validated": false,
+  "software_requirements_retained": 24,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "all_seven_phase3_tasks_complete": false,
+  "full_candidate_review_complete": false,
+  "full_M1_complete": false,
+  "U7_U8_complete": false,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false,
+  "canonical_note_edited": false,
+  "factory_run_created": false
+}

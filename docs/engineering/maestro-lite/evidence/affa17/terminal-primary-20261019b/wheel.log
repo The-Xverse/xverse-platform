@@ -1,0 +1,99 @@
+........................................................................ [ 53%]
+.......................F......F............F.F................           [100%]
+=================================== FAILURES ===================================
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[False] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x707932e36cf0>
+optional = False
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+>       result=run(driver);facts=result.terminal.public_data()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:171: AttributeError
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x707934333e00>
+case = 'lost-close-ack'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+>       result=run(driver);assert result.terminal is not None,result.diagnostic
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert None is not None
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='25fc7a3118129b2cd5dff0b0d48f18a899f95d66b349685b9d36859da4f931e...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:34: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x707932a3e0b0>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='d0f42d0bd822e995495573179399602800796e2281e9dd1734a65138d0733cb...diagnostic='ML-PERSIST-TIMEOUT', health_scans=2, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:125: AssertionError
+_ test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal _
+
+request = <FixtureRequest for <Function test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7079329216a0>
+
+    def test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal(request,monkeypatch):
+        stack,controller,driver=scheduled(request,monkeypatch)
+        broker,view,client,work=stack
+        assert driver._lazy and not view._bindings and not broker.owner._claims and not client._attempted
+        assert not FileEvidenceJournal(work.parent/'m3.jsonl').records
+        checkpoints=[]; original=broker.owner.commit_intent
+        def commit(unit,end):
+            earlier=events(stack)
+            checkpoints.append((unit,earlier))
+            assert any(payload(e).get('stepId')=='start-'+('source' if 'source-instance' in unit else 'sink')
+                       and payload(e)['action']=='validate' and payload(e)['generation']==0 for e in earlier)
+            assert broker.issuer(unit)._handle is None and unit not in broker.owner._claims
+            return original(unit,end)
+        monkeypatch.setattr(broker.owner,'commit_intent',commit)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='682b550f4a61d6ffa3fbdbc822fcb884ba00952e0773a79e707945abff7a092...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:141: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+4 failed, 130 passed in 207.84s (0:03:27)

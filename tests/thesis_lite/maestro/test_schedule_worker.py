@@ -147,7 +147,13 @@ def test_original_native_gate_renewal_updates_only_after_exact_ack(boot_stack):
         owner.session, min(boot_stack[0]._lease / 1e9, time.monotonic() + 4.5)
     )
     receipt = gate.renew(lease, deadline(1))
-    assert gate.lease_ns > prior and receipt == lease
+    # The gate quantizes the requested lease to integer nanoseconds (owner._deadline) and reports
+    # that quantized value; a float round trip through nanoseconds may differ from the requested
+    # float by one unit in the last place (run h, finding 374), so the receipt is compared with the
+    # retained nanosecond lease, and with the request at nanosecond resolution.
+    assert gate.lease_ns > prior
+    assert receipt == HostDeadline(owner.session, gate.lease_ns / 1e9)
+    assert abs(receipt.monotonic_seconds - lease.monotonic_seconds) <= 1e-9
     # Renewal did not Release the staged workload or change its original scope.
     assert not list(boot_stack[4].glob("*.marker"))
     facade = ProcessReadiness(

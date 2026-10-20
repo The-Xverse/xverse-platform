@@ -1,0 +1,116 @@
+F..F............                                                         [100%]
+=================================== FAILURES ===================================
+____ test_actual_original_append_fields_export_and_index_without_new_claims ____
+
+request = <FixtureRequest for <Function test_actual_original_append_fields_export_and_index_without_new_claims>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72e8b0ba35c0>
+
+    def test_actual_original_append_fields_export_and_index_without_new_claims(request,monkeypatch):
+        saved=prepare(monkeypatch)
+        stack=request.getfixturevalue('broker_stack')
+        broker,facade,client,work=stack
+        assert json.loads(saved['config'].private_bytes)['version']==3
+        end=stage_all(stack)
+        for unit in broker.owner._prepared.resource_order:
+            issuer=broker.issuer(unit)
+            assert facade.start(unit,issuer.recipe.descriptor,broker.connection,end).ready
+        worker=client.process
+        before=FileEvidenceJournal(work.parent/'m3.jsonl').records
+        original_attempts=set(client._attempted)
+        receipt=client.export_public_inputs(saved['declaration'],deadline(2))
+        body=read_export(stack,receipt)
+        assert body['publicM3']==list(FileEvidenceJournal(work.parent/'m3.jsonl').public_records())
+        assert client.process is worker and client._attempted==original_attempts
+        assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before
+        actual={e['eventId']:e for e in EvidenceStore.read_run(work.parent/'argus').records()}
+        assert len(body['annotations'])==len(actual)
+        for event in body['annotations']:
+            assert set(event)==ANNOTATION_FIELDS
+>           assert all(actual[event['eventId']][k]==v for k,v in event.items())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_retained_inputs.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <dict_itemiterator object at 0x72e8b0cea3e0>
+
+>   assert all(actual[event['eventId']][k]==v for k,v in event.items())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'causationId'
+
+tests/thesis_lite/maestro/test_retained_inputs.py:83: KeyError
+___ test_retained_export_preserves_original_and_successor_generation_sources ___
+
+request = <FixtureRequest for <Function test_retained_export_preserves_original_and_successor_generation_sources>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72e8b0beee00>
+
+    def test_retained_export_preserves_original_and_successor_generation_sources(request,monkeypatch):
+        future_prepare(request,monkeypatch)
+        saved=prepare(monkeypatch)
+>       stack,controller,unit,_=ready(request,monkeypatch,future=False)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_retained_inputs.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_generation_claim.py:25: in ready
+    stack = request.getfixturevalue("broker_stack")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_generation_worker.py:51: in configured
+    explicit = encode(*args, **kwargs, future_contexts=())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_retained_inputs.py:30: in encode
+    config=original(*args,**kwargs,public_exports=(declaration,))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (PreparedLifecycle(experiment_digest='fcfd10f2bd51f2b846763fab8e75b9c719cb81b73c53106141ba2d32eccd5810', resource_dige...': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})}))))
+kwargs = {'approvals': [PermitApproval(approval_ref='urn:xverse:test:process-approval:0', issuer_label='owned-test-approval', r...maestro-affa17-retained-v1-source-private-8o41jmb3/test_retained_export_preserves0/argus'), 'future_contexts': (), ...}
+futures = (GenerationContext(ready_for_execution=False), GenerationContext(ready_for_execution=False), GenerationContext(ready_for_execution=False), GenerationContext(ready_for_execution=False))
+
+    def configured(*args, **kwargs):
+        if mode == "default":
+            original = encode(*args, **kwargs)
+            explicit = encode(*args, **kwargs, future_contexts=())
+            assert original.private_bytes == explicit.private_bytes
+            retained["config"] = explicit
+            return explicit
+        futures = tuple(
+            successor(b, a, g)
+            for b, a in zip(kwargs["bindings"], kwargs["approvals"])
+            for g in (2, 3)
+        )
+>       config = encode(*args, **kwargs, future_contexts=futures)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: xverse.maestro.persistence.encode_configuration() got multiple values for keyword argument 'future_contexts'
+
+tests/thesis_lite/maestro/test_generation_worker.py:60: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_retained_inputs.py::test_actual_original_append_fields_export_and_index_without_new_claims
+FAILED tests/thesis_lite/maestro/test_retained_inputs.py::test_retained_export_preserves_original_and_successor_generation_sources
+2 failed, 14 passed in 13.15s

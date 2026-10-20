@@ -1,0 +1,60 @@
+--- before/tests/thesis_lite/maestro/test_composed_authority_interruptions.py
++++ after/tests/thesis_lite/maestro/test_composed_authority_interruptions.py
+@@ -112,6 +112,7 @@
+         self.resume = threading.Event()
+         self.once = False
+         self.observations = []
++        self.exchanges = []
+ 
+     def stop(self, label):
+         if self.once:
+@@ -136,6 +137,8 @@
+             if request.kind == kind and window.endswith('before-send'):
+                 barrier.stop(window)
+             reply = exchange(request, **kw)
++            barrier.exchanges.append(dict(request=request.kind.name, reply=reply.kind.name,
++                sequence=reply.sequence, state=reply.state, returned=time.monotonic()))
+             if request.kind == kind and window.endswith('after-reply'):
+                 barrier.stop(window)
+             return reply
+@@ -194,7 +197,9 @@
+         descriptor = issuer._image.admission.descriptor
+         manager = broker.session.boundaries
+         if window == 'stage-ack-pending':
+-            wait_for(lambda: len(manager.residual_membership(descriptor)) == 1)
++            fd = manager._entries[descriptor.key].fd
++            wait_for(lambda: len(observed_members(fd)) == 1)
++            assert read_owned(fd, 'cgroup.freeze').strip() == b'1'
+         if window.startswith('release-') and window != 'release-before-send':
+             wait_for(lambda: len(list(work.glob('*.marker'))) == 1)
+         observations.update(at_barrier=time.monotonic(),
+@@ -223,7 +228,9 @@
+     facts = asdict(closure)
+     facts['terminal_reports'] = [r.public_data() for r in closure.terminal_reports]
+     retain('composed-authority-' + work.parent.name + '.json', dict(window=window, fault=fault,
+-        original_fixture=str(work.parent), barrier=barrier.observations, observations=observations,
++        original_fixture=str(work.parent), barrier=barrier.observations,
++        original_exchange_returns=barrier.exchanges, observations=observations,
++        host_handle_after_run=issuer._handle is not None,
+         execution_succeeded=result.execution_succeeded, diagnostic=result.diagnostic,
+         terminal_recorded=result.terminal_recorded,
+         terminal=result.terminal.public_data() if result.terminal else None,
+@@ -239,6 +246,7 @@
+     assert not any(e.get('extensions', {}).get('xverse.maestro', {}).get('action') == 'started' for e in events)
+     released = window.startswith('release-') and window != 'release-before-send'
+     assert len(markers) == int(released), markers
++    assert all(value == 'EXEC\n' for value in markers.values()), markers
+     assert not facade._bindings or set(facade._bindings) <= {unit}
+     # A real issued fact is allowed to survive. It cannot authorize a late start.
+     sequence = broker.connection.sequence
+@@ -248,7 +256,9 @@
+     assert {p.name: p.read_text() for p in work.glob('*.marker')} == markers
+     if window == 'stage-ack-pending':
+         first = next(f for f in closure.native_units if f.unit_id == unit)
+-        assert first.issued is None and first.direct_child_reaped is None
++        stage_ack = any(e['reply'] == 'STAGED' for e in barrier.exchanges)
++        assert first.issued is (True if stage_ack else None)
++        assert first.direct_child_reaped is None
+         assert not closure.cleanup_complete
+         assert 'ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN' in closure.diagnostics
+     if window == 'issuance-after-record':

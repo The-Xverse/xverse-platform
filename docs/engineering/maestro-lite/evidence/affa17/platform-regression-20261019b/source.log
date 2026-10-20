@@ -1,0 +1,244 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+......................F................................................. [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+.....F.................................................................. [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ib.sha256(source.read_bytes()).hexdigest(),
+E                     binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
+E                     compiler=subprocess.check_output(['cc', '--version'], text=True).splitlines()[0],
+E                     role='owned isolation harness only; not an admitted runtime provider'))
+E         
+E         tests/thesis_lite/maestro/test_composed_authority_interruptions.py:58: 
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         tests/thesis_lite/maestro/test_composed_authority_interruptions.py:34: in retain
+E             with path.open('x') as stream:
+E                  ^^^^^^^^^^^^^^
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         
+E         self = PosixPath('/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/platform-regression-20261019b/source-harness/test_argus2_integration/heartbeat-compiler.json')
+E         mode = 'x', buffering = -1, encoding = 'locale', errors = None, newline = None
+E         
+E             def open(self, mode='r', buffering=-1, encoding=None,
+E                      errors=None, newline=None):
+E                 """
+E                 Open the file pointed to by this path and return a file object, as
+E                 the built-in open() function does.
+E                 """
+E                 if "b" not in mode:
+E                     encoding = io.text_encoding(encoding)
+E         >       return io.open(self, mode, buffering, encoding, errors, newline)
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         E       FileExistsError: [Errno 17] File exists: '/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/platform-regression-20261019b/source-harness/test_argus2_integration/heartbeat-compiler.json'
+E         
+E         ../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_local.py:537: FileExistsError
+E         =========================== short test summary info ============================
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[current-copy]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-copy]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-empty]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-nonmapping]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[stage]
+E         ERROR tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[release]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[before-intent-append]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[after-intent-flush]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-before-send]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-ack-pending]
+E         ERROR tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant[stop-after-reply]
+E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]
+E         ERROR tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]
+E         1782 passed, 14 errors, 24 subtests passed in 1389.51s (0:23:09)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261019b/bin/python', '-m', 'pytest', '-q', '-p'...eanup_after_issuer_loss[after-release]\n1782 passed, 14 errors, 24 subtests passed in 1389.51s (0:23:09)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f5c34eab2a0>
+mode = 'cleaned-leaf'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+        assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+        assert driver.plan.per_unit_seconds==2 and len(driver.prepared.steps)==20
+        contexts={c.binding.unit_id:c for c in client._future_contexts}
+        chosen=(leaf,) if mode=='cleaned-leaf' else (source,middle) if mode=='omitted-dependent' else (source,middle,leaf)
+        tickets=[];old_handles={};prepared_order=[];live_unrelated=[];result=None;closure=None
+        statement_bounds=[]
+        send=driver._send
+        def observe_statement(kind,end,**values):
+            if kind in ('step-dispatch','step-complete'):
+                step=driver._steps[values['step']]
+                cap=next(a.timeout_seconds for u in driver.prepared.units if u.unit_id==step.unit_id
+                         for a in u.plan.actions if a.phase==step.phase)
+                remaining=end.monotonic_seconds-time.monotonic()
+                assert 0<remaining<=cap
+                statement_bounds.append(dict(kind=kind,step=step.step_id,cap=cap,remaining=remaining,
+                                             end=end.monotonic_seconds))
+            return send(kind,end,**values)
+        monkeypatch.setattr(driver,'_send',observe_statement)
+        original_worker=client.process;statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            observed=sum(s.phase=='observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+            trigger=(step.step_id=='cleanup-terminal' if mode=='cleaned-leaf' else step.phase=='observe' and observed==3)
+            if kind=='step-complete' and trigger and not tickets:
+                old_handles.update({u:broker.issuer(u)._handle for u in named.values()})
+                end=HostDeadline(client.session,driver._active_end)
+                inputs=tuple((u,contexts[u].binding.permit,2) for u in chosen)
+                before=FileEvidenceJournal(work.parent/'m3.jsonl').records
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart_many(client.run_id,(inputs[0],inputs[0]),deadline=end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart_many(client.run_id,((chosen[0],replace(contexts[chosen[0]].binding.permit),2),),deadline=end)
+                accepted=driver.restart_many(client.run_id,tuple(reversed(inputs)),deadline=end)
+                assert tuple(t.unit_id for t in accepted)==chosen
+                tickets.extend(accepted)
+                assert tuple(driver.restart_many(client.run_id,inputs,deadline=end))==tuple(tickets)
+                assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before
+                assert all(driver.restart_result(t) is None for t in tickets)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(teardown,unit,descriptor,end):
+            assert threading.get_ident()==broker.owner._dispatch_thread
+            assert broker.issuer(unrelated)._handle is old_handles[unrelated]
+            assert unrelated in facade._released and unrelated not in driver.teardown._stopped
+            live_unrelated.append(dict(unit=unit,handle=asdict(broker.issuer(unrelated)._handle),observed_at=__import__('time').monotonic()))
+            prepared_order.append(unit)
+            return prepare(teardown,unit,descriptor,end)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def original_advance(prepared,end):
+            issuer=advance(prepared,end)
+            if mode=='mid-storage-loss' and issuer.unit_id==middle:
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',original_advance)
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            out=Path(output);out.mkdir(parents=True,exist_ok=True)
+            with (out/('cohort-inputs-'+mode+'.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+                    original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),stream,indent=2)
+                stream.write('\n')
+        try:
+            result=run(driver)
+            assert len(tickets)==len(chosen),result.diagnostic
+            outcomes=[driver.restart_result(t) for t in tickets]
+            assert all(r is not None for r in outcomes)
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if mode=='mid-storage-loss':
+                assert [r.disposition for r in outcomes]==['completed','failed','cancelled'],outcomes
+                assert prepared_order==[source,middle] and not result.execution_succeeded
+            else:
+                expected='rejected' if mode=='omitted-dependent' else 'completed'
+                assert all(r.disposition==expected for r in outcomes),outcomes
+>               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E               AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='822bed3ffb9854b5244cf8e724000138f3049ea92f9ce3b32ac18a69d6f2703...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:130: AssertionError
+____ test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions ____
+
+request = <FixtureRequest for <Function test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f5c34eabe00>
+
+    def test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        bounds = ends(driver)
+        trace = []
+        for method in ("_send", "_effect"):
+            original = getattr(FiniteDispatcher, method)
+    
+            def observed(self, *args, _method=method, _original=original, **kwargs):
+                began = time.monotonic()
+                try:
+                    return _original(self, *args, **kwargs)
+                except Exception as error:
+                    trace.append(
+                        {
+                            "method": _method,
+                            "kind": str(args[0]) if _method == "_send" else args[0].step_id,
+                            "elapsed": time.monotonic() - began,
+                            "error_type": type(error).__name__,
+                            "diagnostic": str(error),
+                        }
+                    )
+                    raise
+    
+            monkeypatch.setattr(FiniteDispatcher, method, observed)
+        result = driver.run(*bounds)
+        receipt = os.environ.get("MAESTRO_BOUNDARY_RECEIPTS")
+        if receipt:
+            (Path(receipt) / "dispatcher-operation-observations.json").write_text(
+                json.dumps(trace, indent=2)
+            )
+>       assert result.execution_succeeded and result.terminal_recorded, result
+E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='6a7030f20133178f4ae70e8d0d4895418acdf1d378a1eec11fd46794ed1d144...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False)
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='6a7030f20133178f4ae70e8d0d4895418acdf1d378a1eec11fd46794ed1d144...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_dispatcher.py:239: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions
+3 failed, 2077 passed, 24 subtests passed in 2886.60s (0:48:06)

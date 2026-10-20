@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_actual_start_window_expiring_during_receipt_read_rejects _________
+
+evidence = (PersistenceInput(prepared=PreparedLifecycle(experiment_digest='3532963898a6dbd2f44e8bcf65cec601a5bfba18a153b4d3896e1d...ted-scope-isolation')), RuntimeEvidenceFiles(), <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7817a96ce850>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7817a96d28b0>
+
+    def test_actual_start_window_expiring_during_receipt_read_rejects(evidence,monkeypatch):
+        values=list(evidence);now=datetime.now(timezone.utc)
+        authorization=replace(values[2],not_before=now-timedelta(seconds=1),expires_at=now+timedelta(seconds=1))
+        values[2]=authorization
+        values[6]=dict(values[6],expected_authorization_digest=admission_digest(authorization))
+        path=values[-1]['authorization'];path.write_bytes(authorization.canonical_bytes())
+        inode=path.stat().st_ino;pread=os.pread;observed=[]
+        def read(fd,size,offset):
+            data=pread(fd,size,offset)
+            if os.fstat(fd).st_ino==inode and not observed:
+                observed.append(datetime.now(timezone.utc))
+                time.sleep(1.1)
+            return data
+        with monkeypatch.context() as patch:
+            patch.setattr(os,'pread',read)
+>           with pytest.raises(ValueError,match='ML-RUNTIME-START-WINDOW'):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_runtime_evidence_window.py:32: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_evidence_window.py::test_actual_start_window_expiring_during_receipt_read_rejects
+1 failed in 3.28s

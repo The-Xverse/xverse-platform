@@ -1,0 +1,247 @@
+F.FFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_original_compilation_proof_rejects_every_changed_input_before_use[compiled-plan] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1010/test_original_compilation_proo0')
+mutation = 'compiled-plan'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "compiled-plan",
+            "prepared-fields",
+            "resource-fields",
+            "equal-result",
+            "equal-resources",
+        ],
+    )
+    def test_original_compilation_proof_rejects_every_changed_input_before_use(
+        tmp_path, mutation
+    ):
+        ctx = context()
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        unit = ctx[0].units[0].unit_id
+        receipt = holder.claim_start_intent(unit, now=NOW)
+        before = (tmp_path / "m3.jsonl").read_bytes()
+        if mutation == "compiled-plan":
+            holder._result.plan["status"] = "forged-after-admission"
+        elif mutation == "prepared-fields":
+            object.__setattr__(
+                holder._prepared,
+                "resource_order",
+                tuple(reversed(holder._prepared.resource_order)),
+            )
+        elif mutation == "resource-fields":
+            object.__setattr__(holder._resources[0], "revision", "forged-after-admission")
+        elif mutation == "equal-result":
+            holder._result = replace(holder._result)
+        else:
+            holder._resources = tuple(list(holder._resources))
+        with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+>           holder.revalidate_start_intent(receipt, now=NOW)
+
+tests/thesis_lite/maestro/test_admission.py:680: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/admission.py:433: in revalidate_start_intent
+    _verify_prepared(self._prepared, self._result, self._resources)
+src/xverse/maestro/admission.py:272: in _verify_prepared
+    recompiled = prepare_lifecycle(
+src/xverse/maestro/projection.py:248: in prepare_lifecycle
+    _reject("ML-PLAN-DIGEST", "experiment plan digest mismatch")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+code = 'ML-PLAN-DIGEST', message = 'experiment plan digest mismatch'
+pointer = ''
+
+    def _reject(code: str, message: str, pointer: str = "") -> None:
+>       raise PreparationError(code, message, pointer)
+E       xverse.maestro.projection.PreparationError: ML-PLAN-DIGEST: experiment plan digest mismatch
+
+src/xverse/maestro/projection.py:48: PreparationError
+_ test_original_compilation_proof_rejects_every_changed_input_before_use[resource-fields] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1010/test_original_compilation_proo2')
+mutation = 'resource-fields'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "compiled-plan",
+            "prepared-fields",
+            "resource-fields",
+            "equal-result",
+            "equal-resources",
+        ],
+    )
+    def test_original_compilation_proof_rejects_every_changed_input_before_use(
+        tmp_path, mutation
+    ):
+        ctx = context()
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        unit = ctx[0].units[0].unit_id
+        receipt = holder.claim_start_intent(unit, now=NOW)
+        before = (tmp_path / "m3.jsonl").read_bytes()
+        if mutation == "compiled-plan":
+            holder._result.plan["status"] = "forged-after-admission"
+        elif mutation == "prepared-fields":
+            object.__setattr__(
+                holder._prepared,
+                "resource_order",
+                tuple(reversed(holder._prepared.resource_order)),
+            )
+        elif mutation == "resource-fields":
+            object.__setattr__(holder._resources[0], "revision", "forged-after-admission")
+        elif mutation == "equal-result":
+            holder._result = replace(holder._result)
+        else:
+            holder._resources = tuple(list(holder._resources))
+        with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+>           holder.revalidate_start_intent(receipt, now=NOW)
+
+tests/thesis_lite/maestro/test_admission.py:680: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/admission.py:433: in revalidate_start_intent
+    _verify_prepared(self._prepared, self._result, self._resources)
+src/xverse/maestro/admission.py:272: in _verify_prepared
+    recompiled = prepare_lifecycle(
+src/xverse/maestro/projection.py:262: in prepare_lifecycle
+    _reject("ML-PLAN-INPUT", "normalized XDL does not reproduce the supplied plan")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+code = 'ML-PLAN-INPUT'
+message = 'normalized XDL does not reproduce the supplied plan', pointer = ''
+
+    def _reject(code: str, message: str, pointer: str = "") -> None:
+>       raise PreparationError(code, message, pointer)
+E       xverse.maestro.projection.PreparationError: ML-PLAN-INPUT: normalized XDL does not reproduce the supplied plan
+
+src/xverse/maestro/projection.py:48: PreparationError
+_ test_original_compilation_proof_rejects_every_changed_input_before_use[equal-result] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1010/test_original_compilation_proo3')
+mutation = 'equal-result'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "compiled-plan",
+            "prepared-fields",
+            "resource-fields",
+            "equal-result",
+            "equal-resources",
+        ],
+    )
+    def test_original_compilation_proof_rejects_every_changed_input_before_use(
+        tmp_path, mutation
+    ):
+        ctx = context()
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        unit = ctx[0].units[0].unit_id
+        receipt = holder.claim_start_intent(unit, now=NOW)
+        before = (tmp_path / "m3.jsonl").read_bytes()
+        if mutation == "compiled-plan":
+            holder._result.plan["status"] = "forged-after-admission"
+        elif mutation == "prepared-fields":
+            object.__setattr__(
+                holder._prepared,
+                "resource_order",
+                tuple(reversed(holder._prepared.resource_order)),
+            )
+        elif mutation == "resource-fields":
+            object.__setattr__(holder._resources[0], "revision", "forged-after-admission")
+        elif mutation == "equal-result":
+            holder._result = replace(holder._result)
+        else:
+            holder._resources = tuple(list(holder._resources))
+>       with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'xverse.maestro.admission.AdmissionError'>
+
+tests/thesis_lite/maestro/test_admission.py:679: Failed
+_ test_original_compilation_proof_rejects_every_changed_input_before_use[equal-resources] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1010/test_original_compilation_proo4')
+mutation = 'equal-resources'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "compiled-plan",
+            "prepared-fields",
+            "resource-fields",
+            "equal-result",
+            "equal-resources",
+        ],
+    )
+    def test_original_compilation_proof_rejects_every_changed_input_before_use(
+        tmp_path, mutation
+    ):
+        ctx = context()
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        unit = ctx[0].units[0].unit_id
+        receipt = holder.claim_start_intent(unit, now=NOW)
+        before = (tmp_path / "m3.jsonl").read_bytes()
+        if mutation == "compiled-plan":
+            holder._result.plan["status"] = "forged-after-admission"
+        elif mutation == "prepared-fields":
+            object.__setattr__(
+                holder._prepared,
+                "resource_order",
+                tuple(reversed(holder._prepared.resource_order)),
+            )
+        elif mutation == "resource-fields":
+            object.__setattr__(holder._resources[0], "revision", "forged-after-admission")
+        elif mutation == "equal-result":
+            holder._result = replace(holder._result)
+        else:
+            holder._resources = tuple(list(holder._resources))
+>       with pytest.raises(AdmissionError, match="ML-PERMIT-(PLAN|HOLDER)"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'xverse.maestro.admission.AdmissionError'>
+
+tests/thesis_lite/maestro/test_admission.py:679: Failed
+_ test_unchanged_original_preparation_proof_revalidates_without_recompilation __
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-1010/test_unchanged_original_prepar0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ec4fc409e00>
+
+    def test_unchanged_original_preparation_proof_revalidates_without_recompilation(
+        tmp_path, monkeypatch
+    ):
+        from xverse.maestro import admission
+    
+        ctx = context()
+        holder = session(ctx, tmp_path / "m3.jsonl")
+        receipt = holder.claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+    
+        def unexpected(*args, **kwargs):
+            raise AssertionError(
+                "unchanged original inputs must reuse their validated preparation proof"
+            )
+    
+        monkeypatch.setattr(admission, "_verify_prepared", unexpected)
+>       holder.revalidate_start_intent(receipt, now=NOW)
+
+tests/thesis_lite/maestro/test_admission.py:701: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/admission.py:433: in revalidate_start_intent
+    _verify_prepared(self._prepared, self._result, self._resources)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...e/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/tests/thesis_lite/maestro/fixtures/system.json'})}))))
+kwargs = {}
+
+    def unexpected(*args, **kwargs):
+>       raise AssertionError(
+            "unchanged original inputs must reuse their validated preparation proof"
+        )
+E       AssertionError: unchanged original inputs must reuse their validated preparation proof
+
+tests/thesis_lite/maestro/test_admission.py:696: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_admission.py::test_original_compilation_proof_rejects_every_changed_input_before_use[compiled-plan]
+FAILED tests/thesis_lite/maestro/test_admission.py::test_original_compilation_proof_rejects_every_changed_input_before_use[resource-fields]
+FAILED tests/thesis_lite/maestro/test_admission.py::test_original_compilation_proof_rejects_every_changed_input_before_use[equal-result]
+FAILED tests/thesis_lite/maestro/test_admission.py::test_original_compilation_proof_rejects_every_changed_input_before_use[equal-resources]
+FAILED tests/thesis_lite/maestro/test_admission.py::test_unchanged_original_preparation_proof_revalidates_without_recompilation
+5 failed, 1 passed, 64 deselected in 2.26s

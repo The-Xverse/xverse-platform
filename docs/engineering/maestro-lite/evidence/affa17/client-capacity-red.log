@@ -1,0 +1,116 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_query_issued_retains_one_exact_original_pidfd ______________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x797112e6c050>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x797112e688a0>
+
+    def test_query_issued_retains_one_exact_original_pidfd(run_stack, monkeypatch):
+        client = connect(run_stack, monkeypatch)
+        _, _, h, _, _, _, _ = run_stack
+        h.stage(0)
+        token = h.units[0]["handle"]
+        for _ in range(3):
+>           frame = replace(h.frame(K.QUERY_ISSUED, 0), handle=bytes(32))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_client.py:238: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_native.py:135: in frame
+    return AuthorityFrame(
+<string>:20: in __init__
+    ???
+src/xverse/maestro/affa_protocol.py:76: in __post_init__
+    self._validate()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AuthorityFrame(kind=<AuthorityKind.QUERY_ISSUED: 11>, sequence=1, deadline_ns=935835605415314, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0)
+
+    def _validate(self):
+        if type(self) is not AuthorityFrame or type(self.kind) is not AuthorityKind:
+            raise ProtocolError("ML-AFFA-TYPE")
+        _integer(self.sequence, 0 if self.kind is AuthorityKind.READY else 1, 8192)
+        _integer(self.deadline_ns, 1, _UINT64)
+        _integer(self.slot, 0, 16)
+        _integer(self.epoch, 0, _UINT64)
+        _integer(self.generation, 0, _UINT64)
+        _integer(self.state, 0, 65535)
+        _integer(self.reason, 0, 7)
+        _integer(self.lease_ns, 0, _UINT64)
+        _bytes(self.scope, 32)
+        _bytes(self.operation, 16)
+        for value in self._digests() + (self.ticket, self.handle):
+            _bytes(value, 32)
+        if self.scope == _ZERO32:
+            raise ProtocolError("ML-AFFA-SCOPE")
+        kind = self.kind
+        if kind is AuthorityKind.READY:
+            self._run_shape()
+            if self.sequence or self.lease_ns != self.deadline_ns or self.state or self.reason:
+                raise ProtocolError("ML-AFFA-READY")
+        elif kind in (AuthorityKind.RENEW, AuthorityKind.CANCEL, AuthorityKind.RENEWED, AuthorityKind.CANCELLED, AuthorityKind.REJECTED):
+            self._run_shape()
+            if (kind in (AuthorityKind.RENEW, AuthorityKind.RENEWED)) != (self.lease_ns > 0):
+                raise ProtocolError("ML-AFFA-LEASE")
+            if kind in (AuthorityKind.RENEW, AuthorityKind.CANCEL) and (self.state or self.reason):
+                raise ProtocolError("ML-AFFA-REQUEST")
+            if kind is AuthorityKind.RENEWED and (self.state or self.reason):
+                raise ProtocolError("ML-AFFA-RENEWED")
+            if kind is AuthorityKind.REJECTED and (not self.reason or self.state):
+                raise ProtocolError("ML-AFFA-REJECTED")
+        else:
+            if not self.slot or not self.generation or self.lease_ns:
+                raise ProtocolError("ML-AFFA-UNIT")
+            if any(value == _ZERO32 for value in self._digests()):
+                raise ProtocolError("ML-AFFA-IDENTITY")
+            if kind in (AuthorityKind.REGISTER, AuthorityKind.REGISTERED):
+                if self.operation != _ZERO16 or self.ticket != _ZERO32 or self.handle != _ZERO32:
+                    raise ProtocolError("ML-AFFA-REGISTER")
+            else:
+                if self.operation == _ZERO16:
+                    raise ProtocolError("ML-AFFA-OPERATION")
+                no_handle = kind in (AuthorityKind.INTENT, AuthorityKind.STAGE, AuthorityKind.QUERY_ISSUED, AuthorityKind.INTENT_RECORDED, AuthorityKind.ADVANCE, AuthorityKind.ADVANCED)
+                if no_handle != (self.handle == _ZERO32):
+>                   raise ProtocolError("ML-AFFA-HANDLE")
+E                   xverse.maestro.affa_protocol.ProtocolError: ML-AFFA-HANDLE
+
+src/xverse/maestro/affa_protocol.py:123: ProtocolError
+_____________ test_expired_original_revoke_end_still_attempts_kill _____________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x797112ea8190>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x797112e69350>
+
+    def test_expired_original_revoke_end_still_attempts_kill(run_stack, monkeypatch):
+        import time
+        from xverse.maestro.time import HostDeadline
+    
+        client = connect(run_stack, monkeypatch)
+        signal.pidfd_send_signal(client.child._capability.fileno(), signal.SIGSTOP)
+>       result = client.revoke(
+            HostDeadline(client.child._root.session, time.monotonic() - 0.01)
+        )
+
+tests/thesis_lite/maestro/test_affa_client.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/affa_client.py:339: in revoke
+    _deadline(deadline, self.child._root.session), self.config.generation_ns
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = HostDeadline(session='host-session', monotonic_seconds=935833.71860173)
+session = 'host-session'
+
+    def _deadline(value, session):
+        if type(value) is not HostDeadline or value.session != session:
+            raise OwnerError("ML-OWNER-HOST-SESSION")
+        value.__post_init__()
+        remaining = value.monotonic_seconds - time.monotonic()
+        if not 0 < remaining <= 5:
+>           raise OwnerError("ML-OWNER-DEADLINE")
+E           xverse.maestro.owner.OwnerError: ML-OWNER-DEADLINE
+
+src/xverse/maestro/owner.py:58: OwnerError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_client.py::test_query_issued_retains_one_exact_original_pidfd
+FAILED tests/thesis_lite/maestro/test_affa_client.py::test_expired_original_revoke_end_still_attempts_kill
+2 failed, 19 deselected in 1.69s

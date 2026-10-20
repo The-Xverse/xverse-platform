@@ -1,0 +1,93 @@
+--- before/verification-driver
++++ after/verification-driver
+@@ -11,15 +11,15 @@
+ import time
+ 
+ CANDIDATE = Path(__file__).resolve().parents[5]
+-OUT = Path(__file__).resolve().parent / 'composed-issuer-loss-20261019b'
+-PYTHON = '/tmp/maestro-lite-affa-issuer-loss-target-20261019b/bin/python'
++OUT = Path(__file__).resolve().parent / 'composed-issuer-loss-20261019c'
++PYTHON = '/tmp/maestro-lite-affa-issuer-loss-target-20261019c/bin/python'
+ assert OUT.is_dir() and {p.name for p in OUT.iterdir()} <= {'dist', 'build.log'}, 'existing evidence namespace'
+ sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+ def save(name, data):
+     with (OUT / name).open('x') as stream:
+         stream.write(json.dumps(data, indent=2) + '\n')
+ 
+-ROOT = Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019b-source-'))
++ROOT = Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019c-source-'))
+ for name in ('src', 'xdl'):
+     shutil.copytree(CANDIDATE / name, ROOT / name, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+ (ROOT / 'tests/thesis_lite').mkdir(parents=True)
+@@ -42,7 +42,7 @@
+ wheel = next((OUT/'dist').glob('*.whl'))
+ with (OUT/'install.log').open('x') as log:
+     subprocess.run([PYTHON, '-m', 'pip', 'install', '--no-deps', '--force-reinstall', str(wheel)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=60)
+-consumer = Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019b-consumer-'))
++consumer = Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019c-consumer-'))
+ shutil.copytree(ROOT / 'tests', consumer / 'tests')
+ shutil.copytree(ROOT / 'xdl', consumer / 'xdl')
+ env = dict(os.environ, PYTEST_DISABLE_PLUGIN_AUTOLOAD='1', PYTHONDONTWRITEBYTECODE='1')
+@@ -70,35 +70,30 @@
+     log_sha256=sha(OUT / 'collected.log')))
+ shutil.copyfile(OUT.parent / 'capture-retained-teardown.py', OUT / 'capture-public.py')
+ rows = []
+-for phase, cwd, isolated in [('source', ROOT, False), ('wheel', consumer, True)]:
+-    private = Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019b-' + phase + '-private-'))
+-    environment = dict(env, MAESTRO_BOUNDARY_RECEIPTS=str(OUT / (phase + '-harness')))
+-    if not isolated:
+-        environment['PYTHONPATH'] = str(ROOT / 'src')
+-    command = [PYTHON, *(['-I'] if isolated else []), '-m', 'pytest',
+-        *[str(cwd / 'tests/thesis_lite/maestro' / n) for n in files], '-q', '--basetemp', str(private)]
+-    began = time.monotonic()
+-    with (OUT / (phase + '.log')).open('x') as log:
+-        result = subprocess.run(command, cwd=cwd, env=environment, stdout=log, stderr=subprocess.STDOUT, timeout=600)
+-    assert all(sha(ROOT / n) == h for n, h in frozen.items())
+-    assert all(sha(Path(row['file'])) == row['sha256'] for row in identity.values())
+-    capture = [PYTHON, '-I', str(OUT / 'capture-public.py'), phase, str(private)]
+-    with (OUT / (phase + '-public-capture.log')).open('x') as log:
+-        observed = subprocess.run(capture, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, timeout=30)
+-    row = dict(command=command, cwd=str(cwd), returncode=result.returncode,
+-        elapsed_seconds=time.monotonic() - began, original_private_basetemp=str(private),
+-        public_capture_returncode=observed.returncode, frozen_source_root=str(ROOT),
+-        log_sha256=sha(OUT / (phase + '.log')), input_manifest_sha256=sha(OUT / 'frozen-inputs.json'))
+-    save(phase + '-receipt.json', row); rows.append(row)
+-    # Separate immutable phase summaries; do not replace historical interim files.
+-    save('result-after-' + phase + '.json', dict(receipts=rows, collected_per_phase=expected,
+-        all_requested_phases_executed=len(rows) == 2, component_checks_passed=len(rows) == 2
+-        and all(r['returncode'] == r['public_capture_returncode'] == 0 for r in rows),
+-        source_manifest_sha256=sha(OUT / 'frozen-inputs.json'),
+-        installed_identity_sha256=sha(OUT / 'installed-identity.json'),
+-        wheel_sha256=sha(OUT / 'dist/xverse_xdl-0.4.0-py3-none-any.whl'),
+-        installed_maestro_modules=42, native_resources=4, full_platform_regression=False,
+-        full_M1_complete=False, stable_increment17=False, accepted=False, merged=False))
+-    print(phase, result.returncode, 'collected', expected, flush=True)
+-    # Both original requested phases run once, even when source fails; all failures remain explicit.
+-raise SystemExit(0 if all(r['returncode'] == r['public_capture_returncode'] == 0 for r in rows) else 1)
++for name in files:
++    cohort=name.removeprefix('test_').removesuffix('.py')
++    for phase,cwd,isolated in [('source',ROOT,False),('wheel',consumer,True)]:
++        label=cohort+'-'+phase
++        private=Path(tempfile.mkdtemp(prefix='maestro-composed-issuer-loss-20261019c-'+label+'-private-'))
++        environment=dict(env,MAESTRO_BOUNDARY_RECEIPTS=str(OUT/(label+'-harness')))
++        if not isolated:environment['PYTHONPATH']=str(ROOT/'src')
++        command=[PYTHON,*(['-I'] if isolated else []),'-m','pytest',str(cwd/'tests/thesis_lite/maestro'/name),'-q','--basetemp',str(private)]
++        began=time.monotonic()
++        with (OUT/(label+'.log')).open('x') as log:
++            result=subprocess.run(command,cwd=cwd,env=environment,stdout=log,stderr=subprocess.STDOUT,timeout=300)
++        assert all(sha(ROOT/n)==h for n,h in frozen.items())
++        assert all(sha(Path(row['file']))==row['sha256'] for row in identity.values())
++        with (OUT/(label+'-public-capture.log')).open('x') as log:
++            capture=subprocess.run([PYTHON,'-I',str(OUT/'capture-public.py'),label,str(private)],cwd=cwd,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=30)
++        row=dict(cohort=cohort,phase=phase,command=command,cwd=str(cwd),returncode=result.returncode,elapsed_seconds=time.monotonic()-began,
++            original_private_basetemp=str(private),public_capture_returncode=capture.returncode,log_sha256=sha(OUT/(label+'.log')),input_manifest_sha256=sha(OUT/'frozen-inputs.json'))
++        save(label+'-receipt.json',row);rows.append(row)
++        save('result-after-'+label+'.json',dict(receipts=rows,collected_per_phase=expected,all_requested_cohorts_executed=len(rows)==2*len(files),
++            component_checks_passed=len(rows)==2*len(files) and all(r['returncode']==r['public_capture_returncode']==0 for r in rows),
++            source_manifest_sha256=sha(OUT/'frozen-inputs.json'),wheel_sha256=sha(OUT/'dist/xverse_xdl-0.4.0-py3-none-any.whl'),
++            full_platform_regression=False,full_M1_complete=False,stable_increment17=False,accepted=False,merged=False))
++        print(label,result.returncode,flush=True)
++    if name=='test_composed_issuer_loss.py' and any(r['returncode'] or r['public_capture_returncode'] for r in rows):
++        save('regression-not-executed.json',dict(reason='original issuer-loss controls not passing',remaining_modules=files[1:]))
++        raise SystemExit(1)
++raise SystemExit(0 if all(r['returncode']==r['public_capture_returncode']==0 for r in rows) else 1)

@@ -1,0 +1,3186 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+..................................................................FFFFFF [ 19%]
+FFFFFFFFFFFFFF.....FFFF................................................. [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+..............................                                           [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: eduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E         E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+E         
+E         src/xverse/maestro/schedule_plan.py:152: ScheduleError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+E         24 failed, 1786 passed, 24 subtests passed in 958.89s (0:15:58)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020d/bin/python', '-m', 'pytest', '-q', '-p'...lated_and_all_generations[cleaned-leaf]\n24 failed, 1786 passed, 24 subtests passed in 958.89s (0:15:58)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+____ test_original_control_rejection_keeps_unspent_authority[past-restart] _____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f8775f0>
+control = 'restart', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='1263786133f52d0596980ccfc426b11c29247995bb6c33a0182c2c4211863a1f', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='dc85c1485333c88f3485899b0e16c5b9dff0735b022cf77ba15aeec92e6eb2e5')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+____ test_original_control_rejection_keeps_unspent_authority[past-recovery] ____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x712160da4890>
+control = 'recovery', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='fe758aa8c6704306576ec1a1ee35df9c6bfff5b40dbbfb86ff46e13785d676d8', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='c63e1da923fd8ca545eda0ad998271b3959d4ee2d91c6b398e89cbe560d486e5')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[foreign-session-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f5eaed0>
+control = 'restart', mode = 'foreign-session'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='acd325b6e931a003244d5f24813e0c595a166ed962a39767f05a6229ee196773', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='ce20f5363535e43f407e436bb28b80f0288986764ec7c70161fb9dd03e077f72')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215e19c260>
+control = 'recovery', mode = 'foreign-session'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='0073624942b3d38cb6c143230b23f0586425f3b978ce0a3e239e34c10748fb32', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='720a9d88a3f4baae2462d4911a5116120849c95d7cec487a1ce5c465558e0bd6')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[beyond-active-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215e19c940>
+control = 'restart', mode = 'beyond-active'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='e4254ec6ed99db2d7c4ae75be9c9391c9d9eaf32a1e176a94931b0169f67c4d8', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='bb36bee02d7d45c86ff7f588e040e75c5167f56e1f2a065777141195a360bb0b')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215dc2b750>
+control = 'recovery', mode = 'beyond-active'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='1ed0e205729e8f090c22465f33a95f29cb15dd83719f979eaf624491055a97ac', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='3ac9ae3782779328f525ba91348807e04c499e4c8ef9d41472d9a88074513bbd')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[expire-queued-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215dc2b070>
+control = 'restart', mode = 'expire-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='788bfba2db08a5bf37536d4885075b531b6c439ea6b25fcf67a18c2a168f6492', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='2d8a8321f3b8a50f7a6a36e2bd3223bf4d5bb37c55135dd995d40a281a1cf367')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f47d640>
+control = 'recovery', mode = 'expire-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='1c9ddd42feb0b1285d325e28d2df106fb4070f21740f5f72d1a9013bdadc2fbe', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='cb05b128a11db6a77067aceda00d117e2934b43ce3c093ad3e158f63de2098b2')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215db82850>
+control = 'restart', mode = 'cancel-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='6959ae7f2cd076e2424ec1656ddb31e4c8f528020b7e0d81f973971888185eff', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='cd859ed2912412a05af56e9e23149a04468d99bd5e15b015553e84ab7a7fdb3f')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery] _
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d68c950>
+control = 'recovery', mode = 'cancel-queued'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+>       stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='0a46843800931e8ac281a7eca292f4964afdac0a7313bb69a23c790c5f04cce8', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='ce25a59bc2fb83957da623cd091c87b2aed519e291ed661887b7175ed006dec9')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[before-start] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d94fd90>
+mode = 'before-start'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='e2eda0a80e36b345ef8777ad1de5706ad8f6184a52d06369697b05fd3001fa7f', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='9f69a71701bd076b214a56cb8d6841932151ec1f1a9590ee759f954ad6519339')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d52d320>
+mode = 'mixed-initial'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='c8d22f7bc46ac648df5164dc054529ec021c43f5f230e2ddbee7d2d741bc793f', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='724235fdfc1f776c76d40a7bf39392c6ceaa33f26aa3ad8baa38fb1a03d96471')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[planned] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[planned]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215defd240>
+mode = 'planned'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='0ae0ac310b4a8017f684e6f4b4757b79eb5f028930d17c76ee094f5d587da637', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='528cdb631c923e9c559a8051b8e70df952a4626a322d0b2915dbbf7750cbc568')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215defcbb0>
+mode = 'dead-before-drain'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='f263f71bbbbf84a78d8cfecaedcb497e7e622e86e2d43e09bdd020f4177cf975', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='02764857823c94d0b48fdbbb7210215be8ea7f4604644bfb23614feabdcdfcf9')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215db37c40>
+mode = 'heartbeat-race'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='e3ed7faa038913a3ae66aac898f14e8e9a0608c43db11dc1e0ebde1461e593ba', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='e584dfcbca57f95c9c62585c54aeb5e4e1c8480732f9b62a1fd13a4a285b3ff6')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[generation2] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f377e00>
+mode = 'generation2'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='291fa134d1c709f7c96f13a7a5f3143b3610baf5ca834c19a9c63747a0b8d2c4', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='efa7e075e07cd5b57fa67110f0bda326f890a44b6ef928134be74ee41ae12f7d')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f360e50>
+mode = 'restart-after'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='a263510f861d31516b8b9173aec53105e81c9d21de9c7fbdcf6b24f1bc1b9dce', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='5c108d7e57b6a6dca907623be75279552789ceef7d728cf7b432c6dfaf9ee9f0')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215f360520>
+mode = 'stopped-then-recovery'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='f9ad53f28d15d4bd422db780012916661847532f3259c326c3ed897d37f01407', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='2b275624bab1f66a68ca102ae5f60f91b68cd22226b18593304d8005f669afd2')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215dc1d390>
+mode = 'cleaned-then-restart'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='fa3d3a25e8ae126d30ce2340e3caab941ac148722a929e6fca17633ec6c0b297', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='99e38ae6c6aba7367d90f9c9ae9672a9a9cacab4407e3e9a6c66df0504113969')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215dc4f3f0>
+mode = 'snapshot-loss'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='ecbe8fc951cc61f70a1b9c77cb5a0bbcc7bd11a00567188773613cc6bced3ca1', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='03bf85440d25d37654442e82effe8968a9ad83a74b5dabed9c46aca494e55968')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d83c280>
+mode = 'cohort'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+>       stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='8f65ba3d2f5a510aa4f9d1532b40df361c6a9aa9efc79bd44292f1d4cfab0f15', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='0dd551b04e01ef0dd9baee2be523abf667243db5a6fd4712d7c54e4478b78c55')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d83dbe0>
+mode = 'omitted-dependent'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+>       stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='0c4b31a11ae0c4bfca1d06635c57c07da5bb2791bd63b1ba82cd91e5114fc9e4', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='e3c60755edbf195789bbe7241e50b06d4a6006ba2135168ec14491c4b99a45ae')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d919940>
+mode = 'mid-storage-loss'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+>       stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='8a24e8f817a226b7e442db58ea8d50532b0a779b1acef8f07815c52ffb43d45f', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='b03dd4afd1f9430fda9eed413a8f89889382619dd4c8a4cffe602d6b1eab0396')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71215d926190>
+mode = 'cleaned-leaf'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+>       stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:109: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:92: in configuration
+    plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='aab8309e673b54e3a928bba3ee23812a9501d58204b3d2c7528dad915126af19', resource_diges...Instances/unrelated-instance"}]}', lifecycle_digest='60e0e6f6965cee21a83015d771818de8be7f682b236469f0b1f2c5dfaae4ab7c')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+        service_operation_count=None,
+        restart_operation_seconds=None,
+        use_action_timeouts=False,
+        recovery_operation_seconds=None,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        if type(use_action_timeouts) is not bool:
+            raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
+        action_timeouts = ()
+        if use_action_timeouts:
+            action_timeouts = tuple((u.unit_id, a.phase, a.timeout_seconds)
+                                    for u in prepared.units for a in u.plan.actions)
+            for unit, phase, seconds in action_timeouts:
+                _seconds(seconds, 5, "ACTION-TIMEOUT")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        service_calls = n + 1
+        if service_operation_count is not None:
+            _integer(service_operation_count, 32, "SERVICE-CAPACITY", 1)
+            service_calls = service_operation_count
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - (service_calls + 1) * operation_seconds
+        if period <= scan or poll_seconds > period:
+>           raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+E           xverse.maestro.schedule_plan.ScheduleError: ML-SCHEDULE-HEALTH-CAPACITY
+
+src/xverse/maestro/schedule_plan.py:152: ScheduleError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[beyond-active-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-restart]
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[cancel-queued-recovery]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[before-start]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[mixed-initial]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+25 failed, 2069 passed, 24 subtests passed in 1970.24s (0:32:50)

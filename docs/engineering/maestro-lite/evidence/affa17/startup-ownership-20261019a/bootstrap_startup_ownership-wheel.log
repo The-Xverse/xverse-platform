@@ -1,0 +1,489 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[capability] _
+
+startup = (<function startup.<locals>.reserve at 0x77ffa42c4540>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa417b0e0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa417aba0>, [19])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[capability]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f348a0>
+fault = 'capability'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+>                   stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   ChildProcessError: [Errno 10] No child processes
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:48: ChildProcessError
+
+During handling of the above exception, another exception occurred:
+
+startup = (<function startup.<locals>.reserve at 0x77ffa42c4540>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa417b0e0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa417aba0>, [19])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[capability]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f348a0>
+fault = 'capability'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+                    stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                    if stopped:break
+                time.sleep(.002)
+            assert stopped is not None and len(created)==1
+            original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+            setattr(owner,'_'+fault,replacement)
+            ordinary_rejected=False
+            try:owner._holder()
+            except ValueError:ordinary_rejected=True
+            try:owner.cancel('owned-startup-alias-loss')
+            except Exception as error:cancel_errors.append(type(error).__name__)
+            assert latch.cancelled
+        finally:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+>           assert len(created)==1 and original
+E           AssertionError: assert (1 == 1 and {})
+E            +  where 1 = len([<Popen: returncode: -9 args: ['/tmp/maestro-startup-ownership-20261019a-boot...>])
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:65: AssertionError
+_ test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[process] _
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec8860>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa4207c50>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa42079d0>, [24])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[process]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa4f415b0>
+fault = 'process'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+>                   stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   ChildProcessError: [Errno 10] No child processes
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:48: ChildProcessError
+
+During handling of the above exception, another exception occurred:
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec8860>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa4207c50>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa42079d0>, [24])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[process]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa4f415b0>
+fault = 'process'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+                    stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                    if stopped:break
+                time.sleep(.002)
+            assert stopped is not None and len(created)==1
+            original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+            setattr(owner,'_'+fault,replacement)
+            ordinary_rejected=False
+            try:owner._holder()
+            except ValueError:ordinary_rejected=True
+            try:owner.cancel('owned-startup-alias-loss')
+            except Exception as error:cancel_errors.append(type(error).__name__)
+            assert latch.cancelled
+        finally:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+>           assert len(created)==1 and original
+E           AssertionError: assert (1 == 1 and {})
+E            +  where 1 = len([<Popen: returncode: -9 args: ['/tmp/maestro-startup-ownership-20261019a-boot...>])
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:65: AssertionError
+_ test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[channel] _
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec9300>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f887d0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f88190>, [33])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[channel]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f2dfd0>
+fault = 'channel'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+>                   stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   ChildProcessError: [Errno 10] No child processes
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:48: ChildProcessError
+
+During handling of the above exception, another exception occurred:
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec9300>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f887d0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f88190>, [33])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[channel]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f2dfd0>
+fault = 'channel'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+                    stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                    if stopped:break
+                time.sleep(.002)
+            assert stopped is not None and len(created)==1
+            original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+            setattr(owner,'_'+fault,replacement)
+            ordinary_rejected=False
+            try:owner._holder()
+            except ValueError:ordinary_rejected=True
+            try:owner.cancel('owned-startup-alias-loss')
+            except Exception as error:cancel_errors.append(type(error).__name__)
+            assert latch.cancelled
+        finally:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+>           assert len(created)==1 and original
+E           AssertionError: assert (1 == 1 and {})
+E            +  where 1 = len([<Popen: returncode: -9 args: ['/tmp/maestro-startup-ownership-20261019a-boot...>])
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:65: AssertionError
+_ test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[pidfd] _
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec8b80>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f368b0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f36780>, [42])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[pidfd]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f90380>
+fault = 'pidfd'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+>                   stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   ChildProcessError: [Errno 10] No child processes
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:48: ChildProcessError
+
+During handling of the above exception, another exception occurred:
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec8b80>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f368b0>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f36780>, [42])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[pidfd]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f90380>
+fault = 'pidfd'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+                    stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                    if stopped:break
+                time.sleep(.002)
+            assert stopped is not None and len(created)==1
+            original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+            setattr(owner,'_'+fault,replacement)
+            ordinary_rejected=False
+            try:owner._holder()
+            except ValueError:ordinary_rejected=True
+            try:owner.cancel('owned-startup-alias-loss')
+            except Exception as error:cancel_errors.append(type(error).__name__)
+            assert latch.cancelled
+        finally:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+>           assert len(created)==1 and original
+E           AssertionError: assert (1 == 1 and {})
+E            +  where 1 = len([<Popen: returncode: -9 args: ['/tmp/maestro-startup-ownership-20261019a-boot...>])
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:65: AssertionError
+_ test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[session] _
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec9800>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f37100>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f36fd0>, [51])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[session]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f91590>
+fault = 'session'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+>                   stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   ChildProcessError: [Errno 10] No child processes
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:48: ChildProcessError
+
+During handling of the above exception, another exception occurred:
+
+startup = (<function startup.<locals>.reserve at 0x77ffa3ec9800>, <xverse.maestro.prbc.ProcessBoundaryOps object at 0x77ffa3f37100>, <xverse.maestro.supervisor.CancellationLatch object at 0x77ffa3f36fd0>, [51])
+registration_faults = {'malformed': PosixPath('/tmp/maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/r.../maestro-startup-ownership-20261019a-bootstrap_startup_ownership-wheel-private-3tphtpj1/registration-faults0/stopped')}
+request = <FixtureRequest for <Function test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[session]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77ffa3f91590>
+fault = 'session'
+
+    @pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+    def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+        reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+        sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+        foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+        popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+        def spawned(*a,**kw):
+            process=popen(*a,**kw);created.append(process);return process
+        def guarded(fd,*a,**kw):
+            if fd==foreign.fileno():
+                forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+            return send(fd,*a,**kw)
+        monkeypatch.setattr(subprocess,'Popen',spawned)
+        monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+        cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+        end=deadline(2)
+        def launch():
+            try:owner.launch(end)
+            except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+        thread=threading.Thread(target=launch);thread.start()
+        try:
+            until=time.monotonic()+1.5;stopped=None
+            while time.monotonic()<until:
+                cap=owner._capability
+                if cap:
+                    stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                    if stopped:break
+                time.sleep(.002)
+            assert stopped is not None and len(created)==1
+            original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+            setattr(owner,'_'+fault,replacement)
+            ordinary_rejected=False
+            try:owner._holder()
+            except ValueError:ordinary_rejected=True
+            try:owner.cancel('owned-startup-alias-loss')
+            except Exception as error:cancel_errors.append(type(error).__name__)
+            assert latch.cancelled
+        finally:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+>           assert len(created)==1 and original
+E           AssertionError: assert (1 == 1 and {})
+E            +  where 1 = len([<Popen: returncode: -9 args: ['/tmp/maestro-startup-ownership-20261019a-boot...>])
+
+tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py:65: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py::test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[capability]
+FAILED tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py::test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[process]
+FAILED tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py::test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[channel]
+FAILED tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py::test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[pidfd]
+FAILED tests/thesis_lite/maestro/test_bootstrap_startup_ownership.py::test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel[session]
+5 failed in 2.05s

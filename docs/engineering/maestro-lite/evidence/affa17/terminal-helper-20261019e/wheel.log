@@ -1,0 +1,174 @@
+........................................................................ [ 62%]
+F.....F.FFF..FF.............................                             [100%]
+=================================== FAILURES ===================================
+___ test_actual_native_report_close_and_external_closed_recomputation[False] ___
+
+request = <FixtureRequest for <Function test_actual_native_report_close_and_external_closed_recomputation[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03dfaea5b0>
+implicit = False
+
+    @pytest.mark.parametrize('implicit',[False,True])
+    def test_actual_native_report_close_and_external_closed_recomputation(request,monkeypatch,implicit):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=implicit)
+        broker,_,client,work=stack
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='562b5eb034e990c31025fd72fffc0103fec8a675a21fe05334da3989fea1d6d...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:63: AssertionError
+__ test_terminal_before_collection_rejects_without_consuming_original_request __
+
+request = <FixtureRequest for <Function test_terminal_before_collection_rejects_without_consuming_original_request>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03dead07a0>
+
+    def test_terminal_before_collection_rejects_without_consuming_original_request(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        sequence=client._sequence
+        with pytest.raises(ValueError,match='ML-TERMINAL-BUDGET'):client.finish_run(stack[0],deadline(1))
+        assert client._sequence==sequence and not client._terminal_attempted and not client._failed
+        result=run(driver)
+>       assert result.terminal.public_data()['writer']['evidence_complete'],result.terminal.public_data()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:157: AttributeError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[True] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03deaae950>
+optional = True
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+>       result=run(driver);facts=result.terminal.public_data()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:171: AttributeError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03de912350>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-helper-20261019e-wheel-private-ir_ebpir/test_actual_nonopen_writer_clo0/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='dbd82ee58f1b28615c7472473f96760900602e33cfbc4ee21cafcdecafd241d...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03deaca4a0>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-helper-20261019e-wheel-private-ir_ebpir/test_actual_nonopen_writer_clo1/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='a65669f74cb5b116ba2fdf39484bf5137b896ab4e2571c0fd6854cf643961ab...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[closed] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[closed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03dfd973f0>
+case = 'closed'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+>       result=run(driver);assert result.terminal is not None,result.diagnostic
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ML-SCHEDULE-CLEANUP-INCOMPLETE
+E       assert None is not None
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='dd6d64f395e54ef000b0767f19e52b23b55b826851eb0dc2ffb2e99292e831f...ML-SCHEDULE-CLEANUP-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:34: AssertionError
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d03de7a5c50>
+case = 'lost-close-ack'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+>       result=run(driver);assert result.terminal is not None,result.diagnostic
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ML-SCHEDULE-CLEANUP-INCOMPLETE
+E       assert None is not None
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='9e727d7a33211931128e5ddb3709ab472d0021a3999bb6bb2b8191158ad8b52...ML-SCHEDULE-CLEANUP-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:34: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_terminal_before_collection_rejects_without_consuming_original_request
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[closed]
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]
+7 failed, 109 passed in 191.94s (0:03:11)

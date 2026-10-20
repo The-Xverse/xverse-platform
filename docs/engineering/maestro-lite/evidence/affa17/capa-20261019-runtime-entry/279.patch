@@ -1,0 +1,27 @@
+--- /tmp/maestro-runtime-entry-20261019b-source-76nd7m3i/tests/thesis_lite/maestro/test_runtime_entry.py
++++ tests/thesis_lite/maestro/test_runtime_entry.py
+@@ -178,7 +178,7 @@
+     assert entry._scope is None and entry._launcher.boundaries._latch.reason=='owned-stop'
+ 
+ 
+-def test_actual_concurrent_stop_preserves_original_cleanup_and_unknown_waits(runtime,monkeypatch):
++def test_actual_concurrent_stop_preserves_original_cleanup_facts(runtime,monkeypatch):
+     from xverse.maestro.dispatcher import FiniteDispatcher
+     entry,scope,work=runtime;reached=threading.Event();resume=threading.Event()
+     original=FiniteDispatcher._statement;results=[];errors=[];held=[]
+@@ -210,7 +210,13 @@
+     assert result.closure is not None and result.closure.root_reaped
+     assert all(h.process_reaped for h in result.closure.helpers)
+     assert all(b.empty and b.released for b in result.closure.boundaries)
+-    assert not result.execution_succeeded and not result.cleanup_complete
++    assert not result.execution_succeeded
+     assert not result.closure.normal_unit_records_complete
+-    assert 'ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN' in result.closure.diagnostics
++    native=result.closure.native_units
++    assert sum(u.issued is True for u in native)==1
++    assert all(u.direct_child_reaped is None and u.native_retired is None for u in native if u.issued is False)
++    confirmed=all(u.direct_child_reaped is True and u.native_retired is True for u in native if u.issued is True)
++    assert result.cleanup_complete is confirmed
++    if not confirmed:assert 'ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN' in result.closure.diagnostics
++    assert 'ML-CLOSURE-REPORT-INCOMPLETE' in result.closure.diagnostics
+     assert not (work/'sink-binding.marker').exists()

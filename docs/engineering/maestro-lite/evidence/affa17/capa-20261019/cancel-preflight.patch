@@ -1,0 +1,11 @@
+--- a/src/xverse/maestro/dispatcher.py
++++ b/src/xverse/maestro/dispatcher.py
+@@ -864,6 +864,8 @@
+         try:
+             from .lifecycle_evidence import _parents
+             self._holder()
++            if self.owner.latch.cancelled:
++                raise OwnerError("ML-SCHEDULE-CANCELLED")
+             for ticket in tickets:
+                 current = ticket
+                 if time.monotonic() >= ticket.deadline.monotonic_seconds:

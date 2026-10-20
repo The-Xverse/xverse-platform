@@ -15,6 +15,8 @@ import json
 import math
 import os
 from pathlib import Path
+import re
+from types import SimpleNamespace
 import select
 import signal
 import socket
@@ -26,7 +28,7 @@ import uuid
 
 from xverse.argus.schema import canonical_bytes
 from .child import check_child, open_child_pidfd, wait_child, signal_child
-from .admission import _verify_prepared, validate_permits
+from .admission import _verify_prepared, validate_generation_contexts
 from .owner import OwnerError, _Original, _deadline, _pin
 from .projection import prepare_lifecycle
 from .supervisor import CancellationLatch
@@ -40,6 +42,20 @@ SEALS = fcntl.F_SEAL_WRITE | fcntl.F_SEAL_GROW | fcntl.F_SEAL_SHRINK | fcntl.F_S
 
 class PersistenceError(OwnerError):
     pass
+
+
+@dataclass(frozen=True)
+class PersistenceRPCFailure:
+    """One local observation; never a durable outcome, ACK or cause attribution."""
+    kind: str
+    stage: str
+    session: str
+    sequence: int | None
+    operation: str | None
+    started_ns: int
+    deadline_ns: int | None
+    failed_ns: int
+    diagnostic: str
 
 
 def _plain(value):
@@ -88,6 +104,11 @@ class PersistenceInput:
     result: object = field(repr=False)
     resources: tuple = field(repr=False)
     schedule: object = field(default=None, repr=False)
+    future_contexts: tuple = field(default=(), repr=False)
+    public_exports: tuple = field(default=(), repr=False)
+    coverage: object = field(default=None, repr=False)
+    broker_artifact: object = field(default=None, repr=False)
+    collection: object = field(default=None, repr=False)
 
 
 def encode_configuration(
@@ -103,6 +124,11 @@ def encode_configuration(
     journal_path,
     evidence_root,
     schedule=None,
+    future_contexts=(),
+    public_exports=(),
+    coverage=None,
+    broker_artifact=None,
+    collection=None,
 ):
     """Pure private bootstrap serialization, not approval or worker creation."""
     if (
@@ -114,7 +140,10 @@ def encode_configuration(
     remaining = generation_deadline.monotonic_seconds - time.monotonic()
     if not 0 < remaining <= 394:
         raise PersistenceError("ML-PERSIST-GENERATION")
-    validate_permits(
+    from .evidence import export_declarations
+    exports = export_declarations(public_exports)
+    bindings, approvals, resources = tuple(bindings), tuple(approvals), tuple(resources)
+    futures = validate_generation_contexts(
         prepared,
         result,
         resources,
@@ -122,7 +151,7 @@ def encode_configuration(
         bindings=bindings,
         approvals=approvals,
         now=datetime.now(timezone.utc),
-        initial_generation=1,
+        future_contexts=future_contexts,
     )
     descriptors = tuple(dict.fromkeys(u.provider for u in prepared.units))
     check = prepare_lifecycle(
@@ -172,6 +201,15 @@ def encode_configuration(
         "bindings": [_plain(asdict(b)) for b in bindings],
         "approvals": [_plain(asdict(a)) for a in approvals],
     }
+    if futures:
+        data["version"] = 2
+        data["future_contexts"] = [
+            {
+                "binding": _plain(asdict(c.binding)),
+                "approval": _plain(asdict(c.approval)),
+            }
+            for c in futures
+        ]
     if schedule is not None:
         from .schedule_plan import ScheduleAdmission, decode_schedule
 
@@ -182,6 +220,37 @@ def encode_configuration(
         ):
             raise PersistenceError("ML-PERSIST-SCHEDULE")
         data["schedule"] = _strict_json(schedule.canonical_bytes)
+        if schedule.required_requests + len(exports) > schedule.request_limit:
+            raise PersistenceError("ML-EVIDENCE-EXPORT-CAPACITY")
+    if exports:
+        data["version"] = 3
+        data["public_exports"] = [asdict(e) for e in exports]
+    if coverage is not None:
+        from .coverage import CoverageAdmission, bind_runtime_coverage, runtime_coverage_input
+        if type(coverage) is not CoverageAdmission:
+            raise PersistenceError("ML-COVERAGE-RUNTIME-ADMISSION")
+        bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+            run_id=run_id, session=session, generation_ns=generation_ns,
+            bindings=bindings, future_contexts=futures, schedule=schedule)
+        data["version"] = 4
+        data["coverage"] = runtime_coverage_input(coverage)
+    if broker_artifact is not None:
+        from .public_blobs import BrokerArtifact, decode_broker_artifact
+        if type(broker_artifact) is not BrokerArtifact or coverage is None:
+            raise PersistenceError("ML-EVIDENCE-BLOB-ADMISSION")
+        decode_broker_artifact(vars(broker_artifact),coverage,coverage.digest)
+        if schedule is not None and schedule.required_requests+len(exports)+1 > schedule.request_limit:
+            raise PersistenceError("ML-EVIDENCE-BLOB-CAPACITY")
+        data["version"] = 5
+        data["broker_artifact"] = vars(broker_artifact)
+    if collection is not None:
+        from .collection_plan import bind_collection
+        if coverage is None or broker_artifact is None:
+            raise PersistenceError('ML-COLLECTION-CONFIG')
+        bind_collection(collection, coverage, coverage.digest, generation_ns=generation_ns,
+                        schedule=schedule, exports=exports)
+        data['version'] = 6
+        data['collection'] = collection.configuration()
     encoded = canonical_bytes(data)
     if len(encoded) > MAX_CONFIG:
         raise PersistenceError("ML-PERSIST-CONFIG-LIMIT")
@@ -194,6 +263,11 @@ def encode_configuration(
         result,
         tuple(resources),
         schedule,
+        futures,
+        exports,
+        coverage,
+        broker_artifact,
+        collection,
     )
 
 
@@ -255,7 +329,14 @@ def _decode(data):
             "hello",
             "init",
             "commit",
+            "generation",
+            "issued",
+            "public-export",
+            "public-blob",
+            "collect",
+            "terminal-report",
             "revalidate",
+            "audit",
             "probe",
             "teardown",
             "tick",
@@ -280,7 +361,7 @@ def _decode(data):
     return frame
 
 
-def _receive(channel, peer, until, check):
+def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
     while True:
         check()
         remaining = (until - time.monotonic_ns()) / 1e9
@@ -296,35 +377,49 @@ def _receive(channel, peer, until, check):
             )
         except BlockingIOError:
             continue
-        credentials = []
+        credentials, rights = [], []
         valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
-        for level, kind, payload in anc:
-            if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
-                values = array.array("i")
-                values.frombytes(
-                    payload[: len(payload) - len(payload) % values.itemsize]
-                )
-                for fd in values:
-                    os.close(fd)
-                valid = False
-            elif (
-                level == socket.SOL_SOCKET
-                and kind == socket.SCM_CREDENTIALS
-                and len(payload) == 12
-            ):
-                credentials.append(struct.unpack("3i", payload))
-            else:
-                valid = False
-        check()
-        if not valid or credentials != [peer] or time.monotonic_ns() >= until:
-            raise PersistenceError("ML-PERSIST-SENDER")
-        return _decode(data)
+        try:
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(payload[:len(payload)-len(payload)%values.itemsize])
+                    rights.extend(values)
+                    if len(payload)%values.itemsize:valid=False
+                elif level == socket.SOL_SOCKET and kind == socket.SCM_CREDENTIALS and len(payload)==12:
+                    credentials.append(struct.unpack("3i",payload))
+                else:valid=False
+            check()
+            if not valid or credentials != [peer] or time.monotonic_ns() >= until:
+                raise PersistenceError("ML-PERSIST-SENDER")
+            frame=_decode(data)
+            if frame['kind']=='public-blob':
+                if maximum_blob<=0 or len(rights)!=1 or not 0<frame['deadline']<=until:
+                    raise PersistenceError('ML-EVIDENCE-BLOB-RIGHTS')
+                from .public_blobs import read_public_blob
+                return frame,read_public_blob(rights[0],frame['body'],frame['deadline'],maximum_blob,check,
+                                             purposes=blob_purposes)
+            if rights:raise PersistenceError("ML-PERSIST-SENDER")
+            return frame,None
+        finally:
+            for fd in rights:os.close(fd)
+
+
+def _receive(channel, peer, until, check, *, maximum_blob=0, with_blob=False, blob_purposes=('broker-projection',)):
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+    return packet if with_blob else packet[0]
 
 
 def _send(channel, frame):
     data = canonical_bytes(frame)
     if len(data) > MAX_PACKET or channel.send(data) != len(data):
         raise PersistenceError("ML-PERSIST-SEND")
+
+
+def _send_public_blob(channel, frame, fd):
+    data=canonical_bytes(frame)
+    if (len(data)>MAX_PACKET or channel.sendmsg([data],[(socket.SOL_SOCKET,socket.SCM_RIGHTS,array.array('i',[fd]))])!=len(data)):
+        raise PersistenceError('ML-EVIDENCE-BLOB-SEND')
 
 
 @dataclass(frozen=True)
@@ -335,6 +430,8 @@ class _PersistenceReceipt:
     flush_digest: bytes
     event_id: str
     deadline_ns: int
+    execution_id: str
+    generation: int
     ready_for_execution: bool = field(default=False, init=False)
 
 
@@ -375,6 +472,69 @@ class PersistenceClient(_Original):
             self.schedule = decode_schedule(config.prepared, serialized["schedule"])
         if self.schedule != config.schedule:
             raise PersistenceError("ML-PERSIST-SCHEDULE")
+        if type(config.future_contexts) is not tuple or serialized.get(
+            "future_contexts", []
+        ) != [
+            {
+                "binding": _plain(asdict(c.binding)),
+                "approval": _plain(asdict(c.approval)),
+            }
+            for c in config.future_contexts
+        ]:
+            raise PersistenceError("ML-PERSIST-FUTURE-CONTEXTS")
+        self._future_contexts = self._future_contexts_pin = config.future_contexts
+        from .evidence import decode_exports
+        if decode_exports(serialized) != config.public_exports or type(config.public_exports) is not tuple:
+            raise PersistenceError("ML-EVIDENCE-EXPORT-CONFIG")
+        self._public_exports = self._public_exports_pin = config.public_exports
+        self.coverage = config.coverage
+        if self.coverage is None:
+            if "coverage" in serialized:
+                raise PersistenceError("ML-COVERAGE-RUNTIME-CONFIG")
+        else:
+            from .coverage import CoverageAdmission, bind_runtime_coverage, runtime_coverage_input
+            if type(self.coverage) is not CoverageAdmission:
+                raise PersistenceError("ML-COVERAGE-RUNTIME-ADMISSION")
+            bind_runtime_coverage(self.coverage, self.coverage.digest, config.prepared, config.result, config.resources,
+                run_id=config.run_id, session=config.session, generation_ns=config.generation_ns,
+                bindings=tuple(SimpleNamespace(**b) for b in serialized["bindings"]),
+                future_contexts=config.future_contexts, schedule=self.schedule)
+            if serialized.get("version") != (6 if config.collection is not None else 5 if config.broker_artifact is not None else 4) or serialized.get("coverage") != runtime_coverage_input(self.coverage):
+                raise PersistenceError("ML-COVERAGE-RUNTIME-CONFIG")
+        self._coverage_pin = (self.coverage, self.coverage.digest if self.coverage is not None else None)
+        self._broker_artifact = config.broker_artifact
+        self._broker_publication = self._broker_publication_pin = None
+        self._publication_lock = self._publication_lock_pin = threading.Lock()
+        if self._broker_artifact is None:
+            if "broker_artifact" in serialized:raise PersistenceError('ML-EVIDENCE-BLOB-ADMISSION')
+        else:
+            from .public_blobs import BrokerArtifact,decode_broker_artifact
+            if (type(self._broker_artifact) is not BrokerArtifact or self.coverage is None
+                or decode_broker_artifact(serialized.get('broker_artifact'),self.coverage,self.coverage_digest)!=self._broker_artifact):
+                raise PersistenceError('ML-EVIDENCE-BLOB-ADMISSION')
+        self._broker_artifact_pin=(self._broker_artifact,canonical_bytes(vars(self._broker_artifact)) if self._broker_artifact is not None else None)
+        self.collection = config.collection
+        if self.collection is None:
+            if 'collection' in serialized:
+                raise PersistenceError('ML-COLLECTION-CONFIG')
+        else:
+            from .collection_plan import bind_collection, decode_collection
+            if self.coverage is None or self._broker_artifact is None:
+                raise PersistenceError('ML-COLLECTION-CONFIG')
+            expected = bind_collection(self.collection, self.coverage, self.coverage_digest,
+                generation_ns=config.generation_ns, schedule=self.schedule, exports=self._public_exports)
+            if decode_collection(serialized.get('collection'), self.coverage, self.coverage_digest) != expected:
+                raise PersistenceError('ML-COLLECTION-CONFIG')
+        self._collection_pin = self.collection, self.collection.canonical_bytes if self.collection is not None else None
+        self._collection_lock = self._collection_lock_pin = threading.Lock()
+        self._collection_attempted = False
+        self._collection_outcome = self._collection_outcome_pin = None
+        self._terminal_lock = self._terminal_lock_pin = threading.Lock()
+        self._terminal_attempted = False
+        self._terminal_outcome = self._terminal_outcome_pin = None
+        self._rpc_failure = self._rpc_failure_pin = None
+        self._rpc_failure_values = None
+        self._export_receipts = self._export_receipts_pin = {}
         self._request_limit = self.schedule.request_limit if self.schedule else 128
         self._schedule_pin = self.schedule, self._request_limit
         self._resources = config.resources
@@ -410,6 +570,10 @@ class PersistenceClient(_Original):
         self._failed, self._aborted, self._ready = False, False, False
         self._claims, self._attempted = {}, set()
         self._probe_receipts, self._probe_attempted = {}, set()
+        self._issued_receipts = self._issued_receipts_pin = {}
+        self._issuance_sequence = 0
+        self._generation_probe_receipts = {}
+        self._generation_teardown_receipts = {}
         self._evidence_sequence = self._evidence_ordinal = self._evidence_m3 = 0
         self._teardown_sequence = 0
         self._teardown_receipts, self._teardown_attempted = {}, set()
@@ -420,6 +584,8 @@ class PersistenceClient(_Original):
         self._drain_deadline = None
         self._term_sent = self._kill_sent = False
         self._drained = None
+        self._disposed = False
+        self._dispose_error = None
         self.last_writer_state = "unknown"
         self._closure_attempted, self._closure_result = False, None
         channel.setblocking(False)
@@ -429,7 +595,7 @@ class PersistenceClient(_Original):
             hello = _receive(channel, self._peer, self._until(deadline), self._live)
             if hello != _frame("hello", 0, "", 0, self._scope, {}):
                 raise PersistenceError("ML-PERSIST-HELLO")
-            _, _, facts = self._rpc("init", {}, deadline)
+            init_operation, _, facts = self._rpc("init", {}, deadline)
             expected = {
                 "run_id": self.run_id,
                 "lifecycle_digest": self.prepared.lifecycle_digest,
@@ -441,6 +607,12 @@ class PersistenceClient(_Original):
                     schedule_digest=self.schedule.digest,
                     request_limit=self._request_limit,
                 )
+            if self.coverage is not None:
+                validation = facts.get("validation")
+                expected.update(validation=dict(admission_digest=self.coverage.digest,
+                    event_id=self.run_id, ingestion_ordinal=1, operation_id=init_operation))
+                if (type(validation) is not dict or type(validation.get("ingestion_ordinal")) is not int):
+                    raise PersistenceError("ML-COVERAGE-VALIDATION-ACK")
             if facts != expected:
                 raise PersistenceError("ML-PERSIST-INIT-ACK")
             self._ready = True
@@ -455,10 +627,56 @@ class PersistenceClient(_Original):
             raise
 
     @property
+    def coverage_digest(self):
+        return self._coverage_pin[1]
+
+    @property
+    def rpc_failure(self):
+        # Failure/cleanup observations must not depend on ordinary live aliases.
+        _Original._holder(self)
+        try:
+            record = self._rpc_failure
+            if record is not self._rpc_failure_pin:
+                raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+            if record is not None:
+                if type(record) is not PersistenceRPCFailure:
+                    raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+                values = tuple(getattr(record, n) for n in PersistenceRPCFailure.__dataclass_fields__)
+                if values != self._rpc_failure_values:
+                    raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+        except (AttributeError, TypeError):
+            raise PersistenceError('ML-PERSIST-RPC-CONTEXT') from None
+        return record
+
+    @property
     def _peer(self):
         return self._pid_pin, os.getuid(), os.getgid()
 
     def _holder(self):
+        if (self._terminal_lock is not self._terminal_lock_pin
+            or self._terminal_outcome is not self._terminal_outcome_pin
+            or self._terminal_outcome is not None and self._terminal_outcome[2].public_bytes != self._terminal_outcome[3]):
+            raise PersistenceError('ML-TERMINAL-REPLACED')
+        if (self.collection is not self._collection_pin[0]
+            or self.collection is not None and self.collection.canonical_bytes != self._collection_pin[1]
+            or self._collection_lock is not self._collection_lock_pin
+            or self._collection_outcome is not self._collection_outcome_pin
+            or self._collection_outcome is not None and self._collection_outcome[2].public_bytes != self._collection_outcome[3]):
+            raise PersistenceError('ML-COLLECTION-REPLACED')
+        if (self._broker_artifact is not self._broker_artifact_pin[0]
+            or self._broker_artifact is not None and canonical_bytes(vars(self._broker_artifact)) != self._broker_artifact_pin[1]
+            or self._broker_publication is not self._broker_publication_pin
+            or self._broker_publication is not None and self._broker_publication[1].public_bytes != self._broker_publication[2]
+            or self._publication_lock is not self._publication_lock_pin):
+            raise PersistenceError('ML-EVIDENCE-BLOB-REPLACED')
+        if (self.coverage is not self._coverage_pin[0]
+            or self.coverage is not None and self.coverage.digest != self._coverage_pin[1]):
+            raise PersistenceError("ML-COVERAGE-RUNTIME-REPLACED")
+        if (self._public_exports is not self._public_exports_pin
+            or self._export_receipts is not self._export_receipts_pin):
+            raise PersistenceError("ML-EVIDENCE-EXPORT-REGISTRY")
+        if self._issued_receipts is not self._issued_receipts_pin:
+            raise PersistenceError("ML-ISSUED-REGISTRY")
         super()._holder()
         if (
             self._resources is not self._input_pins[0]
@@ -466,7 +684,8 @@ class PersistenceClient(_Original):
         ):
             raise PersistenceError("ML-PERSIST-INPUT-REPLACED")
         if (
-            self.schedule is not self._schedule_pin[0]
+            self._future_contexts is not self._future_contexts_pin
+            or self.schedule is not self._schedule_pin[0]
             or self._request_limit != self._schedule_pin[1]
         ):
             raise PersistenceError("ML-PERSIST-SCHEDULE-REPLACED")
@@ -539,10 +758,14 @@ class PersistenceClient(_Original):
             except ProcessLookupError:
                 pass
 
-    def _rpc(self, kind, body, deadline):
+    def _rpc(self, kind, body, deadline, *, public_blob_fd=None):
         if not self._lock.acquire(blocking=False):
             raise PersistenceError("ML-PERSIST-CONFLICT")
-        allow_cancel = kind in ("abort", "closure") or (
+        started_ns = time.monotonic_ns()
+        stage, sequence, operation, until = 'validation', None, None, None
+        allow_cancel = kind in ("abort", "closure", "public-export", "public-blob", "collect", "terminal-report") or (
+            kind == 'teardown' and self.collection is not None
+        ) or (
             kind == "schedule"
             and body.get("kind")
             in ("failure", "step-disposition", "unit-disposition", "run-terminal")
@@ -550,7 +773,8 @@ class PersistenceClient(_Original):
 
         def check():
             return self._live(
-                allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure")
+                allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure") or (
+                    kind == 'terminal-report' and body.get('action') == 'close')
             )
 
         try:
@@ -565,8 +789,14 @@ class PersistenceClient(_Original):
                 raise PersistenceError("ML-PERSIST-SEQUENCE")
             operation = "ml-" + uuid.uuid4().hex
             request = _frame(kind, sequence, operation, until, self._scope, body)
-            _send(self._pins[1], request)
+            stage = 'send'
+            if public_blob_fd is None:_send(self._pins[1], request)
+            elif kind=='public-blob' and self._broker_artifact is not None:
+                _send_public_blob(self._pins[1],request,public_blob_fd)
+            else:raise PersistenceError('ML-EVIDENCE-BLOB-RIGHTS')
+            stage = 'receive'
             reply = _receive(self._pins[1], self._peer, until, check)
+            stage = 'acknowledgement'
             self._sequence = sequence
             if (
                 any(
@@ -576,11 +806,30 @@ class PersistenceClient(_Original):
                 or reply["kind"] != "ok"
             ):
                 raise PersistenceError("ML-PERSIST-ACK")
+            stage = 'post-ack'
             check()
             if time.monotonic_ns() >= until:
                 raise PersistenceError("ML-PERSIST-LATE")
             return operation, until, reply["body"]
-        except Exception:
+        except Exception as error:
+            try:
+                if self._rpc_failure_pin is None:
+                    code = str(error)
+                    safe = code if len(code) <= 128 and re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-PERSIST-RPC-FAILED'
+                    kinds = ('init','commit','generation','issued','public-export','public-blob',
+                             'collect','terminal-report','revalidate','audit','probe','teardown',
+                             'tick','schedule','abort','closure','recovery')
+                    self._rpc_failure = PersistenceRPCFailure(
+                        kind if type(kind) is str and kind in kinds else 'unknown', stage,
+                        self._pins[5], sequence, operation, started_ns, until,
+                        time.monotonic_ns(), safe)
+                    self._rpc_failure_pin = self._rpc_failure
+                    self._rpc_failure_values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
+                if isinstance(error, PersistenceError):
+                    try:error.rpc_failure = self.rpc_failure
+                    except (ValueError, AttributeError):pass
+            except Exception:
+                pass  # Optional observations never bypass original fail-closed cleanup.
             self._fail()
             raise
         finally:
@@ -608,8 +857,89 @@ class PersistenceClient(_Original):
                 _pin(body["flush"]),
                 body["event"],
                 until,
+                self._execution_ids[unit_id],
+                1,
             )
             self._claims[id(receipt)] = receipt
+            return receipt
+        except Exception:
+            self._fail()
+            raise
+
+    def prepare_generation(self, broker, statement, deadline):
+        from .run_broker import RunBroker, _GenerationStatement
+
+        self._available()
+        if (
+            type(broker) is not RunBroker
+            or type(statement) is not _GenerationStatement
+            or broker.storage is not self
+            or broker._active_generation is not statement
+        ):
+            raise PersistenceError("ML-GENERATION-ORIGINAL")
+        broker._holder()
+        issuer = statement.issuer
+        issuer.revalidate_issued(issuer._handle)
+        old = issuer.recipe.descriptor
+        if (
+            broker.issuer(old.unit_id) is not issuer
+            or self._claims.get(id(statement.prior)) is not statement.prior
+            or self._teardown_receipts.get(old.unit_id) is not statement.cleanup
+            or not broker.session.boundaries.record(
+                old, deadline=deadline
+            ).boundary_released
+            or self._until(deadline) > statement.deadline_ns
+        ):
+            raise PersistenceError("ML-GENERATION-ORIGINAL")
+        context = next(
+            (
+                c
+                for c in self._future_contexts
+                if c.binding.unit_id == old.unit_id
+                and c.binding.generation == statement.descriptor.generation
+            ),
+            None,
+        )
+        if context is None:
+            raise PersistenceError("ML-GENERATION-NOT-ADMITTED")
+        from .owner import _hash
+
+        request = dict(
+            unit=old.unit_id,
+            generation=statement.descriptor.generation,
+            prior=statement.prior.operation,
+            handle=asdict(issuer._handle),
+            boundary_digest="sha256:" + _hash(list(old.key)).hex(),
+            cleanup_event=statement.cleanup.event_id,
+        )
+        operation, until, body = self._rpc("generation", request, deadline)
+        try:
+            if (
+                set(body) != {"event", "intent", "flush", "generation"}
+                or body["event"] != operation + "-intent"
+                or type(body["generation"]) is not int
+                or body["generation"] != statement.descriptor.generation
+            ):
+                raise PersistenceError("ML-GENERATION-ACK")
+            receipt = _PersistenceReceipt(
+                old.unit_id,
+                operation,
+                _pin(body["intent"]),
+                _pin(body["flush"]),
+                body["event"],
+                until,
+                context.binding.execution_id,
+                context.binding.generation,
+            )
+            self._claims[id(receipt)] = receipt
+            self._execution_ids[old.unit_id] = context.binding.execution_id
+            if old.unit_id in self._probe_receipts:
+                self._generation_probe_receipts[old.unit_id, old.generation] = (
+                    self._probe_receipts.pop(old.unit_id)
+                )
+            self._generation_teardown_receipts[old.unit_id, old.generation] = (
+                self._teardown_receipts.pop(old.unit_id)
+            )
             return receipt
         except Exception:
             self._fail()
@@ -619,23 +949,131 @@ class PersistenceClient(_Original):
         self._holder()
         if self._claims.get(id(receipt)) is not receipt:
             raise PersistenceError("ML-PERSIST-CLAIM")
-        return self._execution_ids[receipt.unit_id]
+        return receipt.execution_id
 
-    def revalidate_intent(self, receipt, deadline):
+    def revalidate_intent(self, receipt, deadline, *, issuance=None):
         self._available()
         if (
             self._claims.get(id(receipt)) is not receipt
             or self._until(deadline) > receipt.deadline_ns
         ):
             raise PersistenceError("ML-PERSIST-CLAIM")
+        request = {"unit":receipt.unit_id,"claim":receipt.operation}
+        if issuance is not None:
+            if self._issued_receipts.get((receipt.unit_id,receipt.generation)) is not issuance:
+                raise PersistenceError("ML-ISSUED-ORIGINAL")
+            request["issued"] = issuance.event_id
         _, _, body = self._rpc(
             "revalidate",
-            {"unit": receipt.unit_id, "claim": receipt.operation},
+            request,
             deadline,
         )
         if body != {}:
             self._fail()
             raise PersistenceError("ML-PERSIST-REVALIDATE-ACK")
+
+    def revalidate_run(self, broker, deadline):
+        """Read-only original history audit; never reauthorizes a start intent."""
+        from .run_broker import RunBroker
+
+        self._available()
+        if type(broker) is not RunBroker or broker.storage is not self:
+            raise PersistenceError("ML-PERSIST-ORIGINAL-BROKER")
+        broker._holder()
+        _, _, body = self._rpc("audit", {}, deadline)
+        if body != {}:
+            self._fail()
+            raise PersistenceError("ML-PERSIST-AUDIT-ACK")
+
+    def record_issued(self, issuer, statement, deadline):
+        from .run_broker import RunUnitIssuer
+        from .issuance_evidence import IssuanceStatement, validate_issued
+
+        self._available()
+        if (type(issuer) is not RunUnitIssuer or type(statement) is not IssuanceStatement
+            or issuer.owner.persistence is not self or issuer._active_issuance is not statement
+            or statement.issuer is not issuer or statement.handle is not issuer._handle
+            or issuer._issuance_proof is None or statement.native_ack is not issuer._issuance_proof[0]
+            or self._claims.get(id(statement.claim)) is not statement.claim
+            or self._until(deadline)>statement.deadline_ns):
+            raise PersistenceError("ML-ISSUED-ORIGINAL")
+        issuer.revalidate_issued(statement.handle)
+        issuer._boundary()
+        key = issuer.unit_id, issuer.recipe.descriptor.generation
+        if key in self._issued_receipts:
+            raise PersistenceError("ML-ISSUED-REPLAY")
+        operation, _, body = self._rpc("issued",dict(unit=issuer.unit_id,
+            generation=key[1],claim=statement.claim.operation,handle=asdict(statement.handle),
+            observed_at=statement.observed_at,session=self.session),deadline)
+        try:
+            receipt = validate_issued(self,statement,operation,body)
+            self._issued_receipts[key] = receipt
+            self._issuance_sequence += 1
+            self._evidence_m3 = receipt.m3_sequence
+            self._evidence_ordinal = body["event"]["ingestionOrdinal"]
+            return receipt
+        except Exception:
+            self._fail()
+            raise
+
+    def publish_broker_artifact(self, broker, deadline):
+        from .run_broker import RunBroker
+        from .public_blobs import sealed_public_blob,validate_broker_receipt
+        self._holder()
+        until=self._until(deadline)
+        if type(broker) is not RunBroker or broker.storage is not self or self._broker_artifact is None:
+            raise PersistenceError('ML-EVIDENCE-BLOB-ORIGINAL')
+        broker._holder()
+        if not self._publication_lock.acquire(False):raise PersistenceError('ML-EVIDENCE-BLOB-CONFLICT')
+        try:
+            if self._broker_publication is not None:
+                if self._broker_publication[0] is not broker:raise PersistenceError('ML-EVIDENCE-BLOB-ORIGINAL')
+                return self._broker_publication[1]
+            data=broker.public_projection(deadline).public_bytes
+            if len(data)>self._broker_artifact.maximum_bytes:raise PersistenceError('ML-EVIDENCE-BLOB-SIZE')
+            def check():
+                self._live(allow_cancel=True)
+                if time.monotonic_ns()>=until:raise PersistenceError('ML-EVIDENCE-BLOB-DEADLINE')
+            fd=sealed_public_blob(data,check)
+            try:
+                _,_,body=self._rpc('public-blob',dict(purpose='broker-projection',bytes=len(data),
+                    sha256=hashlib.sha256(data).hexdigest()),deadline,public_blob_fd=fd)
+                receipt=validate_broker_receipt(self,data,body)
+                self._broker_publication=self._broker_publication_pin=(broker,receipt,receipt.public_bytes)
+                return receipt
+            except Exception:
+                self._fail();raise
+            finally:os.close(fd)
+        finally:self._publication_lock.release()
+
+    def collect_outputs(self, broker, deadline):
+        """Original bounded collection after factual teardown; no new start authority."""
+        from .collection_runtime import collect_outputs
+        return collect_outputs(self, broker, deadline)
+
+    def finish_run(self, broker, deadline):
+        """Original report/ACK-bound writer closure; full helper closure is separate."""
+        from .terminal_runtime import finish_run
+        return finish_run(self, broker, deadline)
+
+    def export_public_inputs(self, declaration, deadline):
+        from .evidence import validate_export
+
+        self._holder()
+        self._until(deadline)
+        if not any(declaration is e for e in self._public_exports):
+            raise PersistenceError("ML-EVIDENCE-EXPORT-ORIGINAL")
+        path = declaration.relative_path
+        if path in self._export_receipts:
+            return self._export_receipts[path]
+        _, _, body = self._rpc("public-export", {"relative_path": path}, deadline)
+        try:
+            receipt = validate_export(self, declaration, body)
+            self._export_receipts[path] = receipt
+            return receipt
+        except Exception:
+            self._fail()
+            raise
 
     def probe_receipt(self, unit_id):
         self._holder()
@@ -744,7 +1182,6 @@ class PersistenceClient(_Original):
         from .teardown_evidence import TeardownReceipt, validate_teardown_reply
         from .owner import _hash
 
-        self._available()
         if type(controller) is not ReverseTeardown or type(step) is not _Step:
             raise PersistenceError("ML-TEARDOWN-RECORD-ORIGINAL")
         controller._holder()
@@ -767,7 +1204,7 @@ class PersistenceClient(_Original):
         request = {
             "unit": step.unit_id,
             "claim": claim.operation,
-            "generation": 1,
+            "generation": step.descriptor.generation,
             "phase": step.phase,
             "stage": step.stage,
             "handle": asdict(step.handle),
@@ -781,6 +1218,18 @@ class PersistenceClient(_Original):
             "released": step.released,
             "force_observed": step.force_observed,
         }
+        if self.latch.cancelled:
+            if not controller._terminal_scope():
+                raise PersistenceError('ML-TEARDOWN-TERMINAL-SCOPE')
+            broker = controller.owner._run_broker_pin
+            # ReverseTeardown holds the original broker mutation lock. Root
+            # service has its own original channel/lock and native fence proof.
+            broker.session._service_terminal(HostDeadline(self.session, min(
+                deadline.monotonic_seconds, time.monotonic() + .5, broker.session._lease / 1e9)),
+                authority=broker.connection)
+            self._live(allow_cancel=True)
+        else:
+            self._available()
         self._teardown_attempted.add(step.step_id)
         operation, _, body = self._rpc("teardown", request, deadline)
         try:
@@ -914,9 +1363,34 @@ class PersistenceClient(_Original):
 
     def dispose(self):
         self._holder()
-        if not self._drained or not self._drained.worker_reaped:
-            raise PersistenceError("ML-PERSIST-RETAINED")
-        if self._pidfd >= 0:
-            os.close(self._pidfd)
-            self._pidfd = -1
-        self._pins[1].close()
+        if not self._lock.acquire(False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        try:
+            if self._dispose_error is not None:
+                raise PersistenceError("ML-PERSIST-DISPOSE-UNRESOLVED") from self._dispose_error
+            if self._disposed:
+                return
+            if not self._drained or not self._drained.worker_reaped:
+                from .bootstrap import BootstrapChild
+
+                # The root can have consumed the original wait after the local
+                # drain expired. This observation never rewrites that old receipt.
+                if type(self._pins[0]) is not BootstrapChild:
+                    raise PersistenceError("ML-PERSIST-RETAINED")
+                try:
+                    observed = wait_child(self._pins[0], self._pidfd, consume=True)
+                except (ValueError, OSError):
+                    raise PersistenceError("ML-PERSIST-RETAINED") from None
+                if observed is None:
+                    raise PersistenceError("ML-PERSIST-RETAINED")
+            try:
+                if self._pidfd >= 0:
+                    descriptor, self._pidfd = self._pidfd, -1
+                    os.close(descriptor)
+                self._pins[1].close()
+            except OSError as error:
+                self._dispose_error = error
+                raise PersistenceError("ML-PERSIST-DISPOSE-UNRESOLVED") from error
+            self._disposed = True
+        finally:
+            self._lock.release()

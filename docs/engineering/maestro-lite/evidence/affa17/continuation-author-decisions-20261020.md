@@ -1,0 +1,95 @@
+# Author decisions proposed and acted on; no run live
+
+2026-10-20 (UTC). Goal ACTIVE. Supersedes continuation-harness-repairs-20261020.md (its run
+history and baseline description remain valid). Author instruction 2026-10-20: "for the author
+decisions, propose something and proceed". Work by Claude in the isolated candidate. Stable parent
+46e0ebfd332dd833322d764191a7cfe1e008bec1; increment17 remains dirty; no commit; no run live.
+
+## Dispositions (finding 369; record `author-decisions-proposed-20261020.json`, sha256 9920f79c…)
+
+Each is an agent proposal acted on under the author's proceed instruction. None is an explicit
+author approval; each derived artefact carries a provisional status that only an explicit author
+confirmation can advance.
+
+| Decision | Proposal | Acted on |
+| --- | --- | --- |
+| (a) source-parent projection v2 | ACCEPT PROVISIONALLY | thesis successor `engineering/successors/ML-SOURCE-PARENT-2026-10-20-v3/source-parent-register.json` (sha256 e37b4ee8…; 18 identities, 76 proposed links; semantics `proposed_public_safe_summary_provisional`); canonical v2 register bd97f975…, proposal 0183f57a… and the five immutable inputs verified unchanged (finding 370) |
+| (b) endpoint reconciliation | AUTHORIZE agent-drafted proposal | `endpoint-reconciliation-proposal-20261020.json` (sha256 80ad3bea…): 7 present, 16 mapped, 38 mapped_candidate, 1 superseded; all targets resolve against the AST; 0 of 90 obligations closed (finding 371) |
+| (c) transitive cadence redesign | DEFER with trigger | trigger: a transitive-cohort expiry in two of the next three baseline runs, or two in one run; shape cadence 8 s / 0.5 s budgets (period 3.5 s > scan 2.0 s, 15 slots) recorded on ML-CAPA-366 |
+| (d) tmpfs | KEEP, with a persistent-media reference run | declared per run; fsync probe retained; one ext4 reference run per increment before acceptance evidence; recorded on ML-CAPA-364 |
+
+CAPA successor `capa-20261020-author-decisions/register.json` sha256
+9b9cba0ea0eea76fe0e22d80dd84a18965fc5b4ab8a9fb1eafc2a6b2c642cddb, **45 records/307 bindings**,
+parent capa-20261020-run-h (45/302, f563f188…) fully preserved; both validators pass. No state
+advanced; no effectiveness claimed; ten unknown causes remain (135, 286, 287, 318, 324, 330,
+331, 332, 337, 359). Findings 369–371 in review-affa17.md.
+
+## Remaining author gates (explicit confirmation requested)
+
+1. Confirm or amend AD-2026-10-20-a (public-safe classification and semantic fidelity of the 18
+   summaries); on confirmation, re-point the candidate traceability records from the immutable
+   v2 register to the v3 successor under a new finding.
+2. Commission the independent review of the endpoint mapping (AD-2026-10-20-b); only that review
+   closes obligations and re-binds the 24/18/30/90 trace.
+3. Confirm the deferral trigger (c) and the tmpfs terms (d).
+4. Unchanged: acceptance, M1, main merge, factory runs (only via
+   /home/jefferson/x-verse_fabric/automation/factory_start.py), scientific claims, canonical-note
+   edits (a DRAFT paragraph is proposed in ../../canonical-note-update-proposal-affa17.md).
+
+## Baseline and next work
+
+Baseline remains run h (1 failed/2093 passed; environment d, drivers f–h pattern, TMPDIR on
+tmpfs, probe outside the basetemp, fixture repairs 362/364 narrowed, transitive budget 0.3 s).
+Next, in order: the remaining crash-point item (authority/storage loss injected exactly before
+the Release send) with hand-authored expectations; IR-ML3-04 lane admission prerequisites; the
+persistent-media reference run under disposition (d); full 024 scope (seven P3 tasks, independent
+complete review, stable increment17 commit, acceptance, merge), all author-gated.
+
+Thesis: /home/jefferson/distributed_safety_critical_thesis, branch
+agent/synchronize-thesis-obsidian-notes, HEAD d97fdd1 (local ahead of origin by 17; fetch
+succeeded; no incoming note commits; no pull), note SHA
+01fcce48696c30d8e8cf46fa60fcf28eae9f45c19a8885df86528832e18b4abb unchanged.
+
+## Update: author sign-off, redesign results, run i LIVE (finding 373–375)
+
+Author sign-off 2026-10-20 ("I sign-off all of those five", record `author-signoff-20261020.json`
+sha256 956cbc43…): dispositions a–d confirmed; a separate review agent counts as independent;
+increment17 may be committed after a clean full run; Note 23 applied to the canonical note (new
+note SHA a1bbca901651a20dd6d2aacdce9ed760bae80bd1c6f5a8a83211586a5a7437e8); thesis branch pushed
+(fe58918..d97fdd1). Fixture redesign for the residual child failure separately authorized.
+
+Done since: source-parent register v4 (author-confirmed,
+`engineering/successors/ML-SOURCE-PARENT-2026-10-20-v4/`, sha256 41e28ad0…); crash-matrix b
+(release-before-send controls, 17/17 per phase, receipt f260e97d…; finding 372, storage-fault
+expectation corrected after observation and declared); schedule-worker lease comparison fixed at
+nanosecond resolution (finding 374, test redesign, 15 passed locally); transitive redesign found
+infeasible within the fixture (finding 375: probe cap 5 s, restart budget 2 s, period invariant;
+product proposal: terminal statement at dispatcher.py:1465 to use per_unit_seconds, author
+decision required). Independent review of the endpoint mapping by a separate agent in progress
+(outputs `endpoint-reconciliation-independent-review-20261020.{json,md}` when present).
+
+**Run i LIVE**: driver `verify-platform-regression-20261020i.py` (REPAIRED adds
+test_schedule_worker.py), driver PID 2896923, pytest PID 2897880, 2096 collected, environment d,
+TMPDIR on tmpfs, probe outside the basetemp. Expected ~41 min. Terminal receipt:
+`platform-regression-20261020i/source-receipt.json`. Then: triage, correlate, finding 376, CAPA
+successor from capa-20261020-author-decisions (never overwrite), docs; if the run is clean
+(0 failed) commit increment17 on the candidate branch as authorized; otherwise record and do
+not commit. Do not restart a live run because a log is stale.
+
+## Run i terminal and author rulings (findings 376–378); checkpoint commit
+
+Run i: **2096 passed, 0 failed**, 2470 s, inputs unchanged (receipt dcd5ebc2…, log 99a12f0c…,
+triage 1f5e745d…; probe 9875 samples/0 spikes; GC max 0.054 s). First clean full run; nested
+child passed completely. Author rulings ("1 accepted. 2 i authorize"): endpoint proposal v2
+accepted and the 90 obligations re-bound (`endpoint-rebound-traceability-20261020.json`
+0ab343d7…); the run-terminal budget product change is authorized (dispatcher.py:1465 →
+per_unit_seconds), to be applied after the checkpoint commit and verified by run j. CAPA
+successor `capa-20261020-run-i/register.json` 49bd43abf862574ac46888cb249fd9944e873ab634b1d9ee1c7d244ea94600d2
+(46 records/332 bindings, parent 45/307 preserved; adds ML-CAPA-374).
+
+Checkpoint commit: the run-i snapshot (sources, tests, docs, evidence, CAPA chain) is committed
+on candidate/maestro-lite-affa17-20261018 as authorized (finding 373). The candidate has no
+upstream; nothing is pushed or merged. Next: apply the product change (own finding), verify the
+transitive and crash-point modules, launch run j with REPAIRED extended to dispatcher.py, then
+the ext4 reference run (disposition d), IR-ML3-04 prerequisites, full 024 scope. No run is live
+at this point.

@@ -1,0 +1,62 @@
+........................................................................ [ 62%]
+.......F.F..................................                             [100%]
+=================================== FAILURES ===================================
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[False] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b29850503d0>
+optional = False
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+>       result=run(driver);facts=result.terminal.public_data()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:171: AttributeError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b2985261780>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-helper-20261019e-source-private-34fk_bmi/test_actual_nonopen_writer_clo0/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();report=facts['report']
+        assert report is not None and report['entry'] is None and not report['eligible'],facts
+>       assert report['stage']=='report-write' and report['blockers']==['publication']
+E       AssertionError: assert ('report-write' == 'report-write'
+E         
+E           report-write and ['normal-reco...'publication'] == ['publication']
+E         
+E         At index 0 diff: 'normal-records' != 'publication'
+E         Left contains 3 more items, first extra item: 'required-coverage'
+E         Use -v to get more diff)
+
+tests/thesis_lite/maestro/test_terminal_faults.py:84: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]
+2 failed, 114 passed in 191.01s (0:03:11)

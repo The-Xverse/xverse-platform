@@ -1,0 +1,765 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-19-rpc-context-loss-v1",
+  "parent_trace": {
+    "path": "rpc-failure-partial-traceability.json",
+    "sha256": "ee275bb11473461d8a2c989de6382fc37bf9109f1da1eebec93ed65a53da04a2"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Optional diagnostic owner/reference/content loss after actual cleanup returns original incomplete result with unavailable observation and explicit unresolved code. No physical/normal outcome is fabricated or upgraded. Three original faults fail per phase before repair; matching repeats retain corrected results.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start",
+              "line": 120,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result",
+              "line": 19,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Optional diagnostic owner/reference/content loss after actual cleanup returns original incomplete result with unavailable observation and explicit unresolved code. No physical/normal outcome is fabricated or upgraded. Three original faults fail per phase before repair; matching repeats retain corrected results.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start",
+              "line": 120,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result",
+              "line": 19,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Diagnostic capture/attachment is subordinate to original fail-closed RPC handling. Actual blocked worker RPC with missing observation pin retains original timeout/cancellation/wait without external fallback. Source concern303, not an observed historical cause or complete journal/Argus failure matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "line": 451,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient._rpc",
+              "line": 759,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_unavailable_capture_cannot_bypass_original_rpc_cancellation",
+              "line": 63,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Optional diagnostic owner/reference/content loss after actual cleanup returns original incomplete result with unavailable observation and explicit unresolved code. No physical/normal outcome is fabricated or upgraded. Three original faults fail per phase before repair; matching repeats retain corrected results.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start",
+              "line": 120,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result",
+              "line": 19,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Optional diagnostic owner/reference/content loss after actual cleanup returns original incomplete result with unavailable observation and explicit unresolved code. No physical/normal outcome is fabricated or upgraded. Three original faults fail per phase before repair; matching repeats retain corrected results.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start",
+              "line": 120,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result",
+              "line": 19,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        },
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Diagnostic capture/attachment is subordinate to original fail-closed RPC handling. Actual blocked worker RPC with missing observation pin retains original timeout/cancellation/wait without external fallback. Source concern303, not an observed historical cause or complete journal/Argus failure matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "line": 451,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient._rpc",
+              "line": 759,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_unavailable_capture_cannot_bypass_original_rpc_cancellation",
+              "line": 63,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged",
+      "component_deltas": [
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Optional diagnostic owner/reference/content loss after actual cleanup returns original incomplete result with unavailable observation and explicit unresolved code. No physical/normal outcome is fabricated or upgraded. Three original faults fail per phase before repair; matching repeats retain corrected results.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start",
+              "line": 120,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result",
+              "line": 19,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        },
+        {
+          "maturity": "owned_diagnostic_metadata_loss_and_original_result_preservation_verified",
+          "scope": "Diagnostic capture/attachment is subordinate to original fail-closed RPC handling. Actual blocked worker RPC with missing observation pin retains original timeout/cancellation/wait without external fallback. Source concern303, not an observed historical cause or complete journal/Argus failure matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.__init__",
+              "line": 451,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient._rpc",
+              "line": 759,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure",
+              "line": 632,
+              "file_sha256": "08ec893baef11800d2055b664f43b83a4c6bf3645fd2170ff62cefd69c287bbb",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_unavailable_capture_cannot_bypass_original_rpc_cancellation",
+              "line": 63,
+              "file_sha256": "069fdc735aff1f08d57b83820254c25c83c92de7c93f642f4a1a52ce084060ee",
+              "frozen_manifest": "rpc-context-loss-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": {
+            "path": "rpc-context-loss-20261019c/verification.json",
+            "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+          },
+          "full_requirement_closure": false
+        }
+      ]
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/persistence.py::PersistenceClient.rpc_failure": [
+      "ML-SR-013",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.start": [
+      "ML-SR-013",
+      "ML-SR-018",
+      "ML-SR-020",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_diagnostic_metadata_loss_after_actual_cleanup_preserves_original_result": [
+      "ML-SR-013",
+      "ML-SR-018",
+      "ML-SR-020",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient.__init__": [
+      "ML-SR-019",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient._rpc": [
+      "ML-SR-019",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_rpc_context_loss.py::test_unavailable_capture_cannot_bypass_original_rpc_cancellation": [
+      "ML-SR-019",
+      "ML-SR-023",
+      "ML-SR-024"
+    ]
+  },
+  "evidence": {
+    "path": "rpc-context-loss-20261019c/verification.json",
+    "sha256": "dcede7770e73a47cf2ccf1130cd2c033896ec4ad357b6e37b5e8a5b934a26cf7"
+  },
+  "original_red": {
+    "path": "rpc-context-loss-20261019a/verification.json",
+    "sha256": "f0cc4f6e674b4f34a36621b961ad9e90c39e36bdd94a8cedd85035ee2701a5d0"
+  },
+  "partial_b": {
+    "path": "rpc-context-loss-20261019b/verification.json",
+    "sha256": "e220cef6861bcbb60730cd551c207f87e86e1ee20b6fe60401b664462e7dbc40"
+  },
+  "current_scope": {
+    "path": "rpc-context-loss-current-scope.json",
+    "sha256": "2bd9ed201133186638fc8b87ff4645447f464ca40df06607656e961ddded4a6a"
+  },
+  "ADR": {
+    "path": "docs/engineering/maestro-lite/ADR-ML3-RUNTIME-0007.md",
+    "sha256": "502b15cb7b57ddc79684b06ccf725ada05aa565924cf2b77a743bd596d3d702b"
+  },
+  "CAPA": {
+    "path": "capa-20261019-rpc-context-loss/register.json",
+    "sha256": "05b83e4fe1401555a8a003ccbd8baab469295d5a17d82b13603de31c4a58dc5d"
+  },
+  "CAPA_validation": {
+    "path": "capa-20261019-rpc-context-loss/verification-recheck.json",
+    "sha256": "d9efa81802dc81f4a45cc8fc3654deee1afb0af5d447448c067b5ef84a79dd81"
+  },
+  "selected_checks_passed_per_phase": 61,
+  "software_requirements_retained": 24,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "open_findings": [
+    135,
+    222,
+    286,
+    287
+  ],
+  "remaining_gates": [
+    "18 source-parent semantics unvalidated",
+    "24 full software requirements",
+    "30 pairs/90 endpoints",
+    "nine complete runtime cases",
+    "seven full P3 tasks",
+    "late/expiry/cancellation/failure-stage matrix",
+    "W02/W03",
+    "full M1/environment/whole-platform regression",
+    "independent complete-candidate review",
+    "user acceptance/main merge"
+  ],
+  "actual_M1_admissions": 0,
+  "actual_service_runtime_runs": 0,
+  "independent_CAPA_effectiveness": false,
+  "source_parent_semantics_validated": false,
+  "whole_platform_regression": false,
+  "all_seven_phase3_tasks_complete": false,
+  "full_M1_complete": false,
+  "full_candidate_review_complete": false,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false,
+  "scientific_result": false
+}

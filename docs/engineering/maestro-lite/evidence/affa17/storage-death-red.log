@@ -1,0 +1,26 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_native_watchdog_observes_actual_storage_death_without_python_cancel ___
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x7161ff38ecf0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x7161ff38e7b0>, PosixPath('/tmp/pytest-of-jefferson/pytest-987/test_native_watchdog_observes_0/work'))
+
+    def test_native_watchdog_observes_actual_storage_death_without_python_cancel(
+        broker_stack,
+    ):
+        import select
+    
+        broker, facade, storage, _ = broker_stack
+        end = stage_all(broker_stack)
+        for unit in broker.owner._prepared.resource_order:
+            issuer = broker.issuer(unit)
+            assert facade.start(
+                unit, issuer.recipe.descriptor, broker.connection, end
+            ).ready
+        signal.pidfd_send_signal(storage.process._capability.fileno(), signal.SIGKILL)
+>       assert select.select([broker.session._pidfd_capability.fileno()], [], [], 1)[0]
+E       assert []
+
+tests/thesis_lite/maestro/test_run_broker.py:336: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_broker.py::test_native_watchdog_observes_actual_storage_death_without_python_cancel
+1 failed, 10 deselected in 4.02s

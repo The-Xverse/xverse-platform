@@ -1,0 +1,147 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 33%]
+........................................................F............... [ 38%]
+........................................................................ [ 43%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 57%]
+........................................................................ [ 62%]
+........................................................................ [ 67%]
+........................................................................ [ 72%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+.................................................................F...... [ 96%]
+..............F........................................                  [100%]
+=================================== FAILURES ===================================
+_ test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records _
+
+request = <FixtureRequest for <Function test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7084bfc02e40>
+
+    def test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records(request,monkeypatch):
+        from .test_shared_dispatcher import scheduled,run
+        configure(monkeypatch)
+        stack,controller,driver=scheduled(request,monkeypatch)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='e1f7f673303dc501a603ccaf2ed1ddc830edf4a3b28811895c6444a6cb3e1ef...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_coverage_producers.py:180: AssertionError
+_ test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack] _
+
+request = <FixtureRequest for <Function test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7084c0603cb0>
+fault = 'lost-report-ack'
+
+    @pytest.mark.parametrize('fault',['lost-report-ack','changed-report-ack','lost-close-ack'])
+    def test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc;intercepted=[]
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and kind=='terminal-report':
+                intercepted.append(body['action'])
+                if body['action']=='publish' and fault=='lost-report-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+                if body['action']=='publish' and fault=='changed-report-ack':
+                    operation,until,reply=result;reply=deepcopy(reply);reply['annotationCount']+=1
+                    return operation,until,reply
+                if body['action']=='close' and fault=='lost-close-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+>       result=run(driver);facts=result.terminal.public_data()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:115: AttributeError
+_ test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall] _
+
+request = <FixtureRequest for <Function test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7084bf791940>
+fault = 'storage-stall'
+
+    @pytest.mark.parametrize('fault',['storage-stall','storage-death','source-root-loss','evidence-root-loss'])
+    def test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        root=work.parent/'argus';actual_root=root;observations=[];closed=None;result=None
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=digest(Path(__file__)))
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('loss-original-inputs-'+fault+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        original=PersistenceClient.finish_run
+    
+        def lose(self,owner,end):
+            nonlocal actual_root
+            if self is not client:return original(self,owner,end)
+            assert owner is broker and not observations
+            assert self._collection_outcome is not None and self._collection_outcome[0] is broker
+            collection=self._collection_outcome[2].public_data();assert collection['collectionComplete']
+            rows=EvidenceStore.read_run(root).records()
+            terminal=[e for e in rows if e.get('extensions',{}).get('xverse.maestro',{}).get('action')=='run-terminal']
+            assert len(terminal)==1 and terminal[0]['extensions']['xverse.maestro']['outcome']=='succeeded'
+            assert driver.teardown._result.unit_cleanup_complete and driver.teardown._result.normal_records_complete
+            before=dict(fault=fault,original_report_end=[end.session,end.monotonic_seconds],
+                before_manifest_sha256=digest(root/'manifest.json'),before_evidence_identity=identity(root),
+                before_source_identity=identity(work),before_m3_sha256=digest(work.parent/'m3.jsonl'),
+                before_events_sha256=digest(root/'events.jsonl'),collection=collection,
+                original_terminal_event=terminal[0],original_helper_retained=self.process is self._pins[0],
+                observed_at=time.monotonic(),nonconsuming_signal_observation=None,
+                retained_source_path=None,retained_evidence_path=str(root))
+            observations.append(before)
+            if fault in ('storage-stall','storage-death'):
+                child=self.process;child._holder();fd=child._capability.fileno()
+                signum=signal.SIGSTOP if fault=='storage-stall' else signal.SIGKILL
+                signal.pidfd_send_signal(fd,signum)
+                # This observes only the original pidfd; it does not consume exit
+                # status or substitute a PID/path for signal or cleanup ownership.
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    flags=os.WSTOPPED if fault=='storage-stall' else os.WEXITED
+                    observed=os.waitid(os.P_PIDFD,fd,flags|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None
+                assert observed.si_code==(os.CLD_STOPPED if fault=='storage-stall' else os.CLD_KILLED)
+                assert observed.si_status==signum
+                before['nonconsuming_signal_observation']=dict(code=observed.si_code,status=observed.si_status)
+            elif fault=='source-root-loss':
+                retained=work.with_name('source-retained-after-loss');assert not retained.exists()
+                work.rename(retained)
+                assert not work.exists() and identity(retained)==before['before_source_identity']
+                before['retained_source_path']=str(retained)
+            else:
+                retained=root.with_name('evidence-retained-after-loss');assert not retained.exists()
+                root.rename(retained);actual_root=retained
+                assert not root.exists() and identity(retained)==before['before_evidence_identity']
+                before['retained_evidence_path']=str(retained)
+            before['injection_completed_at']=time.monotonic()
+            return original(self,owner,end)
+    
+        monkeypatch.setattr(PersistenceClient,'finish_run',lose)
+        no_replay=False
+        try:
+            result=run(driver)
+>           assert len(observations)==1,'original post-collection fault boundary not reached'
+E           AssertionError: original post-collection fault boundary not reached
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_storage_root_loss.py:99: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall]
+3 failed, 1492 passed in 1400.11s (0:23:20)

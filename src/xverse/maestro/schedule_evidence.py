@@ -1,7 +1,7 @@
 """Original-worker finite tick source and schedule evidence; no launch authority."""
 
 from datetime import datetime, timezone
-from dataclasses import replace
+from dataclasses import replace, asdict
 import re
 from xverse_xdl.lifecycle import OwnedResourceHandle
 from xverse_xdl.models import freeze
@@ -30,6 +30,65 @@ class ScheduleJournal:
         )
         self.dispositions = {}
         self.request_sequence = 0
+        self.lazy = getattr(evidence, 'collection_source', None) is not None
+        self.retired_handles = {}
+
+    def validate_generation(self, body, claims):
+        """Reject a live logical step before successor permit consumption."""
+        if not self.lazy:
+            return
+        unit = body.get('unit')
+        if (type(unit) is not str or unit not in claims or not self.full
+            or self.closing or self.terminal or self.pending is None
+            or type(body.get('generation')) is not int
+            or body['generation'] != self._generation(unit, claims) + 1
+            or unit not in self.handles
+            or asdict(self.handles[unit]) != body.get('handle')
+            or any(s.unit_id == unit and s.step_id in self.steps and s.step_id not in self.completed
+                   for s in self.evidence.permits._prepared.steps)):
+            raise PersistenceError('ML-SCHEDULE-GENERATION-PHASE')
+
+    def commit_generation(self, body, claims):
+        """Called only after the original generation operation durably succeeded."""
+        if not self.lazy:
+            return
+        unit, generation = body['unit'], body['generation']
+        old = self.handles.get(unit)
+        if (old is None or asdict(old) != body['handle']
+            or self._generation(unit, claims) != generation):
+            raise PersistenceError('ML-SCHEDULE-GENERATION-ORIGINAL')
+        self.retired_handles[unit, generation - 1] = old
+        del self.handles[unit]
+
+    def _generation(self, unit, claims):
+        claim = claims.get(unit)
+        if claim is not None:
+            saved = self.evidence.permits._issued.get(id(claim.receipt))
+            if saved is None or saved[0] is not claim.receipt:
+                raise PersistenceError("ML-SCHEDULE-CLAIM")
+            return saved[1].details['generation']
+        if self.lazy and unit not in self.evidence.start_attempts:
+            return 0
+        return next(b.generation for u, b, a in self.evidence.permits._checked if u.unit_id == unit)
+
+    def _logical_source(self, unit, phase, kind, status, details, claims, deadline, check):
+        if self.lazy and unit not in claims:
+            # No M3 record can be attributed to a permit which was never consumed.
+            return None
+        return self._m3(unit, phase, kind, status, details, claims, deadline, check)
+
+    def admit_start_claim(self, unit):
+        if not self.lazy:
+            return
+        step = next((s for s in self.evidence.permits._prepared.steps
+                     if s.unit_id == unit and s.phase == 'start'), None)
+        state = self.steps.get(step.step_id) if step else None
+        if (not self.full or self.closing or self.terminal or self.pending is None
+            or state is None or not state.get('logical') or state.get('claim_attempted')
+            or step.step_id in self.completed
+            or not step.at_ticks <= self.tick <= step.latest_ticks):
+            raise PersistenceError('ML-SCHEDULE-START-CLAIM')
+        state['claim_attempted'] = True
 
     def pull(self, body, deadline, check):
         check(deadline)
@@ -200,6 +259,7 @@ class ScheduleJournal:
         action,
         outcome,
         refs=None,
+        generation=0,
         **extra,
     ):
         value = {
@@ -209,7 +269,7 @@ class ScheduleJournal:
             "sessionId": session,
             "scope": "step" if step else ("unit" if unit else "run"),
             "unitId": unit,
-            "generation": 1 if unit else 0,
+            "generation": generation,
             "operationId": operation,
             "action": action,
             "outcome": outcome,
@@ -264,6 +324,10 @@ class ScheduleJournal:
             or (unit in self.handles and self.handles[unit] != handle)
         ):
             raise PersistenceError("ML-SCHEDULE-HANDLE")
+        if self.lazy:
+            issued = self.evidence.issued_handles.get((unit, self._generation(unit, claims)))
+            if issued is None or issued[0] != handle:
+                raise PersistenceError("ML-SCHEDULE-ORIGINAL-HANDLE")
         self.handles[unit] = handle
         return handle
 
@@ -291,7 +355,7 @@ class ScheduleJournal:
                 {
                     "maestroRunId": self.evidence.permits._run_id,
                     "maestroUnitId": unit,
-                    "generation": 1,
+                    "generation": saved.details["generation"],
                     "lifecycleDigest": self.plan.lifecycle_digest,
                     "schedule": details,
                 }
@@ -383,6 +447,9 @@ class ScheduleJournal:
             causation=None,
             **extra,
         ):
+            generation = 0
+            if unit is not None:
+                generation = self._generation(unit, claims)
             payload = self._payload(
                 operation,
                 deadline.session,
@@ -391,6 +458,7 @@ class ScheduleJournal:
                 action=action,
                 outcome=outcome,
                 refs=refs,
+                generation=generation,
                 **extra,
             )
             event = self._append(
@@ -411,12 +479,13 @@ class ScheduleJournal:
                 or self.full
                 or self.cursor
                 or self.pending
-                or set(claims) != {u.unit_id for u in prepared.units}
+                or (bool(claims or self.evidence.start_attempts) if self.lazy
+                    else set(claims) != {u.unit_id for u in prepared.units})
                 or self.evidence.samples
                 or (self.teardown and self.teardown.states)
                 or self.request_sequence
                 + self.plan.required_requests
-                - (1 + 2 * len(prepared.units))
+                - (1 if self.lazy else 1 + 2 * len(prepared.units))
                 - 1
                 > self.plan.request_limit
             ):
@@ -438,7 +507,13 @@ class ScheduleJournal:
             step = next((s for s in prepared.steps if s.step_id == body["step"]), None)
             if step is None:
                 raise PersistenceError("ML-SCHEDULE-STEP")
-            self._handle(step.unit_id, body["handle"], claims)
+            logical = self.lazy and body['handle'] is None
+            if logical:
+                if (step.unit_id in claims or step.unit_id in self.evidence.start_attempts
+                    or not (step.phase == 'prepare' or kind == 'step-dispatch' and step.phase == 'start')):
+                    raise PersistenceError("ML-SCHEDULE-HANDLE")
+            else:
+                self._handle(step.unit_id, body["handle"], claims)
             if kind == "step-dispatch":
                 if (
                     not self._admissible(step, claims)
@@ -447,7 +522,7 @@ class ScheduleJournal:
                     or step not in prepared.eligible_steps(self.tick, self.completed)
                 ):
                     raise PersistenceError("ML-SCHEDULE-STEP-ORDER")
-                source = self._m3(
+                source = self._logical_source(
                     step.unit_id,
                     step.phase,
                     "intent",
@@ -458,14 +533,14 @@ class ScheduleJournal:
                     check,
                 )
                 emit(
-                    "intent",
+                    "validate" if logical else "intent",
                     "pending",
                     unit=step.unit_id,
                     step=step.step_id,
-                    refs=[source],
+                    refs=[source] if source else None,
                     suffix="dispatch",
                 )
-                self.steps[step.step_id] = {"due": self.tick + step.duration_ticks}
+                self.steps[step.step_id] = {"due": self.tick + step.duration_ticks, 'logical': logical}
             else:
                 state = self.steps.get(step.step_id)
                 if (
@@ -475,7 +550,30 @@ class ScheduleJournal:
                 ):
                     raise PersistenceError("ML-SCHEDULE-STEP-WINDOW")
                 actual, cause = self._phase_source(step)
-                source = self._m3(
+                phase_fields = {}
+                start_source = None
+                if step.phase in ('start', 'observe', 'stop', 'cleanup'):
+                    phase_fields['handleRef'] = 'handle-' + _digest([
+                        self.evidence.permits._run_id, asdict(self.handles[step.unit_id])])[7:]
+                if step.phase in ('start', 'observe'):
+                    dependencies = []
+                    for parent in _parents(prepared, step.unit_id):
+                        sample = self.evidence.samples.get(parent)
+                        if (sample is None or not sample['ready']
+                            or not 0 <= body['observed_at'] - sample['observed_at'] <= sample['freshness']):
+                            raise PersistenceError('ML-SCHEDULE-NO-READINESS')
+                        dependencies.append(dict(unitId=parent, generation=sample['generation'],
+                                                 probeEventId=sample['event']))
+                    phase_fields['dependencies'] = dependencies
+                if step.phase == 'start':
+                    started = [event for event in self.evidence.events.values()
+                        if (p := event['extensions']['xverse.maestro'])['scope'] == 'unit'
+                        and p['unitId'] == step.unit_id and p['generation'] == self._generation(step.unit_id, claims)
+                        and p['action'] == 'started' and p['outcome'] == 'succeeded']
+                    if len(started) != 1:
+                        raise PersistenceError('ML-SCHEDULE-NO-START')
+                    start_source = started[0]['extensions']['xverse.maestro']['sourceRefs'][0]
+                source = self._logical_source(
                     step.unit_id,
                     step.phase,
                     "outcome",
@@ -485,7 +583,7 @@ class ScheduleJournal:
                     deadline,
                     check,
                 )
-                refs = [source] + ([actual] if actual else [])
+                refs = ([source] if source else []) + ([actual] if actual else []) + ([start_source] if start_source else [])
                 action = {
                     "prepare": "validate",
                     "start": "started",
@@ -498,9 +596,10 @@ class ScheduleJournal:
                     "succeeded",
                     unit=step.unit_id,
                     step=step.step_id,
-                    refs=refs,
+                    refs=refs or None,
                     suffix="phase",
                     causation=cause,
+                    **phase_fields,
                     **({"probeId": "running"} if action == "probe" else {}),
                 )
                 emit(
@@ -508,7 +607,7 @@ class ScheduleJournal:
                     "succeeded",
                     unit=step.unit_id,
                     step=step.step_id,
-                    refs=[source],
+                    refs=[source] if source else None,
                     suffix="disposition",
                     causation=phase_event["eventId"],
                     disposition="completed",
@@ -529,7 +628,8 @@ class ScheduleJournal:
                     "observed_at",
                 }
                 or unit in self.failures
-                or (unit is not None and unit not in claims)
+                or (unit is not None and unit not in {u.unit_id for u in prepared.units})
+                or (not self.lazy and unit is not None and unit not in claims)
                 or body["phase"]
                 not in ("prepare", "start", "observe", "stop", "cleanup")
                 or type(body["observation_missing"]) is not bool
@@ -540,7 +640,7 @@ class ScheduleJournal:
                 raise PersistenceError("ML-SCHEDULE-FAILURE")
             refs = None
             if unit is not None:
-                source = self._m3(
+                source = self._logical_source(
                     unit,
                     body["phase"],
                     "observation",
@@ -554,7 +654,7 @@ class ScheduleJournal:
                     deadline,
                     check,
                 )
-                refs = [source]
+                refs = [source] if source else None
             emit(
                 "cancel"
                 if body["cause"] == "cancellation"
@@ -584,7 +684,7 @@ class ScheduleJournal:
             if body["disposition"] == "failed" and step.step_id not in self.steps:
                 raise PersistenceError("ML-SCHEDULE-DISPOSITION")
             self.closing = True
-            source = self._m3(
+            source = self._logical_source(
                 step.unit_id,
                 step.phase,
                 "outcome",
@@ -604,7 +704,7 @@ class ScheduleJournal:
                 }[body["disposition"]],
                 unit=step.unit_id,
                 step=step.step_id,
-                refs=[source],
+                refs=[source] if source else None,
                 disposition=body["disposition"],
                 cause=body["cause"],
             )
@@ -614,7 +714,8 @@ class ScheduleJournal:
             if (
                 set(body) != {"kind", "unit", "disposition", "cause", "observed_at"}
                 or body["unit"] in self.units
-                or body["unit"] not in claims
+                or body["unit"] not in {u.unit_id for u in prepared.units}
+                or not self.lazy and body['unit'] not in claims
             ):
                 raise PersistenceError("ML-SCHEDULE-UNIT-DISPOSITION")
             unit = body["unit"]
@@ -636,7 +737,7 @@ class ScheduleJournal:
                 )
             ):
                 raise PersistenceError("ML-SCHEDULE-UNIT-DISPOSITION")
-            source = self._m3(
+            source = self._logical_source(
                 unit,
                 "cleanup",
                 "observation",
@@ -656,7 +757,7 @@ class ScheduleJournal:
                     "unresolved": "unresolved",
                 }[disposition],
                 unit=unit,
-                refs=[source],
+                refs=[source] if source else None,
                 disposition=disposition,
                 cause=body["cause"],
             )
@@ -668,7 +769,7 @@ class ScheduleJournal:
                 "outcome"
             ] not in ("succeeded", "failed", "cancelled", "unresolved"):
                 raise PersistenceError("ML-SCHEDULE-RUN-TERMINAL")
-            if set(self.units) != set(claims) or self.completed != {
+            if set(self.units) != {u.unit_id for u in prepared.units} or self.completed != {
                 s.step_id for s in prepared.steps
             }:
                 raise PersistenceError("ML-SCHEDULE-RUN-TERMINAL")

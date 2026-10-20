@@ -1,0 +1,34 @@
+.......F                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_actual_registry_controller_recovery_preserves_productive_original_run[recovery] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x74abf4e41a70>, RuntimeScope(startup=HostDeadline(sessio...stro-runtime-controls-20261019b-runtime_control_registry-wheel-private-cogbeo23/test_actual_registry_controlle0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74abf502bb50>
+
+    @pytest.mark.parametrize('runtime',['recovery'],indirect=True)
+    def test_actual_registry_controller_recovery_preserves_productive_original_run(runtime,monkeypatch):
+        entry,scope,work=runtime;registry=_OriginalRuntimeRegistry(1);registry.reserve(entry);tickets=[]
+        original=FiniteDispatcher._statement;old=[]
+        def observed(self,kind,step,**kw):
+            reply=original(self,kind,step,**kw)
+            if kind=='step-complete' and step.phase=='prepare' and not tickets:
+                old.append(self._controller)
+                ticket=registry.replace_controller('fixture-run',session_id='registry-successor',deadline=scope.active)
+                tickets.append(ticket)
+                assert registry.replace_controller('fixture-run',session_id=ticket.session_id,deadline=scope.active) is ticket
+                assert registry.controller_recovery_result('fixture-run',ticket) is None
+                with pytest.raises(ValueError,match='RECOVERY-ORIGINAL'):
+                    registry.controller_recovery_result('fixture-run',replace(ticket))
+            return reply
+        monkeypatch.setattr(FiniteDispatcher,'_statement',observed)
+        result=registry.start('fixture-run',scope)
+>       assert len(tickets)==1 and result.execution_succeeded and result.cleanup_complete,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='795b40dc2cc98766d7...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False)
+E       assert (1 == 1 and False)
+E        +  where 1 = len([ControllerRecoveryRequest(run_id='fixture-run', session_id='registry-successor', deadline=HostDeadline(session='host-session', monotonic_seconds=1015519.139538458))])
+E        +  and   False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='795b40dc2cc98766d7...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_control_registry.py:126: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run[recovery]
+1 failed, 7 passed in 11.60s

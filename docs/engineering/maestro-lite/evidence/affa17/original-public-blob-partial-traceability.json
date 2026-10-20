@@ -1,0 +1,1111 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-19-original-public-blob-partial",
+  "scope": "additive component trace; full integrated increment17 trace remains required",
+  "parent_trace": {
+    "path": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/recovery16/traceability.json",
+    "sha256": "e1651cad4268c8dfc2d700bf7010a203b15e06984a133d4af181c9b0147a2809"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::admit_broker_artifact",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::decode_broker_artifact",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::encode_configuration",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::_load",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_bad_sealed_broker_artifact_rejects_before_original_writer",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_original_replacement_conflict_and_cancelled_publication_preserve_no_start",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::serve",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_v5_revalidation_failure_still_prevents_native_release",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::receiving",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::injected",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release",
+              "file_sha256": "dbdb3d35a059146da16663d094021bde15aa625452cdca7cc818d3fb1626c4e5",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::serve",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_v5_revalidation_failure_still_prevents_native_release",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive_packet",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_send_public_blob",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::sealed_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::read_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::decode_broker_data",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_real_sealed_transfer_above_packet_bound_preserves_all_bytes_and_closes_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_bad_transport_disposes_every_delivered_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_full_synthetic_admitted_inventory_above_packet_transfers_without_row_loss",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_closed_broker_validation_rejects_bad_inventory_and_identity",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive_packet",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_send_public_blob",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::sealed_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::read_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::decode_broker_data",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_real_sealed_transfer_above_packet_bound_preserves_all_bytes_and_closes_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_bad_transport_disposes_every_delivered_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_full_synthetic_admitted_inventory_above_packet_transfers_without_row_loss",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_closed_broker_validation_rejects_bad_inventory_and_identity",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::write_public_bytes",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::publish_broker",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::validate_broker_receipt",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.publish_broker_artifact",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_original_worker_publishes_actual_broker_bytes_indexes_and_caches_without_new_intents",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_failed_actual_publication_never_certifies_receipt_or_rewrites_existing_bytes",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_confined_public_artifact_nested_bytes_and_actual_closed_reader",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::serve",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_v5_revalidation_failure_still_prevents_native_release",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::receiving",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::injected",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release",
+              "file_sha256": "dbdb3d35a059146da16663d094021bde15aa625452cdca7cc818d3fb1626c4e5",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive_packet",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_receive",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::_send_public_blob",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::sealed_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::read_public_blob",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::decode_broker_data",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_real_sealed_transfer_above_packet_bound_preserves_all_bytes_and_closes_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_bad_transport_disposes_every_delivered_right",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_full_synthetic_admitted_inventory_above_packet_transfers_without_row_loss",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_closed_broker_validation_rejects_bad_inventory_and_identity",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::write_public_bytes",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::publish_broker",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::validate_broker_receipt",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.publish_broker_artifact",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_original_worker_publishes_actual_broker_bytes_indexes_and_caches_without_new_intents",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_failed_actual_publication_never_certifies_receipt_or_rewrites_existing_bytes",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_confined_public_artifact_nested_bytes_and_actual_closed_reader",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::write_public_bytes",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::publish_broker",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::validate_broker_receipt",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.publish_broker_artifact",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_original_worker_publishes_actual_broker_bytes_indexes_and_caches_without_new_intents",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_failed_actual_publication_never_certifies_receipt_or_rewrites_existing_bytes",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_confined_public_artifact_nested_bytes_and_actual_closed_reader",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::serve",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_v5_revalidation_failure_still_prevents_native_release",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        },
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::receiving",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/persistence_fixture.py::injected",
+              "file_sha256": "07a97efa9fa36edb4a521a21c1779959b052e12610f0819b0da8fd82686a3068",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release",
+              "file_sha256": "dbdb3d35a059146da16663d094021bde15aa625452cdca7cc818d3fb1626c4e5",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_component_evidence_only",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::admit_broker_artifact",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/public_blobs.py::decode_broker_artifact",
+              "file_sha256": "fef52e8f035f1e1e975c0072f260c7995f7070c7887e0e923d357d0004b747b9",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::encode_configuration",
+              "file_sha256": "c506294886a577ba999a60f29d23d0fc95c459b2ecfcb496c9e60daafefc319e",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::_load",
+              "file_sha256": "10bb5fa36757857cdc2f87fdb1b91b7a7d1d0623137b00668b14f4bdcc7d9e50",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_bad_sealed_broker_artifact_rejects_before_original_writer",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_public_blobs.py::test_original_replacement_conflict_and_cancelled_publication_preserve_no_start",
+              "file_sha256": "01ee2b90981517e81b51f1693dd9c14956ce0fc385118e9f36fe8a56dcb2ae52",
+              "frozen_manifest": "public-blob-v2-frozen-inputs.json"
+            }
+          ],
+          "verification": {
+            "path": "public-blob-v2-verification.json",
+            "sha256": "7da04505a5a6d4f026cd5d796482911ea1cf54518e66bcb59baae03cb23c2a26"
+          },
+          "all_original_requirement_clauses_verified": false
+        }
+      ]
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/public_blobs.py::admit_broker_artifact": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/public_blobs.py::decode_broker_artifact": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::encode_configuration": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence_worker.py::_load": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_bad_sealed_broker_artifact_rejects_before_original_writer": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_original_replacement_conflict_and_cancelled_publication_preserve_no_start": [
+      "ML-SR-004",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/persistence.py::_receive_packet": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/persistence.py::_receive": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/persistence.py::_send_public_blob": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/public_blobs.py::sealed_public_blob": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/public_blobs.py::read_public_blob": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/public_blobs.py::decode_broker_data": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_real_sealed_transfer_above_packet_bound_preserves_all_bytes_and_closes_right": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_bad_transport_disposes_every_delivered_right": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_full_synthetic_admitted_inventory_above_packet_transfers_without_row_loss": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_closed_broker_validation_rejects_bad_inventory_and_identity": [
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-020"
+    ],
+    "src/xverse/maestro/public_blobs.py::write_public_bytes": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/public_blobs.py::publish_broker": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/public_blobs.py::validate_broker_receipt": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/persistence.py::PersistenceClient.publish_broker_artifact": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_original_worker_publishes_actual_broker_bytes_indexes_and_caches_without_new_intents": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_failed_actual_publication_never_certifies_receipt_or_rewrites_existing_bytes": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_confined_public_artifact_nested_bytes_and_actual_closed_reader": [
+      "ML-SR-019",
+      "ML-SR-021",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/persistence_worker.py::serve": [
+      "ML-SR-005",
+      "ML-SR-006",
+      "ML-SR-019",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_public_blobs.py::test_actual_v5_revalidation_failure_still_prevents_native_release": [
+      "ML-SR-005",
+      "ML-SR-006",
+      "ML-SR-019",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/persistence_fixture.py::receiving": [
+      "ML-SR-005",
+      "ML-SR-019",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/persistence_fixture.py::injected": [
+      "ML-SR-005",
+      "ML-SR-019",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release": [
+      "ML-SR-005",
+      "ML-SR-019",
+      "ML-SR-023"
+    ]
+  },
+  "source_parent_semantics_validated": false,
+  "software_requirements_retained": 24,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "all_seven_phase3_tasks_complete": false,
+  "full_candidate_review_complete": false,
+  "full_M1_complete": false,
+  "U7_U8_complete": false,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false,
+  "canonical_note_edited": false,
+  "factory_run_created": false
+}

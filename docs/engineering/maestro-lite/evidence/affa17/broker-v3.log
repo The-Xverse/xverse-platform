@@ -1,0 +1,41 @@
+...F..                                                                   [100%]
+=================================== FAILURES ===================================
+__________ test_worker_stall_does_not_hold_independent_native_cancel ___________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x7e1228e9e3f0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x7e1229d88f50>, PosixPath('/tmp/pytest-of-jefferson/pytest-984/test_worker_stall_does_not_hol0/work'))
+
+    def test_worker_stall_does_not_hold_independent_native_cancel(broker_stack):
+        import threading
+    
+        broker, _, storage, work = broker_stack
+        unit = broker.owner._prepared.units[0].unit_id
+        broker.owner.commit_intent(unit, deadline(2))
+        signal.pidfd_send_signal(storage.process._capability.fileno(), signal.SIGSTOP)
+        entered = threading.Event()
+        original = storage.revalidate_intent
+        errors = []
+    
+        def blocked(*args, **kwargs):
+            entered.set()
+            return original(*args, **kwargs)
+    
+        storage.revalidate_intent = blocked
+    
+        def stage():
+            try:
+                broker.issuer(unit).stage(deadline(2))
+            except ValueError as error:
+                errors.append(str(error))
+    
+        thread = threading.Thread(target=stage)
+        thread.start()
+        try:
+>           assert entered.wait(1)
+E           assert False
+E            +  where False = wait(1)
+E            +    where wait = <threading.Event at 0x7e1228e67890: unset>.wait
+
+tests/thesis_lite/maestro/test_run_broker.py:255: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_broker.py::test_worker_stall_does_not_hold_independent_native_cancel
+1 failed, 5 passed in 10.95s
