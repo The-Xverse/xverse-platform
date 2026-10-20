@@ -1,0 +1,163 @@
+--- c/tests/thesis_lite/maestro/test_shared_dispatcher.py
++++ h/tests/thesis_lite/maestro/test_shared_dispatcher.py
+@@ -77,9 +77,21 @@
+         lambda *a, **kw: prepare(*a, limits=Limits(horizon_ticks=5 if transitive else 3), **kw))
+     encode = test_launcher.encode_configuration
+     def configuration(prepared, *a, **kw):
++        # The admitted active window is created here, before worker init (~0.4 s) and
++        # before the first schedule statement. Measured over 305 clean runs of this
++        # fixture, the span after init-begin reaches p99 4.55 s; restart-capable runs
++        # additionally spend their restart/recovery budget inside the same window, so a
++        # 4.8 s window left no margin for ordinary jitter (finding 362, CAPA-222 class).
++        # The window therefore reserves the explicit restart/recovery budgets; no
++        # statement budget, lease, health cadence or product constant changes.
++        base_active_seconds = 20 if transitive else 8 if pauses>1 else 4.8
++        # Only the tight 4.8 s base window reserves the explicit restart/recovery budgets; the
++        # 20 s transitive and 8 s paused windows hold ample margin and are asserted literally.
++        reserved_seconds = ((restart_operation_seconds or 0)+(recovery_operation_seconds or 0)
++                            if base_active_seconds == 4.8 else 0)
+         plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+             ticks=(0,)*pauses+((1,2,3,4,5) if transitive else (1,2,3)),
+-            active_seconds=20 if transitive else 8 if pauses>1 else 4.8,
++            active_seconds=base_active_seconds+reserved_seconds,
+             operation_seconds=.3 if transitive else .5, per_unit_seconds=2 if transitive else 1,
+             poll_seconds=.05, request_limit=1024, service_operation_count=4,
+             restart_operation_seconds=restart_operation_seconds,use_action_timeouts=transitive,
+--- c/tests/thesis_lite/maestro/test_active_restart.py
++++ h/tests/thesis_lite/maestro/test_active_restart.py
+@@ -47,7 +47,7 @@
+     successful=mode in ('leaf','external-thread')
+     stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+     broker,facade,client,work=stack
+-    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==4.8
++    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==5.8
+     assert driver.plan.restart_operation_seconds==1.0
+     source,leaf=driver.prepared.resource_order
+     unit=source if mode=='parent-reject' else leaf
+--- c/tests/thesis_lite/maestro/test_schedule_worker.py
++++ h/tests/thesis_lite/maestro/test_schedule_worker.py
+@@ -147,7 +147,15 @@
+         owner.session, min(boot_stack[0]._lease / 1e9, time.monotonic() + 4.5)
+     )
+     receipt = gate.renew(lease, deadline(1))
+-    assert gate.lease_ns > prior and receipt == lease
++    # The gate quantizes the requested lease to integer nanoseconds (owner._deadline) and reports
++    # that quantized value; a float round trip through nanoseconds may differ from the requested
++    # float by one unit in the last place (run h, finding 374), so the receipt is compared with the
++    # retained nanosecond lease, and the retained lease with the request at integer-nanosecond resolution.
++    assert gate.lease_ns > prior
++    assert receipt == HostDeadline(owner.session, gate.lease_ns / 1e9)
++    # Integer-nanosecond resolution (independent review N-02): the gate retained exactly the
++    # quantized request, independent of float spacing at the current uptime.
++    assert gate.lease_ns == int(lease.monotonic_seconds * 1e9)
+     # Renewal did not Release the staged workload or change its original scope.
+     assert not list(boot_stack[4].glob("*.marker"))
+     facade = ProcessReadiness(
+--- c/src/xverse/maestro/dispatcher.py
++++ h/src/xverse/maestro/dispatcher.py
+@@ -1353,7 +1353,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         unit=unit,
+@@ -1412,7 +1414,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         step=step.step_id,
+@@ -1444,7 +1448,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         unit=unit.unit_id,
+@@ -1462,7 +1468,9 @@
+                         self.owner.session,
+                         min(
+                             self._work_end,
+-                            time.monotonic() + self.plan.operation_seconds,
++                            # Terminal statement takes the per-unit budget like teardown and
++                            # cleanup (finding 379); the operation budget is cadence-bound.
++                            time.monotonic() + self.plan.per_unit_seconds,
+                         ),
+                     ),
+                     outcome="succeeded"
+--- c/tests/thesis_lite/maestro/test_runtime_entry.py
++++ h/tests/thesis_lite/maestro/test_runtime_entry.py
+@@ -34,6 +34,10 @@
+ from .test_terminal_runtime import verify
+ from .test_lazy_dispatcher import observe_original_operations as observe_original_operations
+ 
++
++# Bootstrap environment pin of the owned fixture; the lane admission control overrides it with the
++# verification-environment digest of the lane admission proposal (finding 382).
++ENVIRONMENT_DIGEST = pin(b'owned-environment')
+ 
+ @pytest.fixture
+ def runtime(environment,binaries,authority_binary,run_bootstrap_binary,tmp_path,monkeypatch,request):
+@@ -80,7 +84,7 @@
+     images=tuple(seal_helper_image(p,digest=pin(p.read_bytes()),argv0=sys.executable if p==Path(sys.executable).resolve() else str(p))
+         for p in (binaries['launcher'],binaries['bound-gate'],Path(sys.executable).resolve(),authority_binary))
+     supervisor=seal_helper_image(run_bootstrap_binary,digest=pin(run_bootstrap_binary.read_bytes()),argv0=str(run_bootstrap_binary))
+-    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',pin(b'owned-environment'),
++    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',ENVIRONMENT_DIGEST,
+         supervisor.digest,manager._admission.teardown_deadline,deadline(4.8),images[:3],images[3],manager._root_fd))
+     launcher=OriginalBootstrapRegistry(1).reserve(boot,supervisor,manager)
+     units=tuple(UnitAdmission(BoundaryDescriptor(config.run_id,u.unit_id,1,'work-'+str(i),0),(('MAESTRO_VISIBLE','declared'),),1)
+--- c/src/xverse/maestro/native/run_authority.c
++++ h/src/xverse/maestro/native/run_authority.c
+@@ -158,7 +158,8 @@
+         struct unit *u=&g->units[i];if(!u->registered)continue;
+         struct generation *e=&u->history[u->used-1];
+         if(removed(e)){mask|=UINT64_C(1)<<i;continue;}
+-        if(now_ns()>=end||write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
++        /* F-01 (finding 394): the write is never skipped for an elapsed budget; only the wait is bounded. */
++        if(write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
+         uint64_t frozen=0;
+         while(now_ns()<end){
+             if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==1)break;
+@@ -177,6 +178,8 @@
+     }
+     return freeze_all(g,end);
+ }
++/* F-01: closing never inherits an already-elapsed request deadline. */
++static uint64_t close_end(struct authority *g) { uint64_t now=now_ns(),end=g->generation;if(now&&end>now+2*NS)end=now+2*NS;return end; }
+ static int send_packet(struct authority *g,unsigned char *p,int fd) {
+     struct iovec iov={.iov_base=p,.iov_len=PACKET};
+     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(int))];}control;
+@@ -388,7 +391,7 @@
+     unsigned kind=get32(p+4);uint64_t slot=get64(p+56),generation=get64(p+72);
+     if(kind==CANCEL){
+         if(count||slot||generation||!zero(p+80,208)||get64(p+304))return -1;
+-        uint64_t frozen=close_authority(g,g->deadline);
++        uint64_t frozen=close_authority(g,close_end(g));
+         return run_reply(g,CANCELLED,frozen,g->freeze_failed?FREEZE_FAILED:CANCEL_REASON);
+     }
+     if(kind==RENEW){
+@@ -514,6 +517,6 @@
+         if(valid){g->sequence=get64(p+8);g->deadline=until;result=command(g,p,fds,count);}
+         for(unsigned i=0;i<count;++i)close(fds[i]);
+         if(!valid)return cleanup(g);
+-        if(result){close_authority(g,until);if(run_reply(g,REJECTED,0,PROTOCOL))return cleanup(g);}
+-    }
+-}
++        if(result){close_authority(g,close_end(g));if(run_reply(g,REJECTED,0,g->freeze_failed?FREEZE_FAILED:PROTOCOL))return cleanup(g);}
++    }
++}

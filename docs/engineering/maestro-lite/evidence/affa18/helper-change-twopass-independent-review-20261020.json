@@ -1,0 +1,246 @@
+{
+  "review": "Independent review of the two-pass freeze_all change to run_authority.c (F-01, F01R-02)",
+  "reviewer": "separate agent session (Claude, independent of the change author)",
+  "date": "2026-10-20",
+  "repository": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+  "branch": "candidate/maestro-lite-affa18-20261020",
+  "subject": "src/xverse/maestro/native/run_authority.c",
+  "method": "Read-only source reading of the full diff against HEAD, the HEAD and working-tree helper, review-affa18.md findings 394-397, the prior independent review (helper-change-f01-independent-review-20261020), affa_protocol.py, affa_client.py, run_broker.py CANCEL, bootstrap.py _service_terminal and bootstrap.c freeze paths. Both sources compiled in /dev/shm with the harness flags; the binary was not executed. No existing file was modified, no state-changing git command and no pytest were run.",
+  "frozen_inputs": {
+    "old": {
+      "source": "git show HEAD:src/xverse/maestro/native/run_authority.c",
+      "sha256": "2a2ee8306a7f45186355b548888d00e3df9fd22f20fd9fbe9435afa718874563",
+      "verified": true
+    },
+    "new": {
+      "source": "working tree src/xverse/maestro/native/run_authority.c",
+      "sha256": "b29a5239345354c4758f22203c7d38d557596bb2d743e826fa89825bdd60a09f",
+      "verified": true
+    },
+    "build": {
+      "compiler": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+      "flags": "-std=c11 -O2 -Wall -Wextra -Werror -lcrypto",
+      "warnings": 0,
+      "binary_sha256": "17f2476a2d4138415f8563dc41f47bf73501b28b005aede2e640b9c78a5c4af5",
+      "matches_finding_397": true,
+      "executed": false
+    }
+  },
+  "checks": [
+    {
+      "item": "1a. Frozen inputs and diff scope",
+      "verdict": "PASS",
+      "evidence": "sha256(git show HEAD:src/xverse/maestro/native/run_authority.c)=2a2ee8306a7f45186355b548888d00e3df9fd22f20fd9fbe9435afa718874563; sha256(working tree)=b29a5239345354c4758f22203c7d38d557596bb2d743e826fa89825bdd60a09f; git diff --numstat: 18 insertions, 10 deletions, confined to freeze_all (155-177), close_end (186-187), CANCEL (399-400) and the rejection path (525).",
+      "note": "The working tree also changes tests/thesis_lite/maestro/test_affa_release_timeout_fence.py (outside the subject; read for context only)."
+    },
+    {
+      "item": "1b. Build with harness flags",
+      "verdict": "PASS",
+      "evidence": "cc 11.4.0, -std=c11 -O2 -Wall -Wextra -Werror authority.c -lcrypto in /dev/shm: no warnings; binary sha256 17f2476a2d4138415f8563dc41f47bf73501b28b005aede2e640b9c78a5c4af5, equal to the 17f2476a2d41...c4af5 recorded in finding 397. HEAD source also builds warning-free. The binary was not executed.",
+      "note": ""
+    },
+    {
+      "item": "1c. F-01: freeze write never skipped for an elapsed budget",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:163 calls write_freeze(e->cg,'1') with no time test; HEAD:162 was `if(now_ns()>=end||write_freeze(e->cg,'1'))`, which skipped the write once the budget had elapsed.",
+      "note": ""
+    },
+    {
+      "item": "1d. F-01: wait bounded",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:166-174: the loop breaks on `!pending||now_ns()>=end` (172) and sleeps with poll(...,1) (173); every caller passes end <= min(generation, now+2 s): close_end 187 (CANCEL 399, rejection 525), lease expiry 506, cleanup 473-474.",
+      "note": "Bounded on the assumption that CLOCK_MONOTONIC works; see TPR-04 (pre-existing, identical in HEAD)."
+    },
+    {
+      "item": "1e. F-01: independent close budget min(generation, now+2 s) on CANCEL and rejection path",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:187 close_end; used at 399 (CANCEL, replaces g->deadline) and 525 (rejection, replaces `until`). Same formula as cleanup() 473.",
+      "note": "When now_ns() returns 0, close_end returns generation, as cleanup() does (pre-existing pattern)."
+    },
+    {
+      "item": "1f. F01R-02: all writes before any wait",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:159-165 issue every write and build `pending`; no poll or wait occurs before line 166. A slow unit therefore no longer delays later units' writes.",
+      "note": ""
+    },
+    {
+      "item": "1g. F01R-02: each pending unit checked at least once",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:167-171 reads cgroup.events for every pending bit before the exit test at 172, so even with an already-elapsed `end` every pending unit is read once.",
+      "note": "Units whose write failed are not pending and are not read (see TPR-03); this matches the wording 'each pending unit' in finding 397."
+    },
+    {
+      "item": "1h. F01R-02: still-pending units set freeze_failed",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:175 `if(pending)g->freeze_failed=1;`; write failures set it at 163.",
+      "note": ""
+    },
+    {
+      "item": "2a. Bit arithmetic for up to 16 units",
+      "verdict": "PASS",
+      "evidence": "count is 1..16 (initialize, src/xverse/maestro/native/run_authority.c:288) and units[16] (53); all shifts are UINT64_C(1)<<i with i<16; pending&=~bit (170) clears only bit i. mask and pending are disjoint; mask < 1<<count.",
+      "note": ""
+    },
+    {
+      "item": "2b. Unregistered units",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:160 skips them before any dereference of history[0].cg (=-1 for unregistered units, set in main 501); they never enter `pending`, so the second pass never touches them. Not reported in the mask and do not set freeze_failed, as in HEAD.",
+      "note": ""
+    },
+    {
+      "item": "2c. Current generation removed",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:162 sets the mask bit and skips the write, as in HEAD:160. A generation removed after its write (between pass 1 and pass 2) makes field() fail and stays pending until `end`, then sets freeze_failed (TPR-02).",
+      "note": "Conservative direction."
+    },
+    {
+      "item": "2d. Transient field() failure",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:170: a failing field() leaves the bit pending; it is re-read every iteration until `end`; if never confirmed, 175 sets freeze_failed and the bit stays out of the mask. Same outcome as HEAD's per-unit loop.",
+      "note": ""
+    },
+    {
+      "item": "2e. Loop termination",
+      "verdict": "NOTE",
+      "evidence": "src/xverse/maestro/native/run_authority.c:166-174 cannot return before one full read pass and exits on !pending or now>=end. It cannot spin forever while the monotonic clock works; if now_ns() returns 0 permanently and a unit never reports frozen==1, `0>=end` is false and the loop does not terminate.",
+      "note": "Identical to HEAD's `while(now_ns()<end)` (F01R-08); recorded as TPR-04."
+    },
+    {
+      "item": "2f. Poll used for waiting",
+      "verdict": "NOTE",
+      "evidence": "src/xverse/maestro/native/run_authority.c:173 polls g->parent (pidfd of the parent) for POLLIN with a 1 ms timeout, as HEAD:166. Once the parent has exited, the pidfd is readable and poll returns immediately, so the wait busy-spins (up to 16 openat/read per iteration) until `end` (at most 2 s).",
+      "note": "Pre-existing and bounded; recorded under TPR-04."
+    },
+    {
+      "item": "2g. Returned mask meaning and client expectations",
+      "verdict": "PASS",
+      "evidence": "Bit i is set iff unit i's current generation was removed (src/xverse/maestro/native/run_authority.c:162) or frozen==1 was observed during this call (170), the same predicate as HEAD:160,169-170. For the same kernel timing the new mask is a superset of HEAD's, because units reached after an elapsed budget are now read. affa_client.py:303 requires state < 1<<len(units) and reason in (5,6): run_reply (400) sends exactly the mask and CANCEL_REASON(5)/FREEZE_FAILED(6); affa_protocol.py:86 bounds state to 0..65535, which a 16-bit mask satisfies.",
+      "note": ""
+    },
+    {
+      "item": "3a. CANCEL path regression check",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:399-400: only the budget changes (g->deadline -> close_end). run_broker.py:886 sends CANCEL with until <= now+1 s, so the helper may now reply after the client's receive deadline (F01R-01, recorded as deliberate in finding 396); the client then revokes instead of recording CANCELLED. No wire change.",
+      "note": "The two-pass loop reduces the time per close (one shared wait) relative to the intermediate version."
+    },
+    {
+      "item": "3b. Rejection path regression check",
+      "verdict": "NOTE",
+      "evidence": "src/xverse/maestro/native/run_authority.c:525: budget `until` -> close_end; reason PROTOCOL(4) -> FREEZE_FAILED(6) when g->freeze_failed. HEAD could wait up to `until` (<= receipt+5 s); the new budget is at most 2 s from the rejection, which can be shorter. Because writes are unconditional and the reply state stays 0, this does not weaken containment. The reason is taken from the sticky g->freeze_failed (TPR-01). affa_client.py:288-289 does not read the REJECTED reason.",
+      "note": "No behavioural regression for the client."
+    },
+    {
+      "item": "3c. Lease-expiry path regression check",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:506 unchanged; it already passed min(generation, now+2 s) and now gets the two-pass behaviour.",
+      "note": "Uses `now` from the top of the loop iteration (F01R-08, pre-existing)."
+    },
+    {
+      "item": "3d. cleanup() regression check",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:473-474 unchanged; close_authority shares `end` with the reap wait (488). As in HEAD, a unit that never reports frozen consumes the budget and leaves the reap wait no time, so cleanup returns 70; with the two-pass loop the consumption is one shared wait rather than per unit.",
+      "note": ""
+    },
+    {
+      "item": "4a. Finding 394 describes the code",
+      "verdict": "PASS",
+      "evidence": "(a) matches 163, 166-175, 187, 399, 525; REJECTED keeps state 0 (525) and reason in 1..7. The '1..7 ... affa_protocol.py:108' wording was corrected in finding 396 (bound at affa_protocol.py:87; 108 requires a nonzero reason and state 0).",
+      "note": "Record 394 is not rewritten, which is consistent with the log's practice."
+    },
+    {
+      "item": "4b. Finding 395: REJECTED reason FREEZE_FAILED(6) when the refreeze is unconfirmed",
+      "verdict": "NOTE",
+      "evidence": "src/xverse/maestro/native/run_authority.c:525 selects 6 from g->freeze_failed, which is set at 163/175 and never cleared (src/xverse/maestro/native/run_authority.c:51,163,175 are the only writers). Reason 6 therefore means 'some freeze in this authority's life was unconfirmed', not only 'this refreeze was unconfirmed'.",
+      "note": "Narrower wording than the code; see TPR-01."
+    },
+    {
+      "item": "4c. Finding 397 describes the code",
+      "verdict": "PASS",
+      "evidence": "Two-pass structure, unconditional writes, at-least-once check of pending units and freeze_failed for still-pending units all match src/xverse/maestro/native/run_authority.c:155-177; numstat 18/10 against HEAD and binary 17f2476a2d41...c4af5 reproduced; the control's docstring states that the reason-6 and bounded-wait branches are not reached.",
+      "note": ""
+    },
+    {
+      "item": "4d. Deferrals F-02, F-05, F-07, F01R-03",
+      "verdict": "PASS",
+      "evidence": "F-05: no RELEASE_TIMEOUT reason in the enum (src/xverse/maestro/native/run_authority.c:34) and REJECTED state stays 0 (525), consistent with deferral. F-07: the only '0' writer is RELEASE (src/xverse/maestro/native/run_authority.c:443), gated by enabled() (106 requires !closed); the authority stays alive after CANCEL; bootstrap.py:848-860 _service_terminal requires a CANCELLED receipt or observed authority death. F-02: no WATCH token or supervisor channel in the diff; design options only. F01R-03: the closed loop (src/xverse/maestro/native/run_authority.c:504-526) has no retry, consistent with 'DEFERRED'; bootstrap.c:160-162,265-271 freeze watched leaves on terminal service.",
+      "note": "The F01R-03 rationale about supervisor freezing was checked only at source-reading level."
+    }
+  ],
+  "findings": [
+    {
+      "id": "TPR-01",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "34, 51, 163, 175, 400, 525 (consumer run_broker.py:902)",
+      "title": "freeze_failed is sticky, so reason 6 reports any earlier unconfirmed freeze, not only the current refreeze",
+      "scenario": "A close that times out (for example on lease expiry at 506, or a REJECTED refreeze) sets g->freeze_failed, which nothing clears. Every later REJECTED then carries reason 6 even if its own refreeze is fully confirmed, and a later CANCEL can return a complete mask together with reason 6, which run_broker.py:902 maps to ML-RUN-FREEZE-UNRESOLVED. Findings 395/397 describe reason 6 as 'when the refreeze could not be confirmed within the close budget'. The direction is conservative and affa_client.py does not read the REJECTED reason, so no containment property is weakened.",
+      "recommendation": "Either record in the review log that reason 6 (on REJECTED and CANCELLED) and cleanup's exit 70 reflect a sticky, authority-lifetime freeze failure, or have freeze_all report a per-call failure for the reply reason while keeping the sticky flag for cleanup(). Do not clear the sticky flag without a recorded rationale."
+    },
+    {
+      "id": "TPR-02",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "162, 167-175",
+      "title": "A generation removed after its freeze write stays pending, consumes the budget and is reported unfrozen",
+      "scenario": "Pass 1 treats a removed current generation as covered (mask bit). If the cgroup is removed between the write and the read, field() fails with ENOENT on every read, the unit stays pending until `end` (up to 2 s), freeze_failed is set and the bit stays out of the mask. HEAD behaves the same. Conservative (under-reports), but spends the shared budget that cleanup() also uses for its reap wait.",
+      "recommendation": "Optional: when field() fails in the wait loop, test removed(e) and, if true, set the mask bit and clear the pending bit; otherwise record the conservative behaviour."
+    },
+    {
+      "id": "TPR-03",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "93-96, 163",
+      "title": "Units whose freeze write fails are never read or retried",
+      "scenario": "write_freeze returning -1 (transient error) or 1 (ENOENT/ENODEV) sets freeze_failed and excludes the unit from `pending`, so a unit that is in fact frozen (for example by an earlier stop_child at 363) is not confirmed and its bit is missing from the mask. Same as HEAD; conservative. The 'checked at least once' guarantee of finding 397 applies to pending units only, which matches its wording.",
+      "recommendation": "Optional: read cgroup.events once for write-failed units too (or retry the write inside the wait loop) and keep freeze_failed for them; or keep as is and note it alongside F01R-06."
+    },
+    {
+      "id": "TPR-04",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "55, 172-173, 187, 473",
+      "title": "Pre-existing: the wait is unbounded if the monotonic clock fails, and busy-spins when the parent has exited",
+      "scenario": "now_ns() returns 0 on clock_gettime failure; then `now_ns()>=end` is never true and, if a unit never reports frozen==1, the loop never ends (close_end and cleanup also fall back to end=generation when now is 0). If the parent has exited, poll on its pidfd returns immediately and the wait busy-spins until `end`. Both are identical in HEAD (F01R-08) and are not introduced by this diff.",
+      "recommendation": "Optional hardening: treat now_ns()==0 as budget exhausted in the exit test at 172; consider a sleep that does not depend on g->parent (e.g. poll(NULL,0,1)) when the parent pidfd is already readable."
+    },
+    {
+      "id": "TPR-05",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "525 (HEAD:520)",
+      "title": "Rejection-path wait can be shorter than in HEAD",
+      "scenario": "HEAD waited for frozen==1 until the request's `until` (up to receipt+5 s); the new budget is at most now+2 s from the rejection. A refreeze that completes between 2 s and `until` is now reported as reason 6 where HEAD reported 4. The write itself is unconditional, so the boundary is still frozen by the kernel; only the confirmation and the reason differ.",
+      "recommendation": "None required; mention in the review log that the rejection-path confirmation window is capped at 2 s."
+    },
+    {
+      "id": "TPR-06",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "187, 473, 506",
+      "title": "Close-budget formula is written three times",
+      "scenario": "close_end (187), cleanup (473) and the lease-expiry call (506, with the loop-top `now`) compute the same min(generation, now+2 s) independently. They agree today; divergence in a later edit would silently change one close path.",
+      "recommendation": "Optional: call close_end(g) from cleanup() and the lease-expiry path."
+    }
+  ],
+  "counts": {
+    "findings": {
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 1,
+      "NOTE": 5
+    },
+    "checks": {
+      "PASS": 19,
+      "FAIL": 0,
+      "NOTE": 4
+    }
+  },
+  "verdict": "F-01 and F01R-02 addressed",
+  "verdict_rationale": "Every live generation's cgroup.freeze write is issued before any wait and regardless of budget (163); one bounded wait reads each pending unit at least once (166-174); still-pending units set freeze_failed (175); CANCEL and the rejection path use close_end = min(generation, now+2 s) (187, 399, 525). The returned mask keeps HEAD's meaning and satisfies affa_client.py:303. No regression on CANCEL, rejection, lease-expiry or cleanup paths beyond the recorded F01R-01 timing trade-off. Residual items are one LOW (sticky reason-6 semantics versus the wording of findings 395/397) and NOTEs, all conservative in direction.",
+  "limits": "Source reading and a warning-check build only; no execution, no kernel-level timing measurement, no test run. Supervisor-side freezing (F01R-03 rationale) was checked at source-reading level only.",
+  "authority_limits": {
+    "activation_approved": false,
+    "m1_admission": false,
+    "acceptance": false
+  }
+}

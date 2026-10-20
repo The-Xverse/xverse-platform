@@ -1,15 +1,16 @@
-"""F-01 (helper-bytes review, finding 381): release timeout is fenced by the Python-side cleanup.
+"""F-01 (helper-bytes review, finding 381; native fix in increment18, findings 394-397): release timeout fence.
 
-The native authority skips its refreeze once the request deadline has elapsed (run_authority.c
-freeze_all/close_authority), so after a RELEASE that times out before the workload exec completes
-the unit boundary can be left thawed. The documented increment17 precondition is that the owner
-treats a REJECTED or uncertain Release as cancellation and the supervisor's cleanup-only authority
-terminates the boundary before anything else can thaw it. This control reproduces the timeout
-deterministically by freezing the boundary parent (an ancestor freeze keeps the unit frozen while
-the authority thaws it), observes the authority's reply, applies the cleanup-only fence while the
-ancestor is still frozen, then thaws the ancestor and proves that no workload instruction ever ran.
-Observation only for the helper: no helper byte changes; the native strengthening is queued as a
-change-spec item (finding 382).
+Increment17 behaviour: the native authority skipped its refreeze once the request deadline had elapsed,
+so after a RELEASE that timed out before the workload exec completed the unit boundary could be left
+thawed, and the Python-side precondition (REJECTED release -> cleanup-only termination before any thaw)
+was the enforcing layer. Increment18: the authority writes cgroup.freeze for every live generation on the
+rejection path whatever budget remained, then waits once over all units within an independent close
+budget. This control reproduces the timeout deterministically by freezing the boundary parent (an
+ancestor freeze keeps the unit frozen while the authority thaws it), asserts the release-timeout
+discriminators and that the authority itself left the unit's cgroup.freeze at "1", applies the
+cleanup-only fence while the ancestor is still frozen, then thaws the ancestor and proves that no
+workload instruction ever ran. The reason-6 (FREEZE_FAILED) and bounded-wait branches are not reached
+by this control.
 """
 import hashlib
 import json
@@ -45,6 +46,14 @@ def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
     try:
         began = time.monotonic()
         reply = h.release(0)
+        # F-01 native strengthening (increment18, finding 394): the authority writes the unit's
+        # cgroup.freeze back to "1" itself on the rejection path, whatever budget remained.
+        control = os.open("cgroup.freeze", os.O_RDONLY | os.O_CLOEXEC, dir_fd=h.units[0]["cg"])
+        try:
+            unit_freeze_after_reply = os.read(control, 8).strip()
+        finally:
+            os.close(control)
+        observations.update(unit_freeze_control_after_reply=unit_freeze_after_reply.decode())
         observations.update(reply_kind=reply.kind.name, reply_state=reply.state, reply_reason=reply.reason,
                             reply_epoch=reply.epoch, reply_seconds=round(time.monotonic() - began, 3),
                             marker_before_fence=(work / "u0.marker").exists(),
@@ -57,6 +66,7 @@ def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
         assert observations["reply_seconds"] >= ticket_seconds - 0.25, (observations["reply_seconds"], ticket_seconds)
         assert not observations["marker_before_fence"]
         assert observations["members_before_fence"], "pre-exec child was not a member before the fence"
+        assert unit_freeze_after_reply == b"1", "authority left the unit thawed after a rejected release"
         # Python-side precondition: a REJECTED/uncertain Release is cancellation; cleanup-only
         # authority terminates the boundary while nothing has thawed it yet.
         fenced = h.manager.force_cleanup(descriptor)
@@ -72,7 +82,7 @@ def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
         target = Path(output)
         target.mkdir(parents=True, exist_ok=True)
         (target / ("release-timeout-fence-" + Path(work).name + ".json")).write_text(json.dumps(dict(
-            observations=dict(observations, ticket_seconds=round(ticket_seconds, 3)), source_sha256=SOURCE_SHA256, helper_finding="F-01", helper_bytes_changed=False,
+            observations=dict(observations, ticket_seconds=round(ticket_seconds, 3)), source_sha256=SOURCE_SHA256, helper_finding="F-01", helper_bytes_changed=True, native_refreeze_asserted=True,
             precondition="REJECTED release -> cleanup-only termination before any thaw", accepted=False), indent=2))
     assert fenced.boundary_released and fenced.termination_observed
     assert not (work / "u0.marker").exists(), "workload instruction reached the child after a REJECTED release"

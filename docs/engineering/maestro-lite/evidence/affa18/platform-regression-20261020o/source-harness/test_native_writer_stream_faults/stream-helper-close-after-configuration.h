@@ -1,0 +1,3 @@
+#define OWNED_MODE 3
+#define OWNED_TARGET "/dev/shm/maestro-platform-20261020o-private-4xc8uxdy/test_native_stream_fault_prese3/argus/events.jsonl"
+#define OWNED_TRACE "/dev/shm/maestro-platform-20261020o-private-4xc8uxdy/test_native_stream_fault_prese3/owned-stream-syscalls.jsonl"

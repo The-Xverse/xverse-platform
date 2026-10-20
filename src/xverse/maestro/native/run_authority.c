@@ -153,20 +153,26 @@ static uint64_t state(struct generation *e) {
     return value;
 }
 static uint64_t freeze_all(struct authority *g,uint64_t end) {
-    uint64_t mask=0;
+    /* F-01 (findings 394, 397): first issue the freeze write for every live generation, never skipped
+     * for an elapsed budget; then one bounded wait over all pending units, each checked at least once. */
+    uint64_t mask=0,pending=0;
     for(unsigned i=0;i<g->count;++i){
         struct unit *u=&g->units[i];if(!u->registered)continue;
         struct generation *e=&u->history[u->used-1];
         if(removed(e)){mask|=UINT64_C(1)<<i;continue;}
-        if(now_ns()>=end||write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
-        uint64_t frozen=0;
-        while(now_ns()<end){
-            if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==1)break;
-            struct pollfd p={.fd=g->parent,.events=POLLIN};poll(&p,1,1);
-        }
-        if(frozen==1)mask|=UINT64_C(1)<<i;
-        else g->freeze_failed=1;
+        if(write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
+        pending|=UINT64_C(1)<<i;
     }
+    for(;;){
+        for(unsigned i=0;i<g->count;++i){
+            if(!(pending&(UINT64_C(1)<<i)))continue;
+            struct unit *u=&g->units[i];struct generation *e=&u->history[u->used-1];uint64_t frozen=0;
+            if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==1){mask|=UINT64_C(1)<<i;pending&=~(UINT64_C(1)<<i);}
+        }
+        if(!pending||now_ns()>=end)break;
+        struct pollfd p={.fd=g->parent,.events=POLLIN};poll(&p,1,1);
+    }
+    if(pending)g->freeze_failed=1;
     return mask;
 }
 static uint64_t close_authority(struct authority *g,uint64_t end) {
@@ -177,6 +183,8 @@ static uint64_t close_authority(struct authority *g,uint64_t end) {
     }
     return freeze_all(g,end);
 }
+/* F-01: closing never inherits an already-elapsed request deadline. */
+static uint64_t close_end(struct authority *g) { uint64_t now=now_ns(),end=g->generation;if(now&&end>now+2*NS)end=now+2*NS;return end; }
 static int send_packet(struct authority *g,unsigned char *p,int fd) {
     struct iovec iov={.iov_base=p,.iov_len=PACKET};
     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(int))];}control;
@@ -388,7 +396,7 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
     unsigned kind=get32(p+4);uint64_t slot=get64(p+56),generation=get64(p+72);
     if(kind==CANCEL){
         if(count||slot||generation||!zero(p+80,208)||get64(p+304))return -1;
-        uint64_t frozen=close_authority(g,g->deadline);
+        uint64_t frozen=close_authority(g,close_end(g));
         return run_reply(g,CANCELLED,frozen,g->freeze_failed?FREEZE_FAILED:CANCEL_REASON);
     }
     if(kind==RENEW){
@@ -514,6 +522,6 @@ int main(int argc,char **argv) {
         if(valid){g->sequence=get64(p+8);g->deadline=until;result=command(g,p,fds,count);}
         for(unsigned i=0;i<count;++i)close(fds[i]);
         if(!valid)return cleanup(g);
-        if(result){close_authority(g,until);if(run_reply(g,REJECTED,0,PROTOCOL))return cleanup(g);}
+        if(result){close_authority(g,close_end(g));if(run_reply(g,REJECTED,0,g->freeze_failed?FREEZE_FAILED:PROTOCOL))return cleanup(g);}
     }
 }
