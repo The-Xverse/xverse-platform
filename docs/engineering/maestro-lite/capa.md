@@ -346,3 +346,9 @@ It binds the author's acceptance of increment18 (finding 411,
 author-acceptance-increment18-20261020.json) and review span 410, sets the increment18 block to
 accepted with its scope and carried-open items, and leaves merged false. No record state, cause or
 effectiveness changes.
+
+Increment18: the [merge successor](evidence/affa18/capa-20261020-affa18-merge/register.json)
+(64579304880cd7c1…) validates 50 records/491 bindings and preserves all 489 acceptance parent
+bindings. It binds the merge record of increments 17 and 18 into local main (finding 412, merge
+commit e65965a95, main not pushed) and review span 411, and sets merged true at the top level and in
+the increment18 block. No record state, cause or effectiveness changes.
