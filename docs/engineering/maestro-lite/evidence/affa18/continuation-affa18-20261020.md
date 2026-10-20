@@ -88,9 +88,26 @@ the author's go with the CARLA load still present (host_condition_at_launch in c
 61 stalls > 0.5 s, 0 fsync spikes). CAPA successor capa-20261020-affa18-run-s/register.json
 4fd92f3fb2b9af81e229f8393193bb1e518c68820c95614c2463f59138014b20 (50/487). Next finding: 411.
 
+## Next (superseded by step 6 below)
+
+1. Readiness re-examination (see step 6).
+2. ~~AUTHOR: acceptance of increment18~~ accepted (finding 411).
+
+## Step 6 done: author acceptance of increment18 (finding 411)
+
+Author text "go with your proposal": accept increment18; hold the merges of increments 17/18 as a
+separate decision; defer F02D-01 hardening and F-05. Record
+author-acceptance-increment18-20261020.json; CAPA successor
+capa-20261020-affa18-acceptance/register.json
+a2e751c6e6a1e257ddf9bc1805aac9f48f99b0e92b9965ac3cb91949784628ae (50/489; increment18 accepted,
+merged false). Canonical-note paragraph proposed in ../../canonical-note-update-proposal-affa18.md,
+not applied. Next finding: 412 (span 411 is bound by the next successor).
+
 ## Next (current)
 
-1. Readiness re-examination: five blocking entries remain (ten unknown causes in two entries, lane
-   activation not approved, M1 not admitted, increment18 acceptance open).
-2. AUTHOR: acceptance of increment18 (an acceptance record on the increment17 pattern, finding 392);
-   merges of increments 17/18 into main; lane activation; M1; optional F02D-01 hardening; F-05.
+1. AUTHOR: merges of increments 17 and 18 into /home/jefferson/xverse-platform main (separate
+   decision; main untouched at c2997c0f).
+2. AUTHOR: approve or amend the canonical-note paragraph.
+3. Lane activation and M1 stay blocked by their own readiness check (ten unknown causes, lane
+   activation not approved, M1 not admitted). Later increments: F02D-01 hardening, F-05 wire
+   revision, the remaining 024 scope.

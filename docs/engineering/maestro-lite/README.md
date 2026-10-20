@@ -1,8 +1,22 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increment18 in progress on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes implemented and verified; clean full run s on the F-02 bytes; not accepted); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increment18 accepted by the author (finding 411) on candidate/maestro-lite-affa18-20261020 (native F-01 and F-02 fixes; clean full runs o, p, s); not merged; increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increment18 accepted (2026-10-20, finding 411)
+
+The author accepted increment18 as an engineering increment ("go with your proposal"). The terms
+are in [the acceptance record](evidence/affa18/author-acceptance-increment18-20261020.json).
+Scope: checkpoints 7abdb9dc0 through 3bee8fb9d, whose product changes are native F-01 and native
+F-02. Basis: clean runs o, p and s, per-change independent reviews, and the lane and crash-point
+evidence on the final bytes. Carried open: ten unknown causes, effectiveness NOT_DEMONSTRATED
+everywhere, the F02D-01 non-claim and deferred hardening, F02D-02, F-05, and the thin-margin fixture
+under load. Not covered: lane activation, M1, the merges of increments 17 and 18 into main,
+factory runs, canonical-note edits and scientific claims. CAPA successor
+[capa-20261020-affa18-acceptance](evidence/affa18/capa-20261020-affa18-acceptance/register.json)
+(50 records/489 bindings, parent preserved; the increment18 block is accepted, merged false). A
+canonical-note paragraph is [proposed, not applied](canonical-note-update-proposal-affa18.md).
 
 ## Increment18 step 5: clean full run s on the F-02 bytes (2026-10-20, finding 410)
 

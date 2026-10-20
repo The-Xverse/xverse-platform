@@ -339,3 +339,10 @@ It adds the clean full run s on the F-02 bytes (2103 passed/1 skipped/0 failed u
 finding-409 host load, recorded at launch) as a prevention observation on 222, 357, 359-CHILD,
 364, 374, 379, 381-F01, 381-F02 and 389, and binds review span 409. No state, cause or
 effectiveness changes; ten causes remain unknown; manual OBSERVE_ONLY.
+
+Increment18: the [acceptance successor](evidence/affa18/capa-20261020-affa18-acceptance/register.json)
+(a2e751c6e6a1e257…) validates 50 records/489 bindings and preserves all 487 run-s parent bindings.
+It binds the author's acceptance of increment18 (finding 411,
+author-acceptance-increment18-20261020.json) and review span 410, sets the increment18 block to
+accepted with its scope and carried-open items, and leaves merged false. No record state, cause or
+effectiveness changes.

@@ -418,3 +418,33 @@ candidate/maestro-lite-affa18-20261020, worktree
     381-F01, 381-F02 and 389; effectiveness remains NOT_DEMONSTRATED everywhere (one clean run
     is not a demonstration), and no state, cause or product change follows. The owed clean
     full run on the F-02 bytes is discharged. Increment18 remains not accepted.
+
+411. Author acceptance of increment18, 2026-10-20 ("go with your proposal", to the three
+    recommendations: (1) accept increment18 with an acceptance record on the finding-392
+    pattern carrying the open items; (2) hold the merges of increments 17/18 into main as a
+    separate decision; (3) defer the optional F02D-01 hardening and the F-05 wire revision to a
+    later increment). Recorded terms, which bound every later citation of this acceptance:
+    (a) scope: the Maestro Lite increment18 candidate as committed in checkpoints 7abdb9dc0
+    (F-01), d52683ad5, 18547fd6c, e290ce78c (F-02), b1dc99792 and 3bee8fb9d on
+    candidate/maestro-lite-affa18-20261020 (parent bdf7b29cc, increment17 accepted), accepted
+    as an engineering increment; its product changes are the native F-01 refreeze/close-budget
+    correction and the native F-02 watch proof. (b) basis: clean full runs o (tmpfs, F-01
+    bytes), p (ext4 reference, quiet host, F-01 bytes) and s (tmpfs, F-02 bytes, under an
+    unrelated host load); run r (3 failed under that load) retained with the A/B showing F-02
+    is not the discriminator (finding 409); independent reviews of every product change
+    (F-01, two-pass, F-02, dumpable delta; 0 HIGH, 0 MEDIUM open); runtime lane e, crash-point
+    f and lane admission f on the final bytes; CAPA chain through capa-20261020-affa18-run-s.
+    No separate whole-increment review was performed beyond the per-change reviews, which
+    together cover every product byte changed in increment18. (c) carried open: the ten CAPA
+    records with unknown cause (135, 286, 287, 318, 324, 330, 331, 332, 337, 359);
+    effectiveness NOT_DEMONSTRATED for every record, including 381-F01/F02 (the F-01 reason-6
+    and bounded-wait branches are not exercised); F02D-01 as a non-claim (no key
+    confidentiality against a hostile same-uid peer) with the owner-unreadable authority image
+    as deferred hardening; the run_authority.c:510 comment correction (F02D-02) deferred to the
+    next helper change; F-05 (distinct release-timeout reason, wire revision) deferred; F-07
+    unchanged by design; the thin-margin paused-shared fixture under host load (ML-CAPA-364
+    observation); the tmpfs harness as a declared fidelity choice. (d) not covered: lane
+    activation, M1 admission, the merges of increments 17 and 18 into
+    /home/jefferson/xverse-platform main, the remaining 024 scope, factory runs, canonical-note
+    edits and any scientific claim. The candidate branch remains pushed to origin as a backup
+    branch (no merge, no pull request).
