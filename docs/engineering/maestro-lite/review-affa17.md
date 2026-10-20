@@ -4796,3 +4796,91 @@ independent full-candidate review or acceptance. Full selected M1 is still open.
     unchanged. Full run l (2098 collected) follows to carry these modules in the
     whole suite; the lane test is skipped there by design. Not M1, not lane
     activation, not acceptance.
+
+385. Author permission 2026-10-20 ("what is for me, please address it with my
+    permission") on the items listed as the author's after finding 384.
+    Recorded dispositions: (1) extension of the per-unit budget to the terminal
+    section's unit diagnostic/disposition statements (finding 383 d) is
+    authorized; it is applied only after run l is terminal (frozen-input
+    manifest), under its own finding, targeted verification and a full run m.
+    (2) The separate complete independent review of the increment is
+    commissioned now as a separate agent session (read-only, against checkpoint
+    b03633329), labelled as such. (3) Lane activation and M1 admission are not
+    addressable by permission: RuntimeReadiness refuses execution while any
+    blocking finding is listed, and the ten unknown-cause CAPA records and the
+    two helper observations are genuine; no readiness statement asserting
+    otherwise is written. (4) Acceptance and the main merge are deferred until
+    the complete review returns; acceptance remains the author's explicit act
+    on that result. Nothing else changes.
+
+386. Complete independent review of the increment received (separate agent
+    session, read-only, against checkpoint b03633329; record
+    `evidence/affa17/increment17-independent-review-20261020.json` sha256
+    e9f4dd6467ca9d4c4d17ce4ea971a0690b6c0b0046adbd3f69c15c1c112f4d7a, summary
+    .md d211c5f0…3360): 38 checks, 30 PASS, 3 FAIL, 5 NOTE; every quoted hash
+    recomputed, run counts, probe spikes, GC maxima, stall correlations and the
+    run-k expired-statement timeline confirmed; both CAPA validators pass
+    (49/359, 343 parent bindings preserved); no record claims effectiveness;
+    acceptance not recommended until three blocking findings are resolved.
+    Dispositions (acted on as authorized, labelled): B-01 (finding-384 modules
+    and the fixture edit absent from HEAD) — the fourth checkpoint commits the
+    three files after run l; if their bytes change under B-02 the new hashes
+    get their own finding and lane re-run. B-02 (F-01 control asserts only the
+    REJECTED kind) — after run l the control additionally asserts reason 4,
+    elapsed >= ticket minus tolerance, a non-empty pre-fence membership and the
+    absent marker before the fence; lane driver c re-runs it. B-03 (capa.md and
+    README attribute the F-01/F-02 disposition to the author) — corrected now
+    to "agent-proposed disposition under the author's proceed instruction
+    (finding 382), explicit author confirmation pending"; the confirmation,
+    when given, is bound in the next successor. Non-blocking: N-01 reserve
+    accounting — corrected statement: schedule_plan.py reserves the terminal
+    statement at operation_seconds within its "(steps + 2n + 2)·op" term and
+    n·per_unit for the cleanup; after findings 379 and 383(d) the worst-case
+    sum of terminal-section budgets can exceed that reserve, every statement
+    stays capped by work_end, and the reserve formula is unchanged, so the
+    window is never extended but can be consumed earlier under stall. N-02 —
+    the nanosecond comparison moves to integer resolution after run l. N-03 —
+    the storage row is documented as an at-most-once bound (a zero-release
+    outcome also passes) after run l. N-04 — stale status lines refreshed now.
+    N-05 — recorded: finding 381 reserved activation of a bounded lane
+    admission test for the author; finding 382 activated it as a fail-closed
+    component-harness test under the author's "propose something and go"; the
+    lane-activation limit (execution) is respected and the author's explicit
+    confirmation of the finding-382 dispositions is requested. N-06 — run k's
+    configuration.json records git_head 1e081a1ba (HEAD at the moment the
+    driver started, before commit 36e6bf13); content identity is established
+    by its frozen manifest (identical to run j) and the dispatcher.py blob
+    ba8b2eb2… equal to the committed one. N-07 — IR-ML3-04 is the candidate's
+    own label (first used in finding 365) for the activation prerequisites
+    stated in runtime-lane.md; no 024 specification artefact defines it; the
+    document now says so. N-08 — a successor validator accepting an output
+    path is added for independent re-verification. N-09 — README header reworded.
+
+387. Author confirmation 2026-10-20 ("yes") of the finding-382 dispositions:
+    the two MEDIUM helper observations (ML-CAPA-381-F01/F02) are handled in
+    increment17 by the documented Python-side preconditions with owned controls,
+    and the native strengthening (close-specific grace deadline in
+    close_authority; ADVANCE requiring native watch proof) is deferred to the
+    next increment as a change-spec item with new frozen hashes and a fresh
+    independent review. This resolves the independent review's B-03 as to
+    attribution: the disposition is now author-confirmed; capa.md and README are
+    updated accordingly and the confirmation is bound in the run-l successor.
+    The helper bytes remain unchanged; no lane activation, M1, acceptance or
+    merge follows from this confirmation.
+
+388. Terminal read-only review of run l (pytest 564319, environment d, TMPDIR on
+    tmpfs, 2098 collected = j/k snapshot plus test_runtime_lane_admission.py,
+    test_affa_release_timeout_fence.py and the test_runtime_entry.py
+    ENVIRONMENT_DIGEST constant): returncode 0, 2409.12 s, **2097 passed,
+    1 skipped, 0 failed**, 24 subtests passed, frozen inputs unchanged. Receipt
+    286392d3…f08e; log abaef48b…695d; triage b343c7dd…47e3 (0 failures). The
+    skip is the lane admission control, which runs only under its own driver
+    (lane-admission-20261020b, 23/23 per phase). Third consecutive clean full
+    run on tmpfs (i, j, l); the nested child passed completely; probe 9631
+    samples, 0 spikes; GC 58, max 0.069 s; 11 durable-write stalls, none with a
+    spike. The fourth checkpoint commits the three test files at exactly the
+    bytes this run and lane driver b verified (c7804730…43ca, f33d4394…0570,
+    603361be…8e8e), resolving the independent review's B-01; the B-02/N-02/N-03
+    test changes follow under their own finding with lane driver c and run m
+    together with the authorized terminal-section extension. No acceptance, M1
+    or merge claim.

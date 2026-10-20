@@ -35,6 +35,10 @@ from .test_terminal_runtime import verify
 from .test_lazy_dispatcher import observe_original_operations as observe_original_operations
 
 
+# Bootstrap environment pin of the owned fixture; the lane admission control overrides it with the
+# verification-environment digest of the lane admission proposal (finding 382).
+ENVIRONMENT_DIGEST = pin(b'owned-environment')
+
 @pytest.fixture
 def runtime(environment,binaries,authority_binary,run_bootstrap_binary,tmp_path,monkeypatch,request):
     factory,_,_=environment;manager,_=factory(seconds=45,run_id='fixture-run')
@@ -80,7 +84,7 @@ def runtime(environment,binaries,authority_binary,run_bootstrap_binary,tmp_path,
     images=tuple(seal_helper_image(p,digest=pin(p.read_bytes()),argv0=sys.executable if p==Path(sys.executable).resolve() else str(p))
         for p in (binaries['launcher'],binaries['bound-gate'],Path(sys.executable).resolve(),authority_binary))
     supervisor=seal_helper_image(run_bootstrap_binary,digest=pin(run_bootstrap_binary.read_bytes()),argv0=str(run_bootstrap_binary))
-    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',pin(b'owned-environment'),
+    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',ENVIRONMENT_DIGEST,
         supervisor.digest,manager._admission.teardown_deadline,deadline(4.8),images[:3],images[3],manager._root_fd))
     launcher=OriginalBootstrapRegistry(1).reserve(boot,supervisor,manager)
     units=tuple(UnitAdmission(BoundaryDescriptor(config.run_id,u.unit_id,1,'work-'+str(i),0),(('MAESTRO_VISIBLE','declared'),),1)

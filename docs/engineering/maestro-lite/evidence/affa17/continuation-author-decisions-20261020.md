@@ -163,3 +163,19 @@ new modules; 2098 collected). Commits: evidence/docs of run k and the IR-ML3-04 
 third checkpoint now; tests and lane evidence as the fourth checkpoint after a clean run l.
 Pending author: extension of the per-unit budget to the terminal section's unit statements
 (finding 383 d); lane activation; M1; acceptance; merge.
+
+## Run l terminal (finding 388); review (386) and confirmation (387); fourth checkpoint
+
+Run l: **2097 passed/1 skipped/0 failed**, 2409 s, inputs unchanged (receipt 286392d3…, log
+abaef48b…, triage b343c7dd…; probe 0 spikes). Complete independent review record
+increment17-independent-review-20261020.json (e9f4dd64…): B-01/B-02/B-03 and N-01..N-09 recorded
+with dispositions in finding 386; author confirmed the finding-382 dispositions ("yes", finding
+387, record author-confirmation-382-20261020.json). CAPA successor
+`capa-20261020-run-l/register.json` 155f89b5aa9545dff4823301b21998e3dbc01b3ece733a7237058c39d4fd048c
+(49 records/385 bindings, parent run-k preserved). Fourth checkpoint commits the three test files
+at the run-l-verified bytes plus run-l evidence and docs. Then, under finding 389: apply the
+scripted test changes (B-02 F-01 discriminators, N-02 integer-nanosecond comparison, N-03
+docstring) and the author-authorized terminal-section extension (dispatcher.py failure/
+step-disposition/unit-disposition statements → per_unit_seconds, capped by work_end), targeted
+verification, lane driver c, full run m (driver m prepared; REPAIRED already lists dispatcher.py
+and test_schedule_worker.py), fifth checkpoint. Then the author's acceptance decision.

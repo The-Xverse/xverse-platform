@@ -731,3 +731,10 @@ statement, bounding finding379; extension proposed). Helper-bytes independent re
 non-activating lane admission proposal (finding382). CAPA successor capa-20261020-run-k
 7bac7f7c… (49/359). Next: lane admission driver, full run l, third checkpoint; author gates
 unchanged.
+
+2026-10-20 run l and review: run l2097 passed/1 skipped/0 failed (finding388). Complete
+independent review of the increment (finding386:30 pass/3 fail/5 notes; three blocking items,
+all addressed or scheduled). Author confirmed the finding-382 dispositions (finding387). CAPA
+successor capa-20261020-run-l155f89b5… (49/385). Fourth checkpoint commits the finding-384
+modules; then B-02/N-02/N-03 test changes, the terminal-section extension (383 d), lane driver c
+and run m. Acceptance, M1, lane activation and merge remain the author's.

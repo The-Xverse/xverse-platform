@@ -1,12 +1,17 @@
 # Maestro CAPA observations
 
-Latest successor: [reviewer shape](evidence/affa17/capa-20261019-reviewer-shape/register.json)
+Latest successor: [run k](evidence/affa17/capa-20261020-run-k/register.json)
+validates49 records/359 evidence bindings and preserves all343 run-j parent bindings (chain
+from the 2026-10-19 registers through harness-repairs, runs f–h, author-decisions and runs
+i–k; see the dated paragraphs at the end of this page). All effectiveness remains
+NOT_DEMONSTRATED; ten causes remain unknown; manual OBSERVE_ONLY. Full platform runs i and j
+(tmpfs) are clean; the ext4 reference run k records host-condition observations.
+
+Historical successor (2026-10-19): [reviewer shape](evidence/affa17/capa-20261019-reviewer-shape/register.json)
 validates40 records/216 evidence bindings and preserves all210 parent bindings.
 353 records a local review-tool assumption about a computed cleanup property;
 the corrected comparison uses the same nine original controls without native
-reexecution. All effectiveness remains NOT_DEMONSTRATED. The current complete
-Maestro source/wheel regression passes1501 per phase, without resolving historical
-timeout causes. The broader2080-test platform run is live with provisional failures.
+reexecution.
 
 Previous successor: [runtime disposal](evidence/affa17/capa-20261019-runtime-disposal/register.json)
 validates39 records/210 evidence bindings and preserves all198 parent bindings.
@@ -267,6 +272,17 @@ reference run k (2 failed/2094 passed; probe9 spikes, worst1.18s; outer expiry a
 unit-disposition statement in the terminal section) as a host-condition observation on222,357,
 359-CHILD,364,374 and379, binds the independent helper-bytes review, the lane admission proposal
 and the composed-case indexes, and adds ML-CAPA-381-F01 and ML-CAPA-381-F02 (independent review
-observations on run_authority.c, UNRESOLVED, author disposition recorded as documented Python-side
-preconditions with owned controls, finding382). Ten causes remain unknown; all effectiveness
+observations on run_authority.c, UNRESOLVED; disposition = documented Python-side preconditions with
+owned controls, proposed in finding382 and confirmed by the author in finding387; native strengthening
+deferred to the next increment). Ten causes remain unknown; all effectiveness
+NOT_DEMONSTRATED; manual OBSERVE_ONLY.
+
+The [run-l successor](evidence/affa17/capa-20261020-run-l/register.json) (155f89b5aa9545df…)
+validates49 records/385 bindings and preserves all359 run-k parent bindings. It adds run l
+(2097 passed/1 skipped/0 failed,0 expiries,0 probe spikes) as a prevention observation on222,
+357,359-CHILD,364,374 and379, binds the lane admission two-phase evidence, the F-01/F-02 control
+modules, the fixture constant, the complete independent review of the increment (finding386) and
+the author's confirmation of the finding-382 dispositions (finding387), and records on
+ML-CAPA-381-F01/F02 the author-confirmed documented-precondition correction with their owned
+controls passing in lane driver b and run l. Ten causes remain unknown; all effectiveness
 NOT_DEMONSTRATED; manual OBSERVE_ONLY.

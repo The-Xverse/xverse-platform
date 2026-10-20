@@ -65,3 +65,10 @@ not this page. Scratch iterations before integration are not evidence.
   kernel identity and both review digests through the product's own canonicalisation; it calls no
   admission function and keeps execution_approved false. Activating a bounded lane admission
   test, M1 admission and acceptance remain author decisions.
+
+Label note (independent review N-07, finding 386): "IR-ML3-04" is this candidate's own label,
+first used in finding 365, for the two activation prerequisites stated above; no artefact under
+specs/024-maestro-lite-lifecycle defines it. Evidence since: lane admission with real pins and
+the F-01 control verified in two phases (`evidence/affa17/lane-admission-20261020b/`, 23/23 per
+phase, finding 384); the lane remains not activated (execution not approved, blocking findings
+listed); the finding-382 dispositions were confirmed by the author (finding 387).

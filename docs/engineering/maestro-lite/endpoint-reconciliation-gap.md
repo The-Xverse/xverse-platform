@@ -1,8 +1,8 @@
 # Endpoint reconciliation gap (24/18/30/90 trace closure)
 
-Status: **gap record; agent-drafted proposal v1 (finding 371) independently reviewed by a separate
-agent session (finding 376: 32 agree, 20 agree with note, 1 alternative, 9 disagree); proposal v2
-adopts the ten corrections; author ruling on v2 pending; no obligation closed; no code change.**
+Status: **proposal v2 accepted by the author (finding 377) after the independent review (finding
+376); the 90 obligations are re-bound to current identities in evidence/affa17/endpoint-rebound-
+traceability-20261020.json; implementation not verified; no acceptance, M1 or merge; no code change.**
 2026-10-20.
 
 The ML3 successor change spec (`ML3-SUCCESSOR-CHANGE-SPEC-2026-10-03-v2`, 90 declared

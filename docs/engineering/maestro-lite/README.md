@@ -4,6 +4,22 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not ac
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Clean run l, complete independent review, author confirmations (2026-10-20)
+
+Run l (2098 collected: the lane admission and F-01 control modules plus a fixture constant) ends
+**2097 passed, 1 skipped, 0 failed** with frozen inputs unchanged and 0 probe spikes (finding
+388), the third clean tmpfs run. The separate complete independent review of the increment
+(`evidence/affa17/increment17-independent-review-20261020.{json,md}`, finding 386: 38 checks,
+30 pass, 3 fail, 5 notes) confirmed every quoted hash and count and raised three blocking items,
+all addressed: the fourth checkpoint commits the finding-384 modules at the verified bytes (B-01);
+the F-01 control gains the release-timeout discriminators under its own finding with lane driver c
+(B-02); the F-01/F-02 disposition is now author-confirmed (finding 387; B-03). Acceptance was not
+recommended by the reviewer before those items; it remains the author's explicit act after the
+next checkpoint. CAPA successor [capa-20261020-run-l](evidence/affa17/capa-20261020-run-l/register.json)
+validates 49 records/385 bindings preserving the run-k parent and binds the review and the
+confirmation. Next: B-02/N-02/N-03 test changes, the author-authorized terminal-section extension
+(finding 383 d), lane driver c and full run m. No acceptance, M1 claim, lane activation or merge.
+
 ## ext4 reference run k and IR-ML3-04 prerequisites (2026-10-20)
 
 Run k, the persistent-media reference run of disposition d, ends **2 failed, 2094 passed** on
@@ -16,11 +32,11 @@ acceptance failures. IR-ML3-04: the independent frozen review of the helper byte
 (six fence properties enforced, independent-watchdog partial, 0 HIGH, 2 MEDIUM; finding 381) and
 a non-activating [lane admission proposal](runtime-lane.md) carries real pins; the two MEDIUM
 observations are dispositioned as documented Python-side preconditions with owned controls
-(finding 382) and the native strengthening is queued for the next increment. CAPA successor
+(proposed in finding 382, confirmed by the author in finding 387; native strengthening next increment) and the native strengthening is queued for the next increment. CAPA successor
 [capa-20261020-run-k](evidence/affa17/capa-20261020-run-k/register.json) validates 49 records/359
 bindings preserving the run-j parent. No acceptance, M1 claim or merge.
 
-## Product change verified by clean run j; ext4 reference run k live (2026-10-20)
+## Product change exercised by clean run j, effectiveness NOT_DEMONSTRATED; ext4 reference run k (2026-10-20)
 
 The author-authorized product change (finding 377/379: the dispatcher's run-terminal statement
 takes `per_unit_seconds`, as teardown and cleanup already do, instead of the cadence-bound
