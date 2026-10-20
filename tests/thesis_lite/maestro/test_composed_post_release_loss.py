@@ -150,7 +150,11 @@ EXPECTED_RELEASE_BEFORE_SEND = {
 
 @pytest.mark.parametrize("fault", ["authority", "storage"])
 def test_release_before_send_loss(request, monkeypatch, sentinel, fault):
-    """Authority or storage loss exactly before the Release send: nothing released, nothing fabricated."""
+    """Authority or storage loss exactly before the Release send: at most one release, nothing fabricated.
+
+    Authority loss: nothing released. Storage loss: released at most once (an outcome with zero
+    releases also satisfies the bound); the started/outcome records stay absent either way.
+    """
     window = "release-before-send"
     expected = EXPECTED_RELEASE_BEFORE_SEND[(window, fault)]
     before = sentinel()

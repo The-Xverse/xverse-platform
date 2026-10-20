@@ -36,6 +36,7 @@ def _freeze_parent(root_fd, value):
 def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
     h, work = authority
     h.stage(0)
+    ticket_armed_ns = time.monotonic_ns()
     h.arm(0)
     descriptor = h.units[0]["descriptor"]
     root = h.manager._root_fd
@@ -48,9 +49,16 @@ def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
                             reply_epoch=reply.epoch, reply_seconds=round(time.monotonic() - began, 3),
                             marker_before_fence=(work / "u0.marker").exists(),
                             members_before_fence=list(h.manager.residual_membership(descriptor)))
+        # Release-timeout discriminators (independent review B-02): REJECTED with the PROTOCOL
+        # reason after the ticket window elapsed, no workload instruction yet, and the pre-exec
+        # child still a boundary member when the fence is applied.
+        ticket_seconds = (h.units[0]["ticket_end"] - ticket_armed_ns) / 1e9
+        assert reply.kind is K.REJECTED and reply.reason == 4, (reply.kind, reply.reason)
+        assert observations["reply_seconds"] >= ticket_seconds - 0.25, (observations["reply_seconds"], ticket_seconds)
+        assert not observations["marker_before_fence"]
+        assert observations["members_before_fence"], "pre-exec child was not a member before the fence"
         # Python-side precondition: a REJECTED/uncertain Release is cancellation; cleanup-only
         # authority terminates the boundary while nothing has thawed it yet.
-        assert reply.kind is K.REJECTED
         fenced = h.manager.force_cleanup(descriptor)
         observations.update(boundary_released=fenced.boundary_released, termination_observed=fenced.termination_observed,
                             fenced_at=time.monotonic())
@@ -64,7 +72,7 @@ def test_release_timeout_under_frozen_ancestor_is_fenced_before_thaw(authority):
         target = Path(output)
         target.mkdir(parents=True, exist_ok=True)
         (target / ("release-timeout-fence-" + Path(work).name + ".json")).write_text(json.dumps(dict(
-            observations=observations, source_sha256=SOURCE_SHA256, helper_finding="F-01", helper_bytes_changed=False,
+            observations=dict(observations, ticket_seconds=round(ticket_seconds, 3)), source_sha256=SOURCE_SHA256, helper_finding="F-01", helper_bytes_changed=False,
             precondition="REJECTED release -> cleanup-only termination before any thaw", accepted=False), indent=2))
     assert fenced.boundary_released and fenced.termination_observed
     assert not (work / "u0.marker").exists(), "workload instruction reached the child after a REJECTED release"

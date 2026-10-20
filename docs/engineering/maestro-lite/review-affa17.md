@@ -4884,3 +4884,66 @@ independent full-candidate review or acceptance. Full selected M1 is still open.
     test changes follow under their own finding with lane driver c and run m
     together with the authorized terminal-section extension. No acceptance, M1
     or merge claim.
+
+389. Changes after the fourth checkpoint 12ef86553, recorded before application:
+    (a) independent review B-02: test_affa_release_timeout_fence.py asserts the
+    release-timeout discriminators — REJECTED with reason 4, elapsed at least
+    the armed ticket window minus 0.25 s, a non-empty pre-fence membership and
+    no marker before the fence — in addition to the fence outcome; (b) N-02:
+    test_schedule_worker.py compares the retained lease with the request at
+    integer-nanosecond resolution instead of a 1e-9 s float tolerance; (c) N-03:
+    the before-Release-send control's docstring states the at-most-once bound
+    for the storage row; (d) the author-authorized extension of finding 383(d)
+    (permission of finding 385): the terminal section's failure diagnostic,
+    step-disposition and unit-disposition statements in dispatcher.py take
+    min(work_end, now + per_unit_seconds) like run-terminal; the admission
+    reserve formula is unchanged (N-01 statement in finding 386 applies: the
+    window is never extended, it can be consumed earlier under stall, every
+    statement stays capped by work_end). Verification order: targeted
+    source-phase run of the changed modules plus the transitive, dispatcher and
+    crash-point modules; lane driver c (two phases) for the F-01 control; full
+    run m (2098 collected; REPAIRED already names dispatcher.py and
+    test_schedule_worker.py). No helper byte changes; no acceptance, M1, lane
+    activation or merge claim.
+
+390. Terminal read-only review of run m (pytest 1081263, environment d, TMPDIR on
+    tmpfs, 2098 collected; snapshot = checkpoint 12ef86553 plus the finding-389
+    changes: terminal-section budget extension in dispatcher.py, F-01
+    discriminators, integer-nanosecond lease comparison, at-most-once
+    docstring): returncode 0, 2409.42 s, **2097 passed, 1 skipped, 0 failed**,
+    24 subtests passed, frozen inputs unchanged. Receipt d1f1ca5e…feb3; log
+    3bc8d8d7…054c; triage e4118fa6…8c06 (0 failures). Fourth consecutive clean
+    tmpfs full run (i, j, l, m); nested child passed completely; probe 9631
+    samples, 0 spikes; GC 58, max 0.061 s; 7 durable-write stalls, none with a
+    spike. The extension is therefore exercised by one clean full run on tmpfs;
+    its target class (persistent-media overrun of a terminal-section unit
+    statement) can only be observed in a later ext4 reference run, so
+    ML-CAPA-389 stays FIX_CANDIDATE with effectiveness NOT_DEMONSTRATED. The
+    fifth checkpoint commits this snapshot with run m, lane driver c and the
+    CAPA successor. This closes the engineering items raised by the complete
+    independent review (B-01 checkpoint 12ef86553; B-02 lane driver c and run
+    m; B-03 finding 387) and the finding-383(d) extension; the author's
+    acceptance decision, lane activation, M1 and the main merge remain open.
+
+391. CAPA validator defect found and resolved while validating the run-m
+    successor (register ae11e2848c23d7839be5aa40d2724e64450d94fc4ee3cd8b52cbe67def0af3d7,
+    50 records/403 bindings; parent run-l 49/385 preserved by the preservation
+    checker). (a) Defect: file-kind evidence bindings point at mutable source
+    paths; earlier successors bound the live bytes of test_schedule_worker.py
+    (run i), test_composed_post_release_loss.py (crash-matrix b), dispatcher.py
+    (finding 379) and test_affa_release_timeout_fence.py (finding 384), and
+    finding 389 changed all four, so verify-capa-register rejected the first of
+    them (E-HARNESS-I-SCHEDULE-WORKER-TEST). The recorded hashes are not wrong:
+    each identifies the exact bytes that the cited run exercised. (b) Resolution
+    without touching any register: verify-capa-register-20261020.py now
+    accepts a file binding whose live bytes differ only if a committed
+    checkpoint blob of that path has the recorded SHA-256 (git history, newest
+    first) and reports those bindings as historical_file_bindings in its
+    recheck output; a binding with no such blob still fails. For run m: the
+    four bindings resolve to checkpoints 1e081a1ba, 1e081a1ba, 36e6bf132 and
+    12ef86553 respectively. (c) Consequence recorded: evidence bound to live
+    paths is only as durable as the checkpoint discipline that keeps every
+    exercised byte committed; the four checkpoints of this increment satisfy
+    it. The 2026-10-19 validator is retained unchanged as the historical
+    verifier; validators 20261019 and 20261020 agree on every register up to
+    run l. No register, product or test change.

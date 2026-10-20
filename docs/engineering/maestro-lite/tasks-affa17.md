@@ -738,3 +738,11 @@ all addressed or scheduled). Author confirmed the finding-382 dispositions (find
 successor capa-20261020-run-l155f89b5… (49/385). Fourth checkpoint commits the finding-384
 modules; then B-02/N-02/N-03 test changes, the terminal-section extension (383 d), lane driver c
 and run m. Acceptance, M1, lane activation and merge remain the author's.
+
+2026-10-20 run m: finding389 changes (terminal-section extension, F-01 discriminators,
+integer-nanosecond comparison, docstring) verified by lane driver c (23/23 per phase) and full
+run m (2097 passed/1 skipped/0 failed, finding390). Validator defect on mutable-path file
+bindings resolved (finding391). CAPA successor capa-20261020-run-m ae11e284… (50/403). Fifth
+checkpoint. All engineering items of the complete independent review closed. Author decisions:
+acceptance of increment17, lane activation, M1, main merge; next increment: native helper
+strengthening. No scientific claim.

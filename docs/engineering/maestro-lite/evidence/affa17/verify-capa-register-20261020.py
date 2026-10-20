@@ -28,10 +28,26 @@ for row in data['records']:
     plan=data['action_plans'][row['capa_id']]
     assert plan['effectiveness']['status']=='NOT_DEMONSTRATED' and not plan['effectiveness']['independent_confirmation']
     for stage in ('correction','prevention'):assert set(plan[stage]['evidence_refs'])<=data['evidence'].keys()
+import subprocess
+historical={}
+def committed_blob_matches(path,expected):
+    # Finding 391: a file binding to a mutable source path must still verify once the file has changed;
+    # the recorded SHA-256 is checked against the committed checkpoint blobs of that path (newest first).
+    for commit in subprocess.check_output(['git','rev-list','HEAD','--',path],cwd=candidate,text=True).split():
+        try:blob=subprocess.check_output(['git','show',commit+':'+path],cwd=candidate)
+        except subprocess.CalledProcessError:continue
+        if hashlib.sha256(blob).hexdigest()==expected:return commit
+    return None
 for key,item in data['evidence'].items():
     source=candidate/item['path']
     assert source.is_file() and not source.is_symlink()
-    if item['kind']=='file':digest=sha(source)
+    if item['kind']=='file':
+        digest=sha(source)
+        if digest!=item['sha256']:
+            commit=committed_blob_matches(item['path'],item['sha256'])
+            assert commit,key
+            historical[key]=dict(path=item['path'],sha256=item['sha256'],committed_in=commit)
+            digest=item['sha256']
     else:
         assert item['kind']=='review_span'
         text=source.read_text();span=text[text.index('\n'+item['start'])+1:text.index('\n'+item['end'])]
@@ -44,7 +60,7 @@ result=dict(command=sys.argv,python=sys.version,platform=platform.platform(),jso
     verifier_sha256=sha(Path(__file__)),register_sha256=sha(folder/'register.json'),records_validated=len(ids),
     evidence_bindings_verified=len(data['evidence']),states={r['capa_id']:r['state'] for r in data['records']},
     independent_cause_confirmation=False,effectiveness_demonstrated=False,automatic_workflow_implemented=False,
-    full_increment17_complete=False,accepted=False,merged=False)
+    full_increment17_complete=False,accepted=False,merged=False,historical_file_bindings=historical)
 output=Path(sys.argv[2]) if len(sys.argv)>2 else folder/'verification-recheck.json'  # N-08: independent re-verification writes elsewhere
 with output.open('x') as stream:json.dump(result,stream,indent=2);stream.write('\n')
 print(json.dumps(result))

@@ -179,3 +179,28 @@ docstring) and the author-authorized terminal-section extension (dispatcher.py f
 step-disposition/unit-disposition statements → per_unit_seconds, capped by work_end), targeted
 verification, lane driver c, full run m (driver m prepared; REPAIRED already lists dispatcher.py
 and test_schedule_worker.py), fifth checkpoint. Then the author's acceptance decision.
+
+## Finding 389 applied; run m LIVE
+
+Fourth checkpoint 12ef86553 committed (test modules at the run-l bytes). Then, under finding
+389: B-02 F-01 discriminators, N-02 integer-nanosecond comparison, N-03 docstring, and the
+terminal-section extension (dispatcher.py failure/step-disposition/unit-disposition →
+per_unit_seconds, capped by work_end). Lane driver c: 23/23 per phase (receipt 893d66a7…;
+F-01 asserts REJECTED reason 4, 2.0 s elapsed, member present). Targeted verification: 70 passed
+over eight modules. **Run m LIVE**: driver verify-platform-regression-20261020m.py, driver PID
+1078151, pytest PID 1081263, 2098 collected. Then: triage, finding 390, CAPA successor
+(build-capa-20261020-run-m.py, adds ML-CAPA-389), docs, fifth checkpoint, final hand-off and the
+author's acceptance decision.
+
+## Run m terminal (finding 390); validator fix (finding 391); fifth checkpoint; hand-off state
+
+Run m: **2097 passed/1 skipped/0 failed**, 2409 s, inputs unchanged (receipt d1f1ca5e…, log
+3bc8d8d7…, triage e4118fa6…; probe 0 spikes). CAPA successor `capa-20261020-run-m/register.json`
+ae11e2848c23d7839be5aa40d2724e64450d94fc4ee3cd8b52cbe67def0af3d7 (50 records/403 bindings,
+parent run-l preserved; adds ML-CAPA-389). Validator successor verify-capa-register-20261020.py
+(committed-blob fallback for changed live-path bindings, finding 391). Fifth checkpoint commits
+the run-m snapshot. No run is live. Engineering items of the complete independent review are
+closed. Open, the author's: acceptance of increment17; lane activation (not possible while
+blocking findings are listed); M1; main merge; next-increment native helper strengthening
+(F-01/F-02, change-spec item). Owed in a later increment: a persistent-media reference run to
+observe ML-CAPA-389's target class.

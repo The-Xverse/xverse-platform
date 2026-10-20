@@ -1353,7 +1353,9 @@ class FiniteDispatcher(_Original):
                             self.owner.session,
                             min(
                                 self._work_end,
-                                time.monotonic() + self.plan.operation_seconds,
+                                # Terminal-section statement: per-unit budget like run-terminal,
+                                # capped by the admitted work window (finding 386).
+                                time.monotonic() + self.plan.per_unit_seconds,
                             ),
                         ),
                         unit=unit,
@@ -1412,7 +1414,9 @@ class FiniteDispatcher(_Original):
                             self.owner.session,
                             min(
                                 self._work_end,
-                                time.monotonic() + self.plan.operation_seconds,
+                                # Terminal-section statement: per-unit budget like run-terminal,
+                                # capped by the admitted work window (finding 386).
+                                time.monotonic() + self.plan.per_unit_seconds,
                             ),
                         ),
                         step=step.step_id,
@@ -1444,7 +1448,9 @@ class FiniteDispatcher(_Original):
                             self.owner.session,
                             min(
                                 self._work_end,
-                                time.monotonic() + self.plan.operation_seconds,
+                                # Terminal-section statement: per-unit budget like run-terminal,
+                                # capped by the admitted work window (finding 386).
+                                time.monotonic() + self.plan.per_unit_seconds,
                             ),
                         ),
                         unit=unit.unit_id,

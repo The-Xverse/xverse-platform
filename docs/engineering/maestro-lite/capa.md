@@ -1,10 +1,10 @@
 # Maestro CAPA observations
 
-Latest successor: [run k](evidence/affa17/capa-20261020-run-k/register.json)
-validates49 records/359 evidence bindings and preserves all343 run-j parent bindings (chain
+Latest successor: [run m](evidence/affa17/capa-20261020-run-m/register.json)
+validates50 records/403 evidence bindings and preserves all385 run-l parent bindings (chain
 from the 2026-10-19 registers through harness-repairs, runs f–h, author-decisions and runs
-i–k; see the dated paragraphs at the end of this page). All effectiveness remains
-NOT_DEMONSTRATED; ten causes remain unknown; manual OBSERVE_ONLY. Full platform runs i and j
+i–m; see the dated paragraphs at the end of this page). All effectiveness remains
+NOT_DEMONSTRATED; ten causes remain unknown; manual OBSERVE_ONLY. Full platform runs i, j, l and m
 (tmpfs) are clean; the ext4 reference run k records host-condition observations.
 
 Historical successor (2026-10-19): [reviewer shape](evidence/affa17/capa-20261019-reviewer-shape/register.json)
@@ -286,3 +286,14 @@ the author's confirmation of the finding-382 dispositions (finding387), and reco
 ML-CAPA-381-F01/F02 the author-confirmed documented-precondition correction with their owned
 controls passing in lane driver b and run l. Ten causes remain unknown; all effectiveness
 NOT_DEMONSTRATED; manual OBSERVE_ONLY.
+
+The [run-m successor](evidence/affa17/capa-20261020-run-m/register.json) (ae11e2848c23d783…)
+validates50 records/403 bindings and preserves all385 run-l parent bindings. It adds
+ML-CAPA-389 (terminal-section unit statements at the operation budget; correction = the
+author-authorized extension of finding389 with dispatcher.py bound; prevention = run m,2097
+passed/1 skipped/0 failed; cause HYPOTHESIS; effectiveness NOT_DEMONSTRATED, the persistent-media
+class observable only in a later ext4 reference run), binds lane driver c and the three changed
+test modules, and adds run m to222,357,359-CHILD,364,374,379 and381-F01. Finding391: four
+earlier file bindings now verify against committed checkpoint blobs (validator
+verify-capa-register-20261020.py, historical_file_bindings); no register changed. Ten causes
+remain unknown; manual OBSERVE_ONLY. Latest successor line at the top of this page: run m.

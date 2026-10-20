@@ -4,6 +4,26 @@ Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not ac
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
 
+## Run m closes the review items; increment17 ready for the author's acceptance decision (2026-10-20)
+
+Run m (2098 collected; snapshot = checkpoint 12ef86553 plus finding 389: the author-authorized
+terminal-section budget extension in dispatcher.py, the F-01 discriminators, the
+integer-nanosecond lease comparison and the at-most-once docstring) ends **2097 passed,
+1 skipped, 0 failed** with frozen inputs unchanged and 0 probe spikes (finding 390), the fourth
+consecutive clean tmpfs run; lane driver c passes 23/23 per phase with the strengthened F-01
+control. Every engineering item raised by the complete independent review (finding 386) is now
+closed: B-01 by checkpoint 12ef86553, B-02 by lane driver c and run m, B-03 by the author's
+confirmation (finding 387); the nine notes are recorded or applied. CAPA successor
+[capa-20261020-run-m](evidence/affa17/capa-20261020-run-m/register.json) validates 50 records/403
+bindings preserving the run-l parent and adds ML-CAPA-389 (FIX_CANDIDATE, one tmpfs run; the
+persistent-media class is observable only in a later ext4 reference run). Finding 391 records a
+validator defect (file bindings to mutable source paths) resolved by a committed-blob fallback
+in verify-capa-register-20261020.py without touching any register. Fifth checkpoint commits
+this snapshot. Open and the author's: acceptance of increment17, lane activation (blocked by the
+listed findings by the product's own readiness check), M1, the main merge, and the next-increment
+native strengthening of the helpers (F-01/F-02). Ten CAPA causes remain unknown; all
+effectiveness NOT_DEMONSTRATED; no scientific claim.
+
 ## Clean run l, complete independent review, author confirmations (2026-10-20)
 
 Run l (2098 collected: the lane admission and F-01 control modules plus a fixture constant) ends
