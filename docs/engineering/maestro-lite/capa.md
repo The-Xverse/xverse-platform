@@ -1,7 +1,8 @@
 # Maestro CAPA observations
 
-Latest successor: [run m](evidence/affa17/capa-20261020-run-m/register.json)
-validates50 records/403 evidence bindings and preserves all385 run-l parent bindings (chain
+Latest successor: [acceptance](evidence/affa17/capa-20261020-acceptance/register.json)
+validates50 records/408 evidence bindings and preserves all403 run-m parent bindings; it binds the
+author's acceptance of increment17 (finding392) without changing any record state (chain
 from the 2026-10-19 registers through harness-repairs, runs f–h, author-decisions and runs
 i–m; see the dated paragraphs at the end of this page). All effectiveness remains
 NOT_DEMONSTRATED; ten causes remain unknown; manual OBSERVE_ONLY. Full platform runs i, j, l and m
@@ -297,3 +298,10 @@ test modules, and adds run m to222,357,359-CHILD,364,374,379 and381-F01. Finding
 earlier file bindings now verify against committed checkpoint blobs (validator
 verify-capa-register-20261020.py, historical_file_bindings); no register changed. Ten causes
 remain unknown; manual OBSERVE_ONLY. Latest successor line at the top of this page: run m.
+
+The [acceptance successor](evidence/affa17/capa-20261020-acceptance/register.json) (6931d9cbd7bdd80a…)
+validates50 records/408 bindings and preserves all403 run-m parent bindings. It binds the author's
+acceptance of increment17 (finding392, author-acceptance-increment17-20261020.json), sets the
+register's accepted flag with an increment17_acceptance block naming the carried-open items (ten
+unknown causes, effectiveness NOT_DEMONSTRATED everywhere) and leaves merged and
+full_increment17_complete false. No record state, cause or effectiveness changes.

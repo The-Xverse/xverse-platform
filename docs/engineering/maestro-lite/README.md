@@ -1,8 +1,23 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **implementation candidate; U1/U6 plus partial U2/U3/U4/U5/U7/U8; not accepted; no runtime admission**.
+Status: **increment17 accepted by the author as an engineering increment (2026-10-20, finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Increment17 accepted (2026-10-20, finding 392)
+
+The author accepted increment17 as an engineering increment on the basis of four clean tmpfs
+full runs (i, j, l, m), the ext4 reference run k, the complete independent review with all
+blocking items closed, and the CAPA chain. The acceptance carries open, explicitly: ten CAPA
+records with unknown cause, effectiveness NOT_DEMONSTRATED for every record, ML-CAPA-389's
+persistent-media class unobserved since the change, the helper observations F-01/F-02 under
+documented preconditions (native strengthening in increment18), and the tmpfs harness as a
+declared fidelity choice. It does not cover lane activation, M1, the main merge, the remaining
+024 scope, factory runs or any scientific claim. Record:
+[author-acceptance-increment17-20261020.json](evidence/affa17/author-acceptance-increment17-20261020.json);
+CAPA successor [capa-20261020-acceptance](evidence/affa17/capa-20261020-acceptance/register.json)
+(50 records/408 bindings, run-m parent preserved). The candidate branch is backed up on origin as a
+branch; the main merge is a separate author decision.
 
 ## Run m closes the review items; increment17 ready for the author's acceptance decision (2026-10-20)
 

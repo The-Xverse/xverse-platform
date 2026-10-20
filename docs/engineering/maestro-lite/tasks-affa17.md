@@ -746,3 +746,9 @@ bindings resolved (finding391). CAPA successor capa-20261020-run-m ae11e284… (
 checkpoint. All engineering items of the complete independent review closed. Author decisions:
 acceptance of increment17, lane activation, M1, main merge; next increment: native helper
 strengthening. No scientific claim.
+
+2026-10-20 acceptance: the author accepted increment17 as an engineering increment (finding392,
+author-acceptance-increment17-20261020.json) with ten unknown causes and NOT_DEMONSTRATED
+effectiveness carried open; CAPA successor capa-20261020-acceptance6931d9cb… (50/408). Not
+covered: lane activation, M1, main merge, remaining 024 scope. Increment18: native helper
+strengthening (F-01/F-02), persistent-media reference run, readiness re-examination.

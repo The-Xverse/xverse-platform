@@ -204,3 +204,15 @@ closed. Open, the author's: acceptance of increment17; lane activation (not poss
 blocking findings are listed); M1; main merge; next-increment native helper strengthening
 (F-01/F-02, change-spec item). Owed in a later increment: a persistent-media reference run to
 observe ML-CAPA-389's target class.
+
+## Increment17 accepted (finding 392)
+
+Author: "I agree go" to the recommendation. Acceptance record author-acceptance-increment17-20261020.json;
+CAPA successor `capa-20261020-acceptance/register.json`
+6931d9cbd7bdd80a86d8a666ea43fcb7b95e2628ba7b49c7de2b87cd5152e779 (50 records/408 bindings, parent
+run-m preserved; accepted true, merged false). Sixth checkpoint commits these documents; the
+candidate branch is pushed to origin (The-Xverse/xverse-platform) as a backup branch, no merge,
+no pull request. Open: the main merge (separate author decision); increment18 plan: (1) native
+helper strengthening for F-01/F-02 under a change-spec with new frozen hashes and a fresh
+independent review, (2) persistent-media reference run on the extended terminal budget, (3)
+readiness re-examination for lane activation.

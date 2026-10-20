@@ -486,3 +486,14 @@ Affected: engineering/successors/ML-SOURCE-PARENT-2026-10-20-v3, candidate
 endpoint-reconciliation-gap.md, CAPA successor capa-20261020-author-decisions.
 No implementation, execution, M1, acceptance, merge or scientific result follows;
 do not insert automatically.
+
+Additional proposed context (2026-10-20), pending author approval, status AUTHOR-ACCEPTED
+ENGINEERING INCREMENT / NOT MERGED / NO M1: the author accepted Maestro Lite increment17 as an
+engineering increment on the basis of four clean full platform runs on a declared tmpfs harness,
+an ext4 reference run with host-condition observations, a complete independent review with its
+blocking items closed, and a parent-preserving CAPA chain (capa-20261020-acceptance). Ten CAPA
+records keep an unknown cause and no corrective action has demonstrated effectiveness. Lane
+activation, M1 admission, the main merge and the remaining 024 scope stay open; no
+experimental parameter, protocol threshold or scientific result changes. Affected artefacts:
+candidate review-affa17.md findings 357-392, capa.md, README.md and thesis
+specs/024-maestro-lite-lifecycle/tasks.md. Do not insert automatically.

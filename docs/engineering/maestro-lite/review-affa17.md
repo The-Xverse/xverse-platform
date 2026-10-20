@@ -4947,3 +4947,25 @@ independent full-candidate review or acceptance. Full selected M1 is still open.
     it. The 2026-10-19 validator is retained unchanged as the historical
     verifier; validators 20261019 and 20261020 agree on every register up to
     run l. No register, product or test change.
+
+392. Author acceptance of increment17, 2026-10-20 ("I agree go", to the
+    recommendation to accept now with stated terms and to keep the lane and M1
+    closed). Recorded terms, which bound every later citation of this
+    acceptance: (a) scope: the Maestro Lite increment17 candidate as committed
+    in checkpoints 1e081a1b, 36e6bf13, b0363332, 12ef8655 and 40d8440e on
+    candidate/maestro-lite-affa17-20261018, accepted as an engineering
+    increment; (b) basis: four clean full platform runs on the declared tmpfs
+    harness (i, j, l, m), the ext4 reference run k with its host-condition
+    observations, the complete independent review (finding 386) with all
+    blocking items closed, and the CAPA chain through capa-20261020-run-m;
+    (c) carried open: ten CAPA records with unknown cause (135, 286, 287, 318,
+    324, 330, 331, 332, 337, 359), effectiveness NOT_DEMONSTRATED for every
+    record, ML-CAPA-389's persistent-media class unobserved since the change,
+    the two helper observations F-01/F-02 handled by documented preconditions
+    with the native strengthening deferred to increment18, and the tmpfs
+    harness as a declared fidelity choice; (d) not covered: lane activation,
+    M1 admission, the main merge, the remaining 024 scope (the seven P3 tasks
+    and full M1), factory runs and any scientific claim. The main merge into
+    /home/jefferson/xverse-platform remains a separate author decision. Under
+    the same instruction the candidate branch is pushed to origin as a backup
+    branch (no merge, no pull request).
