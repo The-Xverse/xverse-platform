@@ -1,0 +1,28 @@
+{
+  "mode": "closed",
+  "command": [
+    "cc",
+    "-DRUN_BOOTSTRAP",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "/dev/shm/maestro-platform-20261020r-private-caommxf7/test_actual_nonopen_writer_clo1/owned-report-fault-helper/bootstrap.c",
+    "-lcrypto",
+    "-o",
+    "/dev/shm/maestro-platform-20261020r-private-caommxf7/test_actual_nonopen_writer_clo1/owned-report-fault-helper/run-bootstrap"
+  ],
+  "returncode": 0,
+  "original_native_source_sha256": "c1f2885db167852b93d207b1051421e44610efa2f88bfe45309f4a944e8dfe05",
+  "fixed_fault_code": "import os\nfrom xverse.argus.writer import EvidenceRun\nfrom xverse.maestro import persistence_worker\noriginal=EvidenceRun.record_artifact\nhit=False\ndef report_index(self,path,*args,**kwargs):\n    global hit\n    if path!='lifecycle-coverage.json':return original(self,path,*args,**kwargs)\n    if hit:raise AssertionError('owned report fault replay')\n    hit=True\n    if 'closed'=='failed':\n        self.abort(reason='Owned report-index fault: actual writer failed before close')\n    else:\n        original(self,path,*args,**kwargs)\n        self.finalize()\n    raise OSError('owned lost report index acknowledgement after public closure')\nEvidenceRun.record_artifact=report_index\nos._exit(persistence_worker.main())\n",
+  "fixed_fault_code_sha256": "4fee6faebb5e09744c897a47e23216e4277f72507118d517a5876bba1b2ee3b6",
+  "compiled_source_sha256": "727ba9b30ec0da95043b9ba974081b541eb6bce1b2bdbc4f166b6f7ae83c2ce3",
+  "binary_sha256": "c62208036c44567961a67f25c497697782cf37ecf6a3ad5d93b9b98cfeb7c44d",
+  "original_fixture": "/dev/shm/maestro-platform-20261020r-private-caommxf7/test_actual_nonopen_writer_clo1",
+  "source_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+  "production_fault_mode_added": false,
+  "admission_precedes_birth": true
+}

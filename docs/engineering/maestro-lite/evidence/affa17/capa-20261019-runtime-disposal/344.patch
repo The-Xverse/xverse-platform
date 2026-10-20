@@ -1,0 +1,115 @@
+--- before/src/xverse/maestro/run_broker.py
++++ after/src/xverse/maestro/run_broker.py
+@@ -353,6 +353,13 @@
+                 owner,
+             )
+             value._pins = session, storage, connection, owner, tuple(images)
++            value._disposal = value._disposal_pin = (
++                value._pins,
++                threading.Lock(),
++                [fd for image in images
++                 for fd in (image.image_fd, image.cwd_fd, image.recipe_fd)],
++                [],
++            )
+             value._lock = threading.Lock()
+             value._cancel_result = None
+             value._issuers = {}
+@@ -913,12 +920,31 @@
+         return result
+ 
+     def dispose(self):
+-        self._holder()
+-        if self.connection.child._result is None:
+-            raise OwnerError("ML-RUN-RETAINED")
+-        for image in self._pins[4]:
+-            for fd in (image.image_fd, image.cwd_fd, image.recipe_fd):
+-                os.close(fd)
++        # Matching replay cannot require transports already closed by the launcher.
++        super()._holder()
++        if self._disposal is not self._disposal_pin or self._disposal[0] is not self._pins:
++            raise OwnerError("ML-RUN-REPLACED")
++        pins, lock, pending, failures = self._disposal
++        if not lock.acquire(False):
++            raise OwnerError("ML-RUN-DISPOSE-CONFLICT")
++        try:
++            if failures:
++                raise OwnerError("ML-RUN-DISPOSE-UNRESOLVED") from failures[0]
++            if not pending:
++                return
++            self._cleanup_context()
++            if pins[2].child._result is None:
++                raise OwnerError("ML-RUN-RETAINED")
++            while pending:
++                fd = pending.pop()  # consume before close, including ambiguous errors
++                try:
++                    os.close(fd)
++                except OSError as error:
++                    failures.append(error)
++            if failures:
++                raise OwnerError("ML-RUN-DISPOSE-UNRESOLVED") from failures[0]
++        finally:
++            lock.release()
+ 
+ 
+ class RunUnitIssuer(_Original):
+--- before/tests/thesis_lite/maestro/test_runtime_disposal.py
++++ after/tests/thesis_lite/maestro/test_runtime_disposal.py
+@@ -18,7 +18,7 @@
+ from .test_run_bootstrap import run_bootstrap_binary as run_bootstrap_binary
+ 
+ 
+-@pytest.mark.parametrize('case', ['late-root-wait', 'broker-repeat', 'entry-retry'])
++@pytest.mark.parametrize('case', ['late-root-wait', 'broker-repeat', 'entry-retry', 'broker-close-error'])
+ def test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor(runtime,request,monkeypatch,case):
+     entry,scope,work=runtime
+     owner=entry._pins[1]
+@@ -26,7 +26,8 @@
+     original_wait=persistence_module.wait_child
+     real_dispose=AuthorityConnection.dispose
+     state=dict(mask=case=='late-root-wait',guard=False,canary=None,
+-        closed_images=set(),targets=(),reject_once=case=='entry-retry')
++        closed_images=set(),targets=(),reject_once=case=='entry-retry',
++        close_error_once=case=='broker-close-error')
+     facts=dict(case=case,original_fixture=str(work.parent),full_M1_complete=False,
+         actual_M1_admissions=0,full_runtime_case_complete=False,
+         hidden_client_wait_observations=0,live_disposal_rejected=False,
+@@ -52,6 +53,10 @@
+         result=real_close(fd)
+         if fd in state['targets']:
+             state['closed_images'].add(fd)
++            if state['close_error_once']:
++                state['close_error_once']=False
++                facts['injected_close_error_after_actual_close']=True
++                raise OSError(errno.EINTR,'owned ambiguous close result after actual close')
+         return result
+ 
+     def authority_dispose(connection):
+@@ -133,6 +138,10 @@
+             with pytest.raises(OwnerError,match='ML-TEST-DISPOSE-REJECTED'):
+                 entry.dispose()
+             assert not entry._disposed
++        elif case=='broker-close-error':
++            with pytest.raises(OwnerError,match='ML-RUN-DISPOSE-UNRESOLVED'):
++                broker.dispose()
++            assert state['closed_images']==set(state['targets'])
+         if case!='late-root-wait':
+             released=[]
+             for fd in state['targets']:
+@@ -152,6 +161,17 @@
+             facts['reused_released_broker_fd']=canary in released
+             state['guard']=True
+         try:
++            if case=='broker-close-error':
++                with pytest.raises(OwnerError,match='ML-RUN-DISPOSE-UNRESOLVED'):
++                    broker.dispose()
++                with pytest.raises(OwnerError,match='ML-RUN-DISPOSE-UNRESOLVED'):
++                    entry.dispose()
++                assert not entry._disposed and not facts['protected_close_attempts']
++                assert os.pread(state['canary'],5,0)==b'KEEP\n'
++                assert storage._drained is old_drain and entry._result is result
++                facts.update(close_uncertainty_retained=True,canary_untouched=True,
++                    earlier_drain_unchanged=True,original_result_unchanged=True)
++                return
+             if case=='broker-repeat':broker.dispose()
+             entry.dispose()
+         except Exception as error:

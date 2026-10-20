@@ -1,0 +1,138 @@
+.....FE..                                                                [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_original_registry_whole_run_replay_and_retained_collection _
+
+environment = (<function environment.<locals>.factory at 0x7ab08a0405e0>, <function environment.<locals>.spawn at 0x7ab08a040680>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/c...stro-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/test_original_registry_whole_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ab08a282450>
+request = <SubRequest 'runtime' for <Function test_original_registry_whole_run_replay_and_retained_collection>>
+
+    @pytest.fixture
+    def runtime(environment,binaries,authority_binary,run_bootstrap_binary,tmp_path,monkeypatch,request):
+        factory,_,_=environment;manager,_=factory(seconds=45,run_id='fixture-run')
+        controller_recovery=getattr(request,'param',None)=='recovery'
+        original_docs=test_launcher.documents
+        def documents():
+            data=original_docs();scenario=data['scenario.json']['spec'];template=scenario['steps'][0]
+            scenario['steps']=[]
+            for name,unit,phase,tick,deps in [
+                ('prepare-source','source','prepare',0,[]),('prepare-sink','sink','prepare',0,[]),
+                ('start-source','source','start',0,['prepare-source']),('start-sink','sink','start',0,['prepare-sink','start-source']),
+                ('observe-source','source','observe',1,['start-source']),('observe-sink','sink','observe',1,['start-sink']),
+                ('stop-sink','sink','stop',2,['observe-sink']),('cleanup-sink','sink','cleanup',2,['stop-sink']),
+                ('stop-source','source','stop',3,['observe-source']),('cleanup-source','source','cleanup',3,['stop-source'])]:
+                step=copy.deepcopy(template);step['id']=name;step['targetRef']['element']=unit+'-instance'
+                step['actionKind']='validate' if phase=='prepare' else phase;step['action']['operation']=step['actionKind']
+                step['schedule']['at']=tick;ext=step['extensions']['io.xverse.experiment']
+                ext['target']['element']=name;ext['phase']=phase;ext['dependsOn']=deps;scenario['steps'].append(step)
+            return data
+        monkeypatch.setattr(test_launcher,'documents',documents)
+        prepare=test_launcher.prepare_lifecycle
+        monkeypatch.setattr(test_launcher,'prepare_lifecycle',lambda *a,**kw:prepare(*a,limits=Limits(horizon_ticks=3),**kw))
+        encode=test_launcher.encode_configuration
+        def configuration(prepared,result,resources,**kw):
+            import time
+            schedule=admit_schedule(prepared,policies=tuple(ProbePolicy(u.unit_id,5,5,.5) for u in prepared.units),
+                ticks=(0,1,2,3),active_seconds=20 if controller_recovery else 4.8,operation_seconds=.5,per_unit_seconds=1,poll_seconds=.05,
+                request_limit=1024,service_operation_count=4,recovery_operation_seconds=3 if controller_recovery else None)
+            source=Path(kw['journal_path']).parent/'work';st=source.stat()
+            declarations=tuple(ArtifactDeclaration(u.unit_id,1,u.binding_id+'.marker','outputs/'+u.binding_id+'.txt') for u in prepared.units)
+            coverage=admit_coverage(prepared,result,resources,run_id=kw['run_id'],host_session=kw['session'],
+                contexts=[(b.unit_id,b.generation,b.execution_id) for b in kw['bindings']],
+                health_policies={p.unit_id:(p.cadence_seconds,p.freshness_seconds) for p in schedule.policies},
+                active_start=time.monotonic(),active_end=time.monotonic()+schedule.active_seconds,source_digests=(pin(schedule.canonical_bytes),),
+                artifacts=[*(ArtifactExpectation(d.destination,True,32,d.unit_id,1) for d in declarations),ArtifactExpectation('collection-result.json',maximum_bytes=16384)])
+            collection=admit_collection(coverage,expected_digest=coverage.digest,source_root=str(source),source_identity=(st.st_dev,st.st_ino),
+                declarations=declarations,metadata_path='collection-result.json',operation_seconds=.5,per_unit_teardown_seconds=1,
+                collection_seconds=2,terminal_seconds=2,drain_seconds=2)
+            return encode(prepared,result,resources,**kw,schedule=schedule,coverage=coverage,collection=collection,
+                broker_artifact=admit_broker_artifact(coverage,expected_digest=coverage.digest))
+        monkeypatch.setattr(test_launcher,'encode_configuration',configuration)
+        config,_,work=test_launcher.configured(tmp_path,manager,dict(binaries,launcher=authority_binary))
+        images=tuple(seal_helper_image(p,digest=pin(p.read_bytes()),argv0=sys.executable if p==Path(sys.executable).resolve() else str(p))
+            for p in (binaries['launcher'],binaries['bound-gate'],Path(sys.executable).resolve(),authority_binary))
+        supervisor=seal_helper_image(run_bootstrap_binary,digest=pin(run_bootstrap_binary.read_bytes()),argv0=str(run_bootstrap_binary))
+        boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',pin(b'owned-environment'),
+            supervisor.digest,manager._admission.teardown_deadline,deadline(4.8),images[:3],images[3],manager._root_fd))
+        launcher=OriginalBootstrapRegistry(1).reserve(boot,supervisor,manager)
+        units=tuple(UnitAdmission(BoundaryDescriptor(config.run_id,u.unit_id,1,'work-'+str(i),0),(('MAESTRO_VISIBLE','declared'),),1)
+                    for i,u in enumerate(config.prepared.units))
+        entry=_OriginalRuntimeRun(config,launcher,units,controller_sessions=2 if controller_recovery else 1,
+            allow_controller_recovery=controller_recovery)
+        active=HostDeadline(config.session,config.coverage.data(config.coverage.digest)['end']-.01)
+        terminal=HostDeadline(config.session,active.monotonic_seconds+config.schedule.terminal_reserve_seconds+4+.01)
+        scope=RuntimeScope(deadline(2),active,terminal,HostDeadline(config.session,terminal.monotonic_seconds+3))
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            (Path(output)/('entry-original-inputs-'+tmp_path.name+'.json')).write_text(json.dumps(dict(
+                original_admission=json.loads(config.coverage.public_bytes),admission_digest=config.coverage.digest,
+                original_collection=json.loads(config.collection.canonical_bytes),generation_ns=config.generation_ns,
+                runtime_digest=runtime_admission_digest(config.coverage,config.collection,config.generation_ns),
+                original_fixture=str(tmp_path),full_M1_complete=False),indent=2)+'\n')
+        try:yield entry,scope,work
+        finally:
+            out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            failure_retainer=getattr(request.node,'_runtime_failure_retainer',None)
+            if failure_retainer is not None:
+                failure_retainer(entry,scope,work,manager,out)
+            elif entry._result is not None:
+                result=entry._result
+                if out and result.dispatch is not None:
+                    dispatch=result.dispatch
+                    (Path(out)/('runtime-dispatch-'+tmp_path.name+'.json')).write_text(json.dumps(dict(
+                        diagnostic=dispatch.diagnostic,execution_succeeded=dispatch.execution_succeeded,
+                        terminal_recorded=dispatch.terminal_recorded,steps=[asdict(s) for s in dispatch.steps],
+                        cleanup=asdict(dispatch.cleanup),health_scans=dispatch.health_scans,
+                        lease_renewals=dispatch.lease_renewals,full_M1_complete=False),indent=2)+'\n')
+                assert result.startup.supervisor_reaped and result.startup.registered_helpers_reaped
+                assert result.startup.unacknowledged_births==0
+                assert launcher._process.stderr.read()==b''
+                if out:
+                    closure=asdict(result.closure);closure['cleanup_complete']=result.cleanup_complete
+                    closure['terminal_reports']=[r.public_data() for r in result.closure.terminal_reports]
+                    (Path(out)/('runtime-entry-waits-'+tmp_path.name+'.json')).write_text(json.dumps(dict(
+                        case=request.node.name,startup=asdict(result.startup),closure=closure,diagnostics=result.diagnostics,
+                        original_fixture=str(tmp_path),original_root_wait=entry._session._root_result is not None,
+                        actual_original_helper_waits=all(c._result is not None for c in entry._session._children.values()),
+                        all_original_C1_released=all(e.state=='released' for e in manager._entries.values()),
+                        full_M1_complete=False),indent=2)+'\n')
+>               entry.dispose()
+
+tests/thesis_lite/maestro/test_runtime_entry.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../maestro-lite-runtime-issuer-loss-target-20261019b/lib/python3.13/site-packages/xverse/maestro/runtime_entry.py:241: in dispose
+    self._launcher.dispose()
+../maestro-lite-runtime-issuer-loss-target-20261019b/lib/python3.13/site-packages/xverse/maestro/bootstrap_launcher.py:307: in dispose
+    client.dispose()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7ab08a2b6cf0>
+
+    def dispose(self):
+        self._holder()
+        if not self._drained or not self._drained.worker_reaped:
+>           raise PersistenceError("ML-PERSIST-RETAINED")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-RETAINED
+
+../maestro-lite-runtime-issuer-loss-target-20261019b/lib/python3.13/site-packages/xverse/maestro/persistence.py:1365: PersistenceError
+=================================== FAILURES ===================================
+_______ test_original_registry_whole_run_replay_and_retained_collection ________
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7ab08a213390>, RuntimeScope(startup=HostDeadline(sessio...o-runtime-issuer-loss-20261019b-runtime_control_registry-wheel-private-tjelsgln/test_original_registry_whole_r0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ab08a282450>
+
+    def test_original_registry_whole_run_replay_and_retained_collection(runtime,monkeypatch):
+        entry,scope,work=runtime;registry=_OriginalRuntimeRegistry(1);registry.reserve(entry)
+        result=registry.start('fixture-run',scope)
+>       assert result.execution_succeeded and result.cleanup_complete
+E       AssertionError: assert (False)
+E        +  where False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='1af9234b78ae504013...436, failed_ns=1025988859421108, diagnostic='ML-PERSIST-TIMEOUT'), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_control_registry.py:60: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection
+ERROR tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection
+1 failed, 7 passed, 1 error in 13.58s

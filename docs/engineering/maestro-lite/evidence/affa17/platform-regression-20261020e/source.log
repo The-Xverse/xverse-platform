@@ -1,0 +1,111 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: dline=HostDeadline(client.session,driver._active_end)))
+E                     return changed
+E                 monkeypatch.setattr(driver,'_drain_controller_recovery',after_recovery)
+E                 reconcile=ControllerSession.reconcile
+E                 def borrowed_reconcile(controller,policies,active,cleanup,**kw):
+E                     assert kw['_coordinator'] is driver and kw['_request'] is tickets[0]
+E                     assert broker.owner._dispatch_owner is driver and broker.owner._dispatch_thread==threading.get_ident()
+E                     before=broker.owner._view_epoch
+E                     with pytest.raises(ValueError,match='COORDINATOR'):
+E                         IssuerRecovery(broker.session,broker.owner,policies=policies,controller=controller,
+E                             _coordinator=object(),_request=tickets[0])
+E                     assert broker.owner._view_epoch==before
+E                     try:return reconcile(controller,policies,active,cleanup,**kw)
+E                     finally:
+E                         borrowed.append(dict(end=active.monotonic_seconds,owner_retained=broker.owner._dispatch_owner is driver,
+E                             thread_retained=broker.owner._dispatch_thread==threading.get_ident(),new_session=controller.session_id))
+E                         assert borrowed[-1]['owner_retained'] and borrowed[-1]['thread_retained']
+E                         if controller._view is not None:
+E                             new_probes.update({u:asdict(v) for u,v in controller._view._observations.items()})
+E                 monkeypatch.setattr(ControllerSession,'reconcile',borrowed_reconcile)
+E                 snapshot=PersistenceClient.reconcile_snapshot
+E                 def original_snapshot(self,*a,**kw):
+E                     if self is client and mode=='snapshot-loss':
+E                         signal.pidfd_send_signal(self.process._capability.fileno(),signal.SIGSTOP)
+E                     return snapshot(self,*a,**kw)
+E                 monkeypatch.setattr(PersistenceClient,'reconcile_snapshot',original_snapshot)
+E                 controller_request=ControllerSession.request
+E                 def observed_request(controller,unit,phase,end):
+E                     if mode=='heartbeat-race' and race_ready and controller is old and phase=='heartbeat' and not tickets:
+E                         enqueue()
+E                     value=controller_request(controller,unit,phase,end)
+E                     if controller is not old and unit is not None:
+E                         productive.append(dict(session=controller.session_id,unit=unit,phase=phase))
+E                     return value
+E                 monkeypatch.setattr(ControllerSession,'request',observed_request)
+E                 output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+E                 if output:
+E                     target=Path(output);target.mkdir(parents=True,exist_ok=True)
+E                     with (target/('active-recovery-inputs-'+mode+'.json')).open('x') as f:
+E                         json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+E                             original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+E                             generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+E                             original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),f,indent=2);f.write('\n')
+E                 try:
+E                     result=run(driver)
+E         >           assert len(tickets)==1 and len(broker._controllers)==2,result.diagnostic
+E         E           AssertionError: ML-PERSIST-TIMEOUT
+E         E           assert (0 == 1)
+E         E            +  where 0 = len([])
+E         
+E         tests/thesis_lite/maestro/test_active_controller_recovery.py:181: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+E         2 failed, 1794 passed, 24 subtests passed in 1495.96s (0:24:55)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020d/bin/python', '-m', 'pytest', '-q', '-p'...er_and_productive_access[restart-after]\n2 failed, 1794 passed, 24 subtests passed in 1495.96s (0:24:55)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+1 failed, 2079 passed, 24 subtests passed in 2743.97s (0:45:43)

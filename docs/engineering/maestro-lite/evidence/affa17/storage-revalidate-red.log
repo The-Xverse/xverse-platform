@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_actual_intent_mirror_loss_prevents_revalidation _____________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7dc0e9f392b0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-981/test_actual_intent_mirror_loss0/work'), <function boot_stack.<locals>.boundary at 0x7dc0ea08f740>, ...)
+
+    def test_actual_intent_mirror_loss_prevents_revalidation(boot_stack):
+        session, _, _, config, work, boundary, _, clients, _ = boot_stack
+        storage = session.persistence(config, boundary("storage"), deadline(2))
+        clients.append(storage)
+        unit = config.prepared.units[0].unit_id
+        receipt = storage.commit_intent(unit, deadline(2))
+        events = work.parent / "argus" / "events.jsonl"
+        assert events.is_file()
+        events.rename(events.with_name("saved-events.jsonl"))
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_storage_revalidate.py:21: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_storage_revalidate.py::test_actual_intent_mirror_loss_prevents_revalidation
+1 failed in 1.91s

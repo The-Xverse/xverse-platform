@@ -1,0 +1,78 @@
+.....F..F............................................................... [ 84%]
+.............                                                            [100%]
+=================================== FAILURES ===================================
+______________ test_late_actual_flush_does_not_register_authority ______________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x70583a46fce0>, <xverse.maestro.admission.PermitSession object at 0x705...3a46f950>, <function environment.<locals>.spawn at 0x70583a2eaf20>, <function stack.<locals>.launch at 0x70583a2eb740>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70583a334850>
+
+    def test_late_actual_flush_does_not_register_authority(stack, monkeypatch):
+        owner, permits, writer, manager, spawn, launch = stack
+        actual = writer.flush_buffer
+    
+        def slow_flush():
+            actual()
+            time.sleep(0.08)
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(writer, "flush_buffer", slow_flush)
+            with pytest.raises(OwnerError, match="DEADLINE"):
+                owner.commit_intent(permits._prepared.units[0].unit_id, deadline(0.05))
+        assert owner.latch.cancelled and not owner._claims
+        assert len(permits._journal.records) == 1
+        writer.finalize()  # Seal this annotation-only test store for public readback.
+        assert (
+>           EvidenceStore.read_run(writer._root).records()[0]["extensions"][
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "xverse.maestro"
+            ]["action"]
+            == "intent"
+        )
+E       IndexError: list index out of range
+
+tests/thesis_lite/maestro/test_owner.py:264: IndexError
+_______ test_release_requires_live_original_claim_and_deadline[expired] ________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x70583a48ebe0>, <xverse.maestro.admission.PermitSession object at 0x705...3a48ead0>, <function environment.<locals>.spawn at 0x70583a1e5f80>, <function stack.<locals>.launch at 0x70583a1e6660>)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-802/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-802/releasegate-native0/release-gate')
+condition = 'expired'
+
+    @pytest.mark.parametrize(
+        "condition", ["extended", "expired", "terminal", "missing", "copied"]
+    )
+    def test_release_requires_live_original_claim_and_deadline(
+        stack, native, guard_binary, condition
+    ):
+        owner, permits, writer, manager, spawn, launch = stack
+        unit_id, descriptor, child, marker, gate = staged(stack, native, guard_binary)
+        original = deadline(0.15 if condition == "expired" else 2)
+        if condition != "missing":
+>           owner.commit_intent(unit_id, original)
+
+tests/thesis_lite/maestro/test_owner.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/owner.py:529: in commit_intent
+    self._check(deadline)
+src/xverse/maestro/owner.py:414: in _check
+    until = _deadline(deadline, self.session)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = HostDeadline(session='host-session', monotonic_seconds=905257.537313281)
+session = 'host-session'
+
+    def _deadline(value, session):
+        if type(value) is not HostDeadline or value.session != session:
+            raise OwnerError("ML-OWNER-HOST-SESSION")
+        value.__post_init__()
+        remaining = value.monotonic_seconds - time.monotonic()
+        if not 0 < remaining <= 5:
+>           raise OwnerError("ML-OWNER-DEADLINE")
+E           xverse.maestro.owner.OwnerError: ML-OWNER-DEADLINE
+
+src/xverse/maestro/owner.py:57: OwnerError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_owner.py::test_late_actual_flush_does_not_register_authority
+FAILED tests/thesis_lite/maestro/test_owner.py::test_release_requires_live_original_claim_and_deadline[expired]
+2 failed, 83 passed in 22.32s

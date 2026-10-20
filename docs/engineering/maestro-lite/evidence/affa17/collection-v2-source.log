@@ -1,0 +1,221 @@
+.......................FF                                                [100%]
+=================================== FAILURES ===================================
+_______________ test_actual_public_index_and_closed_reader_bytes _______________
+
+directories = (PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_actual_public_index_and_c0/source'), PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_actual_public_index_and_c0/evidence'))
+
+    def test_actual_public_index_and_closed_reader_bytes(directories):
+        source,target=directories
+        (source/'item').write_bytes(b'indexed actual bytes')
+>       run=writer(source,target)
+            ^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_collection.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_collection.py:194: in writer
+    return EvidenceStore.open_run(target,run_id='collection-run',plan=result.plan,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'xverse.argus.api.EvidenceStore'>
+root = PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_actual_public_index_and_c0/evidence')
+
+    @classmethod
+    def open_run(
+        cls,
+        root: Any,
+        *,
+        run_id: Any,
+        plan: Any,
+        run_envelope: Any = None,
+        source_byte_digests: Any = None,
+        limits: EvidenceLimits | None = None,
+        obligations: Any = (),
+        clocks: Any = None,
+    ) -> EvidenceRun:
+        """Open exactly one fresh run, or reject with stable diagnostics and no partial state."""
+    
+        effective = limits if limits is not None else EvidenceLimits()
+        diagnostics: list[EvidenceDiagnostic] = []
+    
+        diagnostics.extend(_validate_run_id(run_id, effective))
+        validated_obligations, obligation_diagnostics = _validate_obligations(obligations, effective)
+        diagnostics.extend(obligation_diagnostics)
+    
+        plan_block = None
+        if diagnostics:
+            # Identity/obligation defects are reported without touching the plan or the filesystem.
+            raise EvidenceError(bound_diagnostics(diagnostics, effective.max_diagnostic_count))
+    
+        plan_block, plan_diagnostics = plan_identity(plan)
+        diagnostics.extend(plan_diagnostics)
+        if diagnostics or plan_block is None:
+            raise EvidenceError(bound_diagnostics(diagnostics, effective.max_diagnostic_count))
+    
+        declared_envelope_id = envelope_run_id(run_envelope)
+        if declared_envelope_id is not None and declared_envelope_id != run_id:
+            raise EvidenceError(
+                diagnostic(
+                    "ARGUS2-PLAN-ENVELOPE-CONFLICT",
+                    "envelope run identity conflicts with the declared run identity",
+                    pointer="/runEnvelope/runId",
+                    remediation="Supply one consistent run identity; nothing is overwritten.",
+                )
+            )
+    
+        provenance, provenance_diagnostics = _source_provenance(source_byte_digests)
+        if provenance_diagnostics:
+            raise EvidenceError(bound_diagnostics(provenance_diagnostics, effective.max_diagnostic_count))
+    
+        declared_domains: frozenset[str] = frozenset()
+        if clocks is not None:
+            preserved_clocks, clock_diagnostics = validate_clocks(clocks, pointer="/clocks", limits=effective)
+            if clock_diagnostics or preserved_clocks is None:
+                raise EvidenceError(bound_diagnostics(clock_diagnostics, effective.max_diagnostic_count))
+            declared_domains = frozenset(
+                value["domain"] for value in preserved_clocks.values()
+            )
+    
+        opened_at = None
+        if isinstance(run_envelope, dict):
+            candidate = run_envelope.get("openedAt")
+            if isinstance(candidate, dict):
+                validated_clock, clock_diagnostics = validate_clock(candidate, pointer="/runEnvelope/openedAt", limits=effective)
+                if clock_diagnostics:
+                    raise EvidenceError(bound_diagnostics(clock_diagnostics, effective.max_diagnostic_count))
+                opened_at = validated_clock
+    
+        root_path = Path(root)
+        registry_key = os.path.realpath(root_path)
+        with _ACTIVE_LOCK:
+            if registry_key in _ACTIVE:
+                raise EvidenceError(
+                    diagnostic(
+                        "ARGUS2-STATE-WRITER-CONFLICT",
+                        "a second owning writer was requested for the same run",
+                        remediation="Exactly one owning writer may hold a run.",
+                    )
+                )
+        if root_path.exists():
+>           raise EvidenceError(
+                diagnostic(
+                    "ARGUS2-STATE-RUN-EXISTS",
+                    "the run root already exists",
+                    path=str(root_path),
+                    remediation="An existing run root is never reused, reopened or overwritten.",
+                )
+            )
+E           xverse.argus.diagnostics.EvidenceError: ARGUS2-STATE-RUN-EXISTS: the run root already exists
+
+src/xverse/argus/api.py:345: EvidenceError
+________ test_malformed_actual_index_ack_never_returns_an_index_receipt ________
+
+directories = (PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_malformed_actual_index_ac0/source'), PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_malformed_actual_index_ac0/evidence'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f59c419a300>
+
+    def test_malformed_actual_index_ack_never_returns_an_index_receipt(directories,monkeypatch):
+        source,target=directories
+        (source/'item').write_bytes(b'indexed actual bytes')
+>       run=writer(source,target)
+            ^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_collection.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_collection.py:194: in writer
+    return EvidenceStore.open_run(target,run_id='collection-run',plan=result.plan,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'xverse.argus.api.EvidenceStore'>
+root = PosixPath('/tmp/maestro-affa17-collection-v2-source-private-o6rpch18/test_malformed_actual_index_ac0/evidence')
+
+    @classmethod
+    def open_run(
+        cls,
+        root: Any,
+        *,
+        run_id: Any,
+        plan: Any,
+        run_envelope: Any = None,
+        source_byte_digests: Any = None,
+        limits: EvidenceLimits | None = None,
+        obligations: Any = (),
+        clocks: Any = None,
+    ) -> EvidenceRun:
+        """Open exactly one fresh run, or reject with stable diagnostics and no partial state."""
+    
+        effective = limits if limits is not None else EvidenceLimits()
+        diagnostics: list[EvidenceDiagnostic] = []
+    
+        diagnostics.extend(_validate_run_id(run_id, effective))
+        validated_obligations, obligation_diagnostics = _validate_obligations(obligations, effective)
+        diagnostics.extend(obligation_diagnostics)
+    
+        plan_block = None
+        if diagnostics:
+            # Identity/obligation defects are reported without touching the plan or the filesystem.
+            raise EvidenceError(bound_diagnostics(diagnostics, effective.max_diagnostic_count))
+    
+        plan_block, plan_diagnostics = plan_identity(plan)
+        diagnostics.extend(plan_diagnostics)
+        if diagnostics or plan_block is None:
+            raise EvidenceError(bound_diagnostics(diagnostics, effective.max_diagnostic_count))
+    
+        declared_envelope_id = envelope_run_id(run_envelope)
+        if declared_envelope_id is not None and declared_envelope_id != run_id:
+            raise EvidenceError(
+                diagnostic(
+                    "ARGUS2-PLAN-ENVELOPE-CONFLICT",
+                    "envelope run identity conflicts with the declared run identity",
+                    pointer="/runEnvelope/runId",
+                    remediation="Supply one consistent run identity; nothing is overwritten.",
+                )
+            )
+    
+        provenance, provenance_diagnostics = _source_provenance(source_byte_digests)
+        if provenance_diagnostics:
+            raise EvidenceError(bound_diagnostics(provenance_diagnostics, effective.max_diagnostic_count))
+    
+        declared_domains: frozenset[str] = frozenset()
+        if clocks is not None:
+            preserved_clocks, clock_diagnostics = validate_clocks(clocks, pointer="/clocks", limits=effective)
+            if clock_diagnostics or preserved_clocks is None:
+                raise EvidenceError(bound_diagnostics(clock_diagnostics, effective.max_diagnostic_count))
+            declared_domains = frozenset(
+                value["domain"] for value in preserved_clocks.values()
+            )
+    
+        opened_at = None
+        if isinstance(run_envelope, dict):
+            candidate = run_envelope.get("openedAt")
+            if isinstance(candidate, dict):
+                validated_clock, clock_diagnostics = validate_clock(candidate, pointer="/runEnvelope/openedAt", limits=effective)
+                if clock_diagnostics:
+                    raise EvidenceError(bound_diagnostics(clock_diagnostics, effective.max_diagnostic_count))
+                opened_at = validated_clock
+    
+        root_path = Path(root)
+        registry_key = os.path.realpath(root_path)
+        with _ACTIVE_LOCK:
+            if registry_key in _ACTIVE:
+                raise EvidenceError(
+                    diagnostic(
+                        "ARGUS2-STATE-WRITER-CONFLICT",
+                        "a second owning writer was requested for the same run",
+                        remediation="Exactly one owning writer may hold a run.",
+                    )
+                )
+        if root_path.exists():
+>           raise EvidenceError(
+                diagnostic(
+                    "ARGUS2-STATE-RUN-EXISTS",
+                    "the run root already exists",
+                    path=str(root_path),
+                    remediation="An existing run root is never reused, reopened or overwritten.",
+                )
+            )
+E           xverse.argus.diagnostics.EvidenceError: ARGUS2-STATE-RUN-EXISTS: the run root already exists
+
+src/xverse/argus/api.py:345: EvidenceError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_collection.py::test_actual_public_index_and_closed_reader_bytes
+FAILED tests/thesis_lite/maestro/test_collection.py::test_malformed_actual_index_ack_never_returns_an_index_receipt
+2 failed, 23 passed in 0.77s

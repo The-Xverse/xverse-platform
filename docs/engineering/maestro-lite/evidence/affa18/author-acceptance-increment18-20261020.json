@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "record": "author-acceptance-increment18-20261020",
+  "date_utc": "2026-10-20",
+  "author_text": "go with your proposal",
+  "responding_to": "three recommendations: (1) accept increment18 with an acceptance record on the finding-392 pattern carrying the open items; (2) hold the merges of increments 17/18 into main as a separate decision; (3) defer the optional F02D-01 hardening and the F-05 wire revision to a later increment",
+  "review_finding": 411,
+  "scope": {
+    "repository": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+    "branch": "candidate/maestro-lite-affa18-20261020",
+    "parent_checkpoint": "bdf7b29cc (increment17 accepted, finding 392)",
+    "checkpoints": ["7abdb9dc024f821b54c38767c4406574eff029c5", "d52683ad52e995e7ef443af16b813bb7cc5722a7", "18547fd6c51dbd023e6290502dff31b4c59887ff", "e290ce78cd1fbec052a2130e7aedf7b70990e279", "b1dc997920e4aee7020ae98c7177934640e272c4", "3bee8fb9dd732ee943421d8387fe676534afcf2f"],
+    "product_changes": ["native F-01 refreeze never skipped, two-pass wait, independent close budget (run_authority.c)", "native F-02 supervisor-keyed WATCH token verified on ADVANCE (bootstrap.c, run_authority.c, affa_protocol.py, bootstrap.py, affa_client.py, run_broker.py)"],
+    "accepted_as": "engineering increment"
+  },
+  "basis": {
+    "clean_full_runs": ["platform-regression-20261020o (tmpfs, F-01 bytes)", "platform-regression-20261020p (ext4 reference, quiet host, F-01 bytes)", "platform-regression-20261020s (tmpfs, F-02 bytes, under unrelated host load)"],
+    "failed_run_retained": "platform-regression-20261020r (3 failed under unrelated host load; A/B ab-load-discrimination-20261020a shows F-02 not the discriminator, finding 409)",
+    "independent_reviews": ["helper-change-f01-independent-review-20261020.json", "helper-change-twopass-independent-review-20261020.json", "helper-change-f02-independent-review-20261020.json", "helper-change-dumpable-independent-review-20261020.json"],
+    "whole_increment_review": "none beyond the per-change reviews, which together cover every product byte changed",
+    "bounded_evidence_final_bytes": ["runtime-lane-20261020e", "crash-matrix-20261020f", "lane-admission-20261020f"],
+    "capa_register": "capa-20261020-affa18-run-s/register.json 4fd92f3fb2b9af81e229f8393193bb1e518c68820c95614c2463f59138014b20"
+  },
+  "carried_open": {
+    "unknown_cause_capa": ["ML-CAPA-135", "ML-CAPA-286", "ML-CAPA-287", "ML-CAPA-318", "ML-CAPA-324", "ML-CAPA-330", "ML-CAPA-331", "ML-CAPA-332", "ML-CAPA-337", "ML-CAPA-359"],
+    "effectiveness": "NOT_DEMONSTRATED for every record, including ML-CAPA-381-F01/F02",
+    "f02d_01": "non-claim: no key confidentiality against a hostile same-uid peer; owner-unreadable authority image deferred",
+    "f02d_02": "run_authority.c:510 comment correction deferred to the next helper change",
+    "f05": "distinct release-timeout reason (wire revision) deferred",
+    "f07": "unchanged by design (a closed authority cannot thaw)",
+    "thin_margin_fixture": "paused-shared fixture intermittent under host load (ML-CAPA-364 observation)",
+    "harness": "tmpfs declared fidelity choice (disposition AD-2026-10-20-d)"
+  },
+  "not_covered": ["lane activation", "M1 admission", "merges of increments 17 and 18 into main", "remaining 024 scope", "factory runs", "canonical-note edits", "scientific claims"],
+  "backup_push": "candidate branch pushed to origin as a branch; no merge, no pull request"
+}

@@ -1,0 +1,48 @@
+.......F                                                                 [100%]
+=================================== FAILURES ===================================
+___ test_actual_concurrent_stop_preserves_original_cleanup_and_unknown_waits ___
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7404083d97b0>, RuntimeScope(startup=HostDeadline(sessio...Path('/tmp/maestro-runtime-entry-20261019b-runtime_entry-wheel-private-x_dt3yy2/test_actual_concurrent_stop_pr0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74040810fbd0>
+
+    def test_actual_concurrent_stop_preserves_original_cleanup_and_unknown_waits(runtime,monkeypatch):
+        from xverse.maestro.dispatcher import FiniteDispatcher
+        entry,scope,work=runtime;reached=threading.Event();resume=threading.Event()
+        original=FiniteDispatcher._statement;results=[];errors=[];held=[]
+        def statement(self,kind,step,**kw):
+            result=original(self,kind,step,**kw)
+            if kind=='step-complete' and step.phase=='start' and not held:
+                held.append(True);reached.set()
+                assert resume.wait(1.5)
+            return result
+        monkeypatch.setattr(FiniteDispatcher,'_statement',statement)
+        def run():
+            try:results.append(entry.start(scope))
+            except BaseException as error:errors.append(repr(error))
+        thread=threading.Thread(target=run);thread.start()
+        try:
+            assert reached.wait(2)
+            assert entry._lock.locked()
+            with pytest.raises(ValueError,match='CONFLICT'):entry.start(scope)
+            with pytest.raises(ValueError,match='CONFLICT'):entry.collect('fixture-run')
+            assert (work/'source-binding.marker').read_bytes()==b'EXEC\n'
+            assert not (work/'sink-binding.marker').exists()
+            assert entry.stop('fixture-run',reason='owned-active-stop')==1
+            with monkeypatch.context() as patch:
+                patch.setattr(entry._driver,'cancel',lambda *a,**kw:pytest.fail('matching active stop repeated cancellation'))
+                assert entry.stop('fixture-run',reason='owned-active-stop')==1
+        finally:resume.set();thread.join(6)
+        assert not thread.is_alive() and not errors and len(results)==1,errors
+        result=results[0]
+        assert result.closure is not None and result.closure.root_reaped
+        assert all(h.process_reaped for h in result.closure.helpers)
+        assert all(b.empty and b.released for b in result.closure.boundaries)
+>       assert not result.execution_succeeded and not result.cleanup_complete
+E       AssertionError: assert (not False and not True)
+E        +  where False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='114c38dd507d639c26...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E        +  and   True = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='114c38dd507d639c26...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False).cleanup_complete
+
+tests/thesis_lite/maestro/test_runtime_entry.py:213: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_actual_concurrent_stop_preserves_original_cleanup_and_unknown_waits
+1 failed, 7 passed in 14.41s

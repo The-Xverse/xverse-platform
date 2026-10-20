@@ -1,0 +1,79 @@
+................................................ [  3%]
+........................................................................ [  9%]
+........................................................................ [ 15%]
+............................................................F........... [ 21%]
+........................................................................ [ 27%]
+........................................................................ [ 33%]
+........................................................................ [ 39%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 56%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 92%]
+........................................................................ [ 98%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ................................................ [  5%]
+E         ........................................................................ [ 12%]
+E         ........................................................................ [ 20%]
+E         ........................................................................ [ 28%]
+E         ................................F....................................... [ 35%]
+E         ........................................................................ [ 43%]
+E         ........................................................................ [ 51%]
+E         ........................................................................ [ 58%]
+E         ........................................................................ [ 66%]
+E         ........................................................................ [ 74%]
+E         ........................................................................ [ 81%]
+E         ........................................................................ [ 89%]
+E         ........................................................................ [ 97%]
+E         ............................                                             [100%]
+E         =================================== FAILURES ===================================
+E         _______ test_paused_ticks_still_service_host_health_and_original_leases ________
+E         
+E         request = <FixtureRequest for <Function test_paused_ticks_still_service_host_health_and_original_leases>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b55e8547a80>
+E         
+E             def test_paused_ticks_still_service_host_health_and_original_leases(
+E                 request, monkeypatch
+E             ):
+E                 stack = full_stack(request, monkeypatch, pauses=40)
+E                 driver = dispatcher(stack)
+E                 result = driver.run(*ends(driver))
+E         >       assert result.execution_succeeded, result
+E         E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='f1d42c88d0f08415350a467dab17a66439b1c9c19ebc705f3b39deed9d6b554...ML-SCHEDULE-CLEANUP-INCOMPLETE', health_scans=1, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False)
+E         E       assert False
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='f1d42c88d0f08415350a467dab17a66439b1c9c19ebc705f3b39deed9d6b554...ML-SCHEDULE-CLEANUP-INCOMPLETE', health_scans=1, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_dispatcher.py:313: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+E         1 failed, 939 passed, 24 subtests passed in 395.10s (0:06:35)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-recovery-verify-20261018/bin/python', '-m', 'pytest', '-q', '-p', 'no:cachep...l_service_host_health_and_original_leases\n1 failed, 939 passed, 24 subtests passed in 395.10s (0:06:35)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+1 failed, 1223 passed, 24 subtests passed in 837.85s (0:13:57)

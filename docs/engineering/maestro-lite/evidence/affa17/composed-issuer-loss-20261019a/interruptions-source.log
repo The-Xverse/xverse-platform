@@ -1,0 +1,332 @@
+FFFF..                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[current-copy] _
+
+request = <FixtureRequest for <Function test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[current-copy]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75baefd34e90>
+sentinel = <function sentinel.<locals>.observe at 0x75baefcdcea0>
+fault = 'current-copy'
+
+    @pytest.mark.parametrize('fault', ['current-copy', 'generation-copy', 'generation-empty', 'generation-nonmapping'])
+    def test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup(request, monkeypatch, sentinel, fault):
+        before = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        unit = driver.prepared.resource_order[0]
+        issuer = broker.issuer(unit)
+        barrier = Barrier()
+        instrument(monkeypatch, stack, 'release-after-reply', barrier)
+        thread, results, failures = threaded_run(driver)
+        attribute = '_issuers' if fault == 'current-copy' else '_generation_issuers'
+        original = getattr(broker, attribute)
+        replacement = dict(original) if fault.endswith('copy') else {} if fault.endswith('empty') else None
+        observations = dict(fault=fault, ordinary_rejected=False, cancellation_error=None,
+            primary_error=None, restoration_after_original_cleanup=False)
+        primary = fallback = None
+        try:
+            assert barrier.reached.wait(3), failures
+            wait_for(lambda: (work/'source-binding.marker').is_file())
+            observations['members_before_loss'] = list(observed_members(
+                broker.session.boundaries._entries[issuer._image.admission.descriptor.key].fd))
+            observations['actual_release_ack_before_loss'] = issuer._release_ack is not None
+            setattr(broker, attribute, replacement)  # explicit ordinary-registry fault only
+            sequence = broker.connection.sequence
+            with pytest.raises(ValueError):
+                broker.issuer(unit)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            observations['ordinary_rejected'] = True
+            try:
+                driver.cancel('owned-registry-loss')
+            except Exception as error:
+                observations['cancellation_error'] = str(error)
+            observations['cancellation_completed'] = time.monotonic()
+        finally:
+            barrier.resume.set()
+            thread.join(timeout=18)
+        try:
+            assert not thread.is_alive(), 'original dispatcher not terminal'
+            try:
+                primary = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+            except Exception as error:
+                observations['primary_error'] = type(error).__name__+': '+str(error)
+                # A primary defect must remain failed. Original-root cleanup protects
+                # the owned fixture without reconstructing or adopting a broker.
+                fallback = RunClosure(broker.session).close(deadline(6))
+            closed = primary if primary is not None else fallback
+            assert closed.root_reaped and all(h.process_reaped for h in closed.helpers)
+            assert all(b.empty and b.released for b in closed.boundaries)
+            after = sentinel()
+            assert broker.connection.child._result is not None
+            # Harness-only restoration after all original authority and scopes died.
+            # It does not reopen starts or grant a replacement registry any rights.
+            setattr(broker, attribute, original)
+            observations['restoration_after_original_cleanup'] = True
+            observations['restored_at'] = time.monotonic()
+            assert broker.owner.latch.cancelled
+            save(stack, fault, observations, before, after, results, failures, primary, fallback)
+        finally:
+            if getattr(broker, attribute) is not original:
+                # Failed assertions still leave the original fixture responsible for
+                # its own exact cleanup. This is never reported as runtime recovery.
+                broker.session.cancel('owned-test-emergency')
+                broker.session.drain(deadline(2))
+                for entry in broker.session.boundaries._entries.values():
+                    if entry.state != 'released':
+                        broker.session.boundaries.force_cleanup(entry.descriptor)
+                setattr(broker, attribute, original)
+>       assert observations['cancellation_error'] is None, observations
+E       AssertionError: {'actual_release_ack_before_loss': False, 'cancellation_completed': 1010242.632402261, 'cancellation_error': 'ML-RUN-REPLACED', 'fault': 'current-copy', ...}
+E       assert 'ML-RUN-REPLACED' is None
+
+tests/thesis_lite/maestro/test_composed_issuer_loss.py:125: AssertionError
+_ test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-copy] _
+
+request = <FixtureRequest for <Function test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-copy]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75baf0c01a70>
+sentinel = <function sentinel.<locals>.observe at 0x75baefb36b60>
+fault = 'generation-copy'
+
+    @pytest.mark.parametrize('fault', ['current-copy', 'generation-copy', 'generation-empty', 'generation-nonmapping'])
+    def test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup(request, monkeypatch, sentinel, fault):
+        before = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        unit = driver.prepared.resource_order[0]
+        issuer = broker.issuer(unit)
+        barrier = Barrier()
+        instrument(monkeypatch, stack, 'release-after-reply', barrier)
+        thread, results, failures = threaded_run(driver)
+        attribute = '_issuers' if fault == 'current-copy' else '_generation_issuers'
+        original = getattr(broker, attribute)
+        replacement = dict(original) if fault.endswith('copy') else {} if fault.endswith('empty') else None
+        observations = dict(fault=fault, ordinary_rejected=False, cancellation_error=None,
+            primary_error=None, restoration_after_original_cleanup=False)
+        primary = fallback = None
+        try:
+            assert barrier.reached.wait(3), failures
+            wait_for(lambda: (work/'source-binding.marker').is_file())
+            observations['members_before_loss'] = list(observed_members(
+                broker.session.boundaries._entries[issuer._image.admission.descriptor.key].fd))
+            observations['actual_release_ack_before_loss'] = issuer._release_ack is not None
+            setattr(broker, attribute, replacement)  # explicit ordinary-registry fault only
+            sequence = broker.connection.sequence
+            with pytest.raises(ValueError):
+                broker.issuer(unit)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            observations['ordinary_rejected'] = True
+            try:
+                driver.cancel('owned-registry-loss')
+            except Exception as error:
+                observations['cancellation_error'] = str(error)
+            observations['cancellation_completed'] = time.monotonic()
+        finally:
+            barrier.resume.set()
+            thread.join(timeout=18)
+        try:
+            assert not thread.is_alive(), 'original dispatcher not terminal'
+            try:
+                primary = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+            except Exception as error:
+                observations['primary_error'] = type(error).__name__+': '+str(error)
+                # A primary defect must remain failed. Original-root cleanup protects
+                # the owned fixture without reconstructing or adopting a broker.
+                fallback = RunClosure(broker.session).close(deadline(6))
+            closed = primary if primary is not None else fallback
+            assert closed.root_reaped and all(h.process_reaped for h in closed.helpers)
+            assert all(b.empty and b.released for b in closed.boundaries)
+            after = sentinel()
+            assert broker.connection.child._result is not None
+            # Harness-only restoration after all original authority and scopes died.
+            # It does not reopen starts or grant a replacement registry any rights.
+            setattr(broker, attribute, original)
+            observations['restoration_after_original_cleanup'] = True
+            observations['restored_at'] = time.monotonic()
+            assert broker.owner.latch.cancelled
+            save(stack, fault, observations, before, after, results, failures, primary, fallback)
+        finally:
+            if getattr(broker, attribute) is not original:
+                # Failed assertions still leave the original fixture responsible for
+                # its own exact cleanup. This is never reported as runtime recovery.
+                broker.session.cancel('owned-test-emergency')
+                broker.session.drain(deadline(2))
+                for entry in broker.session.boundaries._entries.values():
+                    if entry.state != 'released':
+                        broker.session.boundaries.force_cleanup(entry.descriptor)
+                setattr(broker, attribute, original)
+>       assert observations['cancellation_error'] is None, observations
+E       AssertionError: {'actual_release_ack_before_loss': False, 'cancellation_completed': 1010244.232327327, 'cancellation_error': 'ML-RUN-REPLACED', 'fault': 'generation-copy', ...}
+E       assert 'ML-RUN-REPLACED' is None
+
+tests/thesis_lite/maestro/test_composed_issuer_loss.py:125: AssertionError
+_ test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-empty] _
+
+request = <FixtureRequest for <Function test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-empty]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75baf0ca4950>
+sentinel = <function sentinel.<locals>.observe at 0x75baefb374c0>
+fault = 'generation-empty'
+
+    @pytest.mark.parametrize('fault', ['current-copy', 'generation-copy', 'generation-empty', 'generation-nonmapping'])
+    def test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup(request, monkeypatch, sentinel, fault):
+        before = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        unit = driver.prepared.resource_order[0]
+        issuer = broker.issuer(unit)
+        barrier = Barrier()
+        instrument(monkeypatch, stack, 'release-after-reply', barrier)
+        thread, results, failures = threaded_run(driver)
+        attribute = '_issuers' if fault == 'current-copy' else '_generation_issuers'
+        original = getattr(broker, attribute)
+        replacement = dict(original) if fault.endswith('copy') else {} if fault.endswith('empty') else None
+        observations = dict(fault=fault, ordinary_rejected=False, cancellation_error=None,
+            primary_error=None, restoration_after_original_cleanup=False)
+        primary = fallback = None
+        try:
+            assert barrier.reached.wait(3), failures
+            wait_for(lambda: (work/'source-binding.marker').is_file())
+            observations['members_before_loss'] = list(observed_members(
+                broker.session.boundaries._entries[issuer._image.admission.descriptor.key].fd))
+            observations['actual_release_ack_before_loss'] = issuer._release_ack is not None
+            setattr(broker, attribute, replacement)  # explicit ordinary-registry fault only
+            sequence = broker.connection.sequence
+            with pytest.raises(ValueError):
+                broker.issuer(unit)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            observations['ordinary_rejected'] = True
+            try:
+                driver.cancel('owned-registry-loss')
+            except Exception as error:
+                observations['cancellation_error'] = str(error)
+            observations['cancellation_completed'] = time.monotonic()
+        finally:
+            barrier.resume.set()
+            thread.join(timeout=18)
+        try:
+            assert not thread.is_alive(), 'original dispatcher not terminal'
+            try:
+                primary = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+            except Exception as error:
+                observations['primary_error'] = type(error).__name__+': '+str(error)
+                # A primary defect must remain failed. Original-root cleanup protects
+                # the owned fixture without reconstructing or adopting a broker.
+                fallback = RunClosure(broker.session).close(deadline(6))
+            closed = primary if primary is not None else fallback
+            assert closed.root_reaped and all(h.process_reaped for h in closed.helpers)
+            assert all(b.empty and b.released for b in closed.boundaries)
+            after = sentinel()
+            assert broker.connection.child._result is not None
+            # Harness-only restoration after all original authority and scopes died.
+            # It does not reopen starts or grant a replacement registry any rights.
+            setattr(broker, attribute, original)
+            observations['restoration_after_original_cleanup'] = True
+            observations['restored_at'] = time.monotonic()
+            assert broker.owner.latch.cancelled
+            save(stack, fault, observations, before, after, results, failures, primary, fallback)
+        finally:
+            if getattr(broker, attribute) is not original:
+                # Failed assertions still leave the original fixture responsible for
+                # its own exact cleanup. This is never reported as runtime recovery.
+                broker.session.cancel('owned-test-emergency')
+                broker.session.drain(deadline(2))
+                for entry in broker.session.boundaries._entries.values():
+                    if entry.state != 'released':
+                        broker.session.boundaries.force_cleanup(entry.descriptor)
+                setattr(broker, attribute, original)
+>       assert observations['cancellation_error'] is None, observations
+E       AssertionError: {'actual_release_ack_before_loss': False, 'cancellation_completed': 1010245.765165893, 'cancellation_error': 'ML-RUN-REPLACED', 'fault': 'generation-empty', ...}
+E       assert 'ML-RUN-REPLACED' is None
+
+tests/thesis_lite/maestro/test_composed_issuer_loss.py:125: AssertionError
+_ test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-nonmapping] _
+
+request = <FixtureRequest for <Function test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-nonmapping]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75baefcab130>
+sentinel = <function sentinel.<locals>.observe at 0x75baefb1d8a0>
+fault = 'generation-nonmapping'
+
+    @pytest.mark.parametrize('fault', ['current-copy', 'generation-copy', 'generation-empty', 'generation-nonmapping'])
+    def test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup(request, monkeypatch, sentinel, fault):
+        before = sentinel()
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        unit = driver.prepared.resource_order[0]
+        issuer = broker.issuer(unit)
+        barrier = Barrier()
+        instrument(monkeypatch, stack, 'release-after-reply', barrier)
+        thread, results, failures = threaded_run(driver)
+        attribute = '_issuers' if fault == 'current-copy' else '_generation_issuers'
+        original = getattr(broker, attribute)
+        replacement = dict(original) if fault.endswith('copy') else {} if fault.endswith('empty') else None
+        observations = dict(fault=fault, ordinary_rejected=False, cancellation_error=None,
+            primary_error=None, restoration_after_original_cleanup=False)
+        primary = fallback = None
+        try:
+            assert barrier.reached.wait(3), failures
+            wait_for(lambda: (work/'source-binding.marker').is_file())
+            observations['members_before_loss'] = list(observed_members(
+                broker.session.boundaries._entries[issuer._image.admission.descriptor.key].fd))
+            observations['actual_release_ack_before_loss'] = issuer._release_ack is not None
+            setattr(broker, attribute, replacement)  # explicit ordinary-registry fault only
+            sequence = broker.connection.sequence
+            with pytest.raises(ValueError):
+                broker.issuer(unit)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            observations['ordinary_rejected'] = True
+            try:
+                driver.cancel('owned-registry-loss')
+            except Exception as error:
+                observations['cancellation_error'] = str(error)
+            observations['cancellation_completed'] = time.monotonic()
+        finally:
+            barrier.resume.set()
+            thread.join(timeout=18)
+        try:
+            assert not thread.is_alive(), 'original dispatcher not terminal'
+            try:
+                primary = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+            except Exception as error:
+                observations['primary_error'] = type(error).__name__+': '+str(error)
+                # A primary defect must remain failed. Original-root cleanup protects
+                # the owned fixture without reconstructing or adopting a broker.
+                fallback = RunClosure(broker.session).close(deadline(6))
+            closed = primary if primary is not None else fallback
+            assert closed.root_reaped and all(h.process_reaped for h in closed.helpers)
+            assert all(b.empty and b.released for b in closed.boundaries)
+            after = sentinel()
+            assert broker.connection.child._result is not None
+            # Harness-only restoration after all original authority and scopes died.
+            # It does not reopen starts or grant a replacement registry any rights.
+            setattr(broker, attribute, original)
+            observations['restoration_after_original_cleanup'] = True
+            observations['restored_at'] = time.monotonic()
+            assert broker.owner.latch.cancelled
+            save(stack, fault, observations, before, after, results, failures, primary, fallback)
+        finally:
+            if getattr(broker, attribute) is not original:
+                # Failed assertions still leave the original fixture responsible for
+                # its own exact cleanup. This is never reported as runtime recovery.
+                broker.session.cancel('owned-test-emergency')
+                broker.session.drain(deadline(2))
+                for entry in broker.session.boundaries._entries.values():
+                    if entry.state != 'released':
+                        broker.session.boundaries.force_cleanup(entry.descriptor)
+                setattr(broker, attribute, original)
+>       assert observations['cancellation_error'] is None, observations
+E       AssertionError: {'actual_release_ack_before_loss': False, 'cancellation_completed': 1010247.375528052, 'cancellation_error': 'ML-RUN-REPLACED', 'fault': 'generation-nonmapping', ...}
+E       assert 'ML-RUN-REPLACED' is None
+
+tests/thesis_lite/maestro/test_composed_issuer_loss.py:125: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[current-copy]
+FAILED tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-copy]
+FAILED tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-empty]
+FAILED tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup[generation-nonmapping]
+4 failed, 2 passed in 11.71s

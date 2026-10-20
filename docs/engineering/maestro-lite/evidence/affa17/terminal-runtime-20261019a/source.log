@@ -1,0 +1,252 @@
+........................................................................ [ 75%]
+FF..F.FFFF...........F..                                                 [100%]
+=================================== FAILURES ===================================
+___ test_actual_native_report_close_and_external_closed_recomputation[False] ___
+
+request = <FixtureRequest for <Function test_actual_native_report_close_and_external_closed_recomputation[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7485334600>
+implicit = False
+
+    @pytest.mark.parametrize('implicit',[False,True])
+    def test_actual_native_report_close_and_external_closed_recomputation(request,monkeypatch,implicit):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=implicit)
+        broker,_,client,work=stack
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data()
+        assert facts['diagnostic'] is None,facts
+        report=facts['report'];writer=facts['writer']
+>       assert report['eligible'] and not report['blockers'],report
+E       AssertionError: {'admissionDigest': 'sha256:9aa8de111d2fa5efe241a08b63750ae76cbc9d89e42d140a0679dc6fbb64f972', 'annotationCount': 64, 'blockers': ['normal-records', 'required-coverage'], 'collectionComplete': True, ...}
+E       assert (False)
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:54: AssertionError
+___ test_actual_native_report_close_and_external_closed_recomputation[True] ____
+
+request = <FixtureRequest for <Function test_actual_native_report_close_and_external_closed_recomputation[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484f54c50>
+implicit = True
+
+    @pytest.mark.parametrize('implicit',[False,True])
+    def test_actual_native_report_close_and_external_closed_recomputation(request,monkeypatch,implicit):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=implicit)
+        broker,_,client,work=stack
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data()
+        assert facts['diagnostic'] is None,facts
+        report=facts['report'];writer=facts['writer']
+>       assert report['eligible'] and not report['blockers'],report
+E       AssertionError: {'admissionDigest': 'sha256:acf1e66d8eb474d74b4e4feb6cf97a53905f1223e0f3813e9572a27cbbed516e', 'annotationCount': 52, 'blockers': ['normal-records', 'required-coverage'], 'collectionComplete': True, ...}
+E       assert (False)
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:54: AssertionError
+_ test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack] _
+
+request = <FixtureRequest for <Function test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484ea3a10>
+fault = 'lost-close-ack'
+
+    @pytest.mark.parametrize('fault',['lost-report-ack','changed-report-ack','lost-close-ack'])
+    def test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc;intercepted=[]
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and kind=='terminal-report':
+                intercepted.append(body['action'])
+                if body['action']=='publish' and fault=='lost-report-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+                if body['action']=='publish' and fault=='changed-report-ack':
+                    operation,until,reply=result;reply=deepcopy(reply);reply['annotationCount']+=1
+                    return operation,until,reply
+                if body['action']=='close' and fault=='lost-close-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver);facts=result.terminal.public_data()
+        assert result.execution_succeeded and result.terminal_recorded
+        assert facts['writer'] is None and facts['diagnostic'] is not None
+        assert facts['lastAcknowledgedWriterState']=='open' and client.last_writer_state=='open'
+        assert client._failed and not result.lifecycle_complete
+        assert intercepted==(['publish'] if fault=='lost-report-ack' else ['publish','close'] if fault=='lost-close-ack' else ['publish'])
+        # A closed durable writer after a lost close ACK is independently observable;
+        # it does not retrospectively mint that missing original acknowledgement.
+        manifest=EvidenceStore.read_run(stack[3].parent/'argus').manifest
+>       assert manifest['writerState']==('closed' if fault=='lost-close-ack' else 'open')
+E       AssertionError: assert 'failed' == 'closed'
+E         
+E         - closed
+E         + failed
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:101: AssertionError
+__ test_terminal_before_collection_rejects_without_consuming_original_request __
+
+request = <FixtureRequest for <Function test_terminal_before_collection_rejects_without_consuming_original_request>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484efa990>
+
+    def test_terminal_before_collection_rejects_without_consuming_original_request(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        sequence=client._sequence
+        with pytest.raises(ValueError,match='ML-TERMINAL-BUDGET'):client.finish_run(stack[0],deadline(1))
+        assert client._sequence==sequence and not client._terminal_attempted and not client._failed
+        result=run(driver)
+>       assert result.terminal.public_data()['writer']['evidence_complete'],result.terminal.public_data()
+E       AssertionError: {'diagnostic': None, 'lastAcknowledgedWriterState': 'failed', 'report': {'admissionDigest': 'sha256:17b29d690da505e7a1...64, 'blockers': ['normal-records', 'required-coverage'], 'collectionComplete': True, ...}, 'schemaVersion': '1.0', ...}
+E       assert False
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:134: AssertionError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[False] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484d59f40>
+optional = False
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+        result=run(driver);facts=result.terminal.public_data()
+        assert result.execution_succeeded and result.terminal_recorded
+        assert facts['diagnostic'] is None and facts['report']['entry'] is not None,facts
+>       assert facts['report']['normalComplete'] and facts['report']['collectionComplete']
+E       assert (False)
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:151: AssertionError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[True] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484d0c1d0>
+optional = True
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+        result=run(driver);facts=result.terminal.public_data()
+        assert result.execution_succeeded and result.terminal_recorded
+        assert facts['diagnostic'] is None and facts['report']['entry'] is not None,facts
+>       assert facts['report']['normalComplete'] and facts['report']['collectionComplete']
+E       assert (False)
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:151: AssertionError
+_ test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal _
+
+request = <FixtureRequest for <Function test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7484ddf7d0>
+
+    def test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal(request,monkeypatch):
+        stack,controller,driver=scheduled(request,monkeypatch)
+        broker,view,client,work=stack
+        assert driver._lazy and not view._bindings and not broker.owner._claims and not client._attempted
+        assert not FileEvidenceJournal(work.parent/'m3.jsonl').records
+        checkpoints=[]; original=broker.owner.commit_intent
+        def commit(unit,end):
+            earlier=events(stack)
+            checkpoints.append((unit,earlier))
+            assert any(payload(e).get('stepId')=='start-'+('source' if 'source-instance' in unit else 'sink')
+                       and payload(e)['action']=='validate' and payload(e)['generation']==0 for e in earlier)
+            assert broker.issuer(unit)._handle is None and unit not in broker.owner._claims
+            return original(unit,end)
+        monkeypatch.setattr(broker.owner,'commit_intent',commit)
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.collection is client._collection_outcome[2] and result.collection.public_data()['collectionComplete']
+        assert len(checkpoints)==2 and len(view._bindings)==2
+        rows=events(stack); collect=next(e for e in rows if payload(e).get('action')=='collect')
+        terminal=[e for e in rows if payload(e).get('action')=='run-terminal'
+                  or payload(e).get('scope')=='unit' and payload(e).get('action')=='disposition']
+        assert len(terminal)==3 and all(e['ingestionOrdinal']>collect['ingestionOrdinal'] for e in terminal)
+        prepared=[e for e in rows if payload(e).get('stepId','').startswith('prepare-')]
+        assert len(prepared)==6 and all(payload(e)['generation']==0 for e in prepared)
+        assert not any(r.action_id in {a.action_id for u in client.prepared.units for a in u.plan.actions if a.phase=='prepare'}
+                       for r in FileEvidenceJournal(work.parent/'m3.jsonl').records)
+        for unit in client.prepared.units:
+            assert (work.parent/'argus'/'outputs'/(unit.binding_id+'.txt')).read_bytes()==b'EXEC\n'
+        assert driver.run(*driver._scope) is result
+        assert controller._sequence==10+result.lease_renewals//2
+>       retain(stack,result,'nominal')
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.run_broker.RunBroker object at 0x7d7484a40af0>, <xverse.maestro.providers.ProcessReadiness object at ...50>, PosixPath('/tmp/maestro-terminal-runtime-20261019a-source-private-7s2h357l/test_actual_lazy_nominal_stage0/work'))
+result = DispatchResult(run_id='fixture-run', lifecycle_digest='14c4a712c25c27e6e4ac178301c22899bec045e9698741a931054d7d671c200...L-SCHEDULE-EVIDENCE-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False)
+case = 'nominal'
+
+    def retain(stack, result, case):
+        broker,_,client,work=stack
+        client.abort(deadline(.8))
+        reader=EvidenceStore.read_run(work.parent/'argus')
+>       assert reader.manifest['writerState']==('closed' if result.execution_succeeded else 'failed')
+E       AssertionError: assert 'failed' == 'closed'
+E         
+E         - closed
+E         + failed
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:111: AssertionError
+___ test_actual_implicit_normal_teardown_occurs_after_original_native_cancel ___
+
+request = <FixtureRequest for <Function test_actual_implicit_normal_teardown_occurs_after_original_native_cancel>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d748514dfd0>
+
+    def test_actual_implicit_normal_teardown_occurs_after_original_native_cancel(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=True);broker=stack[0]
+        cancel=broker.cancel;fenced=[]
+        def observed(reason='run-cancel',**kw):
+            reply=cancel(reason,**kw)
+            if reason=='dispatcher-terminal-fence':
+                assert reply.native_epoch_confirmed;fenced.append(time.monotonic())
+            return reply
+        monkeypatch.setattr(broker,'cancel',observed)
+        result=run(driver)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert len(fenced)==1 and result.cleanup.normal_records_complete and result.cleanup.unit_cleanup_complete
+        normal=[r for r in FileEvidenceJournal(stack[3].parent/'m3.jsonl').records if 'teardown' in r.details]
+        assert len(normal)==8 and all(r.details['teardown']['observed_at']>=fenced[0] for r in normal)
+        assert result.collection.public_data()['collectionComplete']
+        assert broker.owner.latch.cancelled and broker.session._terminal
+>       retain(stack,result,'nominal')
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:301: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.run_broker.RunBroker object at 0x7d7484fa78a0>, <xverse.maestro.providers.ProcessReadiness object at ...10>, PosixPath('/tmp/maestro-terminal-runtime-20261019a-source-private-7s2h357l/test_actual_implicit_normal_te0/work'))
+result = DispatchResult(run_id='fixture-run', lifecycle_digest='c9d18322b765cc7ea423686cb3173bd906e63ffbd96bcfa8cb11bfea860d0f6...L-SCHEDULE-EVIDENCE-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False)
+case = 'nominal'
+
+    def retain(stack, result, case):
+        broker,_,client,work=stack
+        client.abort(deadline(.8))
+        reader=EvidenceStore.read_run(work.parent/'argus')
+>       assert reader.manifest['writerState']==('closed' if result.execution_succeeded else 'failed')
+E       AssertionError: assert 'failed' == 'closed'
+E         
+E         - closed
+E         + failed
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:111: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[True]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_terminal_before_collection_rejects_without_consuming_original_request
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_implicit_normal_teardown_occurs_after_original_native_cancel
+8 failed, 88 passed in 119.83s (0:01:59)

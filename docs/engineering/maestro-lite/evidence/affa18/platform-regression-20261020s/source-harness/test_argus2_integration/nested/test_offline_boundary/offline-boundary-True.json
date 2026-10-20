@@ -1,0 +1,27 @@
+{
+  "late_teardown": true,
+  "returncode": 0,
+  "stdout": "{\"complete\": true, \"modules\": [\"xverse.maestro.artifacts\", \"xverse.maestro.collection_evidence\", \"xverse.maestro.collection_plan\", \"xverse.maestro.coverage\", \"xverse.maestro.evidence_scope\", \"xverse.maestro.projection\", \"xverse.maestro.runtime_verification\", \"xverse.maestro.time\"], \"denied_modules\": [\"bootstrap\", \"child\", \"collection_runtime\", \"controller\", \"fence\", \"owner\", \"persistence\", \"prbc\", \"providers\", \"public_blobs\", \"run_broker\", \"supervisor\", \"terminal_runtime\"]}\n",
+  "stderr": "",
+  "command": [
+    "/tmp/maestro-lite-platform-regression-target-20261020h/bin/python",
+    "-c",
+    "\nimport importlib.abc,json,sys\nfrom pathlib import Path\nforbidden = {'persistence','owner','providers','bootstrap','run_broker','fence','prbc',\n             'supervisor','controller','collection_runtime','public_blobs','terminal_runtime','child'}\nclass DenyRuntime(importlib.abc.MetaPathFinder):\n    def find_spec(self,fullname,path=None,target=None):\n        if fullname.startswith('xverse.maestro.') and fullname.split('.')[2] in forbidden:\n            raise ImportError('Offline verifier imported runtime component: '+fullname)\nsys.meta_path.insert(0,DenyRuntime())\nfrom xverse.maestro.coverage import CoverageAdmission,canonical\nfrom xverse.maestro.collection_plan import decode_collection\nfrom xverse.maestro.runtime_verification import verify_runtime_closed\nbody=json.loads(Path(sys.argv[1]).read_bytes())\nad=CoverageAdmission(canonical(body['admission']))\nplan=decode_collection(body['collection'],ad,body['pins']['expected_admission_digest'])\nresult=verify_runtime_closed(ad,plan,Path(body['root']),**body['pins'])\nassert result.complete, result.diagnostics\nloaded=sorted(n for n in sys.modules if n.startswith('xverse.maestro.'))\nassert not any(n.split('.')[2] in forbidden for n in loaded)\nprint(json.dumps(dict(complete=result.complete,modules=loaded,denied_modules=sorted(forbidden))))\n",
+    "/dev/shm/maestro-platform-20261020s-tmpdir-s5hin29t/pytest-of-jefferson/pytest-2/test_closed_verification_in_fr1/offline-inputs.json"
+  ],
+  "original_inputs": "/dev/shm/maestro-platform-20261020s-tmpdir-s5hin29t/pytest-of-jefferson/pytest-2/test_closed_verification_in_fr1/offline-inputs.json",
+  "input_sha256": "4ccad18f6503183aea62faf6d029e8d6f5e49aa590b03144ca5563c19b071d71",
+  "evidence_sha256": {
+    "manifest.json": "c245f97140c251df87c7ae38b9242190cc7aff0f791037a90b34a2a82d6658a0",
+    "lifecycle-coverage.json": "227762f89abeb63dc3bc4186d79be9e89e108b963e18abf0b8bd2e7106b01da9",
+    "broker-projection.json": "c3eb51d17e50d4674fb6735c1d2d46cd9bb4f429e7307befa9be486f32e6be54",
+    "retained-inputs.json": "de956b171b125bd60fcabfdf35912ccf5f01dd198328e6e9285adf4151980e81",
+    "collection.json": "64a2c1f0a79a53c833d8584c93e9701b141999a7596b2754cbe0ad83604bb388",
+    "synthetic-output.json": "a8198524f58e72b56283ab71ebddada22840f108b46ef7165bb3fca9919c5558",
+    "events.jsonl": "d475283edc86c33ec72dba0d10b4d7f8b11b4e61213e20b6bf878b1c29d2a434"
+  },
+  "unchanged_evidence": true,
+  "source_sha256": "abe42f30bd9a7d74aebc3528f1a2b6e0e84d5c3699e12b7dfbfd504ffcd4e8ca",
+  "synthetic_facts": true,
+  "scientific_result": false
+}

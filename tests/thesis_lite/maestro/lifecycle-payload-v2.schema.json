@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "maturity": "DRAFT",
+  "verification_executed": false,
+  "title": "Draft Maestro lifecycle annotation payload v2.0",
+  "description": "Successor payload version. v1.0 is preserved unchanged; this v2.0 adds the scope discriminator, the validate/disposition actions and the obligationId/cause/disposition fields. For action=disposition the schema enforces the exact outcome/disposition compatibility: completed->succeeded, failed->failed, blocked->skipped, skipped->skipped, cancelled->cancelled, unresolved->unresolved, not-applicable->skipped. The outcome value is always a member of the outcome enum (pending/succeeded/failed/cancelled/skipped/unknown/unresolved); the disposition value is always a member of the disposition enum. Semantic validation (identity/order/obligation) is owned by Maestro; accepted Argus validates only envelope/extension rules.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "const": "2.0" },
+    "lifecycleDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "runId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "scope": { "enum": ["run", "unit", "step"] },
+    "unitId": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "generation": { "type": "integer", "minimum": 0 },
+    "stepId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "operationId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "action": {
+      "enum": [
+        "intent", "issued", "started", "probe", "ready", "health", "health-loss",
+        "validate", "cancel", "stop", "cleanup", "collect", "disposition", "run-terminal"
+      ]
+    },
+    "outcome": {
+      "enum": ["pending", "succeeded", "failed", "cancelled", "skipped", "unknown", "unresolved"]
+    },
+    "sourceRefs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": ["kind", "id", "sha256", "sequence"],
+        "properties": {
+          "kind": { "enum": ["admitted-lifecycle", "m3-record", "broker-record"] },
+          "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "sequence": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": ["unitId", "generation", "probeEventId"],
+        "properties": {
+          "unitId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "generation": { "type": "integer", "minimum": 1 },
+          "probeEventId": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "handleRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "probeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "diagnosticCode": { "type": "string", "pattern": "^ML-[A-Z-]+$" },
+    "obligationId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "cause": {
+      "enum": ["normal", "journal-failure", "argus-failure", "cancellation", "readiness-failure", "issuer-loss", "deadline-exceeded", "external"]
+    },
+    "disposition": {
+      "enum": ["completed", "failed", "blocked", "skipped", "cancelled", "unresolved", "not-applicable"]
+    }
+  },
+  "required": [
+    "schemaVersion", "lifecycleDigest", "runId", "sessionId", "scope", "unitId",
+    "generation", "operationId", "action", "outcome", "sourceRefs", "dependencies"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "scope": { "const": "run" } }, "required": ["scope"] },
+      "then": {
+        "properties": {
+          "unitId": { "type": "null" },
+          "generation": { "const": 0 }
+        },
+        "not": { "required": ["stepId"] }
+      },
+      "else": {
+        "properties": { "unitId": { "type": "string", "minLength": 1, "maxLength": 128 } }
+      }
+    },
+    {
+      "if": { "properties": { "scope": { "const": "step" } }, "required": ["scope"] },
+      "then": { "required": ["stepId"] },
+      "else": { "not": { "required": ["stepId"] } }
+    },
+    {
+      "if": { "properties": { "action": { "enum": ["probe", "ready", "health", "health-loss"] } }, "required": ["action"] },
+      "then": { "required": ["probeId"] }
+    },
+    {
+      "if": { "properties": { "action": { "const": "disposition" } }, "required": ["action"] },
+      "then": {
+        "required": ["disposition"],
+        "allOf": [
+          {
+            "if": { "properties": { "disposition": { "const": "completed" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "succeeded" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "failed" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "failed" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "blocked" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "skipped" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "skipped" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "skipped" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "cancelled" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "cancelled" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "unresolved" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "unresolved" } } }
+          },
+          {
+            "if": { "properties": { "disposition": { "const": "not-applicable" } }, "required": ["disposition"] },
+            "then": { "properties": { "outcome": { "const": "skipped" } } }
+          }
+        ]
+      }
+    },
+    {
+      "if": { "properties": { "action": { "const": "run-terminal" } }, "required": ["action"] },
+      "then": { "properties": { "scope": { "const": "run" } }, "required": ["scope"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "generation": { "const": 0 },
+          "scope": { "enum": ["unit", "step"] }
+        },
+        "required": ["generation", "scope"]
+      },
+      "then": {
+        "properties": {
+          "action": { "enum": ["validate", "disposition", "cancel"] }
+        }
+      }
+    }
+  ]
+}

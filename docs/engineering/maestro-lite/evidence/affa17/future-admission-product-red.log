@@ -1,0 +1,826 @@
+FFFFFFFFFFFFFFFFFFFFFFFFF                                                [100%]
+=================================== FAILURES ===================================
+________ test_future_contexts_are_pure_exact_consecutive_and_canonical _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7de1c8d35810>
+
+    def test_future_contexts_are_pure_exact_consecutive_and_canonical(monkeypatch):
+        import builtins, os, subprocess
+    
+        ctx = initial()
+>       a2 = future(ctx, 0, 2)
+             ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_____ test_future_identity_cannot_reuse_initial_or_other_future[permit-id] _____
+
+kind = 'permit-id'
+
+    @pytest.mark.parametrize("kind", ["permit-id", "nonce", "execution"])
+    def test_future_identity_cannot_reuse_initial_or_other_future(
+        kind
+    ):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_______ test_future_identity_cannot_reuse_initial_or_other_future[nonce] _______
+
+kind = 'nonce'
+
+    @pytest.mark.parametrize("kind", ["permit-id", "nonce", "execution"])
+    def test_future_identity_cannot_reuse_initial_or_other_future(
+        kind
+    ):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_____ test_future_identity_cannot_reuse_initial_or_other_future[execution] _____
+
+kind = 'execution'
+
+    @pytest.mark.parametrize("kind", ["permit-id", "nonce", "execution"])
+    def test_future_identity_cannot_reuse_initial_or_other_future(
+        kind
+    ):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+__________ test_future_contexts_reject_wrong_unit_or_generation[gap] ___________
+
+kind = 'gap'
+
+    @pytest.mark.parametrize(
+        "kind",
+        ["gap", "duplicate", "unknown-unit", "boolean-generation", "initial-generation"],
+    )
+    def test_future_contexts_reject_wrong_unit_or_generation(kind):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_______ test_future_contexts_reject_wrong_unit_or_generation[duplicate] ________
+
+kind = 'duplicate'
+
+    @pytest.mark.parametrize(
+        "kind",
+        ["gap", "duplicate", "unknown-unit", "boolean-generation", "initial-generation"],
+    )
+    def test_future_contexts_reject_wrong_unit_or_generation(kind):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+______ test_future_contexts_reject_wrong_unit_or_generation[unknown-unit] ______
+
+kind = 'unknown-unit'
+
+    @pytest.mark.parametrize(
+        "kind",
+        ["gap", "duplicate", "unknown-unit", "boolean-generation", "initial-generation"],
+    )
+    def test_future_contexts_reject_wrong_unit_or_generation(kind):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+___ test_future_contexts_reject_wrong_unit_or_generation[boolean-generation] ___
+
+kind = 'boolean-generation'
+
+    @pytest.mark.parametrize(
+        "kind",
+        ["gap", "duplicate", "unknown-unit", "boolean-generation", "initial-generation"],
+    )
+    def test_future_contexts_reject_wrong_unit_or_generation(kind):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+___ test_future_contexts_reject_wrong_unit_or_generation[initial-generation] ___
+
+kind = 'initial-generation'
+
+    @pytest.mark.parametrize(
+        "kind",
+        ["gap", "duplicate", "unknown-unit", "boolean-generation", "initial-generation"],
+    )
+    def test_future_contexts_reject_wrong_unit_or_generation(kind):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_______ test_future_approval_must_match_every_exact_original_pin[run_id] _______
+
+field = 'run_id'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____ test_future_approval_must_match_every_exact_original_pin[execution_id] ____
+
+field = 'execution_id'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_____ test_future_approval_must_match_every_exact_original_pin[generation] _____
+
+field = 'generation'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+__ test_future_approval_must_match_every_exact_original_pin[lifecycle_digest] __
+
+field = 'lifecycle_digest'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____ test_future_approval_must_match_every_exact_original_pin[plan_digest] _____
+
+field = 'plan_digest'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____ test_future_approval_must_match_every_exact_original_pin[provider_id] _____
+
+field = 'provider_id'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+___ test_future_approval_must_match_every_exact_original_pin[provider_kind] ____
+
+field = 'provider_kind'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_ test_future_approval_must_match_every_exact_original_pin[provider_artifact_digest] _
+
+field = 'provider_artifact_digest'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_ test_future_approval_must_match_every_exact_original_pin[environment_identity] _
+
+field = 'environment_identity'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_ test_future_approval_must_match_every_exact_original_pin[permit_content_digest] _
+
+field = 'permit_content_digest'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____ test_future_approval_must_match_every_exact_original_pin[approval_ref] ____
+
+field = 'approval_ref'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____ test_future_approval_must_match_every_exact_original_pin[issuer_label] ____
+
+field = 'issuer_label'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+______ test_future_approval_must_match_every_exact_original_pin[unit_id] _______
+
+field = 'unit_id'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+__ test_future_approval_must_match_every_exact_original_pin[artifact_digests] __
+
+field = 'artifact_digests'
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "run_id",
+            "execution_id",
+            "generation",
+            "lifecycle_digest",
+            "plan_digest",
+            "provider_id",
+            "provider_kind",
+            "provider_artifact_digest",
+            "environment_identity",
+            "permit_content_digest",
+            "approval_ref",
+            "issuer_label",
+            "unit_id",
+            "artifact_digests",
+        ],
+    )
+    def test_future_approval_must_match_every_exact_original_pin(field):
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+_______ test_future_expiry_is_revalidated_without_rewriting_initial_api ________
+
+    def test_future_expiry_is_revalidated_without_rewriting_initial_api():
+        ctx = initial()
+>       value = future(ctx, 0, 2)
+                ^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+____________ test_joint_generation_capacity_is_not_a_new_permission ____________
+
+    def test_joint_generation_capacity_is_not_a_new_permission():
+        ctx = initial()
+>       values = tuple(future(ctx, 0, g) for g in range(2, 128))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_generation_admission.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_generation_admission.py:202: in <genexpr>
+    values = tuple(future(ctx, 0, g) for g in range(2, 128))
+                   ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ctx = (PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_dige...5, tzinfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 18, 9, 0, 30, tzinfo=datetime.timezone.utc))))
+index = 0, generation = 2
+
+    def future(ctx, index, generation):
+>       from xverse.maestro.admission import GenerationContext
+E       ImportError: cannot import name 'GenerationContext' from 'xverse.maestro.admission' (/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/admission.py)
+
+tests/thesis_lite/maestro/test_generation_admission.py:23: ImportError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_are_pure_exact_consecutive_and_canonical
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[permit-id]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[nonce]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[execution]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[gap]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[duplicate]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[unknown-unit]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[boolean-generation]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[initial-generation]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[run_id]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[execution_id]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[generation]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[lifecycle_digest]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[plan_digest]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[provider_id]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[provider_kind]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[provider_artifact_digest]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[environment_identity]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[permit_content_digest]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[approval_ref]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[issuer_label]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[unit_id]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin[artifact_digests]
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_future_expiry_is_revalidated_without_rewriting_initial_api
+FAILED tests/thesis_lite/maestro/test_generation_admission.py::test_joint_generation_capacity_is_not_a_new_permission
+25 failed in 5.85s

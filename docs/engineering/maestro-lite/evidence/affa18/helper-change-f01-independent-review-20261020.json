@@ -1,0 +1,244 @@
+{
+  "review": "helper-change-f01-independent-review",
+  "reviewer": "separate agent session (Claude, independent of the change author)",
+  "date": "2026-10-20",
+  "repository": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+  "branch": "candidate/maestro-lite-affa18-20261020 (change uncommitted in the working tree)",
+  "subject": "src/xverse/maestro/native/run_authority.c",
+  "method": "Read-only source reading of the old blob (git show HEAD:...) and the working-tree file, the diff, review-affa18.md findings 394-395, the affa17 independent review (F-01, F-02, F-05, F-07), affa_protocol.py, affa_client.py and the Python CANCEL/REJECTED consumers; compiled old and new sources in /dev/shm (never executed); no existing file modified, no state-changing git command, no pytest.",
+  "frozen_inputs": [
+    {
+      "path": "src/xverse/maestro/native/run_authority.c",
+      "version": "HEAD (old)",
+      "sha256": "2a2ee8306a7f45186355b548888d00e3df9fd22f20fd9fbe9435afa718874563",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/native/run_authority.c",
+      "version": "working tree (new)",
+      "sha256": "7fde44db52c661d7c27b21986ca63e7185cab40d824c74869dd0c0a1c2acece0",
+      "verified": true
+    }
+  ],
+  "checks": [
+    {
+      "item": "1a. Frozen inputs and diff scope",
+      "verdict": "PASS",
+      "evidence": "sha256(git show HEAD:src/xverse/maestro/native/run_authority.c)=2a2ee830...; sha256(working tree)=7fde44db...; git diff touches exactly run_authority.c:161-162 (freeze_all), 181-182 (close_end), 394 (CANCEL), 520 (rejection path); 6 insertions, 3 deletions",
+      "note": "The working tree also changes tests/thesis_lite/maestro/test_affa_release_timeout_fence.py (outside the subject; read only for context)."
+    },
+    {
+      "item": "1b. Freeze write never skipped for an elapsed budget",
+      "verdict": "PASS",
+      "evidence": "run_authority.c:162 calls write_freeze(e->cg,'1') unconditionally for every registered unit whose latest generation is not removed(); the old guard now_ns()>=end (HEAD:161) is gone; the only remaining skips are removed() at 160 and an unregistered unit at 158",
+      "note": "Writes go through openat on the retained descriptor (93-96), so they cannot reach a different cgroup."
+    },
+    {
+      "item": "1c. Wait for frozen==1 bounded",
+      "verdict": "PASS",
+      "evidence": "run_authority.c:164-167 loops only while now_ns()<end with a 1 ms poll; end <= g->generation by construction of every caller (182, 468, 501)",
+      "note": "Bound depends on CLOCK_MONOTONIC staying readable; see F01R-08."
+    },
+    {
+      "item": "1d. Independent close budget on the rejection path",
+      "verdict": "PASS",
+      "evidence": "run_authority.c:520 close_authority(g,close_end(g)); close_end at 182 samples now_ns() after command() returns and yields min(g->generation, now+2 s), so the RELEASE-timeout case (wait loop 439-444 exits at now>=g->deadline) no longer passes an elapsed end",
+      "note": "Same expression as cleanup():468 and bootstrap.c:259."
+    },
+    {
+      "item": "1e. Independent close budget on CANCEL",
+      "verdict": "PASS",
+      "evidence": "run_authority.c:394 close_authority(g,close_end(g)) replaces g->deadline",
+      "note": "Changes the CANCELLED reply timing relative to the caller's deadline; see F01R-01."
+    },
+    {
+      "item": "1f. Other freeze_all/close_authority call sites",
+      "verdict": "PASS",
+      "evidence": "freeze_all is called only from close_authority (179). close_authority call sites: 394 (CANCEL, now close_end), 469 (cleanup, fresh min(generation, now+2 s) at 468), 501 (lease expiry, fresh min(generation, now+2 s) using now sampled at 500), 520 (rejection, now close_end). stop_child:358 still refuses its own freeze write after g->deadline, but a STOP failure returns -1 and reaches the rejection close at 520",
+      "note": "cleanup():468 can still receive an end <= now when it runs after a close that consumed the budget up to the generation (e.g. a failed REJECTED send at 520); with this change the writes are still issued there, only the wait and kills (472) are skipped and the exit code is 70. See F01R-05."
+    },
+    {
+      "item": "2a. Close budget versus the generation teardown deadline",
+      "verdict": "PASS",
+      "evidence": "close_end:182 never returns more than g->generation; cleanup loops 472 and 483 are bounded by g->generation and end; the authority therefore cannot act past generation except for loop granularity (1 ms poll plus one cgroup.events read per unit)",
+      "note": ""
+    },
+    {
+      "item": "2b. Close budget versus the 'until <= generation - 2 s' request constraint",
+      "verdict": "NOTE",
+      "evidence": "Request validity at run_authority.c:515 and affa_client.py:257 bounds request deadlines only; close_end is not a request deadline and the reply still carries g->deadline (run_reply:196), so the wire constraint is untouched. However a close triggered by a request with until near generation-2 s can now keep the authority busy inside [generation-2 s, generation], the window previously used only by cleanup()",
+      "note": "Conservative: a closed authority cannot thaw (enabled():106 requires !closed; the only '0' writer is RELEASE at 438). See F01R-05."
+    },
+    {
+      "item": "2c. Close budget versus the supervisor's 2 s cleanup budget",
+      "verdict": "PASS",
+      "evidence": "bootstrap.c:285 triggers supervisor cleanup on its own clock and parent/authority liveness; bootstrap.c:258-277 kills every issued helper (including the authority) by retained pidfd before freezing unit and watched boundaries with its own min(generation, now+2 s); nothing in the supervisor waits for the authority's close",
+      "note": "A longer authority close cannot delay the supervisor fence."
+    },
+    {
+      "item": "2d. CANCEL reply timing versus the caller's receive deadline",
+      "verdict": "NOTE",
+      "evidence": "run_broker.py:884 sends CANCEL with until=min(now+1 s, generation-2 s, limit); affa_client.py:338 receives until request.deadline_ns and raises ML-AFFA-TIMEOUT (156-158) or ML-AFFA-LATE-ACK (340-341); the helper's CANCEL wait is now up to 2 s",
+      "note": "When a unit does not reach frozen==1 within the CANCEL deadline, the CANCELLED reply now arrives late and the client revokes (SIGKILL) instead of recording CANCELLED(6). Direction is conservative; it is a behavioural change not recorded in findings 394/395. See F01R-01."
+    },
+    {
+      "item": "3a. REJECTED with reason FREEZE_FAILED (6) accepted by the decoder",
+      "verdict": "PASS",
+      "evidence": "affa_protocol.py:87 bounds reason to 0..7; :108 requires reason != 0 and state == 0 for REJECTED; run_authority.c:520 still sends state 0 and reason 4 or 6",
+      "note": "Finding 394 attributes the 1..7 range to line 108; the upper bound is line 87 and line 108 enforces non-zero reason and zero state."
+    },
+    {
+      "item": "3b. REJECTED reason consumers",
+      "verdict": "PASS",
+      "evidence": "affa_client.py:288-289 raises ML-AFFA-NATIVE-REJECTED before reading the reason; no other src consumer of the AF17 REJECTED reason exists (grep of src/xverse/maestro). tests/thesis_lite/maestro/test_affa_release_timeout_fence.py:64 asserts reason == 4; test_releasegate.py:204,221 concern the lease_guard protocol, not AF17",
+      "note": "Behaviour of the client is unchanged; the reason is diagnostic only. The fence control would fail at :64 if the refreeze were unconfirmed (see F01R-07)."
+    },
+    {
+      "item": "3c. CANCELLED mask and reason consistent with affa_client.py",
+      "verdict": "PASS",
+      "evidence": "run_authority.c:395 sends the freeze_all mask (bits i < g->count <= 16, set only at 160/168) and reason 5 or 6; affa_client.py:303 requires state < 1<<len(units) and reason in (5, 6); affa_protocol.py:86 bounds state to 0..65535; run_broker.py:902 maps reason 5 to success and 6 to ML-RUN-FREEZE-UNRESOLVED; run_closure.py:183-187 accepts any CANCELLED",
+      "note": "freeze_failed is sticky (set at 162/169, never cleared), as before."
+    },
+    {
+      "item": "4a. Integer types and initialisation",
+      "verdict": "PASS",
+      "evidence": "close_end:182 uses uint64_t throughout; now+2*NS cannot overflow a monotonic nanosecond clock; frozen is initialised at 163; compiled in /dev/shm with cc 11.4.0 -std=c11 -O2 -Wall -Wextra -Werror (clean) and additionally -Wconversion -Wshadow -Wsign-conversion (one warning, cleanup():469 int unresolved=g->freeze_failed, identical in the HEAD version); harness-named build (authority.c -> authority) reproduces 40fa39ee34d96c93555a8daf88e52d14a62e1ba52abc2e05bb9173535a92dcbf as recorded in finding 395",
+      "note": "Binary was compiled only, never executed."
+    },
+    {
+      "item": "4b. Writes to removed cgroups; write_freeze == 1 (ENOENT/ENODEV)",
+      "verdict": "NOTE",
+      "evidence": "removed():113-127 is evaluated before the write (160); a removed cgroup that removed() does not recognise (e.g. ENODEV instead of ENOENT) yields write_freeze()==1 at 94, which freeze_all counts as failure (162) while bootstrap.c:265/271 count it as resolved",
+      "note": "Pre-existing and conservative; now also reached where the old code skipped the write, with the same outcome (freeze_failed=1). See F01R-06."
+    },
+    {
+      "item": "4c. Interaction with removed()/advanced generations",
+      "verdict": "PASS",
+      "evidence": "freeze_all uses only history[used-1] (159); advance_unit:381 closes and marks the old generation removed and installs the new retained fd at 386; registered units always have cg >= 0 on their latest generation (318-321)",
+      "note": ""
+    },
+    {
+      "item": "5a. F-05 deferral described accurately",
+      "verdict": "PASS",
+      "evidence": "affa_protocol.py:87 (reason <= 7) and :108 (REJECTED state must be 0); run_authority.c:34 already uses every value 0..7, so RELEASE_TIMEOUT and a REJECTED mask need a wire revision; the RELEASE timeout still exits through 444 -> 520 as REJECTED",
+      "note": "Line attribution in 394(a) is slightly imprecise (see 3a)."
+    },
+    {
+      "item": "5b. F-07 rationale described accurately",
+      "verdict": "PASS",
+      "evidence": "Only '0' writer is RELEASE at run_authority.c:438, gated by enabled() at 434/436; enabled():106 requires !g->closed; closed is set only at 174 and never cleared; STOP/RETIRE/QUERY (447-464) do not require enabled(); bootstrap.c:157-173 terminal_fence still freezes without checking authority liveness; Python precondition at bootstrap.py:859-861 and run_broker.py:858-863",
+      "note": "The native gap remains open, as 394(c) states."
+    },
+    {
+      "item": "5c. F-02 deferral described accurately",
+      "verdict": "PASS",
+      "evidence": "advance_unit:368-389 unchanged and has no watch proof; the AC17 input is a sealed memfd supplied by the caller and only validated by the supervisor (bootstrap.c:212-215, authority_input:184), so option (i) indeed requires a supervisor-generated secret and a birth-path change; option (ii) requires a new supervisor-authority channel",
+      "note": "Correctly left as an author decision."
+    },
+    {
+      "item": "1g. Prior F-01 recommendation 'let the closed loop retry pending freezes'",
+      "verdict": "NOTE",
+      "evidence": "Prior review F-01 recommendation; main():499-521 still never retries a failed freeze while closed except via a later CANCEL or cleanup()",
+      "note": "Neither implemented nor recorded as deferred in findings 394/395. See F01R-03."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F01R-01",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "182, 394 (callers: src/xverse/maestro/run_broker.py:884, src/xverse/maestro/affa_client.py:156-158, 338-341, 388-401)",
+      "title": "CANCEL (and REJECTED) reply can now arrive after the caller's receive deadline when freezing is slow",
+      "scenario": "run_broker.cancel sends CANCEL with until <= now+1 s. If a unit does not report frozen==1 within that window, the HEAD helper replied CANCELLED(reason 6, partial mask) by until; the new helper keeps waiting up to min(generation, now+2 s). The client raises ML-AFFA-TIMEOUT or ML-AFFA-LATE-ACK, revokes (SIGKILL of the authority), and RunCancellation is built from the revocation; no CANCELLED frame enters _epoch_history, so the terminal precondition (bootstrap.py:859-861, run_broker.py:858-863) depends on observed authority death and evidence.py:315 records nativeCancellationAcknowledged=false. The same applies to an early rejection whose REJECTED reply now follows a wait longer than the request remainder. Direction is conservative: the freeze writes were issued before the wait, the authority is killed, and the supervisor cleanup refreezes (bootstrap.c:258-277).",
+      "recommendation": "Record the trade-off in the review log, or bound the CANCEL wait by the request deadline (now sufficient for F-01 because the write is unconditional) while keeping close_end for the rejection path; in either case state which reply-timing guarantee the CANCEL receipt carries."
+    },
+    {
+      "id": "F01R-02",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "155-172",
+      "title": "Freeze writes are serialised behind each unit's wait; units after an exhausted budget are never read",
+      "scenario": "freeze_all writes unit i and waits for it before writing unit i+1. One unit that does not freeze consumes the whole 2 s budget, delaying the freeze write of every later unit (which may host a released, running workload) by up to 2 s. Units reached after the budget is exhausted get the write but no read (frozen stays 0, the loop at 164 is not entered), so they are excluded from the mask and set freeze_failed even if already frozen, yielding reason 6 / exit 70 spuriously.",
+      "recommendation": "Use two passes: issue every cgroup.freeze write first, then wait for frozen==1 under the shared budget, reading each unit at least once (do-while) so the mask is not under-reported."
+    },
+    {
+      "id": "F01R-03",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "499-521",
+      "title": "Prior F-01 recommendation to retry pending freezes in the closed loop is neither implemented nor recorded as deferred",
+      "scenario": "After a close whose freeze could not be confirmed, the closed authority keeps serving cleanup-only requests until generation-2 s without re-issuing the freeze, unless a later CANCEL or cleanup() calls close_authority again. Findings 394/395 do not mention this part of the prior recommendation.",
+      "recommendation": "Either implement a bounded retry for units not in the last mask or record the item as deferred/declined with rationale in review-affa18.md."
+    },
+    {
+      "id": "F01R-04",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "394-395, 520, 467-469",
+      "title": "A failed reply send can now trigger up to three successive 2 s close budgets",
+      "scenario": "If the CANCELLED send at 395 fails (MSG_DONTWAIT, peer gone), command returns -1, main re-runs close_authority with a fresh close_end (520), then a failed REJECTED send leads to cleanup() with another min(generation, now+2 s). Worst case about 6 s when units do not freeze, always bounded by g->generation; the second close previously had an elapsed budget and returned quickly. Fail-safe; the supervisor watchdog is independent.",
+      "recommendation": "Optional: return cleanup(g) directly when a reply send fails, or skip the re-close when the authority is already closed and the last mask was complete."
+    },
+    {
+      "id": "F01R-05",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "182, 468-489, 500",
+      "title": "Close activity can extend into the last 2 s of the generation and leave cleanup() an elapsed budget",
+      "scenario": "A close started near generation-2 s may run until the generation; the next loop iteration (500) calls cleanup(), whose end = min(generation, now+2 s) can already be <= now. With this change cleanup still issues the freeze writes, but performs no frozen wait and no kills (472 requires now < generation), and returns 70. The authority never acts past the generation beyond loop granularity, and the wire constraint until <= generation-2 s is unaffected.",
+      "recommendation": "None required; document that the authority's close and the supervisor cleanup may overlap in [generation-2 s, generation]."
+    },
+    {
+      "id": "F01R-06",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "93-96, 113-127, 162",
+      "title": "write_freeze()==1 (ENOENT/ENODEV) counted as freeze failure, unlike bootstrap.c",
+      "scenario": "A removed cgroup that removed() does not recognise (errno other than ENOENT on any of the three controls) reaches write_freeze, which returns 1; freeze_all sets freeze_failed (reason 6 / exit 70), whereas bootstrap.c:265/271 treat 1 as resolved. Pre-existing, conservative, and unchanged in outcome by this diff; no write can reach a removed or different cgroup.",
+      "recommendation": "Optional: treat write_freeze()==1 as removed (set the mask bit) for consistency with bootstrap.c, or record the stricter semantics."
+    },
+    {
+      "id": "F01R-07",
+      "severity": "NOTE",
+      "file": "tests/thesis_lite/maestro/test_affa_release_timeout_fence.py",
+      "line": "3-12, 64, 84",
+      "title": "Fence-control docstring is stale and the control cannot exercise the new FREEZE_FAILED or bounded-wait branches",
+      "scenario": "The docstring still says the native authority skips its refreeze and that there are no helper byte changes, contradicting helper_bytes_changed=True (84). Because the ancestor freeze keeps the unit frozen, frozen==1 is observed immediately, so the control covers the unconditional write but neither the budgeted wait nor the REJECTED reason 6 path; line 64 would fail first if the refreeze were unconfirmed.",
+      "recommendation": "Update the docstring; record that the FREEZE_FAILED branch and the bounded wait are untested, or add a control for them."
+    },
+    {
+      "id": "F01R-08",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "55, 166, 182, 501-504",
+      "title": "Pre-existing timing details in the close paths (not introduced by this diff)",
+      "scenario": "(a) If clock_gettime fails, now_ns() returns 0, close_end returns g->generation and the wait loop 164 compares 0 < end, so the wait is unbounded while the clock keeps failing (same pattern as cleanup():468). (b) poll on g->parent at 166 returns immediately once the parent has exited, so the wait busy-spins for the budget. (c) After the lease-expiry close at 501 the poll timeout at 504 uses the pre-close now, delaying the generation-2 s cleanup trigger by up to the close duration (bounded by the generation).",
+      "recommendation": "Optional hardening: treat now_ns()==0 as budget exhausted inside the wait loops; recompute now after the lease-expiry close."
+    }
+  ],
+  "counts": {
+    "findings": {
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 3,
+      "NOTE": 5
+    },
+    "checks": {
+      "PASS": 16,
+      "FAIL": 0,
+      "NOTE": 4
+    }
+  },
+  "verdict": "F-01 addressed",
+  "verdict_rationale": "The cgroup.freeze write is issued for every live generation regardless of budget (162), the wait is bounded (164-167), and the rejection path (520) and CANCEL (394) use an independent min(generation, now+2 s) budget; cleanup() and the lease-expiry path already used fresh budgets. Residual items are LOW/NOTE and conservative in direction; the REJECTED freeze mask remains deferred with F-05.",
+  "limits": [
+    "Kernel behaviour (cgroup freeze latency, ENOENT/ENODEV semantics after rmdir) was not verified.",
+    "Nothing was executed; timing statements are source constants.",
+    "The thesis repository Git freshness check and canonical dynamic note were not applied: this is a read-only review in a different repository."
+  ],
+  "authority_limits": {
+    "activation_approved": false,
+    "m1_admission": false,
+    "acceptance": false
+  }
+}

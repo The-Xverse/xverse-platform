@@ -1,0 +1,11 @@
+--- check-rpc-context-loss-work-products-20261019.py
++++ check-rpc-context-loss-work-products-20261019-v2.py
+@@ -36,7 +36,7 @@
+ assert len(v['root_receipts'])==122 and len(v['rpc_failure_contexts'])==10 and len(v['startup_cases'])==12
+ assert len(v['context_loss_cases'])==6 and len(v['unavailable_capture_cases'])==2
+ assert v['source_links']==254 and len(v['retained_durable_closed_roots'])==4
+-assert v['auditor_sha256']==sha(base/'audit-rpc-context-loss-20261019c.py')
++assert v['auditor_sha256']==sha(base/'audit-rpc-context-loss-20261019-v2.py')
+ for item in v['retained_durable_closed_roots']:
+     folder=base/'rpc-context-loss-20261019c'/item['path']
+     assert {str(p.relative_to(folder)):sha(p) for p in folder.rglob('*') if p.is_file()}==item['files']

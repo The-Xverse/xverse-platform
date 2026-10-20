@@ -1,0 +1,110 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  9%]
+............................................................F........... [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError:   accepted=driver.restart_many(client.run_id,tuple(reversed(inputs)),deadline=end)
+E                         assert tuple(t.unit_id for t in accepted)==chosen
+E                         tickets.extend(accepted)
+E                         assert tuple(driver.restart_many(client.run_id,inputs,deadline=end))==tuple(tickets)
+E                         assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before
+E                         assert all(driver.restart_result(t) is None for t in tickets)
+E                     return response
+E                 monkeypatch.setattr(driver,'_statement',enqueue)
+E                 prepare=broker._prepare_generation
+E                 def original_prepare(teardown,unit,descriptor,end):
+E                     assert threading.get_ident()==broker.owner._dispatch_thread
+E                     assert broker.issuer(unrelated)._handle is old_handles[unrelated]
+E                     assert unrelated in facade._released and unrelated not in driver.teardown._stopped
+E                     live_unrelated.append(dict(unit=unit,handle=asdict(broker.issuer(unrelated)._handle),observed_at=__import__('time').monotonic()))
+E                     prepared_order.append(unit)
+E                     return prepare(teardown,unit,descriptor,end)
+E                 monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+E                 advance=broker.advance_generation
+E                 def original_advance(prepared,end):
+E                     issuer=advance(prepared,end)
+E                     if mode=='mid-storage-loss' and issuer.unit_id==middle:
+E                         signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+E                     return issuer
+E                 monkeypatch.setattr(broker,'advance_generation',original_advance)
+E                 output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+E                 if output:
+E                     out=Path(output);out.mkdir(parents=True,exist_ok=True)
+E                     with (out/('cohort-inputs-'+mode+'.json')).open('x') as stream:
+E                         json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+E                             original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+E                             generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+E                             original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),stream,indent=2)
+E                         stream.write('\n')
+E                 try:
+E                     result=run(driver)
+E                     assert len(tickets)==len(chosen),result.diagnostic
+E                     outcomes=[driver.restart_result(t) for t in tickets]
+E                     assert all(r is not None for r in outcomes)
+E                     records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+E                     if mode=='mid-storage-loss':
+E                         assert [r.disposition for r in outcomes]==['completed','failed','cancelled'],outcomes
+E                         assert prepared_order==[source,middle] and not result.execution_succeeded
+E                     else:
+E                         expected='rejected' if mode=='omitted-dependent' else 'completed'
+E                         assert all(r.disposition==expected for r in outcomes),outcomes
+E         >               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E         E               AssertionError: ML-SCHEDULE-TERMINAL-INCOMPLETE
+E         E               assert (False)
+E         E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='6c12338e5b7fbb08098a6e61b52e0bcfc96a24de8ebf97187c96f545d609fbd...L-SCHEDULE-TERMINAL-INCOMPLETE', health_scans=1, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_active_transitive_restart.py:130: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]
+E         1 failed, 1803 passed, 24 subtests passed in 1199.40s (0:19:59)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-platform-regression-target-20261020d/bin/python', '-m', 'pytest', '-q', '-p'..._and_all_generations[omitted-dependent]\n1 failed, 1803 passed, 24 subtests passed in 1199.40s (0:19:59)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+1 failed, 2087 passed, 24 subtests passed in 2425.51s (0:40:25)

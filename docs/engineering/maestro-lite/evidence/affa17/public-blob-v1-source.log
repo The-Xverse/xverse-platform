@@ -1,0 +1,100 @@
+.......................................F................................ [ 27%]
+........................................................................ [ 54%]
+.......................................FF............................... [ 82%]
+...............................................                          [100%]
+=================================== FAILURES ===================================
+_ test_original_replacement_conflict_and_cancelled_publication_preserve_no_start _
+
+request = <FixtureRequest for <Function test_original_replacement_conflict_and_cancelled_publication_preserve_no_start>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7497416748a0>
+
+    def test_original_replacement_conflict_and_cancelled_publication_preserve_no_start(request,monkeypatch):
+        configure(monkeypatch);stack=request.getfixturevalue('broker_stack');broker,_,client,work=stack
+        sequence=client._sequence;original=client._broker_artifact
+        client._broker_artifact=replace(original)
+        try:
+            with pytest.raises(ValueError,match='REPLACED'):client.publish_broker_artifact(broker,deadline(1))
+        finally:client._broker_artifact=original
+        original_path=original.relative_path
+        try:
+            object.__setattr__(original,'relative_path','foreign.json')
+            with pytest.raises(ValueError,match='REPLACED'):client.publish_broker_artifact(broker,deadline(1))
+        finally:object.__setattr__(original,'relative_path',original_path)
+        with pytest.raises(ValueError,match='ORIGINAL'):client.publish_broker_artifact(SimpleNamespace(storage=client),deadline(1))
+        client._publication_lock.acquire()
+        try:
+            with pytest.raises(ValueError,match='CONFLICT'):client.publish_broker_artifact(broker,deadline(1))
+        finally:client._publication_lock.release()
+        assert client._sequence==sequence and not client.latch.cancelled
+>       broker.cancel('public evidence after cancellation')
+
+tests/thesis_lite/maestro/test_public_blobs.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/run_broker.py:850: in cancel
+    self.owner.latch.cancel(reason)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.supervisor.CancellationLatch object at 0x7497405dc8c0>
+reason = 'public evidence after cancellation'
+
+    def cancel(self, reason: str) -> int:
+        self._check()
+        if (
+            type(reason) is not str
+            or not reason
+            or len(reason) > 64
+            or any(not (c.isascii() and (c.isalnum() or c in "-_")) for c in reason)
+        ):
+>           raise SupervisionError("ML-ADMISSION-CANCEL-REASON")
+E           xverse.maestro.supervisor.SupervisionError: ML-ADMISSION-CANCEL-REASON
+
+src/xverse/maestro/supervisor.py:87: SupervisionError
+__ test_actual_revalidation_failure_prevents_native_release[revalidate-hang] ___
+
+storage = (<function storage.<locals>.start at 0x74973ffe7b00>, <function storage.<locals>.stage at 0x74973ffe63e0>, Persistence...c.ProcessBoundaryOps object at 0x749741431a90>, <xverse.maestro.supervisor.CancellationLatch object at 0x74973feabd20>)
+native = PosixPath('/tmp/maestro-affa17-public-blob-v1-source-private-xvv8pamd/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/tmp/maestro-affa17-public-blob-v1-source-private-xvv8pamd/releasegate-native0/release-gate')
+mode = 'revalidate-hang'
+
+    @pytest.mark.parametrize("mode", ["revalidate-hang", "revalidate-fail"])
+    def test_actual_revalidation_failure_prevents_native_release(
+        storage, native, guard_binary, mode
+    ):
+        start, stage, config, manager, latch = storage
+        owner, client, announce, release = start(mode)
+        unit_id = config.prepared.units[0].unit_id
+        original = deadline(1.5)
+        owner.commit_intent(unit_id, original)
+        unit_id, descriptor, child, marker, gate = stage(owner, guard_binary, native)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_persistence.py:372: Failed
+__ test_actual_revalidation_failure_prevents_native_release[revalidate-fail] ___
+
+storage = (<function storage.<locals>.start at 0x749740336480>, <function storage.<locals>.stage at 0x749740337240>, Persistence...c.ProcessBoundaryOps object at 0x74974070ea50>, <xverse.maestro.supervisor.CancellationLatch object at 0x74973fea94e0>)
+native = PosixPath('/tmp/maestro-affa17-public-blob-v1-source-private-xvv8pamd/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/tmp/maestro-affa17-public-blob-v1-source-private-xvv8pamd/releasegate-native0/release-gate')
+mode = 'revalidate-fail'
+
+    @pytest.mark.parametrize("mode", ["revalidate-hang", "revalidate-fail"])
+    def test_actual_revalidation_failure_prevents_native_release(
+        storage, native, guard_binary, mode
+    ):
+        start, stage, config, manager, latch = storage
+        owner, client, announce, release = start(mode)
+        unit_id = config.prepared.units[0].unit_id
+        original = deadline(1.5)
+        owner.commit_intent(unit_id, original)
+        unit_id, descriptor, child, marker, gate = stage(owner, guard_binary, native)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_persistence.py:372: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_public_blobs.py::test_original_replacement_conflict_and_cancelled_publication_preserve_no_start
+FAILED tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release[revalidate-hang]
+FAILED tests/thesis_lite/maestro/test_persistence.py::test_actual_revalidation_failure_prevents_native_release[revalidate-fail]
+3 failed, 260 passed in 241.91s (0:04:01)

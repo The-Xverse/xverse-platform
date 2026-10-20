@@ -1,0 +1,97 @@
+.....................F....................................               [100%]
+=================================== FAILURES ===================================
+_ test_original_storage_worker_failure_after_release_never_returns_ready[flush-fail] _
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x79f1b0c25450>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-884/test_original_storage_worker_f1/work'), <function boot_stack.<locals>.boundary at 0x79f1afc672e0>, ...)
+mode = 'flush-fail'
+
+    @pytest.mark.parametrize("mode", ["append-fail", "flush-fail", "flush-hang"])
+    def test_original_storage_worker_failure_after_release_never_returns_ready(
+        boot_stack, mode
+    ):
+        from pathlib import Path
+        import socket
+        import subprocess
+        import sys
+        from xverse.maestro.persistence import PersistenceClient, sealed_input_fd
+        from xverse.maestro.owner import ReleaseOwner, StageSupervisor
+        from xverse.maestro.launcher import make_launch_recipe
+        from xverse.maestro.providers import ProcessReadiness, ProbePolicy
+        from .test_launcher import deadline
+    
+        session, manager, latch, config, work, boundary, start, clients, owners = boot_stack
+        parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        fd = sealed_input_fd(config)
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                "-I",
+                str(Path(__file__).with_name("outcome_fixture.py")),
+                str(peer.fileno()),
+                str(fd),
+                mode,
+            ],
+            pass_fds=(peer.fileno(), fd),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(fd)
+        try:
+            storage = PersistenceClient(
+                process, parent, config, latch, deadline=deadline(2)
+            )
+            clients.append(storage)
+            owner = ReleaseOwner.from_persistence(
+                storage, StageSupervisor(manager, latch), latch
+            )
+            owners.append(owner)
+            original = deadline(3)
+            unit = config.prepared.units[0].unit_id
+            owner.commit_intent(unit, original)
+            descriptor = boundary("fault-workload", unit)
+            recipe = make_launch_recipe(
+                owner,
+                descriptor,
+                environment={"MAESTRO_VISIBLE": "declared"},
+                helper_artifact_digest=owner._unit(unit).provider.artifact_digest,
+                deadline=original,
+            )
+            launcher = session.catalog(owner, recipe, boundary("fault-launcher"), original)
+            clients.append(launcher)
+            handle = launcher.stage(original)
+            gate = session.gate(
+                owner,
+                descriptor,
+                boundary("fault-gate"),
+                original,
+                lease_ns=min(session._lease, time.monotonic_ns() + 3_000_000_000),
+            )
+            clients.append(gate)
+            facade = ProcessReadiness(
+                owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 1) for u in config.prepared.units
+                ),
+            )
+            facade.bind(launcher, handle)
+            began = time.monotonic()
+            with pytest.raises(ValueError):
+                facade.start(unit, descriptor, gate, deadline(0.4))
+            assert time.monotonic() - began < 1.5
+            assert latch.cancelled and not any(o.ready for o in facade.observations)
+            assert storage.drain(deadline(1)).worker_reaped
+            assert (
+                storage.last_writer_state == "open"
+            )  # Last ACK, not inferred durable closure.
+            journal = FileEvidenceJournal(work.parent / "m3.jsonl").records
+>           assert any(r.kind == "outcome" for r in journal)
+E           assert False
+E            +  where False = any(<generator object test_original_storage_worker_failure_after_release_never_returns_ready.<locals>.<genexpr> at 0x79f1afb8e670>)
+
+tests/thesis_lite/maestro/test_outcomes.py:362: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_outcomes.py::test_original_storage_worker_failure_after_release_never_returns_ready[flush-fail]
+1 failed, 57 passed in 47.34s

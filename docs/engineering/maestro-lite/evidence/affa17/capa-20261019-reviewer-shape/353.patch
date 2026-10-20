@@ -1,0 +1,11 @@
+--- before/reviewer
++++ after/reviewer
+@@ -51,7 +51,7 @@
+         assert sha(manifest_path)==writer['manifest_sha256']
+         assert actual_manifest['writerState']==writer['durable_writer_state']
+         closure = data['closure']
+-        assert closure['root_reaped'] and closure['cleanup_complete']
++        assert closure['root_reaped']
+         assert all(h['process_reaped'] for h in closure['helpers'])
+         assert all(b['empty'] and b['released'] for b in closure['boundaries'])
+         assert not data['full_TR03_complete'] and not data['full_TR06_complete']

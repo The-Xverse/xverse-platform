@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-20-lane-admission-proposal-v1",
+  "status": "PROPOSAL; not an activation; no admission performed",
+  "candidate_git_head": "36e6bf13254acf8d6772f36d38541440082dc18d",
+  "kernel_identity": "6.8.0-138-generic",
+  "facility": {
+    "environment": {
+      "path": "docs/engineering/maestro-lite/evidence/affa17/platform-environment-20261020d/preparation.json",
+      "digest": "sha256:fad839af21c93d21c0720e27918c984cafa1ef27fd0e67fffdb0f8f60efef399"
+    },
+    "implementation": {
+      "method": "git archive --format=tar HEAD src/xverse/maestro",
+      "head": "36e6bf13254acf8d6772f36d38541440082dc18d",
+      "digest": "sha256:db5badee2fc5b545f15badcb4490b9f5768dee976482f3da8eee8cb2df013ee8"
+    },
+    "design": {
+      "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/design-manifest.json",
+      "digest": "sha256:48d85a79b18cbb05482f425fef036270370edca5416da7ef9bd00aea078e780a"
+    },
+    "helpers": {
+      "supervisor": {
+        "source": "src/xverse/maestro/native/bootstrap.c",
+        "source_sha256": "21c2f70f6fbb1dec66fca39c9a44e4086f4496d46d30f28671ecd31f007cc38b",
+        "binary_sha256": "085fe295f96b095198dc027d109e41a46d77145299961038ca37e2bad8267ff0",
+        "retained": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/run-bootstrap-native.json"
+      },
+      "catalog": {
+        "source": "src/xverse/maestro/native/catalog_launcher.c",
+        "source_sha256": "8616a088a3b56a25888129729bcf0771d39f71ddb3a8f79f5affa22665445289",
+        "binary_sha256": "0df39c2000de0252da591213761bafa6b1462437fe304d23e1fc0d3ebee45abc",
+        "retained": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/catalog-native-launcher-0df39c2000de0252da591213761bafa6b1462437fe304d23e1fc0d3ebee45abc.bin"
+      },
+      "gate": {
+        "source": "src/xverse/maestro/native/lease_guard.c",
+        "source_sha256": "5bddac9e336ff82e9ad2fd41f234230573c955646b740df66372dc9a5c2485d6",
+        "binary_sha256": "9922dcdc89af80fce14d0681c28c37b02178b6236225379e7983da1a0200afa4",
+        "retained": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/catalog-native-bound-gate-9922dcdc89af80fce14d0681c28c37b02178b6236225379e7983da1a0200afa4.bin"
+      },
+      "python": {
+        "source": "/home/jefferson/.pyenv/versions/3.13.13/bin/python3.13",
+        "binary_sha256": "9907c621375bc585b55087a939f30310d5bc6e3b6b15a986f734dc24077cf968",
+        "retained": null
+      },
+      "authority": {
+        "source": "src/xverse/maestro/native/run_authority.c",
+        "source_sha256": "2a2ee8306a7f45186355b548888d00e3df9fd22f20fd9fbe9435afa718874563",
+        "binary_sha256": "bcb3e3423f58dfaddb320706275178cf0f0df632a72bb0019bd6ed44ee1abb73",
+        "retained": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/affa-native.json"
+      }
+    },
+    "runtime_case_receipts": {
+      "test_affa": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_affa.json",
+        "sha256": "b180151d6db4bb55f8e40eab5fcdacebe832dfe5cbe640c315cf17d00b5f4b2c",
+        "kind": "lane-receipt"
+      },
+      "test_trusted_launcher": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_trusted_launcher.json",
+        "sha256": "87bfa6877d5dd476f24aa5c2f22084ddc5853cf23972871979b000dfe3b08e40",
+        "kind": "lane-receipt"
+      },
+      "test_prbc": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_prbc.json",
+        "sha256": "cf90e21c2b07a6ea7fcd42c7dda65728cb65400dd2b6e83028982ff97b045e24",
+        "kind": "lane-receipt"
+      },
+      "test_bounded_bootstrap": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_bounded_bootstrap.json",
+        "sha256": "e33367dd0b0393d8b5b8b9370a5f9969fc43af6852db13af11f4d4dc43489d75",
+        "kind": "lane-receipt"
+      },
+      "test_atomic_release_cancel_stage": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/lane-case-index-test_atomic_release_cancel_stage-20261020.json",
+        "sha256": "cb32dfa002e11c792331ba265687ba5e7ffeb9369a473888a50661ec4efb1901",
+        "kind": "composed-case-index",
+        "members": 5
+      },
+      "test_lease_loss": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_lease_loss.json",
+        "sha256": "0140041bd982fb655d0e9cadd06fab410e4300a2c89e57edd40bfb8465bcb7af",
+        "kind": "lane-receipt"
+      },
+      "test_pre_handle_crash_survival": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/lane-case-index-test_pre_handle_crash_survival-20261020.json",
+        "sha256": "012f258ffa5c1ddd062902eb69a58807a408f6e2b97537ff4605b624da29922e",
+        "kind": "composed-case-index",
+        "members": 4
+      },
+      "test_residual_membership": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_residual_membership.json",
+        "sha256": "5cd315d8156d164455c85ff632d4007e7ae34e1a08f78114145708d73484f703",
+        "kind": "lane-receipt"
+      },
+      "test_unrelated_sentinel": {
+        "path": "docs/engineering/maestro-lite/evidence/affa17/runtime-lane-20261020a/source-harness/test_runtime_actual/runtime-actual-test_unrelated_sentinel.json",
+        "sha256": "ab144b82727f45122c42eaf0d34dd9753d5978e80677727b039cc021154c1836",
+        "kind": "lane-receipt"
+      }
+    },
+    "enforced_properties": [
+      "frozen-before-child",
+      "pre-registered-exact-c1",
+      "atomic-release-cancel-epoch",
+      "original-pidfd-waits",
+      "independent-watchdog",
+      "late-request-fenced",
+      "unrelated-scope-isolation"
+    ],
+    "facility_digest": "sha256:419c46e2dc8aca8885abd9c263da2c82a0f1bd67ea4bab5115d0e0db93fdfbd5"
+  },
+  "readiness": {
+    "approval_ref": "PROPOSAL-NOT-AN-APPROVAL-2026-10-20",
+    "authorization_digest": "placeholder; a RunAuthorization exists only for a prepared run",
+    "source_review": {
+      "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-SOURCE-PARENT-2026-10-20-v4/source-parent-register.json",
+      "digest": "sha256:41e28ad0f5f440ab87dad014205a8ffc3780427aa6311c4745be765f4554115d",
+      "meaning": "author-confirmed source-parent register v4"
+    },
+    "verification_review": {
+      "path": "docs/engineering/maestro-lite/evidence/affa17/helper-bytes-independent-review-20261020.json",
+      "digest": "sha256:dddbec1ce51b3ae10e75bc55d13b0f67cd9b0a303bda079684f81b719efc68aa",
+      "meaning": "independent helper-bytes review (separate agent session)"
+    },
+    "source_parent_count": 18,
+    "runtime_cases": [
+      "test_affa",
+      "test_trusted_launcher",
+      "test_prbc",
+      "test_bounded_bootstrap",
+      "test_atomic_release_cancel_stage",
+      "test_lease_loss",
+      "test_pre_handle_crash_survival",
+      "test_residual_membership",
+      "test_unrelated_sentinel"
+    ],
+    "source_dispositions_approved": true,
+    "verification_complete": false,
+    "independent_review_recorded": true,
+    "execution_approved": false,
+    "blocking_findings": [
+      "ML-CAPA-359-UNKNOWN",
+      "ML-CAPA-135/286/287/318/324/330/331/332/337-UNKNOWN",
+      "IR-ML3-04-ACTIVATION-NOT-APPROVED",
+      "M1-NOT-ADMITTED",
+      "ACCEPTANCE-OPEN",
+      "HELPER-REVIEW-F-01-MEDIUM",
+      "HELPER-REVIEW-F-02-MEDIUM"
+    ],
+    "readiness_digest": "sha256:cdeebd4df8c72cdcf6c36e41882efaea804a798922920fd04abd0d5acd947beb"
+  },
+  "helper_review_counts": {
+    "verdicts": {
+      "ENFORCED": 6,
+      "PARTIALLY_ENFORCED": 1,
+      "NOT_FOUND": 0,
+      "DELEGATED_TO_PYTHON": 0
+    },
+    "severities": {
+      "HIGH": 0,
+      "MEDIUM": 2,
+      "LOW": 5,
+      "NOTE": 9
+    },
+    "findings_total": 16
+  },
+  "what_this_is_not": [
+    "not validate_run_admission (needs a prepared run's persistence/bootstrap)",
+    "not verify_runtime_evidence (needs an empty original boundary root)",
+    "not RuntimeService.register/start",
+    "not M1",
+    "not acceptance"
+  ],
+  "next_step": "author decision on activating a bounded lane admission test that supplies these pins to validate_run_admission/verify_runtime_evidence inside the component harness; execution_approved stays False"
+}

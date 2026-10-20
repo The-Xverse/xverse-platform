@@ -1,0 +1,71 @@
+{
+  "phases": [
+    {
+      "phase": "source",
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020f/bin/python",
+        "-m",
+        "pytest",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020/tests/thesis_lite/maestro/test_runtime_lane_admission.py",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020/tests/thesis_lite/maestro/test_affa_release_timeout_fence.py",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020/tests/thesis_lite/maestro/test_affa_client.py",
+        "-q",
+        "-ra",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "/dev/shm/lane-admission-source-private-m7fvohhy"
+      ],
+      "cwd": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+      "returncode": 0,
+      "elapsed_seconds": 8.835,
+      "private_basetemp": "/dev/shm/lane-admission-source-private-m7fvohhy",
+      "log_sha256": "230a4f53bae66ad7614ffde3fc386561a3cea95e03687828a45f487b45e4fc31",
+      "summary": "23 passed in 8.57s",
+      "receipts": [
+        "lane-admission-test_real_pins_are_admitted_re0.json",
+        "release-timeout-fence-test_release_timeout_under_fro0.json"
+      ]
+    },
+    {
+      "phase": "wheel",
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020f/bin/python",
+        "-I",
+        "-m",
+        "pytest",
+        "/dev/shm/lane-admission-consumer-voczbrsj/tests/thesis_lite/maestro/test_runtime_lane_admission.py",
+        "/dev/shm/lane-admission-consumer-voczbrsj/tests/thesis_lite/maestro/test_affa_release_timeout_fence.py",
+        "/dev/shm/lane-admission-consumer-voczbrsj/tests/thesis_lite/maestro/test_affa_client.py",
+        "-q",
+        "-ra",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "/dev/shm/lane-admission-wheel-private-svsc0es9"
+      ],
+      "cwd": "/dev/shm/lane-admission-consumer-voczbrsj",
+      "returncode": 0,
+      "elapsed_seconds": 9.134,
+      "private_basetemp": "/dev/shm/lane-admission-wheel-private-svsc0es9",
+      "log_sha256": "bf3d21be3a985780e19414c34d6689ce5aed117812008bfdebedbc23e9182c83",
+      "summary": "23 passed in 8.87s",
+      "receipts": [
+        "lane-admission-test_real_pins_are_admitted_re0.json",
+        "release-timeout-fence-test_release_timeout_under_fro0.json"
+      ]
+    }
+  ],
+  "changed_frozen_inputs": [],
+  "passed": true,
+  "lane_admission_proposal_sha256": "a8eefbb6bc16e235ce7adb47a604cb1d9d0d6052ca65992d331d2b536f771482",
+  "controls": [
+    "lane admission with real pins (fail-closed)",
+    "F-01 release-timeout fence",
+    "F-02 unwatched ADVANCE rejection"
+  ],
+  "admitted_m1_run": false,
+  "lane_activated": false,
+  "accepted": false,
+  "merged": false
+}

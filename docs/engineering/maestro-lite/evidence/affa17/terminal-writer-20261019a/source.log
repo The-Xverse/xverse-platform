@@ -1,0 +1,31 @@
+.....................................................F.................. [100%]
+=================================== FAILURES ===================================
+_ test_self_consistent_artifacts_cannot_replace_original_runtime_universe[lost-quiescence-ML-RUNTIME-COLLECTION-OWNERSHIP] _
+
+tmp_path = PosixPath('/tmp/maestro-terminal-writer-20261019a-source-private-lke7gs3o/test_self_consistent_artifacts4')
+mutation = 'lost-quiescence', code = 'ML-RUNTIME-COLLECTION-OWNERSHIP'
+
+    @pytest.mark.parametrize('mutation,code',[
+        ('shrink-items','ML-RUNTIME-COLLECTION-UNIVERSE'),
+        ('substitute-plan','ML-RUNTIME-COLLECTION-DOCUMENT'),
+        ('changed-source-identity','ML-RUNTIME-COLLECTION-DOCUMENT'),
+        ('shrink-units','ML-EVIDENCE-BLOB-BROKER'),
+        ('lost-quiescence','ML-RUNTIME-COLLECTION-OWNERSHIP'),
+        ('changed-final-handle','ML-RUNTIME-COLLECTION-FINAL-FACTS'),
+        ('stale-final','ML-RUNTIME-COLLECTION-FINAL-TIME'),
+        ('changed-event-hash','ML-RUNTIME-COLLECTION-EVENT'),
+    ])
+    def test_self_consistent_artifacts_cannot_replace_original_runtime_universe(tmp_path,mutation,code):
+        f=RuntimeFixture(tmp_path,mutation);f.close()
+        result=f.verify()
+        assert not result.collection_verified and not result.complete
+>       assert result.diagnostics==(code,)
+E       AssertionError: assert ('ML-EVIDENCE-BLOB-BROKER',) == ('ML-RUNTIME-...N-OWNERSHIP',)
+E         
+E         At index 0 diff: 'ML-EVIDENCE-BLOB-BROKER' != 'ML-RUNTIME-COLLECTION-OWNERSHIP'
+E         Use -v to get more diff
+
+tests/thesis_lite/maestro/test_runtime_verification.py:119: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_verification.py::test_self_consistent_artifacts_cannot_replace_original_runtime_universe[lost-quiescence-ML-RUNTIME-COLLECTION-OWNERSHIP]
+1 failed, 71 passed in 46.84s

@@ -1,0 +1,148 @@
+EEEE                                                                     [100%]
+==================================== ERRORS ====================================
+______ ERROR at setup of test_one_cancel_fences_both_units_before_release ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7387c246cc30>, _basetemp=PosixPath('/tmp/pytest-of-jefferson/pytest-963'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def authority_binary(tmp_path_factory):
+        source = files("xverse.maestro").joinpath("native/run_authority.c")
+        local = tmp_path_factory.mktemp("affa-native")
+        path = local / "authority.c"
+>       path.write_bytes(source.read_bytes())
+                         ^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_native.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c'
+
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_ ERROR at setup of test_committed_release_before_cancel_runs_once_and_other_unit_never_runs _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7387c246cc30>, _basetemp=PosixPath('/tmp/pytest-of-jefferson/pytest-963'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def authority_binary(tmp_path_factory):
+        source = files("xverse.maestro").joinpath("native/run_authority.c")
+        local = tmp_path_factory.mktemp("affa-native")
+        path = local / "authority.c"
+>       path.write_bytes(source.read_bytes())
+                         ^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_native.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c'
+
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________ ERROR at setup of test_duplicate_ticket_cannot_release_twice _________
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7387c246cc30>, _basetemp=PosixPath('/tmp/pytest-of-jefferson/pytest-963'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def authority_binary(tmp_path_factory):
+        source = files("xverse.maestro").joinpath("native/run_authority.c")
+        local = tmp_path_factory.mktemp("affa-native")
+        path = local / "authority.c"
+>       path.write_bytes(source.read_bytes())
+                         ^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_native.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c'
+
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_ ERROR at setup of test_selective_generation_advance_keeps_unrelated_original_resource_running _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x7387c246cc30>, _basetemp=PosixPath('/tmp/pytest-of-jefferson/pytest-963'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def authority_binary(tmp_path_factory):
+        source = files("xverse.maestro").joinpath("native/run_authority.c")
+        local = tmp_path_factory.mktemp("affa-native")
+        path = local / "authority.c"
+>       path.write_bytes(source.read_bytes())
+                         ^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_native.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/src/xverse/maestro/native/run_authority.c'
+
+../../.pyenv/versions/3.13.13/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release
+ERROR tests/thesis_lite/maestro/test_affa_native.py::test_committed_release_before_cancel_runs_once_and_other_unit_never_runs
+ERROR tests/thesis_lite/maestro/test_affa_native.py::test_duplicate_ticket_cannot_release_twice
+ERROR tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running
+4 errors in 0.43s

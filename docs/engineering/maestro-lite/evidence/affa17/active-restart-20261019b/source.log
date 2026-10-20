@@ -1,0 +1,288 @@
+FF..F............................                                        [100%]
+=================================== FAILURES ===================================
+__ test_original_active_explicit_restart_and_closed_generation_universe[leaf] __
+
+request = <FixtureRequest for <Function test_original_active_explicit_restart_and_closed_generation_universe[leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74aef20e49d0>
+mode = 'leaf'
+
+    @pytest.mark.parametrize('mode',['leaf','external-thread','parent-reject','controller-loss','stage-storage-loss'])
+    def test_original_active_explicit_restart_and_closed_generation_universe(request,monkeypatch,mode):
+        successful=mode in ('leaf','external-thread')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+        broker,facade,client,work=stack
+        source,leaf=driver.prepared.resource_order
+        unit=source if mode=='parent-reject' else leaf
+        context=next(c for c in client._future_contexts if c.binding.unit_id==unit)
+        other=next(c for c in client._future_contexts if c.binding.unit_id!=unit)
+        original_worker=client.process
+        tickets=[];old_handles={};execution_threads=[];retired=None;result=None;closed=None
+        statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            if kind=='step-complete' and step.step_id=='observe-sink':
+                old_handles.update({u:broker.issuer(u)._handle for u in (source,leaf)})
+                end=HostDeadline(client.session,driver._active_end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart(client.run_id,unit,permit=replace(context.binding.permit),generation=2,deadline=end)
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart(client.run_id,unit,permit=context.binding.permit,generation=True,deadline=end)
+                submitted=[];submit_errors=[]
+                def submit():
+                    try:submitted.append(driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end))
+                    except BaseException as e:submit_errors.append(e)
+                if mode=='external-thread':
+                    thread=threading.Thread(target=submit);thread.start();thread.join(.2)
+                    assert not thread.is_alive() and not submit_errors,submit_errors
+                    assert thread.ident!=broker.owner._dispatch_thread
+                else:submit()
+                assert not submit_errors and len(submitted)==1,submit_errors
+                ticket=submitted[0]
+                tickets.append(ticket)
+                assert driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end) is ticket
+                assert driver.restart_result(ticket) is None
+                with pytest.raises(ValueError,match='RESTART-ORIGINAL'):
+                    driver.restart_result(RestartRequest(ticket.run_id,ticket.unit_id,ticket.generation,ticket.deadline))
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,other.binding.unit_id,permit=other.binding.permit,generation=2,deadline=end)
+                if mode=='controller-loss':
+                    signal.pidfd_send_signal(controller.process._capability.fileno(),signal.SIGKILL)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(*a,**kw):
+            execution_threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+            return prepare(*a,**kw)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def native_advance(*a,**kw):
+            issuer=advance(*a,**kw)
+            if mode=='stage-storage-loss':
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',native_advance)
+        target=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result=run(driver)
+            assert len(tickets)==1,result.diagnostic
+            outcome=driver.restart_result(tickets[0])
+            assert outcome is not None
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if successful:
+                assert outcome.disposition=='completed',outcome
+                assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+                assert result.terminal.public_data()['report']['eligible'],result.terminal.public_data()
+                checked=verify(client,work.parent/'argus');assert checked.complete,checked
+                assert {r.details['generation'] for r in records}=={1,2}
+                assert execution_threads and all(a==b for a,b in execution_threads)
+                assert broker.issuer(leaf)._handle is not old_handles[leaf]
+                assert broker.issuer(source)._handle is old_handles[source]
+                assert broker.issuer(leaf)._handle.execution_id==context.binding.execution_id==outcome.execution_id
+                assert len(driver._teardown_history)==1
+                assert driver._teardown_history[0]._cleaned[leaf].generation==1
+                assert driver.teardown._cleaned[leaf].generation==2
+                output=next(d.destination for d in client.collection.declarations if d.unit_id==leaf)
+>               assert (work.parent/'argus'/output).read_bytes()==b'EXEC\n'
+E               AssertionError: assert b'EXEC\nEXEC\n' == b'EXEC\n'
+E                 
+E                 Use -v to get more diff
+
+tests/thesis_lite/maestro/test_active_restart.py:101: AssertionError
+_ test_original_active_explicit_restart_and_closed_generation_universe[external-thread] _
+
+request = <FixtureRequest for <Function test_original_active_explicit_restart_and_closed_generation_universe[external-thread]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74aef20e4050>
+mode = 'external-thread'
+
+    @pytest.mark.parametrize('mode',['leaf','external-thread','parent-reject','controller-loss','stage-storage-loss'])
+    def test_original_active_explicit_restart_and_closed_generation_universe(request,monkeypatch,mode):
+        successful=mode in ('leaf','external-thread')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+        broker,facade,client,work=stack
+        source,leaf=driver.prepared.resource_order
+        unit=source if mode=='parent-reject' else leaf
+        context=next(c for c in client._future_contexts if c.binding.unit_id==unit)
+        other=next(c for c in client._future_contexts if c.binding.unit_id!=unit)
+        original_worker=client.process
+        tickets=[];old_handles={};execution_threads=[];retired=None;result=None;closed=None
+        statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            if kind=='step-complete' and step.step_id=='observe-sink':
+                old_handles.update({u:broker.issuer(u)._handle for u in (source,leaf)})
+                end=HostDeadline(client.session,driver._active_end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart(client.run_id,unit,permit=replace(context.binding.permit),generation=2,deadline=end)
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart(client.run_id,unit,permit=context.binding.permit,generation=True,deadline=end)
+                submitted=[];submit_errors=[]
+                def submit():
+                    try:submitted.append(driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end))
+                    except BaseException as e:submit_errors.append(e)
+                if mode=='external-thread':
+                    thread=threading.Thread(target=submit);thread.start();thread.join(.2)
+                    assert not thread.is_alive() and not submit_errors,submit_errors
+                    assert thread.ident!=broker.owner._dispatch_thread
+                else:submit()
+                assert not submit_errors and len(submitted)==1,submit_errors
+                ticket=submitted[0]
+                tickets.append(ticket)
+                assert driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end) is ticket
+                assert driver.restart_result(ticket) is None
+                with pytest.raises(ValueError,match='RESTART-ORIGINAL'):
+                    driver.restart_result(RestartRequest(ticket.run_id,ticket.unit_id,ticket.generation,ticket.deadline))
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,other.binding.unit_id,permit=other.binding.permit,generation=2,deadline=end)
+                if mode=='controller-loss':
+                    signal.pidfd_send_signal(controller.process._capability.fileno(),signal.SIGKILL)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(*a,**kw):
+            execution_threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+            return prepare(*a,**kw)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def native_advance(*a,**kw):
+            issuer=advance(*a,**kw)
+            if mode=='stage-storage-loss':
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',native_advance)
+        target=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result=run(driver)
+            assert len(tickets)==1,result.diagnostic
+            outcome=driver.restart_result(tickets[0])
+            assert outcome is not None
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if successful:
+                assert outcome.disposition=='completed',outcome
+                assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+                assert result.terminal.public_data()['report']['eligible'],result.terminal.public_data()
+                checked=verify(client,work.parent/'argus');assert checked.complete,checked
+                assert {r.details['generation'] for r in records}=={1,2}
+                assert execution_threads and all(a==b for a,b in execution_threads)
+                assert broker.issuer(leaf)._handle is not old_handles[leaf]
+                assert broker.issuer(source)._handle is old_handles[source]
+                assert broker.issuer(leaf)._handle.execution_id==context.binding.execution_id==outcome.execution_id
+                assert len(driver._teardown_history)==1
+                assert driver._teardown_history[0]._cleaned[leaf].generation==1
+                assert driver.teardown._cleaned[leaf].generation==2
+                output=next(d.destination for d in client.collection.declarations if d.unit_id==leaf)
+>               assert (work.parent/'argus'/output).read_bytes()==b'EXEC\n'
+E               AssertionError: assert b'EXEC\nEXEC\n' == b'EXEC\n'
+E                 
+E                 Use -v to get more diff
+
+tests/thesis_lite/maestro/test_active_restart.py:101: AssertionError
+_ test_original_active_explicit_restart_and_closed_generation_universe[stage-storage-loss] _
+
+request = <FixtureRequest for <Function test_original_active_explicit_restart_and_closed_generation_universe[stage-storage-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74aef208b130>
+mode = 'stage-storage-loss'
+
+    @pytest.mark.parametrize('mode',['leaf','external-thread','parent-reject','controller-loss','stage-storage-loss'])
+    def test_original_active_explicit_restart_and_closed_generation_universe(request,monkeypatch,mode):
+        successful=mode in ('leaf','external-thread')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+        broker,facade,client,work=stack
+        source,leaf=driver.prepared.resource_order
+        unit=source if mode=='parent-reject' else leaf
+        context=next(c for c in client._future_contexts if c.binding.unit_id==unit)
+        other=next(c for c in client._future_contexts if c.binding.unit_id!=unit)
+        original_worker=client.process
+        tickets=[];old_handles={};execution_threads=[];retired=None;result=None;closed=None
+        statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            if kind=='step-complete' and step.step_id=='observe-sink':
+                old_handles.update({u:broker.issuer(u)._handle for u in (source,leaf)})
+                end=HostDeadline(client.session,driver._active_end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart(client.run_id,unit,permit=replace(context.binding.permit),generation=2,deadline=end)
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart(client.run_id,unit,permit=context.binding.permit,generation=True,deadline=end)
+                submitted=[];submit_errors=[]
+                def submit():
+                    try:submitted.append(driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end))
+                    except BaseException as e:submit_errors.append(e)
+                if mode=='external-thread':
+                    thread=threading.Thread(target=submit);thread.start();thread.join(.2)
+                    assert not thread.is_alive() and not submit_errors,submit_errors
+                    assert thread.ident!=broker.owner._dispatch_thread
+                else:submit()
+                assert not submit_errors and len(submitted)==1,submit_errors
+                ticket=submitted[0]
+                tickets.append(ticket)
+                assert driver.restart(client.run_id,unit,permit=context.binding.permit,generation=2,deadline=end) is ticket
+                assert driver.restart_result(ticket) is None
+                with pytest.raises(ValueError,match='RESTART-ORIGINAL'):
+                    driver.restart_result(RestartRequest(ticket.run_id,ticket.unit_id,ticket.generation,ticket.deadline))
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,other.binding.unit_id,permit=other.binding.permit,generation=2,deadline=end)
+                if mode=='controller-loss':
+                    signal.pidfd_send_signal(controller.process._capability.fileno(),signal.SIGKILL)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(*a,**kw):
+            execution_threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+            return prepare(*a,**kw)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def native_advance(*a,**kw):
+            issuer=advance(*a,**kw)
+            if mode=='stage-storage-loss':
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',native_advance)
+        target=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result=run(driver)
+            assert len(tickets)==1,result.diagnostic
+            outcome=driver.restart_result(tickets[0])
+            assert outcome is not None
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if successful:
+                assert outcome.disposition=='completed',outcome
+                assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+                assert result.terminal.public_data()['report']['eligible'],result.terminal.public_data()
+                checked=verify(client,work.parent/'argus');assert checked.complete,checked
+                assert {r.details['generation'] for r in records}=={1,2}
+                assert execution_threads and all(a==b for a,b in execution_threads)
+                assert broker.issuer(leaf)._handle is not old_handles[leaf]
+                assert broker.issuer(source)._handle is old_handles[source]
+                assert broker.issuer(leaf)._handle.execution_id==context.binding.execution_id==outcome.execution_id
+                assert len(driver._teardown_history)==1
+                assert driver._teardown_history[0]._cleaned[leaf].generation==1
+                assert driver.teardown._cleaned[leaf].generation==2
+                output=next(d.destination for d in client.collection.declarations if d.unit_id==leaf)
+                assert (work.parent/'argus'/output).read_bytes()==b'EXEC\n'
+            elif mode=='parent-reject':
+                assert outcome.disposition=='rejected' and outcome.diagnostic=='ML-GENERATION-DEPENDENTS',outcome
+                assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+                assert verify(client,work.parent/'argus').complete
+                assert {r.details['generation'] for r in records}=={1}
+                assert not execution_threads and not driver._teardown_history
+            else:
+                assert outcome.disposition=='failed' and not result.execution_succeeded,outcome
+                assert broker.owner.latch.cancelled
+                assert bool(execution_threads) is (mode=='stage-storage-loss')
+            assert client.process is original_worker
+            assert sum(s.phase=='start' for s in driver.prepared.steps)==2
+            assert len(driver.prepared.steps)==10 and len(driver._outcomes)==10
+            consumed=FileEvidenceJournal(work.parent/'m3.jsonl').permit_consumed(context.binding.permit.permit_id,context.binding.permit.nonce)
+            assert consumed is (successful or mode=='stage-storage-loss')
+            closed=RunClosure(broker.session,dispatcher=driver).close(deadline(6))
+>           assert closed.cleanup_complete and closed.root_reaped,closed
+E           AssertionError: RunClosureResult(run_id='fixture-run', lifecycle_digest='35700a150951e933aad593818d314df4cd87547376651170879d01438172b...generation=2, issued=None, direct_child_reaped=None, native_retired=None)), authority_fenced=True, terminal_reports=())
+E           assert (False)
+E            +  where False = RunClosureResult(run_id='fixture-run', lifecycle_digest='35700a150951e933aad593818d314df4cd87547376651170879d01438172b...generation=2, issued=None, direct_child_reaped=None, native_retired=None)), authority_fenced=True, terminal_reports=()).cleanup_complete
+
+tests/thesis_lite/maestro/test_active_restart.py:118: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]
+FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[external-thread]
+FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[stage-storage-loss]
+3 failed, 30 passed in 41.90s

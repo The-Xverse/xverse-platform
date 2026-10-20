@@ -1,0 +1,170 @@
+F......F.F...                                                            [100%]
+=================================== FAILURES ===================================
+____ test_actual_shared_renewal_keeps_original_live_handles_past_old_lease _____
+
+request = <FixtureRequest for <Function test_actual_shared_renewal_keeps_original_live_handles_past_old_lease>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78d5263522c0>
+
+    def test_actual_shared_renewal_keeps_original_live_handles_past_old_lease(request, monkeypatch):
+        stack, _, _, _ = ready(request, monkeypatch)
+        broker, facade, _, _ = stack
+        old = max(broker.session._lease, broker.connection._lease)
+        originals = [(i, i._handle, i.recipe.operation_deadline_ns) for i in broker.issuers]
+        epoch = broker.connection.epoch
+        lease = target(broker)
+>       result = broker.renew(lease, deadline(1))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_renewal.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/run_broker.py:759: in renew
+    self.storage.revalidate_intent(claim.receipt, deadline)
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/persistence.py:742: in revalidate_intent
+    _, _, body = self._rpc(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x78d52634ef90>
+kind = 'revalidate'
+body = {'claim': 'ml-baa8b64e2a634083821a79e282424fdb', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance'}
+deadline = HostDeadline(session='host-session', monotonic_seconds=944764.778152009)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind in ("abort", "closure") or (
+            kind == "schedule"
+            and body.get("kind")
+            in ("failure", "step-disposition", "unit-disposition", "run-terminal")
+        )
+    
+        def check():
+            return self._live(
+                allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure")
+            )
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/persistence.py:608: PersistenceError
+______ test_cancellation_before_native_renewal_ack_commit_cannot_succeed _______
+
+request = <FixtureRequest for <Function test_cancellation_before_native_renewal_ack_commit_cannot_succeed>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78d5263b5b80>
+
+    def test_cancellation_before_native_renewal_ack_commit_cannot_succeed(request, monkeypatch):
+        stack, _, _, _ = ready(request, monkeypatch)
+        broker = stack[0]
+        receive = broker.connection._receive
+        seen = []
+    
+        def cancel_before_commit(until):
+            reply, fds = receive(until)
+            if reply.kind is K.RENEWED:
+                seen.append(reply)
+                broker.cancel('renewal-ack-race', deadline=deadline(0.5))
+            return reply, fds
+    
+        monkeypatch.setattr(broker.connection, '_receive', cancel_before_commit)
+        with pytest.raises(ValueError):
+            broker.renew(target(broker), deadline(1))
+>       assert len(seen) == 1  # Actual native reply, never a constructed success.
+        ^^^^^^^^^^^^^^^^^^^^^
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_run_renewal.py:103: AssertionError
+___ test_actual_transitive_restart_requires_new_generations_and_fresh_probes ___
+
+request = <FixtureRequest for <Function test_actual_transitive_restart_requires_new_generations_and_fresh_probes>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78d5263d2970>
+
+    def test_actual_transitive_restart_requires_new_generations_and_fresh_probes(request, monkeypatch):
+        chain(monkeypatch)
+        stack, controller, _, _ = ready(request, monkeypatch)
+        broker, facade, client, work = stack
+        units = {u.unit_id.rsplit('/', 1)[-1]: u.unit_id for u in broker.owner._prepared.units}
+        source, middle, leaf, sibling = [units[n + '-instance'] for n in ('source', 'sink', 'terminal', 'unrelated')]
+        original = {u: broker.issuer(u)._handle for u in units.values()}
+        worker = client.process
+>       broker.renew(target(broker), deadline(1))
+
+tests/thesis_lite/maestro/test_generation_dependents.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/run_broker.py:759: in renew
+    self.storage.revalidate_intent(claim.receipt, deadline)
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/persistence.py:742: in revalidate_intent
+    _, _, body = self._rpc(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x78d52637e350>
+kind = 'revalidate'
+body = {'claim': 'ml-a7d9ac07c7c64ab78298d103cb69eb93', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance'}
+deadline = HostDeadline(session='host-session', monotonic_seconds=944779.486643723)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind in ("abort", "closure") or (
+            kind == "schedule"
+            and body.get("kind")
+            in ("failure", "step-disposition", "unit-disposition", "run-terminal")
+        )
+    
+        def check():
+            return self._live(
+                allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure")
+            )
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+../maestro-lite-affa-dependent-verify-20261018/lib/python3.13/site-packages/xverse/maestro/persistence.py:608: PersistenceError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_actual_shared_renewal_keeps_original_live_handles_past_old_lease
+FAILED tests/thesis_lite/maestro/test_run_renewal.py::test_cancellation_before_native_renewal_ack_commit_cannot_succeed
+FAILED tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes
+3 failed, 10 passed in 24.39s

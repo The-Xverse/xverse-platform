@@ -1,0 +1,59 @@
+.........FF.................................................F........... [ 82%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+______ test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup ______
+
+request = <FixtureRequest for <Function test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a0c8fe68140>
+
+    def test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch)
+        result = run(driver)
+        assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+        assert len(result.steps)==10 and all(s.disposition=='completed' and s.normal_recorded for s in result.steps)
+        assert result.cleanup.unit_cleanup_complete and result.cleanup.normal_records_complete
+>       assert controller._sequence==10
+E       assert 11 == 10
+E        +  where 11 = <xverse.maestro.controller.ControllerSession object at 0x7a0c8fd379d0>._sequence
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:112: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a0c8fdeb150>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='2f04468feafc6c31eb8b5f529d105d7ed469840c2b658ca82fdc91af0ddc0d6...diagnostic='ML-PERSIST-TIMEOUT', health_scans=4, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:123: AssertionError
+____ test_implicit_horizon_stop_respects_dependencies_before_compiler_rank _____
+
+request = <FixtureRequest for <Function test_implicit_horizon_stop_respects_dependencies_before_compiler_rank>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a0c90d9c3d0>
+
+    def test_implicit_horizon_stop_respects_dependencies_before_compiler_rank(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch, cleanup_only=True)
+        driver = dispatcher(stack)
+        complete = {s.step_id for s in driver.prepared.steps if s.phase != "cleanup"}
+        static = driver.prepared.eligible_steps(3, complete)
+        assert static[0].unit_id == driver.prepared.units[0].unit_id
+        result = driver.run(*ends(driver))
+>       assert result.execution_succeeded, result
+E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='dde603b45c5c74835e115e9fb98874ff77d93faabbef8d0f408cb9bebd271fc...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=3, lifecycle_complete=False, ready_for_execution=False)
+E       assert False
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='dde603b45c5c74835e115e9fb98874ff77d93faabbef8d0f408cb9bebd271fc...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=3, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_dispatcher.py:609: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_implicit_horizon_stop_respects_dependencies_before_compiler_rank
+3 failed, 84 passed in 109.24s (0:01:49)

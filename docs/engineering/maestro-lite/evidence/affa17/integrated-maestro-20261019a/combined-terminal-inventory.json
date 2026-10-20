@@ -1,0 +1,145 @@
+{
+  "status": "BOTH_ORIGINAL_PHASES_TERMINAL_FAILED",
+  "original_exec_session": 53866,
+  "original_exec_exit": 1,
+  "collected_per_phase": 1495,
+  "total_executions": 2990,
+  "total_passed": 2985,
+  "total_failed": 5,
+  "complete_both_phase_failure_inventory": true,
+  "failures": [
+    {
+      "phase": "source",
+      "finding": 318,
+      "test": "tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]",
+      "failed_assertion": "submitted and len(queue_facts)==1, result.diagnostic",
+      "control_submission_reached": false,
+      "observed_diagnostic": "ML-PERSIST-TIMEOUT",
+      "original_operation": "schedule/step-complete prepare-unrelated",
+      "detailed_context": "provisional-failure-318.json",
+      "cause": "UNKNOWN"
+    },
+    {
+      "phase": "source",
+      "finding": 324,
+      "test": "tests/thesis_lite/maestro/test_collection_runtime.py::test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader",
+      "failed_call": "client.collect_outputs -> _rpc collect/action=finish -> receive",
+      "original_rpc_end_ns": 1022808197994349,
+      "observed_diagnostic": "ML-PERSIST-TIMEOUT",
+      "first_rpc_context_record_retained": false,
+      "worker_substage": "UNKNOWN",
+      "collection_result_returned": false,
+      "later_closed_reader_assertions_reached": false,
+      "cause": "UNKNOWN"
+    },
+    {
+      "phase": "wheel",
+      "finding": 330,
+      "test": "tests/thesis_lite/maestro/test_coverage_producers.py::test_actual_shared_schedule_preserves_single_original_validation_and_distinct_tick_records",
+      "cause": "UNKNOWN",
+      "candidate_correction": null,
+      "effectiveness": "NOT_DEMONSTRATED",
+      "first_observed_bad_RPC": null,
+      "first_RPC_context_retained": false,
+      "intended_validation_assertions_reached": false
+    },
+    {
+      "phase": "wheel",
+      "finding": 331,
+      "test": "tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack]",
+      "cause": "UNKNOWN",
+      "candidate_correction": null,
+      "effectiveness": "NOT_DEMONSTRATED",
+      "first_observed_bad_RPC": {
+        "kind": "probe",
+        "action": null,
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance",
+        "step": null,
+        "began": 1025069.523716643,
+        "ended": 1025069.564704967,
+        "end": 1025069.564392735,
+        "observed_at": 1025069.522745547,
+        "generation": 1,
+        "diagnostic": "ML-PERSIST-TIMEOUT"
+      },
+      "observation_receipt": {
+        "path": "maestro_full-wheel-harness/test_terminal_runtime/lazy-operations-test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays-lost-report-ack.json",
+        "sha256": "760c03f3f3eeecd1032279bdb2b41fdead098ac6c130154ecdff06b9f1bf4090"
+      },
+      "intended_fault_boundary_credit": false,
+      "worker_substage": "UNKNOWN"
+    },
+    {
+      "phase": "wheel",
+      "finding": 332,
+      "test": "tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall]",
+      "cause": "UNKNOWN",
+      "candidate_correction": null,
+      "effectiveness": "NOT_DEMONSTRATED",
+      "first_observed_bad_RPC": {
+        "kind": "commit",
+        "action": null,
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance",
+        "step": null,
+        "began": 1025115.917263245,
+        "ended": 1025116.415699557,
+        "end": 1025116.415216841,
+        "observed_at": null,
+        "generation": 1,
+        "diagnostic": "ML-PERSIST-TIMEOUT"
+      },
+      "observation_receipt": {
+        "path": "maestro_full-wheel-harness/test_terminal_storage_root_loss/lazy-operations-test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup-storage-stall.json",
+        "sha256": "cafdeeff8e11d928387ccd6a7c94b825556baabf9392bcfc188b123317fadad3"
+      },
+      "intended_fault_boundary_credit": false,
+      "worker_substage": "UNKNOWN"
+    }
+  ],
+  "phases": {
+    "source": {
+      "counts": {
+        "passed": 1493,
+        "failed": 2,
+        "skipped": 0,
+        "errors": 0,
+        "xfailed": 0,
+        "xpassed": 0
+      },
+      "receipt_sha256": "766d1a6c0689e8920262b8340732f2095e27a86e9fa3449c953f2848666f37b3",
+      "log_sha256": "a7498c669d8a0725dd39ba896a5f41d526f3f9305994d38f8076786657c151cb",
+      "audit_sha256": "bd3252c44a19c007b037d384923d8b646e643c7c30512254bafddfdb694a8940"
+    },
+    "wheel": {
+      "counts": {
+        "passed": 1492,
+        "failed": 3,
+        "skipped": 0,
+        "errors": 0,
+        "xfailed": 0,
+        "xpassed": 0
+      },
+      "receipt_sha256": "3f621a133c7af341e3d96af39d012fdd2b4c49a48e01400556dfee2106d7a929",
+      "log_sha256": "b2963436d77d1a74b42343e65c7612a00277be6864183c13900917d359395560",
+      "audit_sha256": "bea1ec6dfab1ca23b1e14e6d63c35aac3074b2ef4a3ccd655d46ffa313088f59"
+    }
+  },
+  "frozen_manifest_sha256": "7cb83feff5c08fe4b4bf2bab38594a869d8718d9bf91aa4be7a7e36db312ba8f",
+  "driver_result_sha256": "968341d8ac3d720921e9278fd3c9e8b4ef6e50cbeb086fd53c83b4cc441c09e9",
+  "source_tree_files": 118,
+  "packaged_python_c_files": 81,
+  "recorded_root_reservations_absent": 1706,
+  "verified_M3_reference_links": 13508,
+  "unclassified_reader_reference_gaps": 423,
+  "public_projections": 662,
+  "all_workload_waits_proven": false,
+  "root_causes_proven": false,
+  "same_cause_relations_proven": false,
+  "unchanged_native_retry_performed": false,
+  "full_maestro_regression_passed": false,
+  "whole_platform_regression": false,
+  "actual_M1_admissions": 0,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false
+}

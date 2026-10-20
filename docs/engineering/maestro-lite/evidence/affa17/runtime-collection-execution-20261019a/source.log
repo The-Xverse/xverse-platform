@@ -1,0 +1,40 @@
+........................................................................ [ 65%]
+.....................F................                                   [100%]
+=================================== FAILURES ===================================
+____ test_actual_quiescent_required_and_optional_missing_are_distinct[True] ____
+
+request = <FixtureRequest for <Function test_actual_quiescent_required_and_optional_missing_are_distinct[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77cacef33460>
+optional = True
+
+    @pytest.mark.parametrize('optional', [False, True])
+    def test_actual_quiescent_required_and_optional_missing_are_distinct(request, monkeypatch, optional):
+        configure(monkeypatch, optional=optional, missing=True)
+        stack = request.getfixturevalue('broker_stack'); broker, facade, client, work = stack
+>       start_and_stop(stack)
+
+tests/thesis_lite/maestro/test_collection_runtime.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.run_broker.RunBroker object at 0x77cacee588d0>, <xverse.maestro.providers.ProcessReadiness object at ...th('/tmp/maestro-runtime-collection-execution-20261019a-source-private-oik5ym6j/test_actual_quiescent_required1/work'))
+
+    def start_and_stop(stack):
+        broker, facade, client, work = stack
+        until = stage_all(stack)
+        for uid in client.prepared.resource_order:
+            issuer = broker.issuer(uid)
+            assert facade.start(uid, issuer.recipe.descriptor, broker.connection, until).ready
+        until = time.monotonic() + .5
+        while not all((work / (u.binding_id + '.marker')).exists() for u in client.prepared.units):
+            assert time.monotonic() < until, 'owned native workload did not produce its declared marker'
+            time.sleep(.005)
+        cleanup = ReverseTeardown(facade, per_unit_seconds=.8).run(deadline(3))
+>       assert cleanup.unit_cleanup_complete and cleanup.normal_records_complete
+E       AssertionError: assert (True and False)
+E        +  where True = TeardownResult(run_id='fixture-run', lifecycle_digest='d3d493f0e8135e120c0824cf23b4d075f7c81dc942e2aa4908870bc078359f7... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).unit_cleanup_complete
+E        +  and   False = TeardownResult(run_id='fixture-run', lifecycle_digest='d3d493f0e8135e120c0824cf23b4d075f7c81dc942e2aa4908870bc078359f7... diagnostic='ML-TEARDOWN-NORMAL-INCOMPLETE')), starts_closed=True, lifecycle_complete=False, ready_for_execution=False).normal_records_complete
+
+tests/thesis_lite/maestro/test_collection_runtime.py:68: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_collection_runtime.py::test_actual_quiescent_required_and_optional_missing_are_distinct[True]
+1 failed, 109 passed in 46.24s

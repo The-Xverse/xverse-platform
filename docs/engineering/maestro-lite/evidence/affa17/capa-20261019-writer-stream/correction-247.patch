@@ -1,0 +1,11 @@
+--- a/tests/thesis_lite/maestro/test_native_writer_stream_faults.py
++++ b/tests/thesis_lite/maestro/test_native_writer_stream_faults.py
+@@ -119,7 +119,7 @@
+             json.dump(dict(original_admission=json.loads(client.coverage.public_bytes), admission_digest=client.coverage_digest,
+                 original_collection=json.loads(client.collection.canonical_bytes), original_schedule=json.loads(client.schedule.canonical_bytes),
+                 generation_ns=client.generation_ns, runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+-                native_bootstrap_digest=broker.session.config.admission.native_digest,
++                native_bootstrap_digest=broker.session.config.admission.supervisor_artifact_digest,
+                 bootstrap_configuration_sha256=hashlib.sha256(broker.session.config.private_bytes).hexdigest(),
+                 original_fixture=str(work.parent), fixture_source_sha256=sha(Path(__file__))), stream, indent=2)
+             stream.write('\n')

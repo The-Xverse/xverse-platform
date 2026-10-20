@@ -1,0 +1,560 @@
+FFFFFFF..................                                                [100%]
+=================================== FAILURES ===================================
+_ test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal _
+
+request = <FixtureRequest for <Function test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fe1f1ba0>
+
+    def test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal(request,monkeypatch):
+>       stack,controller,driver=scheduled(request,monkeypatch)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:2ab45224ffeef932fd9ebce4f8ca74ba7a53eac3e59da15140ebf00f0ce71ce7'
+prepared = PreparedLifecycle(experiment_digest='3443307074c84da1e1aa4f398290cfe8f8f3ebef11bf69eb1da60383d981aa36', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='e9aae6b576f396f1639387265168c5ddde0335b2e2a78a1f54097c0301ef8192')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...398290cfe8f8f3ebef11bf69eb1da60383d981aa36', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+__ test_actual_controller_stall_keeps_never_claimed_units_at_generation_zero ___
+
+request = <FixtureRequest for <Function test_actual_controller_stall_keeps_never_claimed_units_at_generation_zero>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fe1f22c0>
+
+    def test_actual_controller_stall_keeps_never_claimed_units_at_generation_zero(request,monkeypatch):
+>       stack,controller,driver=scheduled(request,monkeypatch)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:44ba9e157b3dd00a3eb33620174eb0a730f3be699885aaa447e3961c8459baae'
+prepared = PreparedLifecycle(experiment_digest='7396e82135b6954ce50a6f6262abe7cfb1db4e87cc789d818318c1c2d2e3021f', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='e9d718230229abbf6917290bfca7d090e1957edaa32ffcc269c07b900e710971')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...6262abe7cfb1db4e87cc789d818318c1c2d2e3021f', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+_ test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[foreign-gate] _
+
+request = <FixtureRequest for <Function test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[foreign-gate]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3ff02fd10>
+bad = 'foreign-gate'
+
+    @pytest.mark.parametrize('bad',['foreign-gate','preclaimed','prebound'])
+    def test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work(request,monkeypatch,bad):
+>       stack,_,driver=scheduled(request,monkeypatch);broker=stack[0]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:8fb5e64969a2952cee3e7ac41635270ae3ef6fefb7f42c4b6b54e9e80597c7c3'
+prepared = PreparedLifecycle(experiment_digest='5fc9fb1267e74b55cc5b5dd8254f547b9f56a1a2cb9b8fbc2f34c8321b65194f', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='fc868c67b3aae0146b90593c61dee6e47104bfcd6bd39176af6c73fe959387e7')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...d8254f547b9f56a1a2cb9b8fbc2f34c8321b65194f', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+_ test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[preclaimed] _
+
+request = <FixtureRequest for <Function test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[preclaimed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fdede7a0>
+bad = 'preclaimed'
+
+    @pytest.mark.parametrize('bad',['foreign-gate','preclaimed','prebound'])
+    def test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work(request,monkeypatch,bad):
+>       stack,_,driver=scheduled(request,monkeypatch);broker=stack[0]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:582473f5f3efebdce787c66bad336eb8ae80bdfc7376dfea0fb9f1ba3bc30bb4'
+prepared = PreparedLifecycle(experiment_digest='bebaa35473e7455af5e67016bfbc0a5f780b653300fd5642ba1f4250bdf3fb55', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='6ca0500731d6244bda58e6631d6021d997556fcd83137c273ff028a3c0be32f8')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...16bfbc0a5f780b653300fd5642ba1f4250bdf3fb55', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+_ test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[prebound] _
+
+request = <FixtureRequest for <Function test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[prebound]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fdedf460>
+bad = 'prebound'
+
+    @pytest.mark.parametrize('bad',['foreign-gate','preclaimed','prebound'])
+    def test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work(request,monkeypatch,bad):
+>       stack,_,driver=scheduled(request,monkeypatch);broker=stack[0]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:b129772908bc1ef15a0c5f2bc1733c040b754109bde1c3443f186a771c8095ba'
+prepared = PreparedLifecycle(experiment_digest='3adeb7db9597ba148dad82500c9fc8bf398d357f68c04e16d615f25e625407a7', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='079006c156ce9c5a7acad12c84710a7e41f5627f5d7d500dea672f2fe5195d0b')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...500c9fc8bf398d357f68c04e16d615f25e625407a7', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+_ test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-complete] _
+
+request = <FixtureRequest for <Function test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-complete]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fe1d1f50>
+kind = 'step-complete'
+
+    @pytest.mark.parametrize('kind',['step-complete','step-dispatch'])
+    def test_actual_worker_rejects_handle_free_productive_completion_or_observe(request,monkeypatch,kind):
+>       stack,_,driver=scheduled(request,monkeypatch)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:31e9269f69832a9d2c1e8584a28d405e5dbb5a84e28b93fef531c7eb07fb08ad'
+prepared = PreparedLifecycle(experiment_digest='c946ed175750e5144037b259ae4bf99a5de06b1e1c8060c8281e22058d52f7b1', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='b09e72e6145c72c6bdb39a2300ab37084329566ed4ddd9ad257368f521957c22')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...59ae4bf99a5de06b1e1c8060c8281e22058d52f7b1', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+_ test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-dispatch] _
+
+request = <FixtureRequest for <Function test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-dispatch]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73c3fe1d1c50>
+kind = 'step-dispatch'
+
+    @pytest.mark.parametrize('kind',['step-complete','step-dispatch'])
+    def test_actual_worker_rejects_handle_free_productive_completion_or_observe(request,monkeypatch,kind):
+>       stack,_,driver=scheduled(request,monkeypatch)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:47: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:79: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:37: in broker_stack
+    config, pin, work = configured(
+tests/thesis_lite/maestro/test_launcher.py:189: in configured
+    config = encode_configuration(
+tests/thesis_lite/maestro/test_shared_dispatcher.py:70: in configuration
+    return encode(prepared, *a, schedule=plan, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:42: in configuration
+    return encode(prepared, result, resources, **kw, coverage=coverage, collection=collection,
+src/xverse/maestro/persistence.py:217: in encode_configuration
+    bind_runtime_coverage(coverage, coverage.digest, prepared, result, resources,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+admission = CoverageAdmission(public_bytes=b'{"artifacts":[{"generation":0,"maximumBytes":1048576,"path":"broker-projection.json",...":"process","unitId":"xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}],"version":1}')
+expected_digest = 'sha256:c2166c82c86b4e529e0cf39ef4ff60c463acbd757f846977c6ebd47882eb6622'
+prepared = PreparedLifecycle(experiment_digest='1dd50344398fbd8ee1078448b9500b665ab0dfd08473d80739d02552f37b60cb', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='dc1fd3c47fd4506c2224c23ee3a3c9915bd457f3f05e89beebd794480d3fbdc5')
+result = ExperimentPlanResult(diagnostics=(), plan={'planVersion': '1', 'generator': {'task': 'XDL1', 'version': '0.1.0'}, 'pro...48b9500b665ab0dfd08473d80739d02552f37b60cb', 'runId': None, 'sourceByteDigests': FrozenMap({}), 'status': 'resolved'}))
+resources = (NormalizedResource(identity=ResourceIdentity(api_version='xverse.io/xdl/v1alpha1', kind='Component', namespace='org.x...e': 'system.json'}), '/spec/timeDomains/0/rate': FrozenMap({'column': None, 'line': None, 'source': 'system.json'})})))
+
+    def bind_runtime_coverage(admission, expected_digest, prepared, result, resources, *,
+                              run_id, session, generation_ns, bindings, future_contexts=(), schedule=None):
+        """Rederive inert admission from actual private original bindings, before sinks."""
+        if type(admission) is not CoverageAdmission:
+            raise CoverageError('ML-COVERAGE-RUNTIME-ADMISSION')
+        body = admission.data(expected_digest)
+        if (body['runId'] != run_id or body['hostSession'] != session
+            or run_id in WRITER_KINDS or body['end'] > generation_ns / 1e9):
+            raise CoverageError('ML-COVERAGE-RUNTIME-IDENTITY')
+        if schedule is not None:
+            policies = {p.unit_id: (p.cadence_seconds, p.freshness_seconds) for p in schedule.policies}
+            if (any((u['cadence'], u['freshness']) != policies.get(u['unitId']) for u in body['units'])
+                or schedule.required_events + 1 > schedule.event_limit):
+                raise CoverageError('ML-COVERAGE-RUNTIME-CAPACITY')
+            if digest(_json(schedule.canonical_bytes)) not in body['sourceDigests']:
+>               raise CoverageError('ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE')
+E               xverse.maestro.coverage.CoverageError: ML-COVERAGE-RUNTIME-SCHEDULE-SOURCE
+
+src/xverse/maestro/coverage.py:265: CoverageError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_controller_stall_keeps_never_claimed_units_at_generation_zero
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[foreign-gate]
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[preclaimed]
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work[prebound]
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-complete]
+FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-dispatch]
+7 failed, 18 passed in 44.20s

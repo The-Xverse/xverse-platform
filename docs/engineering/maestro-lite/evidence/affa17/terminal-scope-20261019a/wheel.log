@@ -1,0 +1,105 @@
+........................................................................ [ 54%]
+.....................F.F.F................FF................             [100%]
+=================================== FAILURES ===================================
+___ test_actual_required_output_loss_publishes_incomplete_report_then_aborts ___
+
+request = <FixtureRequest for <Function test_actual_required_output_loss_publishes_incomplete_report_then_aborts>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x778f91099f60>
+
+    def test_actual_required_output_loss_publishes_incomplete_report_then_aborts(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch)
+        client=stack[2];original=PersistenceClient.collect_outputs
+        def missing(self,broker,end):
+            if self is client:
+                for path in stack[3].glob('*.marker'):path.unlink()
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',missing)
+>       result=run(driver);facts=result.terminal.public_data()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:140: AttributeError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[False] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x778f9102b690>
+optional = False
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='5dd85cf89c7178812142ff3d35252c4ee3b746aaab53e9ecb832661b2ff1171...L-SCHEDULE-TERMINAL-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:172: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x778f9109ab30>
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-scope-20261019a-wheel-private-r__ouiag/test_actual_nonopen_writer_clo0/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-CLEANUP-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='45f6fdaadc9f2ef27c1447479b38ea701928c986ba6bf2db796c1d2035b831a...ML-SCHEDULE-CLEANUP-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+______ test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup ______
+
+request = <FixtureRequest for <Function test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x778f8f89eba0>
+
+    def test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch)
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='452b1c8101ee3b08c6c65090af3e45ed2046981b944e618d9f7ee2eba4384a0...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:111: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x778f8f3bf070>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='70ecb728a9feb4051c2088ed3653173c771ac51743f60b26cb5f4b617d2ba61...diagnostic='ML-PERSIST-TIMEOUT', health_scans=3, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:125: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_required_output_loss_publishes_incomplete_report_then_aborts
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+5 failed, 127 passed in 205.97s (0:03:25)

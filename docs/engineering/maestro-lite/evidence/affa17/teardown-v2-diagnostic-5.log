@@ -1,0 +1,49 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions ____
+
+request = <FixtureRequest for <Function test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x753123a29220>
+
+    def test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        bounds = ends(driver)
+        trace = []
+        for method in ("_send", "_effect"):
+            original = getattr(FiniteDispatcher, method)
+    
+            def observed(self, *args, _method=method, _original=original, **kwargs):
+                began = time.monotonic()
+                try:
+                    return _original(self, *args, **kwargs)
+                except Exception as error:
+                    trace.append(
+                        {
+                            "method": _method,
+                            "kind": str(args[0]) if _method == "_send" else args[0].step_id,
+                            "elapsed": time.monotonic() - began,
+                            "error_type": type(error).__name__,
+                            "diagnostic": str(error),
+                        }
+                    )
+                    raise
+    
+            monkeypatch.setattr(FiniteDispatcher, method, observed)
+        result = driver.run(*bounds)
+        receipt = os.environ.get("MAESTRO_BOUNDARY_RECEIPTS")
+        if receipt:
+            (Path(receipt) / "dispatcher-operation-observations.json").write_text(
+                json.dumps(trace, indent=2)
+            )
+>       assert result.execution_succeeded and result.terminal_recorded, result
+E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='c3e35eb41378040b1b2098ec7f92365f41f290a38ea6140f77910d2f2181381...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False)
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='c3e35eb41378040b1b2098ec7f92365f41f290a38ea6140f77910d2f2181381...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_dispatcher.py:239: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions
+1 failed in 4.25s

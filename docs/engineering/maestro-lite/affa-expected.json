@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-18-DRAFT2",
+  "status": "independently_authored_expected_controls_before_product_code",
+  "runtime_verification_executed": false,
+  "scope": "one original run authority for every unit; surviving original broker with replaceable controller",
+  "controls": [
+    {
+      "id": "AF01",
+      "condition": "two units armed in one live epoch; Cancel commits before either Release",
+      "expected": "both tickets irrevocably rejected; zero workload markers for either unit"
+    },
+    {
+      "id": "AF02",
+      "condition": "unit A Release commits before Cancel; unit B Release ordered afterward",
+      "expected": "A can run at most once and requires actual teardown; B executes zero workload instructions"
+    },
+    {
+      "id": "AF03",
+      "condition": "same exact ticket is presented twice",
+      "expected": "one maximum release; duplicate never unfreezes again"
+    },
+    {
+      "id": "AF04",
+      "condition": "ticket epoch, unit, run, generation, operation, nonce, permit digest or supervisor identity changes",
+      "expected": "reject before unfreeze; exact registered cleanup scopes remain available"
+    },
+    {
+      "id": "AF05",
+      "condition": "Stage request is handled after run Cancel or original lease expiry",
+      "expected": "no child creation; stale acknowledgement cannot reopen Stage"
+    },
+    {
+      "id": "AF06",
+      "condition": "AFFA is actually stopped with a pending old Release; supervisor executes fallback cleanup; AFFA later resumes",
+      "expected": "no child creation or unfreeze in any certified empty/released scope; fencing/death must be actual before certification"
+    },
+    {
+      "id": "AF07",
+      "condition": "AFFA dies before a Stage acknowledgement arrives",
+      "expected": "retain original C1 cleanup-only scope; do not invent full handle or direct-child wait"
+    },
+    {
+      "id": "AF08",
+      "condition": "Stage returned the genuine full handle and original pidfd; ordinary stop follows",
+      "expected": "exact original child termination and wait observed separately from boundary empty/release"
+    },
+    {
+      "id": "AF09",
+      "condition": "original native authority identity is replaced or copied",
+      "expected": "no adoption, renewal, old-ticket minting or ordinary old-resource recovery"
+    },
+    {
+      "id": "AF10",
+      "condition": "original supervisor disappears or renewal ceases",
+      "expected": "authority lease expires and all original boundaries fail closed; report actual waits and unknowns separately"
+    },
+    {
+      "id": "AF11",
+      "condition": "actual mirror append exists but durable public flush acknowledgement is absent",
+      "expected": "no Arm/Release; consumed intent never replayed"
+    },
+    {
+      "id": "AF12",
+      "condition": "actual M3/Argus worker is stopped or fails while resources exist",
+      "expected": "independent original authority cancellation and C1 cleanup; missing normal records remain missing"
+    },
+    {
+      "id": "AF13",
+      "condition": "controller worker actually exits while original broker/AFFA/storage survive",
+      "expected": "retain original registry, consumed intents and C1 authority; retire old controller channel"
+    },
+    {
+      "id": "AF14",
+      "condition": "new owned controller child is admitted under a fresh host session",
+      "expected": "revalidate genuine surviving issuer and durable handles; require new actual health observations before dependent use"
+    },
+    {
+      "id": "AF15",
+      "condition": "old controller/session or forked/copied proxy sends an otherwise well-formed request",
+      "expected": "reject without new mutation or freshness credit"
+    },
+    {
+      "id": "AF16",
+      "condition": "new broker/authority attempts to reconstruct ownership from durable public metadata",
+      "expected": "ordinary adoption rejects; metadata is not a capability"
+    },
+    {
+      "id": "AF17",
+      "condition": "explicit restart of prerequisite requested while transitive dependents remain active",
+      "expected": "stop/release dependents first; never silently retry with old execution, generation or permit"
+    },
+    {
+      "id": "AF18",
+      "condition": "old generation is confirmed released and exact fresh permits/new execution are admitted",
+      "expected": "new generation and epoch; actual new dependency probes; no old writer root reopened"
+    },
+    {
+      "id": "AF19",
+      "condition": "normal mutation owner blocks or conflicts",
+      "expected": "conflicting normal request rejects without waiting; independent cancellation remains effective"
+    },
+    {
+      "id": "AF20",
+      "condition": "native or controller frame has duplicate/unknown fields, malformed size or unexpected rights",
+      "expected": "closed parser rejects; every received right is disposed; no authority is inferred from path/PID data"
+    },
+    {
+      "id": "AF21",
+      "condition": "late success reply arrives after cancellation/deadline",
+      "expected": "cannot commit start/readiness; may only contribute factual original cleanup observations"
+    },
+    {
+      "id": "AF22",
+      "condition": "original host cannot demonstrate frozen clone/exec and original descriptor/pidfd identity",
+      "expected": "process mode rejects before workload Stage; ready_for_execution remains false"
+    },
+    {
+      "id": "AF23",
+      "condition": "same original authority selectively advances a released target while an unrelated sibling remains running",
+      "expected": "fresh execution/permit/intent/mirror and original new C1 scope; shared epoch advances and burns unused tickets; unrelated issued resource remains owned/live"
+    },
+    {
+      "id": "AF24",
+      "condition": "generation advance exceeds explicit per-unit or joint admitted budget, reuses old intent/handle or lacks actual old boundary release",
+      "expected": "reject without child creation, descriptor adoption, new lease or old-generation mutation"
+    },
+    {
+      "id": "AF25",
+      "condition": "old matching stop/cleanup is repeated after a fresh resource generation is admitted",
+      "expected": "return only actual retained old-generation facts; never act on or report the new resource as the old one"
+    }
+  ],
+  "invariants": [
+    "A client latch or exported registry snapshot is not the native M1 transition.",
+    "Cancellation orders every unit in the same run epoch, not a loop of unrelated local epochs.",
+    "No still-live authority may retain a route to thaw/create in a certified released boundary.",
+    "Signal delivery, empty membership, issuer death and direct-child wait are separate observations.",
+    "Recovery cannot authorize implicit start or use cross-session subtraction.",
+    "Complete cleanup never substitutes for missing required normal evidence.",
+    "No control here is an experiment, acceptance or certification result."
+  ],
+  "binding_scope": {
+    "ml_sr": 24,
+    "source_parents_unvalidated_null_mapped": 18,
+    "scenario_pairs": 30,
+    "declared_endpoints": 90,
+    "full_runtime_cases": 9,
+    "all_nine_phases_retained": true
+  }
+}

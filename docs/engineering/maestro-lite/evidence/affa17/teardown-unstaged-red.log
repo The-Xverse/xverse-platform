@@ -1,0 +1,46 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_unstaged_native_units_are_fenced_without_invented_workload_wait _____
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x70f4daee6f90>, <xverse.maestro.providers.ProcessReadiness object at ...ient object at 0x70f4daee6a50>, PosixPath('/tmp/pytest-of-jefferson/pytest-1000/test_unstaged_native_units_are0/work'))
+
+    def test_unstaged_native_units_are_fenced_without_invented_workload_wait(broker_stack):
+        broker, facade, _, _ = broker_stack
+>       result = ReverseTeardown(facade, per_unit_seconds=0.8).run(deadline(2))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_teardown.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/teardown.py:453: in run
+    jobs = self._jobs(deadline)
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.teardown.ReverseTeardown object at 0x70f4daee7620>
+deadline = HostDeadline(session='host-session', monotonic_seconds=939243.495400415)
+
+    def _jobs(self, deadline):
+        units = set(self._order())
+        with self.manager._cleanup_lock(deadline):
+            entries = {
+                e.descriptor.key: e.descriptor
+                for e in self.manager._entries.values()
+                if e.descriptor.unit_id in units and e.fd >= 0
+            }
+        jobs = []
+        for unit in self._order():
+            if unit in self._cleaned:
+                continue
+            launcher = self._registry.get(unit)
+            descriptor = next((d for d in entries.values() if d.unit_id == unit), None)
+            handle = None
+            if type(launcher) in (CatalogLauncher, RunUnitIssuer):
+                launcher._holder()
+>               if launcher.owner is not self.owner or launcher.recipe.unit_id != unit:
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'NoneType' object has no attribute 'unit_id'
+
+src/xverse/maestro/teardown.py:168: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_teardown.py::test_unstaged_native_units_are_fenced_without_invented_workload_wait
+1 failed in 2.26s

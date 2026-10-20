@@ -1,0 +1,11 @@
+--- docs/engineering/maestro-lite/evidence/affa17/audit-runtime-issuer-loss-20261019.py
++++ docs/engineering/maestro-lite/evidence/affa17/audit-runtime-issuer-loss-20261019-v2.py
+@@ -137,7 +137,7 @@
+ else:
+     assert original_exit == 1
+     assert len(phases) == 2 and counts == {p:dict(passed=0, failed=2, errors=0) for p in ('source', 'wheel')}
+-    assert len(roots) == 8
++    assert len(roots) == 4  # one environment root per test; managers share it
+ result = dict(auditor_sha256=sha(Path(__file__)), original_exec_session=handle,
+     original_exec_exit=original_exit, phases=phases, counts=counts,
+     frozen_manifest_sha256=sha(out / 'frozen-inputs.json'), packaged_python_c_files=81,

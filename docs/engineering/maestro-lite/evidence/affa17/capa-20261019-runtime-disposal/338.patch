@@ -1,0 +1,52 @@
+--- before/src/xverse/maestro/persistence.py
++++ after/src/xverse/maestro/persistence.py
+@@ -584,6 +584,8 @@
+         self._drain_deadline = None
+         self._term_sent = self._kill_sent = False
+         self._drained = None
++        self._disposed = False
++        self._dispose_error = None
+         self.last_writer_state = "unknown"
+         self._closure_attempted, self._closure_result = False, None
+         channel.setblocking(False)
+@@ -1361,9 +1363,34 @@
+ 
+     def dispose(self):
+         self._holder()
+-        if not self._drained or not self._drained.worker_reaped:
+-            raise PersistenceError("ML-PERSIST-RETAINED")
+-        if self._pidfd >= 0:
+-            os.close(self._pidfd)
+-            self._pidfd = -1
+-        self._pins[1].close()
++        if not self._lock.acquire(False):
++            raise PersistenceError("ML-PERSIST-CONFLICT")
++        try:
++            if self._dispose_error is not None:
++                raise PersistenceError("ML-PERSIST-DISPOSE-UNRESOLVED") from self._dispose_error
++            if self._disposed:
++                return
++            if not self._drained or not self._drained.worker_reaped:
++                from .bootstrap import BootstrapChild
++
++                # The root can have consumed the original wait after the local
++                # drain expired. This observation never rewrites that old receipt.
++                if type(self._pins[0]) is not BootstrapChild:
++                    raise PersistenceError("ML-PERSIST-RETAINED")
++                try:
++                    observed = wait_child(self._pins[0], self._pidfd, consume=True)
++                except (ValueError, OSError):
++                    raise PersistenceError("ML-PERSIST-RETAINED") from None
++                if observed is None:
++                    raise PersistenceError("ML-PERSIST-RETAINED")
++            try:
++                if self._pidfd >= 0:
++                    descriptor, self._pidfd = self._pidfd, -1
++                    os.close(descriptor)
++                self._pins[1].close()
++            except OSError as error:
++                self._dispose_error = error
++                raise PersistenceError("ML-PERSIST-DISPOSE-UNRESOLVED") from error
++            self._disposed = True
++        finally:
++            self._lock.release()

@@ -1,0 +1,445 @@
+.........................FFFFFF.....F............................        [100%]
+=================================== FAILURES ===================================
+______ test_actual_supervised_tick_pauses_interleave_with_durable_health _______
+
+request = <FixtureRequest for <Function test_actual_supervised_tick_pauses_interleave_with_durable_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7272549890f0>
+
+    def test_actual_supervised_tick_pauses_interleave_with_durable_health(
+        request, monkeypatch
+    ):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x727254894c20>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921678.020301598)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+_________ test_original_worker_rejects_tick_state_forgery[wrong-index] _________
+
+request = <FixtureRequest for <Function test_original_worker_rejects_tick_state_forgery[wrong-index]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x727255880170>
+mode = 'wrong-index'
+
+    @pytest.mark.parametrize(
+        "mode", ["wrong-index", "wrong-prior", "double-pull", "wrong-tick", "without-pull"]
+    )
+    def test_original_worker_rejects_tick_state_forgery(request, monkeypatch, mode):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7272547b65d0>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921678.761026866)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+_________ test_original_worker_rejects_tick_state_forgery[wrong-prior] _________
+
+request = <FixtureRequest for <Function test_original_worker_rejects_tick_state_forgery[wrong-prior]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x727254b94d10>
+mode = 'wrong-prior'
+
+    @pytest.mark.parametrize(
+        "mode", ["wrong-index", "wrong-prior", "double-pull", "wrong-tick", "without-pull"]
+    )
+    def test_original_worker_rejects_tick_state_forgery(request, monkeypatch, mode):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7272547b60d0>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921679.480558348)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+_________ test_original_worker_rejects_tick_state_forgery[double-pull] _________
+
+request = <FixtureRequest for <Function test_original_worker_rejects_tick_state_forgery[double-pull]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x727254b94e20>
+mode = 'double-pull'
+
+    @pytest.mark.parametrize(
+        "mode", ["wrong-index", "wrong-prior", "double-pull", "wrong-tick", "without-pull"]
+    )
+    def test_original_worker_rejects_tick_state_forgery(request, monkeypatch, mode):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7272547b5e50>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921680.211580363)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+_________ test_original_worker_rejects_tick_state_forgery[wrong-tick] __________
+
+request = <FixtureRequest for <Function test_original_worker_rejects_tick_state_forgery[wrong-tick]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x727254619050>
+mode = 'wrong-tick'
+
+    @pytest.mark.parametrize(
+        "mode", ["wrong-index", "wrong-prior", "double-pull", "wrong-tick", "without-pull"]
+    )
+    def test_original_worker_rejects_tick_state_forgery(request, monkeypatch, mode):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7272547b6e90>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921680.949089115)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+________ test_original_worker_rejects_tick_state_forgery[without-pull] _________
+
+request = <FixtureRequest for <Function test_original_worker_rejects_tick_state_forgery[without-pull]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x727254619a50>
+mode = 'without-pull'
+
+    @pytest.mark.parametrize(
+        "mode", ["wrong-index", "wrong-prior", "double-pull", "wrong-tick", "without-pull"]
+    )
+    def test_original_worker_rejects_tick_state_forgery(request, monkeypatch, mode):
+        stack = scheduled(request, monkeypatch)
+>       owner, storage, descriptor, launcher, handle, gate, original = stack[6]()
+                                                                       ^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(
+src/xverse/maestro/bootstrap.py:850: in persistence
+    return PersistenceClient(
+src/xverse/maestro/persistence.py:423: in __init__
+    _, _, facts = self._rpc("init", {}, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x7272547b5e50>
+kind = 'init', body = {}
+deadline = HostDeadline(session='host-session', monotonic_seconds=921681.839141229)
+
+    def _rpc(self, kind, body, deadline):
+        if not self._lock.acquire(blocking=False):
+            raise PersistenceError("ML-PERSIST-CONFLICT")
+        allow_cancel = kind == "abort"
+    
+        def check():
+            return self._live(allow_cancel=allow_cancel, allow_exit=allow_cancel)
+    
+        try:
+            self._live(allow_cancel=allow_cancel)
+            until = self._until(deadline)
+            if kind == "commit":
+                if body["unit"] in self._attempted:
+                    raise PersistenceError("ML-PERSIST-REPLAY-UNIT")
+                self._attempted.add(body["unit"])
+            sequence = self._sequence + 1
+            if sequence > self._request_limit:
+                raise PersistenceError("ML-PERSIST-SEQUENCE")
+            operation = "ml-" + uuid.uuid4().hex
+            request = _frame(kind, sequence, operation, until, self._scope, body)
+            _send(self._pins[1], request)
+            reply = _receive(self._pins[1], self._peer, until, check)
+            self._sequence = sequence
+            if (
+                any(
+                    reply[k] != request[k]
+                    for k in ("version", "sequence", "operation", "deadline", "scope")
+                )
+                or reply["kind"] != "ok"
+            ):
+>               raise PersistenceError("ML-PERSIST-ACK")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-ACK
+
+src/xverse/maestro/persistence.py:558: PersistenceError
+_____ test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts _____
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7272547b5d10>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-903/test_scoped_stop_and_cleanup_k0/work'), <function boot_stack.<locals>.boundary at 0x7272546c2c00>, ...)
+
+    def test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts(boot_stack):
+        from .test_teardown import pair
+    
+        facade, owner, a, b = pair(boot_stack)
+        controller = ReverseTeardown(facade)
+        stopped = controller.phase(b[0].unit_id, "stop", deadline(1))
+        assert stopped.leader_reaped and stopped.boundary_empty
+        assert not stopped.boundary_released and not stopped.normal_records_complete
+        assert controller.phase(b[0].unit_id, "stop", deadline(1)) is stopped
+        assert [v.unit_id for v in facade.check_health(deadline(1), force=True)] == [
+            a[0].unit_id
+        ]
+        assert not owner.latch.cancelled and facade.next_health_deadline is not None
+        cleaned = controller.phase(b[0].unit_id, "cleanup", deadline(1))
+        assert cleaned.unit_cleanup_complete and cleaned.normal_records_complete
+        assert controller.phase(b[0].unit_id, "cleanup", deadline(1)) is cleaned
+        assert facade.check_health(deadline(1), force=True)[0].ready
+>       assert controller.phase(a[0].unit_id, "stop", deadline(1)).leader_reaped
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_schedule_worker.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/teardown.py:303: in phase
+    jobs = self._jobs(deadline)
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.teardown.ReverseTeardown object at 0x7272548978c0>
+deadline = HostDeadline(session='host-session', monotonic_seconds=921686.531142678)
+
+    def _jobs(self, deadline):
+        units = set(self._order())
+        with self.manager._cleanup_lock(deadline):
+            entries = {
+                e.descriptor.unit_id: e.descriptor
+                for e in self.manager._entries.values()
+                if e.descriptor.unit_id in units
+                and e.descriptor.generation == 1
+                and e.fd >= 0
+            }
+        jobs = []
+        for unit in self._order():
+            descriptor = entries.get(unit)
+            launcher = self._registry.get(unit)
+            handle = None
+            if type(launcher) is CatalogLauncher:
+                launcher._holder()
+                if launcher.owner is not self.owner or launcher.recipe.unit_id != unit:
+                    raise TeardownError("ML-TEARDOWN-ISSUER")
+                if descriptor != launcher.recipe.descriptor:
+>                   raise TeardownError("ML-TEARDOWN-BOUNDARY")
+E                   xverse.maestro.teardown.TeardownError: ML-TEARDOWN-BOUNDARY
+
+src/xverse/maestro/teardown.py:170: TeardownError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_actual_supervised_tick_pauses_interleave_with_durable_health
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-index]
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-prior]
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[double-pull]
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-tick]
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[without-pull]
+FAILED tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts
+7 failed, 58 passed in 51.04s

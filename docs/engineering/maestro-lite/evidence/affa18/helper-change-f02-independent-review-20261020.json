@@ -1,0 +1,279 @@
+{
+  "review": "helper-change-f02-independent-review",
+  "reviewer": "separate agent session (Claude, independent of the change author)",
+  "date": "2026-10-20",
+  "repository": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa18-20261020",
+  "branch": "candidate/maestro-lite-affa18-20261020 (change uncommitted on top of HEAD 18547fd6c51dbd023e6290502dff31b4c59887ff)",
+  "subject": "F-02 native watch token: bootstrap.c, run_authority.c, affa_protocol.py, bootstrap.py, affa_client.py, run_broker.py and tests",
+  "method": "Read-only source reading of git diff -- src tests against HEAD, the full changed C sources, the relevant Python paths, the new and changed tests and review-affa18.md finding 403; compiled both supervisor variants and the authority in /dev/shm (never executed); no existing file modified, no state-changing git command, no pytest.",
+  "frozen_inputs": [
+    {
+      "path": "src/xverse/maestro/native/bootstrap.c",
+      "sha256": "83b10177ad792bf6ebda663ce11bcc07bff17fb9eb2807aa5270f0a02c2849f0",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/native/run_authority.c",
+      "sha256": "5938cd01dcd46669ec91de942fdf6df39d53802b3ac329eb3eaf58d9a3e00932",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/affa_protocol.py",
+      "sha256": "4c0e8eb0a10cdcf9316e1ca4cda1c8daccc2e3746cf1aa255d409feeb2aaaca5",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/bootstrap.py",
+      "sha256": "48e38bec9f9f339d12f0fe287c295e5809d2f73cea793eedb132aae224f40046",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/affa_client.py",
+      "sha256": "f88a4bc9e9f7a877997de5e50ec372d3022cc8b5136a4a141ede1277cf161299",
+      "verified": true
+    },
+    {
+      "path": "src/xverse/maestro/run_broker.py",
+      "sha256": "29ebeba8ab61ecb80e9db625a69fe3b38c29a35dacb9195202fa9c5383071211",
+      "verified": true
+    }
+  ],
+  "checks": [
+    {
+      "item": "0. Frozen inputs and diff scope",
+      "verdict": "PASS",
+      "evidence": "sha256sum of all six working-tree files matches the frozen values; HEAD=18547fd6c51dbd023e6290502dff31b4c59887ff; git diff --stat -- src tests: 9 files, +106/-18, plus untracked tests/thesis_lite/maestro/test_affa_watch_token.py",
+      "note": "review-affa18.md is also modified (finding 403 appended at 203-241); read for item 6 only."
+    },
+    {
+      "item": "1a. Token unforgeable without the key",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:183-187 and src/xverse/maestro/native/run_authority.c:379-384 compute the same HMAC-SHA256(key32, 'MLWT'||be64(st_dev)||be64(st_ino)); fixed 20-byte message with a 4-byte domain tag, so no length or field ambiguity; comparison uses CRYPTO_memcmp (src/xverse/maestro/native/run_authority.c:382); key is fresh per supervisor instance (src/xverse/maestro/native/bootstrap.c:133)",
+      "note": "Python only ever sees MAC outputs (kind 20 replies); it has no oracle except WATCH itself, which by construction makes the boundary watched."
+    },
+    {
+      "item": "1b. Supervisor issues tokens only for boundaries it actually retains",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:345-346 kind 4 is the only path to respond(kind 20); watch_boundary src/xverse/maestro/native/bootstrap.c:188-198 checks slot order, frozen/empty/no-descendant cgroup, parent==boundary_parent, not already watched, not a helper child cg, then dups the fd and computes the token over the retained dup before appending it; any failure returns -1 and main exits via cleanup (src/xverse/maestro/native/bootstrap.c:351), so a stale watch_reply is never sent",
+      "note": "Helper cgroups cannot be watched (194) and role 4/5 cannot be born into a watched cgroup (221, 231), so no token exists for a helper cgroup."
+    },
+    {
+      "item": "1c. No cross-boundary replay",
+      "verdict": "PASS",
+      "evidence": "Token binds (st_dev, st_ino); src/xverse/maestro/native/run_authority.c:389 recomputes over fstat(fd) of the descriptor in the same request; src/xverse/maestro/native/run_authority.c:392-395 rejects any identity already present in any unit's history, so one watched boundary is admissible at most once",
+      "note": "The token is not bound to unit, slot or generation; see F02R-07."
+    },
+    {
+      "item": "1d. Kernfs inode reuse",
+      "verdict": "NOTE",
+      "evidence": "Supervisor keeps every watched fd open for its whole life (src/xverse/maestro/native/bootstrap.c:195-197; never closed outside process exit). An open fd pins the kernfs node, and kernfs releases the node id (idr) only on the final put, so the (st_dev, st_ino) of a watched-then-removed cgroup cannot be handed to a new cgroup while the supervisor lives; on 64-bit kernels kernfs ids are additionally allocated cyclically with a generation in the high 32 bits",
+      "note": "Reasoned from kernel behaviour, not tested. Residual only if the supervisor dies abruptly (no cleanup) while the authority survives; see F02R-04."
+    },
+    {
+      "item": "1e. TOCTOU between fstat and admission",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/run_authority.c:385-404 uses one received fd throughout: cgroup(fd,1), fstat(fd,&next), watched(g,&next,p+224), openat(fd,'..'), history comparison with next, F_DUPFD_CLOEXEC(fd), and stores next.st_dev/st_ino. The identity of an open fd is immutable, so the verified identity is exactly the admitted one; all checks precede the first mutation at 396-398",
+      "note": "cgroup state (frozen/populated) can still change after the check; that is pre-existing and not part of F-02."
+    },
+    {
+      "item": "2a. Key generation",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:133 getrandom(watch_key,32,0)!=32 -> initialize fails (exit 64); blocking flag 0 waits for an initialised pool; src/xverse/maestro/native/run_authority.c:287 rejects an all-zero key",
+      "note": ""
+    },
+    {
+      "item": "2b. memfd creation and sealing",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:255 memfd_create(MFD_CLOEXEC|MFD_ALLOW_SEALING); 257 write exactly 32 then F_ADD_SEALS SEALS where SEALS=src/xverse/maestro/native/bootstrap.c:25 = F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL; src/xverse/maestro/native/run_authority.c:287 sealed(key,32,&size) requires the same four seals, S_ISREG, size==32, then pread exactly 32 at offset 0",
+      "note": ""
+    },
+    {
+      "item": "2c. CLOEXEC handling and fd reach",
+      "verdict": "PASS",
+      "evidence": "Key fd exists only inside birth() for role 4 (src/xverse/maestro/native/bootstrap.c:254-260, 271); the child runs close_range(3,~0,CLOSE_RANGE_CLOEXEC) (src/xverse/maestro/native/bootstrap.c:265) then clears CLOEXEC on keyfd only (src/xverse/maestro/native/bootstrap.c:267) before execveat (269); fd table is copied (no CLONE_FILES), so the parent's copy stays CLOEXEC and is closed at src/xverse/maestro/native/bootstrap.c:271 whether clone succeeded or failed; roles 1,2,3,5 take keyfd=-1 and never see a key fd; the supervisor is single-threaded so no concurrent fork can inherit it; argv[3] carries only the fd number; the authority closes it at src/xverse/maestro/native/run_authority.c:288 and its workload children run close_range CLOEXEC (src/xverse/maestro/native/run_authority.c:344) after that",
+      "note": "The authority does not close the key fd on its own initialize error paths, but it exits 64 immediately."
+    },
+    {
+      "item": "2d. birth() error paths",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:256 memfd failure returns before any fd exists; 257 write/seal failure closes keyfd; 261 getrandom/enabled failure closes keyfd; 271 closes on clone success and on clone failure (before the pid<0 check at 272); every -1 return leads to cleanup in main",
+      "note": "c->cg/c->unit dups at 234 leak on later failures; pre-existing and moot because the supervisor then exits."
+    },
+    {
+      "item": "2e. Key never in replies, logs or evidence",
+      "verdict": "PASS",
+      "evidence": "watch_key is used only at src/xverse/maestro/native/bootstrap.c:133, 196 and 257; respond() copies watch_reply (the MAC) not watch_key (src/xverse/maestro/native/bootstrap.c:103); src/xverse/maestro/native/run_authority.c watch_key is used only at 287 and 382; grep of src/ and tests/ for watch_key outside the C files finds only the test harness's own key (test_affa_native.py:83,94,261-262); AuthorityFrame.ticket and BootstrapPacket.token are repr=False",
+      "note": ""
+    },
+    {
+      "item": "2f. Key confidentiality against the Python peer process",
+      "verdict": "NOTE",
+      "evidence": "The authority is a CLONE_PARENT child of the Python peer (src/xverse/maestro/native/bootstrap.c:262; src/xverse/maestro/native/run_authority.c:313 requires peer.pid==getppid()); after execveat it is dumpable until prctl(PR_SET_DUMPABLE,0) at the end of initialize (src/xverse/maestro/native/run_authority.c:316), i.e. after the key fd was read (src/xverse/maestro/native/run_authority.c:287) and while the fd is still open; kernel.yama.ptrace_scope on this host is 1, which permits a parent to attach",
+      "note": "See F02R-01. Holds against a buggy-but-honest broker, which is the F-02 threat."
+    },
+    {
+      "item": "3a. BootstrapPacket: kind 20 carries a token, nothing else gains one",
+      "verdict": "PASS",
+      "evidence": "bootstrap.py:246 watch = kind in (4,20) and version==2; 264 the pid==0<->token==ZERO rule is waived only for watch and kind==20; 266-273 for watch packets requires pid==0, state==0, slot>=1, sequence!=0 and token nonzero iff kind==20 (kind 4 requests keep a zero token); v1 does not admit kinds 4/20 at all (252-255); all other v1/v2 kinds keep the unchanged pid/token rule; bootstrap.py:809 rejects a zero WATCH reply token",
+      "note": ""
+    },
+    {
+      "item": "3b. Supervisor wire for other kinds",
+      "verdict": "PASS",
+      "evidence": "src/xverse/maestro/native/bootstrap.c:103 the token copy is guarded by !c&&kind==20 inside RUN_BOOTSTRAP; kinds 16,19,21,22 (c==NULL) keep a zero token; 17/18 carry the child token as before",
+      "note": ""
+    },
+    {
+      "item": "3c. Non-RUN_BOOTSTRAP build unaffected",
+      "verdict": "PASS",
+      "evidence": "Compiled in /dev/shm with and without -DRUN_BOOTSTRAP using -std=c11 -O2 -Wall -Wextra -Werror -Wconversion -Wshadow -lcrypto: both clean; nm -u of the legacy object has no HMAC reference; legacy birth() only gains keyfd=-1 with dead conditional closes",
+      "note": "Not executed."
+    },
+    {
+      "item": "3d. Authority compiles cleanly",
+      "verdict": "PASS",
+      "evidence": "cc -std=c11 -O2 -Wall -Wextra -Werror authority.c -lcrypto: clean (not executed)",
+      "note": ""
+    },
+    {
+      "item": "4a. Protocol requires a nonzero ticket on ADVANCE",
+      "verdict": "PASS",
+      "evidence": "affa_protocol.py:125-127 needs_ticket includes ADVANCE (not ADVANCED); a zero-ticket ADVANCE raises ML-AFFA-TICKET, and an ADVANCED with a ticket is rejected",
+      "note": ""
+    },
+    {
+      "item": "4b. Client checks the retained token before sending",
+      "verdict": "PASS",
+      "evidence": "affa_client.py:281-284 inside _validate, which _exchange calls before sendmsg (339-346); expected_rights forces exactly one fd for ADVANCE (274-280); watch_token (242-248) first re-runs _watched then reads root._watch_tokens by fstat identity; run_broker.py:761 is the only production ADVANCE construction (grep) and goes through _exchange",
+      "note": "A caller writing raw bytes to the channel bypasses this, which is exactly what the native check now covers."
+    },
+    {
+      "item": "4c. ADVANCED reply no longer echoes the request ticket",
+      "verdict": "PASS",
+      "evidence": "affa_client.py:324 expects zero ticket for ADVANCED; native unit_reply zeroes p+224 for every kind except ARMED/RELEASED (src/xverse/maestro/native/run_authority.c:216-217), and the new generation's ticket is never stored (proof copy is p+80..223, src/xverse/maestro/native/run_authority.c:404)",
+      "note": ""
+    },
+    {
+      "item": "4d. No regression in CANCEL, RENEW, RELEASE, ARMED, REGISTER",
+      "verdict": "PASS",
+      "evidence": "CANCEL/RENEW still require p+80..287 zero (src/xverse/maestro/native/run_authority.c:410,416); REGISTER requires p+224..287 zero (src/xverse/maestro/native/run_authority.c:324) and is unchanged in Python; ARM/RELEASE logic (src/xverse/maestro/native/run_authority.c:443-452) and the Python RELEASE ticket check (affa_client.py:285-290) are unchanged; prbc.admit_epoch does not compare tickets",
+      "note": ""
+    },
+    {
+      "item": "4e. Token retention integrity pin",
+      "verdict": "PASS",
+      "evidence": "bootstrap.py:487-488 registry identity pin and log; 573-574 included in ML-BOOT-INVENTORY-REPLACED; 814-815 tokens recorded only after a validated WATCH reply",
+      "note": "watch_token() does not itself invoke the inventory check (parity with _watched); the native HMAC makes a tampered Python token harmless except as a fatal rejection."
+    },
+    {
+      "item": "5a. Native controls in test_affa_watch_token.py",
+      "verdict": "PASS",
+      "evidence": "raw_exchange (30-43) overwrites bytes 224:256 below the protocol layer, so 'missing' reaches the native zero check and 'foreign'/'forged' reach the HMAC; frames are otherwise identical across cases and 'correct' is ADVANCED, so rejection is attributable to the token; assertions 91-96 check kind, reason==4 (PROTOCOL), empty new boundary and single EXEC marker",
+      "note": "'missing' exercises the presence check at run_authority.c:389 (zero(p+224,32)), not the HMAC."
+    },
+    {
+      "item": "5b. Harness key as a stand-in for the supervisor",
+      "verdict": "PASS",
+      "evidence": "test_affa_native.py:91-95 builds 'MLWT'+8-byte big-endian st_dev+st_ino with hmac-sha256, byte-identical to bootstrap.c:185; 260-262 seals the key with bootstrap._sealed (same four seals); the supervisor-generated path is exercised positively by test_affa_epoch.py:53 through connect() (test_affa_client.py:39-43 substitutes client.watch_token)",
+      "note": "No negative control through a supervisor-born authority; see F02R-05."
+    },
+    {
+      "item": "5c. Untested aspects",
+      "verdict": "NOTE",
+      "evidence": "No BootstrapPacket unit test for kind 20 (test_run_bootstrap_values.py covers kind 4 only); no test of ML-AFFA-WATCH-TOKEN (test_affa_client.py:233 gives a ticket but stops at UNWATCHED); no removed-and-reused identity test (not constructible while the supervisor pins the node)",
+      "note": "See F02R-02, F02R-03, F02R-04."
+    },
+    {
+      "item": "6. Accuracy of finding 403",
+      "verdict": "PASS",
+      "evidence": "review-affa18.md:203-241 (a)-(e) match the code: getrandom at init, HMAC format, token in p+72, sealed memfd as the authority's third argument, close after clone, exact 32-byte read and close, CRYPTO_memcmp, handle p+256 kept zero, Python changes and wire-layout statement",
+      "note": "Omissions only; see F02R-06."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F02R-01",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "287-288, 316",
+      "title": "Watch key readable by the same-uid parent between execveat and PR_SET_DUMPABLE(0)",
+      "scenario": "The authority is born with CLONE_PARENT, so the Python peer is its parent. execveat resets dumpability to 1; the authority reads the key and keeps its fd open until line 288 and only becomes non-dumpable at line 316. The peer controls the timing (it sends ACTIVATE) and, with yama ptrace_scope=1 as on this host, may PTRACE_ATTACH to its own child or open /proc/<pid>/fd/<n> (n is visible in cmdline) in that window; an attachment survives the later prctl. A hostile peer could then mint tokens for any identity. A buggy-but-honest broker, the F-02 threat, does not do this, and a hostile peer can in any case obtain legitimate tokens by sending WATCH, so the gain is limited to boundaries that would fail watch_boundary's checks.",
+      "recommendation": "Call prctl(PR_SET_DUMPABLE,0) as the first statement of main, before initialize touches the key, and state in finding 403 that confidentiality against a hostile same-uid parent is not claimed (a loader window before main remains)."
+    },
+    {
+      "id": "F02R-02",
+      "severity": "LOW",
+      "file": "tests/thesis_lite/maestro/test_run_bootstrap_values.py",
+      "line": "45-58",
+      "title": "No unit test of the relaxed kind-20 packet rule",
+      "scenario": "bootstrap.py:264 and 269 now admit a nonzero token with pid 0 for v2 kind 20 and require it; only kind 4 shapes are tested, so a regression that lets another kind carry a token with pid 0, or accepts a zero kind-20 token, would not be caught at the packet layer.",
+      "recommendation": "Add literal cases: v2 kind 20 with nonzero token accepted; kind 20 with zero token, with pid!=0, and v1 kind 20 rejected; kind 4 with nonzero token still rejected; another pid-0 kind (e.g. 19) with nonzero token rejected."
+    },
+    {
+      "id": "F02R-03",
+      "severity": "LOW",
+      "file": "src/xverse/maestro/affa_client.py",
+      "line": "283-284",
+      "title": "Client-side ML-AFFA-WATCH-TOKEN check is not exercised",
+      "scenario": "test_affa_client.py:233 supplies a ticket but the boundary is unwatched, so the UNWATCHED check fires first; no test sends an ADVANCE for a watched boundary with a wrong ticket through _exchange, so the precondition and its no-send/no-sequence-advance behaviour are untested.",
+      "recommendation": "Add a client test with a watched boundary and a wrong nonzero ticket asserting ML-AFFA-WATCH-TOKEN, unchanged client.sequence and nothing sent."
+    },
+    {
+      "id": "F02R-04",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/run_authority.c",
+      "line": "379-389",
+      "title": "Token proves 'watched by this supervisor instance', not 'currently watched'; relies on the supervisor pinning the kernfs node",
+      "scenario": "The MAC covers only (st_dev, st_ino). Identity reuse is prevented because the supervisor never closes watched fds (bootstrap.c:195-197), which pins the kernfs node id, plus 64-bit cyclic kernfs ids. If the supervisor dies abruptly (SIGKILL, no cleanup) the authority, whose liveness check is the Python parent, keeps admitting tokens for up to its lease while no watcher exists. This is the general supervisor-liveness property rather than a token defect.",
+      "recommendation": "Record the kernel assumption and the supervisor-liveness dependency in finding 403; optionally give the authority a native liveness link to the supervisor (e.g. a pidfd) so ADVANCE is refused once it is gone."
+    },
+    {
+      "id": "F02R-05",
+      "severity": "NOTE",
+      "file": "tests/thesis_lite/maestro/test_affa_watch_token.py",
+      "line": "82-83, 93",
+      "title": "Late STAGE rejection is not independent evidence of non-admission; no supervisor-born negative control",
+      "scenario": "Any REJECTED closes the authority (run_authority.c:537), so the later STAGE is rejected whether or not a generation was recorded; non-admission actually follows from advance_unit returning before its first mutation (396-404) and from the empty new boundary. Negative cases use the harness key only; the supervisor-issued path is tested only positively (test_affa_epoch.py:53).",
+      "recommendation": "Word the evidence as 'REJECTED before admission, by code path, with an empty boundary' and optionally add one raw wrong-token ADVANCE through a supervisor-born authority."
+    },
+    {
+      "id": "F02R-06",
+      "severity": "NOTE",
+      "file": "docs/engineering/maestro-lite/review-affa18.md",
+      "line": "203-241",
+      "title": "Finding 403 is accurate but incomplete",
+      "scenario": "(b) omits the all-zero key rejection and the seal/size checks; (d) omits the forged-token control; 'Python never receives the key' holds for the protocol but is qualified by F02R-01; the token's run-wide (not per-unit) scope (F02R-07) and the kernfs/supervisor-liveness assumption (F02R-04) are not stated.",
+      "recommendation": "Add these qualifications when 403 is next updated."
+    },
+    {
+      "id": "F02R-07",
+      "severity": "NOTE",
+      "file": "src/xverse/maestro/native/bootstrap.c",
+      "line": "183-187",
+      "title": "Token is not bound to unit, slot or generation",
+      "scenario": "A token for a boundary watched for unit A is accepted on an ADVANCE for unit B, provided the authority's own checks pass (same parent as u->parent, identity unused in any history). The F-02 property (the supervisor watches the admitted boundary) still holds; intended unit binding remains a Python responsibility.",
+      "recommendation": "None needed for F-02; mention it if per-unit binding is ever claimed."
+    }
+  ],
+  "counts": {
+    "findings": {
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 3,
+      "NOTE": 4
+    },
+    "checks": {
+      "PASS": 22,
+      "FAIL": 0,
+      "NOTE": 3
+    }
+  },
+  "verdict": "F-02 addressed",
+  "verdict_rationale": "A Python caller that holds tokens but not the key cannot obtain a valid token for a boundary the supervisor did not WATCH, cannot replay one boundary's token for another, and the authority verifies the identity of the same open fd it admits. The remaining items are hardening (dumpable window), test coverage and documentation; none reopens F-02 for a non-hostile broker.",
+  "limits": "Source reading only; kernel kernfs behaviour reasoned, not tested; no test was run and no binary executed.",
+  "authority_limits": {
+    "activation_approved": false,
+    "m1_admission": false,
+    "acceptance": false
+  }
+}

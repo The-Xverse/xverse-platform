@@ -1,0 +1,44 @@
+.........................................F............                   [100%]
+=================================== FAILURES ===================================
+__________________ test_expired_actual_reply_cannot_be_reused __________________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x768ae5e4d590>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-883/test_expired_actual_reply_cann0/work'), <function boot_stack.<locals>.boundary at 0x768ae4ff0c20>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x768ae4e50440>
+
+    def test_expired_actual_reply_cannot_be_reused(boot_stack, monkeypatch):
+        facade, owner, descriptor, launcher, handle, gate, original = runtime(
+            boot_stack, freshness=0.01
+        )
+>       assert facade.start(descriptor.unit_id, descriptor, gate, original).ready
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_provider.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/providers.py:336: in start
+    return self._fresh(unit_id)
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.providers.ProcessReadiness object at 0x768ae4f6df40>
+unit_id = 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance'
+
+    def _fresh(self, unit_id):
+        binding = self._bound(unit_id)
+        value = self._observations.get(unit_id)
+        if (
+            value is None
+            or not value.ready
+            or value.host_session != self._pins[2]
+            or value.generation != binding.launcher.recipe.descriptor.generation
+            or value.handle_digest != _hash(asdict(binding.handle)).hex()
+            or not 0
+            <= time.monotonic() - value.observed_at
+            <= self._policies[unit_id].freshness_seconds
+        ):
+>           raise ReadinessError("ML-PROBE-NOT-FRESH")
+E           xverse.maestro.providers.ReadinessError: ML-PROBE-NOT-FRESH
+
+src/xverse/maestro/providers.py:296: ReadinessError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_provider.py::test_expired_actual_reply_cannot_be_reused
+1 failed, 53 passed in 44.50s

@@ -1,0 +1,100 @@
+..........F.                                                             [100%]
+=================================== FAILURES ===================================
+___ test_dead_leader_does_not_hide_live_contained_descendant[launch_stack0] ____
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7573daef5e50>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='catalog-boundary', creation_epoch=0)
+
+    def residual_membership(self, descriptor: BoundaryDescriptor) -> tuple[int, ...]:
+        entry = self._entry(descriptor)
+        with self._lock, self._operation():
+            if entry.state == "released":
+                raise BoundaryError("ML-OWNERSHIP-BOUNDARY-OBSERVATION-CLOSED")
+            try:
+                self._authority(entry)
+>               return self._members(entry)
+                       ^^^^^^^^^^^^^^^^^^^^
+
+src/xverse/maestro/prbc.py:593: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7573daef5e50>
+entry = _Entry(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#com...lse, count=None, terminated=False, diagnostic='ML-TEARDOWN-MEMBERSHIP-UNKNOWN', terminal=None, external_released=False)
+
+    def _members(self, entry: _Entry) -> tuple[int, ...]:
+        self._verify(entry)
+        if self._fields(entry, "cgroup.stat").get("nr_descendants") != 0:
+            raise BoundaryError("ML-TEARDOWN-NESTED-BOUNDARY")
+        before = self._events(entry)
+        samples = []
+        for _ in range(2):
+            tokens = self._read(entry, "cgroup.procs").split()
+            if len(tokens) > self._limits.max_members or any(
+                not p.isascii()
+                or not p.isdigit()
+                or len(p) > 10
+                or not 0 < int(p) < 2**31
+                for p in tokens
+            ):
+                raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+            members = tuple(sorted(map(int, tokens)))
+            if len(set(members)) != len(members):
+                raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+            samples.append(members)
+        after = self._events(entry)
+        self._verify(entry)
+        if (
+            before != after
+            or after["frozen"] != 1
+            or samples[0] != samples[1]
+            or (bool(samples[1]) != bool(after["populated"]))
+        ):
+>           raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+E           xverse.maestro.prbc.BoundaryError: ML-TEARDOWN-MEMBERSHIP-UNKNOWN
+
+src/xverse/maestro/prbc.py:492: BoundaryError
+
+The above exception was the direct cause of the following exception:
+
+launch_stack = (<xverse.maestro.owner.ReleaseOwner object at 0x7573daef6e40>, <xverse.maestro.persistence.PersistenceClient object at...rson/pytest-829/test_dead_leader_does_not_hide0/work'), <function launch_stack.<locals>.launch at 0x7573dad298a0>, ...)
+
+    @pytest.mark.parametrize("launch_stack", [{"mode": "descendant"}], indirect=True)
+    def test_dead_leader_does_not_hide_live_contained_descendant(launch_stack):
+        owner, client, manager, config, work, launch, gate = launch_stack
+        descriptor, launcher, handle, original = launch()
+        connection = gate(descriptor, original)
+        owner.release(descriptor.unit_id, descriptor, connection, original)
+        marker = work / "source-binding.marker"
+        until = time.monotonic() + 1
+        while time.monotonic() < until:
+            if marker.exists() and "DESCENDANT" in marker.read_text():
+                break
+            time.sleep(0.005)
+        assert "DESCENDANT" in marker.read_text()
+        observed = launcher.observe(handle, deadline())
+        assert not observed.running and observed.leader_reaped
+>       assert manager.residual_membership(descriptor)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_launcher.py:568: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7573daef5e50>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='catalog-boundary', creation_epoch=0)
+
+    def residual_membership(self, descriptor: BoundaryDescriptor) -> tuple[int, ...]:
+        entry = self._entry(descriptor)
+        with self._lock, self._operation():
+            if entry.state == "released":
+                raise BoundaryError("ML-OWNERSHIP-BOUNDARY-OBSERVATION-CLOSED")
+            try:
+                self._authority(entry)
+                return self._members(entry)
+            except (OSError, UnicodeError, BoundaryError) as exc:
+>               raise self._error(entry, exc) from exc
+E               xverse.maestro.prbc.BoundaryError: ML-TEARDOWN-MEMBERSHIP-UNKNOWN
+
+src/xverse/maestro/prbc.py:595: BoundaryError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_launcher.py::test_dead_leader_does_not_hide_live_contained_descendant[launch_stack0]
+1 failed, 11 passed in 16.02s

@@ -1,0 +1,100 @@
+......F..                                                                [100%]
+=================================== FAILURES ===================================
+_________ test_pre_handle_crash_survival[stage-ack-pending-authority] __________
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x707f4ba4d010>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='unit-0', creation_epoch=0)
+
+    def residual_membership(self, descriptor: BoundaryDescriptor) -> tuple[int, ...]:
+        entry = self._entry(descriptor)
+        with self._lock, self._operation():
+            if entry.state == "released":
+                raise BoundaryError("ML-OWNERSHIP-BOUNDARY-OBSERVATION-CLOSED")
+            try:
+                self._authority(entry)
+>               return self._members(entry)
+                       ^^^^^^^^^^^^^^^^^^^^
+
+../maestro-lite-affa-active-control-deadlines-target-20261019c/lib/python3.13/site-packages/xverse/maestro/prbc.py:701: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x707f4ba4d010>
+entry = _Entry(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#com...ue, residual_count=0, termination_observed=False, diagnostic=None, ready_for_execution=False), external_released=False)
+
+    def _members(self, entry: _Entry) -> tuple[int, ...]:
+        self._verify(entry)
+        if self._fields(entry, "cgroup.stat").get("nr_descendants") != 0:
+            raise BoundaryError("ML-TEARDOWN-NESTED-BOUNDARY")
+        before = self._events(entry)
+        samples = []
+        for _ in range(2):
+            tokens = self._read(entry, "cgroup.procs").split()
+            if len(tokens) > self._limits.max_members or any(
+                not p.isascii()
+                or not p.isdigit()
+                or len(p) > 10
+                or not 0 < int(p) < 2**31
+                for p in tokens
+            ):
+                raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+            members = tuple(sorted(map(int, tokens)))
+            if len(set(members)) != len(members):
+                raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+            samples.append(members)
+        after = self._events(entry)
+        self._verify(entry)
+        if (
+            before != after
+            or after["frozen"] != 1
+            or samples[0] != samples[1]
+            or (bool(samples[1]) != bool(after["populated"]))
+        ):
+>           raise BoundaryError("ML-TEARDOWN-MEMBERSHIP-UNKNOWN")
+E           xverse.maestro.prbc.BoundaryError: ML-TEARDOWN-MEMBERSHIP-UNKNOWN
+
+../maestro-lite-affa-active-control-deadlines-target-20261019c/lib/python3.13/site-packages/xverse/maestro/prbc.py:597: BoundaryError
+
+The above exception was the direct cause of the following exception:
+
+request = <FixtureRequest for <Function test_pre_handle_crash_survival[stage-ack-pending-authority]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x707f4a639e50>
+sentinel = <function sentinel.<locals>.observe at 0x707f4a62c860>
+window = 'stage-ack-pending', fault = 'authority'
+
+    @pytest.mark.parametrize('window,fault', [('stage-before-send', 'authority'),
+        ('stage-ack-pending', 'authority'), ('issuance-before-record', 'storage'),
+        ('issuance-after-record', 'storage')])
+    def test_pre_handle_crash_survival(request, monkeypatch, sentinel, window, fault):
+>       execute(request, monkeypatch, sentinel, window, fault)
+
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:270: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:197: in execute
+    wait_for(lambda: len(manager.residual_membership(descriptor)) == 1)
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:168: in wait_for
+    while not predicate() and time.monotonic() < end:
+              ^^^^^^^^^^^
+tests/thesis_lite/maestro/test_composed_authority_interruptions.py:197: in <lambda>
+    wait_for(lambda: len(manager.residual_membership(descriptor)) == 1)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x707f4ba4d010>
+descriptor = BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='unit-0', creation_epoch=0)
+
+    def residual_membership(self, descriptor: BoundaryDescriptor) -> tuple[int, ...]:
+        entry = self._entry(descriptor)
+        with self._lock, self._operation():
+            if entry.state == "released":
+                raise BoundaryError("ML-OWNERSHIP-BOUNDARY-OBSERVATION-CLOSED")
+            try:
+                self._authority(entry)
+                return self._members(entry)
+            except (OSError, UnicodeError, BoundaryError) as exc:
+>               raise self._error(entry, exc) from exc
+E               xverse.maestro.prbc.BoundaryError: ML-TEARDOWN-MEMBERSHIP-UNKNOWN
+
+../maestro-lite-affa-active-control-deadlines-target-20261019c/lib/python3.13/site-packages/xverse/maestro/prbc.py:703: BoundaryError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-ack-pending-authority]
+1 failed, 8 passed in 18.79s

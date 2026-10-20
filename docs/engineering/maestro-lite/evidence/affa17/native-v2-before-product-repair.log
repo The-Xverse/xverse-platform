@@ -1,0 +1,42 @@
+...F.                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_selective_generation_advance_keeps_unrelated_original_resource_running __
+
+authority = (<tests.thesis_lite.maestro.test_affa_native.Harness object at 0x7e19f19bce90>, PosixPath('/tmp/pytest-of-jefferson/pytest-965/test_selective_generation_adva0'))
+
+    def test_selective_generation_advance_keeps_unrelated_original_resource_running(
+        authority,
+    ):
+        h, work = authority
+        for i in range(2):
+            h.stage(i)
+            h.arm(i)
+            assert h.release(i).kind is K.RELEASED
+        wait_marker(work / "u0.marker")
+        wait_marker(work / "u1.marker")
+        old = h.frame(K.QUERY, 0)
+        h.stop_retire(0)
+        assert h.manager.force_cleanup(h.units[0]["descriptor"]).boundary_released
+        desc = BoundaryDescriptor("run", "u0", 2, "next-0", 0)
+        h.manager.create_frozen(desc)
+        fd = h.manager._entries[desc.key].fd
+        u = h.units[0]
+        u.update(
+            generation=2,
+            operation=b"n" * 16,
+            intent=digest(b"new-intent"),
+            mirror=digest(b"new-mirror"),
+            boundary=digest(b"new-boundary"),
+        )
+        u.pop("handle")
+        u.pop("ticket")
+        advanced = h.rpc(h.frame(K.ADVANCE, 0), (fd,))
+>       assert advanced.kind is K.ADVANCED and advanced.epoch == 1
+E       assert (<AuthorityKind.REJECTED: 27> is <AuthorityKind.ADVANCED: 28>)
+E        +  where <AuthorityKind.REJECTED: 27> = AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=13, deadline_ns=934240687658039, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0).kind
+E        +  and   <AuthorityKind.ADVANCED: 28> = K.ADVANCED
+
+tests/thesis_lite/maestro/test_affa_native.py:397: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running
+1 failed, 4 passed in 1.62s

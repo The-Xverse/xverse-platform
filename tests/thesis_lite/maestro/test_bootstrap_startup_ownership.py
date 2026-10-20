@@ -1,0 +1,111 @@
+"""Original pending supervisor ownership; foreign signal attempts denied by harness."""
+from dataclasses import asdict
+import json
+import os
+from pathlib import Path
+import select
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import time
+import pytest
+from xverse.maestro.child import _PidfdCapability
+from .test_bootstrap_launcher import startup as startup, registration_faults as registration_faults
+from .test_boundary import environment as environment
+from .test_launcher import binaries as binaries, deadline
+from .test_affa_native import authority_binary as authority_binary
+from .test_run_bootstrap import run_bootstrap_binary as run_bootstrap_binary
+
+
+@pytest.mark.parametrize('fault',['capability','process','channel','pidfd','session'])
+def test_pending_ready_alias_loss_keeps_original_cleanup_and_unrelated_sentinel(startup,registration_faults,request,monkeypatch,fault):
+    reserve,_,latch,_=startup;owner=reserve(registration_faults['stopped'])
+    sentinel=subprocess.Popen([sys.executable,'-I','-c','import time; time.sleep(30)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    sentinel_fd=os.pidfd_open(sentinel.pid,0);foreign=_PidfdCapability(sentinel_fd)
+    foreign_channel,foreign_peer=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+    popen=subprocess.Popen;send=signal.pidfd_send_signal;created=[];forbidden=[];errors=[];cancel_errors=[];facts={};original={}
+    class ObservedPopen(popen):
+        def __init__(self,*a,**kw):
+            super().__init__(*a,**kw);created.append(self)
+    def guarded(fd,*a,**kw):
+        if fd==foreign.fileno():
+            forbidden.append(True);raise PermissionError('owned unrelated-sentinel signal denied')
+        return send(fd,*a,**kw)
+    monkeypatch.setattr(subprocess,'Popen',ObservedPopen)
+    monkeypatch.setattr(signal,'pidfd_send_signal',guarded)
+    cached=[];request.node._launcher_failure_retainer=lambda owners:cached
+    end=deadline(2);ordinary_rejected=False;fault_injected=False
+    def launch():
+        try:owner.launch(end)
+        except Exception as error:errors.append(str(error) if str(error).startswith('ML-') else type(error).__name__)
+    thread=threading.Thread(target=launch);thread.start()
+    try:
+        until=time.monotonic()+1.5;stopped=None
+        while time.monotonic()<until:
+            cap=owner._capability
+            if cap:
+                stopped=os.waitid(os.P_PIDFD,cap.fileno(),os.WSTOPPED|os.WNOHANG|os.WNOWAIT)
+                if stopped:break
+            time.sleep(.002)
+        assert stopped is not None and len(created)==1
+        original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+            channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+        replacement={'capability':foreign,'process':sentinel,'channel':foreign_channel,'pidfd':sentinel_fd,'session':object()}[fault]
+        setattr(owner,'_'+fault,replacement);fault_injected=True
+        ordinary_rejected=False
+        try:owner._holder()
+        except ValueError:ordinary_rejected=True
+        try:owner.cancel('owned-startup-alias-loss')
+        except Exception as error:cancel_errors.append(type(error).__name__)
+        assert latch.cancelled
+    finally:
+        try:
+            if not latch.cancelled:latch.cancel('owned-startup-test-finally')
+            thread.join(6);assert not thread.is_alive()
+            assert len(created)==1
+            if not original:
+                original.update(process=created[0],capability=owner._capability,pidfd=owner._pidfd,
+                    channel=owner._channel,session=owner._session,stderr=created[0].stderr,supervisor_fd=owner._supervisor_fd)
+            try:outcome=asdict(owner.outcome);outcome_error=None
+            except Exception as error:outcome=None;outcome_error=type(error).__name__
+            # WNOWAIT distinguishes the original kernel wait from a claimed foreign wait.
+            try:
+                observed=os.waitid(os.P_PIDFD,original['capability'].fileno(),os.WEXITED|os.WNOHANG|os.WNOWAIT)
+                original_wait_consumed=False
+            except ChildProcessError:
+                observed=None;original_wait_consumed=True
+            sentinel_alive=not bool(select.select([sentinel_fd],[],[],0)[0])
+            sentinel_metadata_untouched=sentinel.returncode is None
+            external_fallback=not original_wait_consumed
+            if external_fallback:
+                send(original['capability'].fileno(),signal.SIGKILL)
+                observed=os.waitid(os.P_PIDFD,original['capability'].fileno(),os.WEXITED)
+                original['process'].returncode=observed.si_status if observed.si_code==os.CLD_EXITED else -observed.si_status
+            # No product wait/result is fabricated after external cleanup.
+            for name in ('process','capability','pidfd','channel','session'):setattr(owner,'_'+name,original[name])
+            original['capability'].close();os.close(original['pidfd']);original['channel'].close()
+            original['stderr'].close();os.close(original['supervisor_fd'])
+            facts.update(fault=fault,fault_injected=fault_injected,ordinary_rejected=ordinary_rejected,forbidden_signal_attempts=len(forbidden),
+                sentinel_kernel_alive=sentinel_alive,sentinel_metadata_untouched=sentinel_metadata_untouched,
+                primary_outcome=outcome,primary_outcome_error=outcome_error,primary_original_wait_consumed=original_wait_consumed,
+                external_root_cleanup=external_fallback,external_descriptor_disposal=True,
+                creation_count=len(created),launch_errors=errors,cancel_errors=cancel_errors,actual_M1_admissions=0)
+            cached.append(dict(outcome=outcome,original_pid=original['process'].pid,
+                actual_wait_observed=original_wait_consumed,actual_root_returncode=original['process'].returncode,
+                external_root_cleanup=external_fallback,external_descriptor_disposal=True))
+            out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            if out:(Path(out)/('startup-alias-'+fault+'.json')).write_text(json.dumps(facts,indent=2)+'\n')
+        finally:
+            # Original unrelated sentinel cleanup belongs only to this harness.
+            send(sentinel_fd,signal.SIGKILL);wait=os.waitid(os.P_PIDFD,sentinel_fd,os.WEXITED)
+            sentinel.returncode=wait.si_status if wait.si_code==os.CLD_EXITED else -wait.si_status
+            out=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+            if out:(Path(out)/('sentinel-wait-'+fault+'.json')).write_text(json.dumps(dict(
+                actual_original_wait=True,returncode=sentinel.returncode,actual_M1_admissions=0),indent=2)+'\n')
+            foreign.close();os.close(sentinel_fd);foreign_channel.close();foreign_peer.close()
+    assert facts['ordinary_rejected']
+    assert facts['forbidden_signal_attempts']==0 and facts['sentinel_kernel_alive'] and facts['sentinel_metadata_untouched']
+    assert not facts['cancel_errors'] and facts['primary_original_wait_consumed'] and not facts['external_root_cleanup']
+    assert facts['primary_outcome']['supervisor_reaped'] and not facts['primary_outcome']['registered']

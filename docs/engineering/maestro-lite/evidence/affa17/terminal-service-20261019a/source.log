@@ -1,0 +1,551 @@
+.....E.E.E.........................FE................................... [ 85%]
+............                                                             [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_actual_terminal_root_rejects_valid_ordinary_native_renewal _
+
+environment = (<function environment.<locals>.factory at 0x786c4b497e20>, <function environment.<locals>.spawn at 0x786c4b497b00>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/bou...kload': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/test_actual_terminal_root_reje0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+>               assert result.supervisor_reaped and result.registered_children_reaped
+E               AssertionError: assert (False)
+E                +  where False = BootstrapDrain(supervisor_reaped=False, registered_children_reaped=False, unacknowledged_births=0, supervisor_returnco...ad_freeze_acknowledged=False, diagnostic='ML-BOOT-DRAIN-UNRESOLVED', cleanup_complete=False, ready_for_execution=False).supervisor_reaped
+
+tests/thesis_lite/maestro/test_run_broker.py:127: AssertionError
+_ ERROR at teardown of test_actual_terminal_root_keeps_original_failure_watchdogs[lease-expiry] _
+
+environment = (<function environment.<locals>.factory at 0x786c4a274a40>, <function environment.<locals>.spawn at 0x786c4a2744a0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/bou...kload': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/test_actual_terminal_root_keep0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+>               assert result.supervisor_reaped and result.registered_children_reaped
+E               AssertionError: assert (False)
+E                +  where False = BootstrapDrain(supervisor_reaped=False, registered_children_reaped=False, unacknowledged_births=0, supervisor_returnco...ad_freeze_acknowledged=False, diagnostic='ML-BOOT-DRAIN-UNRESOLVED', cleanup_complete=False, ready_for_execution=False).supervisor_reaped
+
+tests/thesis_lite/maestro/test_run_broker.py:127: AssertionError
+_ ERROR at teardown of test_actual_terminal_root_keeps_original_failure_watchdogs[storage-death] _
+
+environment = (<function environment.<locals>.factory at 0x786c4a2777e0>, <function environment.<locals>.spawn at 0x786c4a277880>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/bou...kload': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/test_actual_terminal_root_keep1')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+>               assert result.supervisor_reaped and result.registered_children_reaped
+E               AssertionError: assert (False)
+E                +  where False = BootstrapDrain(supervisor_reaped=False, registered_children_reaped=False, unacknowledged_births=0, supervisor_returnco...ad_freeze_acknowledged=False, diagnostic='ML-BOOT-DRAIN-UNRESOLVED', cleanup_complete=False, ready_for_execution=False).supervisor_reaped
+
+tests/thesis_lite/maestro/test_run_broker.py:127: AssertionError
+_ ERROR at teardown of test_late_genuine_birth_ack_retains_cleanup_only_pidfd __
+
+environment = (<function environment.<locals>.factory at 0x786c49fae200>, <function environment.<locals>.spawn at 0x786c49fad8a0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native3/bou...kload': PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/catalog-launcher-native3/workload')}
+supervisor_binary = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/bootstrap-native0/bootstrap')
+tmp_path = PosixPath('/tmp/maestro-terminal-service-20261019a-source-private-wyqlbf4t/test_late_genuine_birth_ack_re0')
+request = <SubRequest 'boot_stack' for <Function test_late_genuine_birth_ack_retains_cleanup_only_pidfd>>
+
+    @pytest.fixture
+    def boot_stack(environment, binaries, supervisor_binary, tmp_path, request):
+        options = getattr(request, "param", {})
+        factory, spawn, root = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, helper_pin, work = configured(tmp_path, manager, binaries)
+        images = tuple(
+            seal_helper_image(
+                source,
+                digest="sha256:" + hashlib.sha256(source.read_bytes()).hexdigest(),
+                argv0=argv0,
+            )
+            for source, argv0 in (
+                (binaries["launcher"], str(binaries["launcher"])),
+                (binaries["bound-gate"], str(binaries["bound-gate"])),
+                (Path(sys.executable).resolve(), sys.executable),
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + hashlib.sha256(b"owned-test-environment").hexdigest(),
+            "sha256:" + hashlib.sha256(supervisor_binary.read_bytes()).hexdigest(),
+            manager._admission.teardown_deadline,
+            deadline(options.get("lease_seconds", 4.9)),
+            images,
+        )
+        data = encode_bootstrap(admission)
+        input_fd = sealed_bootstrap_fd(data)
+        parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(supervisor_binary), str(peer.fileno()), str(input_fd)],
+            pass_fds=(peer.fileno(), input_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(input_fd)
+        try:
+            session = BootstrapSession(
+                process,
+                parent,
+                data,
+                manager,
+                latch,
+                deadline=deadline(min(3, options.get("lease_seconds", 4.9) * 0.8)),
+            )
+        except Exception:
+            process.wait(timeout=2)
+            process.stderr.close()
+            parent.close()
+            for image in images:
+                os.close(image.descriptor)
+            raise
+        clients, owners = [], []
+    
+        def boundary(name, unit=None):
+            value = BoundaryDescriptor("fixture-run", unit or "helper:" + name, 1, name, 0)
+            manager.create_frozen(value)
+            return value
+    
+        def start():
+            storage = session.persistence(
+                config,
+                boundary("storage"),
+                deadline(min(3, (session._lease - time.monotonic_ns()) / 1e9 - 0.1)),
+            )
+            clients.append(storage)
+            owner = ReleaseOwner.from_persistence(
+                storage, StageSupervisor(manager, latch), latch
+            )
+            owners.append(owner)
+            original = deadline(min(4, (session._lease - time.monotonic_ns()) / 1e9 - 0.2))
+            unit = config.prepared.units[0].unit_id
+            owner.commit_intent(unit, original)
+            descriptor = boundary("workload", unit)
+            recipe = make_launch_recipe(
+                owner,
+                descriptor,
+                environment={"MAESTRO_VISIBLE": "declared"},
+                helper_artifact_digest=helper_pin,
+                deadline=original,
+            )
+            launcher = session.catalog(owner, recipe, boundary("launcher"), original)
+            clients.append(launcher)
+            handle = launcher.stage(original)
+            gate = session.gate(
+                owner,
+                descriptor,
+                boundary("gate"),
+                original,
+                lease_ns=min(session._lease, time.monotonic_ns() + 3_500_000_000),
+            )
+            clients.append(gate)
+            return owner, storage, descriptor, launcher, handle, gate, original
+    
+        yield session, manager, latch, config, work, boundary, start, clients, owners
+        for owner in owners:
+            owner.cancel("test-bootstrap-teardown")
+        from xverse.maestro.launcher import CatalogLauncher
+        from xverse.maestro.persistence import PersistenceClient
+        from xverse.maestro.owner import GateConnection
+    
+        launcher_drains = []
+        for client in clients:
+            if type(client) is CatalogLauncher:
+                client.cancel("test-bootstrap-teardown")
+                observed = client.drain(deadline(1))
+                assert observed.helper_reaped
+                launcher_drains.append(asdict(observed))
+            elif type(client) is PersistenceClient:
+                if not client._failed and not client._aborted:
+                    try:
+                        client.abort(deadline(1))
+                    except (ValueError, OSError):
+                        client._fail()
+                assert client.drain(deadline(1)).worker_reaped
+        session.cancel("test-bootstrap-teardown")
+        observed = session.drain(deadline(1.8))
+        assert observed.supervisor_reaped and observed.registered_children_reaped
+>       assert observed.unacknowledged_births == int(
+            options.get("allow_unacknowledged", False)
+        )
+E       AssertionError: assert 1 == 0
+E        +  where 1 = BootstrapDrain(supervisor_reaped=True, registered_children_reaped=True, unacknowledged_births=1, supervisor_returncode...oad_freeze_acknowledged=True, diagnostic='ML-BOOT-DRAIN-UNRESOLVED', cleanup_complete=False, ready_for_execution=False).unacknowledged_births
+E        +  and   0 = int(False)
+E        +    where False = <built-in method get of dict object at 0x786c4a5dc2c0>('allow_unacknowledged', False)
+E        +      where <built-in method get of dict object at 0x786c4a5dc2c0> = {}.get
+
+tests/thesis_lite/maestro/test_bootstrap.py:206: AssertionError
+=================================== FAILURES ===================================
+____________ test_late_genuine_birth_ack_retains_cleanup_only_pidfd ____________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x786c4a042350>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rivate-wyqlbf4t/test_late_genuine_birth_ack_re0/work'), <function boot_stack.<locals>.boundary at 0x786c49fae520>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x786c4a41fd50>
+
+    def test_late_genuine_birth_ack_retains_cleanup_only_pidfd(boot_stack, monkeypatch):
+        session, manager, latch, config, work, boundary, start, clients, owners = boot_stack
+        receive = session._receive
+    
+        def delayed(until, *, cleanup=False):
+            result = receive(until, cleanup=cleanup)
+            if not cleanup:
+                time.sleep(max(0, (until - time.monotonic_ns()) / 1e9) + 0.02)
+            return result
+    
+        monkeypatch.setattr(session, "_receive", delayed)
+        with pytest.raises(ValueError, match="LATE-ACK"):
+>           raw_storage(boot_stack, original=deadline(0.15))
+
+tests/thesis_lite/maestro/test_bootstrap.py:350: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:292: in raw_storage
+    child = session.birth(3, helper, helper, peer, fd, original)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/bootstrap.py:743: in birth
+    reply, fds = self._rpc(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x786c4a042350>
+kind = 1
+deadline = HostDeadline(session='host-session', monotonic_seconds=981053.665659374)
+
+    def _rpc(self, kind, deadline, *, slot=0, child=None, state=0, fds=(), terminal=False):
+        if terminal and (self.config.version != 2 or kind not in (5, 6)
+                         or slot or child is not None or fds):
+            raise BootstrapError("ML-BOOT-TERMINAL-OPERATION")
+        # Entry5 is allowed only after the original latch closes; reply receipt
+        # still checks original liveness/lease. Ordinary RPCs remain prohibited.
+        if terminal and kind == 5:
+            self._holder()
+            if not self.latch.cancelled or self._terminal or self._closed:
+                raise BootstrapError("ML-BOOT-TERMINAL-STATE")
+        else:
+            self._live(terminal=terminal)
+        until = self._until(deadline)
+        packet = BootstrapPacket(
+            kind,
+            self._sequence + 1,
+            until,
+            self.config.scope,
+            slot,
+            child.pid if child else 0,
+            child._token if child else ZERO,
+            state,
+            version=self.config.version,
+        )
+        if kind == 1:
+            self._pending[slot] = packet
+        anc = (
+            [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", fds))]
+            if fds
+            else []
+        )
+        try:
+            if self.channel.sendmsg([packet.encode()], anc) != 128:
+                raise BootstrapError("ML-BOOT-SEND")
+            self._sequence = packet.sequence
+>           reply, received = self._receive(until, cleanup=terminal and kind == 5, terminal=terminal)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: test_late_genuine_birth_ack_retains_cleanup_only_pidfd.<locals>.delayed() got an unexpected keyword argument 'terminal'
+
+src/xverse/maestro/bootstrap.py:680: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_bootstrap.py::test_late_genuine_birth_ack_retains_cleanup_only_pidfd
+ERROR tests/thesis_lite/maestro/test_terminal_service.py::test_actual_terminal_root_rejects_valid_ordinary_native_renewal
+ERROR tests/thesis_lite/maestro/test_terminal_service.py::test_actual_terminal_root_keeps_original_failure_watchdogs[lease-expiry]
+ERROR tests/thesis_lite/maestro/test_terminal_service.py::test_actual_terminal_root_keeps_original_failure_watchdogs[storage-death]
+ERROR tests/thesis_lite/maestro/test_bootstrap.py::test_late_genuine_birth_ack_retains_cleanup_only_pidfd
+1 failed, 79 passed, 4 errors in 96.50s (0:01:36)

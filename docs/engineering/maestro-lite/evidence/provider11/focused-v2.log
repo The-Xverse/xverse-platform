@@ -1,0 +1,73 @@
+..............................F...                                       [100%]
+=================================== FAILURES ===================================
+___________ test_step_dependency_without_flow_still_blocks_dependent ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7399d0f66350>
+request = <FixtureRequest for <Function test_step_dependency_without_flow_still_blocks_dependent>>
+
+    def test_step_dependency_without_flow_still_blocks_dependent(monkeypatch, request):
+        from . import test_launcher
+    
+        documents = test_launcher.documents
+    
+        def step_only():
+            docs = documents()
+            docs["system.json"]["spec"]["flows"] = []
+            return docs
+    
+        monkeypatch.setattr(test_launcher, "documents", step_only)
+>       stack = request.getfixturevalue("boot_stack")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_provider.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/tmp/maestro-lite-bootstrap-verify-20261018/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/tmp/maestro-lite-bootstrap-verify-20261018/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_bootstrap.py:88: in boot_stack
+    config, helper_pin, work = configured(tmp_path, manager, binaries)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_launcher.py:132: in configured
+    result, resources = compiled(docs)
+                        ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+docs = {'component.json': {'apiVersion': 'xverse.io/xdl/v1alpha1', 'kind': 'Component', 'metadata': {'name': 'sample-source',...rse.io/docs/profiles/runtime-compatibility/v0.1/', 'extensionNamespace': 'io.xverse.runtime.compatibility', ...}}, ...}
+
+    def compiled(docs=None):
+        if docs is None:
+            validation = validate_files(
+                sorted(FIXTURES.glob("*.json")), profile_schema_paths=SCHEMAS
+            )
+        else:
+            validation = validate_sources(
+                [(name, json.dumps(value).encode()) for name, value in docs.items()],
+                profile_schema_paths=SCHEMAS,
+            )
+>       assert validation.is_valid, [(d.code, d.message) for d in validation.diagnostics]
+E       AssertionError: [('XDL-REFERENCE-UNRESOLVED-ELEMENT', 'element xdl://org.xverse.experiment/system/sample-loop#sample-flow does not exist')]
+E       assert False
+E        +  where False = ValidationResult(diagnostics=(Diagnostic(code='XDL-REFERENCE-UNRESOLVED-ELEMENT', gate=<ValidationGate.REFERENCE: 3>, ...ne), related=('xdl://org.xverse.experiment/system/sample-loop#sample-flow',)),), resources=(), readiness=FrozenMap({})).is_valid
+
+tests/thesis_lite/maestro/test_preparation.py:47: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_provider.py::test_step_dependency_without_flow_still_blocks_dependent
+1 failed, 33 passed in 23.29s

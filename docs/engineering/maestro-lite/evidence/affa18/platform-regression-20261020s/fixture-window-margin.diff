@@ -1,0 +1,588 @@
+--- c/tests/thesis_lite/maestro/test_shared_dispatcher.py
++++ h/tests/thesis_lite/maestro/test_shared_dispatcher.py
+@@ -77,9 +77,21 @@
+         lambda *a, **kw: prepare(*a, limits=Limits(horizon_ticks=5 if transitive else 3), **kw))
+     encode = test_launcher.encode_configuration
+     def configuration(prepared, *a, **kw):
++        # The admitted active window is created here, before worker init (~0.4 s) and
++        # before the first schedule statement. Measured over 305 clean runs of this
++        # fixture, the span after init-begin reaches p99 4.55 s; restart-capable runs
++        # additionally spend their restart/recovery budget inside the same window, so a
++        # 4.8 s window left no margin for ordinary jitter (finding 362, CAPA-222 class).
++        # The window therefore reserves the explicit restart/recovery budgets; no
++        # statement budget, lease, health cadence or product constant changes.
++        base_active_seconds = 20 if transitive else 8 if pauses>1 else 4.8
++        # Only the tight 4.8 s base window reserves the explicit restart/recovery budgets; the
++        # 20 s transitive and 8 s paused windows hold ample margin and are asserted literally.
++        reserved_seconds = ((restart_operation_seconds or 0)+(recovery_operation_seconds or 0)
++                            if base_active_seconds == 4.8 else 0)
+         plan = admit_schedule(prepared, policies=tuple(ProbePolicy(u.unit_id,5,5,0.5) for u in prepared.units),
+             ticks=(0,)*pauses+((1,2,3,4,5) if transitive else (1,2,3)),
+-            active_seconds=20 if transitive else 8 if pauses>1 else 4.8,
++            active_seconds=base_active_seconds+reserved_seconds,
+             operation_seconds=.3 if transitive else .5, per_unit_seconds=2 if transitive else 1,
+             poll_seconds=.05, request_limit=1024, service_operation_count=4,
+             restart_operation_seconds=restart_operation_seconds,use_action_timeouts=transitive,
+--- c/tests/thesis_lite/maestro/test_active_restart.py
++++ h/tests/thesis_lite/maestro/test_active_restart.py
+@@ -47,7 +47,7 @@
+     successful=mode in ('leaf','external-thread')
+     stack,controller,driver=scheduled(request,monkeypatch,restarts=True,restart_leaf_artifact=successful)
+     broker,facade,client,work=stack
+-    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==4.8
++    assert driver.plan.operation_seconds==.5 and driver.plan.active_seconds==5.8
+     assert driver.plan.restart_operation_seconds==1.0
+     source,leaf=driver.prepared.resource_order
+     unit=source if mode=='parent-reject' else leaf
+--- c/tests/thesis_lite/maestro/test_schedule_worker.py
++++ h/tests/thesis_lite/maestro/test_schedule_worker.py
+@@ -147,7 +147,15 @@
+         owner.session, min(boot_stack[0]._lease / 1e9, time.monotonic() + 4.5)
+     )
+     receipt = gate.renew(lease, deadline(1))
+-    assert gate.lease_ns > prior and receipt == lease
++    # The gate quantizes the requested lease to integer nanoseconds (owner._deadline) and reports
++    # that quantized value; a float round trip through nanoseconds may differ from the requested
++    # float by one unit in the last place (run h, finding 374), so the receipt is compared with the
++    # retained nanosecond lease, and the retained lease with the request at integer-nanosecond resolution.
++    assert gate.lease_ns > prior
++    assert receipt == HostDeadline(owner.session, gate.lease_ns / 1e9)
++    # Integer-nanosecond resolution (independent review N-02): the gate retained exactly the
++    # quantized request, independent of float spacing at the current uptime.
++    assert gate.lease_ns == int(lease.monotonic_seconds * 1e9)
+     # Renewal did not Release the staged workload or change its original scope.
+     assert not list(boot_stack[4].glob("*.marker"))
+     facade = ProcessReadiness(
+--- c/src/xverse/maestro/dispatcher.py
++++ h/src/xverse/maestro/dispatcher.py
+@@ -1353,7 +1353,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         unit=unit,
+@@ -1412,7 +1414,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         step=step.step_id,
+@@ -1444,7 +1448,9 @@
+                             self.owner.session,
+                             min(
+                                 self._work_end,
+-                                time.monotonic() + self.plan.operation_seconds,
++                                # Terminal-section statement: per-unit budget like run-terminal,
++                                # capped by the admitted work window (finding 386).
++                                time.monotonic() + self.plan.per_unit_seconds,
+                             ),
+                         ),
+                         unit=unit.unit_id,
+@@ -1462,7 +1468,9 @@
+                         self.owner.session,
+                         min(
+                             self._work_end,
+-                            time.monotonic() + self.plan.operation_seconds,
++                            # Terminal statement takes the per-unit budget like teardown and
++                            # cleanup (finding 379); the operation budget is cadence-bound.
++                            time.monotonic() + self.plan.per_unit_seconds,
+                         ),
+                     ),
+                     outcome="succeeded"
+--- c/tests/thesis_lite/maestro/test_runtime_entry.py
++++ h/tests/thesis_lite/maestro/test_runtime_entry.py
+@@ -34,6 +34,10 @@
+ from .test_terminal_runtime import verify
+ from .test_lazy_dispatcher import observe_original_operations as observe_original_operations
+ 
++
++# Bootstrap environment pin of the owned fixture; the lane admission control overrides it with the
++# verification-environment digest of the lane admission proposal (finding 382).
++ENVIRONMENT_DIGEST = pin(b'owned-environment')
+ 
+ @pytest.fixture
+ def runtime(environment,binaries,authority_binary,run_bootstrap_binary,tmp_path,monkeypatch,request):
+@@ -80,7 +84,7 @@
+     images=tuple(seal_helper_image(p,digest=pin(p.read_bytes()),argv0=sys.executable if p==Path(sys.executable).resolve() else str(p))
+         for p in (binaries['launcher'],binaries['bound-gate'],Path(sys.executable).resolve(),authority_binary))
+     supervisor=seal_helper_image(run_bootstrap_binary,digest=pin(run_bootstrap_binary.read_bytes()),argv0=str(run_bootstrap_binary))
+-    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',pin(b'owned-environment'),
++    boot=encode_bootstrap(BootstrapAdmission(config.run_id,config.prepared.lifecycle_digest,'bootstrap-approval',ENVIRONMENT_DIGEST,
+         supervisor.digest,manager._admission.teardown_deadline,deadline(4.8),images[:3],images[3],manager._root_fd))
+     launcher=OriginalBootstrapRegistry(1).reserve(boot,supervisor,manager)
+     units=tuple(UnitAdmission(BoundaryDescriptor(config.run_id,u.unit_id,1,'work-'+str(i),0),(('MAESTRO_VISIBLE','declared'),),1)
+--- c/src/xverse/maestro/native/run_authority.c
++++ h/src/xverse/maestro/native/run_authority.c
+@@ -6,7 +6,9 @@
+ #include <fcntl.h>
+ #include <limits.h>
+ #include <linux/sched.h>
++#include <openssl/crypto.h>
+ #include <openssl/evp.h>
++#include <openssl/hmac.h>
+ #include <poll.h>
+ #include <signal.h>
+ #include <stdint.h>
+@@ -49,7 +51,7 @@
+  int channel,parent; struct ucred peer;
+  uint64_t generation,lease,epoch,sequence,deadline;
+  unsigned count,registered,closed,freeze_failed;
+- unsigned char scope[32],session[32];
++ unsigned char scope[32],session[32],watch_key[32]; /* F-02 (finding 403): supervisor watch key */
+  struct unit units[16];
+ };
+ static uint64_t now_ns(void) { struct timespec t;if(clock_gettime(CLOCK_MONOTONIC,&t)||t.tv_sec<0)return 0;return (uint64_t)t.tv_sec*NS+(uint64_t)t.tv_nsec; }
+@@ -153,20 +155,26 @@
+     return value;
+ }
+ static uint64_t freeze_all(struct authority *g,uint64_t end) {
+-    uint64_t mask=0;
++    /* F-01 (findings 394, 397): first issue the freeze write for every live generation, never skipped
++     * for an elapsed budget; then one bounded wait over all pending units, each checked at least once. */
++    uint64_t mask=0,pending=0;
+     for(unsigned i=0;i<g->count;++i){
+         struct unit *u=&g->units[i];if(!u->registered)continue;
+         struct generation *e=&u->history[u->used-1];
+         if(removed(e)){mask|=UINT64_C(1)<<i;continue;}
+-        if(now_ns()>=end||write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
+-        uint64_t frozen=0;
+-        while(now_ns()<end){
+-            if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==1)break;
+-            struct pollfd p={.fd=g->parent,.events=POLLIN};poll(&p,1,1);
+-        }
+-        if(frozen==1)mask|=UINT64_C(1)<<i;
+-        else g->freeze_failed=1;
+-    }
++        if(write_freeze(e->cg,'1')){g->freeze_failed=1;continue;}
++        pending|=UINT64_C(1)<<i;
++    }
++    for(;;){
++        for(unsigned i=0;i<g->count;++i){
++            if(!(pending&(UINT64_C(1)<<i)))continue;
++            struct unit *u=&g->units[i];struct generation *e=&u->history[u->used-1];uint64_t frozen=0;
++            if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==1){mask|=UINT64_C(1)<<i;pending&=~(UINT64_C(1)<<i);}
++        }
++        if(!pending||now_ns()>=end)break;
++        struct pollfd p={.fd=g->parent,.events=POLLIN};poll(&p,1,1);
++    }
++    if(pending)g->freeze_failed=1;
+     return mask;
+ }
+ static uint64_t close_authority(struct authority *g,uint64_t end) {
+@@ -177,6 +185,8 @@
+     }
+     return freeze_all(g,end);
+ }
++/* F-01: closing never inherits an already-elapsed request deadline. */
++static uint64_t close_end(struct authority *g) { uint64_t now=now_ns(),end=g->generation;if(now&&end>now+2*NS)end=now+2*NS;return end; }
+ static int send_packet(struct authority *g,unsigned char *p,int fd) {
+     struct iovec iov={.iov_base=p,.iov_len=PACKET};
+     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(int))];}control;
+@@ -270,9 +280,12 @@
+     return offset==(size_t)size?0:-1;
+ }
+ static int initialize(struct authority *g,int argc,char **argv) {
+-    if(argc!=3)return -1;
+-    int channel=decimal(argv[1]),input=decimal(argv[2]);off_t size;
+-    if(channel<0||input<0||channel==input||sealed(input,2688,&size)||size<288)return -1;
++    if(argc!=4)return -1;
++    int channel=decimal(argv[1]),input=decimal(argv[2]),key=decimal(argv[3]);off_t size,key_size;
++    if(channel<0||input<0||key<0||channel==input||key==channel||key==input||sealed(input,2688,&size)||size<288)return -1;
++    /* F-02: the supervisor-generated watch key arrives only in this sealed memfd. */
++    if(sealed(key,32,&key_size)||key_size!=32||pread(key,g->watch_key,32,0)!=32||zero(g->watch_key,32))return -1;
++    close(key);
+     unsigned char data[2688];if(pread(input,data,(size_t)size,0)!=size)return -1;
+     if(memcmp(data,"AC17",4)||get32(data+4)!=2||!zero(data+104,24))return -1;
+     g->generation=get64(data+8);g->lease=get64(data+16);g->deadline=g->lease;g->epoch=get64(data+24);
+@@ -362,11 +375,18 @@
+     }
+     return -1;
+ }
++/* F-02 (finding 403): ADVANCE carries the supervisor's WATCH token for its boundary in the ticket field. */
++static int watched(struct authority *g,const struct stat *st,const unsigned char *token) {
++    unsigned char message[20],expected[32];unsigned length=0;
++    memcpy(message,"MLWT",4);put64(message+4,(uint64_t)st->st_dev);put64(message+12,(uint64_t)st->st_ino);
++    int ok=HMAC(EVP_sha256(),g->watch_key,32,message,sizeof(message),expected,&length)&&length==32&&!CRYPTO_memcmp(expected,token,32);
++    OPENSSL_cleanse(expected,32);return ok;
++}
+ static int advance_unit(struct authority *g,struct unit *u,const unsigned char *p,int fd) {
+     struct generation *old=&u->history[u->used-1];struct stat next;
+     if(!enabled(g)||old->number==UINT64_MAX||get64(p+72)!=old->number+1||get64(p+72)>u->maximum||
+        u->used>=128||g->epoch>=UINT64_MAX-1||!old->retired||!old->reaped||!removed(old)||memcmp(p+96,old->proof+16,32)||
+-       !fresh(g,p)||!zero(p+224,64)||cgroup(fd,1)||fstat(fd,&next))return -1;
++       !fresh(g,p)||zero(p+224,32)||!zero(p+256,32)||cgroup(fd,1)||fstat(fd,&next)||!watched(g,&next,p+224))return -1;
+     int parent=openat(fd,"..",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+     int valid=parent>=0&&same(parent,u->parent);if(parent>=0)close(parent);if(!valid)return -1;
+     for(unsigned i=0;i<g->count;++i){struct unit *other=&g->units[i];
+@@ -388,7 +408,7 @@
+     unsigned kind=get32(p+4);uint64_t slot=get64(p+56),generation=get64(p+72);
+     if(kind==CANCEL){
+         if(count||slot||generation||!zero(p+80,208)||get64(p+304))return -1;
+-        uint64_t frozen=close_authority(g,g->deadline);
++        uint64_t frozen=close_authority(g,close_end(g));
+         return run_reply(g,CANCELLED,frozen,g->freeze_failed?FREEZE_FAILED:CANCEL_REASON);
+     }
+     if(kind==RENEW){
+@@ -487,6 +507,8 @@
+     return unresolved?70:0;
+ }
+ int main(int argc,char **argv) {
++    /* F02R-01 (finding 406): not dumpable before any secret exists in this process. */
++    if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;
+     struct authority *g=calloc(1,sizeof(*g));if(!g)return 64;
+     g->channel=g->parent=-1;
+     for(unsigned i=0;i<16;++i){g->units[i].image=g->units[i].cwd=g->units[i].parent=-1;
+@@ -514,6 +536,6 @@
+         if(valid){g->sequence=get64(p+8);g->deadline=until;result=command(g,p,fds,count);}
+         for(unsigned i=0;i<count;++i)close(fds[i]);
+         if(!valid)return cleanup(g);
+-        if(result){close_authority(g,until);if(run_reply(g,REJECTED,0,PROTOCOL))return cleanup(g);}
+-    }
+-}
++        if(result){close_authority(g,close_end(g));if(run_reply(g,REJECTED,0,g->freeze_failed?FREEZE_FAILED:PROTOCOL))return cleanup(g);}
++    }
++}
+--- c/src/xverse/maestro/native/bootstrap.c
++++ h/src/xverse/maestro/native/bootstrap.c
+@@ -6,6 +6,7 @@
+ #include <linux/memfd.h>
+ #include <linux/sched.h>
+ #include <openssl/evp.h>
++#include <openssl/hmac.h>
+ #include <poll.h>
+ #include <signal.h>
+ #include <stdint.h>
+@@ -44,6 +45,7 @@
+     unsigned char scope[32]; unsigned char *config; struct image images[IMAGES]; struct child children[64];
+ #ifdef RUN_BOOTSTRAP
+     int boundary_parent, watched[128]; unsigned watch_count, authority_slot, storage_slot, terminal;
++    unsigned char watch_key[32], watch_reply[32]; /* F-02 (finding 403): never sent to the Python peer */
+ #endif
+ };
+ static uint64_t now_ns(void) { struct timespec t;if(clock_gettime(CLOCK_MONOTONIC,&t)||t.tv_sec<0)return 0;return (uint64_t)t.tv_sec*NS+(uint64_t)t.tv_nsec; }
+@@ -97,6 +99,9 @@
+     unsigned char p[PACKET]={0};memcpy(p,WIRE_MAGIC,4);p[7]=(unsigned char)kind;put64(p+8,s->sequence);put64(p+16,s->deadline);memcpy(p+24,s->scope,32);put64(p+56,slot);
+     if(c){put64(p+64,(uint64_t)c->pid);memcpy(p+72,c->token,32);put64(p+104,c->active);}
+     else if(kind!=20)put64(p+104,s->lease);
++#ifdef RUN_BOOTSTRAP
++    if(!c&&kind==20)memcpy(p+72,s->watch_reply,32);
++#endif
+     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(int))];} control;
+     struct iovec iov={.iov_base=p,.iov_len=sizeof(p)};struct msghdr msg={.msg_iov=&iov,.msg_iovlen=1};
+     if(fd>=0){memset(&control,0,sizeof(control));msg.msg_control=control.data;msg.msg_controllen=sizeof(control.data);
+@@ -124,6 +129,9 @@
+     if(s->channel<0||sealed(input,65536,&size)||size<56)return -1;
+     s->config=malloc((size_t)size);if(!s->config||pread(input,s->config,(size_t)size,0)!=size||memcmp(s->config,CONFIG_MAGIC,4)||get32(s->config+4)!=VERSION)return -1;
+     unsigned length=0;if(EVP_Digest(s->config,(size_t)size,s->scope,&length,EVP_sha256(),NULL)!=1||length!=32)return -1;
++#ifdef RUN_BOOTSTRAP
++    if(getrandom(s->watch_key,32,0)!=32)return -1;
++#endif
+     s->generation=get64(s->config+8);s->lease=get64(s->config+16);s->deadline=s->lease;uint64_t now=now_ns();
+     if(!now||s->generation<=now+2*NS||s->generation-now>394*NS||s->lease<=now||s->lease-now>5*NS||s->lease>s->generation-2*NS)return -1;
+     size_t offset=56;
+@@ -171,6 +179,12 @@
+     }
+     return enabled(s)?0:-1;
+ }
++/* F-02 (finding 403): WATCH proof the authority verifies natively on ADVANCE. */
++static int watch_token(const unsigned char *key,int fd,unsigned char *out) {
++    struct stat st;if(fstat(fd,&st))return -1;
++    unsigned char message[20];memcpy(message,"MLWT",4);put64(message+4,(uint64_t)st.st_dev);put64(message+12,(uint64_t)st.st_ino);
++    unsigned length=0;return HMAC(EVP_sha256(),key,32,message,sizeof(message),out,&length)&&length==32?0:-1;
++}
+ static int watch_boundary(struct supervisor *s,int fd,uint64_t slot) {
+     if(slot!=(uint64_t)s->watch_count+1||s->watch_count>=128||!enabled(s)||cgroup(fd,1))return -1;
+     int parent=openat(fd,"..",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
+@@ -179,6 +193,7 @@
+     for(unsigned i=0;i<s->watch_count;++i)if(same(fd,s->watched[i]))return -1;
+     for(unsigned i=0;i<64;++i)if(s->children[i].pid>0&&same(fd,s->children[i].cg))return -1;
+     int retained=fcntl(fd,F_DUPFD_CLOEXEC,3);if(retained<0)return -1;
++    if(watch_token(s->watch_key,retained,s->watch_reply)){close(retained);return -1;}
+     s->watched[s->watch_count++]=retained;return 0;
+ }
+ static int authority_input(struct supervisor *s,int fd,off_t size) {
+@@ -233,15 +248,27 @@
+     }else if(role==3){args[1]="-I";args[2]="-m";args[3]="xverse.maestro.persistence_worker";args[4]=channel;args[5]=input;}
+     else if(role==5){args[1]="-I";args[2]="-m";args[3]="xverse.maestro.controller_worker";args[4]=channel;args[5]=input;}
+     else{args[1]=channel;args[2]=input;}
+-    if(getrandom(c->token,32,0)!=32||!enabled(s))return -1;
++    int keyfd=-1;
++#ifdef RUN_BOOTSTRAP
++    char key[32];
++    if(role==4){ /* F-02: the watch key reaches only the authority, in a sealed memfd */
++        keyfd=(int)syscall(SYS_memfd_create,"maestro-watch-key",MFD_CLOEXEC|MFD_ALLOW_SEALING);
++        if(keyfd<0)return -1;
++        if(write(keyfd,s->watch_key,32)!=32||fcntl(keyfd,F_ADD_SEALS,SEALS)){close(keyfd);return -1;}
++        snprintf(key,sizeof(key),"%d",keyfd);args[3]=key;
++    }
++#endif
++    if(getrandom(c->token,32,0)!=32||!enabled(s)){if(keyfd>=0)close(keyfd);return -1;}
+     struct clone_args clone={0};clone.flags=CLONE_PARENT|CLONE_PIDFD|CLONE_INTO_CGROUP;clone.cgroup=(__u64)(unsigned)c->cg;clone.pidfd=(uint64_t)(uintptr_t)&c->pidfd;clone.exit_signal=0;
+     long pid=syscall(SYS_clone3,&clone,sizeof(clone));
+     if(pid==0){
+         if(syscall(SYS_close_range,3U,UINT_MAX,4U))_exit(126);
+         if(fcntl(fds[2],F_SETFD,0)<0||(role!=2&&fcntl(fds[3],F_SETFD,0)<0)||(role<3&&fcntl(fds[1],F_SETFD,0)<0))_exit(126);
++        if(keyfd>=0&&fcntl(keyfd,F_SETFD,0)<0)_exit(126);
+         int null=open("/dev/null",O_RDWR|O_CLOEXEC);if(null<0)_exit(126);for(int fd=0;fd<3;++fd)if(dup2(null,fd)<0)_exit(126);
+         char *environment[]={NULL};syscall(SYS_execveat,s->images[image].fd,"",args,environment,AT_EMPTY_PATH);_exit(127);
+     }
++    if(keyfd>=0)close(keyfd);
+     if(pid<0)return -1;
+     c->pid=(pid_t)pid;
+ #ifdef RUN_BOOTSTRAP
+@@ -278,6 +305,8 @@
+     return unresolved?70:0;
+ }
+ int main(int argc,char **argv) {
++    /* F02R-01 (finding 406): not dumpable before the watch key is generated. */
++    if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;
+     struct supervisor s={.channel=-1,.parent=-1};for(unsigned i=0;i<64;++i)s.children[i].cg=s.children[i].unit=s.children[i].pidfd=-1;
+     if(initialize(&s,argc,argv))return 64;
+     if(respond(&s,16,0,NULL,-1))return cleanup(&s);
+--- c/src/xverse/maestro/affa_protocol.py
++++ h/src/xverse/maestro/affa_protocol.py
+@@ -121,7 +121,8 @@
+                 no_handle = kind in (AuthorityKind.INTENT, AuthorityKind.STAGE, AuthorityKind.QUERY_ISSUED, AuthorityKind.INTENT_RECORDED, AuthorityKind.ADVANCE, AuthorityKind.ADVANCED)
+                 if no_handle != (self.handle == _ZERO32):
+                     raise ProtocolError("ML-AFFA-HANDLE")
+-                needs_ticket = kind in (AuthorityKind.RELEASE, AuthorityKind.ARMED, AuthorityKind.RELEASED)
++                # F-02 (finding 403): an ADVANCE request carries the supervisor's WATCH token here.
++                needs_ticket = kind in (AuthorityKind.RELEASE, AuthorityKind.ARMED, AuthorityKind.RELEASED, AuthorityKind.ADVANCE)
+                 if needs_ticket != (self.ticket != _ZERO32):
+                     raise ProtocolError("ML-AFFA-TICKET")
+             if kind.value < 16 and (self.state or self.reason):
+--- c/src/xverse/maestro/bootstrap.py
++++ h/src/xverse/maestro/bootstrap.py
+@@ -260,12 +260,13 @@
+             raise BootstrapError("ML-BOOT-WIRE-HEADER")
+         if any(type(v) is not bytes or len(v) != 32 for v in (self.scope, self.token)):
+             raise BootstrapError("ML-BOOT-WIRE-DIGEST")
+-        if (self.pid == 0) != (self.token == ZERO) or self.pid == 1:
++        # F-02 (finding 403): a v2 WATCH reply (kind 20) carries the supervisor's watch token with pid 0.
++        if ((self.pid == 0) != (self.token == ZERO) and not (watch and self.kind == 20)) or self.pid == 1:
+             raise BootstrapError("ML-BOOT-WIRE-CHILD")
+         if watch and (
+             not self.slot
+             or self.pid
+-            or self.token != ZERO
++            or (self.token == ZERO) != (self.kind == 4)
+             or self.state
+             or not self.sequence
+         ):
+@@ -483,6 +484,8 @@
+         self._authority_input = None
+         self._watches, self._watch_log = {}, ()
+         self._watch_registry = self._watches
++        self._watch_tokens, self._watch_token_log = {}, ()
++        self._watch_token_registry = self._watch_tokens
+         self._registries = (
+             self._children,
+             self._pending,
+@@ -567,6 +570,8 @@
+             or tuple(sorted(self._clients.items())) != self._client_log
+             or self._watches is not self._watch_registry
+             or tuple(self._watches.items()) != self._watch_log
++            or self._watch_tokens is not self._watch_token_registry
++            or tuple(self._watch_tokens.items()) != self._watch_token_log
+         ):
+             raise BootstrapError("ML-BOOT-INVENTORY-REPLACED")
+ 
+@@ -801,11 +806,13 @@
+                 raise BootstrapError("ML-BOOT-WATCH-SCOPE")
+             slot = len(self._watches) + 1
+             reply, _ = self._rpc(4, deadline, slot=slot, fds=(entry.fd,))
+-            if reply.pid or reply.token != ZERO or reply.state:
++            if reply.pid or reply.token == ZERO or reply.state:
+                 self.cancel("bootstrap-watch-uncertain")
+                 raise BootstrapError("ML-BOOT-WATCH-ACK")
+             self._watches[identity] = descriptor
+             self._watch_log = tuple(self._watches.items())
++            self._watch_tokens[identity] = reply.token  # F-02: echoed on ADVANCE, verified natively
++            self._watch_token_log = tuple(self._watch_tokens.items())
+         finally:
+             self._lock.release()
+ 
+--- c/src/xverse/maestro/affa_client.py
++++ h/src/xverse/maestro/affa_client.py
+@@ -239,6 +239,14 @@
+             raise BootstrapError("ML-AFFA-C1-IDENTITY")
+         return descriptor
+ 
++    def watch_token(self, fd):
++        """The supervisor's WATCH token for an exact watched original C1 (F-02, finding 403)."""
++        self._watched(fd)
++        token = self.child._root._watch_tokens.get(BootstrapChild._fd_identity(fd))
++        if token is None:
++            raise BootstrapError("ML-AFFA-UNWATCHED")
++        return token
++
+     def _validate(self, request, fds):
+         self._holder()
+         if (
+@@ -272,6 +280,8 @@
+             raise BootstrapError("ML-AFFA-RIGHTS")
+         if fds:
+             self._watched(fds[0])
++            if request.kind is K.ADVANCE and request.ticket != self.watch_token(fds[0]):
++                raise BootstrapError("ML-AFFA-WATCH-TOKEN")
+         if request.kind is K.RELEASE:
+             ticket = self._tickets.get(
+                 (request.slot, request.generation, request.handle)
+@@ -310,7 +320,8 @@
+                 state=reply.state,
+                 reason=0,
+                 handle=reply.handle if kind is K.STAGED else request.handle,
+-                ticket=reply.ticket if kind is K.ARMED else request.ticket,
++                # F-02 (finding 403): the ADVANCE watch token is never echoed in ADVANCED.
++                ticket=reply.ticket if kind is K.ARMED else bytes(32) if kind is K.ADVANCED else request.ticket,
+                 lease_ns=request.lease_ns if kind is K.RENEWED else 0,
+             )
+             if reply.state & ~511:
+--- c/src/xverse/maestro/run_broker.py
++++ h/src/xverse/maestro/run_broker.py
+@@ -758,6 +758,7 @@
+                 prepared.receipt.intent_digest,
+                 prepared.receipt.flush_digest,
+                 c1,
++                ticket=self.connection.watch_token(entry.fd),  # F-02: supervisor WATCH token
+             )
+             self.connection._exchange(frame, fds=(entry.fd,))
+             advance = self.connection._advance_receipts[-1]
+--- c/tests/thesis_lite/maestro/test_affa_native.py
++++ h/tests/thesis_lite/maestro/test_affa_native.py
+@@ -3,6 +3,7 @@
+ from dataclasses import replace
+ import array
+ import hashlib
++import hmac
+ from importlib.resources import files
+ import json
+ import os
+@@ -68,12 +69,18 @@
+     return binary
+ 
+ 
++# F-02 (finding 403): ADVANCE frames must carry a nonzero ticket; rpc() replaces this placeholder
++# with the supervisor-equivalent WATCH token of the boundary descriptor being sent.
++WATCH_PLACEHOLDER = b"W" * 32
++
++
+ class Harness:
+     def __init__(self, manager, cwd, image, units):
+         self.manager, self.cwd, self.image, self.units = manager, cwd, image, units
+         self.fds, self.childfds, self.sequence, self.epoch = [], [], 0, 0
+         self.config = self.channel = self.process = None
+         self.closed = False
++        self.watch_key = None
+ 
+     def end(self):
+         return min(
+@@ -81,7 +88,15 @@
+             self.config.generation_ns if self.closed else self.lease,
+         )
+ 
++    def watch_token(self, fd):
++        """The supervisor's WATCH token for a boundary descriptor (F-02, finding 403)."""
++        st = os.fstat(fd)
++        return hmac.new(self.watch_key, b"MLWT" + st.st_dev.to_bytes(8, "big") + st.st_ino.to_bytes(8, "big"),
++                        hashlib.sha256).digest()
++
+     def rpc(self, frame, fds=()):
++        if frame.kind is K.ADVANCE and fds and frame.ticket == WATCH_PLACEHOLDER:
++            frame = replace(frame, ticket=self.watch_token(fds[0]))
+         self.sequence += 1
+         end = self.end()
+         if frame.kind is K.RELEASE:
+@@ -145,7 +160,8 @@
+             u["intent"],
+             u["mirror"],
+             u["boundary"],
+-            ticket=u.get("ticket", bytes(32)) if kind is K.RELEASE else bytes(32),
++            ticket=(u.get("ticket", bytes(32)) if kind is K.RELEASE
++                    else WATCH_PLACEHOLDER if kind is K.ADVANCE else bytes(32)),
+             handle=u.get("handle", bytes(32)),
+         )
+ 
+@@ -241,13 +257,17 @@
+         )
+         config_fd = _sealed(h.config.encode(), "owned-affa-config")
+         h.fds.append(config_fd)
++        # F-02 (finding 403): a direct launch plays the supervisor and supplies its own sealed watch key.
++        h.watch_key = os.urandom(32)
++        key_fd = _sealed(h.watch_key, "owned-affa-watch-key")
++        h.fds.append(key_fd)
+         parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+         parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+         parent.settimeout(3)
+         h.channel = parent
+         h.process = subprocess.Popen(
+-            [str(authority_binary), str(peer.fileno()), str(config_fd)],
+-            pass_fds=(peer.fileno(), config_fd),
++            [str(authority_binary), str(peer.fileno()), str(config_fd), str(key_fd)],
++            pass_fds=(peer.fileno(), config_fd, key_fd),
+             stdout=subprocess.DEVNULL,
+             stderr=subprocess.PIPE,
+         )
+@@ -463,6 +483,7 @@
+         digest(b"new-intent"),
+         digest(b"new-mirror"),
+         digest(b"new-boundary"),
++        ticket=WATCH_PLACEHOLDER,
+     )
+     assert h.rpc(frame, (fd,)).kind is K.REJECTED
+     assert (work / "u0.marker").read_bytes() == b"EXEC\n"
+--- c/tests/thesis_lite/maestro/test_affa_client.py
++++ h/tests/thesis_lite/maestro/test_affa_client.py
+@@ -37,6 +37,9 @@
+     h.config = config
+ 
+     def exchange(frame, fds=()):
++        from .test_affa_native import WATCH_PLACEHOLDER
++        if frame.kind is K.ADVANCE and fds and frame.ticket == WATCH_PLACEHOLDER:
++            frame = replace(frame, ticket=client.watch_token(fds[0]))  # F-02: real supervisor token
+         until = h.end()
+         if frame.kind is K.RELEASE:
+             until = min(until, h.units[frame.slot - 1]["ticket_end"])
+@@ -227,6 +230,7 @@
+         generation=2,
+         sequence=client.sequence + 1,
+         deadline_ns=h.end(),
++        ticket=b"\x01" * 32,  # F-02: an ADVANCE carries a WATCH token; the UNWATCHED check still precedes it
+     )
+     before = client.sequence
+     with pytest.raises(ValueError, match="UNWATCHED"):
+--- c/tests/thesis_lite/maestro/test_affa_protocol.py
++++ h/tests/thesis_lite/maestro/test_affa_protocol.py
+@@ -100,14 +100,18 @@
+         dataclasses.replace(issued, handle=b"h" * 32)
+ 
+ 
+-def test_selective_generation_advance_has_no_old_handle_or_release_ticket():
++def test_selective_generation_advance_has_no_old_handle_and_carries_only_the_watch_token():
++    # F-02 (finding 403): the ADVANCE request's ticket field carries the supervisor's WATCH token;
++    # it is mandatory on the request and absent from the ADVANCED reply.
++    with pytest.raises(ProtocolError, match="TICKET"):
++        AuthorityFrame(AuthorityKind.ADVANCE, 10, 123456790, SCOPE, 2, 3, 2, b"n" * 16, *DIGESTS)
+     advance = AuthorityFrame(AuthorityKind.ADVANCE, 10, 123456790, SCOPE, 2, 3, 2,
+-                             b"n" * 16, *DIGESTS)
++                             b"n" * 16, *DIGESTS, ticket=b"w" * 32)
+     assert AuthorityFrame.decode(advance.encode()) == advance
+     assert struct.unpack_from("!I", advance.encode(), 4)[0] == 12
+-    acknowledged = dataclasses.replace(advance, kind=AuthorityKind.ADVANCED, epoch=4)
++    acknowledged = dataclasses.replace(advance, kind=AuthorityKind.ADVANCED, epoch=4, ticket=bytes(32))
+     assert AuthorityFrame.decode(acknowledged.encode()) == acknowledged
+     with pytest.raises(ProtocolError):
+         dataclasses.replace(advance, handle=b"h" * 32)
+     with pytest.raises(ProtocolError):
+-        dataclasses.replace(advance, ticket=b"t" * 32)
++        dataclasses.replace(acknowledged, ticket=b"t" * 32)

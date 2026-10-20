@@ -1,0 +1,57 @@
+E
+==================================== ERRORS ====================================
+____ ERROR at setup of test_three_actual_helpers_without_coordinator_popen _____
+
+environment = (<function environment.<locals>.factory at 0x7495c7dc5260>, <function environment.<locals>.spawn at 0x7495c7dc51c0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-842/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-842/catalog-launcher-native0/workload')}
+supervisor_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-842/bootstrap-native0/bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-842/test_three_actual_helpers_with0')
+
+    @pytest.fixture
+    def boot_stack(environment, binaries, supervisor_binary, tmp_path):
+        factory, spawn, root = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, helper_pin, work = configured(tmp_path, manager, binaries)
+        images = tuple(
+            seal_helper_image(
+                source,
+                digest="sha256:" + hashlib.sha256(source.read_bytes()).hexdigest(),
+                argv0=argv0,
+            )
+            for source, argv0 in (
+                (binaries["launcher"], str(binaries["launcher"])),
+                (binaries["bound-gate"], str(binaries["bound-gate"])),
+                (Path(sys.executable).resolve(), sys.executable),
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + hashlib.sha256(b"owned-test-environment").hexdigest(),
+            "sha256:" + hashlib.sha256(supervisor_binary.read_bytes()).hexdigest(),
+            manager._admission.teardown_deadline,
+            deadline(4.9),
+            images,
+        )
+>       data = encode_bootstrap(admission)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_bootstrap.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:129: in encode_bootstrap
+    _pin(admission.lifecycle_digest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = 'b5bd04c9056e7f1a98278d79019a78ed39a8c277b1e27c50cc9f0d2ee4bf9452'
+
+    def _pin(value):
+        if type(value) is not str or not value.startswith("sha256:") or len(value) != 71:
+>           raise OwnerError("ML-OWNER-ARTIFACT")
+E           xverse.maestro.owner.OwnerError: ML-OWNER-ARTIFACT
+
+src/xverse/maestro/owner.py:42: OwnerError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_bootstrap.py::test_three_actual_helpers_without_coordinator_popen
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 error in 1.49s

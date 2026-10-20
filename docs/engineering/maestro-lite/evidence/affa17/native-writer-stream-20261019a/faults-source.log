@@ -1,0 +1,66 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-once] _
+
+request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-once]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b23f85b83e0>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stream-20261019a-faults-source-private-w31746ww/test_native_stream_fault_prese0/owned-stream-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+    def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+        mode = request.node.callspec.params['run_bootstrap_binary']
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        result = closure = None
+        output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result = run(driver)
+            retain(stack, result, 'native-stream-' + mode)
+            assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+            facts = result.terminal.public_data()
+            writer = facts['writer']
+            assert facts['diagnostic'] is None and facts['report']['eligible'], facts
+            assert writer['before_state'] == 'open' and writer['finalize_attempted']
+>           assert (writer['stage'], writer['after_state'], writer['durable_writer_state'], writer['abort_usability'],
+                    writer['abort_attempted'], writer['abort_completed']) == EXPECTED[mode], writer
+E                   AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'closed', ...}
+E                   assert ('finalize-co... False, False) == ('abort-compl...', True, True)
+E                     
+E                     At index 0 diff: 'finalize-completed' != 'abort-completed'
+E                     Use -v to get more diff
+
+tests/thesis_lite/maestro/test_native_writer_stream_faults.py:124: AssertionError
+_ test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-persistent] _
+
+request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b23f98b5a70>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stream-20261019a-faults-source-private-w31746ww/test_native_stream_fault_prese1/owned-stream-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+    def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+        mode = request.node.callspec.params['run_bootstrap_binary']
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        result = closure = None
+        output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        try:
+            result = run(driver)
+            retain(stack, result, 'native-stream-' + mode)
+            assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+            facts = result.terminal.public_data()
+            writer = facts['writer']
+            assert facts['diagnostic'] is None and facts['report']['eligible'], facts
+            assert writer['before_state'] == 'open' and writer['finalize_attempted']
+>           assert (writer['stage'], writer['after_state'], writer['durable_writer_state'], writer['abort_usability'],
+                    writer['abort_attempted'], writer['abort_completed']) == EXPECTED[mode], writer
+E                   AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'closed', ...}
+E                   assert ('finalize-co... False, False) == ('flush-error... False, False)
+E                     
+E                     At index 0 diff: 'finalize-completed' != 'flush-error'
+E                     Use -v to get more diff
+
+tests/thesis_lite/maestro/test_native_writer_stream_faults.py:124: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-once]
+FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[flush-persistent]
+2 failed, 1 passed, 1 deselected in 16.63s

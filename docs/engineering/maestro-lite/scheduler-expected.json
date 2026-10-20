@@ -1,0 +1,18 @@
+{
+  "revision": "ML3-SCHEDULER14-2026-10-18-v1",
+  "authored_before_product_code": true,
+  "cases": {
+    "admission": "independent client/worker budget/policy/tick/window validation before Release; default legacy cap unchanged",
+    "normal": "all declared phases follow combined dependency order; actual readiness precedes start completion",
+    "duration": "dispatch once, complete only after admitted tick duration, within original window",
+    "pause": "repeated simulation tick does not suspend host health/lease servicing",
+    "health": "finite cadence and before-dependent probes; failed or missing observation closes starts and tears down",
+    "tick_fault": "original worker timeout/bad frame/rewind/exhaustion cannot invent ticks or complete steps",
+    "evidence": "normal M3/public source hashes/Argus schema/flush ACKs; missing records stay missing",
+    "teardown": "separate scoped stop/cleanup, final reverse cleanup and explicit unresolved child reaping",
+    "authority": "forged step, registry/handle/session/copy/changed repeat reject; no path/PID adoption",
+    "conflict": "normal mutation conflicts reject; cancellation does not wait for those locks",
+    "leases": "original root and individual gates renew separately before expiry; cancellation stays irreversible"
+  },
+  "runtime_ready": false
+}

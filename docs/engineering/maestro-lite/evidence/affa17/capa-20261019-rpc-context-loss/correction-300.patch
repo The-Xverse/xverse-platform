@@ -1,0 +1,66 @@
+--- red/src/xverse/maestro/persistence.py
++++ corrected/src/xverse/maestro/persistence.py
+@@ -532,7 +532,8 @@
+         self._terminal_lock = self._terminal_lock_pin = threading.Lock()
+         self._terminal_attempted = False
+         self._terminal_outcome = self._terminal_outcome_pin = None
+-        self._rpc_failure = None
++        self._rpc_failure = self._rpc_failure_pin = None
++        self._rpc_failure_values = None
+         self._export_receipts = self._export_receipts_pin = {}
+         self._request_limit = self.schedule.request_limit if self.schedule else 128
+         self._schedule_pin = self.schedule, self._request_limit
+@@ -631,6 +632,17 @@
+     def rpc_failure(self):
+         # Failure/cleanup observations must not depend on ordinary live aliases.
+         _Original._holder(self)
++        if self._rpc_failure is not self._rpc_failure_pin:
++            raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
++        if self._rpc_failure is not None:
++            if type(self._rpc_failure) is not PersistenceRPCFailure:
++                raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
++            try:
++                values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
++            except AttributeError:
++                raise PersistenceError('ML-PERSIST-RPC-CONTEXT') from None
++            if values != self._rpc_failure_values:
++                raise PersistenceError('ML-PERSIST-RPC-CONTEXT')
+         return self._rpc_failure
+ 
+     @property
+@@ -797,7 +809,7 @@
+                 raise PersistenceError("ML-PERSIST-LATE")
+             return operation, until, reply["body"]
+         except Exception as error:
+-            if self._rpc_failure is None:
++            if self._rpc_failure_pin is None:
+                 code = str(error)
+                 safe = code if len(code) <= 128 and re.fullmatch(r'ML-[A-Z0-9-]+', code) else 'ML-PERSIST-RPC-FAILED'
+                 kinds = ('init','commit','generation','issued','public-export','public-blob',
+@@ -807,8 +819,11 @@
+                     kind if type(kind) is str and kind in kinds else 'unknown', stage,
+                     self._pins[5], sequence, operation, started_ns, until,
+                     time.monotonic_ns(), safe)
++                self._rpc_failure_pin = self._rpc_failure
++                self._rpc_failure_values = tuple(getattr(self._rpc_failure, n) for n in PersistenceRPCFailure.__dataclass_fields__)
+             if isinstance(error, PersistenceError):
+-                error.rpc_failure = self._rpc_failure
++                try:error.rpc_failure = self.rpc_failure
++                except (ValueError, AttributeError):pass
+             self._fail()
+             raise
+         finally:
+--- red/src/xverse/maestro/runtime_entry.py
++++ corrected/src/xverse/maestro/runtime_entry.py
+@@ -171,7 +171,10 @@
+                 except (ValueError,OSError):diagnostics.append('ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED')
+             original_storage=self._runtime_pins[1]
+             if original_storage is not None:
+-                persistence_failure=original_storage.rpc_failure
++                try:persistence_failure=original_storage.rpc_failure
++                except Exception:
++                    persistence_failure=None
++                    diagnostics.append('ML-RUNTIME-RPC-CONTEXT-UNRESOLVED')
+             self._result=RuntimeResult(self._pins[0].run_id,dispatch,closure,self._pins[1].outcome,tuple(diagnostics),persistence_failure)
+             if fatal is not None:raise fatal
+             return self._result

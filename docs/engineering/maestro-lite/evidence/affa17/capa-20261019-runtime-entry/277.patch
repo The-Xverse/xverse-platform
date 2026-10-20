@@ -1,0 +1,13 @@
+--- docs/engineering/maestro-lite/evidence/affa17/runtime-evidence-original-source-20261019.py
++++ src/xverse/maestro/runtime_evidence.py
+@@ -116,6 +116,10 @@
+             capability=_PidfdCapability(fd)
+             capability.close()
+         finally:os.close(fd)
++        # A valid entry window can expire during receipt I/O or host checks.
++        # The original deadline never extends authorization or the active lease.
++        admission=validate_run_admission(persistence,bootstrap,authorization,facility,
++            now=datetime.now(timezone.utc),host_now=HostDeadline(deadline.session,time.monotonic()),**pins)
+         _deadline(deadline,authorization.cleanup_until.session)
+         return RuntimeEvidencePins(admission,tuple(receipts),facility.kernel_identity,boundaries._root_identity)
+     except RuntimeAdmissionError:raise

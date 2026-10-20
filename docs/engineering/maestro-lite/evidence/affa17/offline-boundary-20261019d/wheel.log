@@ -1,0 +1,81 @@
+........................................................................ [ 31%]
+..............................FF...........F............................ [ 63%]
+........................................................................ [ 95%]
+..........                                                               [100%]
+=================================== FAILURES ===================================
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x731ea9849320>
+case = 'lost-close-ack'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+>       result=run(driver);assert result.terminal is not None,result.diagnostic
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert None is not None
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='44dbe8526281f2a54a053af2b6117a41cbed4e661c1f11678b07afefab41fbe...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:34: AssertionError
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x731ea95e5e10>
+case = 'required-missing'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+>       result=run(driver);assert result.terminal is not None,result.diagnostic
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert None is not None
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='71edab2fb9ed640c434948cd4d20f2f337b8b59833fb06432169f2cc6e441d1...diagnostic='ML-PERSIST-TIMEOUT', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).terminal
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:34: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x731ea738bd90>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-PERSIST-TIMEOUT
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='853b8e076bcf279db647a40b52dfa8b525d45fb2d357d923c2e074e13771a6e...diagnostic='ML-PERSIST-TIMEOUT', health_scans=4, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:125: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[lost-close-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing]
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+3 failed, 223 passed in 269.74s (0:04:29)

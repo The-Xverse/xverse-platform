@@ -1,0 +1,62 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_________ test_dependent_direct_release_requires_original_active_guard _________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x7d14b94aecf0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x7d14b94ae7b0>, PosixPath('/tmp/pytest-of-jefferson/pytest-985/test_dependent_direct_release_0/work'))
+
+    def test_dependent_direct_release_requires_original_active_guard(broker_stack):
+        broker, _, _, work = broker_stack
+        end = stage_all(broker_stack)
+        sink = broker.issuer(broker.owner._prepared.resource_order[-1])
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_run_broker.py:281: Failed
+______________ test_issued_metadata_cannot_be_relabelled[recipe] _______________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x7d14b938ae90>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x7d14b938a990>, PosixPath('/tmp/pytest-of-jefferson/pytest-985/test_issued_metadata_cannot_be0/work'))
+field = 'recipe'
+
+    @pytest.mark.parametrize("field", ["recipe", "handle"])
+    def test_issued_metadata_cannot_be_relabelled(broker_stack, field):
+        from dataclasses import replace
+    
+        broker, _, _, _ = broker_stack
+        stage_all(broker_stack)
+        issuer = broker.issuers[0]
+        if field == "recipe":
+            issuer.recipe = replace(issuer.recipe, execution_id="forged")
+        else:
+            issuer._handle = replace(issuer._handle, execution_id="forged")
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_run_broker.py:299: Failed
+______________ test_issued_metadata_cannot_be_relabelled[handle] _______________
+
+broker_stack = (<xverse.maestro.run_broker.RunBroker object at 0x7d14b938b4d0>, <xverse.maestro.providers.ProcessReadiness object at ...lient object at 0x7d14b938ae90>, PosixPath('/tmp/pytest-of-jefferson/pytest-985/test_issued_metadata_cannot_be1/work'))
+field = 'handle'
+
+    @pytest.mark.parametrize("field", ["recipe", "handle"])
+    def test_issued_metadata_cannot_be_relabelled(broker_stack, field):
+        from dataclasses import replace
+    
+        broker, _, _, _ = broker_stack
+        stage_all(broker_stack)
+        issuer = broker.issuers[0]
+        if field == "recipe":
+            issuer.recipe = replace(issuer.recipe, execution_id="forged")
+        else:
+            issuer._handle = replace(issuer._handle, execution_id="forged")
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_run_broker.py:299: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_broker.py::test_dependent_direct_release_requires_original_active_guard
+FAILED tests/thesis_lite/maestro/test_run_broker.py::test_issued_metadata_cannot_be_relabelled[recipe]
+FAILED tests/thesis_lite/maestro/test_run_broker.py::test_issued_metadata_cannot_be_relabelled[handle]
+3 failed, 5 deselected in 4.74s

@@ -1,0 +1,625 @@
+"""Single original persistence process; CLI accepts only private socket/config FDs."""
+
+from datetime import datetime, timezone
+from importlib.resources import files
+import ctypes
+import hashlib
+import os
+import select
+import signal
+import socket
+import struct
+import sys
+import time
+
+from xverse.argus import EvidenceStore
+from xverse_xdl.experiment_plan import compile_experiment_plan
+from xverse_xdl.lifecycle import ExecutionPermit, FileEvidenceJournal
+from xverse_xdl.validate import validate_mappings
+from .admission import (
+    PermitApproval,
+    PermitBinding,
+    PermitSession,
+    GenerationContext,
+    validate_generation_contexts,
+)
+from .owner import _persist_intent
+from .lifecycle_evidence import OutcomeJournal
+from .teardown_evidence import TeardownJournal
+from .schedule_evidence import ScheduleJournal
+from .persistence import (
+    PersistenceError,
+    _frame,
+    _read_input,
+    _receive,
+    _send,
+    _strict_json,
+)
+from .projection import Limits, ProviderDescriptor, prepare_lifecycle
+from .time import HostDeadline
+
+
+CONFIG_KEYS = {
+    "version",
+    "resources",
+    "providers",
+    "limits",
+    "experiment_digest",
+    "lifecycle_digest",
+    "run_id",
+    "session",
+    "generation_ns",
+    "journal_path",
+    "evidence_root",
+    "bindings",
+    "approvals",
+}
+
+
+def _decode_binding(row):
+    row = dict(row)
+    permit = dict(row.pop("permit"))
+    for name in ("not_before", "expires_at"):
+        permit[name] = datetime.fromisoformat(permit[name])
+    for name in ("permitted_actions", "operation_classes", "exclusions"):
+        permit[name] = tuple(permit[name])
+    return PermitBinding(**row, permit=ExecutionPermit(**permit))
+
+
+def _decode_approval(row):
+    row = dict(row)
+    for name in ("not_before", "expires_at"):
+        row[name] = datetime.fromisoformat(row[name])
+    row["artifact_digests"] = tuple(row["artifact_digests"])
+    return PermitApproval(**row)
+
+
+def _load(config, checkpoint):
+    """Original objects are constructed here only, after authenticated Init."""
+    checkpoint()
+    from .evidence import decode_exports
+    exports = decode_exports(config)
+    schemas = tuple(
+        p
+        for p in files("xverse_xdl").joinpath("profiles").iterdir()
+        if p.name.endswith(".schema.json")
+    )
+    checkpoint()
+    validation = validate_mappings(
+        tuple(config["resources"]), profile_schema_paths=schemas
+    )
+    if not validation.is_valid:
+        raise PersistenceError("ML-PERSIST-XDL")
+    checkpoint()
+    result = compile_experiment_plan(validation.resources)
+    prepared = prepare_lifecycle(
+        result,
+        validation.resources,
+        provider_descriptors=tuple(
+            ProviderDescriptor(**d) for d in config["providers"]
+        ),
+        limits=Limits(**config["limits"]),
+    )
+    if (
+        prepared.experiment_digest != config["experiment_digest"]
+        or prepared.lifecycle_digest != config["lifecycle_digest"]
+    ):
+        raise PersistenceError("ML-PERSIST-PREPARATION")
+    schedule = None
+    if "schedule" in config:
+        from .schedule_plan import decode_schedule
+
+        schedule = decode_schedule(prepared, config["schedule"])
+        if schedule.required_requests + len(exports) > schedule.request_limit:
+            raise PersistenceError("ML-EVIDENCE-EXPORT-CAPACITY")
+    bindings = tuple(_decode_binding(row) for row in config["bindings"])
+    approvals = tuple(_decode_approval(row) for row in config["approvals"])
+    futures = []
+    for row in config.get("future_contexts", []):
+        if type(row) is not dict or set(row) != {"binding", "approval"}:
+            raise PersistenceError("ML-PERSIST-FUTURE-CONTEXTS")
+        futures.append(
+            GenerationContext(
+                _decode_binding(row["binding"]), _decode_approval(row["approval"])
+            )
+        )
+    checkpoint()
+    now = datetime.now(timezone.utc)
+    futures = validate_generation_contexts(
+        prepared,
+        result,
+        validation.resources,
+        run_id=config["run_id"],
+        bindings=bindings,
+        approvals=approvals,
+        now=now,
+        future_contexts=tuple(futures),
+    )
+    checkpoint()
+    coverage = None
+    if "coverage" in config:
+        from .coverage import decode_runtime_coverage, bind_runtime_coverage
+        coverage = decode_runtime_coverage(config["coverage"])
+        bind_runtime_coverage(coverage, config["coverage"]["digest"], prepared, result, validation.resources,
+            run_id=config["run_id"], session=config["session"], generation_ns=config["generation_ns"],
+            bindings=bindings, future_contexts=futures, schedule=schedule)
+    broker_artifact = None
+    if "broker_artifact" in config:
+        from .public_blobs import decode_broker_artifact
+        broker_artifact=decode_broker_artifact(config['broker_artifact'],coverage,config['coverage']['digest'])
+        if schedule is not None and schedule.required_requests+len(exports)+1>schedule.request_limit:
+            raise PersistenceError('ML-EVIDENCE-BLOB-CAPACITY')
+    collection_source = None
+    if 'collection' in config:
+        from .collection_plan import decode_collection, bind_collection
+        from .artifacts import CollectionSource
+        collection = decode_collection(config['collection'], coverage, config['coverage']['digest'])
+        bind_collection(collection, coverage, config['coverage']['digest'],
+                        generation_ns=config['generation_ns'], schedule=schedule, exports=exports)
+        checkpoint()
+        collection_source = CollectionSource(collection.source_root, collection.source_identity)
+    try:
+        checkpoint()
+        if collection_source is not None:
+            collection_source._verify()
+        journal = FileEvidenceJournal(config["journal_path"])
+        checkpoint()
+        permits = PermitSession(
+            prepared,
+            result,
+            validation.resources,
+            run_id=config["run_id"],
+            bindings=bindings,
+            approvals=approvals,
+            now=now,
+            initial_generation=1,
+            future_contexts=futures,
+            journal=journal,
+        )
+        checkpoint()
+        session = config["session"]
+        clocks = {
+            "host": {"domain": "host:" + session, "unit": "s", "value": time.monotonic()},
+            "utc": {"domain": "utc:" + session, "unit": "s", "value": now.timestamp()},
+        }
+        if schedule is not None:
+            clocks["simulation"] = {
+                "domain": prepared.clock.domain,
+                "unit": "tick",
+                "value": 0,
+            }
+        if collection_source is not None:
+            collection_source._verify()
+        writer = EvidenceStore.open_run(
+            config["evidence_root"],
+            run_id=config["run_id"],
+            plan=result.plan,
+            clocks=clocks,
+        )
+        checkpoint()
+        if collection_source is not None:
+            collection_source._verify()
+        return permits, writer, schedule, coverage, broker_artifact, collection_source
+    except BaseException:
+        if collection_source is not None:
+            collection_source.close()
+        raise
+
+
+def serve(channel, input_fd):
+    """Trusted bootstrap calls in the new process; never fork-copy active owners."""
+    collection_source = None
+    outcomes = None
+    if (
+        channel.family != socket.AF_UNIX
+        or channel.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE)
+        != socket.SOCK_SEQPACKET
+    ):
+        raise PersistenceError("ML-PERSIST-SOCKET")
+    peer = struct.unpack(
+        "3i", channel.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
+    )
+    if peer != (os.getppid(), os.getuid(), os.getgid()) or peer[0] <= 1:
+        raise PersistenceError("ML-PERSIST-PARENT")
+    parent_fd = os.pidfd_open(peer[0], 0)
+    try:
+        # The bootstrap must keep the creating parent thread alive; not a hard
+        # kernel bound or protection during interpreter/bootstrap initialization.
+        libc = ctypes.CDLL(None, use_errno=True)
+        libc.prctl.argtypes = (
+            ctypes.c_int,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
+        )
+        libc.prctl.restype = ctypes.c_int
+        if (
+            libc.prctl(1, signal.SIGKILL, 0, 0, 0)
+            or libc.prctl(4, 0, 0, 0, 0)
+            or libc.prctl(38, 1, 0, 0, 0)
+            or os.getppid() != peer[0]
+        ):
+            raise PersistenceError("ML-PERSIST-PARENT-GUARD")
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        channel.setblocking(False)
+        private = _read_input(input_fd)
+        config = _strict_json(private)
+        if (
+            type(config) is not dict
+            or not CONFIG_KEYS <= set(config) <= CONFIG_KEYS | {"schedule", "future_contexts", "public_exports", "coverage", "broker_artifact", "collection"}
+            or type(config["version"]) is not int
+            or config["version"] != (6 if "collection" in config else 5 if "broker_artifact" in config else 4 if "coverage" in config else 3 if "public_exports" in config else 2 if "future_contexts" in config else 1)
+            or "broker_artifact" in config and "coverage" not in config
+            or "collection" in config and not {'coverage', 'broker_artifact'} <= set(config)
+            or "public_exports" in config and (
+                type(config["public_exports"]) is not list or not 0 < len(config["public_exports"]) <= 8)
+            or "future_contexts" in config
+            and (
+                type(config["future_contexts"]) is not list
+                or not 0 < len(config["future_contexts"]) <= 127
+            )
+            or type(config["generation_ns"]) is not int
+            or not 0 < config["generation_ns"] - time.monotonic_ns() <= 394_000_000_000
+            or any(
+                type(config[k]) is not list or not 0 < len(config[k]) <= cap
+                for k, cap in (
+                    ("resources", 128),
+                    ("providers", 16),
+                    ("bindings", 16),
+                    ("approvals", 16),
+                )
+            )
+        ):
+            raise PersistenceError("ML-PERSIST-CONFIG")
+        session, end = config["session"], config["generation_ns"]
+        HostDeadline(session, end / 1e9).__post_init__()
+        scope = hashlib.sha256(private).hexdigest()
+        sequence, permits, writer, claims, attempted = 0, None, None, {}, set()
+        outcomes = None
+        teardown = None
+        schedule = None
+        schedule_journal = None
+        broker_artifact = None
+        request_limit = 128
+
+        def alive():
+            if (
+                select.select([parent_fd], [], [], 0)[0]
+                or os.getppid() != peer[0]
+                or time.monotonic_ns() >= end
+            ):
+                raise PersistenceError("ML-PERSIST-PARENT-CLOSED")
+
+        def check(deadline):
+            alive()
+            if type(deadline) is not HostDeadline or deadline.session != session:
+                raise PersistenceError("ML-PERSIST-HOST-SESSION")
+            deadline.__post_init__()
+            until = request["deadline"]
+            if deadline.monotonic_seconds != until / 1e9:
+                raise PersistenceError("ML-PERSIST-DEADLINE")
+            if not 0 < until - time.monotonic_ns() <= 5_000_000_000 or until > end:
+                raise PersistenceError("ML-PERSIST-DEADLINE")
+            return until
+
+        _send(channel, _frame("hello", 0, "", 0, scope, {}))
+        while True:
+            if permits is not None and collection_source is not None:
+                from .public_blobs import MAX_PUBLIC_BLOB
+                request, public_blob = _receive(channel,peer,end,alive,
+                    maximum_blob=MAX_PUBLIC_BLOB,with_blob=True,
+                    blob_purposes=('broker-projection','collection-context'))
+            elif permits is not None and broker_artifact is not None:
+                request, public_blob = _receive(channel,peer,end,alive,
+                    maximum_blob=broker_artifact.maximum_bytes,with_blob=True)
+            else:
+                request, public_blob = _receive(channel,peer,end,alive),None
+            sequence += 1
+            if (
+                sequence > request_limit
+                or request["sequence"] != sequence
+                or request["scope"] != scope
+                or request["kind"]
+                not in {
+                    "init",
+                    "commit",
+                    "generation",
+                    "issued",
+                    "public-export",
+                    "public-blob",
+                    "collect",
+                    "terminal-report",
+                    "revalidate",
+                    "audit",
+                    "probe",
+                    "teardown",
+                    "tick",
+                    "schedule",
+                    "abort",
+                    "closure",
+                    "recovery",
+                }
+                or not request["operation"].startswith("ml-")
+                or len(request["operation"]) != 35
+            ):
+                raise PersistenceError("ML-PERSIST-REQUEST")
+            deadline = HostDeadline(session, request["deadline"] / 1e9)
+            check(deadline)
+            kind, body = request["kind"], request["body"]
+            terminal_observation = (
+                kind == 'terminal-report'
+                and set(body) == {'action', 'reportEndNs', 'reportReceiptDigest'}
+                and body['action'] == 'close'
+                and outcomes is not None and outcomes.terminal_state is not None
+                and outcomes.terminal_state.receipt_bytes is not None
+            )
+            if schedule_journal is not None:
+                schedule_journal.request_sequence = sequence
+            try:
+                if (collection_source is not None and kind not in ('abort', 'closure')
+                    and not (kind == 'terminal-report' and body.get('action') == 'close')):
+                    collection_source._verify()
+                if kind == "init":
+                    if permits is not None or body != {}:
+                        raise PersistenceError("ML-PERSIST-INIT")
+                    permits, writer, schedule, coverage, broker_artifact, collection_source = _load(config, lambda: check(deadline))
+                    from .evidence import decode_exports
+                    outcomes = OutcomeJournal(permits, writer, config["evidence_root"], decode_exports(config))
+                    outcomes.coverage=coverage
+                    outcomes.broker_artifact=broker_artifact
+                    outcomes.broker_artifact_attempted=False
+                    outcomes.collection_source=collection_source
+                    outcomes.start_attempts=attempted
+                    outcomes.collection_state=None
+                    outcomes.collection_attempted=False
+                    outcomes.terminal_state=None
+                    outcomes.collection_generation_ns=end
+                    if collection_source is not None:
+                        from .collection_plan import decode_collection
+                        outcomes.collection_plan=decode_collection(config['collection'],coverage,coverage.digest)
+                    if broker_artifact is not None and outcomes.export_root is None:
+                        from .evidence import pin_export_root
+                        outcomes.export_root=pin_export_root(outcomes)
+                    teardown = TeardownJournal(outcomes)
+                    response = {
+                        "run_id": config["run_id"],
+                        "lifecycle_digest": permits._prepared.lifecycle_digest,
+                        "session": session,
+                        "generation_ns": end,
+                    }
+                    if schedule is not None:
+                        outcomes.event_limit = schedule.event_limit
+                        schedule_journal = ScheduleJournal(outcomes, schedule, teardown)
+                        request_limit = schedule.request_limit
+                        response.update(
+                            schedule_digest=schedule.digest, request_limit=request_limit
+                        )
+                    if coverage is not None:
+                        from .evidence import record_validation
+                        response["validation"] = record_validation(outcomes, coverage,
+                            request["operation"], deadline, check)
+                elif permits is None or writer.writer_state != "open" and not terminal_observation:
+                    raise PersistenceError("ML-PERSIST-NOT-OPEN")
+                elif outcomes.terminal_state is not None and kind not in ('terminal-report','abort','closure'):
+                    raise PersistenceError('ML-TERMINAL-CLOSING')
+                elif (
+                    schedule_journal is not None
+                    and schedule_journal.closing
+                    and kind not in ("schedule", "abort", "closure", "public-export", "public-blob", "collect", "terminal-report")
+                    and not (kind == 'teardown' and outcomes.collection_source is not None)
+                ):
+                    raise PersistenceError("ML-SCHEDULE-CLOSING")
+                elif (outcomes.collection_attempted and kind not in ('collect', 'public-blob',
+                      'public-export', 'schedule', 'abort', 'closure', 'terminal-report')):
+                    raise PersistenceError('ML-COLLECTION-CLOSING')
+                elif kind == 'terminal-report':
+                    from .terminal_runtime import WorkerTerminal
+                    if set(body)=={'action','reportEndNs'} and body['action']=='publish':
+                        if outcomes.terminal_state is not None:
+                            raise PersistenceError('ML-TERMINAL-REPORT-REPLAY')
+                        outcomes.terminal_state=WorkerTerminal(outcomes)
+                        response=outcomes.terminal_state.publish(claims,body['reportEndNs'],deadline,check)
+                    elif (set(body)=={'action','reportEndNs','reportReceiptDigest'} and body['action']=='close'
+                          and outcomes.terminal_state is not None):
+                        response=outcomes.terminal_state.close(body['reportEndNs'],body['reportReceiptDigest'],deadline,check)
+                    else:
+                        raise PersistenceError('ML-TERMINAL-REQUEST')
+                elif kind == "public-export":
+                    from .evidence import publish_export
+                    response = publish_export(outcomes, claims, body, deadline, check)
+                elif kind == "public-blob":
+                    if public_blob is None:raise PersistenceError('ML-EVIDENCE-BLOB-RIGHTS')
+                    if body.get('purpose') == 'collection-context':
+                        from .collection_runtime import WorkerCollection
+                        if collection_source is None or outcomes.collection_attempted:
+                            raise PersistenceError('ML-COLLECTION-ADMISSION')
+                        if deadline.monotonic_seconds-time.monotonic()>outcomes.collection_plan.operation_seconds:
+                            raise PersistenceError('ML-COLLECTION-BUDGET')
+                        remaining=(outcomes.collection_plan.additional_requests - 1
+                                   + len(outcomes.public_exports) + 1)
+                        if request_limit-sequence < remaining:
+                            raise PersistenceError('ML-COLLECTION-CAPACITY')
+                        outcomes.collection_attempted=True
+                        outcomes.collection_state=WorkerCollection(outcomes,claims,public_blob,deadline,check)
+                        response=outcomes.collection_state.begin_ack()
+                    elif body.get('purpose') == 'broker-projection':
+                        from .public_blobs import publish_broker
+                        response=publish_broker(outcomes,public_blob,deadline,check)
+                    else:
+                        raise PersistenceError('ML-EVIDENCE-BLOB-REQUEST')
+                elif kind == 'collect':
+                    state=outcomes.collection_state
+                    if state is None:
+                        raise PersistenceError('ML-COLLECTION-ADMISSION')
+                    if set(body)=={'action','index'} and body['action']=='item':
+                        response=state.item(body['index'],deadline)
+                    elif body=={'action':'finish'}:
+                        response=state.finish(request['operation'],claims,deadline)
+                    else:
+                        raise PersistenceError('ML-COLLECTION-REQUEST')
+                elif kind == "recovery":
+                    from .recovery_evidence import snapshot
+
+                    outcomes.request_sequence = sequence
+                    outcomes.request_limit = request_limit
+                    response = snapshot(
+                        outcomes, teardown, body, claims, deadline, check
+                    )
+                elif kind == "closure":
+                    from .writer_closure import close_writer
+
+                    if body != {}:
+                        raise PersistenceError("ML-CLOSURE-WRITER-REQUEST")
+                    response = close_writer(
+                        writer, config["evidence_root"], lambda: check(deadline)
+                    )
+                elif kind == "commit":
+                    outcomes.reserve_event(claims)
+                    if (
+                        set(body) != {"unit", "generation"}
+                        or type(body["generation"]) is not int
+                        or body["generation"] != 1
+                        or body["unit"] in attempted
+                    ):
+                        raise PersistenceError("ML-PERSIST-CLAIM")
+                    if schedule_journal is not None:
+                        schedule_journal.admit_start_claim(body['unit'])
+                    attempted.add(body["unit"])
+                    claim = _persist_intent(
+                        permits,
+                        writer,
+                        session,
+                        body["unit"],
+                        deadline,
+                        check,
+                        request["operation"],
+                    )
+                    outcomes.retain_claim(claim)
+                    claims[body["unit"]] = claim
+                    response = {
+                        "event": claim.event_id,
+                        "intent": "sha256:" + claim.intent_digest.hex(),
+                        "flush": "sha256:" + claim.flush_digest.hex(),
+                    }
+                elif kind == "issued":
+                    from .issuance_evidence import record_issued
+
+                    response = record_issued(outcomes,body,claims,request["operation"],deadline,check)
+                elif kind == "generation":
+                    from .generation_evidence import prepare_generation
+
+                    if schedule_journal is not None:
+                        schedule_journal.validate_generation(body, claims)
+                    response = prepare_generation(
+                        outcomes,
+                        teardown,
+                        body,
+                        claims,
+                        request["operation"],
+                        deadline,
+                        check,
+                    )
+                    if schedule_journal is not None:
+                        schedule_journal.commit_generation(body, claims)
+                elif kind in ("tick", "schedule"):
+                    if schedule_journal is None:
+                        raise PersistenceError("ML-SCHEDULE-NOT-ADMITTED")
+                    response = (
+                        schedule_journal.pull(body, deadline, check)
+                        if kind == "tick"
+                        else schedule_journal.record(
+                            body, claims, request["operation"], deadline, check
+                        )
+                    )
+                elif kind == "teardown":
+                    response = teardown.record(
+                        body, claims, request["operation"], deadline, check
+                    )
+                elif kind == "probe":
+                    response = outcomes.record(
+                        body, claims, request["operation"], deadline, check
+                    )
+                elif kind == "audit":
+                    if body != {}:
+                        raise PersistenceError("ML-PERSIST-AUDIT-INPUT")
+                    permits._preparation_proof.check(
+                        permits._prepared, permits._result, permits._resources
+                    )
+                    outcomes._history(claims)
+                    outcomes._mirrors(claims)
+                    check(deadline)
+                    response = {}
+                elif kind == "revalidate":
+                    if set(body) not in ({"unit", "claim"},{"unit","claim","issued"}):
+                        raise PersistenceError("ML-PERSIST-CLAIM")
+                    claim = claims.get(body["unit"])
+                    if (
+                        claim is None
+                        or body["claim"] != claim.operation
+                        or check(deadline) > claim.deadline_ns
+                    ):
+                        raise PersistenceError("ML-PERSIST-CLAIM")
+                    permits.revalidate_start_intent(
+                        claim.receipt, now=datetime.now(timezone.utc)
+                    )
+                    if "issued" in body:
+                        saved = permits._issued[id(claim.receipt)][1]
+                        issued = outcomes.issued_handles.get((body["unit"],saved.details["generation"]))
+                        if issued is None or body["issued"] != issued[1]:
+                            raise PersistenceError("ML-ISSUED-DURABILITY")
+                    outcomes._history(claims)
+                    outcomes._mirrors(claims)
+                    check(deadline)
+                    response = {}
+                else:
+                    if body != {}:
+                        raise PersistenceError("ML-PERSIST-ABORT")
+                    writer.abort(
+                        reason="Maestro persistence owner abort; lifecycle evidence remains incomplete"
+                    )
+                    response = {"writer_state": writer.writer_state}
+                check(deadline)
+                reply = dict(request, kind="ok", body=response)
+                _send(channel, reply)
+                if kind in ("abort", "closure") or kind == 'terminal-report' and body.get('action') == 'close':
+                    return
+            except Exception:
+                # No exception text/private path/permit material is serialized.
+                try:
+                    _send(
+                        channel,
+                        dict(
+                            request,
+                            kind="error",
+                            body={"diagnostic": "ML-PERSIST-WORKER-FAILED"},
+                        ),
+                    )
+                except Exception:
+                    pass
+                raise
+    finally:
+        collection_state=getattr(outcomes,'collection_state',None)
+        if collection_state is not None:
+            collection_state.collector.close()
+        if collection_source is not None:
+            collection_source.close()
+        os.close(parent_fd)
+
+
+def main():
+    try:
+        if len(sys.argv) != 3:
+            raise PersistenceError("ML-PERSIST-ARGUMENTS")
+        channel_fd, input_fd = (int(v) for v in sys.argv[1:])
+        if min(channel_fd, input_fd) < 3 or channel_fd == input_fd:
+            raise PersistenceError("ML-PERSIST-ARGUMENTS")
+        channel = socket.socket(fileno=channel_fd)
+        serve(channel, input_fd)
+        return 0
+    except Exception:
+        return 70
+
+
+if __name__ == "__main__":
+    os._exit(main())

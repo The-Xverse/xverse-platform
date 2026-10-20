@@ -1,0 +1,34 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_delayed_observation_cannot_signal_after_final_deadline __________
+
+children = <function children.<locals>.spawn at 0x7b3c835d40e0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b3c83790fc0>
+
+    def test_delayed_observation_cannot_signal_after_final_deadline(children, monkeypatch):
+        worker = children()
+        monitor = WorkerMonitor(CancellationLatch())
+        ref = monitor.retain(worker, WatchLimits(.01, .01, .01, .005))
+        monitor.latch.cancel("operator-stop")
+        original_wait = os.waitid
+        delayed = False
+        def slow_observation(*args):
+            nonlocal delayed
+            if not delayed:
+                delayed = True
+                time.sleep(.05)
+            return original_wait(*args)
+        with monkeypatch.context() as patch:
+            patch.setattr(os, "waitid", slow_observation)
+            result = monitor.watch(ref)
+        try:
+>           assert result.disposition == "unresolved" and not result.signals_sent
+E           AssertionError: assert ('unresolved' == 'unresolved'
+E             
+E               unresolved and not ('TERM',))
+E            +  where ('TERM',) = WorkerObservation(worker_ref='c927bfab49574a5fb5d60126655fa4ad', host_session='23d050732b6e40f5a1196ebea1ecc526', disp..., observed_at=899560.721068632, diagnostic='ML-TIMEOUT-WORKER-REAP', cleanup_complete=False, ready_for_execution=False).signals_sent
+
+tests/thesis_lite/maestro/test_supervisor.py:427: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_supervisor.py::test_delayed_observation_cannot_signal_after_final_deadline
+1 failed in 0.29s

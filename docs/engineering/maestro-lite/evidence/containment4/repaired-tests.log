@@ -1,0 +1,47 @@
+......................F..............F..                                 [100%]
+=================================== FAILURES ===================================
+______ test_fields_copies_and_replacement_registry_do_not_grant_authority ______
+
+environment = (<function environment.<locals>.factory at 0x703f4b9c9580>, <function environment.<locals>.spawn at 0x703f4b9c8fe0>, 12)
+
+    def test_fields_copies_and_replacement_registry_do_not_grant_authority(environment):
+        factory, _, _ = environment
+        manager, _ = factory()
+        manager.create_frozen(descriptor())
+        replacement, _ = factory()
+>       for value in [copy.copy(manager), replacement]:
+                      ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_boundary.py:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:88: in copy
+    rv = reductor(4)
+         ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x703f4ba0d550>
+protocol = 4
+
+    def __reduce_ex__(self, protocol: int):
+>       raise TypeError("original boundary registries cannot be serialized")
+E       TypeError: original boundary registries cannot be serialized
+
+src/xverse/maestro/prbc.py:248: TypeError
+______________________ test_replaced_name_is_not_targeted ______________________
+
+environment = (<function environment.<locals>.factory at 0x703f4ba96480>, <function environment.<locals>.spawn at 0x703f4ba96520>, 12)
+
+    def test_replaced_name_is_not_targeted(environment):
+        factory, _, root = environment
+        manager, _ = factory()
+        manager.create_frozen(descriptor())
+        entry = manager._entries[descriptor().key]
+        moved = "moved-" + uuid.uuid4().hex
+>       os.rename(entry.name, moved, src_dir_fd=root, dst_dir_fd=root)
+E       PermissionError: [Errno 1] Operation not permitted: 'mlb-36338e8b31064cffa053dd4a69e2a75c' -> 'moved-531630b866c743f9b6ff845c488d7c4c'
+
+tests/thesis_lite/maestro/test_boundary.py:479: PermissionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_replaced_name_is_not_targeted
+2 failed, 38 passed in 1.15s

@@ -1,0 +1,227 @@
+...........FFF                                                           [100%]
+=================================== FAILURES ===================================
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7c4f460d0750>, RuntimeScope(startup=HostDeadline(sessio...ntime-startup-faults-20261019a-runtime_startup_failures-source-private-ndows7rh/test_original_startup_failure_3/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c4f453f35f0>
+fault = 'session-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+        assert not errors,errors
+>       assert result is not None and result.closure is not None,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False)
+E       assert (RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False) is not None and None is not None)
+E        +  where None = RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False).closure
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:107: AssertionError
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7c4f46346b30>, RuntimeScope(startup=HostDeadline(sessio...ntime-startup-faults-20261019a-runtime_startup_failures-source-private-ndows7rh/test_original_startup_failure_4/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c4f45131850>
+fault = 'broker-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+        assert not errors,errors
+>       assert result is not None and result.closure is not None,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False)
+E       assert (RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False) is not None and None is not None)
+E        +  where None = RuntimeResult(run_id='fixture-run', dispatch=None, closure=None, startup=BootstrapLaunchOutcome(birth_attempted=True, ...TEST-ORDINARY-ALIAS-LOST', 'ML-RUNTIME-ENTRY-CLOSURE-UNRESOLVED'), lifecycle_complete=False, ready_for_execution=False).closure
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:107: AssertionError
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7c4f463465f0>, RuntimeScope(startup=HostDeadline(sessio...ntime-startup-faults-20261019a-runtime_startup_failures-source-private-ndows7rh/test_original_startup_failure_5/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c4f45131e50>
+fault = 'launcher-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+>       assert not errors,errors
+E       AssertionError: ["AttributeError: 'object' object has no attribute 'outcome'"]
+E       assert not ["AttributeError: 'object' object has no attribute 'outcome'"]
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:106: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias]
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias]
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias]
+3 failed, 11 passed in 11.98s

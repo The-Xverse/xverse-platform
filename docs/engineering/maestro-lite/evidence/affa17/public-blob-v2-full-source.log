@@ -1,0 +1,52 @@
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 35%]
+........................................................................ [ 44%]
+...............................................................F........ [ 53%]
+........................................................................ [ 61%]
+........................................................................ [ 70%]
+........................................................................ [ 79%]
+........................................................................ [ 88%]
+........................................................................ [ 97%]
+......................                                                   [100%]
+=================================== FAILURES ===================================
+________ test_scheduled_observe_queries_only_its_declared_original_unit ________
+
+request = <FixtureRequest for <Function test_scheduled_observe_queries_only_its_declared_original_unit>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x710155353ee0>
+
+    def test_scheduled_observe_queries_only_its_declared_original_unit(request, monkeypatch):
+        stack = full_stack(request, monkeypatch)
+        driver = dispatcher(stack)
+        active = [None]
+        observed = []
+        effect = FiniteDispatcher._effect
+        query = ProcessReadiness._query
+    
+        def counted(self, unit, until):
+            if active[0] is not None:
+                observed.append((active[0], unit))
+            return query(self, unit, until)
+    
+        def scoped(self, step):
+            active[0] = step.unit_id if step.phase == "observe" else None
+            try:
+                return effect(self, step)
+            finally:
+                active[0] = None
+    
+        monkeypatch.setattr(ProcessReadiness, "_query", counted)
+        monkeypatch.setattr(FiniteDispatcher, "_effect", scoped)
+        result = driver.run(*ends(driver))
+        expected = [(s.unit_id, s.unit_id) for s in driver.prepared.steps if s.phase == "observe"]
+>       assert observed == expected
+E       AssertionError: assert [] == [('xdl://org....nk-instance')]
+E         
+E         Right contains 2 more items, first extra item: ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance')
+E         Use -v to get more diff
+
+tests/thesis_lite/maestro/test_dispatch_observe.py:40: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dispatch_observe.py::test_scheduled_observe_queries_only_its_declared_original_unit
+1 failed, 813 passed in 531.99s (0:08:51)

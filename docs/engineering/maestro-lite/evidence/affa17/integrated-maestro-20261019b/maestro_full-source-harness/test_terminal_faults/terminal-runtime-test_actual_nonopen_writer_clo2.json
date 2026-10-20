@@ -1,0 +1,662 @@
+{
+  "case": "nonopen-failed-changed-receipt",
+  "receipt": {
+    "diagnostic": "ML-PERSIST-ACK",
+    "lastAcknowledgedWriterState": "open",
+    "report": {
+      "admissionDigest": "sha256:410c1e1967f084694669f58273974d04f37de1f48799eddd8802100475e47fe8",
+      "annotationCount": 63,
+      "blockers": [
+        "publication"
+      ],
+      "collectionComplete": true,
+      "coreDigest": "sha256:b6149700440d1def362e498f2cfbd751b49158413964e54d80c6f6cd3b97525c",
+      "eligible": false,
+      "entry": null,
+      "m3Count": 35,
+      "normalComplete": true,
+      "reportEndNs": 1028924785386245,
+      "requiredRowsSatisfied": true,
+      "retainedEntry": {
+        "bytes": 152593,
+        "mediaType": "application/json",
+        "path": "retained-inputs.json",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "429e6470e36c3924f0f1e655f01ed4ab9fa52dc3811f00cbcede27ab87a36546"
+      },
+      "runtimeAdmissionDigest": "sha256:f06d09a83c5ab78ed376f9abd62790b5dea3649cd8d561e4714fa9f74473b071",
+      "schemaVersion": "1.0",
+      "stage": "report-write",
+      "terminalSucceeded": true
+    },
+    "schemaVersion": "1.0",
+    "storageDrain": {
+      "cleanup_complete": false,
+      "diagnostic": null,
+      "identity_retained": true,
+      "ready_for_execution": false,
+      "returncode": 70,
+      "worker_reaped": true
+    },
+    "writer": null
+  },
+  "execution_succeeded": true,
+  "diagnostic": "ML-SCHEDULE-EVIDENCE-INCOMPLETE",
+  "original_admission": {
+    "artifacts": [
+      {
+        "generation": 0,
+        "maximumBytes": 1048576,
+        "path": "broker-projection.json",
+        "required": true,
+        "unitId": null
+      },
+      {
+        "generation": 0,
+        "maximumBytes": 16384,
+        "path": "collection-result.json",
+        "required": true,
+        "unitId": null
+      },
+      {
+        "generation": 0,
+        "maximumBytes": 1048576,
+        "path": "lifecycle-coverage.json",
+        "required": true,
+        "unitId": null
+      },
+      {
+        "generation": 1,
+        "maximumBytes": 32,
+        "path": "outputs/sink-binding.txt",
+        "required": true,
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "maximumBytes": 32,
+        "path": "outputs/source-binding.txt",
+        "required": true,
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "maximumBytes": 1048576,
+        "path": "retained-inputs.json",
+        "required": true,
+        "unitId": null
+      }
+    ],
+    "brokerPath": "broker-projection.json",
+    "contexts": [
+      {
+        "executionId": "owned-process-execution-1",
+        "generation": 1,
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "executionId": "owned-process-execution-0",
+        "generation": 1,
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      }
+    ],
+    "end": 1028924.16972427,
+    "experimentDigest": "sha256:d3273e8183f00716f07533fbb0706c8542fea17754a4f2dca4bfb70fb03649a2",
+    "horizonTicks": 3,
+    "hostSession": "host-session",
+    "lifecycleDigest": "sha256:99697365e9f070fa01e05fe86ba52bc2cc8ee40ffdd7def1351bc51ec35cfe26",
+    "reportPath": "lifecycle-coverage.json",
+    "retainedPath": "retained-inputs.json",
+    "runId": "fixture-run",
+    "simulationDomain": "experiment-time",
+    "sourceDigests": [
+      "sha256:99697365e9f070fa01e05fe86ba52bc2cc8ee40ffdd7def1351bc51ec35cfe26",
+      "sha256:ff5c6142159ae1a277b80829f1917b8af16ecd2238b890581b0753e47cc1945e"
+    ],
+    "start": 1028919.369724061,
+    "steps": [
+      {
+        "phase": "prepare",
+        "stepId": "prepare-source",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "phase": "prepare",
+        "stepId": "prepare-sink",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "phase": "start",
+        "stepId": "start-source",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "phase": "start",
+        "stepId": "start-sink",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "phase": "observe",
+        "stepId": "observe-source",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "phase": "observe",
+        "stepId": "observe-sink",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "phase": "stop",
+        "stepId": "stop-sink",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "phase": "cleanup",
+        "stepId": "cleanup-sink",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "phase": "stop",
+        "stepId": "stop-source",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "phase": "cleanup",
+        "stepId": "cleanup-source",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      }
+    ],
+    "templates": [
+      {
+        "generation": 0,
+        "id": "ob.input-integrity",
+        "kind": "normal-record",
+        "suffix": "integrity",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.unit-disposition",
+        "kind": "unit-disposition",
+        "suffix": "unit-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.intent",
+        "kind": "normal-record",
+        "suffix": "intent",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.issued",
+        "kind": "normal-record",
+        "suffix": "issued",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.outcome",
+        "kind": "normal-record",
+        "suffix": "outcome",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.ready",
+        "kind": "normal-record",
+        "suffix": "ready",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.stop",
+        "kind": "normal-record",
+        "suffix": "stop",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.cleanup",
+        "kind": "normal-record",
+        "suffix": "cleanup",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.emergency",
+        "kind": "emergency-fact",
+        "suffix": "emergency",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.4b58874af8d75c6204a614594242884c0740bfe5104b923b2651b163d5dd8814.g1.health.1",
+        "kind": "normal-record",
+        "slot": 1,
+        "suffix": "health",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.unit-disposition",
+        "kind": "unit-disposition",
+        "suffix": "unit-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.intent",
+        "kind": "normal-record",
+        "suffix": "intent",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.issued",
+        "kind": "normal-record",
+        "suffix": "issued",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.outcome",
+        "kind": "normal-record",
+        "suffix": "outcome",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.ready",
+        "kind": "normal-record",
+        "suffix": "ready",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.stop",
+        "kind": "normal-record",
+        "suffix": "stop",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.cleanup",
+        "kind": "normal-record",
+        "suffix": "cleanup",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.emergency",
+        "kind": "emergency-fact",
+        "suffix": "emergency",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.096ed72440d47b4b14f225972397d5557bbe6883ac43caf816f5cd4db6a318cf.g1.health.1",
+        "kind": "normal-record",
+        "slot": 1,
+        "suffix": "health",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.876c8ed5c71243954ea6d75cddfcae7ed729feed00d8e3ea893d2650cf505784",
+        "kind": "step-disposition",
+        "step": "prepare-source",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.460a48f9b846f70fe7358a824d89510cb03a679c91eb0bc1a89b886049540ec9",
+        "kind": "step-disposition",
+        "step": "prepare-sink",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.6add3f94eea0df6671ee5563cf71a9b54e2cd5be586f4154fdebeba693d21c51",
+        "kind": "step-disposition",
+        "step": "start-source",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.2fa49b926f43e2a8ae2db95ce1e7ab159f2eb3f69fdc8cd2619aa10acd691bf9",
+        "kind": "step-disposition",
+        "step": "start-sink",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.b8234ea9f8f54344fb208ca5ebdf1e412fe38a537d374157098b58fbb5394e8a",
+        "kind": "step-disposition",
+        "step": "observe-source",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.7dcc1f86611ee4e76a4ac9e720bfb80409ee3e8c3e624fdc4b6f16a218347326",
+        "kind": "step-disposition",
+        "step": "observe-sink",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.259c6196b3b271827620b94825f95ed8a3ef7078caf17d3c52ee029a3e7e9775",
+        "kind": "step-disposition",
+        "step": "stop-sink",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.59ce228ef78dd97b21dea0499ce61bee2a3b90e97a9bed05d7d75b89ba6ef056",
+        "kind": "step-disposition",
+        "step": "cleanup-sink",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.abc0209e2e41994e69b9090913f8c6517304ff06bab5531111a5ce626508c810",
+        "kind": "step-disposition",
+        "step": "stop-source",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.step.23b005cf88162884197352dd7357e875118c55cdd1ce876fd45e85fcefbaba55",
+        "kind": "step-disposition",
+        "step": "cleanup-source",
+        "suffix": "step-disposition",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.artifact.489680468756810388a81daa3a72b749716249f6e8e0446f227defc4296affb9",
+        "kind": "artifact",
+        "path": "broker-projection.json",
+        "required": true,
+        "suffix": "artifact",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.artifact.df2c5b76cdebd19f4c1554fd08820f2b236afc80b78f68c0230f4a0b1e842e37",
+        "kind": "artifact",
+        "path": "collection-result.json",
+        "required": true,
+        "suffix": "artifact",
+        "unit": null
+      },
+      {
+        "generation": 1,
+        "id": "ob.artifact.0a2044a27f559d43d40df26313be467cff0465c97130fe34beae7246eb42500a",
+        "kind": "artifact",
+        "path": "outputs/sink-binding.txt",
+        "required": true,
+        "suffix": "artifact",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      },
+      {
+        "generation": 1,
+        "id": "ob.artifact.fc788031edae8c58dee127102b2e0c3c6893d24bf0ebba9d59e5b1195c2f0c9d",
+        "kind": "artifact",
+        "path": "outputs/source-binding.txt",
+        "required": true,
+        "suffix": "artifact",
+        "unit": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "generation": 0,
+        "id": "ob.artifact.26337b73f3d9ac1c6c5351d897e9a1e92bd22f9b805aca24b3f5b44aeedd13d5",
+        "kind": "artifact",
+        "path": "retained-inputs.json",
+        "required": true,
+        "suffix": "artifact",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.run-validation",
+        "kind": "normal-record",
+        "suffix": "run-validation",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.collect",
+        "kind": "normal-record",
+        "suffix": "collect",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.run-terminal",
+        "kind": "normal-record",
+        "suffix": "run-terminal",
+        "unit": null
+      },
+      {
+        "generation": 0,
+        "id": "ob.run-disposition",
+        "kind": "normal-record",
+        "suffix": "run-disposition",
+        "unit": null
+      }
+    ],
+    "units": [
+      {
+        "actions": {
+          "cleanup": "cleanup",
+          "observe": "observe",
+          "prepare": "prepare",
+          "start": "start",
+          "stop": "stop"
+        },
+        "artifactDigests": [
+          "sha256:83d2469c7520aa55ab4a5889ca93685edd8e85b77ff20676971d952f6e98bbdd"
+        ],
+        "cadence": 5,
+        "catalogIdentity": "xdl://org.xverse.experiment/deployment/local-simulated-loop#binding/source-binding",
+        "environmentIdentity": "isolated-fixture",
+        "freshness": 5,
+        "hasDependent": true,
+        "parents": [],
+        "planDigest": "sha256:a1f887e427a6360884eb325cf7615a7af303ead56f033bcdec74116fec7b70dd",
+        "providerId": "maestro-process-v1",
+        "providerKind": "process",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "actions": {
+          "cleanup": "cleanup",
+          "observe": "observe",
+          "prepare": "prepare",
+          "start": "start",
+          "stop": "stop"
+        },
+        "artifactDigests": [
+          "sha256:83d2469c7520aa55ab4a5889ca93685edd8e85b77ff20676971d952f6e98bbdd"
+        ],
+        "cadence": 5,
+        "catalogIdentity": "xdl://org.xverse.experiment/deployment/local-simulated-loop#binding/sink-binding",
+        "environmentIdentity": "isolated-fixture",
+        "freshness": 5,
+        "hasDependent": false,
+        "parents": [
+          "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+        ],
+        "planDigest": "sha256:39f340647108dd65c5c0f7befccfd390b227d760d2aa92f66b0783ff3bc806e1",
+        "providerId": "maestro-process-v1",
+        "providerKind": "process",
+        "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      }
+    ],
+    "version": 1
+  },
+  "admission_digest": "sha256:410c1e1967f084694669f58273974d04f37de1f48799eddd8802100475e47fe8",
+  "original_collection": {
+    "byte_limits": [
+      32,
+      32
+    ],
+    "collection_seconds": 2,
+    "coverage_digest": "sha256:410c1e1967f084694669f58273974d04f37de1f48799eddd8802100475e47fe8",
+    "declarations": [
+      {
+        "destination": "outputs/source-binding.txt",
+        "generation": 1,
+        "media_type": "application/octet-stream",
+        "required": true,
+        "source": "source-binding.marker",
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance"
+      },
+      {
+        "destination": "outputs/sink-binding.txt",
+        "generation": 1,
+        "media_type": "application/octet-stream",
+        "required": true,
+        "source": "sink-binding.marker",
+        "unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"
+      }
+    ],
+    "drain_seconds": 2,
+    "metadata_maximum_bytes": 16384,
+    "metadata_path": "collection-result.json",
+    "operation_seconds": 0.5,
+    "per_unit_teardown_seconds": 1,
+    "source_identity": [
+      66310,
+      12906793
+    ],
+    "source_root": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_nonopen_writer_clo2/work",
+    "terminal_reserve_seconds": 8,
+    "terminal_seconds": 2
+  },
+  "generation_ns": 1028964127387706,
+  "runtime_digest": "sha256:f06d09a83c5ab78ed376f9abd62790b5dea3649cd8d561e4714fa9f74473b071",
+  "manifest": {
+    "artifacts": [
+      {
+        "bytes": 5,
+        "mediaType": "application/octet-stream",
+        "path": "outputs/source-binding.txt",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "7032d581bdad6388b800d0a9db75b024d363feb456396493667da0a24a0b59bc"
+      },
+      {
+        "bytes": 5,
+        "mediaType": "application/octet-stream",
+        "path": "outputs/sink-binding.txt",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "7032d581bdad6388b800d0a9db75b024d363feb456396493667da0a24a0b59bc"
+      },
+      {
+        "bytes": 3958,
+        "mediaType": "application/json",
+        "path": "collection-result.json",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "f209f98cc15db98a49b719465829e611cfca3f6d92748c47e6c9d39dcff5b392"
+      },
+      {
+        "bytes": 2034,
+        "mediaType": "application/json",
+        "path": "broker-projection.json",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "6aede80a26a012f80f2315bd39b6ceb56f2e8954564fcc2418b33a023d7b210d"
+      },
+      {
+        "bytes": 152593,
+        "mediaType": "application/json",
+        "path": "retained-inputs.json",
+        "role": "evidence",
+        "schemaVersion": "1.0",
+        "sha256": "429e6470e36c3924f0f1e655f01ed4ab9fa52dc3811f00cbcede27ab87a36546"
+      }
+    ],
+    "clockDomains": [
+      "experiment-time",
+      "host:host-session",
+      "utc:host-session"
+    ],
+    "eventCount": 63,
+    "eventStream": {
+      "bytes": 76381,
+      "mediaType": "application/x-ndjson",
+      "path": "events.jsonl",
+      "schemaVersion": "1.0",
+      "sha256": "7e43c6154f0bbd6f2f8cf3e9e9a545d02be8cb6f8d6f055b1509dcb2f9aeab0c"
+    },
+    "evidenceReasons": [
+      "ARGUS2-REASON-WRITER-STATE"
+    ],
+    "evidenceStatus": "incomplete",
+    "limits": {
+      "max_artifacts": 256,
+      "max_causal_index_entries": 4096,
+      "max_diagnostic_count": 256,
+      "max_event_bytes": 1048576,
+      "max_events": 100000,
+      "max_id_length": 128,
+      "max_manifest_bytes": 4194304,
+      "max_obligations": 64,
+      "max_payload_bytes": 1024,
+      "max_read_records": 100000,
+      "max_text_length": 256
+    },
+    "manifestVersion": "1.0",
+    "metricInputs": [
+      {
+        "calculationRef": "urn:xverse:experiment:metric:count",
+        "evidenceSinkRefs": [
+          "evidence/sample-observer.json"
+        ],
+        "metricId": "sample-count",
+        "observerIds": [
+          "sample-observer"
+        ],
+        "timeDomainIds": [
+          "experiment-time"
+        ],
+        "unitSemantics": "count"
+      }
+    ],
+    "obligations": [],
+    "plan": {
+      "apiVersion": "xverse.io/xdl/v1alpha1",
+      "planVersion": "1",
+      "profileVersion": "0.1.0",
+      "semanticDigest": {
+        "algorithm": "sha256",
+        "value": "d3273e8183f00716f07533fbb0706c8542fea17754a4f2dca4bfb70fb03649a2"
+      }
+    },
+    "runId": "fixture-run",
+    "schemaVersion": "1.0",
+    "sourceByteProvenance": {},
+    "writerState": "failed"
+  },
+  "manifest_sha256": "f5cff924dd665b9f7d5ce5563c0962df777a606e23fc87593a7b0789e215bc9d",
+  "original_fixture": "/tmp/maestro-integrated-20261019b-source-private-lk9kp2gn/test_actual_nonopen_writer_clo2",
+  "source_sha256": "698e2ab72c735edd9b8334281eca8e72d9c0c0615bbea9002fbaaa93c961a28e",
+  "native_helper_closure_not_inferred": true,
+  "full_M1_complete": false,
+  "scientific_result": false
+}

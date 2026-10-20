@@ -1,0 +1,54 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_actual_advance_during_C1_creation_leaves_only_partial_scope _______
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x74510c4ac1a0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...', generation=1, boundary_id='authority', creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74510c4a89d0>
+
+    def test_actual_advance_during_C1_creation_leaves_only_partial_scope(
+        run_stack, monkeypatch
+    ):
+        client = connect(run_stack, monkeypatch, maximum_generation=3)
+        session, manager, h, _, _, _, _ = run_stack
+        for i in range(2):
+            h.stage(i)
+            h.arm(i)
+            h.release(i)
+        h.stop_retire(0)
+        assert manager.force_cleanup(h.units[0]["descriptor"]).boundary_released
+        target = BoundaryDescriptor("run", "u0", 2, "next-target", 0)
+        manager.create_frozen(target)
+        session.watch(target, deadline(2))
+        unit = h.units[0]
+        unit.update(
+            generation=2,
+            operation=b"n" * 16,
+            intent=digest(b"next-intent"),
+            mirror=digest(b"next-mirror"),
+            boundary=digest(b"next-boundary"),
+        )
+        unit.pop("handle")
+        unit.pop("ticket")
+        pending = BoundaryDescriptor("run", "pending", 1, "pending", 0)
+        original = manager._freeze
+    
+        def advance_during_freeze(entry):
+            original(entry)
+            if entry.descriptor == pending:
+                frame = h.frame(K.ADVANCE, 0)
+                assert h.rpc(frame, (manager._entry(target).fd,)).epoch == 1
+    
+        monkeypatch.setattr(manager, "_freeze", advance_during_freeze)
+        with pytest.raises(ValueError) as observed:
+            manager.create_frozen(pending)
+        assert observed.value.record.state == "partial"
+        assert manager._entry(pending).c1 is not None
+        receipt = client._advance_receipts[-1]
+>       with pytest.raises(AttributeError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'AttributeError'>
+
+tests/thesis_lite/maestro/test_affa_epoch.py:173: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_epoch.py::test_actual_advance_during_C1_creation_leaves_only_partial_scope
+1 failed, 9 deselected in 1.71s

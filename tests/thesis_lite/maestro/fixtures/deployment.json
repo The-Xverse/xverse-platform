@@ -1,0 +1,241 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "local-simulated-loop",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "limitations": [
+        "Declared realization intent only; no artifact is retrieved."
+      ],
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "artifacts": [
+      {
+        "id": "neutral-model",
+        "artifactKind": "model",
+        "version": "1.0.0",
+        "digest": "sha256:6506e6f74827ef5d40ba871e29d7666487e0c50c7dffb2f0b911f6eb642f8a4b",
+        "sourceRef": "urn:xverse:maestro:draft:neutral-model",
+        "maturity": "prototype"
+      }
+    ],
+    "bindings": [
+      {
+        "artifactIds": [
+          "neutral-model"
+        ],
+        "extensions": {
+          "io.xverse.experiment": {
+            "delivery": "none",
+            "kind": "realization-intent",
+            "protocolBinding": {
+              "bindingKind": "sample-binding",
+              "compatibility": "exact",
+              "limitations": [
+                "Declared reference only; nothing is resolved."
+              ],
+              "standardRef": "urn:xverse:experiment:protocol:sample"
+            },
+            "schemaVersion": "0.1",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "element": "source-binding",
+              "kind": "Deployment",
+              "name": "local-simulated-loop",
+              "namespace": "org.xverse.experiment"
+            }
+          },
+          "io.xverse.runtime.compatibility": {
+            "schemaVersion": "0.1.0",
+            "environmentId": "isolated-fixture",
+            "provider": {
+              "id": "maestro-fixture-v1",
+              "kind": "fixture"
+            },
+            "actions": [
+              {
+                "id": "prepare",
+                "phase": "prepare",
+                "operation": "validate",
+                "timeoutSeconds": 1
+              },
+              {
+                "id": "start",
+                "phase": "start",
+                "operation": "start",
+                "timeoutSeconds": 2
+              },
+              {
+                "id": "observe",
+                "phase": "observe",
+                "operation": "observe",
+                "timeoutSeconds": 1,
+                "condition": "running"
+              },
+              {
+                "id": "stop",
+                "phase": "stop",
+                "operation": "stop",
+                "timeoutSeconds": 2
+              },
+              {
+                "id": "cleanup",
+                "phase": "cleanup",
+                "operation": "cleanup",
+                "timeoutSeconds": 1
+              }
+            ],
+            "evidence": {
+              "maturity": "prototype",
+              "limitations": [
+                "Draft fixture intent only; provider artifact and execution authorization missing."
+              ]
+            }
+          }
+        },
+        "id": "source-binding",
+        "lifecycle": {
+          "failure": "failure",
+          "prepare": "prepare",
+          "ready": "ready",
+          "start": "start",
+          "stop": "stop"
+        },
+        "logicalRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "source-instance",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "realizationClass": "simulated",
+        "targetId": "model-unit-target"
+      },
+      {
+        "artifactIds": [
+          "neutral-model"
+        ],
+        "extensions": {
+          "io.xverse.experiment": {
+            "delivery": "none",
+            "kind": "realization-intent",
+            "protocolBinding": {
+              "bindingKind": "sample-binding",
+              "compatibility": "exact",
+              "limitations": [
+                "Declared reference only; nothing is resolved."
+              ],
+              "standardRef": "urn:xverse:experiment:protocol:sample"
+            },
+            "schemaVersion": "0.1",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "element": "sink-binding",
+              "kind": "Deployment",
+              "name": "local-simulated-loop",
+              "namespace": "org.xverse.experiment"
+            }
+          },
+          "io.xverse.runtime.compatibility": {
+            "schemaVersion": "0.1.0",
+            "environmentId": "isolated-fixture",
+            "provider": {
+              "id": "maestro-fixture-v1",
+              "kind": "fixture"
+            },
+            "actions": [
+              {
+                "id": "prepare",
+                "phase": "prepare",
+                "operation": "validate",
+                "timeoutSeconds": 1
+              },
+              {
+                "id": "start",
+                "phase": "start",
+                "operation": "start",
+                "timeoutSeconds": 2
+              },
+              {
+                "id": "observe",
+                "phase": "observe",
+                "operation": "observe",
+                "timeoutSeconds": 1,
+                "condition": "running"
+              },
+              {
+                "id": "stop",
+                "phase": "stop",
+                "operation": "stop",
+                "timeoutSeconds": 2
+              },
+              {
+                "id": "cleanup",
+                "phase": "cleanup",
+                "operation": "cleanup",
+                "timeoutSeconds": 1
+              }
+            ],
+            "evidence": {
+              "maturity": "prototype",
+              "limitations": [
+                "Draft fixture intent only; provider artifact and execution authorization missing."
+              ]
+            }
+          }
+        },
+        "id": "sink-binding",
+        "lifecycle": {
+          "failure": "failure",
+          "prepare": "prepare",
+          "ready": "ready",
+          "start": "start",
+          "stop": "stop"
+        },
+        "logicalRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "sink-instance",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "realizationClass": "simulated",
+        "targetId": "model-unit-target"
+      }
+    ],
+    "readiness": {
+      "failurePolicy": "fail-fast",
+      "requiredConditions": [
+        "artifacts-pinned"
+      ]
+    },
+    "systemRef": {
+      "apiVersion": "xverse.io/xdl/v1alpha1",
+      "kind": "System",
+      "name": "sample-loop",
+      "namespace": "org.xverse.experiment"
+    },
+    "targets": [
+      {
+        "capabilities": [
+          "execute-model"
+        ],
+        "id": "model-unit-target",
+        "lifecycle": {
+          "failure": "failure",
+          "prepare": "prepare",
+          "ready": "ready",
+          "start": "start",
+          "stop": "stop"
+        },
+        "targetClass": "model-unit"
+      }
+    ]
+  }
+}

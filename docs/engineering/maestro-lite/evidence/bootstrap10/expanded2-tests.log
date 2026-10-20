@@ -1,0 +1,40 @@
+....................F.                                                   [100%]
+=================================== FAILURES ===================================
+_ test_lease_expiry_kills_helpers_then_refreezes_original_workload[boot_stack0] _
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x71d3597d5ba0>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-850/test_lease_expiry_kills_helper0/work'), <function boot_stack.<locals>.boundary at 0x71d3589a2160>, ...)
+
+    @pytest.mark.parametrize("boot_stack", [{"lease_seconds": 3}], indirect=True)
+    def test_lease_expiry_kills_helpers_then_refreezes_original_workload(boot_stack):
+        session, manager, latch, config, work, boundary, start, clients, owners = boot_stack
+>       owner, storage, descriptor, launcher, handle, gate, original = start()
+                                                                       ^^^^^^^
+
+tests/thesis_lite/maestro/test_bootstrap.py:667: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_bootstrap.py:148: in start
+    storage = session.persistence(config, boundary("storage"), deadline())
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/bootstrap.py:804: in persistence
+    child, channel = self._spawn_role(
+src/xverse/maestro/bootstrap.py:784: in _spawn_role
+    child = self.birth(role, helper, unit, peer, private_fd, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/bootstrap.py:613: in birth
+    self._birth_deadlines[self._slot] = self._until(deadline)
+                                        ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x71d3597d5ba0>
+deadline = HostDeadline(session='host-session', monotonic_seconds=912944.411746135)
+
+    def _until(self, deadline):
+        until = _deadline(deadline, self.session)
+        if until > self._lease or until > self._generation - 2_000_000_000:
+>           raise BootstrapError("ML-BOOT-DEADLINE")
+E           xverse.maestro.bootstrap.BootstrapError: ML-BOOT-DEADLINE
+
+src/xverse/maestro/bootstrap.py:478: BootstrapError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_bootstrap.py::test_lease_expiry_kills_helpers_then_refreezes_original_workload[boot_stack0]
+1 failed, 21 passed in 10.76s

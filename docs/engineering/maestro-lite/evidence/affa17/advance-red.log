@@ -1,0 +1,41 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite _____
+
+request = <FixtureRequest for <Function test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79cc52bc8d60>
+
+    def test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite(
+        request, monkeypatch
+    ):
+        stack, controller, unit, config = ready(request, monkeypatch)
+        broker, facade, client, work = stack
+        source = broker.owner._prepared.resource_order[0]
+        original_source = broker.issuer(source)._handle
+        original_worker = client.process
+        executions = [broker.issuer(unit)._handle.execution_id]
+        original_issuers = []
+        for generation in (2, 3):
+            old = broker.issuer(unit)
+            original_issuers.append(old)
+            release(controller, unit)
+            old_stop = controller.phase(unit, "stop", deadline(0.5))
+            old_clean = controller.phase(unit, "cleanup", deadline(0.5))
+            descriptor = BoundaryDescriptor(
+                client.run_id,
+                unit,
+                generation,
+                "leaf-generation-" + str(generation),
+                broker.session.boundaries.release_epoch,
+            )
+            broker.session.boundaries.create_frozen(descriptor)
+            end = deadline(1.3)
+            prepared = broker._prepare_generation(controller, unit, descriptor, end)
+>           fresh = broker.advance_generation(prepared, end)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'RunBroker' object has no attribute 'advance_generation'
+
+tests/thesis_lite/maestro/test_generation_restart.py:47: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite
+1 failed in 2.83s

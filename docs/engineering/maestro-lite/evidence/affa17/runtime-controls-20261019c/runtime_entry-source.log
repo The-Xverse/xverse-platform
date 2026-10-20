@@ -1,0 +1,27 @@
+F.......                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_whole_original_start_returns_after_actual_terminal_and_helper_closure[closed] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7e965e619d30>, RuntimeScope(startup=HostDeadline(sessio...('/tmp/maestro-runtime-controls-20261019c-runtime_entry-source-private-bx89zkvn/test_whole_original_start_retu0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e965e589e00>
+case = 'closed'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack'])
+    def test_whole_original_start_returns_after_actual_terminal_and_helper_closure(runtime,monkeypatch,case):
+        entry,scope,work=runtime
+        original=PersistenceClient._rpc
+        def rpc(self,kind,body,end,**kw):
+            reply=original(self,kind,body,end,**kw)
+            if case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':raise PersistenceError('ML-TEST-LOST-ACK')
+            return reply
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        result=entry.start(scope)
+>       assert result.execution_succeeded and result.cleanup_complete,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='b8e2c5efb1f7651b15...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False)
+E       assert (False)
+E        +  where False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='b8e2c5efb1f7651b15...leanup_complete=False, ready_for_execution=False), diagnostics=(), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_entry.py:141: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_whole_original_start_returns_after_actual_terminal_and_helper_closure[closed]
+1 failed, 7 passed in 13.31s

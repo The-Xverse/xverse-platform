@@ -1,0 +1,2526 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-19-runtime-service-v1",
+  "parent_trace": {
+    "path": "runtime-controls-partial-traceability.json",
+    "sha256": "c0afb1d4e085e10380ee998949b08fd4a22bcd8610030d0b8e9c484c19050618"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "default_closed_policy_inert_external_review_binding_verified",
+          "scope": "Partial admission binding: original preparation/evidence validator reused; actual fixed review/file pins and blocked readiness tested. Synthetic positives inspect-only or final-start-stubbed with effects forbidden. Host authenticates approval and validates semantics; no actual source-parent/receipt/review approval or executable admission demonstrated.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::ApprovedRuntime.canonical_bytes",
+              "line": 40,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeReadiness.canonical_bytes",
+              "line": 66,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::readiness_digest",
+              "line": 82,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.__init__",
+              "line": 133,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._holder",
+              "line": 149,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._binding",
+              "line": 158,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.inspect",
+              "line": 175,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.start",
+              "line": 227,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_default_closed_and_inspection_never_creates_execution_authority",
+              "line": 63,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_service_wiring_uses_original_registry_with_final_start_stubbed",
+              "line": 74,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_draft_partial_or_blocked_review_rejects_even_when_hash_is_allowed",
+              "line": 87,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_external_policy_pins_cannot_be_replaced_by_bundle_rehash",
+              "line": 96,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_actual_review_or_receipt_bytes_prevent_registration",
+              "line": 104,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_authorization_and_files_are_revalidated_at_first_start",
+              "line": 132,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_actual_expired_authorization_and_malformed_ids_deadlines_reject",
+              "line": 141,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "original_registration_conflicts_cleanup_only_controls_partial",
+          "scope": "Original run lock serializes first claims; conflicting/foreign registration cannot bind a restriction. Exact repeated registration, ordinary metadata checks and retained stop tested without service process creation. Adjacent registry lifecycle/replay/cleanup/recovery tests use separately owned low-level scope, not admitted RuntimeService. Full service active-control/restart/recovery/matching-repeat matrix remains open.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+              "line": 238,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+              "line": 242,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve",
+              "line": 257,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window",
+              "line": 110,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop",
+              "line": 122,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration",
+              "line": 34,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection",
+              "line": 57,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup",
+              "line": 72,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run",
+              "line": 111,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            },
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        },
+        {
+          "maturity": "original_registration_conflicts_cleanup_only_controls_partial",
+          "scope": "Original run lock serializes first claims; conflicting/foreign registration cannot bind a restriction. Exact repeated registration, ordinary metadata checks and retained stop tested without service process creation. Adjacent registry lifecycle/replay/cleanup/recovery tests use separately owned low-level scope, not admitted RuntimeService. Full service active-control/restart/recovery/matching-repeat matrix remains open.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+              "line": 238,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+              "line": 242,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve",
+              "line": 257,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window",
+              "line": 110,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop",
+              "line": 122,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration",
+              "line": 34,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection",
+              "line": 57,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup",
+              "line": 72,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run",
+              "line": 111,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            },
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "original_registration_conflicts_cleanup_only_controls_partial",
+          "scope": "Original run lock serializes first claims; conflicting/foreign registration cannot bind a restriction. Exact repeated registration, ordinary metadata checks and retained stop tested without service process creation. Adjacent registry lifecycle/replay/cleanup/recovery tests use separately owned low-level scope, not admitted RuntimeService. Full service active-control/restart/recovery/matching-repeat matrix remains open.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+              "line": 238,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+              "line": 242,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve",
+              "line": 257,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window",
+              "line": 110,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop",
+              "line": 122,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration",
+              "line": 34,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection",
+              "line": 57,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup",
+              "line": 72,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run",
+              "line": 111,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            },
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "default_closed_policy_inert_external_review_binding_verified",
+          "scope": "Partial admission binding: original preparation/evidence validator reused; actual fixed review/file pins and blocked readiness tested. Synthetic positives inspect-only or final-start-stubbed with effects forbidden. Host authenticates approval and validates semantics; no actual source-parent/receipt/review approval or executable admission demonstrated.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::ApprovedRuntime.canonical_bytes",
+              "line": 40,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeReadiness.canonical_bytes",
+              "line": 66,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::readiness_digest",
+              "line": 82,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.__init__",
+              "line": 133,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._holder",
+              "line": 149,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._binding",
+              "line": 158,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.inspect",
+              "line": 175,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.start",
+              "line": 227,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_default_closed_and_inspection_never_creates_execution_authority",
+              "line": 63,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_service_wiring_uses_original_registry_with_final_start_stubbed",
+              "line": 74,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_draft_partial_or_blocked_review_rejects_even_when_hash_is_allowed",
+              "line": 87,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_external_policy_pins_cannot_be_replaced_by_bundle_rehash",
+              "line": 96,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_actual_review_or_receipt_bytes_prevent_registration",
+              "line": 104,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_authorization_and_files_are_revalidated_at_first_start",
+              "line": 132,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_actual_expired_authorization_and_malformed_ids_deadlines_reject",
+              "line": 141,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        },
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        },
+        {
+          "maturity": "original_registration_conflicts_cleanup_only_controls_partial",
+          "scope": "Original run lock serializes first claims; conflicting/foreign registration cannot bind a restriction. Exact repeated registration, ordinary metadata checks and retained stop tested without service process creation. Adjacent registry lifecycle/replay/cleanup/recovery tests use separately owned low-level scope, not admitted RuntimeService. Full service active-control/restart/recovery/matching-repeat matrix remains open.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+              "line": 238,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+              "line": 242,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve",
+              "line": 257,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window",
+              "line": 110,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop",
+              "line": 122,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration",
+              "line": 34,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection",
+              "line": 57,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup",
+              "line": 72,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run",
+              "line": 111,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            },
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "default_closed_policy_inert_external_review_binding_verified",
+          "scope": "Partial admission binding: original preparation/evidence validator reused; actual fixed review/file pins and blocked readiness tested. Synthetic positives inspect-only or final-start-stubbed with effects forbidden. Host authenticates approval and validates semantics; no actual source-parent/receipt/review approval or executable admission demonstrated.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::ApprovedRuntime.canonical_bytes",
+              "line": 40,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeReadiness.canonical_bytes",
+              "line": 66,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::readiness_digest",
+              "line": 82,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.__init__",
+              "line": 133,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._holder",
+              "line": 149,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._binding",
+              "line": 158,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.inspect",
+              "line": 175,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.start",
+              "line": 227,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_default_closed_and_inspection_never_creates_execution_authority",
+              "line": 63,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_service_wiring_uses_original_registry_with_final_start_stubbed",
+              "line": 74,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_draft_partial_or_blocked_review_rejects_even_when_hash_is_allowed",
+              "line": 87,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_external_policy_pins_cannot_be_replaced_by_bundle_rehash",
+              "line": 96,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_actual_review_or_receipt_bytes_prevent_registration",
+              "line": 104,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_authorization_and_files_are_revalidated_at_first_start",
+              "line": 132,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_actual_expired_authorization_and_malformed_ids_deadlines_reject",
+              "line": 141,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        },
+        {
+          "maturity": "restricting_actual_window_denials_original_cleanup_verified",
+          "scope": "Additional aware-UTC restriction on already separately owned bootstrap authority. Actual expiry after image hash/during C1 validation, helper/controller denial before issuance, and original cleanup after expiry/corruption. No new M3 permit/fence/facility capability, atomic UTC-kernel guarantee or complete late-resource/crash/cleanup matrix.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.__init__",
+              "line": 106,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow._holder",
+              "line": 119,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::_StartWindow.check",
+              "line": 125,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization",
+              "line": 100,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization",
+              "line": 117,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check",
+              "line": 126,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch",
+              "line": 146,
+              "file_sha256": "d2242ac3161565bd6c83632c7865815aed4071962551133e0c8a0da79b20af1b",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization",
+              "line": 717,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization",
+              "line": 729,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap.py::BootstrapSession.birth",
+              "line": 735,
+              "file_sha256": "294a8135e4b06a089b62f72c64f74ada9e3835f7c122a0d81fac949be41048d1",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/controller.py::admit_controller",
+              "line": 326,
+              "file_sha256": "4b44201d5972dd7e376d8e6af123a593c25fd7d3f4c5583dd142fa47ba35b52e",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end",
+              "line": 114,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen",
+              "line": 28,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal",
+              "line": 46,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup",
+              "line": 57,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC",
+              "line": 76,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel",
+              "line": 97,
+              "file_sha256": "73902e44b044b264c43bcd6546520269634aed20e5602ced6015520317bfdedf",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        },
+        {
+          "maturity": "original_registration_conflicts_cleanup_only_controls_partial",
+          "scope": "Original run lock serializes first claims; conflicting/foreign registration cannot bind a restriction. Exact repeated registration, ordinary metadata checks and retained stop tested without service process creation. Adjacent registry lifecycle/replay/cleanup/recovery tests use separately owned low-level scope, not admitted RuntimeService. Full service active-control/restart/recovery/matching-repeat matrix remains open.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.register",
+              "line": 200,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for",
+              "line": 219,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.stop",
+              "line": 238,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_service.py::RuntimeService.collect",
+              "line": 242,
+              "file_sha256": "1677e68b0f55685f8dedc45844df13c67abf9460152f260d8936915fa082f409",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve",
+              "line": 257,
+              "file_sha256": "68a3705c182f269abb7c7887945b9fe6340824978fdf6022dfdeff6beb0b9eae",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window",
+              "line": 110,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop",
+              "line": 122,
+              "file_sha256": "87637d2bafdc98c48e1f99d9b25ff29c994f23bc05da98f95c81f180e506c176",
+              "frozen_manifest": "runtime-service-20261019b/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration",
+              "line": 34,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection",
+              "line": 57,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup",
+              "line": 72,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run",
+              "line": 111,
+              "file_sha256": "37ecd0d58d5cd0cb90222dada48835330ba0c6a52ad0e6fec736e8abe7fd324a",
+              "frozen_manifest": "runtime-service-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-service-20261019b/verification-v2.json",
+              "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+            },
+            {
+              "path": "runtime-service-20261019c/verification-v2.json",
+              "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+            }
+          ],
+          "full_requirement_closure": false,
+          "actual_service_runtime_runs": 0
+        }
+      ],
+      "prior_component_dispositions": "inherit exact parent_trace; earlier findings/results unchanged"
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/runtime_service.py::ApprovedRuntime.canonical_bytes": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeReadiness.canonical_bytes": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::readiness_digest": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.__init__": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService._holder": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService._binding": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.inspect": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.register": [
+      "ML-SR-001",
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService._submission_for": [
+      "ML-SR-001",
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.start": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_default_closed_and_inspection_never_creates_execution_authority": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_service_wiring_uses_original_registry_with_final_start_stubbed": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_draft_partial_or_blocked_review_rejects_even_when_hash_is_allowed": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_external_policy_pins_cannot_be_replaced_by_bundle_rehash": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_actual_review_or_receipt_bytes_prevent_registration": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_authorization_and_files_are_revalidated_at_first_start": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_actual_expired_authorization_and_malformed_ids_deadlines_reject": [
+      "ML-SR-001",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::_StartWindow.__init__": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::_StartWindow._holder": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::_StartWindow.check": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.bind_start_authorization": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.check_start_authorization": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher._check": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.launch": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap.py::BootstrapSession.bind_start_authorization": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap.py::BootstrapSession.check_start_authorization": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/bootstrap.py::BootstrapSession.birth": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/controller.py::admit_controller": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun._startup_end": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_after_live_image_hash_rejects_before_original_Popen": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_start_window.py::test_lost_restriction_rejects_birth_without_blocking_original_disposal": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_root_helper_birth_keeps_original_wait_and_cleanup": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_start_window.py::test_actual_expiry_during_C1_validation_rejects_before_slot_or_BIRTH_RPC": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_start_window.py::test_expired_controller_permission_rejects_before_new_C1_and_preserves_cancel": [
+      "ML-SR-005",
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-015",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.stop": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_service.py::RuntimeService.collect": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRegistry.reserve": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_original_reservation_conflicts_do_not_bind_or_widen_start_window": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_rejects_reconstruction_loss_and_cross_registration": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_original_registry_loss_stop_uses_only_retained_cleanup": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_control_registry.py::test_actual_registry_controller_recovery_preserves_productive_original_run": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-022",
+      "ML-SR-023",
+      "ML-SR-024"
+    ]
+  },
+  "evidence": [
+    {
+      "path": "runtime-service-20261019b/verification-v2.json",
+      "sha256": "635ea0cad503b0522523da18db1bbc574f417c875628c175aec47549ec2b72d3"
+    },
+    {
+      "path": "runtime-service-20261019c/verification-v2.json",
+      "sha256": "e13f97af49ebbba71f4f48cb0d1b1f6fae63b4c75cad25be86b20c66da4a4d15"
+    }
+  ],
+  "original_service_failure": {
+    "path": "runtime-service-20261019a/verification.json",
+    "sha256": "55e8ed2f5fa3c9f7ef60adc01b6524c3c1b7659aafbc654a8028d2769bf8d584"
+  },
+  "evidence_reuse": {
+    "path": "runtime-service-evidence-reuse-20261019.json",
+    "sha256": "1f0785e7994f47d256856f917e18f4a557c35fa3741b47caeebe6031226c40a6"
+  },
+  "CAPA": {
+    "path": "capa-20261019-runtime-service/register.json",
+    "sha256": "14239c69e944a3519f39ee4d4baf77749c218c7f397965833de4ffaf96021185"
+  },
+  "CAPA_validation": {
+    "path": "capa-20261019-runtime-service/verification-recheck.json",
+    "sha256": "2eff27658bc081aa76aef7a64bce7b3fcc1161317547babc76ccbf7bfc37d0a3"
+  },
+  "ADR": {
+    "path": "docs/engineering/maestro-lite/ADR-ML3-RUNTIME-0005.md",
+    "sha256": "ab46beb15964e2d11eb8fab3324d91d34481596c5aa47340202148976b70ec8e"
+  },
+  "selected_checks_passed_per_phase": 73,
+  "actual_service_runtime_runs": 0,
+  "actual_M1_admissions": 0,
+  "synthetic_positives_inert": true,
+  "real_operator_approval_verified": false,
+  "software_requirements_retained": 24,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "open_findings": [
+    135,
+    222,
+    286,
+    287
+  ],
+  "remaining_gates": [
+    "18 source-parent semantics unvalidated",
+    "24 full software requirements",
+    "30 pairs/90 endpoints",
+    "nine complete runtime cases",
+    "seven full P3 tasks",
+    "late/expiry/cancellation/failure-stage matrix",
+    "W02/W03",
+    "full M1/environment/whole-platform regression",
+    "independent complete-candidate review",
+    "user acceptance/main merge"
+  ],
+  "full_service_control_matrix": false,
+  "source_parent_semantics_validated": false,
+  "all_seven_phase3_tasks_complete": false,
+  "full_M1_complete": false,
+  "whole_platform_regression": false,
+  "full_candidate_review_complete": false,
+  "stable_increment17": false,
+  "independent_CAPA_effectiveness": false,
+  "accepted": false,
+  "merged": false,
+  "canonical_note_edited": false,
+  "factory_run_created": false,
+  "scientific_result": false
+}

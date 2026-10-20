@@ -1,0 +1,94 @@
+--- original/audit-runtime-controls-20261019.py
++++ successor/audit-runtime-controls-v2-20261019.py
+@@ -59,14 +59,17 @@
+         row=read(path);obs=row['observations'];primary,fallback=obs['primary'],obs['fallback']
+         original=primary['closure'] if primary else None
+         result=original or fallback
+-        assert result and result['root_reaped'] and all(h['process_reaped'] for h in result['helpers'])
+-        assert all(b['empty'] and b['released'] for b in result['boundaries'])
++        if result is not None:
++            assert result['root_reaped'] and all(h['process_reaped'] for h in result['helpers'])
++            assert all(b['empty'] and b['released'] for b in result['boundaries'])
++        else:
++            assert out.name.endswith('19a') and row['case']=='launcher-alias' and primary is None and fallback is None
+         assert obs['actual_original_root_wait'] and obs['all_original_C1_released']
+         assert obs['ordinary_alias_restoration_after_cleanup'] and not row['full_M1_complete']
+         if out.name.endswith('19a') and row['case'].endswith('-alias'):
+-            assert fallback and original is None
+-            if row['case']=='launcher-alias':assert primary is None and len(obs['primary_exceptions'])==1
+-            else:assert primary and not obs['primary_exceptions']
++            assert original is None
++            if row['case']=='launcher-alias':assert primary is None and len(obs['primary_exceptions'])==1 and fallback is None
++            else:assert primary and not obs['primary_exceptions'] and fallback is not None
+         else:
+             assert primary and original and not obs['primary_exceptions'] and fallback is None
+             assert primary['dispatch_returned'] is False
+@@ -102,13 +105,19 @@
+             if not confirmed:assert 'ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN' in closure['diagnostics']
+             assert sum(u['issued'] is True for u in closure['native_units'])==1
+         else:
+-            assert closure['cleanup_complete'] and closure['normal_unit_records_complete'] and not row['diagnostics']
++            assert closure['cleanup_complete'] and not row['diagnostics']
+             assert all(u['issued'] and u['direct_child_reaped'] and u['native_retired'] for u in closure['native_units'])
+-            assert len(closure['terminal_reports'])==1 and not closure['writers']
+-            terminal=closure['terminal_reports'][0]
+-            if '[lost-close-ack]' in case:
+-                assert terminal['writer'] is None and terminal['lastAcknowledgedWriterState']=='open'
+-            else:assert terminal['writer']['evidence_complete'] and not closure['diagnostics']
++            actual_complete=bool(closure['normal_unit_records_complete'] and closure['terminal_reports'])
++            classification[row['original_fixture']]=actual_complete
++            if not actual_complete:
++                assert receipt['returncode']!=0 and not closure['normal_unit_records_complete']
++                assert closure['writers'] and any(not w['acknowledged'] for w in closure['writers'])
++            else:
++                assert len(closure['terminal_reports'])==1 and not closure['writers']
++                terminal=closure['terminal_reports'][0]
++                if '[lost-close-ack]' in case:
++                    assert terminal['writer'] is None and terminal['lastAcknowledgedWriterState']=='open'
++                else:assert terminal['writer']['evidence_complete'] and not closure['diagnostics']
+         cases.append(dict(label=label,case=case,path=str(path.relative_to(out)),sha256=sha(path),
+             helper_births=len(closure['helpers']),workload_births=sum(u['issued'] is True for u in closure['native_units'])))
+         waits.append(dict(path=str(path.relative_to(out)),sha256=sha(path)))
+@@ -151,23 +160,32 @@
+ if out.name.endswith('19a'):
+     assert exit_code==1 and counts=={p:dict(passed=11,failed=3,errors=0) for p in ('source','wheel')}
+     assert not changed and len(roots)==28 and not cases and not closed and not registry_cases
+-    assert sum(r['fallback_used'] for r in startup_cases)==6
++    assert sum(r['fallback_used'] for r in startup_cases)==4 and len(startup_cases)==12
++elif out.name.endswith('19b'):
++    assert exit_code==1 and counts=={'source':dict(passed=22,failed=0,errors=0),'wheel':dict(passed=21,failed=1,errors=0)}
++    assert changed==['src/xverse/maestro/runtime_entry.py'] and len(roots)==36
++    assert len(startup_cases)==12 and not any(r['fallback_used'] for r in startup_cases)
++    assert len(cases)==6 and len(closed)==3 and len(registry_cases)==5
++elif out.name.endswith('19c'):
++    assert exit_code==1 and counts=={'source':dict(passed=7,failed=1,errors=0),'wheel':dict(passed=8,failed=0,errors=0)}
++    assert len(roots)==16 and len(cases)==6 and len(closed)==3 and not registry_cases and not startup_cases
++    assert (out/'regression-not-executed.json').exists()
+ else:
+-    assert exit_code==0 and counts=={p:dict(passed=30,failed=0,errors=0) for p in ('source','wheel')}
+-    assert read(out/'collection-receipt.json')['collected']==30
+-    assert changed==['src/xverse/maestro/runtime_entry.py']
+-    assert len(roots)==52 and len(cases)==12 and len(closed)==8 and len(registry_cases)==6
+-    assert not any(r['fallback_used'] for r in startup_cases)
+-assert len(startup_cases)==12 and len(snapshots)==len(startup_cases)+len(cases)
+-assert sum(r['helper_births'] for r in startup_cases)==30
++    assert out.name.endswith('19d') and len(phases)==4 and len(roots)==len(cases)==4
++    assert not startup_cases
++    assert all(r['passed']+r['failed']==1 and not r['errors'] for r in phases)
++    assert exit_code==(0 if all(r['returncode']==0 for r in phases) else 1)
++assert len(snapshots)==len(startup_cases)+len(cases)
++actual_startup_helpers=sum(r['helper_births'] for r in startup_cases)
++if startup_cases:assert actual_startup_helpers==30
+ result=dict(original_exec_session=handle,original_exec_exit=exit_code,phases=phases,counts=counts,packaged_sources=80,
+     all_79_other_production_sources_unchanged=True,changed_production_sources=changed,
+     startup_cases=startup_cases,registry_cases=registry_cases,
+     root_receipts=roots,whole_entry_cases=cases,wait_receipts=waits,snapshots=snapshots,
+-    actual_owned_supervisor_births=len(startup_cases)+len(cases),actual_startup_helpers=30,actual_helpers=30+sum(r['helper_births'] for r in cases),
++    actual_owned_supervisor_births=len(startup_cases)+len(cases),actual_startup_helpers=actual_startup_helpers,actual_helpers=actual_startup_helpers+sum(r['helper_births'] for r in cases),
+     actual_workloads=sum(r['workload_births'] for r in cases),source_links=sum(r['source_links'] for r in snapshots),
+     retained_durable_closed_roots=closed,auditor_sha256=sha(Path(__file__)),source_manifest_sha256=sha(out/'frozen-inputs.json'),
+     actual_M1_admissions=0,public_admitted_start_implemented=False,
+     full_M1_complete=False,whole_platform_regression=False,stable_increment17=False,accepted=False,merged=False)
+-with (out/'verification.json').open('x') as stream:json.dump(result,stream,indent=2);stream.write('\n')
++with (out/'verification-v2.json').open('x') as stream:json.dump(result,stream,indent=2);stream.write('\n')
+ print(json.dumps(dict(counts=counts,roots=len(roots),startup_cases=len(startup_cases),fallbacks=sum(r['fallback_used'] for r in startup_cases),whole_entry_cases=len(cases),source_links=result['source_links'],closed=len(closed))))

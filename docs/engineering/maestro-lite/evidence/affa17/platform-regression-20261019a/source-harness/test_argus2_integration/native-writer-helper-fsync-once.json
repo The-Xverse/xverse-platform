@@ -1,0 +1,39 @@
+{
+  "mode": "fsync-once",
+  "expected_public_states": [
+    "abort-completed",
+    "failed",
+    "failed",
+    "usable",
+    true,
+    true,
+    "W-01"
+  ],
+  "command": [
+    "cc",
+    "-DRUN_BOOTSTRAP",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "/tmp/pytest-of-jefferson/pytest-1200/test_actual_native_writer_fail0/owned-writer-stage-helper/bootstrap.c",
+    "-lcrypto",
+    "-o",
+    "/tmp/pytest-of-jefferson/pytest-1200/test_actual_native_writer_fail0/owned-writer-stage-helper/run-bootstrap"
+  ],
+  "returncode": 0,
+  "original_native_source_sha256": "21c2f70f6fbb1dec66fca39c9a44e4086f4496d46d30f28671ecd31f007cc38b",
+  "fixed_fault_code": "import os,json\nfrom xverse.argus import recovery,writer as module\nfrom xverse.argus.writer import EvidenceRun\nfrom xverse.maestro import persistence_worker\nmode='fsync-once'\nfd=os.open('/tmp/pytest-of-jefferson/pytest-1200/test_actual_native_writer_fail0/original-writer-faults.jsonl',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)\nphase=None\nwriter=None\nfaults=0\ndef log(operation,result):\n    os.write(fd,(json.dumps(dict(operation=operation,result=result,phase=phase,\n        writer_state=writer.writer_state if writer is not None else None))+'\\n').encode())\nfinalize=EvidenceRun.finalize\nflush=EvidenceRun.flush_buffer\nabort=EvidenceRun.abort\nfsync=os.fsync\nreplace=os.replace\nrecover=recovery.recover_stream\ncheck_artifact=module.verify_index_entry\ndef failure(operation):\n    global faults\n    faults+=1;log(operation,'injected-error');raise OSError('owned exact writer failure')\ndef sync(*args,**kwargs):\n    if (phase=='finalize' and mode in ('fsync-once','fsync-persistent','abort-entry')\n        and (faults==0 or mode=='fsync-persistent')):\n        failure('os.fsync')\n    if phase=='flush' and mode=='fsync-persistent':failure('os.fsync')\n    return fsync(*args,**kwargs)\ndef publication(*args,**kwargs):\n    if phase=='finalize' and mode=='manifest-replace':failure('os.replace')\n    return replace(*args,**kwargs)\ndef recover_run(*args,**kwargs):\n    if phase=='finalize' and mode=='recovery':failure('recover_stream')\n    return recover(*args,**kwargs)\ndef artifact(*args,**kwargs):\n    if phase=='finalize' and mode=='artifact-check':failure('verify_index_entry')\n    return check_artifact(*args,**kwargs)\ndef final(self,*args,**kwargs):\n    global phase,writer\n    writer=self;phase='finalize';log('finalize','entered')\n    try:\n        result=finalize(self,*args,**kwargs);log('finalize','returned');return result\n    except BaseException:\n        log('finalize','raised');raise\n    finally:phase=None\ndef flushed(self,*args,**kwargs):\n    global phase,writer\n    # A finalize's own public flush retains finalize context; the later fresh\n    # policy flush is distinct. Ordinary productive flushes are untouched.\n    if phase=='finalize':return flush(self,*args,**kwargs)\n    if writer is not self:return flush(self,*args,**kwargs)\n    phase='flush';log('flush_buffer','entered')\n    try:\n        result=flush(self,*args,**kwargs);log('flush_buffer','returned');return result\n    except BaseException:\n        log('flush_buffer','raised');raise\n    finally:phase=None\ndef aborted(self,*args,**kwargs):\n    global phase\n    phase='abort';log('abort','entered')\n    try:\n        if mode=='abort-entry':failure('abort-entry')\n        result=abort(self,*args,**kwargs);log('abort','returned');return result\n    except BaseException:\n        log('abort','raised');raise\n    finally:phase=None\nos.fsync=sync\nos.replace=publication\nrecovery.recover_stream=recover_run\nmodule.verify_index_entry=artifact\nEvidenceRun.finalize=final\nEvidenceRun.flush_buffer=flushed\nEvidenceRun.abort=aborted\nstatus=persistence_worker.main()\nos.close(fd)\nos._exit(status)\n",
+  "fixed_fault_code_sha256": "ef91fe9374d3dfb50471377179abd5a6c5ef2b3f44093a3d510f9f0eafcfcc4d",
+  "compiled_source_sha256": "5d93456f4f31003de7555c8ed49f341a16227a088391d19aa9e87c44ea5698e6",
+  "binary_sha256": "7f2659585969b727df2860c65e9551acf73e419bf7d9a137600d89d5905afc5a",
+  "original_fixture": "/tmp/pytest-of-jefferson/pytest-1200/test_actual_native_writer_fail0",
+  "trace_file": "/tmp/pytest-of-jefferson/pytest-1200/test_actual_native_writer_fail0/original-writer-faults.jsonl",
+  "source_sha256": "686d6aa0ccf39d172563749b96e0ac06f3e2cac24a988f4e37fd3bf8c205eb19",
+  "production_fault_mode_added": false,
+  "admission_precedes_birth": true,
+  "private_stream_access": false
+}

@@ -1,0 +1,935 @@
+.E.E.E.E.E.E.E....                                                       [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_actual_role5_channel_inherits_no_productive_capabilities _
+
+environment = (<function environment.<locals>.factory at 0x74bce8bd59e0>, <function environment.<locals>.spawn at 0x74bce8bd5a80>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_actual_role5_channel_inhe0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce8bf1e80>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_actual_controller_death_preserves_original_storage_authority_and_workloads _
+
+environment = (<function environment.<locals>.factory at 0x74bce8ac0e00>, <function environment.<locals>.spawn at 0x74bce8ac0ea0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_actual_controller_death_p0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce8874050>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_actual_replacement_reconciles_original_handles_and_new_probes[False] _
+
+environment = (<function environment.<locals>.factory at 0x74bce8ac2160>, <function environment.<locals>.spawn at 0x74bce8ac2200>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_actual_replacement_reconc0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce8875bd0>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_actual_replacement_reconciles_original_handles_and_new_probes[True] _
+
+environment = (<function environment.<locals>.factory at 0x74bce87a8a40>, <function environment.<locals>.spawn at 0x74bce87a8ae0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_actual_replacement_reconc1')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce8923490>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect _
+
+environment = (<function environment.<locals>.factory at 0x74bce8bd5c60>, <function environment.<locals>.spawn at 0x74bce9a696c0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_controller_admission_reje0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce8937820>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_missing_durable_mirror_does_not_reconcile_controller _
+
+environment = (<function environment.<locals>.factory at 0x74bce87a8180>, <function environment.<locals>.spawn at 0x74bce87a8360>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_missing_durable_mirror_do0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce9a828d0>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+_ ERROR at teardown of test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired _
+
+environment = (<function environment.<locals>.factory at 0x74bce87aac00>, <function environment.<locals>.spawn at 0x74bce87aaca0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/bound-gat..., 'workload': PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/maestro-affa17-controller-v4-source-private-v74id13y/test_stopped_controller_reques0')
+
+    @pytest.fixture
+    def broker_stack(
+        environment, binaries, authority_binary, run_bootstrap_binary, tmp_path
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=45, run_id="fixture-run")
+        config, pin, work = configured(
+            tmp_path, manager, dict(binaries, launcher=authority_binary)
+        )
+        images = tuple(
+            seal_helper_image(
+                p,
+                digest="sha256:" + digest(p.read_bytes()).hex(),
+                argv0=sys.executable if p == Path(sys.executable).resolve() else str(p),
+            )
+            for p in (
+                binaries["launcher"],
+                binaries["bound-gate"],
+                Path(sys.executable).resolve(),
+                authority_binary,
+            )
+        )
+        admission = BootstrapAdmission(
+            "fixture-run",
+            config.prepared.lifecycle_digest,
+            "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(),
+            "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline,
+            deadline(4.8),
+            images[:3],
+            images[3],
+            manager._root_fd,
+        )
+        boot = encode_bootstrap(admission)
+        private = sealed_bootstrap_fd(boot)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen(
+            [str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(
+                peer.fileno(),
+                private,
+                manager._root_fd,
+                *(i.descriptor for i in images),
+            ),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+        peer.close()
+        os.close(private)
+        session = storage = broker = None
+    
+        def boundary(name, unit):
+            descriptor = BoundaryDescriptor("fixture-run", unit, 1, name, 0)
+            manager.create_frozen(descriptor)
+            return descriptor
+    
+        try:
+            session = BootstrapSession(
+                process, channel, boot, manager, latch, deadline=deadline(2)
+            )
+            storage = session.persistence(
+                config, boundary("storage", "helper:storage"), deadline(2)
+            )
+            units = tuple(
+                UnitAdmission(
+                    boundary("unit-" + str(i), u.unit_id),
+                    (("MAESTRO_VISIBLE", "declared"),),
+                    3,
+                )
+                for i, u in enumerate(config.prepared.units)
+            )
+            helper = boundary("authority", "helper:authority")
+            broker = RunBroker.admit(session, storage, units, helper, deadline=deadline(2))
+            facade = ProcessReadiness(
+                broker.owner,
+                policies=tuple(
+                    ProbePolicy(u.unit_id, 2, 0.5, 0.5) for u in config.prepared.units
+                ),
+            )
+            yield broker, facade, storage, work
+        finally:
+            if broker:
+                broker.cancel("owned-broker-teardown")
+            if storage:
+                if not storage._failed and not storage._aborted:
+                    try:
+                        storage.abort(deadline(1))
+                    except (ValueError, OSError):
+                        storage._fail()
+                assert storage.drain(deadline(1)).worker_reaped
+            if session:
+                session.cancel("owned-broker-fixture-teardown")
+                result = session.drain(deadline(1.8))
+                assert result.supervisor_reaped and result.registered_children_reaped
+                assert not result.unacknowledged_births
+                if broker:
+                    broker.dispose()
+                for client in session._clients.values():
+>                   client.dispose()
+
+tests/thesis_lite/maestro/test_run_broker.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/controller.py:305: in dispose
+    self._holder()
+src/xverse/maestro/controller.py:158: in _holder
+    broker._holder()
+src/xverse/maestro/run_broker.py:422: in _holder
+    connection._holder()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.affa_client.AuthorityConnection object at 0x74bce9a82210>
+
+    def _holder(self):
+        super()._holder()
+        child, channel, config, raw, identity = self._pins
+        child._holder()
+>       actual = os.fstat(channel.fileno())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 9] Bad file descriptor
+
+src/xverse/maestro/affa_client.py:117: OSError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_controller.py::test_actual_role5_channel_inherits_no_productive_capabilities
+ERROR tests/thesis_lite/maestro/test_controller.py::test_actual_controller_death_preserves_original_storage_authority_and_workloads
+ERROR tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[False]
+ERROR tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[True]
+ERROR tests/thesis_lite/maestro/test_controller.py::test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect
+ERROR tests/thesis_lite/maestro/test_controller.py::test_missing_durable_mirror_does_not_reconcile_controller
+ERROR tests/thesis_lite/maestro/test_controller.py::test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired
+11 passed, 7 errors in 17.16s

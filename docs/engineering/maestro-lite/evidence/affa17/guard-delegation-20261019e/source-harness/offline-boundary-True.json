@@ -1,0 +1,27 @@
+{
+  "late_teardown": true,
+  "returncode": 0,
+  "stdout": "{\"complete\": true, \"modules\": [\"xverse.maestro.artifacts\", \"xverse.maestro.collection_evidence\", \"xverse.maestro.collection_plan\", \"xverse.maestro.coverage\", \"xverse.maestro.evidence_scope\", \"xverse.maestro.projection\", \"xverse.maestro.runtime_verification\", \"xverse.maestro.time\"], \"denied_modules\": [\"bootstrap\", \"child\", \"collection_runtime\", \"controller\", \"fence\", \"owner\", \"persistence\", \"prbc\", \"providers\", \"public_blobs\", \"run_broker\", \"supervisor\", \"terminal_runtime\"]}\n",
+  "stderr": "",
+  "command": [
+    "/tmp/maestro-lite-affa-guard-delegation-target-20261019d/bin/python",
+    "-c",
+    "\nimport importlib.abc,json,sys\nfrom pathlib import Path\nforbidden = {'persistence','owner','providers','bootstrap','run_broker','fence','prbc',\n             'supervisor','controller','collection_runtime','public_blobs','terminal_runtime','child'}\nclass DenyRuntime(importlib.abc.MetaPathFinder):\n    def find_spec(self,fullname,path=None,target=None):\n        if fullname.startswith('xverse.maestro.') and fullname.split('.')[2] in forbidden:\n            raise ImportError('Offline verifier imported runtime component: '+fullname)\nsys.meta_path.insert(0,DenyRuntime())\nfrom xverse.maestro.coverage import CoverageAdmission,canonical\nfrom xverse.maestro.collection_plan import decode_collection\nfrom xverse.maestro.runtime_verification import verify_runtime_closed\nbody=json.loads(Path(sys.argv[1]).read_bytes())\nad=CoverageAdmission(canonical(body['admission']))\nplan=decode_collection(body['collection'],ad,body['pins']['expected_admission_digest'])\nresult=verify_runtime_closed(ad,plan,Path(body['root']),**body['pins'])\nassert result.complete, result.diagnostics\nloaded=sorted(n for n in sys.modules if n.startswith('xverse.maestro.'))\nassert not any(n.split('.')[2] in forbidden for n in loaded)\nprint(json.dumps(dict(complete=result.complete,modules=loaded,denied_modules=sorted(forbidden))))\n",
+    "/tmp/maestro-guard-delegation-20261019e-source-private-9x1pqjy8/test_closed_verification_in_fr1/offline-inputs.json"
+  ],
+  "original_inputs": "/tmp/maestro-guard-delegation-20261019e-source-private-9x1pqjy8/test_closed_verification_in_fr1/offline-inputs.json",
+  "input_sha256": "81e4f0247ebdc884ee2674bf8734372f2d0283df54f4fcc0690d8e9d72e082c7",
+  "evidence_sha256": {
+    "broker-projection.json": "c3eb51d17e50d4674fb6735c1d2d46cd9bb4f429e7307befa9be486f32e6be54",
+    "retained-inputs.json": "148b45c3a416778d5dd31e806a49f33a92fc02cb2dd28d01ce7d1d85979843dd",
+    "manifest.json": "12e5e9c08f341c770c1856b04d7c72adb428c92d7fd02ac5248524d708f45e02",
+    "lifecycle-coverage.json": "3d739d554ae070fc9a784d82309e0074effad5e7a0c567d8699e77db6dd49ed8",
+    "synthetic-output.json": "a8198524f58e72b56283ab71ebddada22840f108b46ef7165bb3fca9919c5558",
+    "events.jsonl": "994494873b417b1d084616114b96f9b65de2e019a4752891621644c7e323ceea",
+    "collection.json": "6dfa239cf521a255f2f44ae66ad31473d3b2607ba93c1ff38c4ae0ebd8f84ef9"
+  },
+  "unchanged_evidence": true,
+  "source_sha256": "abe42f30bd9a7d74aebc3528f1a2b6e0e84d5c3699e12b7dfbfd504ffcd4e8ca",
+  "synthetic_facts": true,
+  "scientific_result": false
+}

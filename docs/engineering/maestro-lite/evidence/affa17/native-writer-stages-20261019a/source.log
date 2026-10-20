@@ -1,0 +1,144 @@
+.FFFFF..........                                                         [100%]
+=================================== FAILURES ===================================
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cc361b5130>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stages-20261019a-source-private-vhlsws05/test_actual_native_writer_fail1/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();w=facts['writer']
+        assert facts['diagnostic'] is None and facts['report']['eligible'],facts
+        assert w is not None,facts
+        assert w['before_state']=='open' and w['finalize_attempted'] and not w['finalize_completed']
+        assert (w['stage'],w['after_state'],w['durable_writer_state'],w['abort_usability'],
+                w['abort_attempted'],w['abort_completed'])==EXPECTED[mode][:6],w
+>       assert not w['evidence_complete'] and w['collection_verified'] and w['collection_complete'],w
+E       AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'open', ...}
+E       assert (not False and False)
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:150: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cc354c6f10>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stages-20261019a-source-private-vhlsws05/test_actual_native_writer_fail2/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();w=facts['writer']
+        assert facts['diagnostic'] is None and facts['report']['eligible'],facts
+        assert w is not None,facts
+        assert w['before_state']=='open' and w['finalize_attempted'] and not w['finalize_completed']
+        assert (w['stage'],w['after_state'],w['durable_writer_state'],w['abort_usability'],
+                w['abort_attempted'],w['abort_completed'])==EXPECTED[mode][:6],w
+>       assert not w['evidence_complete'] and w['collection_verified'] and w['collection_complete'],w
+E       AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'failed', ...}
+E       assert (not False and False)
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:150: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cc354c4f30>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stages-20261019a-source-private-vhlsws05/test_actual_native_writer_fail3/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();w=facts['writer']
+        assert facts['diagnostic'] is None and facts['report']['eligible'],facts
+        assert w is not None,facts
+        assert w['before_state']=='open' and w['finalize_attempted'] and not w['finalize_completed']
+        assert (w['stage'],w['after_state'],w['durable_writer_state'],w['abort_usability'],
+                w['abort_attempted'],w['abort_completed'])==EXPECTED[mode][:6],w
+>       assert not w['evidence_complete'] and w['collection_verified'] and w['collection_complete'],w
+E       AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'failed', ...}
+E       assert (not False and False)
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:150: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cc35091a50>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stages-20261019a-source-private-vhlsws05/test_actual_native_writer_fail4/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();w=facts['writer']
+        assert facts['diagnostic'] is None and facts['report']['eligible'],facts
+        assert w is not None,facts
+        assert w['before_state']=='open' and w['finalize_attempted'] and not w['finalize_completed']
+        assert (w['stage'],w['after_state'],w['durable_writer_state'],w['abort_usability'],
+                w['abort_attempted'],w['abort_completed'])==EXPECTED[mode][:6],w
+>       assert not w['evidence_complete'] and w['collection_verified'] and w['collection_complete'],w
+E       AssertionError: {'abort_attempted': False, 'abort_completed': False, 'abort_usability': 'unknown', 'after_state': 'failed', ...}
+E       assert (not False and False)
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:150: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cc35092b50>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stages-20261019a-source-private-vhlsws05/test_actual_native_writer_fail5/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+        assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+        assert result.terminal is not None,result.diagnostic
+        facts=result.terminal.public_data();w=facts['writer']
+        assert facts['diagnostic'] is None and facts['report']['eligible'],facts
+        assert w is not None,facts
+        assert w['before_state']=='open' and w['finalize_attempted'] and not w['finalize_completed']
+        assert (w['stage'],w['after_state'],w['durable_writer_state'],w['abort_usability'],
+                w['abort_attempted'],w['abort_completed'])==EXPECTED[mode][:6],w
+>       assert not w['evidence_complete'] and w['collection_verified'] and w['collection_complete'],w
+E       AssertionError: {'abort_attempted': True, 'abort_completed': False, 'abort_usability': 'usable', 'after_state': 'open', ...}
+E       assert (not False and False)
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:150: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry]
+5 failed, 11 passed in 40.38s

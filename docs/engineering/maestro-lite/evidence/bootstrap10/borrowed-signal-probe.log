@@ -1,0 +1,28 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_failure_signal_cannot_follow_borrowed_foreign_pidfd ___________
+
+boot_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x7262f1488c20>, <xverse.maestro.prbc.ProcessBoundaryOps object ...rson/pytest-866/test_failure_signal_cannot_fol0/work'), <function boot_stack.<locals>.boundary at 0x7262f17fefc0>, ...)
+environment = (<function environment.<locals>.factory at 0x7262f15db100>, <function environment.<locals>.spawn at 0x7262f15db060>, 12)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-866/boundary-native0/boundary-fixture')
+
+    def test_failure_signal_cannot_follow_borrowed_foreign_pidfd(boot_stack, environment, native):
+        session,manager,latch,config,work,boundary,start,clients,owners=boot_stack
+        owner,storage,*_=start()
+        _,spawn,_=environment
+        sentinel_descriptor=boundary('signal-sentinel')
+        sentinel,_,line=spawn(native,manager,sentinel_descriptor)
+        saved=os.dup(storage._pidfd)
+        foreign=os.pidfd_open(sentinel.pid,0)
+        try:
+            os.dup2(foreign,storage._pidfd)
+            with pytest.raises((ValueError,OSError)):
+                storage.commit_intent(config.prepared.units[1].unit_id,deadline(1))
+>           assert not select.select([foreign],[],[],0.2)[0], 'foreign sentinel was signalled'
+E           AssertionError: foreign sentinel was signalled
+E           assert not [42]
+
+/tmp/test_bootstrap_signal_probe.py:22: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../tmp/test_bootstrap_signal_probe.py::test_failure_signal_cannot_follow_borrowed_foreign_pidfd
+1 failed in 2.26s

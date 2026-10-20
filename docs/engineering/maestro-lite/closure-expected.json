@@ -1,0 +1,16 @@
+{
+  "revision": "ML3-CLOSURE15-2026-10-18-v1",
+  "authored_before_product_code": true,
+  "expected_cases": {
+    "normal": "all original unit/helper/root waits and all issued boundary releases; writer aborted/incomplete; lifecycle completeness false",
+    "partial": "birth inventory survives missing adapter; cleanup-only scope, no fabricated normal records",
+    "writer-flush-fault": "no abort when usability unproven; current public state and actual durable observation separated",
+    "writer-abort-fault": "state observed by actual public property, never inferred failed",
+    "writer-rpc-stall": "unknown actual writer state; retain last ACK; original cleanup remains independent",
+    "issuer-loss": "root/helper and C1 facts do not invent missing native leader wait",
+    "conflict": "normal lock conflict rejects before mutation; independent cancel does not wait",
+    "short-window": "same caller end; late/missing observations unresolved",
+    "repeat": "same original arguments return cached facts without mutation; changes reject"
+  },
+  "runtime_ready": false
+}

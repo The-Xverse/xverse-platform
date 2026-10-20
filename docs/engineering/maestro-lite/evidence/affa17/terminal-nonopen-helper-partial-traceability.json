@@ -1,0 +1,1163 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-19-nonopen-helper-partial",
+  "scope": "Additive partial original writer/helper composition; current expanded scope fails and full increment17 remains open",
+  "prior_component_trace": {
+    "path": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/terminal-runtime-partial-traceability.json",
+    "sha256": "85b8c7472bf7fdaed264369dc29fe104a873286301ae98b94c7804dc35f9041b"
+  },
+  "parent_trace": {
+    "path": "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/recovery16/traceability.json",
+    "sha256": "e1651cad4268c8dfc2d700bf7010a203b15e06984a133d4af181c9b0147a2809"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": [
+        {
+          "maturity": "partial_nonopen_and_helper_composition_with_failed_expanded_scope",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence_worker.py::main",
+              "line": 606,
+              "file_sha256": "30afc450bfb02c9879f53d8adfdb6014e577006817cfe4249a5dc00a90c4128e",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close",
+              "line": 160,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/terminal_runtime.py::_writer_ack",
+              "line": 214,
+              "file_sha256": "258a7622bd810fd16b3bd3bbf5c2c785a2495fbc94c2d28664bcd3d19f8c2abc",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run",
+              "line": 700,
+              "file_sha256": "491c858729a0881ad3212c02ca242e66984d933712c8c79b74f618aca363e0a2",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosureResult",
+              "line": 50,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_closure.py::RunClosure.close",
+              "line": 205,
+              "file_sha256": "76bf6936a3d7ce7120062c873c9646b69159793071536409761e3130c133bbf0",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt",
+              "line": 69,
+              "file_sha256": "2e0b1e04d90f1fa5fce20e6521216cce1630cca1a41c7a70f6b1b12a834f3d8d",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            },
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer",
+              "line": 20,
+              "file_sha256": "e63c98dedbe0edf2592f19e3aa71cbf488355aa1c02050befab428e0c337d9ec",
+              "frozen_manifest": "terminal-helper-20261019e/frozen-inputs.json"
+            }
+          ],
+          "verification": "terminal-helper-20261019e/verification.json",
+          "source_scope": {
+            "passed": 114,
+            "failed": 2
+          },
+          "wheel_scope": {
+            "passed": 109,
+            "failed": 7
+          },
+          "prior_nonopen_component": "terminal-nonopen-20261019c/verification.json",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "component_deltas": []
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/persistence_worker.py::main": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/terminal_runtime.py::WorkerTerminal.close": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/terminal_runtime.py::_writer_ack": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/dispatcher.py::FiniteDispatcher.run": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/run_closure.py::RunClosureResult": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/run_closure.py::RunClosure.close": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer": [
+      "ML-SR-009",
+      "ML-SR-011",
+      "ML-SR-013",
+      "ML-SR-016",
+      "ML-SR-017",
+      "ML-SR-018",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ]
+  },
+  "evidence": {
+    "path": "terminal-helper-20261019e/verification.json",
+    "sha256": "3f583087202503ab573ea57de36ad1ed4e37d5734f1f885ba38cc63a207bd5ca"
+  },
+  "prior_nonopen_evidence": {
+    "path": "terminal-nonopen-20261019c/verification.json",
+    "sha256": "be7063f5dff640c9dae36a3e8f5d043aedd58449d161734805c928adcada7f18"
+  },
+  "source_parent_semantics_validated": false,
+  "software_requirements_retained": 24,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "full_source_wheel_scope_passed": false,
+  "full_M1_complete": false,
+  "full_candidate_review_complete": false,
+  "all_seven_phase3_tasks_complete": false,
+  "U7_U8_complete": false,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false,
+  "canonical_note_edited": false,
+  "factory_run_created": false
+}

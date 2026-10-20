@@ -1,0 +1,285 @@
+.......................FFFFFFFFFFFF..............F.                      [100%]
+=================================== FAILURES ===================================
+____ test_selective_generation_advance_has_no_old_handle_or_release_ticket _____
+
+    def test_selective_generation_advance_has_no_old_handle_or_release_ticket():
+>       advance = AuthorityFrame(AuthorityKind.ADVANCE, 10, 123456790, SCOPE, 2, 3, 2,
+                                 ^^^^^^^^^^^^^^^^^^^^^
+                                 b"n" * 16, *DIGESTS)
+E       AttributeError: type object 'AuthorityKind' has no attribute 'ADVANCE'
+
+tests/thesis_lite/maestro/test_affa_protocol.py:104: AttributeError
+_______ test_sealed_configuration_matches_the_independent_native_offsets _______
+
+    def test_sealed_configuration_matches_the_independent_native_offsets():
+        expected = (
+            b"AC17" + struct.pack("!IQQQQ", 2, 10_000_000_000, 5_000_000_000, 3, 1)
+            + b"s" * 32 + b"c" * 32 + bytes(24)
+            + b"u" * 32 + b"i" * 32 + b"r" * 32
+            + struct.pack("!QQQQQQ", 29, 100, 29, 200, 1, 2) + bytes(16)
+        )
+>       assert len(expected) == 288 and config().encode() == expected
+                                        ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+________ test_malformed_original_config_is_not_an_admission[truncated] _________
+
+mode = 'truncated'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+__________ test_malformed_original_config_is_not_an_admission[suffix] __________
+
+mode = 'suffix'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+_________ test_malformed_original_config_is_not_an_admission[version] __________
+
+mode = 'version'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+_____ test_malformed_original_config_is_not_an_admission[reserved-header] ______
+
+mode = 'reserved-header'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+______ test_malformed_original_config_is_not_an_admission[reserved-unit] _______
+
+mode = 'reserved-unit'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+__________ test_malformed_original_config_is_not_an_admission[count] ___________
+
+mode = 'count'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+________ test_malformed_original_config_is_not_an_admission[zero-unit] _________
+
+mode = 'zero-unit'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+_________ test_malformed_original_config_is_not_an_admission[zero-cwd] _________
+
+mode = 'zero-cwd'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+_____ test_malformed_original_config_is_not_an_admission[zero-generation] ______
+
+mode = 'zero-generation'
+
+    @pytest.mark.parametrize("mode", ["truncated", "suffix", "version", "reserved-header", "reserved-unit", "count", "zero-unit", "zero-cwd", "zero-generation"])
+    def test_malformed_original_config_is_not_an_admission(mode):
+>       data = bytearray(config().encode())
+                         ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+__ test_original_unit_and_boundary_sets_are_unique_and_leave_cancel_capacity ___
+
+    def test_original_unit_and_boundary_sets_are_unique_and_leave_cancel_capacity():
+        with pytest.raises(ProtocolError):
+>           replace(config(), units=(unit(), unit()))
+                    ^^^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_affa_config.py:17: in config
+    return AuthorityConfig(10_000_000_000, 5_000_000_000, 3, b"s" * 32, b"c" * 32, (unit(),))
+                                                                                    ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+____________ test_generation_budget_is_explicit_and_jointly_bounded ____________
+
+    def test_generation_budget_is_explicit_and_jointly_bounded():
+        with pytest.raises(ProtocolError):
+>           replace(unit(), max_generation=0)
+                    ^^^^^^
+
+tests/thesis_lite/maestro/test_affa_config.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def unit():
+>       return AuthorityUnit(b"u" * 32, b"i" * 32, b"r" * 32, 29, 100, 29, 200, 1, 2)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: AuthorityUnit.__init__() takes 9 positional arguments but 10 were given
+
+tests/thesis_lite/maestro/test_affa_config.py:13: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_affa_protocol.py::test_selective_generation_advance_has_no_old_handle_or_release_ticket
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_sealed_configuration_matches_the_independent_native_offsets
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[truncated]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[suffix]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[version]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[reserved-header]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[reserved-unit]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[count]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[zero-unit]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[zero-cwd]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_malformed_original_config_is_not_an_admission[zero-generation]
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_original_unit_and_boundary_sets_are_unique_and_leave_cancel_capacity
+FAILED tests/thesis_lite/maestro/test_affa_config.py::test_generation_budget_is_explicit_and_jointly_bounded
+13 failed, 38 passed in 0.25s

@@ -1,0 +1,990 @@
+{
+  "schema_version": 1,
+  "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+  "parent_trace": {
+    "path": "runtime-disposal-partial-traceability.json",
+    "sha256": "d04629e3df3d1715b42c79a7d3d8cd14bf34e4f1dedcffedd3c830000cf3c4e7"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.admit",
+              "line": 285,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.dispose",
+              "line": 295,
+              "file_sha256": "857e8121c43ddd86e030e8f680f41d7340c3a34e5d26f26db5abdd1d5f616223",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        },
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+            "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership",
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_unrelated_sentinel"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose",
+              "line": 230,
+              "file_sha256": "2ef100f2fc95fbde3096310a0ee9c9dc706ecd5dcb636b1c6dbaf0fe541d2b8d",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": []
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "inherited_status": "pending",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [
+            {
+              "endpoint": "src/xverse/maestro/persistence.py::PersistenceClient.dispose",
+              "line": 1364,
+              "file_sha256": "c8ca7b5f4e4e546b1c696e9d3dbef8442fc8bd832f7218c0ef24b1649905c1b2",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            },
+            {
+              "endpoint": "src/xverse/maestro/run_broker.py::RunBroker.dispose",
+              "line": 922,
+              "file_sha256": "0a82b96ebab3f9e645711d7f8d28addf6cdd7d6a9c9b4908dd3361b30e71ef8c",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "maturity": "partial_original_wait_and_single_use_local_disposal",
+          "scope": "Local disposal after original helper waits,unchanged earlier failure facts,repeated broker/entry disposal and ambiguous close-error retention. No full teardown/normal-evidence/runtime-case claim.",
+          "code": [],
+          "tests": [
+            {
+              "endpoint": "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor",
+              "line": 22,
+              "file_sha256": "984409377a8dd94f3a5923440ffeeb8706427550c9bb07107547919d9f71d981",
+              "frozen_manifest": "runtime-disposal-20261019c/frozen-inputs.json"
+            }
+          ],
+          "evidence": [
+            {
+              "path": "runtime-disposal-20261019a/verification.json",
+              "sha256": "e9e5405a25567f8708ef71cb0b34bf090efa4353ab714438b9729e05717d6e8d"
+            },
+            {
+              "path": "runtime-disposal-20261019c/verification.json",
+              "sha256": "22ee74ea30500f1a84c79c1259450b0db17e843fe71cc338d0fc8e5de5eb0941"
+            }
+          ],
+          "full_requirement_closure": false
+        }
+      ]
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "inherited_status": "partial_implementation_candidate",
+      "full_requirement_closure": false,
+      "prior_component_dispositions": "inherit exact parent_trace; historical claims remain revision-bound",
+      "component_deltas": [
+        {
+          "revision": "ML3-AFFA17-2026-10-20-runtime-lane-v1",
+          "lane_cases": [
+            "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap"
+          ],
+          "evidence": "runtime-lane-20261020a/receipt.json",
+          "status": "process_lane_cases_exercised_in_component_harness",
+          "full_requirement_closure": false
+        }
+      ]
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "runtime_cases": {
+    "test_affa": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-011",
+        "ML-SR-012"
+      ],
+      "receipt_file": "runtime-actual-test_affa.json"
+    },
+    "test_trusted_launcher": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-012"
+      ],
+      "receipt_file": "runtime-actual-test_trusted_launcher.json"
+    },
+    "test_prbc": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_prbc.json"
+    },
+    "test_bounded_bootstrap": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-009",
+        "ML-SR-024"
+      ],
+      "receipt_file": "runtime-actual-test_bounded_bootstrap.json"
+    },
+    "test_atomic_release_cancel_stage": {
+      "module": "tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+      "requirements": [
+        "ML-SR-010",
+        "ML-SR-011"
+      ],
+      "receipt_file": "composed-authority-<fixture>.json"
+    },
+    "test_lease_loss": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-009",
+        "ML-SR-010"
+      ],
+      "receipt_file": "runtime-actual-test_lease_loss.json"
+    },
+    "test_pre_handle_crash_survival": {
+      "module": "tests/thesis_lite/maestro/test_composed_authority_interruptions.py",
+      "requirements": [
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "composed-authority-<fixture>.json"
+    },
+    "test_residual_membership": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-012",
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_residual_membership.json"
+    },
+    "test_unrelated_sentinel": {
+      "module": "tests/thesis_lite/maestro/test_runtime_actual.py",
+      "requirements": [
+        "ML-SR-013"
+      ],
+      "receipt_file": "runtime-actual-test_unrelated_sentinel.json"
+    }
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/persistence.py::PersistenceClient.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-022"
+    ],
+    "src/xverse/maestro/runtime_entry.py::_OriginalRuntimeRun.dispose": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-019",
+      "ML-SR-020"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_disposal.py::test_original_runtime_disposal_preserves_wait_facts_and_reused_descriptor": [
+      "ML-SR-011",
+      "ML-SR-012",
+      "ML-SR-013",
+      "ML-SR-019",
+      "ML-SR-020",
+      "ML-SR-022",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/run_broker.py::RunBroker.admit": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/bootstrap_launcher.py::OriginalBootstrapLauncher.dispose": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa": [
+      "ML-SR-010",
+      "ML-SR-011",
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_trusted_launcher": [
+      "ML-SR-010",
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc": [
+      "ML-SR-010",
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_bounded_bootstrap": [
+      "ML-SR-009",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss": [
+      "ML-SR-009",
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership": [
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_runtime_actual.py::test_unrelated_sentinel": [
+      "ML-SR-013"
+    ]
+  },
+  "evidence": [
+    {
+      "path": "runtime-lane-20261020a/receipt.json",
+      "sha256": "1985355134306cc08c9e24bda62591e6282296630402922417651b81e6f78e80"
+    },
+    {
+      "path": "runtime-lane-20261020a/configuration.json",
+      "sha256": "478a4a21fa4346e5f78695226965e27993eebe493cb4de9aae60dcbdbf426cca"
+    },
+    {
+      "path": "runtime-lane-20261020a/source.log",
+      "sha256": "81ed4183deb9668e25f20c69f643c3b609ff550da6daa76003a4cbc31d3003fb"
+    },
+    {
+      "path": "runtime-lane-20261020a/wheel.log",
+      "sha256": "5d57d7e9e4c246577deb0af5cf701ce0ae1b975ed23b00bb05507a6088d08bf5"
+    }
+  ],
+  "lane_documentation": {
+    "path": "docs/engineering/maestro-lite/runtime-lane.md",
+    "sha256": "42bda17c6f0a77b47b66adea468d486f0214fa8cb1d1cb346da2b103a7903b22"
+  },
+  "lane_module_sha256": "00abcd8db4dd7934d5f9938db744c2e0d7206ee2cdbb84335ed35797412cbbd9",
+  "composed_module_sha256": "c5c1d00758dbeefb8f0b68f078e7794f5984a27c7bbd03e1db11f0d8c217a00a",
+  "phase_results": {
+    "source": {
+      "returncode": 0,
+      "summary": "17 passed in 21.74s"
+    },
+    "wheel": {
+      "returncode": 0,
+      "summary": "17 passed in 21.58s"
+    }
+  },
+  "lane_receipts_expected": [
+    "runtime-actual-test_affa.json",
+    "runtime-actual-test_bounded_bootstrap.json",
+    "runtime-actual-test_lease_loss.json",
+    "runtime-actual-test_prbc.json",
+    "runtime-actual-test_residual_membership.json",
+    "runtime-actual-test_trusted_launcher.json",
+    "runtime-actual-test_unrelated_sentinel.json"
+  ],
+  "lane_receipts_present_per_phase": {
+    "source": [
+      "runtime-actual-test_affa.json",
+      "runtime-actual-test_bounded_bootstrap.json",
+      "runtime-actual-test_lease_loss.json",
+      "runtime-actual-test_prbc.json",
+      "runtime-actual-test_residual_membership.json",
+      "runtime-actual-test_trusted_launcher.json",
+      "runtime-actual-test_unrelated_sentinel.json"
+    ],
+    "wheel": [
+      "runtime-actual-test_affa.json",
+      "runtime-actual-test_bounded_bootstrap.json",
+      "runtime-actual-test_lease_loss.json",
+      "runtime-actual-test_prbc.json",
+      "runtime-actual-test_residual_membership.json",
+      "runtime-actual-test_trusted_launcher.json",
+      "runtime-actual-test_unrelated_sentinel.json"
+    ]
+  },
+  "all_lane_receipts_present": true,
+  "lane_passed_both_phases": true,
+  "source_parents_retained": 18,
+  "scenario_pairs_retained": 30,
+  "endpoint_obligations_retained": 90,
+  "full_runtime_cases_retained": 9,
+  "nine_identifiers_implemented": true,
+  "nine_identifiers_exercised_with_real_children": true,
+  "open_findings": [
+    135,
+    222,
+    286,
+    287,
+    318,
+    324,
+    330,
+    331,
+    332,
+    337,
+    338,
+    344,
+    345,
+    359,
+    364
+  ],
+  "authority_limits": {
+    "actual_M1_admissions": 0,
+    "full_runtime_cases_complete": false,
+    "full_increment17_complete": false,
+    "full_maestro_regression_passed": false,
+    "whole_platform_regression": false,
+    "stable_increment17": false,
+    "source_parent_semantics_validated": false,
+    "independent_complete_review": false,
+    "CAPA_effectiveness_demonstrated": false,
+    "accepted": false,
+    "merged": false,
+    "scientific_result": false,
+    "ir_ml3_04_activation_prerequisites_met": false,
+    "runtime_case_receipts_bound_into_admission": false,
+    "crash_point_matrices_complete": false
+  }
+}

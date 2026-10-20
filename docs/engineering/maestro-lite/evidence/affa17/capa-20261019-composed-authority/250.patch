@@ -1,0 +1,59 @@
+--- before/tests/thesis_lite/maestro/test_composed_authority_interruptions.py
++++ after/tests/thesis_lite/maestro/test_composed_authority_interruptions.py
+@@ -34,6 +34,19 @@
+         with path.open('x') as stream:
+             json.dump(data, stream, indent=2)
+             stream.write('\n')
++
++
++def read_owned(directory, name):
++    """Observation through retained fd, not certified frozen-membership evidence."""
++    fd = os.open(name, os.O_RDONLY, dir_fd=directory)
++    try:
++        return os.read(fd, 4096)
++    finally:
++        os.close(fd)
++
++
++def observed_members(directory):
++    return tuple(sorted(map(int, read_owned(directory, 'cgroup.procs').split())))
+ 
+ 
+ @pytest.fixture(scope='module')
+@@ -69,14 +82,10 @@
+ 
+     def observe():
+         assert not latch.cancelled and worker.poll() is None
+-        assert manager.residual_membership(descriptor) == members
++        assert observed_members(entry.fd) == members
+         current = os.fstat(entry.fd)
+         assert (current.st_dev, current.st_ino) == (identity.st_dev, identity.st_ino)
+-        fd = os.open('cgroup.freeze', os.O_RDONLY, dir_fd=entry.fd)
+-        try:
+-            assert os.read(fd, 16).strip() == b'0'
+-        finally:
+-            os.close(fd)
++        assert read_owned(entry.fd, 'cgroup.freeze').strip() == b'0'
+         while select.select([pipe], [], [], 0)[0]:
+             assert os.read(pipe, 4096).strip(b'S') == b''
+         began = time.monotonic()
+@@ -85,7 +94,8 @@
+         assert data and data.strip(b'S') == b''
+         return dict(boundary_identity=[identity.st_dev, identity.st_ino], members=list(members),
+             fresh_heartbeat_began=began, fresh_heartbeat_observed=time.monotonic(),
+-            parent_alive=True, unfrozen=True, cancellation_latch=False)
++            parent_alive=True, unfrozen=True, cancellation_latch=False,
++            membership_observation_only=True)
+ 
+     try:
+         yield observe
+@@ -187,7 +197,8 @@
+             wait_for(lambda: len(manager.residual_membership(descriptor)) == 1)
+         if window.startswith('release-') and window != 'release-before-send':
+             wait_for(lambda: len(list(work.glob('*.marker'))) == 1)
+-        observations.update(at_barrier=time.monotonic(), members=list(manager.residual_membership(descriptor)),
++        observations.update(at_barrier=time.monotonic(),
++            members=list(observed_members(manager._entries[descriptor.key].fd)),
+             marker_names=sorted(p.name for p in work.glob('*.marker')),
+             issued_receipts=len(client._issued_receipts), host_handle_retained=issuer._handle is not None)
+         if fault == 'cancel':

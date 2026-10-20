@@ -1,0 +1,459 @@
+EEEEE                                                                    [100%]
+==================================== ERRORS ====================================
+______ ERROR at setup of test_original_parent_birth_without_runtime_popen ______
+
+environment = (<function environment.<locals>.factory at 0x712699ca4b80>, <function environment.<locals>.spawn at 0x712699ca4ae0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-972/test_original_parent_birth_wit0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+>           session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:475: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x712699d6bb60>
+until = 935365836576333
+
+    def _receive(self, until, *, cleanup=False):
+        while True:
+            self._holder() if cleanup else self._live()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise BootstrapError("ML-BOOT-TIMEOUT")
+            if not select.select([self.channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+                data, anc, flags, _ = self.channel.recvmsg(
+                    129,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+            except BlockingIOError:
+                continue
+            received, credentials = [], []
+            valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(
+                        payload[: len(payload) - len(payload) % values.itemsize]
+                    )
+                    received.extend(values)
+                elif (
+                    level == socket.SOL_SOCKET
+                    and kind == socket.SCM_CREDENTIALS
+                    and len(payload) == 12
+                ):
+                    credentials.append(struct.unpack("3i", payload))
+                else:
+                    valid = False
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._pid_pin, os.getuid(), os.getgid())]
+                    or not data
+                ):
+>                   raise BootstrapError("ML-BOOT-SENDER")
+E                   xverse.maestro.bootstrap.BootstrapError: ML-BOOT-SENDER
+
+src/xverse/maestro/bootstrap.py:600: BootstrapError
+_ ERROR at setup of test_stopped_authority_cannot_thaw_after_watchdog_cleanup __
+
+environment = (<function environment.<locals>.factory at 0x712699ca45e0>, <function environment.<locals>.spawn at 0x712699ca4a40>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-972/test_stopped_authority_cannot_0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+>           session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:475: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x712699c17390>
+until = 935365933838553
+
+    def _receive(self, until, *, cleanup=False):
+        while True:
+            self._holder() if cleanup else self._live()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise BootstrapError("ML-BOOT-TIMEOUT")
+            if not select.select([self.channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+                data, anc, flags, _ = self.channel.recvmsg(
+                    129,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+            except BlockingIOError:
+                continue
+            received, credentials = [], []
+            valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(
+                        payload[: len(payload) - len(payload) % values.itemsize]
+                    )
+                    received.extend(values)
+                elif (
+                    level == socket.SOL_SOCKET
+                    and kind == socket.SCM_CREDENTIALS
+                    and len(payload) == 12
+                ):
+                    credentials.append(struct.unpack("3i", payload))
+                else:
+                    valid = False
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._pid_pin, os.getuid(), os.getgid())]
+                    or not data
+                ):
+>                   raise BootstrapError("ML-BOOT-SENDER")
+E                   xverse.maestro.bootstrap.BootstrapError: ML-BOOT-SENDER
+
+src/xverse/maestro/bootstrap.py:600: BootstrapError
+____ ERROR at setup of test_authority_death_triggers_watchdog_before_lease _____
+
+environment = (<function environment.<locals>.factory at 0x712699ca6d40>, <function environment.<locals>.spawn at 0x712699ca6f20>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-972/test_authority_death_triggers_0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+>           session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:475: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x712699d04410>
+until = 935366025059120
+
+    def _receive(self, until, *, cleanup=False):
+        while True:
+            self._holder() if cleanup else self._live()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise BootstrapError("ML-BOOT-TIMEOUT")
+            if not select.select([self.channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+                data, anc, flags, _ = self.channel.recvmsg(
+                    129,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+            except BlockingIOError:
+                continue
+            received, credentials = [], []
+            valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(
+                        payload[: len(payload) - len(payload) % values.itemsize]
+                    )
+                    received.extend(values)
+                elif (
+                    level == socket.SOL_SOCKET
+                    and kind == socket.SCM_CREDENTIALS
+                    and len(payload) == 12
+                ):
+                    credentials.append(struct.unpack("3i", payload))
+                else:
+                    valid = False
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._pid_pin, os.getuid(), os.getgid())]
+                    or not data
+                ):
+>                   raise BootstrapError("ML-BOOT-SENDER")
+E                   xverse.maestro.bootstrap.BootstrapError: ML-BOOT-SENDER
+
+src/xverse/maestro/bootstrap.py:600: BootstrapError
+_____ ERROR at setup of test_unwatched_initial_scope_rejects_before_birth ______
+
+environment = (<function environment.<locals>.factory at 0x712699ca7380>, <function environment.<locals>.spawn at 0x712699ca6c00>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-972/test_unwatched_initial_scope_r0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+>           session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:475: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x712699d04cd0>
+until = 935366104628835
+
+    def _receive(self, until, *, cleanup=False):
+        while True:
+            self._holder() if cleanup else self._live()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise BootstrapError("ML-BOOT-TIMEOUT")
+            if not select.select([self.channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+                data, anc, flags, _ = self.channel.recvmsg(
+                    129,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+            except BlockingIOError:
+                continue
+            received, credentials = [], []
+            valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(
+                        payload[: len(payload) - len(payload) % values.itemsize]
+                    )
+                    received.extend(values)
+                elif (
+                    level == socket.SOL_SOCKET
+                    and kind == socket.SCM_CREDENTIALS
+                    and len(payload) == 12
+                ):
+                    credentials.append(struct.unpack("3i", payload))
+                else:
+                    valid = False
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._pid_pin, os.getuid(), os.getgid())]
+                    or not data
+                ):
+>                   raise BootstrapError("ML-BOOT-SENDER")
+E                   xverse.maestro.bootstrap.BootstrapError: ML-BOOT-SENDER
+
+src/xverse/maestro/bootstrap.py:600: BootstrapError
+____ ERROR at setup of test_duplicate_watch_rejects_without_native_mutation ____
+
+environment = (<function environment.<locals>.factory at 0x712699ca7880>, <function environment.<locals>.spawn at 0x712699ca6ca0>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-972/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-972/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-972/test_duplicate_watch_rejects_w0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+>           session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/bootstrap.py:475: in __init__
+    packet, fds = self._receive(self._until(deadline))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.bootstrap.BootstrapSession object at 0x712699d05310>
+until = 935366185922996
+
+    def _receive(self, until, *, cleanup=False):
+        while True:
+            self._holder() if cleanup else self._live()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise BootstrapError("ML-BOOT-TIMEOUT")
+            if not select.select([self.channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+                data, anc, flags, _ = self.channel.recvmsg(
+                    129,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+            except BlockingIOError:
+                continue
+            received, credentials = [], []
+            valid = not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
+            for level, kind, payload in anc:
+                if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                    values = array.array("i")
+                    values.frombytes(
+                        payload[: len(payload) - len(payload) % values.itemsize]
+                    )
+                    received.extend(values)
+                elif (
+                    level == socket.SOL_SOCKET
+                    and kind == socket.SCM_CREDENTIALS
+                    and len(payload) == 12
+                ):
+                    credentials.append(struct.unpack("3i", payload))
+                else:
+                    valid = False
+            try:
+                if (
+                    not valid
+                    or credentials != [(self._pid_pin, os.getuid(), os.getgid())]
+                    or not data
+                ):
+>                   raise BootstrapError("ML-BOOT-SENDER")
+E                   xverse.maestro.bootstrap.BootstrapError: ML-BOOT-SENDER
+
+src/xverse/maestro/bootstrap.py:600: BootstrapError
+=========================== short test summary info ============================
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_original_parent_birth_without_runtime_popen
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_authority_death_triggers_watchdog_before_lease
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_unwatched_initial_scope_rejects_before_birth
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_duplicate_watch_rejects_without_native_mutation
+5 errors in 2.02s

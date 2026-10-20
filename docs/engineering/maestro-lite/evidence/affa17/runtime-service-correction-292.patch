@@ -1,0 +1,52 @@
+--- original/src/xverse/maestro/runtime_service.py
++++ corrected/src/xverse/maestro/runtime_service.py
+@@ -216,7 +216,7 @@
+             return request.run
+         finally:self._lock.release()
+ 
+-    def _original(self,run_id):
++    def _submission_for(self,run_id):
+         self._holder()
+         if type(run_id) is not str:raise RuntimeServiceError('ML-RUNTIME-SERVICE-IDENTITY')
+         row=self._entries.get(run_id)
+@@ -225,7 +225,7 @@
+         return row[0]
+ 
+     def start(self,run_id,scope):
+-        request=self._original(run_id)
++        request=self._submission_for(run_id)
+         if request.run._scope is None:
+             if not self._lock.acquire(False):raise RuntimeServiceError('ML-RUNTIME-SERVICE-CONFLICT')
+             try:
+@@ -240,25 +240,25 @@
+         return self._registry_pin.stop(run_id,reason=reason)
+ 
+     def collect(self,run_id):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.collect(run_id)
+ 
+     def restart(self,run_id,unit_id,*,permit,generation,deadline):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.restart(run_id,unit_id,permit=permit,generation=generation,deadline=deadline)
+ 
+     def restart_many(self,run_id,requests,*,deadline):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.restart_many(run_id,requests,deadline=deadline)
+ 
+     def restart_result(self,run_id,ticket):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.restart_result(run_id,ticket)
+ 
+     def replace_controller(self,run_id,*,session_id,deadline):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.replace_controller(run_id,session_id=session_id,deadline=deadline)
+ 
+     def controller_recovery_result(self,run_id,ticket):
+-        self._original(run_id)
++        self._submission_for(run_id)
+         return self._registry.controller_recovery_result(run_id,ticket)

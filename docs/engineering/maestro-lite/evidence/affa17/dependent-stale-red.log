@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement _
+
+request = <FixtureRequest for <Function test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70921e6176f0>
+
+    def test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement(request, monkeypatch):
+        stack, controller, leaf, _ = ready(request, monkeypatch)
+        broker, facade, _, work = stack
+        source = broker.owner._prepared.resource_order[0]
+        release(controller, leaf)
+        fresh = advance(stack, controller, leaf)
+        before = FileEvidenceJournal(work.parent / 'm3.jsonl').records
+>       with pytest.raises(ValueError, match='DEPENDENTS'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_generation_dependents.py:44: Failed
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_generation_dependents.py::test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement
+1 failed in 3.51s

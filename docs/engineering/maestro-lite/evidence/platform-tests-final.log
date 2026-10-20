@@ -1,0 +1,113 @@
+................................................ [  7%]
+........................................................................ [ 19%]
+........................................................................ [ 30%]
+............................................................F........... [ 41%]
+........................................................................ [ 53%]
+........................................................................ [ 64%]
+.............FF......................................................... [ 76%]
+........................................................................ [ 87%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ................................................ [ 13%]
+E         ........................................................................ [ 34%]
+E         .................FF..................................................... [ 55%]
+E         ........................................................................ [ 76%]
+E         ........................................................................ [ 97%]
+E         .........                                                                [100%]
+E         =================================== FAILURES ===================================
+E         __________ test_early_stop_cannot_outlive_a_still_required_dependent ___________
+E         
+E             def test_early_stop_cannot_outlive_a_still_required_dependent():
+E                 docs = documents()
+E                 extra_step(docs, step_id="stop-source", phase="stop", at=2)
+E                 with pytest.raises(PreparationError, match="ML-TIME"):
+E                     prepared(docs, limits=Limits(horizon_ticks=10))
+E                 extra_step(docs, step_id="stop-sink", phase="stop", unit="sink-instance", at=1)
+E                 value = prepared(docs, limits=Limits(horizon_ticks=10))
+E         >       assert "stop-source" not in {
+E                     s.step_id for s in value.eligible_steps(2, ("start-source", "start-sink"))
+E                 }
+E         E       AssertionError: assert 'stop-source' not in {'stop-source'}
+E         
+E         tests/thesis_lite/maestro/test_preparation.py:306: AssertionError
+E         ____________ test_source_json_pointers_resolve_to_original_records _____________
+E         
+E             def test_source_json_pointers_resolve_to_original_records():
+E                 value = prepared()
+E                 docs = documents()
+E                 resources = {SYSTEM: docs["system.json"], SCENARIO: docs["scenario.json"]}
+E                 for edge in value.graph_edges:
+E                     if not edge.pointer:
+E                         continue
+E                     uri, pointer = edge.pointer.split("#", 1)
+E                     current = resources[uri]
+E                     for part in pointer.lstrip("/").split("/"):
+E         >               current = current[int(part)] if isinstance(current, list) else current[part]
+E                                                                                        ^^^^^^^^^^^^^
+E         E               KeyError: 'dependsOn'
+E         
+E         tests/thesis_lite/maestro/test_preparation.py:325: KeyError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_preparation.py::test_early_stop_cannot_outlive_a_still_required_dependent
+E         FAILED tests/thesis_lite/maestro/test_preparation.py::test_source_json_pointers_resolve_to_original_records
+E         2 failed, 343 passed, 24 subtests passed in 32.40s
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/maestro-lite-verify-20261018-v2/bin/python', '-m', 'pytest', '-q', '-p', 'no:cacheprovide...est_source_json_pointers_resolve_to_original_records\n2 failed, 343 passed, 24 subtests passed in 32.40s\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+__________ test_early_stop_cannot_outlive_a_still_required_dependent ___________
+
+    def test_early_stop_cannot_outlive_a_still_required_dependent():
+        docs = documents()
+        extra_step(docs, step_id="stop-source", phase="stop", at=2)
+        with pytest.raises(PreparationError, match="ML-TIME"):
+            prepared(docs, limits=Limits(horizon_ticks=10))
+        extra_step(docs, step_id="stop-sink", phase="stop", unit="sink-instance", at=1)
+        value = prepared(docs, limits=Limits(horizon_ticks=10))
+>       assert "stop-source" not in {
+            s.step_id for s in value.eligible_steps(2, ("start-source", "start-sink"))
+        }
+E       AssertionError: assert 'stop-source' not in {'stop-source'}
+
+tests/thesis_lite/maestro/test_preparation.py:306: AssertionError
+____________ test_source_json_pointers_resolve_to_original_records _____________
+
+    def test_source_json_pointers_resolve_to_original_records():
+        value = prepared()
+        docs = documents()
+        resources = {SYSTEM: docs["system.json"], SCENARIO: docs["scenario.json"]}
+        for edge in value.graph_edges:
+            if not edge.pointer:
+                continue
+            uri, pointer = edge.pointer.split("#", 1)
+            current = resources[uri]
+            for part in pointer.lstrip("/").split("/"):
+>               current = current[int(part)] if isinstance(current, list) else current[part]
+                                                                               ^^^^^^^^^^^^^
+E               KeyError: 'dependsOn'
+
+tests/thesis_lite/maestro/test_preparation.py:325: KeyError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_preparation.py::test_early_stop_cannot_outlive_a_still_required_dependent
+FAILED tests/thesis_lite/maestro/test_preparation.py::test_source_json_pointers_resolve_to_original_records
+3 failed, 626 passed, 24 subtests passed in 120.98s (0:02:00)

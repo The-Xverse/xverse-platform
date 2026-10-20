@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_native_stream_fault_preserves_public_writer_and_original_cleanup[loader-only] _
+
+request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[loader-only]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78dda64d6190>
+run_bootstrap_binary = PosixPath('/tmp/maestro-native-writer-stream-20261019b-loader-wheel-private-c7g8wxh7/test_native_stream_fault_prese0/owned-stream-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+    def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+        mode = request.node.callspec.params['run_bootstrap_binary']
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        result = closure = None
+        output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            with (Path(output) / ('stream-inputs-' + mode + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes), admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes), original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns, runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+>                   native_bootstrap_digest=broker.session.config.admission.native_digest,
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    bootstrap_configuration_sha256=hashlib.sha256(broker.session.config.private_bytes).hexdigest(),
+                    original_fixture=str(work.parent), fixture_source_sha256=sha(Path(__file__))), stream, indent=2)
+E               AttributeError: 'BootstrapAdmission' object has no attribute 'native_digest'
+
+tests/thesis_lite/maestro/test_native_writer_stream_faults.py:122: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[loader-only]
+1 failed, 3 deselected in 3.03s

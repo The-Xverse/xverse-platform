@@ -1,0 +1,827 @@
+.................FEFEFE.FEFEFEFE.                                        [100%]
+==================================== ERRORS ====================================
+__________ ERROR at teardown of test_real_cp03_empty_boundary_release __________
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79384681e250>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+_ ERROR at teardown of test_real_frozen_birth_force_cleanup_and_deleted_fd_fence _
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938467c8e50>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+_ ERROR at teardown of test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched _
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938467c9650>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+_ ERROR at teardown of test_cancel_during_allocation_retains_original_epoch_for_cleanup _
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79384678c5f0>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=8)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+_ ERROR at teardown of test_fields_copies_and_replacement_registry_do_not_grant_authority _
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x793846774e50>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+_ ERROR at teardown of test_failed_release_retains_identity_then_original_retry_succeeds _
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938466f8460>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+______ ERROR at teardown of test_missing_membership_is_unknown_not_empty _______
+
+    @pytest.fixture
+    def environment():
+        # Discovery selects a test parent; it never grants runtime ownership/recovery.
+        current = Path(
+            "/sys/fs/cgroup" + Path("/proc/self/cgroup").read_text().strip().split("::")[1]
+        )
+        root_name = "maestro-component-" + uuid.uuid4().hex
+        parent_fd = os.open(current, os.O_RDONLY | os.O_DIRECTORY)
+        os.mkdir(root_name, mode=0o700, dir_fd=parent_fd)
+        root_fd = os.open(root_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        monitors = []
+        workers = []
+        pipes = []
+    
+        def factory(*, seconds=4, reservation=True, epoch=0):
+            facts = BoundaryAdmission(
+                "run",
+                "supervisor",
+                "affa",
+                "bootstrap-approval",
+                "cleanup-approval",
+                "reservation-approval" if reservation else None,
+                HostDeadline("host-session", time.monotonic() + seconds),
+                epoch,
+            )
+            latch = CancellationLatch()
+            manager = ProcessBoundaryOps(root_fd, facts, latch)
+            monitors.append(manager)
+            return manager, latch
+    
+        def spawn(native, manager, descriptor, mode="single", retained_fd=None):
+            entry = manager._entries[descriptor.key]
+            cgfd = retained_fd if retained_fd is not None else entry.fd
+            read, write = os.pipe()
+            pipes.append(read)
+            try:
+                process = subprocess.Popen(
+                    [str(native), str(cgfd), str(write), mode],
+                    pass_fds=(cgfd, write),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            finally:
+                os.close(write)
+            workers.append(process)
+            assert select.select([process.stdout], [], [], 2)[0]
+            line = process.stdout.readline().strip()
+            return process, read, line
+    
+        yield factory, spawn, root_fd
+        # Runtime library failures remain unresolved. Harness cleanup is separate evidence.
+        for entry in list(os.scandir(root_fd)):
+            if entry.is_dir(follow_symlinks=False):
+                _remove_owned_tree(root_fd, entry.name)
+        for process in workers:
+            process.wait(timeout=3)
+            process.stdout.close()
+            process.stderr.close()
+        for fd in pipes:
+            os.close(fd)
+        for manager in monitors:
+            for entry in manager._entries.values():
+                if entry.fd >= 0:
+>                   manager.dispose_external_release(entry.descriptor)
+
+tests/thesis_lite/maestro/test_boundary.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938467a1f10>
+descriptor = BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0)
+
+    def dispose_external_release(self, descriptor: BoundaryDescriptor) -> None:
+        """Dispose local FD only after exact externally removed identity is observed.
+    
+        Never promotes the previous unresolved cleanup into an authorized success.
+        """
+        entry = self._entry(descriptor)
+        with self._lock:
+            if entry.fd >= 0:
+                info = os.fstat(entry.fd)
+                if (info.st_dev, info.st_ino) != entry.identity or info.st_nlink != 0:
+>                   raise BoundaryError("ML-OWNERSHIP-BOUNDARY-STILL-RETAINED")
+E                   xverse.maestro.prbc.BoundaryError: ML-OWNERSHIP-BOUNDARY-STILL-RETAINED
+
+src/xverse/maestro/prbc.py:539: BoundaryError
+=================================== FAILURES ===================================
+____________________ test_real_cp03_empty_boundary_release _____________________
+
+environment = (<function environment.<locals>.factory at 0x79384676f420>, <function environment.<locals>.spawn at 0x79384676fce0>, 12)
+
+    def test_real_cp03_empty_boundary_release(environment):
+        factory, _, _ = environment
+        manager, _ = factory()
+        record = manager.create_frozen(descriptor())
+        assert record.state == "frozen" and record.identity_retained
+        assert record.membership_complete and record.residual_count == 0
+        assert manager.residual_membership(descriptor()) == ()
+        with pytest.raises(FrozenInstanceError):
+            record.state = "released"
+        result = manager.force_cleanup(descriptor())
+>       assert result.boundary_released and not result.identity_retained
+E       AssertionError: assert (False)
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+
+tests/thesis_lite/maestro/test_boundary.py:187: AssertionError
+__________ test_real_frozen_birth_force_cleanup_and_deleted_fd_fence ___________
+
+environment = (<function environment.<locals>.factory at 0x7938467d9940>, <function environment.<locals>.spawn at 0x7938467d9b20>, 16)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-763/boundary-native0/boundary-fixture')
+
+    def test_real_frozen_birth_force_cleanup_and_deleted_fd_fence(environment, native):
+        factory, spawn, _ = environment
+        manager, _ = factory()
+        desc = descriptor()
+        manager.create_frozen(desc)
+        saved_fd = os.dup(manager._entries[desc.key].fd)
+        try:
+            worker, marker, line = spawn(native, manager, desc)
+            assert line.startswith("CHILD "), line
+            pid = int(line.split()[1])
+            assert not select.select([marker], [], [], 0.03)[0], "frozen child ran marker"
+            assert manager.residual_membership(desc) == (pid,)
+            result = manager.force_cleanup(desc)
+>           assert result.boundary_released and result.termination_observed
+E           AssertionError: assert (False)
+E            +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...lse, residual_count=0, termination_observed=True, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+
+tests/thesis_lite/maestro/test_boundary.py:208: AssertionError
+___ test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched ____
+
+environment = (<function environment.<locals>.factory at 0x7938467d9ee0>, <function environment.<locals>.spawn at 0x7938467da3e0>, 20)
+native = PosixPath('/tmp/pytest-of-jefferson/pytest-763/boundary-native0/boundary-fixture')
+
+    def test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched(
+        environment, native
+    ):
+        factory, spawn, _ = environment
+        manager, _ = factory()
+        desc, sentinel_desc = descriptor(), descriptor("sentinel")
+        manager.create_frozen(desc)
+        manager.create_frozen(sentinel_desc)
+        leader, marker, line = spawn(native, manager, desc, "descendant")
+        sentinel, sentinel_marker, sentinel_line = spawn(native, manager, sentinel_desc)
+        assert line.startswith("CHILD ") and sentinel_line.startswith("CHILD ")
+        leader_pid = int(line.split()[1])
+        # Test-only thaw exercises membership. This is not an admitted Release method.
+        _write(manager._entries[desc.key].fd, "cgroup.freeze", b"0")
+        assert select.select([marker], [], [], 2)[0]
+        first = os.read(marker, 1)
+        assert first == b"M"
+        assert select.select([marker], [], [], 2)[0]
+        assert os.read(marker, 1) == b"D"
+        leader.wait(timeout=2)  # fixture reaped its leader, descendant remains
+        manager._freeze(manager._entries[desc.key])
+        members = manager.residual_membership(desc)
+        assert len(members) == 1 and leader_pid not in members
+>       assert manager.force_cleanup(desc).boundary_released
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...lse, residual_count=0, termination_observed=True, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...lse, residual_count=0, termination_observed=True, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938467c9650>.force_cleanup
+
+tests/thesis_lite/maestro/test_boundary.py:240: AssertionError
+_______ test_cancel_during_allocation_retains_original_epoch_for_cleanup _______
+
+environment = (<function environment.<locals>.factory at 0x7938467daa20>, <function environment.<locals>.spawn at 0x7938467da840>, 25)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7938467d5480>
+
+    def test_cancel_during_allocation_retains_original_epoch_for_cleanup(
+        environment, monkeypatch
+    ):
+        factory, _, _ = environment
+        manager, latch = factory(epoch=8)
+        original = os.mkdir
+    
+        def late_allocation(*args, **kwargs):
+            original(*args, **kwargs)
+            latch.cancel("during-stage")
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(os, "mkdir", late_allocation)
+            with pytest.raises(BoundaryError, match="LATE-STAGE") as error:
+                manager.create_frozen(descriptor(epoch=8))
+        assert error.value.record.state == "partial"
+        assert error.value.record.descriptor.creation_epoch == 8
+        assert error.value.record.release_epoch == 9
+>       assert manager.force_cleanup(descriptor(epoch=8)).boundary_released
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=8))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x79384678c5f0>.force_cleanup
+E        +      and   BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=8) = descriptor(epoch=8)
+
+tests/thesis_lite/maestro/test_boundary.py:278: AssertionError
+______ test_fields_copies_and_replacement_registry_do_not_grant_authority ______
+
+environment = (<function environment.<locals>.factory at 0x7938467db240>, <function environment.<locals>.spawn at 0x7938467daf20>, 29)
+
+    def test_fields_copies_and_replacement_registry_do_not_grant_authority(environment):
+        factory, _, _ = environment
+        manager, _ = factory()
+        manager.create_frozen(descriptor())
+        replacement, _ = factory()
+>       for value in [copy.copy(manager), replacement]:
+                      ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_boundary.py:286: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:88: in copy
+    rv = reductor(4)
+         ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x793846774e50>
+protocol = 4
+
+    def __reduce_ex__(self, protocol: int):
+>       raise TypeError("original boundary registries cannot be serialized")
+E       TypeError: original boundary registries cannot be serialized
+
+src/xverse/maestro/prbc.py:243: TypeError
+______ test_failed_release_retains_identity_then_original_retry_succeeds _______
+
+environment = (<function environment.<locals>.factory at 0x7938467db7e0>, <function environment.<locals>.spawn at 0x7938467db920>, 34)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x793846737890>
+
+    def test_failed_release_retains_identity_then_original_retry_succeeds(
+        environment, monkeypatch
+    ):
+        factory, _, _ = environment
+        manager, _ = factory()
+        manager.create_frozen(descriptor())
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                os,
+                "rmdir",
+                lambda *args, **kwargs: (_ for _ in ()).throw(PermissionError()),
+            )
+            failed = manager.force_cleanup(descriptor())
+        assert failed.state == "unresolved" and failed.identity_retained
+>       assert manager.force_cleanup(descriptor()).boundary_released
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938466f8460>.force_cleanup
+E        +      and   BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0) = descriptor()
+
+tests/thesis_lite/maestro/test_boundary.py:312: AssertionError
+_________________ test_missing_membership_is_unknown_not_empty _________________
+
+environment = (<function environment.<locals>.factory at 0x7938467dafc0>, <function environment.<locals>.spawn at 0x7938467db560>, 38)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79384681d7b0>
+
+    def test_missing_membership_is_unknown_not_empty(environment, monkeypatch):
+        factory, _, _ = environment
+        manager, _ = factory()
+        manager.create_frozen(descriptor())
+        original = manager._read
+    
+        def unreadable(entry, name):
+            if name == "cgroup.procs":
+                raise PermissionError()
+            return original(entry, name)
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(manager, "_read", unreadable)
+            with pytest.raises(BoundaryError) as error:
+                manager.residual_membership(descriptor())
+        assert error.value.record.state == "unresolved"
+        assert not error.value.record.membership_complete
+>       assert manager.force_cleanup(descriptor()).boundary_released
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False).boundary_released
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', ...se, residual_count=0, termination_observed=False, diagnostic='ML-TEARDOWN-BOUNDARY-RELEASE', ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7938467a1f10>.force_cleanup
+E        +      and   BoundaryDescriptor(run_id='run', unit_id='unit', generation=0, boundary_id='boundary-unit', creation_epoch=0) = descriptor()
+
+tests/thesis_lite/maestro/test_boundary.py:332: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_cancel_during_allocation_retains_original_epoch_for_cleanup
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_failed_release_retains_identity_then_original_retry_succeeds
+FAILED tests/thesis_lite/maestro/test_boundary.py::test_missing_membership_is_unknown_not_empty
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_cancel_during_allocation_retains_original_epoch_for_cleanup
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_failed_release_retains_identity_then_original_retry_succeeds
+ERROR tests/thesis_lite/maestro/test_boundary.py::test_missing_membership_is_unknown_not_empty
+7 failed, 19 passed, 7 errors in 0.54s

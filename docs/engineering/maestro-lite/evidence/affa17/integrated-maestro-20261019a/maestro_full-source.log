@@ -1,0 +1,199 @@
+F....................................................................... [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+...........F............................................................ [ 33%]
+........................................................................ [ 38%]
+........................................................................ [ 43%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 57%]
+........................................................................ [ 62%]
+........................................................................ [ 67%]
+........................................................................ [ 72%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+........................................................................ [ 96%]
+.......................................................                  [100%]
+=================================== FAILURES ===================================
+____ test_original_control_rejection_keeps_unspent_authority[past-restart] _____
+
+request = <FixtureRequest for <Function test_original_control_rejection_keeps_unspent_authority[past-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7707ac8d0050>
+control = 'restart', mode = 'past'
+
+    @pytest.mark.parametrize('control', ['restart', 'recovery'])
+    @pytest.mark.parametrize('mode', ['past', 'foreign-session', 'beyond-active', 'expire-queued', 'cancel-queued'])
+    def test_original_control_rejection_keeps_unspent_authority(request, monkeypatch, control, mode):
+        stack, controller, driver = scheduled(request, monkeypatch, restarts=True,
+            transitive=True, controller_recovery=True)
+        broker, facade, client, work = stack
+        leaf = next(u for u in driver.prepared.resource_order if u.endswith('/terminal-instance'))
+        future = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        session = 'rejected-successor-' + mode
+        tickets, transitions, queue_facts, errors = [], [], [], []
+        result = closure = None
+        original_worker, original_authority = client.process, broker.connection.child
+        path = Path(os.environ['MAESTRO_BOUNDARY_RECEIPTS']) if os.environ.get('MAESTRO_BOUNDARY_RECEIPTS') else None
+        case = control + '-' + mode
+    
+        def frontier():
+            records = FileEvidenceJournal(work.parent / 'm3.jsonl').public_records()
+            return dict(storage_sequence=client._sequence, authority_sequence=broker.connection.sequence,
+                m3_sha256=hashlib.sha256(json.dumps(records, sort_keys=True).encode()).hexdigest(),
+                controller_sessions=[c.session_id for c in broker._controllers],
+                handles=[asdict(i._handle) if i._handle is not None else None for i in broker.issuers],
+                generations=sorted([list(k) for k in broker._generation_issuers]),
+                view_epoch=broker.owner._view_epoch,
+                stopped=sorted(driver.teardown._stopped), cleaned=sorted(driver.teardown._cleaned))
+    
+        def submit(end, *, late=False):
+            if control == 'restart':
+                context = next(c for c in client._future_contexts if c.binding.unit_id != leaf) if late else future
+                return driver.restart(client.run_id, context.binding.unit_id,
+                    permit=context.binding.permit, generation=2, deadline=end)
+            return driver.replace_controller(client.run_id,
+                session_id='late-successor' if late else session, deadline=end)
+    
+        def outcome(ticket):
+            return driver.restart_result(ticket) if control == 'restart' else driver.controller_recovery_result(ticket)
+    
+        def watch(method, pending):
+            original = getattr(driver, method)
+            def observed():
+                selected = bool(tickets) and getattr(driver, pending) is not None
+                before = frontier() if selected else None
+                try:
+                    return original()
+                finally:
+                    if selected:
+                        after = frontier()
+                        value = outcome(tickets[0])
+                        transitions.append(dict(method=method, before=before, after=after,
+                            outcome=asdict(value) if value else None, observed_at=time.monotonic()))
+                        assert before == after, 'rejected control performed an authority/resource effect'
+            monkeypatch.setattr(driver, method, observed)
+    
+        watch('_drain_restart' if control == 'restart' else '_drain_controller_recovery',
+              '_restart_pending' if control == 'restart' else '_recovery_pending')
+        watch('_close_restarts', '_restart_pending' if control == 'restart' else '_recovery_pending')
+        statement = driver._statement
+        submitted = False
+        def enqueue(kind, step, **kw):
+            nonlocal submitted
+            response = statement(kind, step, **kw)
+            if submitted or kind != 'step-complete' or step.step_id != 'observe-unrelated':
+                return response
+            submitted = True
+            now = time.monotonic()
+            end = HostDeadline(client.session, now + .2 if mode == 'expire-queued' else driver._active_end)
+            if mode == 'past':
+                end = HostDeadline(client.session, now - .01)
+            elif mode == 'foreign-session':
+                end = HostDeadline('foreign-control-clock', end.monotonic_seconds)
+            elif mode == 'beyond-active':
+                end = HostDeadline(client.session, driver._active_end + .01)
+            before = frontier()
+            if mode in ('past', 'foreign-session', 'beyond-active'):
+                with pytest.raises(ValueError) as failure:
+                    submit(end)
+                errors.append(str(failure.value))
+            else:
+                ticket = submit(end)
+                tickets.append(ticket)
+                assert outcome(ticket) is None
+                assert submit(end) is ticket
+                with pytest.raises(ValueError, match='ORIGINAL'):
+                    outcome(replace(ticket))
+            after = frontier()
+            assert before == after, 'queue/admission performed an authority/resource effect'
+            fact = dict(before=before, after=after, end=asdict(end), queued_at=now,
+                active_end=driver._active_end, work_end=driver._work_end)
+            if mode == 'expire-queued':
+                # Real host time passes; no fake clock or replacement authority/end.
+                select.select([], [], [], max(0, end.monotonic_seconds - time.monotonic()) + .002)
+                fact['expired_at'] = time.monotonic()
+                assert fact['expired_at'] >= end.monotonic_seconds
+            elif mode == 'cancel-queued':
+                failures = []
+                def cancel():
+                    try:
+                        driver.cancel('active-control-native-cancel')
+                    except BaseException as error:
+                        failures.append(error)
+                thread = threading.Thread(target=cancel)
+                thread.start()
+                thread.join(2)
+                assert not thread.is_alive() and not failures, failures
+                assert thread.ident != broker.owner._dispatch_thread and broker.owner.latch.cancelled
+                fact.update(cancel_thread=thread.ident, coordinator_thread=broker.owner._dispatch_thread,
+                    after_cancel=frontier(), cancelled_at=time.monotonic())
+            queue_facts.append(fact)
+            return response
+        monkeypatch.setattr(driver, '_statement', enqueue)
+        if path:
+            path.mkdir(parents=True, exist_ok=True)
+            with (path / ('control-deadline-inputs-' + case + '.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),
+                    admission_digest=client.coverage_digest, original_collection=json.loads(client.collection.canonical_bytes),
+                    original_schedule=json.loads(client.schedule.canonical_bytes), generation_ns=client.generation_ns,
+                    runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+                    original_fixture=str(work.parent), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()), stream, indent=2)
+                stream.write('\n')
+        try:
+            result = run(driver)
+>           assert submitted and len(queue_facts) == 1, result.diagnostic
+E           AssertionError: ML-PERSIST-TIMEOUT
+E           assert (False)
+
+tests/thesis_lite/maestro/test_active_control_deadlines.py:147: AssertionError
+_ test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader _
+
+request = <FixtureRequest for <Function test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7707acf24c90>
+
+    def test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader(request, monkeypatch):
+        from xverse.maestro.coverage import assess_preclosure
+        configure(monkeypatch, retained=True)
+        stack = request.getfixturevalue('broker_stack'); broker, facade, client, work = stack
+        start_and_stop(stack)
+>       receipt = client.collect_outputs(broker, deadline(2)); data = metadata(client, work, receipt)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_collection_runtime.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/persistence.py:1050: in collect_outputs
+    return collect_outputs(self, broker, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/collection_runtime.py:284: in collect_outputs
+    operation, until, response = client._rpc('collect', dict(action='finish'), operation_end())
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:796: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:409: in _receive
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=24, family=1, type=5, proto=0, laddr=b'\x00bd39b', raddr=b'\x0069067'>
+peer = (630402, 1000, 1000), until = 1022808197994349
+check = <function PersistenceClient._rpc.<locals>.check at 0x7707abe4de40>
+
+    def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
+        while True:
+            check()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+>               raise PersistenceError("ML-PERSIST-TIMEOUT")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-TIMEOUT
+
+src/xverse/maestro/persistence.py:369: PersistenceError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]
+FAILED tests/thesis_lite/maestro/test_collection_runtime.py::test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader
+2 failed, 1493 passed in 1310.39s (0:21:50)

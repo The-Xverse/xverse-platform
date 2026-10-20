@@ -1,0 +1,1903 @@
+{
+  "schema_version": 1,
+  "work_item": "ML3-OWNER7",
+  "maturity": "partial_U1_U2_U3_U4_U6_U7_candidate",
+  "baseline": "c2997c0f810d117cf45b2e34a4011b3ba7219494",
+  "author_instruction": "continue the implementation of X-Verse Lite spec with the needed functionalitis for my dissertation project",
+  "requirements_source": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/requirements.md",
+    "sha256": "2fae1c43214dacf0cfa46f8055167aeb6f9cb21334208dd3a15a6c22acbdf792"
+  },
+  "requirements": [
+    {
+      "id": "ML-SR-001",
+      "feature_parents": "FR-001",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/projection.py::prepare_lifecycle",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_digest_snapshot_is_immutable_and_repeatable",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_changed_plan_and_rehashed_forgery_both_reject",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_invalid_result_and_duplicate_resources_reject",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_pure_prepare_cannot_open_sink_launch_lock_or_read_ambient_clock",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-002",
+      "feature_parents": "FR-001, FR-012",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/projection.py::prepare_lifecycle",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        },
+        {
+          "endpoint": "src/xverse/maestro/projection.py::ProviderDescriptor",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_real_xdl_catalog_plans_and_combined_phase_edges",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_missing_ambiguous_or_wrong_environment_provider_rejects",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_ambiguous_actual_catalog_entry_rejects",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_duplicate_realization_rejects_before_graph_creation",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-003",
+      "feature_parents": "FR-002",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/projection.py::_project",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        },
+        {
+          "endpoint": "src/xverse/maestro/projection.py::_order",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        },
+        {
+          "endpoint": "src/xverse/maestro/projection.py::Unit",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        },
+        {
+          "endpoint": "src/xverse/maestro/projection.py::GraphEdge",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_real_xdl_catalog_plans_and_combined_phase_edges",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_combined_cycle_rejects_even_when_xdl_order_is_valid",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_missing_executable_flow_prerequisite_rejects",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_no_logical_node_is_launched_as_an_extra_unit",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_source_json_pointers_resolve_to_original_records",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-004",
+      "feature_parents": "FR-002",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/projection.py::PreparedLifecycle",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        },
+        {
+          "endpoint": "src/xverse/maestro/projection.py::_project",
+          "file_sha256": "614d45ab5ce0bea8fcdea4ebb7c185884ca306807cef55dfdbf192561574e593"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_implicit_start_precedes_observation_without_explicit_dependency",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_early_stop_cannot_outlive_a_still_required_dependent",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_static_eligibility_requires_flow_and_step_predecessor_completion",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_impossible_step_duration_and_dependency_window_reject",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_missing_start_step_rejects",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_unsupported_actions_do_not_reach_provider_or_graph",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-005",
+      "feature_parents": "FR-003",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/admission.py::validate_permits",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::PermitSession",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::_validate_one",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::_check_exclusions",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::permit_digest",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::_verify_prepared",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::commit_intent",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::public_start_intent",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_all_exact_m3_permits_validate_without_effects",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_surplus_scope_and_changed_m3_identity_reject",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_conflicting_unknown_and_duplicate_exclusions_reject",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_recognized_nonconflicting_exclusion_preserves_a_valid_fixture_permit",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_duplicate_unit_permit_id_or_nonce_rejects",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_changed_owner_approval_facts_reject",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_future_expired_permits_and_expired_approval_reject",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_boolean_approval_generation_and_mutable_scope_reject",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_expiry_of_already_used_start_permission_does_not_block_a_fresh_unit",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_first_claim_rechecks_all_initial_permits_at_the_actual_use_time",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_real_claim_flush_stage_and_credential_checked_release",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Trusted approval-owner provenance, actual run/store admission, bootstrap/force scope and provider launch binding remain pending."
+    },
+    {
+      "id": "ML-SR-006",
+      "feature_parents": "FR-003, FR-007",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/admission.py::claim_start_intent",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::claim_intent",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::_check_start_claim",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::_claim_store",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::_write_claim_marker",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::_check_unresolved_intents",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::revalidate_start_intent",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_durable_claims_recheck_at_use_and_do_not_issue_launch_authority",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_existing_intent_without_outcome_blocks_reopen_and_new_session",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_actual_two_process_claims_have_one_fsynced_winner",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_consumption_history_loss_or_replacement_never_resets_claims",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_partial_first_store_marker_blocks_without_consuming",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_post_intent_store_publication_failure_never_returns_a_success_receipt",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_fresh_permit_identities_do_not_adopt_an_unresolved_prior_scope",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_release_requires_live_original_claim_and_deadline",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_public_projection_is_genuine_redacted_and_detached",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Resource restart, prior confirmed release, generation coordination and full host/runtime guarantees remain pending."
+    },
+    {
+      "id": "ML-SR-007",
+      "feature_parents": "FR-004",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-008",
+      "feature_parents": "FR-004",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-009",
+      "feature_parents": "FR-005",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::WatchLimits",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::WorkerMonitor",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::watch",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::_watch",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::BoundaryLimits",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::_operation",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::GateConnection",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::release",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_deadline_kills_actual_blocked_worker_without_callback",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_kill_escalation_does_not_touch_sentinel",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_observation_error_closes_latch_without_signalling",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_delayed_observation_cannot_signal_after_final_deadline",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_long_original_lease_keeps_short_operation_budget",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_deadline_rechecked_after_identity_work",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_gate_ready_requires_actual_child_credentials_and_exact_packet",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_release_requires_live_original_claim_and_deadline",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Outer helper supervision, M1/AFFA and atomic supervisor-loss lease remain pending; userspace boundary budgets are not kernel leases."
+    },
+    {
+      "id": "ML-SR-010",
+      "feature_parents": "FR-005, FR-006",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::create_frozen",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::BoundaryDescriptor",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::main",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::receive",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::ticket_command",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::StageSupervisor",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::release",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_cancel_during_allocation_retains_original_epoch_for_cleanup",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_cancel_before_stage_allocates_nothing",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_renewal_is_absolute_and_acknowledged",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_queued_heartbeat_after_expiry_does_not_revive",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_duplicate_renewal_cannot_replay",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_killed_guard_is_not_a_fail_closed_fence",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_actual_release_then_cancel_runs_one_fixed_child",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_cancel_before_release_executes_no_workload",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_consumed_ticket_cannot_release_or_arm_again",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_ticket_ttl_not_extended_by_lease_renewal",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_real_claim_flush_stage_and_credential_checked_release",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_empty_frozen_boundary_is_not_a_stage_ack",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "No ordinary provider lease/handle, child insertion or Release ticket; full broker/launcher integration remains pending.",
+      "lease_guard_extent": "native freeze-only component; no C1 transfer, Release fence, original-owner survival or whole requirement closure",
+      "release_gate_extent": "local one-use unfreeze/Cancel ordering component; actual upstream ACK and full original-authority/kernel-stall integration pending"
+    },
+    {
+      "id": "ML-SR-011",
+      "feature_parents": "FR-006",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::CancellationLatch",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::cancel",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::_error",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::cancel",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::commit_intent",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::release",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_independent_cancel_does_not_wait_for_worker",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_latch_is_irreversible_and_idempotent",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_cancellation_at_exit_commit_is_not_success",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_unknown_membership_closes_new_stages",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_idempotent_stage_revalidation_failure_closes_starts",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_cancel_during_flush_does_not_wait_for_owner_lock",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_cancel_targets_original_latch_after_public_alias_replacement",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Only shared latch and Stage commitment component semantics; full run mutation serialization, AFFA and reverse teardown pending."
+    },
+    {
+      "id": "ML-SR-012",
+      "feature_parents": "FR-006, FR-007",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::ProcessBoundaryOps",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::_authority",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::_entry",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::BoundaryAdmission",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::initialize",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::freeze",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::_holder",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_forked_holder_cannot_use_original_c1",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_cp02_empty_reservation_is_not_c1",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_cp02_live_allocation_never_gains_force_or_freeze",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_lost_c1_cannot_fall_back_to_reservation",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_expired_original_authority_stays_unresolved",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_replaced_name_is_not_targeted",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_forked_sender_cannot_renew_inherited_channel",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_deleted_boundary_is_unresolved",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_passed_descriptors_are_closed_and_rejected",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_delayed_production_gate_cannot_thaw_after_exact_cleanup",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_forked_sender_cannot_release_original_ticket",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_bad_release_never_unfreezes",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_replaced_original_authority_cannot_release",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_generation_zero_session_is_not_runtime_release_authority",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Original private kernel-boundary registry only. Authenticated bootstrap/owner/run/store binding, ordinary handles, broker/issuer loss and full nine runtime cases pending.",
+      "lease_guard_extent": "native freeze-only component; no C1 transfer, Release fence, original-owner survival or whole requirement closure",
+      "release_gate_extent": "local one-use unfreeze/Cancel ordering component; actual upstream ACK and full original-authority/kernel-stall integration pending"
+    },
+    {
+      "id": "ML-SR-013",
+      "feature_parents": "FR-006, FR-010",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::force_cleanup",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::residual_membership",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::_removed",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::BoundaryRecord",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::freeze",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_failed_release_retains_identity_then_original_retry_succeeds",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_missing_membership_is_unknown_not_empty",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_live_boundary_prevents_early_descriptor_disposal",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_expiry_is_native_and_preserves_live_membership",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_cancel_or_control_loss_freezes",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_authority_expired_does_not_gain_late_freeze_right",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_actual_release_then_cancel_runs_one_fixed_child",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_delayed_production_gate_cannot_thaw_after_exact_cleanup",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Per-boundary factual cleanup only; whole-run reverse teardown/order and complete runtime/coverage proof remain pending.",
+      "lease_guard_extent": "native freeze-only component; no C1 transfer, Release fence, original-owner survival or whole requirement closure",
+      "release_gate_extent": "local one-use unfreeze/Cancel ordering component; actual upstream ACK and full original-authority/kernel-stall integration pending"
+    },
+    {
+      "id": "ML-SR-014",
+      "feature_parents": "FR-007",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-015",
+      "feature_parents": "FR-008",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/time.py::TickDomain",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/time.py::ClockContext",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/time.py::HostDeadline",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/time.py::advance_tick",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/time.py::compare_host_deadline",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/time.py::utc_elapsed",
+          "file_sha256": "f21f8732e1a66a05edbded0e03ffbcfac45ab3df38c3c57ae32a71d67949a8bf"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::_deadline",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_valid_zero_pause_progression_and_horizon",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_invalid_tick_values_reject_without_mutating_context",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_tick_domain_rejects_invalid_horizon",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_host_deadlines_are_session_qualified",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_utc_jump_and_simulation_pause_never_move_host_deadline",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_time.py::test_utc_numeric_values_are_finite",
+          "file_sha256": "7bdbb7f4ec9e0b6848bfdfaf9b3039233ea48e9acb2d4ca9c8a586f07c7ae82c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_release_requires_live_original_claim_and_deadline",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-016",
+      "feature_parents": "FR-009",
+      "status": "pending",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/owner.py::commit_intent",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::public_start_intent",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_real_claim_flush_stage_and_credential_checked_release",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_late_actual_flush_does_not_register_authority",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-017",
+      "feature_parents": "FR-009",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-018",
+      "feature_parents": "FR-009, FR-010",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-019",
+      "feature_parents": "FR-010",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/admission.py::PermitSession",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::claims_closed",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::claim_start_intent",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::commit_intent",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::cancel",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_consumption_read_failure_latches_the_original_session_closed",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_durability_failure_never_registers_start_authority",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_public_intent_projection_loss_closes_claims",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "The U2 claim latch closes on persistence/read failure. Actual supervisor cancellation, retained original C1 cleanup and Argus/journal failure coordination remain pending."
+    },
+    {
+      "id": "ML-SR-020",
+      "feature_parents": "FR-010",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-021",
+      "feature_parents": "FR-011",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-022",
+      "feature_parents": "FR-006, FR-011",
+      "status": "pending",
+      "code": [],
+      "verification": [],
+      "full_requirement_closure": false
+    },
+    {
+      "id": "ML-SR-023",
+      "feature_parents": "FR-012",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::FileEvidenceJournal",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse_xdl/lifecycle.py::append",
+          "file_sha256": "56912bae7d963aaf9ac5c012f35bf626767aa204ef7cab36848599253b8f2850"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::WorkerMonitor",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::ProcessBoundaryOps",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/owner.py::ReleaseObservation",
+          "file_sha256": "f7ae349d95bb1e1819a32b881deb0fbfe43c46330814422818528f59bd24d3ba"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_preparation.py::test_preparation_has_no_execution_facade_or_success_outcome",
+          "file_sha256": "be78c2522a97af358aad11a64f3ecbaf1fd90575cf067376f3dee93f8b89f752"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_public_m3_projection_and_receipt_withhold_nonce",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_watch_does_not_use_popen_wait_poll_or_child_output",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_actual_exit_is_worker_observation_only",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_owner.py::test_explicit_generation_one_and_original_receipt_revalidation",
+          "file_sha256": "36917eea841bc6536ba9ec622d0a63e1ad5247f55dde1d534758de3ab292f41a"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Additive module packaging and exact installed-wheel/Python regression; complete trusted trace and C++ verification remain pending."
+    },
+    {
+      "id": "ML-SR-024",
+      "feature_parents": "FR-012",
+      "status": "partial_implementation_candidate",
+      "code": [
+        {
+          "endpoint": "src/xverse/maestro/admission.py::validate_permits",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::PermitApproval",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/admission.py::ready_for_execution",
+          "file_sha256": "b59241771fcc7ea1c9ba980d888009af724665fa0c2de8d8e2047692623e4dba"
+        },
+        {
+          "endpoint": "src/xverse/maestro/supervisor.py::WorkerObservation",
+          "file_sha256": "918af9303e432bff1eaa8d29c605468a0be5e131cd5d0bec7fe2fe4d9fa1e87b"
+        },
+        {
+          "endpoint": "src/xverse/maestro/prbc.py::BoundaryRecord",
+          "file_sha256": "9633b559269be078f42f6f75aca1556b3423c32941548f1d3823d67811eb0e79"
+        },
+        {
+          "endpoint": "src/xverse/maestro/native/lease_guard.c::initialize",
+          "file_sha256": "b3cd14f92e370210afedda956f877f1847395133af87a4d89569d9ba23e100a8"
+        },
+        {
+          "endpoint": "src/xverse/maestro/fence.py::GatePacket",
+          "file_sha256": "db8879c8dedf5702e89d436a57e0636afea76f3c57b03e3a444e96784bb4ae26"
+        }
+      ],
+      "verification": [
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_forged_prepared_plan_rejects_even_with_unchanged_public_digest",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_claim_rejects_malformed_durable_identity_without_new_bytes",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_claim_rejects_duplicate_json_keys_without_new_bytes",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_claim_store_attribute_substitution_rejects",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_admission.py::test_claim_store_marker_cannot_be_silently_reinitialized",
+          "file_sha256": "17e9f9f1264f867a6d7af633dfcca3cacb1171ed6a51089b4fa7a771ff92c4ea"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_original_holder_and_object_are_required",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_inherited_holder_cannot_signal_from_fork",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_supervisor.py::test_signal_denial_retains_original_identity",
+          "file_sha256": "beb43dc63dd2e5116a050256c14fcb9e8b50eaae1d666613fbaa941da653939c"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_non_cgroup_parent_rejects_without_effect",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_boundary.py::test_closed_options_reject_before_allocation",
+          "file_sha256": "71a9f7e73a5dc2cd5a1ac10e096eaa0a542d279dda58d1fa867e8d636c9c8f97"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_original_supervisor_pidfd_independent_of_socket_loss",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_bootstrap_rejects_bad_limits_scope",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_ordinary_directory_cannot_be_boundary",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_leaseguard.py::test_running_boundary_is_not_implicitly_admitted",
+          "file_sha256": "f33021be39f5a174cc193e5e4cc9f51b23704a25836c0a9edc9cd71cd58b55e5"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_missing_stage_or_durable_ack_identity_denies_arm",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_releasegate.py::test_invalid_initial_epoch_rejected",
+          "file_sha256": "7473040087f2d1e1f8dc8fb104d2254381acccdcb699672520c216eac80291b6"
+        },
+        {
+          "endpoint": "tests/thesis_lite/maestro/test_fence_codec.py::test_wire_offsets_are_literal_and_not_a_second_state_machine",
+          "file_sha256": "ed2ba79a82160ac000732f9776c73b71d65832ad108b72caffa042a9e3109b21"
+        }
+      ],
+      "full_requirement_closure": false,
+      "remaining_scope": "Actual component kernel proof is distinct from authenticated execution admission, source-parent semantics, full runtime review and acceptance; readiness remains false.",
+      "lease_guard_extent": "native freeze-only component; no C1 transfer, Release fence, original-owner survival or whole requirement closure",
+      "release_gate_extent": "local one-use unfreeze/Cancel ordering component; actual upstream ACK and full original-authority/kernel-stall integration pending"
+    }
+  ],
+  "source_parent_register": {
+    "path": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/source-parent-register.json",
+    "sha256": "bd97f975983b3ebe800267b6a9f21c5e68c67834a850d7218efad48506da845f",
+    "requirements": [
+      {
+        "source_id": "XVE-SYS-0012",
+        "source_section": "Scenario management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0056",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0059",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0060",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0078",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0080",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0090",
+        "source_section": "Orchestration and resource management",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0117",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0118",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0121",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0122",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0125",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0130",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0133",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0134",
+        "source_section": "Runtime environment",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0251",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0252",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      },
+      {
+        "source_id": "XVE-SYS-0254",
+        "source_section": "Time synchronization and determinism",
+        "disposition": "allocated",
+        "extent": "bounded_partial",
+        "semantics_status": "unvalidated_missing_approved_public_safe_input",
+        "draft_gate_disposition": "author_waived",
+        "software_mapping": null,
+        "full_parent_closure": false
+      }
+    ],
+    "semantics_validated": false,
+    "full_parent_closure": false
+  },
+  "preserved_downstream_obligations": "All 30 scenario requirement pairs, all declared endpoint obligations, nine actual-runtime cases and CHG-01..08 remain pending for full ML3. This partial index does not replace whole-project trace.",
+  "trusted_whole_project_trace_validated": false,
+  "accepted": false,
+  "merged": false,
+  "runtime_ready": false,
+  "parent_trace": {
+    "path": "docs/engineering/maestro-lite/evidence/leaseguard5/traceability.json",
+    "sha256": "1b6d17e99110429c4e545063b117512d015d6f0c65aa0b1e8208d532c4ced946"
+  },
+  "architecture": "docs/engineering/maestro-lite/ADR-ML3-ADMISSION-0001.md",
+  "unit_specification": "docs/engineering/maestro-lite/unit-specification-admission2.md",
+  "packaging_trace_rebind": "packaging-trace-rebind.json",
+  "revision": "ML3-RELEASEGATE6-2026-10-18-v1",
+  "predecessor_snapshot": {
+    "commit": "d40ab1a6612dccec86fcc0b9cf09c44d0e48e47e",
+    "source_manifest_sha256": "28039f6b732445747cdc23ff856936288d51cff9f7ea932d9d79ff67acff7c68"
+  },
+  "component_architecture": {
+    "path": "docs/engineering/maestro-lite/ADR-ML3-RELEASEGATE-0001.md",
+    "sha256": "f58374db13368a10712a835fc106938c09c17d44d688220e3e32dddf94787f63"
+  },
+  "component_unit_specification": {
+    "path": "docs/engineering/maestro-lite/unit-specification-releasegate6.md",
+    "sha256": "454a01acfaabd9cbc4dbc1368ba0dc1f53de604ffcfe1a6a9613fc678d5562c0"
+  },
+  "reverse_endpoint_requirements": {
+    "src/xverse/maestro/projection.py::prepare_lifecycle": [
+      "ML-SR-001",
+      "ML-SR-002"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_digest_snapshot_is_immutable_and_repeatable": [
+      "ML-SR-001"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_changed_plan_and_rehashed_forgery_both_reject": [
+      "ML-SR-001"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_invalid_result_and_duplicate_resources_reject": [
+      "ML-SR-001"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_pure_prepare_cannot_open_sink_launch_lock_or_read_ambient_clock": [
+      "ML-SR-001"
+    ],
+    "src/xverse/maestro/projection.py::ProviderDescriptor": [
+      "ML-SR-002"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_real_xdl_catalog_plans_and_combined_phase_edges": [
+      "ML-SR-002",
+      "ML-SR-003"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_missing_ambiguous_or_wrong_environment_provider_rejects": [
+      "ML-SR-002"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_ambiguous_actual_catalog_entry_rejects": [
+      "ML-SR-002"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_duplicate_realization_rejects_before_graph_creation": [
+      "ML-SR-002"
+    ],
+    "src/xverse/maestro/projection.py::_project": [
+      "ML-SR-003",
+      "ML-SR-004"
+    ],
+    "src/xverse/maestro/projection.py::_order": [
+      "ML-SR-003"
+    ],
+    "src/xverse/maestro/projection.py::Unit": [
+      "ML-SR-003"
+    ],
+    "src/xverse/maestro/projection.py::GraphEdge": [
+      "ML-SR-003"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_combined_cycle_rejects_even_when_xdl_order_is_valid": [
+      "ML-SR-003"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_missing_executable_flow_prerequisite_rejects": [
+      "ML-SR-003"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_no_logical_node_is_launched_as_an_extra_unit": [
+      "ML-SR-003"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_source_json_pointers_resolve_to_original_records": [
+      "ML-SR-003"
+    ],
+    "src/xverse/maestro/projection.py::PreparedLifecycle": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_implicit_start_precedes_observation_without_explicit_dependency": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_early_stop_cannot_outlive_a_still_required_dependent": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_static_eligibility_requires_flow_and_step_predecessor_completion": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_impossible_step_duration_and_dependency_window_reject": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_missing_start_step_rejects": [
+      "ML-SR-004"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_unsupported_actions_do_not_reach_provider_or_graph": [
+      "ML-SR-004"
+    ],
+    "src/xverse/maestro/admission.py::validate_permits": [
+      "ML-SR-005",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/admission.py::PermitSession": [
+      "ML-SR-005",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/admission.py::_validate_one": [
+      "ML-SR-005"
+    ],
+    "src/xverse/maestro/admission.py::_check_exclusions": [
+      "ML-SR-005"
+    ],
+    "src/xverse/maestro/admission.py::permit_digest": [
+      "ML-SR-005"
+    ],
+    "src/xverse/maestro/admission.py::_verify_prepared": [
+      "ML-SR-005"
+    ],
+    "src/xverse/maestro/owner.py::commit_intent": [
+      "ML-SR-005",
+      "ML-SR-011",
+      "ML-SR-016",
+      "ML-SR-019"
+    ],
+    "src/xverse/maestro/admission.py::public_start_intent": [
+      "ML-SR-005",
+      "ML-SR-016"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_all_exact_m3_permits_validate_without_effects": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_surplus_scope_and_changed_m3_identity_reject": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_conflicting_unknown_and_duplicate_exclusions_reject": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_recognized_nonconflicting_exclusion_preserves_a_valid_fixture_permit": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_duplicate_unit_permit_id_or_nonce_rejects": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_changed_owner_approval_facts_reject": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_future_expired_permits_and_expired_approval_reject": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_boolean_approval_generation_and_mutable_scope_reject": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_expiry_of_already_used_start_permission_does_not_block_a_fresh_unit": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_first_claim_rechecks_all_initial_permits_at_the_actual_use_time": [
+      "ML-SR-005"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_real_claim_flush_stage_and_credential_checked_release": [
+      "ML-SR-005",
+      "ML-SR-010",
+      "ML-SR-016"
+    ],
+    "src/xverse/maestro/admission.py::claim_start_intent": [
+      "ML-SR-006",
+      "ML-SR-019"
+    ],
+    "src/xverse_xdl/lifecycle.py::claim_intent": [
+      "ML-SR-006"
+    ],
+    "src/xverse_xdl/lifecycle.py::_check_start_claim": [
+      "ML-SR-006"
+    ],
+    "src/xverse_xdl/lifecycle.py::_claim_store": [
+      "ML-SR-006"
+    ],
+    "src/xverse_xdl/lifecycle.py::_write_claim_marker": [
+      "ML-SR-006"
+    ],
+    "src/xverse/maestro/admission.py::_check_unresolved_intents": [
+      "ML-SR-006"
+    ],
+    "src/xverse/maestro/admission.py::revalidate_start_intent": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_durable_claims_recheck_at_use_and_do_not_issue_launch_authority": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_existing_intent_without_outcome_blocks_reopen_and_new_session": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_actual_two_process_claims_have_one_fsynced_winner": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay": [
+      "ML-SR-006",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_consumption_history_loss_or_replacement_never_resets_claims": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_partial_first_store_marker_blocks_without_consuming": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_post_intent_store_publication_failure_never_returns_a_success_receipt": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_fresh_permit_identities_do_not_adopt_an_unresolved_prior_scope": [
+      "ML-SR-006"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_release_requires_live_original_claim_and_deadline": [
+      "ML-SR-006",
+      "ML-SR-009",
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_public_projection_is_genuine_redacted_and_detached": [
+      "ML-SR-006"
+    ],
+    "src/xverse/maestro/supervisor.py::WatchLimits": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/supervisor.py::WorkerMonitor": [
+      "ML-SR-009",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/supervisor.py::watch": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/supervisor.py::_watch": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/prbc.py::BoundaryLimits": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/prbc.py::_operation": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/owner.py::GateConnection": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/owner.py::release": [
+      "ML-SR-009",
+      "ML-SR-010",
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_deadline_kills_actual_blocked_worker_without_callback": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_kill_escalation_does_not_touch_sentinel": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_observation_error_closes_latch_without_signalling": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_delayed_observation_cannot_signal_after_final_deadline": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_long_original_lease_keeps_short_operation_budget": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_deadline_rechecked_after_identity_work": [
+      "ML-SR-009"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_gate_ready_requires_actual_child_credentials_and_exact_packet": [
+      "ML-SR-009"
+    ],
+    "src/xverse/maestro/prbc.py::create_frozen": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/prbc.py::BoundaryDescriptor": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/native/lease_guard.c::main": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/native/lease_guard.c::receive": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/native/lease_guard.c::ticket_command": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/owner.py::StageSupervisor": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_cancel_during_allocation_retains_original_epoch_for_cleanup": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_cancel_before_stage_allocates_nothing": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_renewal_is_absolute_and_acknowledged": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_queued_heartbeat_after_expiry_does_not_revive": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_duplicate_renewal_cannot_replay": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_killed_guard_is_not_a_fail_closed_fence": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_actual_release_then_cancel_runs_one_fixed_child": [
+      "ML-SR-010",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_cancel_before_release_executes_no_workload": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_consumed_ticket_cannot_release_or_arm_again": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_ticket_ttl_not_extended_by_lease_renewal": [
+      "ML-SR-010"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_empty_frozen_boundary_is_not_a_stage_ack": [
+      "ML-SR-010"
+    ],
+    "src/xverse/maestro/supervisor.py::CancellationLatch": [
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/supervisor.py::cancel": [
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/prbc.py::_error": [
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/owner.py::cancel": [
+      "ML-SR-011",
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_independent_cancel_does_not_wait_for_worker": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_latch_is_irreversible_and_idempotent": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_cancellation_at_exit_commit_is_not_success": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_unknown_membership_closes_new_stages": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_idempotent_stage_revalidation_failure_closes_starts": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_cancel_during_flush_does_not_wait_for_owner_lock": [
+      "ML-SR-011"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_cancel_targets_original_latch_after_public_alias_replacement": [
+      "ML-SR-011"
+    ],
+    "src/xverse/maestro/prbc.py::ProcessBoundaryOps": [
+      "ML-SR-012",
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/prbc.py::_authority": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/prbc.py::_entry": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/prbc.py::BoundaryAdmission": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/native/lease_guard.c::initialize": [
+      "ML-SR-012",
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/native/lease_guard.c::freeze": [
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/owner.py::_holder": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_forked_holder_cannot_use_original_c1": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_cp02_empty_reservation_is_not_c1": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_cp02_live_allocation_never_gains_force_or_freeze": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_lost_c1_cannot_fall_back_to_reservation": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_expired_original_authority_stays_unresolved": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_replaced_name_is_not_targeted": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_forked_sender_cannot_renew_inherited_channel": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_deleted_boundary_is_unresolved": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_passed_descriptors_are_closed_and_rejected": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_delayed_production_gate_cannot_thaw_after_exact_cleanup": [
+      "ML-SR-012",
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_forked_sender_cannot_release_original_ticket": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_bad_release_never_unfreezes": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_replaced_original_authority_cannot_release": [
+      "ML-SR-012"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_generation_zero_session_is_not_runtime_release_authority": [
+      "ML-SR-012"
+    ],
+    "src/xverse/maestro/prbc.py::force_cleanup": [
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/prbc.py::residual_membership": [
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/prbc.py::_removed": [
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/prbc.py::BoundaryRecord": [
+      "ML-SR-013",
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release": [
+      "ML-SR-013",
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_failed_release_retains_identity_then_original_retry_succeeds": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_missing_membership_is_unknown_not_empty": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_live_boundary_prevents_early_descriptor_disposal": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_expiry_is_native_and_preserves_live_membership": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_cancel_or_control_loss_freezes": [
+      "ML-SR-013"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_authority_expired_does_not_gain_late_freeze_right": [
+      "ML-SR-013"
+    ],
+    "src/xverse/maestro/time.py::TickDomain": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::ClockContext": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::HostDeadline": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::advance_tick": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::compare_host_deadline": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/time.py::utc_elapsed": [
+      "ML-SR-015"
+    ],
+    "src/xverse/maestro/owner.py::_deadline": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_valid_zero_pause_progression_and_horizon": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_invalid_tick_values_reject_without_mutating_context": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_tick_domain_rejects_invalid_horizon": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_host_deadlines_are_session_qualified": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_utc_jump_and_simulation_pause_never_move_host_deadline": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_time.py::test_utc_numeric_values_are_finite": [
+      "ML-SR-015"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_late_actual_flush_does_not_register_authority": [
+      "ML-SR-016"
+    ],
+    "src/xverse/maestro/admission.py::claims_closed": [
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_consumption_read_failure_latches_the_original_session_closed": [
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_durability_failure_never_registers_start_authority": [
+      "ML-SR-019"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_public_intent_projection_loss_closes_claims": [
+      "ML-SR-019"
+    ],
+    "src/xverse_xdl/lifecycle.py::FileEvidenceJournal": [
+      "ML-SR-023"
+    ],
+    "src/xverse_xdl/lifecycle.py::append": [
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/owner.py::ReleaseObservation": [
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_preparation.py::test_preparation_has_no_execution_facade_or_success_outcome": [
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_public_m3_projection_and_receipt_withhold_nonce": [
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_watch_does_not_use_popen_wait_poll_or_child_output": [
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_actual_exit_is_worker_observation_only": [
+      "ML-SR-023"
+    ],
+    "tests/thesis_lite/maestro/test_owner.py::test_explicit_generation_one_and_original_receipt_revalidation": [
+      "ML-SR-023"
+    ],
+    "src/xverse/maestro/admission.py::PermitApproval": [
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/admission.py::ready_for_execution": [
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/supervisor.py::WorkerObservation": [
+      "ML-SR-024"
+    ],
+    "src/xverse/maestro/fence.py::GatePacket": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_forged_prepared_plan_rejects_even_with_unchanged_public_digest": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_claim_rejects_malformed_durable_identity_without_new_bytes": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_claim_rejects_duplicate_json_keys_without_new_bytes": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_claim_store_attribute_substitution_rejects": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_admission.py::test_claim_store_marker_cannot_be_silently_reinitialized": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_original_holder_and_object_are_required": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_inherited_holder_cannot_signal_from_fork": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_supervisor.py::test_signal_denial_retains_original_identity": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_non_cgroup_parent_rejects_without_effect": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_boundary.py::test_closed_options_reject_before_allocation": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_original_supervisor_pidfd_independent_of_socket_loss": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_bootstrap_rejects_bad_limits_scope": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_ordinary_directory_cannot_be_boundary": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_leaseguard.py::test_running_boundary_is_not_implicitly_admitted": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_missing_stage_or_durable_ack_identity_denies_arm": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_releasegate.py::test_invalid_initial_epoch_rejected": [
+      "ML-SR-024"
+    ],
+    "tests/thesis_lite/maestro/test_fence_codec.py::test_wire_offsets_are_literal_and_not_a_second_state_machine": [
+      "ML-SR-024"
+    ]
+  },
+  "partial_endpoint_hash_and_ast_check": "pending final verifier; C symbols lexical plus strict native compilation, not full C semantic trace"
+}

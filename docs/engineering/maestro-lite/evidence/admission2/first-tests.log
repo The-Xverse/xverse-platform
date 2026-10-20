@@ -1,0 +1,500 @@
+................................FFFF
+=================================== FAILURES ===================================
+_____ test_durable_claims_recheck_at_use_and_do_not_issue_launch_authority _____
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-734/test_durable_claims_recheck_at0')
+
+    def test_durable_claims_recheck_at_use_and_do_not_issue_launch_authority(tmp_path):
+        ctx = context()
+        path = tmp_path / "m3.jsonl"
+>       holder = session(ctx, path)
+                 ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_admission.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_admission.py:98: in session
+    return PermitSession(
+src/xverse/maestro/admission.py:318: in __init__
+    self._result = copy.deepcopy(result)
+                   ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+x = mappingproxy({})
+memo = {140176824632640: {'algorithm': 'sha256', 'value': 'b6fa71421421c81f8d74f5315caa80aed8cba389974ade1eecb79292f88e5818'}...o/xdl/v1alpha1', 'kind': 'Scenario', 'name': 'sample-observation-run', 'namespace': 'org.xverse.experiment', ...}, ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        d = id(x)
+        if memo is None:
+            memo = {}
+        else:
+            y = memo.get(d, _nil)
+            if y is not _nil:
+                return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+>                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle 'mappingproxy' object
+
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:152: TypeError
+______ test_existing_intent_without_outcome_blocks_reopen_and_new_session ______
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-734/test_existing_intent_without_o0')
+
+    def test_existing_intent_without_outcome_blocks_reopen_and_new_session(tmp_path):
+        ctx = context()
+        path = tmp_path / "m3.jsonl"
+>       session(ctx, path).claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+        ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_admission.py:295: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_admission.py:98: in session
+    return PermitSession(
+src/xverse/maestro/admission.py:318: in __init__
+    self._result = copy.deepcopy(result)
+                   ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+x = mappingproxy({})
+memo = {140176822474240: {'unitSemantics': 'experiment-seed', 'value': 7}, 140176822474880: [{'deliveryIntent': 'ordered', 'd...'tick', 'clockClass': 'simulation', 'epoch': '0', 'id': 'experiment-time', ...}], 140176822619264: {'_items': ()}, ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        d = id(x)
+        if memo is None:
+            memo = {}
+        else:
+            y = memo.get(d, _nil)
+            if y is not _nil:
+                return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+>                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle 'mappingproxy' object
+
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:152: TypeError
+__ test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay ___
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-734/test_failed_fsync_returns_no_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7d75f27230>
+
+    def test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay(
+        tmp_path, monkeypatch
+    ):
+        import os
+    
+        ctx = context()
+        path = tmp_path / "m3.jsonl"
+>       holder = session(ctx, path)
+                 ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_admission.py:307: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_admission.py:98: in session
+    return PermitSession(
+src/xverse/maestro/admission.py:318: in __init__
+    self._result = copy.deepcopy(result)
+                   ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+x = mappingproxy({})
+memo = {140176822979584: {}, 140176823659904: {'ticks': 0, 'unit': 'tick', 'value': 0}, 140176823659968: {'ticks': 0, 'unit':...6: {'atTicks': 0, 'declaredAt': 0, 'declaredUnit': 'tick', 'tolerance': {'ticks': 0, 'unit': 'tick', 'value': 0}}, ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        d = id(x)
+        if memo is None:
+            memo = {}
+        else:
+            y = memo.get(d, _nil)
+            if y is not _nil:
+                return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+>                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle 'mappingproxy' object
+
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:152: TypeError
+_____________ test_public_m3_projection_and_receipt_withhold_nonce _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-734/test_public_m3_projection_and_0')
+
+    def test_public_m3_projection_and_receipt_withhold_nonce(tmp_path):
+        from dataclasses import asdict
+    
+        ctx = context()
+        path = tmp_path / "m3.jsonl"
+>       receipt = session(ctx, path).claim_start_intent(ctx[0].units[0].unit_id, now=NOW)
+                  ^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_admission.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_admission.py:98: in session
+    return PermitSession(
+src/xverse/maestro/admission.py:318: in __init__
+    self._result = copy.deepcopy(result)
+                   ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:163: in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:260: in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:202: in _deepcopy_tuple
+    y = [deepcopy(a, memo) for a in x]
+         ^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:137: in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:222: in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+x = mappingproxy({})
+memo = {140176821479936: {'algorithm': 'sha256', 'value': 'b3331142a728cf8a26e1b2495e0e684e9579e817214ec72044d6e91f407204b8'}...176823257728: [{'canonicalUnit': 'tick', 'clockClass': 'simulation', 'epoch': '0', 'id': 'experiment-time', ...}], ...}
+_nil = []
+
+    def deepcopy(x, memo=None, _nil=[]):
+        """Deep copy operation on arbitrary Python objects.
+    
+        See the module's __doc__ string for more info.
+        """
+    
+        d = id(x)
+        if memo is None:
+            memo = {}
+        else:
+            y = memo.get(d, _nil)
+            if y is not _nil:
+                return y
+    
+        cls = type(x)
+    
+        copier = _deepcopy_dispatch.get(cls)
+        if copier is not None:
+            y = copier(x, memo)
+        else:
+            if issubclass(cls, type):
+                y = _deepcopy_atomic(x, memo)
+            else:
+                copier = getattr(x, "__deepcopy__", None)
+                if copier is not None:
+                    y = copier(memo)
+                else:
+                    reductor = dispatch_table.get(cls)
+                    if reductor:
+                        rv = reductor(x)
+                    else:
+                        reductor = getattr(x, "__reduce_ex__", None)
+                        if reductor is not None:
+>                           rv = reductor(4)
+                                 ^^^^^^^^^^^
+E                           TypeError: cannot pickle 'mappingproxy' object
+
+../../.pyenv/versions/3.13.13/lib/python3.13/copy.py:152: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_admission.py::test_durable_claims_recheck_at_use_and_do_not_issue_launch_authority
+FAILED tests/thesis_lite/maestro/test_admission.py::test_existing_intent_without_outcome_blocks_reopen_and_new_session
+FAILED tests/thesis_lite/maestro/test_admission.py::test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay
+FAILED tests/thesis_lite/maestro/test_admission.py::test_public_m3_projection_and_receipt_withhold_nonce
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 4 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+4 failed, 32 passed in 10.16s

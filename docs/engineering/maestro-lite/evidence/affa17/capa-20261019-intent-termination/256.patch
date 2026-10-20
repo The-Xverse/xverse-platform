@@ -1,0 +1,12 @@
+--- before/tests/thesis_lite/maestro/test_composed_persistence_termination.py
++++ after/tests/thesis_lite/maestro/test_composed_persistence_termination.py
+@@ -61,7 +61,8 @@
+ def appended(self,*args,**kwargs):
+     global pending
+     payload=kwargs.get('extensions',{}).get('xverse.maestro',{})
+-    intent=payload.get('scope')=='unit' and payload.get('action')=='intent'
++    intent=(payload.get('scope')=='unit' and payload.get('action')=='intent'
++        and kwargs.get('producer_id')=='maestro.owner7')
+     if intent:
+         log('before-intent-append',payload)
+         if mode=='before-intent-append':os.kill(os.getpid(),signal.SIGSTOP)

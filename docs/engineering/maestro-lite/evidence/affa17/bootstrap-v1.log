@@ -1,0 +1,225 @@
+FFF.E..........                                                          [100%]
+==================================== ERRORS ====================================
+____ ERROR at teardown of test_unwatched_initial_scope_rejects_before_birth ____
+
+environment = (<function environment.<locals>.factory at 0x76feb3942a20>, <function environment.<locals>.spawn at 0x76feb3942d40>, 12)
+binaries = {'bound-gate': PosixPath('/tmp/pytest-of-jefferson/pytest-973/catalog-launcher-native0/bound-gate'), 'launcher': Posix...r-native0/plain-gate'), 'workload': PosixPath('/tmp/pytest-of-jefferson/pytest-973/catalog-launcher-native0/workload')}
+authority_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-973/affa-native0/authority')
+run_bootstrap_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-973/run-bootstrap0/run-bootstrap')
+tmp_path = PosixPath('/tmp/pytest-of-jefferson/pytest-973/test_unwatched_initial_scope_r0')
+
+    @pytest.fixture
+    def run_stack(environment, binaries, authority_binary, run_bootstrap_binary, tmp_path):
+        factory, _, _ = environment
+        manager, latch = factory(seconds=40)
+        images = tuple(seal_helper_image(source, digest="sha256:" + digest(source.read_bytes()).hex(), argv0=str(source))
+                       for source in (binaries["launcher"], binaries["bound-gate"], Path(sys.executable).resolve(), authority_binary))
+        now = time.monotonic_ns()
+        admission = BootstrapAdmission("run", hashlib.sha256(b"owned-run-plan").hexdigest(), "bootstrap-approval",
+            "sha256:" + digest(b"owned-environment").hex(), "sha256:" + digest(run_bootstrap_binary.read_bytes()).hex(),
+            manager._admission.teardown_deadline, deadline(4.8), images[:3], images[3], manager._root_fd)
+        config = encode_bootstrap(admission)
+        assert config.private_bytes[:8] == b"BC17\0\0\0\2"
+        private = sealed_bootstrap_fd(config)
+        channel, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+        process = subprocess.Popen([str(run_bootstrap_binary), str(peer.fileno()), str(private)],
+            pass_fds=(peer.fileno(), private, manager._root_fd, *(i.descriptor for i in images)),
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        peer.close()
+        os.close(private)
+        session = None
+        h = None
+        cwd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        workload = seal_helper_image(binaries["workload"], digest="sha256:" + digest(binaries["workload"].read_bytes()).hex(), argv0=str(binaries["workload"]))
+        fds = []
+        try:
+            session = BootstrapSession(process, channel, config, manager, latch, deadline=deadline(2))
+            records, units = [], []
+            for i in range(2):
+                desc = BoundaryDescriptor("run", f"u{i}", 1, f"work-{i}", 0)
+                manager.create_frozen(desc)
+                cg = manager._entry(desc).fd
+                recipe = AuthorityRecipe(("/fixture", f"u{i}.marker", "single"), ("MAESTRO_VISIBLE=declared",)).encode()
+                recipe_fd = _sealed(recipe, "owned-bootstrap-recipe")
+                fds.append(recipe_fd)
+                info, work = os.fstat(cg), os.fstat(cwd)
+                records.append(AuthorityUnit(digest(bytes([i+1])), bytes.fromhex(workload.digest[7:]), digest(recipe),
+                    info.st_dev, info.st_ino, work.st_dev, work.st_ino, 1, 2))
+                units.append(dict(descriptor=desc, cg=cg, recipe=recipe_fd, generation=1,
+                    operation=bytes([i+1])*16, intent=digest(b"intent"+bytes([i])), mirror=digest(b"mirror"+bytes([i])), boundary=digest(b"boundary"+bytes([i]))))
+            h = Harness(manager, cwd, workload, units)
+            h.lease = session._lease
+            h.config = AuthorityConfig(session._generation, h.lease, 0, digest(b"owned-bootstrap-run"), digest(b"original-supervisor"), tuple(records))
+            helper = BoundaryDescriptor("run", "helper:authority", 1, "authority", 0)
+            manager.create_frozen(helper)
+            private = _sealed(h.config.encode(), "owned-bootstrap-authority")
+            fds.append(private)
+            native_channel, native_peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+            native_channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+            native_channel.settimeout(2)
+            h.channel = native_channel
+            yield session, manager, h, helper, private, native_peer, tmp_path
+        finally:
+            if h and h.channel:
+                h.channel.close()
+            if 'native_peer' in locals():
+                native_peer.close()
+            observed = None
+            if session:
+                session.cancel("owned-run-bootstrap-teardown")
+                observed = session.drain(deadline(1.8))
+                assert observed.supervisor_reaped and observed.registered_children_reaped
+>               assert observed.unacknowledged_births == 0
+E               AssertionError: assert 1 == 0
+E                +  where 1 = BootstrapDrain(supervisor_reaped=True, registered_children_reaped=True, unacknowledged_births=1, supervisor_returncode...oad_freeze_acknowledged=True, diagnostic='ML-BOOT-DRAIN-UNRESOLVED', cleanup_complete=False, ready_for_execution=False).unacknowledged_births
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:105: AssertionError
+=================================== FAILURES ===================================
+_______________ test_original_parent_birth_without_runtime_popen _______________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb39fbb60>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x001ec08', raddr=b'\x00dc374'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb39383e0>
+
+    def test_original_parent_birth_without_runtime_popen(run_stack, monkeypatch):
+        session, _, h, _, _, _, work = run_stack
+>       child = start_authority(run_stack, monkeypatch)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb39fbb60>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x001ec08', raddr=b'\x00dc374'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb39383e0>
+
+    def start_authority(stack, monkeypatch):
+        session, manager, h, helper, private, peer, work = stack
+        def forbidden(*args, **kwargs):
+            pytest.fail("runtime attempted Popen")
+        for unit in h.units:
+            session.watch(unit["descriptor"], deadline(2))
+        with monkeypatch.context() as patch:
+            patch.setattr(subprocess, "Popen", forbidden)
+            child = session.birth(4, helper, helper, peer, private, deadline(2))
+            session.activate(child, deadline(1.8))
+        h.process = child
+        raw, anc, flags, _ = h.channel.recvmsg(321, socket.CMSG_SPACE(12))
+        assert not flags and len(anc) == 1
+        ready = AuthorityFrame.decode(raw)
+        assert ready == AuthorityFrame(K.READY, 0, h.lease, h.config.scope, epoch=0, lease_ns=h.lease)
+        for i, unit in enumerate(h.units):
+            record = h.config.units[i]
+            frame = AuthorityFrame(K.REGISTER, 1, h.end(), h.config.scope, i+1, 0, 1,
+                first=record.binding, second=record.image, third=record.recipe, fourth=unit["boundary"])
+            assert h.rpc(frame, (unit["cg"], h.image.descriptor, h.cwd, unit["recipe"])).kind is K.REGISTERED
+>           assert h.rpc(h.frame(K.INTENT, i)).kind is K.INTENT_RECORDED
+E           assert <AuthorityKind.REJECTED: 27> is <AuthorityKind.INTENT_RECORDED: 18>
+E            +  where <AuthorityKind.REJECTED: 27> = AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414738440293, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0).kind
+E            +    where AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414738440293, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0) = rpc(AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414738403612, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0))
+E            +      where rpc = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb39341a0>.rpc
+E            +      and   AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414738403612, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0) = frame(<AuthorityKind.INTENT: 2>, 0)
+E            +        where frame = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb39341a0>.frame
+E            +        and   <AuthorityKind.INTENT: 2> = K.INTENT
+E            +  and   <AuthorityKind.INTENT_RECORDED: 18> = K.INTENT_RECORDED
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:154: AssertionError
+__________ test_stopped_authority_cannot_thaw_after_watchdog_cleanup ___________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb3acb890>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x006420b', raddr=b'\x009e845'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb38c3410>
+
+    def test_stopped_authority_cannot_thaw_after_watchdog_cleanup(run_stack, monkeypatch):
+        session, manager, h, _, _, _, work = run_stack
+>       child = start_authority(run_stack, monkeypatch)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:179: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb3acb890>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x006420b', raddr=b'\x009e845'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb38c3410>
+
+    def start_authority(stack, monkeypatch):
+        session, manager, h, helper, private, peer, work = stack
+        def forbidden(*args, **kwargs):
+            pytest.fail("runtime attempted Popen")
+        for unit in h.units:
+            session.watch(unit["descriptor"], deadline(2))
+        with monkeypatch.context() as patch:
+            patch.setattr(subprocess, "Popen", forbidden)
+            child = session.birth(4, helper, helper, peer, private, deadline(2))
+            session.activate(child, deadline(1.8))
+        h.process = child
+        raw, anc, flags, _ = h.channel.recvmsg(321, socket.CMSG_SPACE(12))
+        assert not flags and len(anc) == 1
+        ready = AuthorityFrame.decode(raw)
+        assert ready == AuthorityFrame(K.READY, 0, h.lease, h.config.scope, epoch=0, lease_ns=h.lease)
+        for i, unit in enumerate(h.units):
+            record = h.config.units[i]
+            frame = AuthorityFrame(K.REGISTER, 1, h.end(), h.config.scope, i+1, 0, 1,
+                first=record.binding, second=record.image, third=record.recipe, fourth=unit["boundary"])
+            assert h.rpc(frame, (unit["cg"], h.image.descriptor, h.cwd, unit["recipe"])).kind is K.REGISTERED
+>           assert h.rpc(h.frame(K.INTENT, i)).kind is K.INTENT_RECORDED
+E           assert <AuthorityKind.REJECTED: 27> is <AuthorityKind.INTENT_RECORDED: 18>
+E            +  where <AuthorityKind.REJECTED: 27> = AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414826382585, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0).kind
+E            +    where AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414826382585, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0) = rpc(AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414826352929, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0))
+E            +      where rpc = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb3acbc50>.rpc
+E            +      and   AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414826352929, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0) = frame(<AuthorityKind.INTENT: 2>, 0)
+E            +        where frame = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb3acbc50>.frame
+E            +        and   <AuthorityKind.INTENT: 2> = K.INTENT
+E            +  and   <AuthorityKind.INTENT_RECORDED: 18> = K.INTENT_RECORDED
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:154: AssertionError
+_____________ test_authority_death_triggers_watchdog_before_lease ______________
+
+run_stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb3998a50>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x00df701', raddr=b'\x00b8927'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb3acf680>
+
+    def test_authority_death_triggers_watchdog_before_lease(run_stack, monkeypatch):
+        session, manager, h, _, _, _, _ = run_stack
+>       child = start_authority(run_stack, monkeypatch)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stack = (<xverse.maestro.bootstrap.BootstrapSession object at 0x76feb3998a50>, <xverse.maestro.prbc.ProcessBoundaryOps object ..., creation_epoch=0), 29, <socket.socket fd=31, family=1, type=5, proto=0, laddr=b'\x00df701', raddr=b'\x00b8927'>, ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76feb3acf680>
+
+    def start_authority(stack, monkeypatch):
+        session, manager, h, helper, private, peer, work = stack
+        def forbidden(*args, **kwargs):
+            pytest.fail("runtime attempted Popen")
+        for unit in h.units:
+            session.watch(unit["descriptor"], deadline(2))
+        with monkeypatch.context() as patch:
+            patch.setattr(subprocess, "Popen", forbidden)
+            child = session.birth(4, helper, helper, peer, private, deadline(2))
+            session.activate(child, deadline(1.8))
+        h.process = child
+        raw, anc, flags, _ = h.channel.recvmsg(321, socket.CMSG_SPACE(12))
+        assert not flags and len(anc) == 1
+        ready = AuthorityFrame.decode(raw)
+        assert ready == AuthorityFrame(K.READY, 0, h.lease, h.config.scope, epoch=0, lease_ns=h.lease)
+        for i, unit in enumerate(h.units):
+            record = h.config.units[i]
+            frame = AuthorityFrame(K.REGISTER, 1, h.end(), h.config.scope, i+1, 0, 1,
+                first=record.binding, second=record.image, third=record.recipe, fourth=unit["boundary"])
+            assert h.rpc(frame, (unit["cg"], h.image.descriptor, h.cwd, unit["recipe"])).kind is K.REGISTERED
+>           assert h.rpc(h.frame(K.INTENT, i)).kind is K.INTENT_RECORDED
+E           assert <AuthorityKind.REJECTED: 27> is <AuthorityKind.INTENT_RECORDED: 18>
+E            +  where <AuthorityKind.REJECTED: 27> = AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414904930671, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0).kind
+E            +    where AuthorityFrame(kind=<AuthorityKind.REJECTED: 27>, sequence=2, deadline_ns=935414904930671, slot=0, epoch=1, generation=0, state=0, reason=4, lease_ns=0) = rpc(AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414904902835, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0))
+E            +      where rpc = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb3998b90>.rpc
+E            +      and   AuthorityFrame(kind=<AuthorityKind.INTENT: 2>, sequence=1, deadline_ns=935414904902835, slot=1, epoch=0, generation=1, state=0, reason=0, lease_ns=0) = frame(<AuthorityKind.INTENT: 2>, 0)
+E            +        where frame = <tests.thesis_lite.maestro.test_affa_native.Harness object at 0x76feb3998b90>.frame
+E            +        and   <AuthorityKind.INTENT: 2> = K.INTENT
+E            +  and   <AuthorityKind.INTENT_RECORDED: 18> = K.INTENT_RECORDED
+
+tests/thesis_lite/maestro/test_run_bootstrap.py:154: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_run_bootstrap.py::test_original_parent_birth_without_runtime_popen
+FAILED tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup
+FAILED tests/thesis_lite/maestro/test_run_bootstrap.py::test_authority_death_triggers_watchdog_before_lease
+ERROR tests/thesis_lite/maestro/test_run_bootstrap.py::test_unwatched_initial_scope_rejects_before_birth
+3 failed, 11 passed, 1 error in 1.84s

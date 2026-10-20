@@ -1,0 +1,26 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_actual_successor_intent_uses_original_worker_and_preserves_old_identity _
+
+request = <FixtureRequest for <Function test_actual_successor_intent_uses_original_worker_and_preserves_old_identity>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7880b64fb820>
+
+    def test_actual_successor_intent_uses_original_worker_and_preserves_old_identity(
+        request, monkeypatch
+    ):
+        stack, controller, unit, config = ready(request, monkeypatch)
+        broker, facade, client, work = stack
+        original_worker = client.process
+        old = broker.owner._claims[unit].receipt
+        original_execution = client._claim_execution_id(old)
+        old_handle = broker.issuer(unit)._handle
+        release(controller, unit)
+        descriptor = replacement(broker, unit)
+>       prepared = broker._prepare_generation(controller, unit, descriptor, deadline(1.2))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'RunBroker' object has no attribute '_prepare_generation'
+
+tests/thesis_lite/maestro/test_generation_claim.py:66: AttributeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_generation_claim.py::test_actual_successor_intent_uses_original_worker_and_preserves_old_identity
+1 failed in 3.04s

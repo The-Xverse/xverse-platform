@@ -1,0 +1,54 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "Component",
+  "metadata": {
+    "name": "sample-source",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "capabilities": [
+      "produce-samples"
+    ],
+    "endpoints": [
+      {
+        "direction": "output",
+        "id": "samples-out",
+        "interfaceId": "sample-stream",
+        "ownerId": "sample-source"
+      }
+    ],
+    "interfaces": [
+      {
+        "compatibility": "exact",
+        "direction": "output",
+        "id": "sample-stream",
+        "payloadSchema": "urn:xverse:experiment:sample-v1",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "models": [
+      {
+        "externalRef": "urn:xverse:experiment:model:sample",
+        "id": "sample-model",
+        "inputs": [],
+        "maturity": "prototype",
+        "modelKind": "behavioral",
+        "outputs": []
+      }
+    ],
+    "parameters": [
+      {
+        "id": "nominal-rate",
+        "mutability": "configuration",
+        "unitSemantics": "hertz",
+        "valueType": "integer"
+      }
+    ]
+  }
+}

@@ -7,6 +7,8 @@ import json
 import os
 import re
 import signal
+import hashlib
+import stat
 import subprocess
 import threading
 import time
@@ -33,6 +35,12 @@ _MUTATION_LOCKS_GUARD = threading.Lock()
 
 class EvidenceWriteError(RuntimeError):
     """Report a durable evidence read, ordering, locking, or write failure."""
+
+    pass
+
+
+class PermitClaimConflict(EvidenceWriteError):
+    """An atomic start-intent claim conflicts with durable consumption history."""
 
     pass
 
@@ -328,6 +336,71 @@ def _record_from_data(value: Mapping[str, Any]) -> EvidenceRecord:
     )
 
 
+def _check_start_claim(record: EvidenceRecord, records: Sequence[EvidenceRecord]) -> None:
+    """Check a new claim while the journal's ownership lock is held."""
+
+    if type(record) is not EvidenceRecord or record.kind != "intent" or record.status != "pending":
+        raise EvidenceWriteError("a start claim requires a pending intent")
+    if type(record.sequence) is not int or record.sequence < 0:
+        raise EvidenceWriteError("start claim sequence must be a nonnegative integer")
+    required = (record.execution_id, record.action_id, record.catalog_identity,
+                record.plan_digest, record.environment_identity, record.permit_id, record.permit_nonce)
+    if any(not isinstance(value, str) or not value.strip() for value in required):
+        raise EvidenceWriteError("start claim identity is incomplete")
+    if any(value is not None for value in (record.handle_id, record.handle_action_id,
+                                          record.handle_provider_id, record.handle_provider_kind,
+                                          record.handle_resource_identity)):
+        raise EvidenceWriteError("a start intent cannot assert an issued handle")
+    try:
+        stamp = datetime.fromisoformat(record.timestamp)
+        if stamp.utcoffset() is None:
+            raise ValueError("naive timestamp")
+        json.dumps(_record_data(record), allow_nan=False)
+    except (ValueError, TypeError, OverflowError) as error:
+        raise EvidenceWriteError("start claim contains invalid evidence") from error
+    intents = [item for item in records if item.kind == "intent"]
+    known_nonces = {item.permit_id for item in intents if isinstance(item.permit_nonce, str) and item.permit_nonce}
+    if any(item.kind not in {"intent", "outcome", "observation"} for item in records):
+        raise EvidenceWriteError("consumption history contains an unknown record kind")
+    for item in intents:
+        if not isinstance(item.permit_id, str) or not item.permit_id:
+            raise EvidenceWriteError("consumption history lacks a permit identity")
+        if item.permit_nonce is not None and (type(item.permit_nonce) is not str or not item.permit_nonce):
+            raise EvidenceWriteError("consumption history has an invalid nonce identity")
+        if not item.permit_nonce and item.permit_id not in known_nonces:
+            raise EvidenceWriteError("consumption history has an unresolved nonce")
+        if (item.permit_id == record.permit_id or item.permit_nonce == record.permit_nonce
+                or item.execution_id == record.execution_id):
+            raise PermitClaimConflict("start intent conflicts with a consumed permit or execution")
+
+
+def _claim_wire_object(pairs):
+    """Reject ambiguous duplicate JSON fields in a strict consumption read."""
+    result = {}
+    for name, value in pairs:
+        if name in result:
+            raise ValueError("duplicate evidence field")
+        result[name] = value
+    return result
+
+
+def _claim_wire_record(value):
+    """Do not infer valid consumption from coercible malformed wire identities."""
+    if type(value) is not dict:
+        raise ValueError("consumption record must be an object")
+    for name in ("kind", "timestamp", "executionId", "actionId", "catalogIdentity", "planDigest", "environmentIdentity"):
+        if type(value.get(name)) is not str or not value[name]:
+            raise ValueError("invalid consumption identity")
+    if type(value.get("sequence")) is not int or value["sequence"] < 1:
+        raise ValueError("invalid consumption ordinal")
+    if value["kind"] == "intent":
+        if type(value.get("permitId")) is not str or not value["permitId"]:
+            raise ValueError("invalid consumption permit")
+        nonce = value.get("permitNonce")
+        if nonce is not None and (type(nonce) is not str or not nonce):
+            raise ValueError("invalid consumption nonce")
+
+
 class InMemoryEvidenceJournal:
     """Thread-safe ordered evidence journal for isolated tests and fixtures."""
 
@@ -361,6 +434,18 @@ class InMemoryEvidenceJournal:
             for item in self.records
         )
 
+    def claim_intent(self, record: EvidenceRecord) -> EvidenceRecord:
+        """Atomically consume a pending start intent; fixture storage is not durable."""
+
+        with self._lock:
+            _check_start_claim(record, self._records)
+            expected = len(self._records) + 1
+            if record.sequence not in (0, expected):
+                raise EvidenceWriteError("evidence sequence is not contiguous")
+            stored = replace(record, sequence=expected)
+            self._records.append(stored)
+            return stored
+
     def public_records(self) -> tuple[dict[str, Any], ...]:
         """Return all evidence using the public-safe projection."""
 
@@ -378,8 +463,12 @@ class FileEvidenceJournal(InMemoryEvidenceJournal):
         self.lock_path = self.path.with_name(self.path.name + ".lock")
         if self.path.is_symlink():
             raise EvidenceWriteError("evidence journal must not be a symbolic link")
-        with self._file_lock():
+        with self._file_lock() as lock_descriptor:
             self._reload()
+            self._claim_lock_identity = self._identity(os.fstat(lock_descriptor))
+            self._claim_parent_identity = self._identity(self.path.parent.stat())
+            self._claim_path = self.path.absolute()
+            self._claim_lock_path = self.lock_path.absolute()
 
     @contextmanager
     def _file_lock(self):
@@ -393,12 +482,12 @@ class FileEvidenceJournal(InMemoryEvidenceJournal):
         try:
             os.fchmod(descriptor, 0o600)
             fcntl.flock(descriptor, fcntl.LOCK_EX)
-            yield
+            yield descriptor
         finally:
             fcntl.flock(descriptor, fcntl.LOCK_UN)
             os.close(descriptor)
 
-    def _reload(self) -> None:
+    def _reload(self, *, claims: bool = False) -> None:
         """Reload and validate the complete contiguous on-disk journal."""
 
         if not self.path.exists():
@@ -407,7 +496,12 @@ class FileEvidenceJournal(InMemoryEvidenceJournal):
         if self.path.is_symlink():
             raise EvidenceWriteError("evidence journal must not be a symbolic link")
         try:
-            records = [_record_from_data(json.loads(line)) for line in self.path.read_text(encoding="utf-8").splitlines() if line]
+            values = [json.loads(line, object_pairs_hook=_claim_wire_object if claims else dict)
+                      for line in self.path.read_text(encoding="utf-8").splitlines() if line]
+            if claims:
+                for value in values:
+                    _claim_wire_record(value)
+            records = [_record_from_data(value) for value in values]
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise EvidenceWriteError(f"cannot load evidence journal: {error}") from error
         if [item.sequence for item in records] != list(range(1, len(records) + 1)):
@@ -428,30 +522,141 @@ class FileEvidenceJournal(InMemoryEvidenceJournal):
         with self._lock:
             with self._file_lock():
                 self._reload()
+                self._append_locked(record)
+
+    def claim_intent(self, record: EvidenceRecord) -> EvidenceRecord:
+        """Check consumption and fsync one intent under the same process/thread locks.
+
+        A write failure can leave surviving intent bytes. No launch is authorized
+        by an exception, and a later claim rechecks those bytes before any effect.
+        This guarantee applies to callers of this method, not legacy check/append pairs.
+        """
+
+        _check_start_claim(record, ())
+        try:
+            with self._lock, self._file_lock() as lock_descriptor:
+                marker = self._claim_store(lock_descriptor)
+                self._reload(claims=True)
+                if len(self._records) < marker["minimum_sequence"]:
+                    raise EvidenceWriteError("consumption history was lost or truncated")
+                _check_start_claim(record, self._records)
                 expected = len(self._records) + 1
                 if record.sequence not in (0, expected):
                     raise EvidenceWriteError("evidence sequence is not contiguous")
-                stored = replace(record, sequence=expected)
-                encoded = json.dumps(_record_data(stored), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
-                try:
-                    self.path.parent.mkdir(parents=True, exist_ok=True)
-                    flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
-                    flags |= getattr(os, "O_NOFOLLOW", 0)
-                    descriptor = os.open(self.path, flags, 0o600)
-                    os.fchmod(descriptor, 0o600)
-                    with os.fdopen(descriptor, "a", encoding="utf-8") as stream:
-                        stream.write(encoded)
-                        stream.flush()
-                        os.fsync(stream.fileno())
-                    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
-                    directory = os.open(self.path.parent, directory_flags)
-                    try:
-                        os.fsync(directory)
-                    finally:
-                        os.close(directory)
-                except OSError as error:
-                    raise EvidenceWriteError(f"cannot persist evidence: {error}") from error
-                self._records.append(stored)
+                # Reserve before writing: uncertainty cannot become empty history.
+                marker["minimum_sequence"] = expected
+                self._write_claim_marker(lock_descriptor, marker)
+                stored = self._append_locked(record)
+                data = self.path.read_bytes()
+                marker["prefix_bytes"] = len(data)
+                marker["prefix_sha256"] = hashlib.sha256(data).hexdigest()
+                self._write_claim_marker(lock_descriptor, marker)
+                return stored
+        except OSError as error:
+            raise EvidenceWriteError(f"claim store access failed: {error}") from error
+
+    @staticmethod
+    def _identity(observation) -> list[int]:
+        return [observation.st_dev, observation.st_ino]
+
+    def _claim_store(self, lock_descriptor: int) -> dict[str, Any]:
+        """Validate the sealed store identity and retained history prefix."""
+        if self.path.absolute() != self._claim_path or self.lock_path.absolute() != self._claim_lock_path:
+            raise EvidenceWriteError("claim store path changed")
+        if self.path.is_symlink():
+            raise EvidenceWriteError("consumption journal must not be a symbolic link")
+        lock_identity = self._identity(os.fstat(lock_descriptor))
+        parent_identity = self._identity(self.path.parent.stat())
+        if lock_identity != self._claim_lock_identity or parent_identity != self._claim_parent_identity:
+            raise EvidenceWriteError("claim store lock or parent identity changed")
+        raw = os.pread(lock_descriptor, 4097, 0)
+        if len(raw) > 4096:
+            raise EvidenceWriteError("claim store marker exceeds its bound")
+        if raw:
+            try:
+                prefix = b"xverse-m3-claim-store-v1\n"
+                if not raw.startswith(prefix):
+                    raise ValueError("unknown claim marker")
+                marker = json.loads(raw[len(prefix):], object_pairs_hook=_claim_wire_object)
+                if set(marker) != {"version", "journal", "lock", "parent", "minimum_sequence", "prefix_bytes", "prefix_sha256"}:
+                    raise ValueError("invalid claim marker fields")
+                if marker["version"] != 1 or type(marker["version"]) is not int:
+                    raise ValueError("invalid claim marker version")
+                for name in ("minimum_sequence", "prefix_bytes"):
+                    if type(marker[name]) is not int or marker[name] < 0:
+                        raise ValueError("invalid claim marker bound")
+                if marker["lock"] != lock_identity or marker["parent"] != parent_identity:
+                    raise ValueError("claim store identity changed")
+                if marker["journal"] != self._identity(self.path.stat()):
+                    raise ValueError("consumption journal identity changed")
+                if not stat.S_ISREG(self.path.stat().st_mode):
+                    raise ValueError("consumption journal must be regular")
+                data = self.path.read_bytes()
+                size = marker["prefix_bytes"]
+                if len(data) < size or hashlib.sha256(data[:size]).hexdigest() != marker["prefix_sha256"]:
+                    raise ValueError("consumption history prefix changed")
+                return marker
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                raise EvidenceWriteError(f"claim store identity is unresolved: {error}") from error
+        # Initialize only an unmarked store. Never reset a nonempty marker.
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(self.path, flags, 0o600)
+        except FileExistsError:
+            pass
+        else:
+            os.close(descriptor)
+        if not stat.S_ISREG(self.path.stat().st_mode):
+            raise EvidenceWriteError("consumption journal must be regular")
+        data = self.path.read_bytes()
+        return {"version": 1, "journal": self._identity(self.path.stat()), "lock": lock_identity,
+                "parent": parent_identity, "minimum_sequence": 0, "prefix_bytes": len(data),
+                "prefix_sha256": hashlib.sha256(data).hexdigest()}
+
+    def _write_claim_marker(self, lock_descriptor: int, marker: Mapping[str, Any]) -> None:
+        """Keep a nonempty magic prefix on all updates; never truncate to empty."""
+        encoded = b"xverse-m3-claim-store-v1\n" + json.dumps(marker, sort_keys=True, separators=(",", ":")).encode()
+        try:
+            if os.pwrite(lock_descriptor, encoded, 0) != len(encoded):
+                raise OSError("partial claim marker write")
+            os.ftruncate(lock_descriptor, len(encoded))
+            os.fsync(lock_descriptor)
+            parent = os.open(self.path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(parent)
+            finally:
+                os.close(parent)
+        except OSError as error:
+            raise EvidenceWriteError(f"claim store publication is uncertain: {error}") from error
+
+    def _append_locked(self, record: EvidenceRecord) -> EvidenceRecord:
+        """Append while both locks are held; preserve the existing fsync sequence."""
+
+        expected = len(self._records) + 1
+        if record.sequence not in (0, expected):
+            raise EvidenceWriteError("evidence sequence is not contiguous")
+        stored = replace(record, sequence=expected)
+        encoded = json.dumps(_record_data(stored), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
+            flags |= getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(self.path, flags, 0o600)
+            os.fchmod(descriptor, 0o600)
+            with os.fdopen(descriptor, "a", encoding="utf-8") as stream:
+                stream.write(encoded)
+                stream.flush()
+                os.fsync(stream.fileno())
+            directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+            directory = os.open(self.path.parent, directory_flags)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        except OSError as error:
+            raise EvidenceWriteError(f"cannot persist evidence: {error}") from error
+        self._records.append(stored)
+        return stored
 
 
 class LifecycleProvider(Protocol):

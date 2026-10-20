@@ -1,0 +1,15 @@
+................F.................................                       [100%]
+=================================== FAILURES ===================================
+______ test_source_pointers_and_full_logical_identity_survive_projection _______
+
+    def test_source_pointers_and_full_logical_identity_survive_projection():
+        value = prepared()
+        assert all(step.logical_id.startswith(SCENARIO + "#steps/") for step in value.steps)
+>       assert any(edge.pointer.endswith("/1/dependsOn") for edge in value.graph_edges)
+E       assert False
+E        +  where False = any(<generator object test_source_pointers_and_full_logical_identity_survive_projection.<locals>.<genexpr> at 0x72829ca9e810>)
+
+tests/thesis_lite/maestro/test_preparation.py:259: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_preparation.py::test_source_pointers_and_full_logical_identity_survive_projection
+1 failed, 49 passed in 6.18s

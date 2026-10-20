@@ -1,0 +1,46 @@
+{
+  "status": "SOURCE_TERMINAL_WHEEL_PENDING",
+  "source_returncode": 1,
+  "source_passed": 1493,
+  "source_failed": 2,
+  "source_elapsed_seconds": 1310.7405419870047,
+  "source_receipt_sha256": "766d1a6c0689e8920262b8340732f2095e27a86e9fa3449c953f2848666f37b3",
+  "source_log_sha256": "a7498c669d8a0725dd39ba896a5f41d526f3f9305994d38f8076786657c151cb",
+  "source_audit_sha256": "bd3252c44a19c007b037d384923d8b646e643c7c30512254bafddfdb694a8940",
+  "source_failures": [
+    {
+      "finding": 318,
+      "test": "tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[past-restart]",
+      "failed_assertion": "submitted and len(queue_facts)==1, result.diagnostic",
+      "control_submission_reached": false,
+      "observed_diagnostic": "ML-PERSIST-TIMEOUT",
+      "original_operation": "schedule/step-complete prepare-unrelated",
+      "detailed_context": "provisional-failure-318.json",
+      "cause": "UNKNOWN"
+    },
+    {
+      "finding": 324,
+      "test": "tests/thesis_lite/maestro/test_collection_runtime.py::test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader",
+      "failed_call": "client.collect_outputs -> _rpc collect/action=finish -> receive",
+      "original_rpc_end_ns": 1022808197994349,
+      "observed_diagnostic": "ML-PERSIST-TIMEOUT",
+      "first_rpc_context_record_retained": false,
+      "worker_substage": "UNKNOWN",
+      "collection_result_returned": false,
+      "later_closed_reader_assertions_reached": false,
+      "cause": "UNKNOWN"
+    }
+  ],
+  "original_exec_session": 53866,
+  "wheel_original_pid": 736231,
+  "complete_both_phase_failure_inventory": false,
+  "runtime_inputs_changed": false,
+  "native_retry_started": false,
+  "cause_relation_established": false,
+  "CAPA_effectiveness_demonstrated": false,
+  "full_regression_passed": false,
+  "actual_M1_admissions": 0,
+  "stable_increment17": false,
+  "accepted": false,
+  "merged": false
+}

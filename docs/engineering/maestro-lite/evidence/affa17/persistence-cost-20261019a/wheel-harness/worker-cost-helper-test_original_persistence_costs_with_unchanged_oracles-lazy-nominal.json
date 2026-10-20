@@ -1,0 +1,31 @@
+{
+  "command": [
+    "cc",
+    "-DRUN_BOOTSTRAP",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "/tmp/maestro-persistence-cost-20261019a-wheel-private-z418k21m/test_original_persistence_cost0/owned-cost-profile-helper/bootstrap.c",
+    "-lcrypto",
+    "-o",
+    "/tmp/maestro-persistence-cost-20261019a-wheel-private-z418k21m/test_original_persistence_cost0/owned-cost-profile-helper/run-bootstrap"
+  ],
+  "returncode": 0,
+  "profile_file": "/tmp/maestro-persistence-cost-20261019a-wheel-private-z418k21m/test_original_persistence_cost0/original-worker-costs.jsonl",
+  "original_native_source_sha256": "21c2f70f6fbb1dec66fca39c9a44e4086f4496d46d30f28671ecd31f007cc38b",
+  "fixed_diagnostic_code": "import os,json,time,functools\nfrom xverse.argus import EvidenceStore\nfrom xverse.argus.writer import EvidenceRun\nfrom xverse.argus.reader import EvidenceReader\nfrom xverse_xdl.lifecycle import FileEvidenceJournal\nfrom xverse.maestro.admission import PermitSession,_PreparationProof\nfrom xverse.maestro.lifecycle_evidence import OutcomeJournal\nfrom xverse.maestro import persistence_worker as worker\nfd=os.open('/tmp/maestro-persistence-cost-20261019a-wheel-private-z418k21m/test_original_persistence_cost0/original-worker-costs.jsonl',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)\nstate={'rpc':0,'kind':None,'unit':None,'deadline':None}\ndepth=0\ncount=0\ndef observed(original,label):\n    @functools.wraps(original)\n    def call(*args,**kwargs):\n        global depth,count\n        began=time.monotonic();current=depth;depth+=1;error=None\n        try:return original(*args,**kwargs)\n        except BaseException as exc:\n            error=type(exc).__name__;raise\n        finally:\n            ended=time.monotonic();depth-=1\n            if count<4096:\n                row=dict(state,label=label,began=began,ended=ended,depth=current,error=error)\n                os.write(fd,(json.dumps(row,separators=(',',':'))+'\\n').encode());count+=1\n    return call\nreceive=worker._receive\ndef request(*args,**kwargs):\n    value=receive(*args,**kwargs)\n    frame=value[0] if isinstance(value,tuple) else value\n    state.update(rpc=frame['sequence'],kind=frame['kind'],unit=frame['body'].get('unit'),\n                 deadline=frame['deadline']/1e9)\n    return value\nworker._receive=request\nworker._send=observed(worker._send,'reply.send')\nEvidenceStore.read_run=classmethod(observed(EvidenceStore.read_run.__func__,'argus.read_run'))\nfor cls,names,prefix in (\n    (EvidenceReader,('records',),'argus.reader'),\n    (EvidenceRun,('append_event','flush_buffer'),'argus.writer'),\n    (FileEvidenceJournal,('append','public_records','_reload'),'m3'),\n    (PermitSession,('revalidate_start_intent',),'permit'),\n    (_PreparationProof,('check',),'preparation'),\n    (OutcomeJournal,('_history','_mirrors','record'),'outcomes')):\n    for name in names:setattr(cls,name,observed(getattr(cls,name),prefix+'.'+name))\noriginal=FileEvidenceJournal.records\nFileEvidenceJournal.records=property(observed(original.fget,'m3.records'),doc=original.__doc__)\nstatus=worker.main()\nos.close(fd)\nos._exit(status)\n",
+  "fixed_diagnostic_code_sha256": "ca5d13ef52309657db321864f4fbd3738fb02d599f460df94a82704ca33506b6",
+  "compiled_source_sha256": "0919e2e44ff5504f700b0a15ead11054ea3abd311775f6ea55edd8d19e83cee0",
+  "binary_sha256": "a89f1e4aa7a4e8b4c5c3ecd10b4b1f9673b5650f5dfcb2b0a71032b938bf3d45",
+  "original_fixture": "/tmp/maestro-persistence-cost-20261019a-wheel-private-z418k21m/test_original_persistence_cost0",
+  "source_sha256": "2aa11803a2a87f848e43ceb1b4a91d0fd7c3b1b9ec931ef0392a2fb50a09c73a",
+  "production_diagnostic_mode_added": false,
+  "admission_precedes_birth": true,
+  "unchanged_original_assertions_and_bounds": true,
+  "observer_io_overhead_included": true,
+  "no_private_request_or_response_material_recorded": true
+}

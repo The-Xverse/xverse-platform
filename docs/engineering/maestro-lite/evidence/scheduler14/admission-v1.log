@@ -1,0 +1,100 @@
+.....................F.F.                                                [100%]
+=================================== FAILURES ===================================
+_________ test_budget_is_independent_of_tick_pauses_and_covers_health __________
+
+    def test_budget_is_independent_of_tick_pauses_and_covers_health():
+        _, short = admitted()
+        _, long = admitted(active_seconds=20, request_limit=8192)
+        assert long.health_slots > short.health_slots
+        assert long.required_requests > short.required_requests
+        assert long.required_events > short.required_events
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_schedule_plan.py:74: Failed
+________ test_subnormal_cadence_rejects_derived_budget_without_overflow ________
+
+    def test_subnormal_cadence_rejects_derived_budget_without_overflow():
+        from xverse.maestro.schedule_plan import ScheduleError
+        value=prepared()
+        with pytest.raises(ScheduleError):
+>           admit_schedule(value,policies=tuple(ProbePolicy(u.unit_id,1,1e-320,0.1) for u in value.units),
+                           ticks=(0,10000),active_seconds=1,operation_seconds=5e-324,
+                           poll_seconds=5e-324,request_limit=8192)
+
+tests/thesis_lite/maestro/test_schedule_plan.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='f570fa42244c1550be6bc6aeb8665050826b7c45227db0b9faf1ab3cbccb4b7a')
+
+    def admit_schedule(
+        prepared,
+        *,
+        policies,
+        ticks,
+        active_seconds,
+        operation_seconds,
+        poll_seconds=0.01,
+        per_unit_seconds=1,
+        request_limit=128,
+        event_limit=MAX_EVENTS,
+    ):
+        if (
+            type(prepared) is not PreparedLifecycle
+            or type(policies) is not tuple
+            or type(ticks) is not tuple
+        ):
+            raise ScheduleError("ML-SCHEDULE-INPUT")
+        _seconds(active_seconds, 300, "ACTIVE")
+        _seconds(operation_seconds, 5, "OPERATION")
+        _seconds(poll_seconds, 0.05, "POLL")
+        _seconds(per_unit_seconds, 5, "TEARDOWN")
+        _integer(request_limit, MAX_REQUESTS, "REQUEST-LIMIT", 128)
+        _integer(event_limit, MAX_EVENTS, "EVENT-LIMIT")
+        units = tuple(u.unit_id for u in prepared.units)
+        if (
+            not units
+            or len(units) > 16
+            or len(policies) != len(units)
+            or any(type(p) is not ProbePolicy for p in policies)
+        ):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        for policy in policies:
+            policy.__post_init__()
+        by_unit = {p.unit_id: p for p in policies}
+        if set(by_unit) != set(units) or len(by_unit) != len(policies):
+            raise ScheduleError("ML-SCHEDULE-POLICIES")
+        policies = tuple(by_unit[u] for u in units)
+        if not 1 <= len(ticks) <= MAX_EVENTS:
+            raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
+        prior = 0
+        for tick in ticks:
+            _integer(tick, prepared.clock.horizon_ticks, "TICK", 0)
+            if tick < prior:
+                raise ScheduleError("ML-SCHEDULE-TICK-REWIND")
+            prior = tick
+        if ticks[0] != 0 or ticks[-1] != prepared.clock.horizon_ticks:
+            raise ScheduleError("ML-SCHEDULE-TICK-HORIZON")
+        if any(
+            s.phase not in ("prepare", "start", "observe", "stop", "cleanup")
+            for s in prepared.steps
+        ):
+            raise ScheduleError("ML-SCHEDULE-PHASE")
+        n = len(units)
+        scan = n * operation_seconds
+        cadence = min(p.cadence_seconds for p in policies)
+        period = cadence - scan - operation_seconds
+        if period <= scan or poll_seconds > period:
+            raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+        # Early scans shorten actual spacing. Count that conservative spacing, not
+        # just ceil(active/cadence); pauses never shrink the host obligation universe.
+>       slots = math.ceil(active_seconds / period) + 2
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OverflowError: cannot convert float infinity to integer
+
+src/xverse/maestro/schedule_plan.py:132: OverflowError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_schedule_plan.py::test_budget_is_independent_of_tick_pauses_and_covers_health
+FAILED tests/thesis_lite/maestro/test_schedule_plan.py::test_subnormal_cadence_rejects_derived_budget_without_overflow
+2 failed, 23 passed in 5.91s

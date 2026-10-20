@@ -1,0 +1,109 @@
+.....FF...........F..                                                    [100%]
+=================================== FAILURES ===================================
+______________ test_late_actual_flush_does_not_register_authority ______________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x7cc2f2097bb0>, <xverse.maestro.admission.PermitSession object at 0x7cc...f2097ce0>, <function environment.<locals>.spawn at 0x7cc2f1eda520>, <function stack.<locals>.launch at 0x7cc2f2335800>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7cc2f1ed4a50>
+
+    def test_late_actual_flush_does_not_register_authority(stack, monkeypatch):
+        owner, permits, writer, manager, spawn, launch = stack
+        actual = writer.flush_buffer
+    
+        def slow_flush():
+            actual()
+            time.sleep(0.08)
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(writer, "flush_buffer", slow_flush)
+            with pytest.raises(OwnerError, match="DEADLINE"):
+                owner.commit_intent(permits._prepared.units[0].unit_id, deadline(0.05))
+        assert owner.latch.cancelled and not owner._claims
+        assert len(permits._journal.records) == 1
+        assert (
+>           EvidenceStore.read_run(writer._root).records()[0]["extensions"][
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "xverse.maestro"
+            ]["action"]
+            == "intent"
+        )
+E       IndexError: list index out of range
+
+tests/thesis_lite/maestro/test_owner.py:263: IndexError
+____________ test_cancel_during_flush_does_not_wait_for_owner_lock _____________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x7cc2f1ed0cb0>, <xverse.maestro.admission.PermitSession object at 0x7cc...f1ed0950>, <function environment.<locals>.spawn at 0x7cc2f1edb880>, <function stack.<locals>.launch at 0x7cc2f1edbc40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7cc2f20c7a70>
+
+    def test_cancel_during_flush_does_not_wait_for_owner_lock(stack, monkeypatch):
+        owner, permits, writer, manager, spawn, launch = stack
+        entered, release = threading.Event(), threading.Event()
+        actual = writer.flush_buffer
+        errors = []
+    
+        def blocked_flush():
+            actual()
+            entered.set()
+            assert release.wait(3)
+    
+        def commit():
+            try:
+                owner.commit_intent(permits._prepared.units[0].unit_id, deadline())
+            except Exception as error:
+                errors.append(error)
+    
+        with monkeypatch.context() as patch:
+            patch.setattr(writer, "flush_buffer", blocked_flush)
+            worker = threading.Thread(target=commit)
+            worker.start()
+            try:
+                assert entered.wait(2)
+>               owner.cancel("test cancellation while public flush is pending")
+
+tests/thesis_lite/maestro/test_owner.py:293: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/owner.py:451: in cancel
+    self.latch.cancel(reason)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.supervisor.CancellationLatch object at 0x7cc2f1ed03b0>
+reason = 'test cancellation while public flush is pending'
+
+    def cancel(self, reason: str) -> int:
+        self._check()
+        if (
+            type(reason) is not str
+            or not reason
+            or len(reason) > 64
+            or any(not (c.isascii() and (c.isalnum() or c in "-_")) for c in reason)
+        ):
+>           raise SupervisionError("ML-ADMISSION-CANCEL-REASON")
+E           xverse.maestro.supervisor.SupervisionError: ML-ADMISSION-CANCEL-REASON
+
+src/xverse/maestro/supervisor.py:87: SupervisionError
+________________ test_empty_frozen_boundary_is_not_a_stage_ack _________________
+
+stack = (<xverse.maestro.owner.ReleaseOwner object at 0x7cc2f1cf3040>, <xverse.maestro.admission.PermitSession object at 0x7cc...f20d3070>, <function environment.<locals>.spawn at 0x7cc2f1d94f40>, <function stack.<locals>.launch at 0x7cc2f1d968e0>)
+guard_binary = PosixPath('/tmp/pytest-of-jefferson/pytest-801/releasegate-native0/release-gate')
+
+    def test_empty_frozen_boundary_is_not_a_stage_ack(stack, guard_binary):
+        owner, permits, writer, manager, spawn, launch = stack
+        unit_id = permits._prepared.units[0].unit_id
+        descriptor = BoundaryDescriptor("fixture-run", unit_id, 1, "empty-boundary", 0)
+        original = deadline()
+        owner.commit_intent(unit_id, original)
+        gate = launch(guard_binary, descriptor)
+        with pytest.raises(OwnerError, match="STAGE"):
+            owner.release(unit_id, descriptor, gate, original)
+        assert owner.latch.cancelled and gate._sequence == 0
+>       assert manager.force_cleanup(descriptor).termination_observed
+E       AssertionError: assert False
+E        +  where False = BoundaryRecord(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-...se, membership_complete=True, residual_count=0, termination_observed=False, diagnostic=None, ready_for_execution=False).termination_observed
+E        +    where BoundaryRecord(descriptor=BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-...se, membership_complete=True, residual_count=0, termination_observed=False, diagnostic=None, ready_for_execution=False) = force_cleanup(BoundaryDescriptor(run_id='fixture-run', unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, boundary_id='empty-boundary', creation_epoch=0))
+E        +      where force_cleanup = <xverse.maestro.prbc.ProcessBoundaryOps object at 0x7cc2f20d3070>.force_cleanup
+
+tests/thesis_lite/maestro/test_owner.py:407: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_owner.py::test_late_actual_flush_does_not_register_authority
+FAILED tests/thesis_lite/maestro/test_owner.py::test_cancel_during_flush_does_not_wait_for_owner_lock
+FAILED tests/thesis_lite/maestro/test_owner.py::test_empty_frozen_boundary_is_not_a_stage_ack
+3 failed, 18 passed in 10.45s

@@ -1,0 +1,190 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "extensions": {
+    "io.xverse.experiment": {
+      "fidelityLimitations": [
+        "Declared intent only; no runtime result is claimed."
+      ],
+      "kind": "scenario-intent",
+      "parameters": [
+        {
+          "id": "gain",
+          "mutability": "configuration",
+          "unitSemantics": "dimensionless",
+          "value": 1.5,
+          "valueType": "number"
+        },
+        {
+          "id": "enabled",
+          "mutability": "configuration",
+          "unitSemantics": "dimensionless",
+          "value": true,
+          "valueType": "boolean"
+        }
+      ],
+      "schemaVersion": "0.1",
+      "seed": {
+        "unitSemantics": "experiment-seed",
+        "value": 7
+      },
+      "target": {
+        "apiVersion": "xverse.io/xdl/v1alpha1",
+        "kind": "Scenario",
+        "name": "sample-observation-run",
+        "namespace": "org.xverse.experiment"
+      }
+    }
+  },
+  "kind": "Scenario",
+  "metadata": {
+    "name": "sample-observation-run",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "limitations": [
+        "Acceptance expressions are declared text only."
+      ],
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "acceptanceIntent": "Demonstrate offline declared intent compilation only.",
+    "deploymentRef": {
+      "apiVersion": "xverse.io/xdl/v1alpha1",
+      "kind": "Deployment",
+      "name": "local-simulated-loop",
+      "namespace": "org.xverse.experiment"
+    },
+    "faults": [],
+    "initialConditions": {
+      "sample-count": 0
+    },
+    "metrics": [
+      {
+        "acceptance": "declared acceptance text only",
+        "calculationRef": "urn:xverse:experiment:metric:count",
+        "id": "sample-count",
+        "observerIds": [
+          "sample-observer"
+        ],
+        "unitSemantics": "count"
+      }
+    ],
+    "observers": [
+      {
+        "evidenceSinkRef": "evidence/sample-observer.json",
+        "id": "sample-observer",
+        "payloadSchema": "urn:xverse:experiment:sample-v1",
+        "samplingIntent": "observe every declared sample",
+        "targetRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "sample-flow",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "timeDomainId": "experiment-time",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "steps": [
+      {
+        "id": "start-source",
+        "actionKind": "start",
+        "targetRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "source-instance",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "timeDomainId": "experiment-time",
+        "schedule": {
+          "at": 0,
+          "unit": "tick",
+          "tolerance": {
+            "value": 0,
+            "unit": "tick"
+          }
+        },
+        "action": {
+          "operation": "start"
+        },
+        "extensions": {
+          "io.xverse.experiment": {
+            "schemaVersion": "0.1",
+            "kind": "step-intent",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "kind": "Scenario",
+              "namespace": "org.xverse.experiment",
+              "name": "sample-observation-run",
+              "element": "start-source"
+            },
+            "phase": "start",
+            "duration": {
+              "value": 0,
+              "unit": "tick"
+            },
+            "parameters": [],
+            "dependsOn": []
+          }
+        }
+      },
+      {
+        "id": "start-sink",
+        "actionKind": "start",
+        "targetRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "element": "sink-instance",
+          "kind": "System",
+          "name": "sample-loop",
+          "namespace": "org.xverse.experiment"
+        },
+        "timeDomainId": "experiment-time",
+        "schedule": {
+          "at": 0,
+          "unit": "tick",
+          "tolerance": {
+            "value": 0,
+            "unit": "tick"
+          }
+        },
+        "action": {
+          "operation": "start"
+        },
+        "extensions": {
+          "io.xverse.experiment": {
+            "schemaVersion": "0.1",
+            "kind": "step-intent",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "kind": "Scenario",
+              "namespace": "org.xverse.experiment",
+              "name": "sample-observation-run",
+              "element": "start-sink"
+            },
+            "phase": "start",
+            "duration": {
+              "value": 0,
+              "unit": "tick"
+            },
+            "parameters": [],
+            "dependsOn": [
+              "start-source"
+            ]
+          }
+        }
+      }
+    ],
+    "systemRef": {
+      "apiVersion": "xverse.io/xdl/v1alpha1",
+      "kind": "System",
+      "name": "sample-loop",
+      "namespace": "org.xverse.experiment"
+    },
+    "timeMappings": []
+  }
+}

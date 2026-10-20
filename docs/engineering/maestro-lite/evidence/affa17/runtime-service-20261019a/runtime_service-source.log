@@ -1,0 +1,106 @@
+.F..................FFF                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_service_wiring_uses_original_registry_with_final_start_stubbed ______
+
+service_data = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7ed7ce8a65d0>, RuntimeScope(startup=HostDeadline(sessio...ession='host-session', monotonic_seconds=1017267.556317862)), <function service_data.<locals>.build at 0x7ed7ce669d00>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ed7cf961a70>
+
+    def test_service_wiring_uses_original_registry_with_final_start_stubbed(service_data,monkeypatch):
+        entry,scope,build=service_data;request,policy,_=build()
+        service=RuntimeService((policy,),execution_enabled=True);calls=[];sentinel=object()
+        monkeypatch.setattr(_OriginalRuntimeRun,'start',lambda self,value:(calls.append((self,value)),sentinel)[1])
+        assert service.register(request,deadline=deadline(1)) is entry
+        assert service.register(request,deadline=deadline(1)) is entry
+>       assert service.start('fixture-run',scope) is sentinel
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_runtime_service.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.runtime_service.RuntimeService object at 0x7ed7ce8a7890>
+run_id = 'fixture-run'
+scope = RuntimeScope(startup=HostDeadline(session='host-session', monotonic_seconds=1017245.866525867), active=HostDeadline(se...onotonic_seconds=1017264.556317862), closure=HostDeadline(session='host-session', monotonic_seconds=1017267.556317862))
+
+    def start(self,run_id,scope):
+>       request=self._original(run_id)
+                ^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'RuntimeService' object is not callable
+
+src/xverse/maestro/runtime_service.py:228: TypeError
+_ test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop _
+
+service_data = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7ed7ce7d54f0>, RuntimeScope(startup=HostDeadline(sessio...session='host-session', monotonic_seconds=1017276.17220993)), <function service_data.<locals>.build at 0x7ed7ce519ee0>)
+
+    def test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop(service_data):
+        entry,_,build=service_data;request,policy,_=build();service=RuntimeService((policy,),execution_enabled=True)
+        service.register(request,deadline=deadline(1))
+        with pytest.raises(ValueError,match='REPEAT'):service.register(replace(request),deadline=deadline(1))
+        object.__setattr__(request.authorization,'approval_ref','changed')
+>       with pytest.raises(ValueError,match='SERVICE-REPLACED'):service.collect('fixture-run')
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_runtime_service.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.runtime_service.RuntimeService object at 0x7ed7cea4bad0>
+run_id = 'fixture-run'
+
+    def collect(self,run_id):
+>       self._original(run_id)
+E       TypeError: 'RuntimeService' object is not callable
+
+src/xverse/maestro/runtime_service.py:243: TypeError
+_________ test_authorization_and_files_are_revalidated_at_first_start __________
+
+service_data = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7ed7ce7d63f0>, RuntimeScope(startup=HostDeadline(sessio...ession='host-session', monotonic_seconds=1017276.748761191)), <function service_data.<locals>.build at 0x7ed7ce4a2020>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ed7ce73bb60>
+
+    def test_authorization_and_files_are_revalidated_at_first_start(service_data,monkeypatch):
+        entry,scope,build=service_data;request,policy,paths=build();service=RuntimeService((policy,),execution_enabled=True)
+        service.register(request,deadline=deadline(1));calls=[]
+        monkeypatch.setattr(_OriginalRuntimeRun,'start',lambda *a:calls.append(True))
+        paths['source'].write_bytes(b'changed-after-register')
+>       with pytest.raises(ValueError,match='READINESS-BYTES'):service.start('fixture-run',scope)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_runtime_service.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.runtime_service.RuntimeService object at 0x7ed7ce660350>
+run_id = 'fixture-run'
+scope = RuntimeScope(startup=HostDeadline(session='host-session', monotonic_seconds=1017255.052189791), active=HostDeadline(se...onotonic_seconds=1017273.748761191), closure=HostDeadline(session='host-session', monotonic_seconds=1017276.748761191))
+
+    def start(self,run_id,scope):
+>       request=self._original(run_id)
+                ^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'RuntimeService' object is not callable
+
+src/xverse/maestro/runtime_service.py:228: TypeError
+_____ test_actual_expired_authorization_and_malformed_ids_deadlines_reject _____
+
+service_data = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7ed7ce511b80>, RuntimeScope(startup=HostDeadline(sessio...ssion='host-session', monotonic_seconds=1017277.3264404191)), <function service_data.<locals>.build at 0x7ed7ce519120>)
+
+    def test_actual_expired_authorization_and_malformed_ids_deadlines_reject(service_data):
+        entry,_,build=service_data;request,policy,_=build(expires=-1);service=RuntimeService((policy,),execution_enabled=True)
+        with pytest.raises(ValueError,match='START-WINDOW'):service.register(request,deadline=deadline(1))
+        with pytest.raises(ValueError,match='DEADLINE'):service.inspect(request,deadline=object())
+>       with pytest.raises(ValueError,match='IDENTITY'):service.collect([])
+                                                        ^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_runtime_service.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.runtime_service.RuntimeService object at 0x7ed7cea4bf50>
+run_id = []
+
+    def collect(self,run_id):
+>       self._original(run_id)
+E       TypeError: 'RuntimeService' object is not callable
+
+src/xverse/maestro/runtime_service.py:243: TypeError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_runtime_service.py::test_service_wiring_uses_original_registry_with_final_start_stubbed
+FAILED tests/thesis_lite/maestro/test_runtime_service.py::test_changed_repeat_and_metadata_corruption_block_ordinary_access_but_not_stop
+FAILED tests/thesis_lite/maestro/test_runtime_service.py::test_authorization_and_files_are_revalidated_at_first_start
+FAILED tests/thesis_lite/maestro/test_runtime_service.py::test_actual_expired_authorization_and_malformed_ids_deadlines_reject
+4 failed, 19 passed in 12.80s

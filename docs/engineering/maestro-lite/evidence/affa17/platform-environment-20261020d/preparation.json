@@ -1,0 +1,84 @@
+{
+  "driver_sha256": "6714b021ca71d55c2275fc85d9b81bc132d081d4cf121f1a5060df40369e9b7b",
+  "python": "/tmp/maestro-lite-platform-regression-target-20261020d/bin/python",
+  "base_executable": "/tmp/maestro-lite-platform-regression-target-20261020c/bin/python",
+  "candidate_wheel_sha256": "e1a5119acd81e879214166307b4b4a4fcbe898feeeca7d68d7ab2bd596bdb1d7",
+  "build_versions": {
+    "build": "1.6.1",
+    "hatchling": "1.32.4",
+    "packaging": "26.3",
+    "pathspec": "1.1.1",
+    "pluggy": "1.7.0",
+    "pyproject-hooks": "1.3.3",
+    "trove-classifiers": "2026.9.21.13"
+  },
+  "plugin_sha256": "8aef024ccf5f34f36196e6217cee8d666d84b1866cfa0b9eeb25696d8a42ad10",
+  "plugin_installed": "/tmp/maestro-lite-platform-regression-target-20261020d/lib/python3.13/site-packages/maestro_receipt_namespace.py",
+  "commands": [
+    {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020c/bin/python",
+        "-m",
+        "venv",
+        "--system-site-packages",
+        "/tmp/maestro-lite-platform-regression-target-20261020d"
+      ],
+      "returncode": 0,
+      "log": "venv.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020d/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--index-url",
+        "https://pypi.org/simple",
+        "build==1.6.1",
+        "hatchling==1.32.4",
+        "packaging==26.3",
+        "pathspec==1.1.1",
+        "pluggy==1.7.0",
+        "pyproject-hooks==1.3.3",
+        "trove-classifiers==2026.9.21.13"
+      ],
+      "returncode": 0,
+      "log": "build-tools.log",
+      "log_sha256": "e63a4b1bfe5d49a4eb968d660de32eed8e42ebf445b3831253e53f7dcd1873d7"
+    },
+    {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020d/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--no-index",
+        "--no-deps",
+        "/home/jefferson/xverse-platform-worktrees/maestro-lite-affa-20261018/docs/engineering/maestro-lite/evidence/affa17/integrated-maestro-20261019b/dist/xverse_xdl-0.4.0-py3-none-any.whl"
+      ],
+      "returncode": 0,
+      "log": "candidate-wheel.log",
+      "log_sha256": "cea9f7f91aeae17c193489a173d56852a921a1e37dda5098f478538171e58d75"
+    },
+    {
+      "command": [
+        "/tmp/maestro-lite-platform-regression-target-20261020d/bin/python",
+        "-m",
+        "pip",
+        "list",
+        "--format=json"
+      ],
+      "returncode": 0,
+      "log": "pip-list.log",
+      "log_sha256": "330288ed4796b5407813539adee9beec68a9faa41347a46cda91bfbbcba48506"
+    }
+  ],
+  "reference_preparation_sha256": "0ee24c73d11f73a9e0aa7e33647d1723f4fc04ec8f88c909899b8ff0b979204d",
+  "original_runtime_environment_mutated": false,
+  "product_tests_executed": false,
+  "runtime_execution": false,
+  "platform_regression_passed": false,
+  "accepted": false,
+  "merged": false
+}
