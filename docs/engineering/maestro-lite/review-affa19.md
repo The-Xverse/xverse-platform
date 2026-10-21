@@ -1427,3 +1427,12 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     closure, runtime entry, storage-root loss, stream faults), two alternating pairs at load 7.5
     to 5.3: 26 passed in each of the four runs. Reading: no C1-attributable failure; the run-2
     failures are load. C1 is a fix candidate; acceptance with increment 19 follows the full run.
+
+473. CAPA successor step 3 (2026-10-21, evidence/affa19/capa-20261021-affa19-step3, builder
+    build-capa-20261021-affa19-step3.py), parent step 2 (335f93f6…, 56 records / 572 bindings),
+    additive: review spans 459-472 and the run u/v, gate-input, loaded A/B and C1 evidence.
+    ML-CAPA-418 stays FIX_CANDIDATE (v2 accepted as a partial mitigation only, 468 A2; F-08/F-09
+    open); ML-CAPA-439 stays FIX_CANDIDATE (accepted, 468 A1; increment acceptance pending);
+    ML-CAPA-444-D09 TRIAGED -> FIX_CANDIDATE on C1 cc3d444c1; ML-CAPA-359 UNRESOLVED/UNKNOWN ->
+    TRIAGED/HYPOTHESIS (468 D4). No cause verified, no effectiveness claimed. This finding is
+    bound by the next successor. Run w (full installed-wheel run on cc3d444c1) is in progress.

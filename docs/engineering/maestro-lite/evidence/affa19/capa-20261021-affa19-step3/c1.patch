@@ -1,0 +1,128 @@
+diff --git a/src/xverse/maestro/dispatcher.py b/src/xverse/maestro/dispatcher.py
+index ad110ebf7..79ba6040b 100644
+--- a/src/xverse/maestro/dispatcher.py
++++ b/src/xverse/maestro/dispatcher.py
+@@ -1506,8 +1506,9 @@ class FiniteDispatcher(_Original):
+                     report_receipt = self.client.finish_run(
+                         self._broker, HostDeadline(self.owner.session, report_end))
+                     facts = report_receipt.public_data()
++                    from .terminal_runtime import finalizable  # same evidence rule as RunClosure (finding 472)
+                     if (facts['diagnostic'] is not None or facts['writer'] is None
+-                        or facts['report'] is None or not facts['report']['eligible']
++                        or facts['report'] is None or not finalizable(facts['report'])
+                         or not facts['writer']['evidence_complete']):
+                         diagnostic = diagnostic or 'ML-SCHEDULE-EVIDENCE-INCOMPLETE'
+                 except Exception:
+diff --git a/src/xverse/maestro/run_closure.py b/src/xverse/maestro/run_closure.py
+index 376d618cf..4edc7cfec 100644
+--- a/src/xverse/maestro/run_closure.py
++++ b/src/xverse/maestro/run_closure.py
+@@ -19,7 +19,7 @@ from .persistence import PersistenceClient
+ from .teardown import ReverseTeardown
+ from .time import HostDeadline
+ from .writer_closure import WriterClosure, unresolved
+-from .terminal_runtime import TerminalReceipt
++from .terminal_runtime import TerminalReceipt, finalizable
+ 
+ 
+ class ClosureError(OwnerError):
+@@ -403,7 +403,7 @@ class RunClosure(_Original):
+                         terminal_reports.append(outcome)
+                         facts = outcome.public_data()
+                         if (facts['diagnostic'] is not None or facts['writer'] is None
+-                            or facts['report'] is None or not facts['report']['eligible']
++                            or facts['report'] is None or not finalizable(facts['report'])
+                             or not facts['writer']['evidence_complete']):
+                             diagnostics.append('ML-CLOSURE-REPORT-INCOMPLETE')
+                         continue
+diff --git a/src/xverse/maestro/terminal_runtime.py b/src/xverse/maestro/terminal_runtime.py
+index 8ff6db91b..347360927 100644
+--- a/src/xverse/maestro/terminal_runtime.py
++++ b/src/xverse/maestro/terminal_runtime.py
+@@ -30,7 +30,7 @@ class WorkerTerminal:
+         self.runtime_digest=runtime_admission_digest(evidence.coverage,self.plan,evidence.collection_generation_ns)
+         self.assessment_scope=RuntimeEvidenceScope(self.plan.canonical_bytes,evidence.collection_generation_ns)
+         self.end=None;self.publish_attempted=self.close_attempted=False
+-        self.receipt_bytes=None;self.eligible=False
++        self.receipt_bytes=None;self.eligible=self.finalizable=False
+ 
+     def checkpoint(self,deadline,check):
+         check(deadline)
+@@ -156,6 +156,7 @@ class WorkerTerminal:
+             normalComplete=normal,requiredRowsSatisfied=required,collectionComplete=collected,
+             terminalSucceeded=terminal,eligible=self.eligible,blockers=blockers,stage=stage,
+             annotationCount=annotations,m3Count=records)
++        self.finalizable=finalizable(receipt)
+         self.receipt_bytes=canonical(receipt)
+         if len(self.receipt_bytes)>65536:raise PersistenceError('ML-TERMINAL-RECEIPT-SIZE')
+         return receipt
+@@ -168,7 +169,8 @@ class WorkerTerminal:
+         e=self.evidence
+         observation=close_runtime_writer(e.writer,e.root,eligible=self.eligible,admission=e.coverage,
+             plan=self.plan,generation_ns=e.collection_generation_ns,expected_admission_digest=e.coverage.digest,
+-            expected_runtime_digest=self.runtime_digest,check=lambda:self.checkpoint(deadline,check))
++            expected_runtime_digest=self.runtime_digest,check=lambda:self.checkpoint(deadline,check),
++            finalize=self.finalizable)
+         return dict(reportReceiptDigest=receipt_digest,writer=asdict(observation))
+ 
+ 
+@@ -180,6 +182,14 @@ class TerminalReceipt:
+     def public_data(self):return _json(self.public_bytes,65536)
+ 
+ 
++def finalizable(report):
++    """Eligible, or factually complete with a failed execution (finding 471)."""
++    return report['eligible'] or (report['blockers']==['terminal-outcome'] and report['entry'] is not None
++        and report['retainedEntry'] is not None and report['stage']=='published'
++        and all(report[k] is True for k in ('normalComplete','requiredRowsSatisfied','collectionComplete'))
++        and report['terminalSucceeded'] is False)
++
++
+ def _report_ack(client,body,end):
+     keys={'schemaVersion','admissionDigest','runtimeAdmissionDigest','reportEndNs','entry','retainedEntry',
+           'coreDigest','normalComplete','requiredRowsSatisfied','collectionComplete','terminalSucceeded',
+@@ -227,7 +237,7 @@ def _writer_ack(body,report):
+         or row['stage'] not in ('not-open','finalize-completed','finalize-error','flush-error','abort-completed','abort-error')
+         or row['abort_usability'] not in ('unknown','usable')
+         or row['after_usability']!={'open':'unknown','closed':'not-applicable','failed':'unusable'}[row['after_state']]
+-        or row['finalize_attempted'] != (report['eligible'] and row['before_state']=='open')
++        or row['finalize_attempted'] != (finalizable(report) and row['before_state']=='open')
+         or row['before_state']!='open' and (row['after_state']!=row['before_state'] or row['stage']!='not-open'
+             or any(row[k] for k in ('finalize_attempted','finalize_completed','abort_attempted','abort_completed')))
+         or row['abort_attempted']!=(row['abort_usability']=='usable')
+diff --git a/src/xverse/maestro/terminal_writer.py b/src/xverse/maestro/terminal_writer.py
+index 54df8d802..ecca2bdfe 100644
+--- a/src/xverse/maestro/terminal_writer.py
++++ b/src/xverse/maestro/terminal_writer.py
+@@ -27,15 +27,19 @@ class TerminalWriterObservation:
+ 
+ 
+ def close_runtime_writer(writer, root, *, eligible, admission, plan, generation_ns,
+-                         expected_admission_digest, expected_runtime_digest, check):
+-    """Called only after the original worker independently establishes eligibility.
++                         expected_admission_digest, expected_runtime_digest, check, finalize=None):
++    """Called only after the original worker independently establishes eligibility and finalizability.
+ 
+     This routine has no authority authentication or RPC entry point. Its caller
+     must bind the original report ACK and fixed end; it never grants lifecycle
+     completion. Only public writer operations and independently accepted closed
+     evidence can contribute observations.
+     """
+-    if type(eligible) is not bool:
++    # finalize: eligible, or a factually complete failed run (finding 471, design branch
++    # normal-documented-failure); it never grants eligibility.
++    if finalize is None:
++        finalize=eligible
++    if type(eligible) is not bool or type(finalize) is not bool or eligible and not finalize:
+         raise ValueError('ML-TERMINAL-WRITER-ELIGIBILITY')
+     pins=dict(expected_admission_digest=expected_admission_digest,
+               expected_runtime_digest=expected_runtime_digest,generation_ns=generation_ns)
+@@ -44,7 +48,7 @@ def close_runtime_writer(writer, root, *, eligible, admission, plan, generation_
+     before=writer.writer_state
+     finalize_attempted=finalize_completed=abort_attempted=abort_completed=False
+     usability='unknown';stage='not-open'
+-    if before=='open' and eligible:
++    if before=='open' and finalize:
+         finalize_attempted=True
+         try:
+             writer.finalize()
