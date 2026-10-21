@@ -1792,3 +1792,30 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     this finding. If the restart class recurs on a run whose samples stay at or below 10, it is
     a regression signal against E1 and the restart path is reopened as a design item; it is not
     waived. Receipts archived (receipts.tar.gz) and the tmpfs work directory removed.
+
+488. Run y (2026-10-21, evidence/affa19/platform-regression-20261021y; run-y-quiet-watch.sh; head
+    5eae7d746, product 897d9dc50 unchanged in code scope). Trigger 20:03:38Z (load 6.03); 109
+    in-run samples, 1-minute load 5.16-13.01, 25 samples above 10. Result: 2249 passed, 1
+    skipped, 1 failed, again only the Argus nested suite, whose nested Maestro run had 6 failures
+    (transitive restart requires new generations; launcher startup [lost-close-ack]; lazy nominal
+    stages; storage full [C0-never-armed]; native stream fault [seeded-flush-once,
+    seeded-flush-persistent]); the outer run of the same tests passed. Codes in the nested work
+    directories: ML-SCHEDULE-SERVICE-DEADLINE only. The failing set differs from run x (487)
+    except for the restart family, so the failures are timing failures spread over budgeted
+    paths, not a fixed defect. DV12 gate: not accepted, B2-failures 1 (sha a4a2f754…).
+    Classification under 469: samples above 10, so an observation; E3 not met.
+    Nested-versus-outer asymmetry (runs v, x, y: nested failures 12, 9, 6; outer 0, 0, 0). Two
+    readings were examined. (a) Leftover processes or threads from the Argus tests that run
+    before the nested suite: refuted for this head; an observation-only session-finish probe
+    over the Argus tests (nested test deselected) found no live descendant process and only the
+    main thread (leak-probe/; its 2 failures are the probe's own PYTHONPATH, which those two
+    tests forbid). (b) Load: in run y the nested phase (about 20:04-20:32) had mean load 8.61
+    with 16 samples above 10, the outer phase mean 9.16 with 9 samples above 10, so short
+    bursts were more frequent during the nested phase; consistent with load, not decisive.
+    Status: HYPOTHESIS (load bursts), the asymmetry remains an open observation for T06. Limit:
+    nested-failure-dirs.tar.gz lacks the transitive-restart directory (not in the archived
+    session directory). Procedure (delegated E3, no waiver): run-z-quiet-loop.sh repeats the
+    run-y procedure on one head until a run is decisive: clean, or failed with every sample at
+    or below 10 (then the 487 rule applies: regression signal, budgeted paths reopened as a
+    design item); runs with samples above 10 are archived as observations and repeated; overall
+    bound 10 h. Receipts archived and the tmpfs work directory removed.

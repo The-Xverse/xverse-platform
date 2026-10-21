@@ -1,0 +1,103 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+............................................................F........... [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+..............................................................s......... [ 78%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+...........................................                              [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: E-SERVICE-DEADLINE
+E         E           assert (False)
+E         E            +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='b2ba05fbb7e16478694e3e6fa21b11b02838715b5f426695fcd1689803dfb4a...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_native_writer_stream_faults.py:129: AssertionError
+E         _ test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent] _
+E         
+E         request = <FixtureRequest for <Function test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71cb65cf9d30>
+E         run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-qidd24kx/tmpdir/pytest-of-jefferson/pytest-2/test_native_stream_fault_prese2/owned-stream-helper/run-bootstrap')
+E         
+E             @pytest.mark.parametrize('run_bootstrap_binary', list(EXPECTED), indirect=True)
+E             def test_native_stream_fault_preserves_public_writer_and_original_cleanup(request, monkeypatch, run_bootstrap_binary):
+E                 mode = request.node.callspec.params['run_bootstrap_binary']
+E                 stack, _, driver = scheduled(request, monkeypatch)
+E                 broker, _, client, work = stack
+E                 result = closure = None
+E                 output = os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+E                 if output:
+E                     with (Path(output) / ('stream-inputs-' + mode + '.json')).open('x') as stream:
+E                         json.dump(dict(original_admission=json.loads(client.coverage.public_bytes), admission_digest=client.coverage_digest,
+E                             original_collection=json.loads(client.collection.canonical_bytes), original_schedule=json.loads(client.schedule.canonical_bytes),
+E                             generation_ns=client.generation_ns, runtime_digest=runtime_admission_digest(client.coverage, client.collection, client.generation_ns),
+E                             native_bootstrap_digest=broker.session.config.admission.supervisor_artifact_digest,
+E                             bootstrap_configuration_sha256=hashlib.sha256(broker.session.config.private_bytes).hexdigest(),
+E                             original_fixture=str(work.parent), fixture_source_sha256=sha(Path(__file__))), stream, indent=2)
+E                         stream.write('\n')
+E                 try:
+E                     result = run(driver)
+E                     retain(stack, result, 'native-stream-' + mode)
+E         >           assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E         E           AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E         E           assert (False)
+E         E            +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='a2bb66d0440f91c294ba490173ed973e0a39fd82bdb4c7238b1ef073467fbec...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_native_writer_stream_faults.py:129: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes
+E         FAILED tests/thesis_lite/maestro/test_launcher_composition.py::test_actual_original_startup_through_terminal_and_helper_closure[lost-close-ack]
+E         FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+E         FAILED tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-once]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]
+E         6 failed, 1960 passed, 1 skipped, 24 subtests passed in 1671.42s (0:27:51)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/dev/shm/maestro-platform-20261021t-qidd24kx/venv/bin/python', '-m', 'pytest', '-q', '-p', 'no...nup[seeded-flush-persistent]\n6 failed, 1960 passed, 1 skipped, 24 subtests passed in 1671.42s (0:27:51)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/thesis_lite/maestro/test_runtime_lane_admission.py:55: MAESTRO_LANE_PROPOSAL not set: lane admission evidence runs under its own driver
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+1 failed, 2249 passed, 1 skipped, 24 subtests passed in 3236.23s (0:53:56)
