@@ -1001,3 +1001,39 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     to run t's directory when it ends. DV12 n2, n6, n7 and n8 are now covered by tooling plus
     tests. Which skips and xfails may be allowlisted, and the G4 waiver scope record, are author
     decisions; none is approved here.
+
+458. Run t result (2026-10-21; evidence/affa19/platform-regression-20261021t, wheel.log sha
+    bce5e7ac…, wheel-receipt.json sha 01fcba3c…; head a343ed387, 2190 collected, 2420 s, load
+    3.9 to 4.8, fsync probe 0 spikes on tmpfs). Return code 1: 13 failed, 2175 passed, 1
+    skipped, 1 xfailed, 24 subtests passed. All 13 failures are Argus packaging tests
+    (test_argus2_consumer_unit 9, test_argus2_integration 2, test_argus2_validation 2), each
+    with "<venv>/bin/python: No module named build". The tests build a wheel themselves with
+    `python -m build`. The candidate venv from candidate-venv/mkvenv.sh inherits the system
+    site-packages but not the build tools, which environment h installs in its own
+    site-packages. This is the verification-environment omission of finding 357 recurring in
+    the new harness: an error in my mkvenv.sh, not a product failure. Every other module
+    passed with one installed version, including every Maestro module, the increment-19 DV
+    controls and both product candidates (F-10, F-08/F-09 v2). Skip: the lane-admission
+    module, which runs under its own driver (MAESTRO_LANE_PROPOSAL unset). Xfail: D-09. Run t
+    is therefore not a clean run and is not presented as one. Repair (harness only, recorded
+    before it is made): mkvenv.sh copies the build-tool distributions of environment h (build,
+    hatchling and their dependencies, with the versions environment h's preparation records)
+    into the candidate venv, file by file from their RECORD entries, and verifies `python -m
+    build --version` and the hatchling import. Then the 13 tests are rerun on run t's frozen
+    tree and wheel as a focused confirmation, and a complete run u follows on the same head
+    for a clean full run. Run t is not retried as is.
+
+459. Run-t harness repair confirmed, and the DV12 gate applied to run t (2026-10-21). mkvenv.sh
+    now copies build 1.6.1, hatchling 1.32.4, packaging 26.3, pluggy 1.7.0, pyproject_hooks
+    1.3.3, tomlkit 0.15.2 and trove_classifiers 2026.9.21.13 from environment h's site-packages
+    (pathspec 1.1.1 comes from the system site-packages, as for environment h) and verifies
+    `python -m build --version` and the hatchling import. The 13 failed Argus tests, rerun on run
+    t's own frozen tree and wheel in a venv built by the repaired script: 13 passed
+    (argus13-fixed-venv.log). Run t's receipts are archived (receipts.tar.gz, 9.9 MB) and its
+    tmpfs work directory is removed. The gate (scripts/validate_maestro_acceptance_evidence.py,
+    candidate a343ed387) on run t: blocked, with B2 failures 13, B3 unlisted skip
+    (lane admission), B3 unlisted xfail (D-09) and B5 missing G4 disposition. B1 (counts
+    consistent, 2190) and B4 (head fresh, archive equal to the candidate's git archive,
+    installed equals frozen src) pass. This is the gate behaving as designed on real evidence
+    (dv12-gate-verdict.json). Run u follows: the same driver on the new head, with the repaired
+    venv script.
