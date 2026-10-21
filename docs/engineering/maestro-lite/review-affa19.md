@@ -1315,3 +1315,81 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     needs budgets that account for load (design scope, T01), which is not attempted in
     increment 19.
     The run v work directory on /dev/shm (84 MB) is deleted after this record.
+
+470. Delegated rulings C2 and C3 (finding 468), with C4 applied (2026-10-21). Basis: the design
+    rows in design-oracle/ML-DESIGN-2026-10-03-v2, the trace of 420
+    (expected-table-trace-20261021.json) and the cited test lines. Rule used for all four: where
+    the implementation is stricter (fails closed) than a DRAFT row, or classifies a window the
+    row does not name, amend the design row to the as-built behaviour; change the
+    implementation only where it is weaker than the row in a way that can be closed. None of
+    the four is weaker in a closable way, so no product change follows from C2 or C3.
+    CP-10 (DIVERGENT -> AMEND DESIGN). The row's guarantee, "zero workload instructions after
+    epoch bump", holds in every variant that bumps the epoch (cancel, authority loss, durable
+    mirror or journal loss: 0 markers). The storage-worker loss variant has no epoch bump: the
+    loss is not observed between the last revalidation and the Release send, so Release
+    linearizes and the run is in CP-11 (one released execution, normal outcome possibly a
+    mandatory gap), which is what test_composed_post_release_loss.py:146,222 asserts. A
+    storage-liveness check before the send would narrow that window but cannot close it (the
+    worker can be lost right after the check), and it would add a round trip, which 469 shows
+    is load-sensitive. Amendment: CP-10's provable cleanup is conditioned on the epoch bump; a
+    storage-worker loss not observed before Release linearization is classified CP-11, with at
+    most the instructions issued by the one released execution.
+    W-01 (DIVERGENT -> AMEND DESIGN). A one-off flush/fsync error matches the row (usable, one
+    bounded abort). For a persistent fault the implementation never aborts and reports
+    usability unknown (test_terminal_native_writer_failures.py:26, test_terminal_writer.py:73,77),
+    the rule W-02 already states for stream errors ("abort only if usability is positively
+    demonstrated"). After a failed fsync the durability of earlier writes cannot be established
+    by retrying, so claiming usability would be the weaker reading. Amendment: split W-01 into a
+    transient case (a later flush succeeds: usable, bounded abort permitted) and a persistent
+    case (usability uncertain, no abort, last durable manifest reported), as implemented.
+    CP-02 (BORDERLINE -> AMEND DESIGN). An empty retained boundary identity is released only
+    under an admitted reservation approval; without it the identity stays retained and the
+    state unresolved (test_boundary.py:150,467-470). Releasing with "surviving authority: none"
+    would be an action without authority. Amendment: state the reservation-approval
+    precondition in the row; without it the outcome is unresolved, identity retained.
+    AF17 (BORDERLINE -> AMEND DESIGN). A request that names the transitive cohort stops and
+    releases dependents leaf -> middle -> source before the advance, with fresh execution ids
+    and permits (test_generation_dependents.py:99-110, test_active_transitive_restart.py:
+    142-153). A lone prerequisite restart while dependents are active is rejected with
+    ML-GENERATION-DEPENDENTS and no effect (test_active_restart.py:134,138). Stopping
+    dependents that the request did not name would act on units without their own permit.
+    Amendment: the request must name the transitive cohort; one that omits active dependents
+    is rejected with no effect; "never silently retry with old execution, generation or permit"
+    is unchanged and holds.
+    C4 applied: DV03 n2-n4 (sealed at admission), DV04 n0 (no application-level probe), DV05 n4
+    (in-process C1 stall, replaced by the authority RETIRE stall), DV06 n5 (no SIGTERM to
+    workloads), DV06 n8 (PID reuse, settled statically) and DV03 p1 (deferred to the U2 gate by
+    ADR-ML3-BOOTSTRAP-0001 line 68) are stated limits of the as-built design.
+    Where the amendments go: the DRAFT design tables are not edited, and the design-oracle
+    copies stay byte-identical to their originals (test_expected_table_trace.py pins them). The
+    amendments, C1 and C4 form the as-built reconciliation for P3-T01, written in the thesis
+    repository as specs/024-maestro-lite-lifecycle/review/as-built-reconciliation-20261021.md.
+    Freezing ML-DESIGN-v2 with that reconciliation is a design acceptance that 468 did not list,
+    so it is prepared and put to the author, not assumed.
+
+471. C1 product fix scope (D-09), recorded before any product edit (2026-10-21). Cause (444):
+    TerminalReportWorker.publish sets eligible = no blockers and an entry; close passes that
+    flag to close_runtime_writer, which finalizes only when eligible and otherwise aborts after a
+    positive flush; the parent's _writer_ack requires finalize_attempted == (eligible and
+    before open). A failed execution always carries the blocker terminal-outcome, so its writer
+    is aborted and coverage.py:937 keeps offline overall incomplete. Design branch
+    normal-documented-failure (kept by C1) expects overall complete with execution failed.
+    Change (candidate, terminal_runtime.py and terminal_writer.py; F-05 wire unchanged: no key,
+    code or stage is added):
+    (1) a report is finalizable when it is eligible, or when its only blocker is terminal-outcome
+        and it has an entry and a retained entry, stage published, and normal, required and
+        collection all true. Eligibility keeps its meaning (an acceptable successful run).
+    (2) the worker passes finalize=<finalizable> to close_runtime_writer, which finalizes when
+        finalize is true; finalize defaults to eligible for existing direct callers, must be a
+        bool, and eligible without finalize is rejected. The abort path is unchanged for every
+        other report, including W-01/W-02 handling.
+    (3) the parent's _writer_ack requires finalize_attempted == (finalizable(report) and before
+        open), computed from the report ACK fields it has already validated.
+    (4) RunClosure's ML-CLOSURE-REPORT-INCOMPLETE uses finalizable instead of eligible, so a
+        factually complete failed run is not reported as incomplete evidence; the execution
+        failure stays reported by the dispatcher, whose diagnostic is not changed.
+    Expected, to be verified: the D-09 test passes and its xfail(strict) is removed together
+    with allowlist entry B2 (468); every test that asserts an abort for a failed execution whose
+    report is otherwise complete changes from abort-completed to finalize-completed, and each such
+    change is listed in the next finding before tests are edited; reports with any other blocker
+    still abort. Independent review before the C1 acceptance proposal; full run after.
