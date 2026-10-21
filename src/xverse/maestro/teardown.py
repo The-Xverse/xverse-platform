@@ -13,6 +13,7 @@ from .run_broker import RunUnitIssuer
 from .lifecycle_evidence import _parents
 from .providers import ProcessReadiness
 from .time import HostDeadline
+from .service_time import NORMAL_SHARE, RPC_MAX_SECONDS, SIZING_MARGIN, ServiceTimes, sized
 
 
 class TeardownError(OwnerError):
@@ -70,7 +71,7 @@ class _Step:
 
 
 class ReverseTeardown(_Original):
-    def __init__(self, facade, *, per_unit_seconds=1):
+    def __init__(self, facade, *, per_unit_seconds=1, times=None):
         if type(facade) is not ProcessReadiness:
             raise TeardownError("ML-TEARDOWN-FACADE")
         facade._holder()
@@ -82,9 +83,10 @@ class ReverseTeardown(_Original):
             )
         except OverflowError:
             valid = False
-        if not valid:
+        if not valid or times is not None and type(times) is not ServiceTimes:
             raise TeardownError("ML-TEARDOWN-BUDGET")
         self._retain()
+        self._times = ServiceTimes() if times is None else times  # shared with the dispatcher
         self.facade = facade
         self.owner = facade._owner
         self.manager = self.owner.supervisor.boundaries
@@ -96,13 +98,23 @@ class ReverseTeardown(_Original):
         self._active = None
         self._intents = {}
         self._receipts = {}
-        self._record_seen = 0.0  # longest observed teardown record round trip (F-09)
+        self._emergencies = {}
+        self._interior_trace = []  # observation only (ADR-ML3-BUDGET-0001)
         self._known_reaps = set()
         self._stopped = {}
         self._stop_results = {}
         self._cleaned = {}
         self._result = None
         self._reason = None
+
+    @property
+    def _record_seen(self):
+        """Longest observed teardown record round trip (F-09), a view of the shared estimator."""
+        return self._times.est("teardown-record")
+
+    @_record_seen.setter
+    def _record_seen(self, value):
+        self._times.seed("teardown-record", value)
 
     def _holder(self):
         super()._holder()
@@ -201,7 +213,7 @@ class ReverseTeardown(_Original):
             raise TeardownError("ML-TEARDOWN-RECORD-BUDGET")
         self._active = step
         receipt = self.owner.persistence.record_teardown(self, step, deadline)
-        self._record_seen = max(self._record_seen, time.monotonic() - began)
+        self._times.observe("teardown-record", time.monotonic() - began)
         self._receipts[step.step_id] = receipt
         if stage == "intent":
             self._intents[unit, phase] = receipt
@@ -308,9 +320,48 @@ class ReverseTeardown(_Original):
         self._cleaned[unit] = result
         return result
 
+    def _spanned(self, phase, job, deadline):
+        """One stop or cleanup, its span recorded for the shared estimator (failed: lower bound)."""
+        cached = job[0] in (self._stop_results if phase == "stop" else self._cleaned)
+        began = time.monotonic()
+        try:
+            result = (self._stop if phase == "stop" else self._cleanup)(job, deadline)
+        except (ValueError, OSError):
+            if not cached:
+                self._times.censor("phase:" + phase, time.monotonic() - began)
+            raise
+        if not cached:
+            self._times.observe("phase:" + phase, time.monotonic() - began)
+        return result
+
+    def _need(self, unit, phase):
+        """Sizing need of the remaining normal work of `unit` through `phase`."""
+        phases = ("stop",) * (unit not in self._stopped) + ("cleanup",) * (phase == "cleanup")
+        return SIZING_MARGIN * sum(self._times.est("phase:" + p) for p in phases)
+
+    def _split(self, began, end0, cap, need, site, unit):
+        """(normal end, end): today's 0.6/0.4 split of the window began..end0 whenever `need` fits
+        its normal share; otherwise the normal share grows toward `need` within `cap` and the
+        admitted emergency share 0.4 of the window is kept (ADR-ML3-BUDGET-0001)."""
+        window = end0 - began
+        normal0 = began + NORMAL_SHARE * window
+        if need <= NORMAL_SHARE * window:
+            return normal0, end0
+        rest = (1 - NORMAL_SHARE) * window
+        cap = min(cap, began + RPC_MAX_SECONDS)  # every record and emergency request stays admissible
+        normal_end = max(normal0, min(cap - rest, began + need))
+        end = max(end0, min(cap, normal_end + rest))
+        self._interior_trace.append(dict(site=site, unit=unit, need=need, window=window,
+                                         normal=normal_end - began, end=end - began))
+        return normal_end, end
+
+    def _diagnostic(self, error):
+        # The guard's own code stays visible in the unit result (finding 474 item 3).
+        return str(error) if str(error) == "ML-TEARDOWN-RECORD-BUDGET" else "ML-TEARDOWN-NORMAL-INCOMPLETE"
+
     def _normal(self, job, deadline):
-        self._stop(job, deadline)
-        return self._cleanup(job, deadline)
+        self._spanned("stop", job, deadline)
+        return self._spanned("cleanup", job, deadline)
 
     def _mutation_locks(self):
         locks = (self.facade._lock, self.owner._lock)
@@ -376,18 +427,19 @@ class ReverseTeardown(_Original):
             if phase == "cleanup" and unit not in self._stopped:
                 raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
             began = time.monotonic()
-            end = min(deadline.monotonic_seconds, began + self._cap)
-            normal_end = began + 0.6 * (end - began)
+            normal_end, end = self._split(
+                began, min(deadline.monotonic_seconds, began + self._cap),
+                deadline.monotonic_seconds, self._need(unit, phase), "phase", unit)
             try:
-                return (self._stop if phase == "stop" else self._cleanup)(
-                    job, HostDeadline(self.session, normal_end)
-                )
-            except (ValueError, OSError):
-                return self._emergency(
+                return self._spanned(phase, job, HostDeadline(self.session, normal_end))
+            except (ValueError, OSError) as error:
+                result = self._emergency(
                     job,
                     HostDeadline(self.session, end),
-                    "ML-TEARDOWN-NORMAL-INCOMPLETE",
+                    self._diagnostic(error),
                 )
+                self._emergencies[unit] = result
+                return result
         finally:
             self._active = None
             for lock in reversed(locks):
@@ -495,31 +547,36 @@ class ReverseTeardown(_Original):
                     raise TeardownError("ML-TEARDOWN-CONFLICT")
                 locks.append(lock)
             jobs = self._jobs(deadline)
-            end = min(
-                deadline.monotonic_seconds, time.monotonic() + len(jobs) * self._cap
+            needs = [self._need(job[0], "cleanup") for job in jobs]
+            now = time.monotonic()
+            end = sized(
+                min(deadline.monotonic_seconds, now + len(jobs) * self._cap),
+                now, sum(needs), len(jobs) * self._cap, deadline.monotonic_seconds,
             )
             self.owner._closed = True
             for unit, value in tuple(self.facade._observations.items()):
                 self.facade._observations[unit] = replace(value, ready=False)
             results = list(self._cleaned.values())
-            for job in jobs:
+            for index, job in enumerate(jobs):
                 began = time.monotonic()
-                unit_end = min(end, began + self._cap)
-                normal_end = began + 0.6 * (unit_end - began)
+                # Every later unit keeps at least today's window, or its own sized share.
+                later = sum(max(self._cap, n + (1 - NORMAL_SHARE) * self._cap) for n in needs[index + 1:])
+                normal_end, unit_end = self._split(
+                    began, min(end, began + self._cap), end - later, needs[index], "run", job[0])
                 try:
                     if self.owner.latch.cancelled and not self._terminal_scope():
                         raise TeardownError("ML-TEARDOWN-CANCELLED")
                     results.append(
                         self._normal(job, HostDeadline(self.session, normal_end))
                     )
-                except (ValueError, OSError):
-                    results.append(
-                        self._emergency(
-                            job,
-                            HostDeadline(self.session, unit_end),
-                            "ML-TEARDOWN-NORMAL-INCOMPLETE",
-                        )
+                except (ValueError, OSError) as error:
+                    result = self._emergency(
+                        job,
+                        HostDeadline(self.session, unit_end),
+                        self._diagnostic(error),
                     )
+                    self._emergencies[job[0]] = result
+                    results.append(result)
                 finally:
                     self._active = None
             self.owner.cancel("teardown-complete")

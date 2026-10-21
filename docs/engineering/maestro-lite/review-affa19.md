@@ -1613,3 +1613,148 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     failures), not from widening. Open: first-of-kind phases fail open; lifetime maxima can cause
     false M1 refusals; natural-load A/B (477 (iv)) and independent review owed. A/B e starts now:
     the host is loaded by its own external process.
+
+480. Independent review of the load-aware budget candidate (479): FAIL (2026-10-21), recorded
+    before any repair. (1) HIGH: dispatcher _run_end widens with a cap of _work_end minus the
+    post-teardown reserve only; teardown._deadline rejects a run deadline more than 80 s away
+    (ML-TEARDOWN-DEADLINE). At the head the bound held by construction (n x per_unit_seconds,
+    n <= 16, per_unit <= 5); with widening, any need above the normal share gives now + need +
+    0.4 w, and when the terminal slack exceeds 80 s (possible after an early failure in a long
+    active window, horizon up to 394 s) run() raises, _cleanup raises, and the run ends
+    ML-SCHEDULE-CLEANUP-INCOMPLETE with no unit cleaned by Maestro. The 479 sentence "the
+    whole-run teardown keeps its 80 s bound" was not enforced in code. (2) MEDIUM: the M1
+    step-dispatch check reads health and lease state before _service() refreshes it, so after
+    restart or quiesce work it can refuse a step the head would dispatch (safe: no mutation,
+    documented failure; but a false refusal, also on a quiet host once a phase estimate exists).
+    (3) MEDIUM: the _run_end and run() widening ignore the lease and health caps of ADR item 3.
+    (4) LOW: the F-09 record estimate now survives teardown replacement (shared estimator; a
+    behaviour change not recorded in 479). (5) LOW: teardown._split widens inside declared
+    action-timeout deadlines (never beyond them), contrary to the ADR wording. (6) LOW: NaN or
+    negative seeds bypass ServiceTimes.observe and fail open. (7) LOW tests: (e) checks _split
+    with approx, (b) restates the reserve formula, (d) prints but does not assert scans and
+    renewals, (a) accepts two outcomes. (8) LOW: work after a widened effect is reserved only
+    for step-complete. Verified OK: _end M2 never exceeds any bound; quiet identity exact for
+    sized() and _split; emergency share kept; M1 refusals before any mutation; estimator max-only;
+    observational lists unread by product code; discrimination of (a), (b), (c), (g).
+    Repair scope: (1)+(3) cap the terminal _run_end widening by now + 80 s minus 1 s, every live
+    lease minus the renewal margin and health minus scan and renewal margin, and add a control
+    with more than 80 s of terminal slack and a large seeded estimate that fails on the 479
+    candidate; (2) refresh service state (_service()) before the M1 fit check, so the check sees
+    the window the dispatch will get; (5) ADR wording: the teardown split may widen up to, never
+    beyond, a declared action-timeout deadline; (6) ServiceTimes rejects non-finite or negative
+    values on every write path, and _send writes through observe; (7) controls tightened: exact
+    equality, outcome pinned, scans and renewals asserted; (4) and (8) recorded as accepted
+    behaviour. A/B e runs on the 479 venv; its result is read as evidence for the M1/M2 effect
+    under load, and the repaired candidate gets its own targeted reruns and a second review.
+
+481. A/B e (2026-10-21, evidence/affa19/ab-budget-loaded-20261021e; driver
+    ab-budget-loaded-20261021e.py; expectations of 477 (iv) recorded before the run). Arms on the
+    12 load-sensitive tests of 467: A = head without E1 (dabf858a5 product), B = the 479 candidate
+    (before the 480 repairs). External load from another project's llama-server; 4 interleaved
+    pairs; load 12.3 (A) and 14.1 (B) in pair 0, then 6.1 to 9.1. Failed tests of 12 per run:
+    pair 0 A 8, B 1; pair 1 B 0, A 0; pair 2 A 1, B 1; pair 3 B 0, A 0. Totals A 9, B 2. Codes: A
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE 5, ML-PERSIST-TIMEOUT 2, ML-SCHEDULE-SERVICE-DEADLINE 1, 6 v2
+    refusals; B ML-SCHEDULE-SERVICE-DEADLINE 1 (paused shared ticks, pair 2) and one transitive
+    [cleaned-leaf] failure whose restart result carries ML-PERSIST-TIMEOUT (pair 0, load 14.1;
+    _restart_unit is not widened by design, 477). Against the pre-registered expectations: B
+    failures at most A's (2 vs 9) holds; fewer ML-PERSIST-TIMEOUT (dispatcher diagnostics 0 vs 2;
+    one more inside a restart result) and ML-SCHEDULE-TEARDOWN-INCOMPLETE (0 vs 5) holds; no new
+    failure class holds (both B codes occur in A's class). Limits: one pair at load above 10;
+    the arm is the 479 candidate, so the 480 repairs (terminal cap, M1 service refresh) are not
+    covered by this A/B; persist timeouts inside restart operations remain possible by design.
+    Reading: E1 removes the dominant F-08/F-09 failure modes at the load reached here; the
+    remaining exposure is the unwidened restart path and active-window exhaustion (outer).
+
+482. Second independent review of the repaired budget candidate (after 480): FAIL (2026-10-21),
+    recorded before any change. (1) HIGH, confirmed by the run log (budget-20261021/
+    repair-set1.log, load 5.8: 1 failed, 69 passed): control (a) fails on the repaired candidate
+    (client._failed, the persistence channel failed), and the dispatcher trace shows no terminal
+    widening. Cause: the 480 (3) cap includes min(live leases) minus the renewal margin
+    (service_calls x op + op, about 2 s), while the bootstrap lease is renewed to at most now +
+    5 s, so the cap sits at or below today's n x per-unit window and _run_end returns today's
+    window. The renewal margin protects renewals between active operations, but no renewal
+    happens inside teardown.run(): in the lazy profile every terminal record itself renews the
+    lease through service_terminal, and in the non-lazy profile nothing renews during run(). The
+    480 (3) reading of ADR item 3 for the terminal run was therefore wrong. A/B e (481) ran on
+    the 479 arm, so its terminal benefit does not carry over to the 480 state. (2) MEDIUM: the
+    480 (2) _service() call runs before every step-dispatch, not only before a stop/cleanup step
+    with an estimate; on a quiet host scans/renewals can move before the step-dispatch statement,
+    controller-recovery drain can run between admission and dispatch, and an exception there
+    leaves the step blocked where the head records it failed. (3) LOW: the v2 guard still reads
+    the raw _service_seen dict (alias of ServiceTimes.seen), so 480 (6) "every write path" is not
+    closed by construction. (4) LOW: ValueError("ML-SERVICE-TIME-ESTIMATE") is a new code string,
+    contrary to ADR item 7 (reachable only through the test-only setter). (5) LOW tests: the
+    estimator test's statement_max check is vacuous (":" kinds are excluded); (d) does not assert
+    scans; (h) does not exercise the health or teardown_deadline caps. (6) LOW: statement_max
+    iterates the shared dict without a snapshot. (7) LOW: the finished-restart deferral appends a
+    trace entry on every inner-loop pass.
+    Repair scope: (1) the terminal _run_end cap becomes work_end minus post reserve, now + 79 s,
+    the boundary teardown deadline and, in the non-lazy profile only, the live leases themselves
+    (no renewal margin; nothing renews inside run()); no lease cap in the lazy profile, where the
+    terminal records renew it; health is not a cap there (next_health_deadline is None once the
+    latch is cancelled) and is dropped; ADR item 3 and 480 (3) corrected accordingly. (2) the
+    pre-check _service() runs only for a stop/cleanup step whose phase estimate is non-zero
+    (inside the M1 check, after its early returns). (3) the v2 guard reads est(). (4) the guard
+    raises a plain ValueError naming the argument, no ML- code; ADR item 7 stands. (5) tests: a
+    statement kind in the statement_max check, health scans asserted where the fixture scans,
+    (h) cases for the teardown_deadline cap and for the lazy/non-lazy lease rule. (6) snapshot
+    iteration. (7) trace a deferral once per ticket. Then rerun (a)-(h), the guard, T3, DV09 and
+    C1 sets, and a third review.
+
+483. 482 repairs applied (2026-10-21; budget3 venv verified equal to the worktree src). The
+    terminal _run_end cap is work_end minus post reserve, now + 79 s, the boundary teardown
+    deadline, and in the non-lazy profile the live leases themselves; the pre-check _service()
+    runs only inside the M1 check after its early returns; the v2 guard reads est(); the
+    estimator's guard raises a plain ValueError; statement_max iterates a snapshot; a deferred
+    finished-restart quiesce is traced once; tests: statement kind in the estimator check, (h)
+    cases for the lazy/non-lazy lease rule and the teardown_deadline cap. Controls set (budget
+    controls a-h, estimator, guard controls, T3, DV09, both C1 modules, gate tests) on budget3 at
+    load 10.1 to 9.5: 70 passed, control (a) included. Recorded before A/B f: the affected-module
+    set on the 480 state (budget2) at load 6 rising to 17 had 35 failed / 103 passed, every
+    failure with a load-class code (ML-SCHEDULE-SERVICE-DEADLINE 10, ML-PERSIST-TIMEOUT 7,
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE 6, ML-RUN-ORIGINAL-END 2, ML-OWNER-DEADLINE 1; the last also
+    fires when a deadline has already passed and appears in head-only logs: A/B d2 arm A, the
+    433 A/B arm A, DV03/DV04 run 1). A/B f (ab-budget-loaded-20261021f.py): arms A = dabf858a5
+    product, B = budget3, on the union of those 35 nodes and the 12 tests of 467
+    (budget-20261021/ab-f-nodes.txt), 2 interleaved pairs under whatever external load the host
+    carries, recorded per run. Expectation: B failures at most A's per pair at comparable load,
+    no failure class in B absent from A, fewer ML-SCHEDULE-TEARDOWN-INCOMPLETE and
+    ML-PERSIST-TIMEOUT in B.
+
+484. Third independent review of the budget candidate (483 state): PASS, no HIGH or MEDIUM item
+    (2026-10-21). Verified: lazy terminal records renew the lease (persistence.py record_teardown
+    -> session._service_terminal, bootstrap.py renews to min(now + 4.9 s, generation - 2 s)) and
+    the native STOP/RETIRE after CANCELLED skip the connection-lease check, so the uncapped lazy
+    run() deadline cannot cause ML-RUN-ORIGINAL-END; nothing renews inside a non-lazy run(), so
+    the live-lease cap there is right; the moved _service() is behaviour-neutral (the head already
+    serviced before the step-dispatch send, and an exception there already left the step blocked;
+    482 (2)'s premise was mostly wrong); all 482 (3)-(7) repairs complete. LOW items and
+    dispositions: (1) a lazy per-unit lease tail of about 0.1 s when per_unit < 5 and widening
+    applies (the head had the same window at per_unit = 5): accepted limit. (2) M1 checks stop
+    plus cleanup against one normal share, which is stricter than the head in a narrow band
+    (example: op 0.5, per_unit 1, stop 0.16 s, cleanup 0.17 s, a lease 2.0-2.6 s away): accepted as
+    a known conservative bias; the outcome is a documented failure, never an unsafe state. (3) a
+    closure-path run() (run_closure.py, up to now + 80 s) can widen beyond live leases in the
+    non-lazy profile, as the head could whenever n x per_unit exceeded about 5 s: accepted, ADR
+    wording corrected to state the lease cap as a property of the dispatcher's terminal window,
+    not of run(). (4) the _run_end comment on health is inaccurate for the non-lazy success path:
+    corrected (no consumer inside run() reads it). (5) tests: (h) does not exercise gate leases,
+    the 482 (5) health assertion was dropped because the fixture scans 0 times (BUDGET-D logs
+    scans 0), (a) is pinned to a single M1 stop and may flake under load, repair2-set1 ran
+    without -s: recorded, not repaired. (6) the 480 repair-scope text and ADR item 3 lead
+    sentence are superseded by 482 (1): corrected in the ADR; 480 stays as recorded history.
+
+485. A/B f (2026-10-21, evidence/affa19/ab-budget-loaded-20261021f; expectations of 483 recorded
+    before the run). Arms A = dabf858a5 product, B = budget3 (483 state), 39 tests (the 35 set-2
+    failures of 483 and the 12 tests of 467), 2 interleaved pairs. Load at start/end: pair 0 A
+    10.6/7.8, B 7.8/8.6; pair 1 B 8.6/5.8, A 5.8/12.3. Failed tests: pair 0 A 5, B 1; pair 1 B 0,
+    A 20. Totals A 25 (ML-SCHEDULE-SERVICE-DEADLINE 9, ML-SCHEDULE-TEARDOWN-INCOMPLETE 4,
+    ML-PERSIST-TIMEOUT 2, ML-BOOT-CLOSED 1, ML-OWNER-DEADLINE 1, the rest without an ML code
+    in the assertion line), B 1 (paused shared ticks, ML-SCHEDULE-TEARDOWN-INCOMPLETE, which A
+    also failed). No B-only failure. Against the expectations: B at most A per pair holds; no
+    class in B absent from A holds; fewer TEARDOWN-INCOMPLETE (1 vs 4) and PERSIST-TIMEOUT (0 vs
+    2) holds. Limit: load was not matched within pair 1 (A's run saw it rise to 12.3); two pairs.
+    With A/B e (481) this supports E1 as removing the dominant F-08/F-09 failure modes under the
+    load seen today; active-window exhaustion (outer bound) and the unwidened restart path remain.
+    Next: commit E1 (budget3 state plus the 484 comment and ADR corrections), CAPA step 4, then
+    the full installed-wheel run on the final head under the quiet-host watcher (469 (3), E3).

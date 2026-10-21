@@ -1,0 +1,37 @@
+load 9.22
+.BUDGET-A {'diagnostic': 'ML-SCHEDULE-SERVICE-DEADLINE', 'interior': [{'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.49953985400497913, 'need': 0.675, 'widened': 0.37546014599502087}, {'site': 'step-dispatch', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 1.5781841930001974, 'need': 0.6502179701812565, 'achievable': 0.29990370478481054, 'stopped': True}, {'site': 'run', 'unit': None, 'remaining': 1.999957351014018, 'need': 2.0250000000000004, 'widened': 0.8250426489394158}], 'teardown': [{'site': 'phase', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'need': 0.675, 'window': 0.8714245180599391, 'normal': 0.5228547109290957, 'end': 0.8714245180599391}, {'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'need': 0.675, 'window': 1.0, 'normal': 0.6740231530275196, 'end': 1.0740231529343873}, {'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'need': 1.35, 'window': 1.0, 'normal': 1.3500000000931323, 'end': 1.75}]}
+.BUDGET-B0 {'diagnostic': 'ML-SCHEDULE-SERVICE-DEADLINE', 'terminal': True, 'cleanup': TeardownResult(run_id='fixture-run', lifecycle_digest='b14e602807a71cebb57dbdf82da3c27952a471f13e9cacab3e8ce355cc715005', reason='dispatcher-terminal', units=(UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=1, leader_reaped=True, boundary_empty=True, boundary_released=True, normal_records_complete=True, emergency=False, diagnostic=None), UnitTeardown(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation=1, leader_reaped=True, boundary_empty=True, boundary_released=True, normal_records_complete=True, emergency=False, diagnostic=None)), starts_closed=True, lifecycle_complete=False, ready_for_execution=False), 'trace': [{'site': 'step-dispatch', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 1.7976497039198875, 'need': 3600.1065654000267, 'achievable': 0.8450746579561382, 'stopped': True}, {'site': 'run', 'unit': None, 'remaining': 1.9999622509349138, 'need': 10800.0, 'widened': 9.072909699287266}], 'td': [[{'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'need': 5400.0, 'window': 1.0, 'normal': 0.6000000000931323, 'end': 1.0}, {'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'need': 5400.0, 'window': 1.0, 'normal': 4.600000000093132, 'end': 5.0}]], 'rpc': None}
+BUDGET-B {'diagnostic': 'ML-SCHEDULE-SERVICE-DEADLINE', 'trace': [{'site': 'step-dispatch', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 1.7976497039198875, 'need': 3600.1065654000267, 'achievable': 0.8450746579561382, 'stopped': True}, {'site': 'run', 'unit': None, 'remaining': 1.9999622509349138, 'need': 10800.0, 'widened': 9.072909699287266}], 'outcomes': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'completed', 'observe-source': 'completed', 'observe-sink': 'completed', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}}
+FBUDGET-C {'outcome': RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='rejected', execution_id=None, diagnostic='ML-SCHEDULE-RESTART-DEADLINE'), 'diagnostic': 'ML-SCHEDULE-COLLECTION-INCOMPLETE', 'trace': [{'site': 'restart', 'unit': None, 'remaining': 4.08864298206754, 'need': 3600.0, 'stopped': True}]}
+.BUDGET-D {'diagnostic': None, 'trace': [{'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.4998020869679749, 'need': 0.375, 'widened': 0.07519791298545897}, {'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.49988976889289916, 'need': 0.375, 'widened': 0.07511023106053472}, {'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'remaining': 0.4999815400224179, 'need': 0.375, 'widened': 0.07501845993101597}], 'scans': 0, 'renewals': 2}
+.BUDGET-G {'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'emergencies': {'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance': 'ML-TEARDOWN-RECORD-BUDGET'}}
+.
+=================================== FAILURES ===================================
+_ test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure _
+
+request = <FixtureRequest for <Function test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a7768b16e0>
+
+    def test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure(request, monkeypatch):
+        """(b), (f) M1: the stop step is never dispatched; normal terminal teardown and the whole
+        terminal sequence still fit, so the report is finalizable and the channel usable."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=3600.0)
+        result = run(driver)
+        print("BUDGET-B0", dict(diagnostic=result.diagnostic, terminal=result.terminal_recorded, cleanup=result.cleanup,
+                                trace=driver._interior_trace, td=[t._interior_trace for t in teardowns(driver)],
+                                rpc=client.rpc_failure))
+        facts = result.terminal.public_data()
+        print("BUDGET-B", dict(diagnostic=result.diagnostic, trace=driver._interior_trace,
+                               outcomes={k: v.disposition for k, v in driver._outcomes.items()}))
+        assert result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE" and not result.execution_succeeded
+        assert [e["site"] for e in driver._interior_trace if e.get("stopped")] == ["step-dispatch"]
+>       assert not any(s.phase in ("stop", "cleanup") for s in driver.prepared.steps if s.step_id in driver._outcomes)
+E       assert not True
+E        +  where True = any(<generator object test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure.<locals>.<genexpr> at 0x70a775682810>)
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:116: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure
+1 failed, 5 passed in 27.56s

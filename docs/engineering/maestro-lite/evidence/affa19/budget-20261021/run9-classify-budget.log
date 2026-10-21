@@ -1,0 +1,467 @@
+load 16.26 13.57 11.02
+.FFFFF.                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75defa8d1ba0>
+mode = 'stopped-then-recovery'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+        assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+        assert json.loads(driver.plan.canonical_bytes)['version']==5
+        leaf=next(u.unit_id for u in driver.prepared.units if u.unit_id.endswith('/terminal-instance'))
+        future=next(c for c in client._future_contexts if c.binding.unit_id==leaf)
+        conflict_context=next(c for c in client._future_contexts if c.binding.unit_id!=leaf)
+        original_worker=client.process;original_authority=broker.connection.child
+        tickets=[];restarts=[];handles={};borrowed=[];threads=[];new_probes={};productive=[]
+        result=closure=None
+        race_ready=[]
+        expected_states={}
+        def enqueue():
+            if tickets:return
+            handles.update({i.unit_id:i._handle for i in broker.issuers if i._handle is not None})
+            end=HostDeadline(client.session,driver._active_end)
+            before=FileEvidenceJournal(work.parent/'m3.jsonl').records;sequence=client._sequence
+            contexts=client.coverage.data(client.coverage_digest)['contexts']
+            for issuer in broker.issuers:
+                if issuer.unit_id not in handles:
+                    expected_states[issuer.unit_id]='never-issued'
+                    continue
+                generation=next(c['generation'] for c in contexts if c['executionId']==handles[issuer.unit_id].execution_id)
+                terminal=[r.status for r in before if r.kind=='outcome' and r.status in ('stopped','cleaned')
+                          and r.details.get('maestroUnitId')==issuer.unit_id and r.details.get('generation')==generation]
+                expected_states[issuer.unit_id]=('released' if terminal[-1]=='cleaned' else 'stopped') if terminal else 'owned'
+            def submit():
+                threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+                ticket=driver.replace_controller(client.run_id,session_id='active-successor-'+mode,deadline=end)
+                tickets.append(ticket)
+                assert driver.replace_controller(client.run_id,session_id=ticket.session_id,deadline=end) is ticket
+                with pytest.raises(ValueError,match='RECOVERY-ORIGINAL'):
+                    driver.controller_recovery_result(replace(ticket))
+                with pytest.raises(ValueError,match='RECOVERY-CONFLICT'):
+                    driver.replace_controller(client.run_id,session_id='conflicting-controller',deadline=end)
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,conflict_context.binding.unit_id,
+                        permit=conflict_context.binding.permit,generation=2,deadline=end)
+            if mode in ('dead-before-drain','heartbeat-race'):
+                errors=[]
+                def external():
+                    try:submit()
+                    except BaseException as e:errors.append(e)
+                thread=threading.Thread(target=external);thread.start();thread.join(2)
+                assert not thread.is_alive() and not errors,errors
+                signal.pidfd_send_signal(old.process._capability.fileno(),signal.SIGKILL)
+            else:submit()
+            assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before and client._sequence==sequence
+            assert driver.controller_recovery_result(tickets[0]) is None
+        statement=driver._statement
+        def after_statement(kind,step,**kw):
+            reply=statement(kind,step,**kw)
+            observed=sum(s.phase=='observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+            if mode=='heartbeat-race':
+                if kind=='step-complete' and step.phase=='start' and sum(s.phase=='start' and s.step_id in driver._outcomes for s in driver.prepared.steps)==3:
+                    race_ready.append(True)
+                return reply
+            if mode=='before-start':
+                trigger=step.phase=='prepare' and not broker.owner._claims
+            elif mode=='mixed-initial':
+                trigger=step.phase=='start' and sum(s.phase=='start' and s.step_id in driver._outcomes for s in driver.prepared.steps)==0
+            elif mode=='stopped-then-recovery':
+                trigger=step.step_id=='stop-terminal'
+            else:
+                trigger=step.step_id=='cleanup-terminal' if mode=='cleaned-then-restart' else step.phase=='observe' and observed==3
+            if kind=='step-complete' and trigger and not tickets and not restarts:
+                if mode=='generation2':
+                    restarts.append(driver.restart(client.run_id,leaf,permit=future.binding.permit,generation=2,
+                        deadline=HostDeadline(client.session,driver._active_end)))
+                else:enqueue()
+            return reply
+        monkeypatch.setattr(driver,'_statement',after_statement)
+        drain_restart=driver._drain_restart
+        def after_restart():
+            changed=drain_restart()
+            if mode=='generation2' and restarts and driver.restart_result(restarts[0]) is not None:enqueue()
+            return changed
+        monkeypatch.setattr(driver,'_drain_restart',after_restart)
+        drain_recovery=driver._drain_controller_recovery
+        def after_recovery():
+            changed=drain_recovery()
+            if mode in ('restart-after','cleaned-then-restart') and tickets and not restarts:
+                outcome=driver.controller_recovery_result(tickets[0])
+                if outcome and outcome.disposition=='completed':
+                    restarts.append(driver.restart(client.run_id,leaf,permit=future.binding.permit,generation=2,
+                        deadline=HostDeadline(client.session,driver._active_end)))
+            return changed
+        monkeypatch.setattr(driver,'_drain_controller_recovery',after_recovery)
+        reconcile=ControllerSession.reconcile
+        def borrowed_reconcile(controller,policies,active,cleanup,**kw):
+            assert kw['_coordinator'] is driver and kw['_request'] is tickets[0]
+            assert broker.owner._dispatch_owner is driver and broker.owner._dispatch_thread==threading.get_ident()
+            before=broker.owner._view_epoch
+            with pytest.raises(ValueError,match='COORDINATOR'):
+                IssuerRecovery(broker.session,broker.owner,policies=policies,controller=controller,
+                    _coordinator=object(),_request=tickets[0])
+            assert broker.owner._view_epoch==before
+            try:return reconcile(controller,policies,active,cleanup,**kw)
+            finally:
+                borrowed.append(dict(end=active.monotonic_seconds,owner_retained=broker.owner._dispatch_owner is driver,
+                    thread_retained=broker.owner._dispatch_thread==threading.get_ident(),new_session=controller.session_id))
+                assert borrowed[-1]['owner_retained'] and borrowed[-1]['thread_retained']
+                if controller._view is not None:
+                    new_probes.update({u:asdict(v) for u,v in controller._view._observations.items()})
+        monkeypatch.setattr(ControllerSession,'reconcile',borrowed_reconcile)
+        snapshot=PersistenceClient.reconcile_snapshot
+        def original_snapshot(self,*a,**kw):
+            if self is client and mode=='snapshot-loss':
+                signal.pidfd_send_signal(self.process._capability.fileno(),signal.SIGSTOP)
+            return snapshot(self,*a,**kw)
+        monkeypatch.setattr(PersistenceClient,'reconcile_snapshot',original_snapshot)
+        controller_request=ControllerSession.request
+        def observed_request(controller,unit,phase,end):
+            if mode=='heartbeat-race' and race_ready and controller is old and phase=='heartbeat' and not tickets:
+                enqueue()
+            value=controller_request(controller,unit,phase,end)
+            if controller is not old and unit is not None:
+                productive.append(dict(session=controller.session_id,unit=unit,phase=phase))
+            return value
+        monkeypatch.setattr(ControllerSession,'request',observed_request)
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('active-recovery-inputs-'+mode+'.json')).open('x') as f:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+                    original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),f,indent=2);f.write('\n')
+        try:
+            result=run(driver)
+            assert len(tickets)==1 and len(broker._controllers)==2,result.diagnostic
+            outcome=driver.controller_recovery_result(tickets[0]);assert outcome is not None
+            assert old._retirement.original_child_dead and old._retirement.original_child_reaped and old._retirement.own_boundary_released
+            assert client.process is original_worker and broker.connection.child is original_authority
+            assert broker.owner._dispatch_owner is None and borrowed
+            if mode=='snapshot-loss':
+                assert outcome.disposition=='failed' and not outcome.ordinary_reconciled and not result.execution_succeeded
+                assert driver.facade is broker._current_controller._recovery._view
+                assert not driver.facade._bindings and not driver.facade._released and not new_probes
+                assert driver.facade._cleanup_only
+                with pytest.raises(ValueError,match='NOT-OPEN'):
+                    ProcessReadiness(broker.owner,policies=driver.plan.policies)
+                with pytest.raises(ValueError,match='CLEANUP-CAPABILITY'):
+                    ProcessReadiness(broker.owner,policies=driver.plan.policies,_cleanup_recovery=object())
+                with pytest.raises(ValueError,match='CLEANUP-ONLY'):
+                    driver.facade.bind(broker.issuer(leaf),handles[leaf])
+                with pytest.raises(ValueError,match='CLEANUP-ONLY'):
+                    driver.facade.check_health(deadline(.5),force=True)
+                with pytest.raises(ValueError):broker._current_controller._start_access()
+            else:
+                assert outcome.disposition=='completed' and outcome.ordinary_reconciled,outcome
+>               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E               AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='1c47cddca794e390221dfdea6dd666b03fe9225a7139e9dc4d7f953e670e97f...'ML-SCHEDULE-SERVICE-DEADLINE', health_scans=4, lease_renewals=10, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:202: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75def96d1d90>
+mode = 'cleaned-then-restart'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+        stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+        broker,facade,client,work=stack
+        assert driver.plan.recovery_operation_seconds==3 and driver.plan.active_seconds==20
+        assert json.loads(driver.plan.canonical_bytes)['version']==5
+        leaf=next(u.unit_id for u in driver.prepared.units if u.unit_id.endswith('/terminal-instance'))
+        future=next(c for c in client._future_contexts if c.binding.unit_id==leaf)
+        conflict_context=next(c for c in client._future_contexts if c.binding.unit_id!=leaf)
+        original_worker=client.process;original_authority=broker.connection.child
+        tickets=[];restarts=[];handles={};borrowed=[];threads=[];new_probes={};productive=[]
+        result=closure=None
+        race_ready=[]
+        expected_states={}
+        def enqueue():
+            if tickets:return
+            handles.update({i.unit_id:i._handle for i in broker.issuers if i._handle is not None})
+            end=HostDeadline(client.session,driver._active_end)
+            before=FileEvidenceJournal(work.parent/'m3.jsonl').records;sequence=client._sequence
+            contexts=client.coverage.data(client.coverage_digest)['contexts']
+            for issuer in broker.issuers:
+                if issuer.unit_id not in handles:
+                    expected_states[issuer.unit_id]='never-issued'
+                    continue
+                generation=next(c['generation'] for c in contexts if c['executionId']==handles[issuer.unit_id].execution_id)
+                terminal=[r.status for r in before if r.kind=='outcome' and r.status in ('stopped','cleaned')
+                          and r.details.get('maestroUnitId')==issuer.unit_id and r.details.get('generation')==generation]
+                expected_states[issuer.unit_id]=('released' if terminal[-1]=='cleaned' else 'stopped') if terminal else 'owned'
+            def submit():
+                threads.append((threading.get_ident(),broker.owner._dispatch_thread))
+                ticket=driver.replace_controller(client.run_id,session_id='active-successor-'+mode,deadline=end)
+                tickets.append(ticket)
+                assert driver.replace_controller(client.run_id,session_id=ticket.session_id,deadline=end) is ticket
+                with pytest.raises(ValueError,match='RECOVERY-ORIGINAL'):
+                    driver.controller_recovery_result(replace(ticket))
+                with pytest.raises(ValueError,match='RECOVERY-CONFLICT'):
+                    driver.replace_controller(client.run_id,session_id='conflicting-controller',deadline=end)
+                with pytest.raises(ValueError,match='RESTART-CONFLICT'):
+                    driver.restart(client.run_id,conflict_context.binding.unit_id,
+                        permit=conflict_context.binding.permit,generation=2,deadline=end)
+            if mode in ('dead-before-drain','heartbeat-race'):
+                errors=[]
+                def external():
+                    try:submit()
+                    except BaseException as e:errors.append(e)
+                thread=threading.Thread(target=external);thread.start();thread.join(2)
+                assert not thread.is_alive() and not errors,errors
+                signal.pidfd_send_signal(old.process._capability.fileno(),signal.SIGKILL)
+            else:submit()
+            assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before and client._sequence==sequence
+            assert driver.controller_recovery_result(tickets[0]) is None
+        statement=driver._statement
+        def after_statement(kind,step,**kw):
+            reply=statement(kind,step,**kw)
+            observed=sum(s.phase=='observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+            if mode=='heartbeat-race':
+                if kind=='step-complete' and step.phase=='start' and sum(s.phase=='start' and s.step_id in driver._outcomes for s in driver.prepared.steps)==3:
+                    race_ready.append(True)
+                return reply
+            if mode=='before-start':
+                trigger=step.phase=='prepare' and not broker.owner._claims
+            elif mode=='mixed-initial':
+                trigger=step.phase=='start' and sum(s.phase=='start' and s.step_id in driver._outcomes for s in driver.prepared.steps)==0
+            elif mode=='stopped-then-recovery':
+                trigger=step.step_id=='stop-terminal'
+            else:
+                trigger=step.step_id=='cleanup-terminal' if mode=='cleaned-then-restart' else step.phase=='observe' and observed==3
+            if kind=='step-complete' and trigger and not tickets and not restarts:
+                if mode=='generation2':
+                    restarts.append(driver.restart(client.run_id,leaf,permit=future.binding.permit,generation=2,
+                        deadline=HostDeadline(client.session,driver._active_end)))
+                else:enqueue()
+            return reply
+        monkeypatch.setattr(driver,'_statement',after_statement)
+        drain_restart=driver._drain_restart
+        def after_restart():
+            changed=drain_restart()
+            if mode=='generation2' and restarts and driver.restart_result(restarts[0]) is not None:enqueue()
+            return changed
+        monkeypatch.setattr(driver,'_drain_restart',after_restart)
+        drain_recovery=driver._drain_controller_recovery
+        def after_recovery():
+            changed=drain_recovery()
+            if mode in ('restart-after','cleaned-then-restart') and tickets and not restarts:
+                outcome=driver.controller_recovery_result(tickets[0])
+                if outcome and outcome.disposition=='completed':
+                    restarts.append(driver.restart(client.run_id,leaf,permit=future.binding.permit,generation=2,
+                        deadline=HostDeadline(client.session,driver._active_end)))
+            return changed
+        monkeypatch.setattr(driver,'_drain_controller_recovery',after_recovery)
+        reconcile=ControllerSession.reconcile
+        def borrowed_reconcile(controller,policies,active,cleanup,**kw):
+            assert kw['_coordinator'] is driver and kw['_request'] is tickets[0]
+            assert broker.owner._dispatch_owner is driver and broker.owner._dispatch_thread==threading.get_ident()
+            before=broker.owner._view_epoch
+            with pytest.raises(ValueError,match='COORDINATOR'):
+                IssuerRecovery(broker.session,broker.owner,policies=policies,controller=controller,
+                    _coordinator=object(),_request=tickets[0])
+            assert broker.owner._view_epoch==before
+            try:return reconcile(controller,policies,active,cleanup,**kw)
+            finally:
+                borrowed.append(dict(end=active.monotonic_seconds,owner_retained=broker.owner._dispatch_owner is driver,
+                    thread_retained=broker.owner._dispatch_thread==threading.get_ident(),new_session=controller.session_id))
+                assert borrowed[-1]['owner_retained'] and borrowed[-1]['thread_retained']
+                if controller._view is not None:
+                    new_probes.update({u:asdict(v) for u,v in controller._view._observations.items()})
+        monkeypatch.setattr(ControllerSession,'reconcile',borrowed_reconcile)
+        snapshot=PersistenceClient.reconcile_snapshot
+        def original_snapshot(self,*a,**kw):
+            if self is client and mode=='snapshot-loss':
+                signal.pidfd_send_signal(self.process._capability.fileno(),signal.SIGSTOP)
+            return snapshot(self,*a,**kw)
+        monkeypatch.setattr(PersistenceClient,'reconcile_snapshot',original_snapshot)
+        controller_request=ControllerSession.request
+        def observed_request(controller,unit,phase,end):
+            if mode=='heartbeat-race' and race_ready and controller is old and phase=='heartbeat' and not tickets:
+                enqueue()
+            value=controller_request(controller,unit,phase,end)
+            if controller is not old and unit is not None:
+                productive.append(dict(session=controller.session_id,unit=unit,phase=phase))
+            return value
+        monkeypatch.setattr(ControllerSession,'request',observed_request)
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('active-recovery-inputs-'+mode+'.json')).open('x') as f:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+                    original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),f,indent=2);f.write('\n')
+        try:
+            result=run(driver)
+            assert len(tickets)==1 and len(broker._controllers)==2,result.diagnostic
+            outcome=driver.controller_recovery_result(tickets[0]);assert outcome is not None
+            assert old._retirement.original_child_dead and old._retirement.original_child_reaped and old._retirement.own_boundary_released
+            assert client.process is original_worker and broker.connection.child is original_authority
+            assert broker.owner._dispatch_owner is None and borrowed
+            if mode=='snapshot-loss':
+                assert outcome.disposition=='failed' and not outcome.ordinary_reconciled and not result.execution_succeeded
+                assert driver.facade is broker._current_controller._recovery._view
+                assert not driver.facade._bindings and not driver.facade._released and not new_probes
+                assert driver.facade._cleanup_only
+                with pytest.raises(ValueError,match='NOT-OPEN'):
+                    ProcessReadiness(broker.owner,policies=driver.plan.policies)
+                with pytest.raises(ValueError,match='CLEANUP-CAPABILITY'):
+                    ProcessReadiness(broker.owner,policies=driver.plan.policies,_cleanup_recovery=object())
+                with pytest.raises(ValueError,match='CLEANUP-ONLY'):
+                    driver.facade.bind(broker.issuer(leaf),handles[leaf])
+                with pytest.raises(ValueError,match='CLEANUP-ONLY'):
+                    driver.facade.check_health(deadline(.5),force=True)
+                with pytest.raises(ValueError):broker._current_controller._start_access()
+            else:
+                assert outcome.disposition=='completed' and outcome.ordinary_reconciled,outcome
+>               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E               AssertionError: ML-PERSIST-TIMEOUT
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='ed703491d293a259a39cbae767156793cbd8a8b9941d42de0860f8c187bef67...diagnostic='ML-PERSIST-TIMEOUT', health_scans=3, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:202: AssertionError
+_ test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss] _
+
+request = <FixtureRequest for <Function test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75defa960050>
+mode = 'snapshot-loss'
+
+    @pytest.mark.parametrize('mode',['before-start','mixed-initial','planned','dead-before-drain','heartbeat-race','generation2','restart-after','stopped-then-recovery','cleaned-then-restart','snapshot-loss'])
+    def test_original_active_replacement_retains_owner_writer_and_productive_access(request,monkeypatch,mode):
+        names=('terminal-instance',) if mode in ('generation2','restart-after','cleaned-then-restart') else ()
+>       stack,old,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,
+            restart_artifact_names=names,controller_recovery=True)
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:73: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,
+tests/thesis_lite/maestro/test_shared_dispatcher.py:108: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:94: in broker_stack
+    storage = session.persistence(
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/bootstrap.py:1124: in persistence
+    client = PersistenceClient(
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/persistence.py:598: in __init__
+    init_operation, _, facts = self._rpc("init", {}, deadline)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:35: in observed
+    return original(self, kind, body, end, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/persistence.py:798: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/persistence.py:409: in _receive
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=24, family=1, type=5, proto=0, laddr=b'\x00c7ee5', raddr=b'\x00d5d0f'>
+peer = (525983, 1000, 1000), until = 1178637399161963
+check = <function PersistenceClient._rpc.<locals>.check at 0x75def90d20c0>
+
+    def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
+        while True:
+            check()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+>               raise PersistenceError("ML-PERSIST-TIMEOUT")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-TIMEOUT
+
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/persistence.py:369: PersistenceError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75def99b7130>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='c6ee1c6c67792857142558656860bd3fb6a1858897fad034d12bff39c38ae7b...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=4, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:152: AssertionError
+_____ test_stopped_controller_records_failure_without_unacknowledged_start _____
+
+request = <FixtureRequest for <Function test_stopped_controller_records_failure_without_unacknowledged_start>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75def952f150>
+
+    def test_stopped_controller_records_failure_without_unacknowledged_start(request, monkeypatch):
+>       stack, controller, driver = scheduled(request, monkeypatch)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_shared_dispatcher.py:111: in scheduled
+    stage_all(stack)
+tests/thesis_lite/maestro/test_run_broker.py:169: in stage_all
+    handle = issuer.stage(end)
+             ^^^^^^^^^^^^^^^^^
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/run_broker.py:1087: in stage
+    until = self.broker._until(deadline, claim=claim)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.run_broker.RunBroker object at 0x75def9059ba0>
+deadline = HostDeadline(session='host-session', monotonic_seconds=1178658.653247764)
+
+    def _until(self, deadline, *, claim=None, cleanup=False):
+        until = _deadline(deadline, self.session.session)
+        if (
+            until > self.connection._lease
+            and not (cleanup and self.connection._starts_closed)
+            or until > self.session._generation - 2_000_000_000
+            or claim
+            and until > claim.deadline_ns
+        ):
+>           raise OwnerError("ML-RUN-ORIGINAL-END")
+E           xverse.maestro.owner.OwnerError: ML-RUN-ORIGINAL-END
+
+/dev/shm/affa19-venv-budget/lib/python3.13/site-packages/xverse/maestro/run_broker.py:467: OwnerError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[stopped-then-recovery]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_stopped_controller_records_failure_without_unacknowledged_start
+5 failed, 2 passed in 98.06s (0:01:38)

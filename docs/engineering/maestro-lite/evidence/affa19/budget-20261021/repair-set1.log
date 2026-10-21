@@ -1,0 +1,38 @@
+.F....................................................................   [100%]
+=================================== FAILURES ===================================
+__________ test_slow_teardown_records_never_end_on_the_emergency_path __________
+
+request = <FixtureRequest for <Function test_slow_teardown_records_never_end_on_the_emergency_path>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d10bafd5cd0>
+
+    def test_slow_teardown_records_never_end_on_the_emergency_path(request, monkeypatch):
+        """(a) Each teardown record takes 0.15 s longer and an earlier slow phase is known. Where the
+        lease-renewal margin leaves an active-phase stop too little room, M1 refuses it before the
+        dispatch and the terminal teardown, sized within its own slack, cleans every unit normally:
+        no emergency, a finalizable documented failure or a success, a usable channel. The head
+        without this change ends on the emergency path (ML-SCHEDULE-TEARDOWN-INCOMPLETE)."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.45, phase_cleanup=0.45)
+        record = PersistenceClient.record_teardown
+    
+        def slow(self, controller, step, deadline):
+            time.sleep(0.15)
+            return record(self, controller, step, deadline)
+    
+        monkeypatch.setattr(PersistenceClient, "record_teardown", slow)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        trace = [e for t in teardowns(driver) for e in getattr(t, "_interior_trace", ())]
+        print("BUDGET-A", dict(diagnostic=result.diagnostic, interior=getattr(driver, "_interior_trace", None), teardown=trace))
+        assert result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE", result.diagnostic  # pinned (finding 480 (7))
+>       assert not client._failed and client.rpc_failure is None and result.terminal_recorded
+E       assert (not True)
+E        +  where True = <xverse.maestro.persistence.PersistenceClient object at 0x7d10ba02a270>._failed
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:95: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-A {'diagnostic': 'ML-SCHEDULE-SERVICE-DEADLINE', 'interior': [{'site': 'step-dispatch', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 2.8311406841967255, 'need': 0.5325324200559407, 'achievable': 0.2999020158313215, 'stopped': True}], 'teardown': [{'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'need': 1.35, 'window': 1.0, 'normal': 0.6000000000931323, 'end': 1.0}, {'site': 'run', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'need': 1.35, 'window': 1.0, 'normal': 1.065960671985522, 'end': 1.4659606718923897}]}
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_slow_teardown_records_never_end_on_the_emergency_path
+1 failed, 69 passed in 72.77s (0:01:12)

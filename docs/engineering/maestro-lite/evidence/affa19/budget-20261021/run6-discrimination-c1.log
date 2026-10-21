@@ -1,0 +1,155 @@
+load 8.06
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_______ test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits ________
+
+    def test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits():
+        """(e) Pure identity and bounds of the sizing functions."""
+>       from xverse.maestro.service_time import NORMAL_SHARE, sized
+E       ModuleNotFoundError: No module named 'xverse.maestro.service_time'
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:50: ModuleNotFoundError
+__________ test_slow_teardown_records_never_end_on_the_emergency_path __________
+
+request = <FixtureRequest for <Function test_slow_teardown_records_never_end_on_the_emergency_path>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c93570d1ba0>
+
+    def test_slow_teardown_records_never_end_on_the_emergency_path(request, monkeypatch):
+        """(a) Each teardown record takes 0.15 s longer and an earlier slow phase is known. Where the
+        lease-renewal margin leaves an active-phase stop too little room, M1 refuses it before the
+        dispatch and the terminal teardown, sized within its own slack, cleans every unit normally:
+        no emergency, a finalizable documented failure or a success, a usable channel. The head
+        without this change ends on the emergency path (ML-SCHEDULE-TEARDOWN-INCOMPLETE)."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.45, phase_cleanup=0.45)
+        record = PersistenceClient.record_teardown
+    
+        def slow(self, controller, step, deadline):
+            time.sleep(0.15)
+            return record(self, controller, step, deadline)
+    
+        monkeypatch.setattr(PersistenceClient, "record_teardown", slow)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        trace = [e for t in teardowns(driver) for e in getattr(t, "_interior_trace", ())]
+        print("BUDGET-A", dict(diagnostic=result.diagnostic, interior=getattr(driver, "_interior_trace", None), teardown=trace))
+>       assert result.diagnostic in (None, "ML-SCHEDULE-SERVICE-DEADLINE"), result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert 'ML-SCHEDULE-TEARDOWN-INCOMPLETE' in (None, 'ML-SCHEDULE-SERVICE-DEADLINE')
+E        +  where 'ML-SCHEDULE-TEARDOWN-INCOMPLETE' = DispatchResult(run_id='fixture-run', lifecycle_digest='e2e4dcc9bf6dd1d46b9716c148477de204b117f04f773de61b0fb61976a49e6...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).diagnostic
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:94: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-A {'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'interior': None, 'teardown': []}
+_ test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure _
+
+request = <FixtureRequest for <Function test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c935605e3f0>
+
+    def test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure(request, monkeypatch):
+        """(b), (f) M1: the stop step is never dispatched; normal terminal teardown and the whole
+        terminal sequence still fit, so the report is finalizable and the channel usable."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=3600.0)
+        result = run(driver)
+        facts = result.terminal.public_data()
+        print("BUDGET-B", dict(diagnostic=result.diagnostic, trace=getattr(driver, "_interior_trace", None),
+                               outcomes={k: v.disposition for k, v in driver._outcomes.items()}))
+>       assert result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE" and not result.execution_succeeded
+E       AssertionError: assert (None == 'ML-SCHEDULE-SERVICE-DEADLINE')
+E        +  where None = DispatchResult(run_id='fixture-run', lifecycle_digest='3bf3d2455b3735621fc0b5798d4fa38c259fff561355f5697117598d554bfea..._recorded=True, diagnostic=None, health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).diagnostic
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:114: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-B {'diagnostic': None, 'trace': None, 'outcomes': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'completed', 'observe-source': 'completed', 'observe-sink': 'completed', 'stop-sink': 'completed', 'cleanup-sink': 'completed', 'stop-source': 'completed', 'cleanup-source': 'completed'}}
+______ test_a_restart_that_cannot_finish_is_rejected_before_any_mutation _______
+
+request = <FixtureRequest for <Function test_a_restart_that_cannot_finish_is_rejected_before_any_mutation>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c935719c170>
+
+    def test_a_restart_that_cannot_finish_is_rejected_before_any_mutation(request, monkeypatch):
+        """(c) M1 before restart mutation: rejected with the existing code; the generation is unchanged
+        and the run continues."""
+        from xverse.maestro.time import HostDeadline
+        from .test_terminal_controller_inventory import scheduled as restart_scheduled
+        stack, controller, driver = restart_scheduled(request, monkeypatch, restarts=True, restart_leaf_artifact=True)
+        broker, facade, client, work = stack
+        source, leaf = driver.prepared.resource_order
+        context = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        seed(driver, restart_unit=3600.0)
+        tickets, statement = [], driver._statement
+    
+        def enqueue(kind, step, **kw):
+            response = statement(kind, step, **kw)
+            if kind == "step-complete" and step.step_id == "observe-sink" and not tickets:
+                end = HostDeadline(client.session, driver._active_end)
+                tickets.append(driver.restart(client.run_id, leaf, permit=context.binding.permit, generation=2, deadline=end))
+            return response
+    
+        monkeypatch.setattr(driver, "_statement", enqueue)
+        result = run(driver)
+        outcome = driver.restart_result(tickets[0]) if tickets else None
+        print("BUDGET-C", dict(outcome=outcome, diagnostic=result.diagnostic, trace=getattr(driver, "_interior_trace", None)))
+>       assert outcome is not None and outcome.disposition == "rejected", outcome
+E       AssertionError: RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='completed', execution_id='owned-process-execution-1-future-2', diagnostic=None)
+E       assert (RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='completed', execution_id='owned-process-execution-1-future-2', diagnostic=None) is not None and 'completed' == 'rejected'
+E         
+E         - rejected
+E         + completed)
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:151: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-C {'outcome': RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='completed', execution_id='owned-process-execution-1-future-2', diagnostic=None), 'diagnostic': None, 'trace': None}
+_____________ test_widened_deadlines_stay_inside_every_outer_bound _____________
+
+request = <FixtureRequest for <Function test_widened_deadlines_stay_inside_every_outer_bound>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c935603f350>
+
+    def test_widened_deadlines_stay_inside_every_outer_bound(request, monkeypatch):
+        """(d) Seeded phase estimates widen the active phases; every deadline stays at or below the
+        active end, health scans and renewals still happen, and no lease is exhausted."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.25, phase_cleanup=0.25)  # sized beyond 0.6 x 0.5 s, still fits (M1 passes)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        print("BUDGET-D", dict(diagnostic=result.diagnostic, trace=getattr(driver, "_interior_trace", None),
+                               scans=driver.health_scans, renewals=driver.lease_renewals))
+        assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
+>       assert any("widened" in e for e in driver._interior_trace)
+                                           ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'FiniteDispatcher' object has no attribute '_interior_trace'
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:169: AttributeError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-D {'diagnostic': None, 'trace': None, 'scans': 0, 'renewals': 2}
+_______ test_a_refused_teardown_record_keeps_its_code_in_the_unit_result _______
+
+request = <FixtureRequest for <Function test_a_refused_teardown_record_keeps_its_code_in_the_unit_result>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c93560c6470>
+
+    def test_a_refused_teardown_record_keeps_its_code_in_the_unit_result(request, monkeypatch):
+        """(g) Finding 474 item 3: ML-TEARDOWN-RECORD-BUDGET is visible in UnitTeardown."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        driver.teardown._record_seen = 3600.0
+        result = run(driver)
+        emergencies = {u: r.diagnostic for t in teardowns(driver) for u, r in getattr(t, "_emergencies", {}).items()}
+        print("BUDGET-G", dict(diagnostic=result.diagnostic, emergencies=emergencies))
+        assert not result.execution_succeeded
+>       assert emergencies and "ML-TEARDOWN-RECORD-BUDGET" in emergencies.values(), emergencies
+E       AssertionError: {}
+E       assert ({})
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:185: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-G {'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'emergencies': {}}
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_slow_teardown_records_never_end_on_the_emergency_path
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_a_restart_that_cannot_finish_is_rejected_before_any_mutation
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_widened_deadlines_stay_inside_every_outer_bound
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_a_refused_teardown_record_keeps_its_code_in_the_unit_result
+6 failed in 22.61s

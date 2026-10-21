@@ -34,7 +34,16 @@ refusals but does not remove them (469).
    becomes a floor of the normal share instead of a cap, and the 0.4 emergency share is kept.
    Not widened: start/observe effects and `_restart_unit` (their ends also bound readiness waits),
    active-phase statements (their limit is the window itself), terminal statements, health scans,
-   renewals, collection, the report, and anything under declared action timeouts.
+   renewals, collection, the report, and the dispatcher deadline of anything under declared action
+   timeouts (inside such a deadline the teardown's normal share may grow up to, never beyond, it;
+   finding 480 (5)). The terminal `run()` window is also capped by `teardown._deadline`'s 80 s, the
+   boundary teardown deadline and, in the non-lazy profile, the live leases themselves; in the lazy
+   profile the terminal records renew the lease, so no lease cap applies (findings 480 (1), 482 (1)).
+   The general lease-minus-margin and health caps above apply to active-phase deadlines, where
+   renewals and scans happen between operations; they do not apply to the terminal window. The
+   lease rule is a property of the dispatcher's terminal window, not of `ReverseTeardown.run()`,
+   which a closure path may call with its own deadline (finding 484 (3)). Known conservative
+   bias: M1 checks stop plus cleanup against one normal share (finding 484 (2)).
 4. **M1, decisions before mutation** (estimate x 1.0, no floor): a stop or cleanup step-dispatch
    whose estimated dispatch plus phase spans no longer fit before the active end is refused with
    the existing ML-SCHEDULE-SERVICE-DEADLINE, so the run ends through normal terminal teardown as a
