@@ -1257,3 +1257,61 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     remains the clean full run, on code that differs from the head only in tests and scripts.
     Next: the loaded A/B d when the host is loaded again by its own jobs; author decision on
     A2 with this evidence (accept as partial mitigation, revise, or withdraw).
+
+468. Author decisions on the request of 2026-10-21 (author-decision-request-20261021.md, as
+    revised by 467). The author's text, verbatim: "I accept all that depends on my decision, and
+    for open questions I let you decide what is the best". Recorded meaning: every recommendation
+    of the decision summary given to the author is accepted as stated; items given there without
+    a recommendation (C2, C3) are delegated to the agent, which records each ruling and its
+    basis as its own finding before acting on it.
+    A1 F-10 (e9b346a05) ACCEPTED as an engineering fix candidate on this branch.
+    A2 F-08/F-09 v2 (f4262c285) ACCEPTED AS A PARTIAL MITIGATION ONLY: F-08/F-09 stay open
+       (ML-CAPA-418 is not closed); the acceptance is withdrawn if the loaded A/B d shows arm B
+       failing more than arm A.
+    B1 lane-admission skip and B2 D-09 xfail ALLOWLISTED; B2 expires with the C1 product fix.
+    B3 G4 WAIVED for engineering-increment evidence only; feature acceptance (P3-T07) needs G4
+       satisfied or decided again.
+    B4 staleness scope CODE (src, tests, scripts, xdl, pyproject.toml) is authoritative.
+    C1 D-09: the design branch normal-documented-failure is KEPT; the product is to be fixed in a
+       later candidate so that a factually complete failed run is finalized, not aborted.
+    C2 CP-10, W-01 and C3 CP-02, AF17: DELEGATED; one brief and ruling per row follow.
+    C4 the non-constructible and deferred items (431, 432, 437, 450) ACCEPTED AS STATED LIMITS,
+       to be listed in the T01 as-built reconciliation.
+    D1 closure of P3-T02 and P3-T04 CONFIRMED (both reopen if the T01 freeze changes the
+       projection or time contracts).
+    D2 acceptance, merge and push of increment 19: NOT NOW, by the accepted recommendation; to
+       be decided after A2's condition, the loaded A/B and a clean full run on the final head.
+    D3 Note 23 paragraph APPROVED, to be applied after D1 with the A2 outcome added.
+    D4 a CAPA successor (step 3) moving ML-CAPA-359 to HYPOTHESIS APPROVED.
+    Gate inputs written from this record: evidence/affa19/acceptance-inputs/allowlist.json and
+    g4.json, approval reference "review-affa19.md finding 468".
+
+469. Loaded A/B d2 (2026-10-21, evidence/affa19/ab-f08v2-loaded-20261021d2, watcher
+    ab-f08v2-loaded-20261021d-watch.sh, driver ab-f08v2-loaded-20261021d.py unchanged). Trigger
+    at 12:47:27Z: a new llama-server of another project and 1-minute load 10.5. Arms as in 467:
+    A = head without v2 (e9b346a05 venv), B = run v venv; the 12 tests of 467; 4 pairs,
+    alternating order. Load 13.5 to 14.7 in pairs 0 and 1, then falling, 8.8 to 6.1 in pairs 2
+    and 3.
+    Failed tests of 12 per run: pair 0 A 9, B 10; pair 1 B 9, A 10; pair 2 A 1, B 0; pair 3 B 0,
+    A 0. Totals A 20, B 19. Arm A codes: ML-SCHEDULE-TEARDOWN-INCOMPLETE 7, ML-PERSIST-TIMEOUT 6,
+    ML-BOOT-CLOSED 1, ML-OWNER-DEADLINE 1; no guard (no refusal possible). Arm B codes:
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE 9, ML-SCHEDULE-SERVICE-DEADLINE 6, no ML-PERSIST-TIMEOUT; 15
+    refusals, all in pairs 0 and 1. Remaining time against estimate ranged from 3 ms against
+    104 ms to 296 against 299 and 166 against 168; three refusals were within 3 ms of the
+    estimate. Their counterfactual outcome is unmeasured, but the same tests failed in arm A
+    in the same pairs.
+    Reading. (1) At load above about 13 these 12 tests fail in most runs with or without v2;
+    at load below about 9 they pass in both arms (one A failure). The dominant cause is the
+    fixed RPC and phase budgets against host load, which is the F-08/F-09 class itself and not
+    a v2 effect. (2) v2 replaces persist timeouts by explicit refusals (6 timeouts in A, 0 in
+    B) with no increase in failures. The A2 condition of 468 (withdraw if B fails more than A)
+    is NOT met, so A2 stands as accepted partial mitigation. (3) Full-run evidence of this
+    suite is therefore meaningful only with the host condition recorded: run u (load about 5)
+    is clean, while run v (load rising to 15) is not, on identical product code. Ruling
+    (delegated, 468): a full run whose recorded host load exceeds 10 at any sample is treated
+    as an observation, not as a regression signal, and it is repeated on a quieter host. The
+    gate is not changed, so a failed run still blocks (B2); the ruling only prevents a load
+    failure from being read as a product regression. (4) F-08/F-09 stay open. Removing them
+    needs budgets that account for load (design scope, T01), which is not attempted in
+    increment 19.
+    The run v work directory on /dev/shm (84 MB) is deleted after this record.
