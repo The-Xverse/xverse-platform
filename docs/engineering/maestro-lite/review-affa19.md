@@ -1037,3 +1037,17 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     installed equals frozen src) pass. This is the gate behaving as designed on real evidence
     (dv12-gate-verdict.json). Run u follows: the same driver on the new head, with the repaired
     venv script.
+
+460. CAPA successor capa-20261021-affa19-step2 (2026-10-21; builder build-capa-20261021-
+    affa19-step2.py; register sha 335f93f6…; 56 records / 572 bindings; parent
+    capa-20261021-affa19-f08 ebcc01d6… preserved; both validators pass). Additive: review
+    spans 420-458; the step-2 tests, the DV12 gate, the candidate-venv tooling; the A/B,
+    calibration and run-t receipts; the two candidate patches written into the folder
+    (f08-f09-v2.patch = git diff e9b346a05 f4262c285 -- src, f10.patch = git diff dd00c1db5
+    e9b346a05 -- src). Record changes: ML-CAPA-418 (F-08/F-09) TRIAGED -> FIX_CANDIDATE on v2,
+    with the load limit stated; ML-CAPA-357 gains the run-t recurrence. New records:
+    ML-CAPA-439 (F-10, FIX_CANDIDATE), ML-CAPA-442 (installed-package worker boundary and its
+    tooling, FIX_CANDIDATE), ML-CAPA-444-D09 (TRIAGED, awaiting the author's ruling),
+    ML-CAPA-445-F11 and ML-CAPA-448-F12 (pre-existing review observations, TRIAGED). No cause is
+    VERIFIED and every effectiveness stays NOT_DEMONSTRATED. The ten unknown-cause records are
+    unchanged.

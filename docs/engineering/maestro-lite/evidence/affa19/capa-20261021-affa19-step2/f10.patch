@@ -1,0 +1,60 @@
+diff --git a/src/xverse/maestro/coverage.py b/src/xverse/maestro/coverage.py
+index ced0eb2fc..b8027ce74 100644
+--- a/src/xverse/maestro/coverage.py
++++ b/src/xverse/maestro/coverage.py
+@@ -528,7 +528,10 @@ class _Assessment:
+             if p['action']=='intent' and e['producerId']=='maestro.owner7':phase_kind_status=('start','intent',{'pending'})
+             elif p['action']=='issued':phase_kind_status=('start','observation',{'staged'})
+             elif p['action']=='started':phase_kind_status=('start','outcome',{'running'} if p['outcome']=='succeeded' else {'failed','unresolved','not-ready'})
+-            elif p['action'] in ('probe','ready','health','health-loss'):phase_kind_status=('observe','observation',{'running'} if p['outcome']=='succeeded' else {'not-ready'})
++            elif p['action'] in ('probe','ready','health','health-loss'):
++                # A lost observation is recorded as health-loss/unknown over an M3 'unknown' observation (F-10, findings 439-440).
++                phase_kind_status=('observe','observation',{'running'} if p['outcome']=='succeeded'
++                                   else {'unknown'} if p['action']=='health-loss' and p['outcome']=='unknown' else {'not-ready'})
+             elif p['action'] in ('stop','cleanup'):phase_kind_status=(p['action'],'outcome',{'stopped'} if p['action']=='stop' else {'cleaned'})
+             if phase_kind_status and not self.source_ok(e,*phase_kind_status):self.valid[eid]='conflicting'
+             row=self.brows.get(key)
+@@ -543,7 +546,10 @@ class _Assessment:
+                 elif row.get('issued') is not True:self.valid[eid]='conflicting';self.errors.append('issued/inactive contradiction')
+                 elif p.get('handleRef')!=row.get('handleRef'):self.valid[eid]='conflicting'
+             if p['action']=='started' and row and row.get('issuedEventId') and not self.ancestor(eid,row['issuedEventId']):self.valid[eid]='conflicting'
+-            if p['action'] in ('started','probe','ready','health','health-loss'):
++            if p['action']=='health-loss' and p['outcome']=='unknown':
++                # A lost observation carries no parent proof, and so no dependencies (F-10, findings 440, 448).
++                if p['dependencies']!=[]:self.valid[eid]='conflicting'
++            elif p['action'] in ('started','probe','ready','health','health-loss'):
+                 if not self.dependencies(e):self.valid[eid]='conflicting'
+         if set(self.sources)-referenced:self.errors.append('unmirrored original M3 source')
+         if any(v!='satisfied' for v in self.valid.values()):self.errors.append('invalid/missing source or annotation')
+diff --git a/src/xverse/maestro/dispatcher.py b/src/xverse/maestro/dispatcher.py
+index ebdc99081..667cd532d 100644
+--- a/src/xverse/maestro/dispatcher.py
++++ b/src/xverse/maestro/dispatcher.py
+@@ -289,6 +289,11 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
+             base["cause"] = request["cause"]
+         if kind == "failure":
+             base["diagnosticCode"] = request["diagnostic"]
++            issued = client._issued_receipts.get((unit, dispatcher._generation(unit))) if unit is not None else None
++            if request["observation_missing"] and issued is not None:
++                # Mirror of the worker's lost-observation handleRef: the validated issuance of the
++                # current generation, the same source the worker uses (F-10, findings 443, 445).
++                base['handleRef'] = json.loads(issued.public_bytes)['event']['extensions']['xverse.maestro']['handleRef']
+         if (
+             type(value) is not dict
+             or set(value) != set(base) | {"sourceRefs"}
+diff --git a/src/xverse/maestro/schedule_evidence.py b/src/xverse/maestro/schedule_evidence.py
+index 36ba71ac1..a7a046e75 100644
+--- a/src/xverse/maestro/schedule_evidence.py
++++ b/src/xverse/maestro/schedule_evidence.py
+@@ -667,6 +667,11 @@ class ScheduleJournal:
+                 cause=body["cause"],
+                 diagnosticCode=body["diagnostic"],
+                 **({"probeId": "running"} if body["observation_missing"] else {}),
++                # The lost observation names the handle issued for the unit's current generation (F-10, findings 441, 445).
++                **({"handleRef": "handle-" + _digest([self.evidence.permits._run_id, asdict(
++                    self.evidence.issued_handles[unit, self._generation(unit, claims)][0])])[7:]}
++                   if body["observation_missing"] and unit is not None
++                   and (unit, self._generation(unit, claims)) in self.evidence.issued_handles else {}),
+             )
+             self.failures.add(unit)
+             self.closing = True
