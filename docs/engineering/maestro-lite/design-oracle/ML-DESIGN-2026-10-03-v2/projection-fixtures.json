@@ -1,0 +1,102 @@
+{
+  "maturity": "DRAFT",
+  "verification_executed": false,
+  "schema_version": 1,
+  "status": "draft_expected_tables_not_runtime_results",
+  "revision": "ML-DESIGN-2026-10-03-v2",
+  "accepted_fixture_basis": "tests/thesis_lite/argus/fixtures at c2997c0f810d117cf45b2e34a4011b3ba7219494",
+  "resource_fixture_directory": "fixtures",
+  "combined_graph_rules": [
+    "start-step dispatch -> Release",
+    "Release -> required probe",
+    "required probe -> ready",
+    "ready -> start-step completion",
+    "inter-unit flow A->B: A.ready -> B.start-step dispatch",
+    "step dependsOn: predecessor step completion -> successor step dispatch",
+    "observed termination -> stop completion -> cleanup (reverse resource order)",
+    "observe phase: configured probe completion -> observe-step completion"
+  ],
+  "positive": {
+    "containers": ["producer-node", "sink-node"],
+    "units": { "source-instance": "source-binding", "sink-instance": "sink-binding" },
+    "flow_edges": [
+      { "from": "source-instance", "to": "sink-instance", "source_pointer": "System/spec/flows/0" }
+    ],
+    "step_edges": [["start-source", "start-sink"]],
+    "expected_combined_edges": [
+      { "from": "step:start-source:dispatch", "to": "release:source-instance:g1" },
+      { "from": "release:source-instance:g1", "to": "probe:source-instance:g1" },
+      { "from": "probe:source-instance:g1", "to": "ready:source-instance:g1" },
+      { "from": "ready:source-instance:g1", "to": "step:start-source:complete" },
+      { "from": "ready:source-instance:g1", "to": "step:start-sink:dispatch", "source_pointer": "System/spec/flows/0" },
+      { "from": "step:start-source:complete", "to": "step:start-sink:dispatch", "source_pointer": "Scenario/spec/steps/1/dependsOn/0" },
+      { "from": "step:start-sink:dispatch", "to": "release:sink-instance:g1" },
+      { "from": "release:sink-instance:g1", "to": "probe:sink-instance:g1" },
+      { "from": "probe:sink-instance:g1", "to": "ready:sink-instance:g1" },
+      { "from": "ready:sink-instance:g1", "to": "step:start-sink:complete" },
+      { "from": "terminated:sink-instance:g1", "to": "stop:sink-instance:g1" },
+      { "from": "stop:sink-instance:g1", "to": "cleanup:sink-instance:g1" },
+      { "from": "terminated:source-instance:g1", "to": "stop:source-instance:g1" },
+      { "from": "stop:source-instance:g1", "to": "cleanup:source-instance:g1" }
+    ],
+    "start_order": ["source-instance", "sink-instance"],
+    "teardown_order": ["sink-instance", "source-instance"],
+    "compiler_kind_order": ["node", "node", "component-instance", "component-instance", "step", "step"],
+    "readiness": "running existence-only probe explicitly declared; not application readiness",
+    "expected_combined_graph": "acyclic; accepted"
+  },
+  "discriminating_cases": [
+    {
+      "id": "flow-only-reversed-steps",
+      "change": "remove step dependsOn and reverse step declaration order; retain source->sink flow",
+      "accepted_compiler": true,
+      "compiler_instance_order": ["source-instance", "sink-instance"],
+      "compiler_step_order": ["start-sink", "start-source"],
+      "expected_combined_edges": [
+        "ready:source-instance:g1 -> step:start-sink:dispatch (flow)",
+        "no step-edge between start-sink and start-source"
+      ],
+      "expected_start_order": ["source-instance", "sink-instance"],
+      "expected_cycle": false,
+      "note": "Eligibility is governed by the combined graph (flow), not by compiler step declaration rank; rank must not veto valid cross-kind eligibility."
+    },
+    {
+      "id": "step-only-reversed-instances",
+      "change": "make the retained flow self-unit and reverse instance declaration order; retain step dependsOn start-source -> start-sink",
+      "accepted_compiler": true,
+      "compiler_instance_order": ["sink-instance", "source-instance"],
+      "compiler_step_order": ["start-source", "start-sink"],
+      "expected_combined_edges": [
+        "step:start-source:complete -> step:start-sink:dispatch (dependsOn)",
+        "no inter-unit resource edge from the self-unit flow"
+      ],
+      "expected_start_order": ["source-instance", "sink-instance"],
+      "expected_cycle": false,
+      "note": "A self-unit flow must not manufacture a cross-unit ready edge."
+    },
+    {
+      "id": "opposing-start-dependency",
+      "change": "retain source->sink flow but make start-source depend on start-sink",
+      "accepted_compiler": true,
+      "compiler_instance_order": ["source-instance", "sink-instance"],
+      "compiler_step_order": ["start-sink", "start-source"],
+      "expected_cycle": true,
+      "expected_result": "ML-PROJECTION combined-graph cycle; whole lifecycle rejection; zero starts",
+      "note": "Compiler validity and rank checks of the original edges alone cannot reject this; only the combined graph does."
+    }
+  ],
+  "negative_controls": [
+    { "id": "unbound-sink", "change": "remove sink-binding", "expected": "ML-PROJECTION; no runtime preparation success" },
+    { "id": "feedback-cycle", "change": "add sink -> source flow with valid endpoints", "expected": "XDL1-PLAN-DEPENDENCY-CYCLE; no plan" },
+    { "id": "bad-schedule", "change": "start-source at tick 2, start-sink at tick 0 tolerance 0", "expected": "ML-PROJECTION; accepted compilation may remain valid" },
+    { "id": "node-target", "change": "start-sink targetRef element sink-node", "expected": "ML-PROJECTION; no node launch" },
+    { "id": "duplicate-binding", "change": "add second executable sink binding", "expected": "ML-PROJECTION; no duplicate realization" },
+    { "id": "unsupported-action", "change": "change start-sink actionKind to set-parameter", "expected": "ML-PROJECTION; accepted XDL string does not grant execution" },
+    { "id": "no-payload-mapping", "change": "introduce a supported phase/action combination without a payload v2.0 mapping", "expected": "ML-PROJECTION; combination rejected before mutation (ML-IR-06)" },
+    { "id": "original-argus-fixture", "change": "use accepted original fixture unchanged", "expected": "Maestro rejects missing sink binding and fault/parameter intent" }
+  ],
+  "limitations": [
+    "Expected edges/orders are independently authored design expectations; no Maestro projection was implemented or executed.",
+    "Accepted-compiler probe results are historical and were not rerun by this draft."
+  ]
+}

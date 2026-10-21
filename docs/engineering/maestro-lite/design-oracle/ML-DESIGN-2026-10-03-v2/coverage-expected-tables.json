@@ -1,0 +1,138 @@
+{
+  "maturity": "DRAFT",
+  "verification_executed": false,
+  "schema_version": 1,
+  "status": "independently_authored_expected_tables_not_runtime_evidence",
+  "revision": "ML-DESIGN-2026-10-03-v2",
+  "findings_addressed": ["ML-IR-07"],
+  "coverage_schema": "lifecycle-coverage.schema.json",
+  "coverage_version": "2.0",
+  "universe_rules": {
+    "derived_from": "admitted lifecycle only, including blocked/never-issued units and steps",
+    "admittedTemplatesDigest": "canonical admitted obligation universe before instantiation",
+    "expectedObligationsDigest": "canonical instantiated expectations, excluding any candidate satisfaction decision",
+    "applicability": "checked from the admitted state machine and retained intent/issuance/terminal evidence; missing/contradictory applicability evidence is unverifiable, never not-applicable",
+    "health_slots": "slot boundaries derive from the admitted host cadence and the actual bounded active interval; a missing endpoint cannot shorten the universe and cannot be hidden by a paused tick",
+    "no_cross_session_subtraction": true,
+    "no_provider_or_oracle_invocation": true
+  },
+  "obligation_templates": [
+    { "suffix": "intent", "obligationClass": "normal-record", "required_when": "unit is scheduled to start", "satisfied_by": "public intent event + durable M3 intent" },
+    { "suffix": "issued", "obligationClass": "normal-record", "required_when": "a resource was staged", "satisfied_by": "public issued event + broker issuance record" },
+    { "suffix": "ready", "obligationClass": "normal-record", "required_when": "unit reached running and has a dependent", "satisfied_by": "successful current-generation probe + ready event" },
+    { "suffix": "outcome", "obligationClass": "normal-record", "required_when": "a normal M3 start outcome is expected", "satisfied_by": "durable M3 outcome + public projection" },
+    { "suffix": "health.<slot>", "obligationClass": "normal-record", "required_when": "unit active across a cadence slot", "satisfied_by": "health event for the exact slot" },
+    { "suffix": "stop", "obligationClass": "normal-record", "required_when": "unit issued", "satisfied_by": "observed stop outcome" },
+    { "suffix": "cleanup", "obligationClass": "normal-record", "required_when": "unit issued", "satisfied_by": "observed cleanup outcome with release" },
+    { "suffix": "unit-disposition", "obligationClass": "unit-disposition", "required_when": "unit admitted (including blocked/never-issued)", "satisfied_by": "exactly one disposition event" },
+    { "suffix": "step-disposition", "obligationClass": "step-disposition", "required_when": "step admitted", "satisfied_by": "exactly one disposition event per step" },
+    { "suffix": "artifact.<path>", "obligationClass": "artifact", "required_when": "artifact declared required", "satisfied_by": "indexed relative path + actual byte hash" },
+    { "suffix": "run-terminal", "obligationClass": "normal-record", "required_when": "always", "satisfied_by": "run-terminal event after teardown/collection" }
+  ],
+  "branch_expectations": [
+    {
+      "id": "nominal",
+      "mutation": "none",
+      "expected_normalRecordStatus": "complete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "complete",
+      "expected_execution": "succeeded"
+    },
+    {
+      "id": "normal-documented-failure",
+      "mutation": "record intent, failed normal outcome, cancellation, blocked dependent disposition, exact teardown/collection and run-terminal failure",
+      "expected_normalRecordStatus": "complete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "complete",
+      "expected_execution": "failed",
+      "note": "a failed run can be factually complete"
+    },
+    {
+      "id": "missing-normal-outcome-without-disposition",
+      "mutation": "omit the normal M3 outcome entirely; retain all other normal records",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "incomplete",
+      "expected_row": { "obligationId": "ob.<unit>.outcome", "status": "missing" }
+    },
+    {
+      "id": "missing-normal-outcome-with-emergency-unresolved",
+      "mutation": "omit the normal M3 outcome but record an emergency unresolved intent/cleanup disposition",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "complete",
+      "expected_overallStatus": "incomplete",
+      "expected_execution": "unresolved_or_failed",
+      "note": "the emergency unresolved disposition documents the failure but cannot satisfy the mandatory normal-record obligation"
+    },
+    {
+      "id": "emergency-cleanup-complete-normal-gap",
+      "mutation": "issued workload; normal outcome lost; emergency cleanup fully observed through C1",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "complete",
+      "expected_overallStatus": "incomplete",
+      "expected_cleanup": "complete_if_release_observed",
+      "note": "cleanup complete and evidence incomplete can coexist"
+    },
+    {
+      "id": "issuer-loss-cleanup-only",
+      "mutation": "issuer registry replaced; retained capability cleans exact boundary",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "complete",
+      "expected_overallStatus": "incomplete",
+      "expected_execution": "unresolved",
+      "expected_cleanup": "complete_only_if_release_observed"
+    },
+    {
+      "id": "all-persistence-failure",
+      "mutation": "all sinks fail after issued workload; in-memory terminal result only",
+      "expected_normalRecordStatus": "unverifiable",
+      "expected_emergencyFactStatus": "actual_observed_or_unverifiable",
+      "expected_overallStatus": "unverifiable",
+      "expected_durable_state": "last_open_or_incomplete"
+    },
+    {
+      "id": "coverage-artifact-lost",
+      "mutation": "all lifecycle event obligations satisfied; report artifact missing",
+      "expected_normalRecordStatus": "complete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "incomplete",
+      "expected_row": { "obligationId": "ob.artifact.lifecycle-coverage.json", "status": "missing" }
+    },
+    {
+      "id": "conflicting-generation",
+      "mutation": "ready uses a previous generation",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "incomplete",
+      "expected_row": { "obligationId": "ob.<unit>.ready", "status": "conflicting" }
+    },
+    {
+      "id": "generic-complete-missing-ready",
+      "mutation": "generic Argus assessment complete; source ready event removed",
+      "expected_normalRecordStatus": "incomplete",
+      "expected_emergencyFactStatus": "not-needed",
+      "expected_overallStatus": "incomplete",
+      "expected_execution_claim": "not_supported",
+      "expected_row": { "obligationId": "ob.<unit>.ready", "status": "missing" }
+    }
+  ],
+  "deletion_mutations_that_must_not_reduce_universe": [
+    "delete an entire admitted unit",
+    "delete an intent/issuance export",
+    "delete a health slot record",
+    "delete a mandatory obligation row",
+    "forge an applicable=false (not-applicable) row",
+    "delete a step disposition",
+    "delete a unit disposition for a blocked unit",
+    "alter the recorded coverage report"
+  ],
+  "aggregation_precedence": {
+    "overallStatus": "unverifiable > incomplete > complete",
+    "rule": "missing/conflicting applicable rows dominate; a complete generic Argus assessment never promotes missing lifecycle coverage; a pre-closure assessment is never authoritative"
+  },
+  "independence_note": "Rows and branch expectations are authored from the admitted design before any candidate routine exists and are not derived from any implementation.",
+  "limitations": [
+    "No assessor or reader was executed; expected statuses are design-only.",
+    "Numeric health-slot counts depend on admitted cadence and actual bounded interval, both currently unmeasured."
+  ]
+}
