@@ -197,3 +197,163 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     generic-complete-missing-ready (the latter is also the DV09 gap scheduled for step 2). The
     PARTIAL majority is mostly unasserted secondary observations (timing words such as "promptly",
     coverage emergency/overall statuses); they are inputs to step 2, not failures.
+
+421. Step-2 plan, recorded before any step-2 test is written (checkpoint 19-1 cc8818460). Gap
+    list from the coverage detail (0ff30783…): DV03 6 PARTIAL, DV04 5 PARTIAL, DV05 4 PARTIAL,
+    DV06 3 PARTIAL, DV09 6 (5 PARTIAL, 1 NOT_FOUND), DV10 5 (3 PARTIAL, 2 NOT_FOUND), 29 in all.
+    Order: (1) DV09 coverage-assessor controls (drop only ready, drop only intent, duplicate
+    generation record, generic Argus complete with missing lifecycle ready, explicit row-by-row
+    provisional/offline agreement); (2) DV10 writer/journal faults (Argus open failure, disk-full
+    by an injected ENOSPC at the write call, M3 outcome and stop write errors injected into the
+    write itself, every report write failing); (3) DV04 start-step dispositions after readiness
+    loss, asserted together with block and teardown; (4) DV03 permit/approval controls observed
+    on the Release path; (5) DV05/DV06 real-process gaps (elapsed bound on a never-returning
+    probe, a catalog workload that ignores TERM, a single dropped Cancel, a hanging C1 cleanup,
+    cancel during restart quiescence). Each stimulus gets its expected outcome recorded in a
+    finding before its first run; a failing new control is a finding, and a product change
+    follows only from such a failure, with its own scope finding and review. Adjustment to the
+    proposed order of work: the F-08 repair (ML-CAPA-418) and any step-2 product change come
+    before the full installed-wheel platform run (step 3), so that one run exercises every
+    product change of the increment; the root-cause campaign (step 4) proceeds after that run.
+    Items that need a facility the owned fixtures do not have are recorded as not constructible
+    rather than approximated.
+
+422. DV09 expectations, recorded before test_coverage_dv09.py first ran. Fixture: the existing
+    test_coverage.Fixture (synthetic observations written through the accepted M3 journal and
+    Argus writer APIs), design rows from coverage-expected-tables.json. E1 drop only the ready
+    annotation of unit a: universe of obligation ids unchanged; row ready (a, g1) status
+    missing; normalRecordStatus incomplete; overallStatus incomplete. E2 drop only the intent
+    annotation of unit a: universe unchanged; row intent (a, g1) not satisfied (missing, or
+    conflicting/unverifiable because the issued record's cause dangles, recorded as observed);
+    normalRecordStatus not complete; overallStatus incomplete or unverifiable. E3 duplicate the
+    broker generation record of (a, g1) in the retained broker export: never a complete result;
+    either a CoverageError at assessment or a report whose normalRecordStatus is not complete,
+    recorded as observed. E4 design row generic-complete-missing-ready: a run whose ready
+    annotation for unit a is never written, closed normally through the accepted writer; the
+    accepted Argus reader reports assessed evidence status complete with no diagnostics, while
+    verify_closed reports row ready (a, g1) missing, normalRecordStatus incomplete and
+    overallStatus incomplete (a complete generic assessment never promotes lifecycle coverage).
+    E5 explicit provisional/offline agreement: for the nominal fixture closed normally, the
+    (obligationId, unitId, generation, status) tuples of the pre-closure provisional report equal
+    those of the closed recomputation row by row, normalRecordStatus is complete in both, and
+    only the closed assessment reports overallStatus complete.
+
+423. DV09 first run: 4 passed, 1 failed. E1 as expected (ready missing, incomplete). E2 observed
+    intent (a, g1) missing, normalRecordStatus and overallStatus incomplete. E3 observed a report,
+    not a CoverageError: normalRecordStatus and overallStatus incomplete. E4 as expected: the
+    accepted Argus reader reports assessed evidence status complete with no diagnostics while the
+    closed lifecycle recomputation reports ready (a, g1) missing and overall incomplete, matching
+    the design row generic-complete-missing-ready (the DV09 NOT_FOUND item). E5 failed on an
+    expectation error, not a product defect: the closed recomputation has exactly one row more
+    than the provisional report, ob.artifact.<sha256("lifecycle-coverage.json")>, the coverage
+    report's own artifact, which exists only after the report is published and indexed (the
+    provisional report excludes its own artifact by design, as test_coverage already asserts).
+    E5 is corrected to: the closed rows equal the provisional rows plus exactly that one report
+    artifact row, satisfied.
+
+424. DV10 native storage-fault expectations, recorded before test_native_storage_faults.py first
+    ran. Mechanism: the existing owned facility of ADR-ML3-WRITER-FAULT-0001 (a copy of the
+    original bootstrap source whose role3 child alone receives a sealed LD_PRELOAD image; all
+    other roles keep the empty environment; the production bootstrap.c is not changed), with a
+    new owned interposer owned_storage_fault.c. It returns -1 with errno ENOSPC (28) from write()
+    on one exact public path once armed, persistently, without calling the kernel; every other
+    descriptor passes through. This simulates a full file system at the write call, it is not a
+    full file system. The existing owned_writer_stream_fault.c is not changed. Cases on the
+    scheduled two-unit lazy stack of test_terminal_runtime (collection and terminal report
+    admitted): C0 injection never armed: as in the existing loader-only control, the run
+    succeeds, the terminal record is written and the closed recomputation is complete (harness
+    control). C1 Argus disk full during the run: target argus/events.jsonl, armed immediately
+    before the first annotation whose action is ready. C2 M3 outcome write failure: target the M3
+    journal file, armed immediately before the first M3 append of kind outcome. C3 M3 stop write
+    failure: target the M3 journal file, armed immediately before the first M3 append with status
+    stopped. Expected for C1–C3: the run does not succeed; the failing worker request is reported
+    (persistence client failed or an explicit storage diagnostic); no workload marker for any unit
+    whose Release would follow the failure (C1, C2: the dependent sink is never released; C3: both
+    units had started, so markers may exist); the M3 journal never contains a record for the
+    failed append (C2: no outcome record for the first unit; C3: no stopped record), and the Argus
+    reader does not report the run complete; the durable manifest is not closed by inference
+    (writerState open or failed, never closed after a failed append); RunClosure.close with the
+    original authority completes cleanup (cleanup_complete, root reaped, every helper reaped,
+    every boundary empty and released) without a writer replay; the closed recomputation is not
+    complete. C4 Argus open failure: target argus/events.jsonl armed at library load, so the
+    first write of open_run fails: building the scheduled stack raises before any Release, no
+    workload marker exists, recorded as observed (exception type, whether helpers are reaped).
+    Any deviation is recorded as a finding before a change.
+
+425. DV10 first run (C0 separately: passed, the harness completes a normal run with complete
+    closed recomputation and no injected write). C4 passed: building the stack raises
+    PersistenceError ML-PERSIST-ACK after 1.0 s, three ENOSPC writes were injected into
+    argus/events.jsonl during open_run, and no workload marker exists. C1–C3 matched every
+    expectation of finding 424 up to the closure step: not succeeded, client failed, three
+    injected ENOSPC writes without a kernel call; C1 (Argus full at the source's ready
+    annotation) ML-PERSIST-ACK, source marker only, the dependent sink never released; C2 (M3
+    outcome write) ML-PERSIST-ACK, source marker only, the M3 journal holds only the source's
+    intent and staged records and no outcome record; C3 (M3 stop write) diagnostic
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE, both markers (both units had started), no stopped record;
+    the durable manifest in each case is open or failed, never closed. They then failed on the
+    test's own guard: the guard copied from the post-terminal writer test forbids every
+    persistence RPC during RunClosure.close, but without a terminal outcome RunClosure makes its
+    designed single close_incomplete attempt (one closure request: public state, flush, abort,
+    reader; never finalize; run_closure.py near line 416, persistence.py close_incomplete). That
+    is not a replay of the failed append. Expectation corrected: during RunClosure.close at most
+    one persistence request, of kind closure, and no other kind. No product change.
+
+426. DV10 second run (guard corrected per finding 425): C0 and C4 pass; C1–C3 make exactly one
+    closure request (stage rpc-unresolved, last acknowledged state open, abort not attempted) and
+    then fail on the expectation "cleanup_complete". Full closure facts for C1 and C3: root
+    reaped, inventory complete, zero unacknowledged births, authority fenced, final freeze
+    acknowledged, every boundary empty and released, every helper reaped (storage -15, authority
+    -9, controller -9); the role4 authority's direct-child wait is not reaped (False) and the
+    issued source unit's direct_child_reaped and native_retired are unknown (None), so
+    cleanup_complete is False with ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN (C3 also
+    ML-CLOSURE-UNIT-UNRESOLVED, because the teardown could not record its stop). This is the
+    established honest outcome after storage loss, not a new defect: the existing control
+    test_composed_persistence_termination.py:258-259 accepts an incomplete cleanup only together
+    with that diagnostic, and physical cleanup is shown by the empty, released boundaries. The
+    expectation of finding 424 was too strong. Corrected: every physical closure fact above holds,
+    normal_unit_records_complete is False, and cleanup_complete is either True or False with
+    ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN among the diagnostics. Open observation, not repaired here:
+    after a storage fault the authority is killed before it reaps the released workload's leader,
+    so the native wait fact is lost although the original authority was alive; this joins the
+    known missing-wait-receipt class and is a candidate for the root-cause campaign.
+
+427. The DV10 harness control C0 (interposer loaded, never armed) failed in 1 of 2 module runs and
+    then in 6 of 8 repeats at host load 11.9–12.7 (the shared host now runs a llama-server of
+    another project at about 4.8 cores, plus fabro collectors; 32 cores). Every failure is a
+    persistence RPC that times out after being sent with a small budget, failing the client:
+    ML-PERSIST-TIMEOUT on schedule requests sent with 98.6, 23.8 and 70.8 ms and on teardown
+    requests sent with 68.2 and 77.4 ms (deadline_ns − started_ns of client.rpc_failure), and
+    once ML-OWNER-DEADLINE at teardown validation (deadline already passed). The unmodified
+    original bootstrap shows the same failure class: the existing control
+    test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False],
+    unchanged and passing in run s, failed 6 of 16 repeats in the same window with
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE. So the interposer's per-write path checks (readlink, fstat,
+    fstatat in role3) raise the rate but do not create the failure. This widens F-08 (finding
+    418): the small budgets occur during ordinary teardown and scheduling, not only at the active
+    end, and an existing accepted control is load-sensitive on this host. Consequences: (a) the
+    C0 control cannot be required to pass under this load; the DV10 fault cases C1–C4 are
+    unaffected in their claims (each failed closed at its injected write, verified by the
+    injection trace before any timeout); (b) a full platform run under this load would likely fail
+    for this reason, so step 3 waits for the F-08 repair or a quieter host; (c) the limiting term of
+    each small budget is measured next, before any repair is scoped.
+
+428. Limiting term of the small budgets (finding 427), measured with a temporary probe on the
+    unmodified original stack (evidence/affa19/budget-probe: probe_test.py, runs.txt; the probe was
+    removed from tests/ after use). It wraps FiniteDispatcher._end and _send, recomputes each term of
+    _end (window limit, admitted operation budget 0.5 s, root lease, next health deadline minus
+    scan time, per-unit gate leases) and logs the send budget and service time. 6 + 8 repeats at
+    load 11.5–13.4: 9 failed. (a) Schedule requests: the limiting term is always the window limit
+    (active end), with 0.019–0.35 s left; no health or lease term ever limited a budget below 0.15 s.
+    Under this load ordinary requests take 0.08–0.25 s each (step-dispatch 0.11–0.13 s,
+    step-complete 0.21–0.25 s, tick-complete 0.04–0.10 s, unit-disposition about 0.16 s), so the run
+    consumes its admitted active window before its last steps; _end then hands the remaining sliver
+    to the next request, which times out (ML-PERSIST-TIMEOUT) and fails the channel. (b) Teardown
+    requests (0.037–0.12 s budgets): TeardownController._stop and _cleanup pass one phase deadline
+    through a sequence (intent record, stop/retire, terminate/release, observation loop, outcome
+    record); the closing record receives what the earlier operations left. Classification: two
+    causes combine. Window exhaustion under load is an environmental sensitivity of the owned
+    fixtures (the product correctly refuses to exceed the admitted window). Sending a request whose
+    remaining budget is below its normal service time, which converts a clean incomplete end into
+    a failed channel without terminal record, is the product defect F-08 (window end, schedule
+    path) and its teardown variant, recorded here as F-09. Same-session observation only; the link
+    to the ten unknown-cause records remains a hypothesis. Repair scope follows in its own finding.
