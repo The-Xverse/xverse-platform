@@ -1767,3 +1767,28 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     (FAIL, FAIL, PASS) and the natural-load A/Bs e and f; effectiveness not claimed beyond the
     observed load. ML-CAPA-359 notes E1 as its tracked correction (cause still HYPOTHESIS). No
     record closed, no cause verified. This finding is bound by the next successor.
+
+487. Run x (2026-10-21, evidence/affa19/platform-regression-20261021x; driver
+    verify-platform-regression-20261021t.py started by run-x-quiet-watch.sh; head 98595161d,
+    product 897d9dc50, wheel sha 94fe115e…, 2251 collected). Trigger at 16:19:48Z after five
+    quiet checks (load 5.76); another project's llama-server started about 2 min after launch
+    (elapsed 3204 s of 3341 s at the end sample) and the end load was 10.41. Result: 2249 passed,
+    1 skipped, 1 failed: the Argus nested suite (test_argus2_integration.py:173), whose nested
+    Maestro run (the first half of the outer run, under the llama-server load) had 9 failures:
+    controller recovery [cleaned-then-restart], active restart [leaf, external-thread,
+    parent-reject], transitive restart [cohort, cleaned-leaf], shared schedule ticks, and RPC
+    context loss [context-reference, context-content]. The same 9 tests passed in the outer run.
+    Codes in the nested work directories: ML-SCHEDULE-SERVICE-DEADLINE, ML-SCHEDULE-TEARDOWN-
+    INCOMPLETE, ML-SCHEDULE-OPERATION-FAILED, i.e. the budget class of F-08/F-09, concentrated on
+    the restart paths that E1 leaves unwidened by design (477, 481, 485). Rerun of the 9 on the
+    run's own frozen tree and venv at load 9.5-10.6: rep 1 one failure ([cleaned-then-restart],
+    ML-SCHEDULE-SERVICE-DEADLINE), rep 2 none (nested-rerun.log). DV12 gate: not accepted,
+    blocker B2-failures 1 (dv12-gate-verdict.json, sha 45cf01c6…). Classification under 469: the
+    recorded end load exceeds 10, so the run is an observation, not a regression signal, and E3
+    is not met. Limit: run x recorded load only at launch and end, so the load during the nested
+    phase is unknown. Repair to the evidence procedure (not to the product): run-y-quiet-watch.sh
+    keeps the run-x quiet condition and adds a 30 s load sampler for the whole run
+    (load-samples.jsonl), so 469 is applied to in-run samples. Next: run y on the head carrying
+    this finding. If the restart class recurs on a run whose samples stay at or below 10, it is
+    a regression signal against E1 and the restart path is reopened as a design item; it is not
+    waived. Receipts archived (receipts.tar.gz) and the tmpfs work directory removed.
