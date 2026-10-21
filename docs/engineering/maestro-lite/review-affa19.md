@@ -357,3 +357,31 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     a failed channel without terminal record, is the product defect F-08 (window end, schedule
     path) and its teardown variant, recorded here as F-09. Same-session observation only; the link
     to the ten unknown-cause records remains a hypothesis. Repair scope follows in its own finding.
+
+429. Repair scope for F-08 and F-09 (ML-CAPA-418), recorded before any product edit. Authority:
+    the strict form of the new T3 control fails (a run ended by its host deadline loses its
+    terminal record), which meets the finding-421 rule for a product change; the choice below is
+    an engineering parameter, not a protocol or scientific setting, and widens no deadline.
+    F-08 (dispatcher.py, FiniteDispatcher._end): keep every existing term; additionally, when the
+    window term (active end, or work end for terminal calls) leaves less than the call's own
+    admitted budget (operation, restart, recovery or action-timeout seconds), raise
+    ML-SCHEDULE-SERVICE-DEADLINE instead of returning the shorter end. Rationale: the schedule
+    admission sizes every operation at its admitted budget, so an operation that cannot be given
+    that budget inside the window is outside the admission; refusing it ends the run by the
+    existing clean path (terminal phase within the work end) instead of failing the channel.
+    Health, lease and gate terms keep their present behaviour (they were never the limiting term
+    in finding 428). The lazy terminal-service branch is unchanged. F-09 (teardown.py,
+    ReverseTeardown._stop and _cleanup): measure the duration of the phase's opening intent
+    record; before the closing outcome record, if the remaining phase deadline is less than twice
+    that duration, raise TeardownError ML-TEARDOWN-RECORD-BUDGET without sending, so phase() takes
+    its existing emergency path with a healthy channel. Rationale: the two records are the same
+    request type, so the measured opening record is the local estimate of the closing record's
+    service time; no constant is introduced. Expected effects, to be verified: (i) T3 shows only
+    the clean branch (ML-SCHEDULE-SERVICE-DEADLINE, terminal recorded, client not failed) in 10
+    repeats under recorded load, after which T3 is tightened; (ii) in repeats of the budget probe
+    and of the existing native report control, no ML-PERSIST-TIMEOUT on a schedule or teardown
+    request (window exhaustion may still end runs incomplete; pass rates under load are not a
+    claim); (iii) the existing dispatcher, scheduler, teardown, terminal and restart modules show no
+    new failure class in an interleaved A/B against checkpoint 19-2 (arm A) under the same load;
+    (iv) independent review of the diff before acceptance. Not changed: admission formulas,
+    windows, budgets, the persistence protocol, the 60/40 normal/emergency split.

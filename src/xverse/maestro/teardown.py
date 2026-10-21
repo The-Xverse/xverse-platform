@@ -200,6 +200,14 @@ class ReverseTeardown(_Original):
             self._intents[unit, phase] = receipt
         return receipt
 
+    def _closing_budget(self, deadline, opening):
+        # F-09 (finding 429): the closing record is the same request type as the phase's opening
+        # record. Sending it with less than twice the measured opening duration risks a timeout
+        # that fails the persistence channel; leave it unsent and let phase() take the emergency
+        # path with a healthy channel instead.
+        if deadline.monotonic_seconds - time.monotonic() < 2 * opening:
+            raise TeardownError("ML-TEARDOWN-RECORD-BUDGET")
+
     def _terminal_scope(self):
         broker = self.owner._run_broker_pin
         if broker is None or broker.storage.collection is None or not broker.session._terminal:
@@ -219,7 +227,9 @@ class ReverseTeardown(_Original):
         ):
             raise TeardownError("ML-TEARDOWN-NO-HANDLE")
         launcher.revalidate_issued(handle)
+        opened = time.monotonic()
         self._record(unit, "stop", "intent", descriptor, handle, deadline)
+        opening = time.monotonic() - opened
         native = type(launcher) is RunUnitIssuer
         if native:
             observed = launcher.stop_owned(handle, deadline)
@@ -242,6 +252,7 @@ class ReverseTeardown(_Original):
                 min(0.005, max(0, deadline.monotonic_seconds - time.monotonic()))
             )
         self._known_reaps.add(unit)
+        self._closing_budget(deadline, opening)
         self._record(
             unit,
             "stop",
@@ -277,12 +288,15 @@ class ReverseTeardown(_Original):
         if current.state != "empty" or not current.identity_retained:
             raise TeardownError("ML-TEARDOWN-NOT-STOPPED")
         boundary = self._stopped[unit]
+        opened = time.monotonic()
         self._record(unit, "cleanup", "intent", descriptor, handle, deadline)
+        opening = time.monotonic() - opened
         if type(launcher) is RunUnitIssuer:
             launcher.retire_owned(handle, deadline)
         released = self.manager.release_empty(descriptor, deadline=deadline)
         if not released.boundary_released or released.residual_count != 0:
             raise TeardownError("ML-TEARDOWN-NOT-RELEASED")
+        self._closing_budget(deadline, opening)
         self._record(
             unit,
             "cleanup",

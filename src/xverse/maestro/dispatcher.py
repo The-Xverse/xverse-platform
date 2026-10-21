@@ -971,15 +971,18 @@ class FiniteDispatcher(_Original):
                            if uid == unit and name == phase), None)
             if budget is None:
                 raise OwnerError("ML-SCHEDULE-ACTION-TIMEOUT")
-        end = min(
-            self._work_end if terminal else self._active_end,
-            now + budget,
-        )
+        window = self._work_end if terminal else self._active_end
+        end = min(window, now + budget)
         end = min(end, self.bootstrap._lease / 1e9)
         if terminal and self._lazy and self._terminal_phase:
             service_end = HostDeadline(self.owner.session, min(end, now + .5))
             lease = self._broker.service_terminal(service_end)
             return HostDeadline(self.owner.session, min(end, lease / 1e9 - .05))
+        # F-08 (finding 429): an operation the window cannot give its admitted budget lies outside
+        # the schedule admission; end cleanly instead of sending a sliver that would time out and
+        # fail the persistence channel.
+        if window - now < budget:
+            raise OwnerError("ML-SCHEDULE-SERVICE-DEADLINE")
         health = self.facade.next_health_deadline
         if health is not None:
             end = min(end, health.monotonic_seconds - self.plan.health_scan_seconds)
