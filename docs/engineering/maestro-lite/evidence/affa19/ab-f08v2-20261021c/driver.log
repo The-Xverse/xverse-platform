@@ -1,0 +1,57 @@
+{"i": 0, "arm": "A", "load": 3.87, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 0, "arm": "B", "load": 3.97, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 1, "arm": "B", "load": 4.6, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 1, "arm": "A", "load": 4.78, "failed": [], "timeouts": 1, "t3": ["ML-PERSIST-TIMEOUT"], "refusals": 0}
+{"i": 2, "arm": "A", "load": 4.46, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 2, "arm": "B", "load": 4.43, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 3, "arm": "B", "load": 4.34, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 3, "arm": "A", "load": 6.19, "failed": [], "timeouts": 1, "t3": ["ML-PERSIST-TIMEOUT"], "refusals": 0}
+{"i": 4, "arm": "A", "load": 5.33, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 4, "arm": "B", "load": 4.75, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 5, "arm": "B", "load": 4.31, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 5, "arm": "A", "load": 3.84, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 6, "arm": "A", "load": 3.63, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 6, "arm": "B", "load": 3.69, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 7, "arm": "B", "load": 3.8, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 7, "arm": "A", "load": 3.95, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 8, "arm": "A", "load": 3.94, "failed": [], "timeouts": 1, "t3": ["ML-PERSIST-TIMEOUT"], "refusals": 0}
+{"i": 8, "arm": "B", "load": 3.82, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{"i": 9, "arm": "B", "load": 3.85, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 1}
+{"i": 9, "arm": "A", "load": 3.65, "failed": [], "timeouts": 0, "t3": ["ML-SCHEDULE-SERVICE-DEADLINE"], "refusals": 0}
+{
+ "A": {
+  "runs": 10,
+  "failures": {
+   "tests/thesis_lite/maestro/test_time_context_controls.py::test_paused_simulation_does_not_hold_the_run_past_its_host_deadline": 0,
+   "tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]": 0,
+   "tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick": 0,
+   "tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases": 0,
+   "tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]": 0
+  },
+  "runs_with_any_failure": 0,
+  "runs_with_persist_timeout": 3,
+  "t3_variants": {
+   "ML-SCHEDULE-SERVICE-DEADLINE": 7,
+   "ML-PERSIST-TIMEOUT": 3
+  },
+  "guard_refusals": 0,
+  "failed_runs_with_refusal": 0
+ },
+ "B": {
+  "runs": 10,
+  "failures": {
+   "tests/thesis_lite/maestro/test_time_context_controls.py::test_paused_simulation_does_not_hold_the_run_past_its_host_deadline": 0,
+   "tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]": 0,
+   "tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick": 0,
+   "tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases": 0,
+   "tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]": 0
+  },
+  "runs_with_any_failure": 0,
+  "runs_with_persist_timeout": 0,
+  "t3_variants": {
+   "ML-SCHEDULE-SERVICE-DEADLINE": 10
+  },
+  "guard_refusals": 8,
+  "failed_runs_with_refusal": 0
+ }
+}

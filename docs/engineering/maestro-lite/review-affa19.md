@@ -906,3 +906,61 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     evidence/affa19/f08v2-20261021). The same patch is now committed on the branch head; the
     worktree src equals the tested venv. Next: the interleaved A/B (447 (ii)) against the venv of
     e9b346a05 and an independent review (447 (iii)). Not accepted.
+
+453. Independent read-only review of F-08/F-09 v2 f4262c285 (subagent, 2026-10-21, code reading
+    only): verdict PASS, no high finding. Every _send and _record caller already handles the
+    raised codes. The refusal happens before _active is set or any pending/outcome state
+    changes, so it adds no half-done state. A refusal can only be worse than the old timeout
+    through a false refusal of a repeated kind. failure, begin and run-terminal are
+    first-of-kind and never guarded. All callers run on the dispatch thread, so the estimate
+    state is single-threaded. _end is byte-identical to c3a9213a1, so 433 items 3, 4, 6 and 8 are
+    moot. Medium items. (1) The A/B cannot attribute failures to the guard: the F-08 code is
+    shared with _end and _service, and ML-TEARDOWN-RECORD-BUDGET is replaced by
+    ML-TEARDOWN-NORMAL-INCOMPLETE in phase() and run(). Expectation 447 (i) ("no new
+    RECORD-BUDGET") is therefore not checkable from output codes. Handled without a product
+    change: guard_trace_plugin.py (evidence/affa19/guard-trace, observation only) logs each
+    refusal at its source, using the guard's own condition (code raised, v2 estimate present,
+    remaining below it), and ab-f08v2-20261021c.py carries it in both arms. (2) The estimator is
+    a lifetime maximum with no decay. One slow call (a load spike, or a step-complete under a
+    long action timeout, schedule_plan.py:107-111) sets the threshold for the rest of the run.
+    Under load, the shared teardown phase window (0.6 x min(deadline, 1 s)) could then refuse
+    closing records that would have fit. The quiet replay of 438 does not cover this. Recorded
+    as an open measurement: the attribution A/B is owed under host load comparable to findings
+    427-428, and the estimator stays a candidate until then. No load is generated on the shared
+    host for this purpose. Low items, recorded: run-terminal is never protected (first of its
+    kind); the teardown estimate resets with each new ReverseTeardown (fails open); the measured
+    span includes local reply validation and, in the cancelled terminal scope, a bootstrap
+    terminal-service RPC, so the implemented estimator is not exactly the replayed one; a
+    refusal is reported with cause "external", like an _end refusal.
+
+454. v2 A/B b completed (2026-10-21, ab-f08v2-20261021b.py, receipt evidence/affa19/
+    ab-f08v2-20261021b/receipt.json sha c3a7f2e9…, 10 interleaved iterations x 5 nodes, load 3.8
+    to 4.4; installed hashes in the receipt: arm A = e9b346a05 dispatcher e59f6499…, arm B = v2
+    dispatcher 9a4b3a0a…, identical coverage.py). Arm A: no failed node; ML-PERSIST-TIMEOUT in
+    3 of 10 runs, all the T3 active-end tick-complete (T3 variants: 7 clean, 3 timeout). Arm B:
+    no failed node; no ML-PERSIST-TIMEOUT; T3 clean in 10 of 10. This meets expectation 447 (ii)
+    on a quiet host: the late-RPC mechanism is gone from these nodes, and no failure class
+    appears that arm A lacks. It shows nothing yet about false refusals under load (453 item
+    2). The attribution A/B (ab-f08v2-20261021c.py, guard_trace_plugin) follows, to count and
+    place every refusal.
+
+455. v2 attribution A/B c and the run-t plan (2026-10-21). A/B c (ab-f08v2-20261021c.py with
+    guard_trace_plugin, receipt evidence/affa19/ab-f08v2-20261021c/receipt.json sha 6d29e8a1…,
+    10 interleaved iterations, load 3.6 to 6.2). Arm A: no failed node; ML-PERSIST-TIMEOUT in 3
+    of 10 runs, all at T3; 0 guard refusals (no v2 estimate). Arm B: no failed node; no
+    ML-PERSIST-TIMEOUT; T3 clean in 10 of 10. 8 guard refusals, every one F-08 on the T3
+    active-end tick-complete, sent with 5.9 to 51.2 ms left against an observed round trip of
+    49.1 to 64.6 ms. No F-09 refusal, and no refusal in any normal-path node (terminal runtime,
+    two dispatcher controls, C0). This answers 453 item 1 for these nodes and a quiet host: every
+    refusal is placed, each sits exactly where finding 418 located the defect, and none
+    coincides with a failure. 453 item 2 (lifetime maximum under load) stays open. Run t (step
+    3, authorized in finding 414): verify-platform-regression-20261021t.py, the first full
+    platform Python run with one installed version (finding 442). It freezes the clean HEAD as a
+    git archive on tmpfs, builds and installs that tree's wheel in a new venv, checks that the
+    installed package equals the frozen src, and runs `pytest tests` from the frozen tree with no
+    PYTHONPATH (tmpdir, basetemp and receipts on tmpfs, fsync probe, outer deadline 7200 s). It
+    exercises every product change of the increment (F-10, F-08/F-09 v2) together; neither is
+    accepted. Expected: collection succeeds (count recorded, not presumed). A clean run is
+    hoped for but not presumed: any failure is recorded with its traceback before any
+    interpretation, and no retry follows without a finding. The host is quiet (load about 4) and
+    its condition is recorded at launch and end.
