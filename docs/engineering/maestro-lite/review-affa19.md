@@ -964,3 +964,40 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     hoped for but not presumed: any failure is recorded with its traceback before any
     interpretation, and no retry follows without a finding. The host is quiet (load about 4) and
     its condition is recorded at launch and end.
+
+456. DV12 blocking rules (P3-T06; step 3, authorized in finding 414), recorded before the code
+    and its tests run (2026-10-21). Gap rows (coverage detail 0ff30783…): n2 missing G4
+    disposition (no G4 token anywhere), n6 skipped tests do not block (run s had one skip and
+    passed_exit_status true), n7 zero tests caught only by a driver assertion, n8 staleness
+    against the successor revision untested; p1 (installed-wheel full run) is run t. Design
+    (verification-plan.md DV12-N): missing G4 disposition, skipped or zero tests, or stale
+    successor evidence block admission or acceptance. These rules belong to verification
+    tooling, not to the runtime product: new scripts/validate_maestro_acceptance_evidence.py
+    (repository pattern scripts/validate_*.py) reads a run directory (configuration.json,
+    wheel-receipt.json, wheel.log), the expected candidate commit, a G4 disposition file and an
+    optional allowlist. It prints a JSON verdict with every blocker and exits 1 when any blocker
+    exists. Rules: B1 collected > 0 and the final pytest summary accounts for exactly the
+    collected count; B2 returncode 0, no failed or error count, no outer timeout; B3 every
+    skipped or xfailed test must be named in the allowlist with a reason and an approval
+    reference, or acceptance is blocked, and any xpassed blocks; B4 staleness: receipt head ==
+    expected candidate, archive sha == sha of git archive of that commit,
+    installed_equals_frozen_src true, wheel_verification true; B5 a G4 disposition record must
+    exist with gate "G4", disposition "waived" or "satisfied", a scope, and an approval
+    reference. tests/thesis_lite/maestro/test_acceptance_evidence_gate.py: one clean synthetic
+    run passes, and each of nine mutations is blocked with its own named blocker (zero tests,
+    count mismatch, failure, timeout, unlisted skip, xpass, stale head, reused archive, missing
+    G4). No allowlist or G4 record is approved by this finding. The gate's verdict on run t is
+    reported as observed, including any blocker that needs an author decision (expected: the
+    lane-admission skip and the D-09 xfail need allowlist approval, and G4 needs the author's
+    recorded waiver scope).
+
+457. DV12 gate results (2026-10-21). scripts/validate_maestro_acceptance_evidence.py and
+    tests/thesis_lite/maestro/test_acceptance_evidence_gate.py: 11 passed. The clean synthetic
+    run (listed skip, G4 record) has no blocker. Each of the nine mutations is blocked by its
+    own named rule (B1 zero tests, B1 count mismatch, B2 failures, B2 outer timeout, B3 unlisted
+    skip, B3 xpassed, B4 stale head, B4 archive mismatch, B5 missing G4). A G4 record without an
+    approval, or with a disposition other than waived or satisfied, counts as missing. The gate
+    and its tests are not part of run t's frozen tree (added after the freeze); they are applied
+    to run t's directory when it ends. DV12 n2, n6, n7 and n8 are now covered by tooling plus
+    tests. Which skips and xfails may be allowlisted, and the G4 waiver scope record, are author
+    decisions; none is approved here.
