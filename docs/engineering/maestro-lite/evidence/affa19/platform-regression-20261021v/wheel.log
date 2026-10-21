@@ -1,0 +1,107 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+............................................................F........... [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+.......................................................................x [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+....................s................................................... [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: essor',end());current.append(fresh)
+E                     assert broker._current_controller is fresh and fresh.session_id!=old.session_id
+E                     # Terminal inventory admission is not recovery and grants no productive
+E                     # access. The original dispatcher still retains its original controller.
+E                     with pytest.raises(ValueError,match='NOT-RECONCILED'):fresh._start_access()
+E                     assert driver._controller is old and driver.facade is facade
+E                     transitions.append(dict(old_session=old.session_id,new_session=fresh.session_id,
+E                         old_retirement=asdict(retired),old_slot=old.process._slot,new_slot=fresh.process._slot,
+E                         successor_productive_access_rejected=True,observed_at=time.monotonic()))
+E                     return cleanup()
+E                 monkeypatch.setattr(driver,'_cleanup',replace_after_productive_steps)
+E                 finish=PersistenceClient.finish_run
+E                 def terminal(self,owner,end):
+E                     if self is client and mode=='successor-dead':
+E                         fresh=current[0];fd=fresh.process._capability.fileno()
+E                         signal.pidfd_send_signal(fd,signal.SIGKILL)
+E                         until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+E                         while time.monotonic()<until:
+E                             observed=os.waitid(os.P_PIDFD,fd,os.WEXITED|os.WNOHANG|os.WNOWAIT)
+E                             if observed is not None:break
+E                             select.select([],[],[],.001)
+E                         assert observed is not None and observed.si_code==os.CLD_KILLED and observed.si_status==signal.SIGKILL
+E                         transitions[0]['successor_death_observed_without_reap']=True
+E                     return finish(self,owner,end)
+E                 monkeypatch.setattr(PersistenceClient,'finish_run',terminal)
+E                 no_replay=False;counterexamples=[]
+E                 try:
+E                     result=run(driver)
+E         >           assert len(transitions)==len(current)==1
+E         E           assert 0 == 1
+E         E            +  where 0 = len([])
+E         
+E         tests/thesis_lite/maestro/test_terminal_controller_inventory.py:126: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+E         FAILED tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+E         FAILED tests/thesis_lite/maestro/test_launcher_composition.py::test_actual_original_startup_through_terminal_and_helper_closure[closed]
+E         FAILED tests/thesis_lite/maestro/test_launcher_composition.py::test_actual_original_startup_through_terminal_and_helper_closure[lost-close-ack]
+E         FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+E         FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_worker_rejects_handle_free_productive_completion_or_observe[step-complete]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[loader-only]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-once]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]
+E         FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+E         FAILED tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-live]
+E         FAILED tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-dead]
+E         12 failed, 1911 passed, 1 skipped, 1 xfailed, 24 subtests passed in 1828.40s (0:30:28)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/dev/shm/maestro-platform-20261021t-pjnlpns7/venv/bin/python', '-m', 'pytest', '-q', '-p', 'no...[successor-dead]\n12 failed, 1911 passed, 1 skipped, 1 xfailed, 24 subtests passed in 1828.40s (0:30:28)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/thesis_lite/maestro/test_runtime_lane_admission.py:55: MAESTRO_LANE_PROPOSAL not set: lane admission evidence runs under its own driver
+XFAIL tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py::test_actual_native_failed_lifecycle_is_overall_complete_per_design_branch - DIVERGENT D-09 (finding 444): writer is aborted, not closed, after a failed execution, so offline overall stays incomplete; author ruling at T01
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+1 failed, 2206 passed, 1 skipped, 1 xfailed, 24 subtests passed in 3515.32s (0:58:35)

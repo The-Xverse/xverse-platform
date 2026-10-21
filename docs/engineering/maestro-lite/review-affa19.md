@@ -1206,3 +1206,54 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     gave 6 passed (clean). The full run therefore now detects an F-08 regression (review 462
     item 3). Run v follows on the hardened head: the same driver, a new frozen archive, a clean
     full installed-wheel run expected but not presumed.
+
+467. Run v on the hardened head 8744ed1ca is not clean, and the F-08/F-09 v2 load risk of 453
+    item 2 is now partly measured (2026-10-21, evidence/affa19/platform-regression-20261021v).
+    Run v: 2209 collected; 1 failed, 2206 passed, 1 skipped (lane admission), 1 xfailed (D-09),
+    24 subtests, 3515 s. The single outer failure is the Argus nested full-suite test
+    (test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target):
+    the nested platform run had 12 failed, 1911 passed. Product sources are identical to run u's
+    head e2c338033 (clean), so the difference is host condition: another project's llama-server
+    started about 2 minutes into run v at 220-240 % CPU and up to 15 GB RSS; load rose from 5.9
+    at launch to 15.3 at the end. The fsync probe saw no spike over 150 ms, so storage is not
+    implicated. Guard codes in the receipts: ML-SCHEDULE-SERVICE-DEADLINE only at the T3 active
+    end (outer and nested), as in A/B c; the nested run keeps only the last 4000 characters of
+    output, so the 12 nested failures carry no traceback in the log.
+    Classification, recorded before any change (rerun-v-nested-failures-20261021.sh, run v's
+    frozen tree and venv, the observation-only guard trace plugin):
+    (a) nested-rerun/, still under the external load (load 14.2 to 13.4): 7 failed, 5 passed.
+        Three are v2 guard refusals outside T3 that end the test in a non-clean variant:
+        launcher_composition [closed], F-08 step-dispatch with 7.9 ms left against an estimate
+        of 136 ms -> ML-SCHEDULE-SERVICE-DEADLINE; launcher_composition [lost-close-ack], F-09
+        cleanup outcome record with 53 ms left against 123 ms -> ML-SCHEDULE-TEARDOWN-INCOMPLETE;
+        native_writer_stream_faults [seeded-flush-persistent], F-09 stop outcome record with
+        103 ms left against 116 ms -> ML-SCHEDULE-TEARDOWN-INCOMPLETE. Four are
+        ML-PERSIST-TIMEOUT that v2 did not prevent: lazy_dispatcher nominal, stream faults
+        [loader-only] and [seeded-flush-once], shared_dispatcher paused ticks.
+    (b) nested-rerun-quiet/, after llama-server exited (load 7.3 falling to 6.5): 12 passed, no
+        guard refusal. All 12 failures therefore depend on host load.
+    (c) A/B d (ab-f08v2-loaded-20261021d.py; A = venv of e9b346a05, verified equal to its src,
+        i.e. the head without v2; B = run v's venv) was written to answer whether the three
+        refusals were false. It stopped at pair 0 with zero runs because the external load had
+        ended; no load was generated to replace it. Whether the refused sends would have
+        completed stays unmeasured. Against the quiet calibration of 438 (step-dispatch p50 23
+        ms; teardown record p50/p99 31/76 ms, two to five times higher under load per 428), the
+        7.9 ms send would almost certainly have timed out, the 53 ms one probably, and the 103
+        ms one is undetermined.
+    Consequences. (1) Expected effect (ii) of 438, "no ML-PERSIST-TIMEOUT outside designed
+    stalls", does not hold under natural load: v2 bounds a send by the longest round trip seen
+    so far in the same run, and under a load that rises during the run the next round trip can
+    exceed it. v2 narrows F-08/F-09 but does not remove them, and A2 cannot be proposed as a
+    complete repair. (2) Under load v2 changes some failures from a persist timeout to an
+    explicit refusal with a usable channel (465). For tests that assert the clean variant this
+    is still a failure, so the full suite is not load-robust with or without v2. (3) Two of the
+    twelve, [seeded-flush-persistent] and transitive [cleaned-leaf], are the tests of
+    ML-CAPA-359 (UNKNOWN cause, ML-PERSIST-TIMEOUT / ML-SCHEDULE-TEARDOWN-INCOMPLETE, never
+    recurred in the quiet campaign of 464). This is the first recurrence: under natural load,
+    and absent on the quiet rerun. It supports, but does not confirm, the hypothesis that 359
+    belongs to the F-08/F-09 load class. A CAPA successor that moves 359 to HYPOTHESIS with this
+    evidence is proposed, not built. (4) DV12 gate on run v (--scope code; run and candidate code
+    sha 0ebb6ecc… equal): blockers B2 (1 failure), B3 skip and xfail unlisted, B5 G4. Run u
+    remains the clean full run, on code that differs from the head only in tests and scripts.
+    Next: the loaded A/B d when the host is loaded again by its own jobs; author decision on
+    A2 with this evidence (accept as partial mitigation, revise, or withdraw).
