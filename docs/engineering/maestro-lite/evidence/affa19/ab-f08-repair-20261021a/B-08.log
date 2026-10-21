@@ -1,0 +1,77 @@
+.F.FF                                                                    [100%]
+=================================== FAILURES ===================================
+___ test_actual_native_report_close_and_external_closed_recomputation[False] ___
+
+request = <FixtureRequest for <Function test_actual_native_report_close_and_external_closed_recomputation[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79606a943230>
+implicit = False
+
+    @pytest.mark.parametrize('implicit',[False,True])
+    def test_actual_native_report_close_and_external_closed_recomputation(request,monkeypatch,implicit):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=implicit)
+        broker,_,client,work=stack
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='354329c753ae03882fd6d7f9049ce1015b4ca09d6d4adf5c26e3ec79c0089a4...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:63: AssertionError
+_______ test_paused_ticks_still_service_host_health_and_original_leases ________
+
+request = <FixtureRequest for <Function test_paused_ticks_still_service_host_health_and_original_leases>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79606aac5260>
+
+    def test_paused_ticks_still_service_host_health_and_original_leases(
+        request, monkeypatch
+    ):
+        stack = full_stack(request, monkeypatch, pauses=40)
+        driver = dispatcher(stack)
+        result = driver.run(*ends(driver))
+>       assert result.execution_succeeded, result
+E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='d11f822c3b097b8f6c14f3a6c25a3abd4b18face17158f6935b3ed0cc886e47...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=1, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False)
+E       assert False
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='d11f822c3b097b8f6c14f3a6c25a3abd4b18face17158f6935b3ed0cc886e47...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=1, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_dispatcher.py:313: AssertionError
+__ test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed] ___
+
+request = <FixtureRequest for <Function test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79606aac7df0>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-ab-f08-oy27c8hw/B8-p_3fwcxx/bt/test_storage_full_inside_the_o0/owned-storage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary', [c for c in CASES if c != 'C4-argus-open'], indirect=True)
+    def test_storage_full_inside_the_original_worker_fails_closed(request, monkeypatch, run_bootstrap_binary):
+        case = request.node.callspec.params['run_bootstrap_binary']
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, _, client, work = stack
+        result = run(driver)
+        public, native = traces(work)
+        faults = [r for r in native if r['action'] == 'injected-before-syscall']
+        print('CASE', case, dict(succeeded=result.execution_succeeded, terminal=result.terminal_recorded,
+                                 diagnostic=result.diagnostic, failed=client._failed, faults=len(faults),
+                                 markers=markers(work), m3=[(r['kind'], r['status']) for r in m3(work)],
+                                 armed=[r for r in public if r['operation'] == 'armed'],
+                                 rpc_failure=(asdict(client.rpc_failure) if client.rpc_failure is not None else None),
+                                 raised=[r for r in public if r['operation'].endswith('raised')]))
+        if case == 'C0-never-armed':
+>           assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E           AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E           assert (False)
+E            +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='3a82514e854e7ded36f1a6e3d8759c19724f5ae3c2d915baa52a88ba2067394...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_native_storage_faults.py:207: AssertionError
+----------------------------- Captured stdout call -----------------------------
+CASE C0-never-armed {'succeeded': False, 'terminal': True, 'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'failed': False, 'faults': 0, 'markers': ['sink-binding.marker', 'source-binding.marker'], 'm3': [('intent', 'pending'), ('observation', 'staged'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'staged'), ('observation', 'running'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'stopped'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'cleaned'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'stopped'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('observation', 'failed'), ('outcome', 'failed'), ('observation', 'unresolved'), ('observation', 'unresolved')], 'armed': [], 'rpc_failure': None, 'raised': []}
+==================================== PASSES ====================================
+_____ test_paused_simulation_does_not_hold_the_run_past_its_host_deadline ______
+----------------------------- Captured stdout call -----------------------------
+return relative to terminal deadline: -11.150 s
+T3-VARIANT ML-SCHEDULE-SERVICE-DEADLINE {'failed': False, 'terminal_recorded': True, 'late_seconds': -11.15}
+=========================== short test summary info ============================
+PASSED tests/thesis_lite/maestro/test_time_context_controls.py::test_paused_simulation_does_not_hold_the_run_past_its_host_deadline
+PASSED tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]
+FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+FAILED tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]
+3 failed, 2 passed in 44.03s

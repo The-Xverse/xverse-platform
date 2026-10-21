@@ -385,3 +385,101 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     new failure class in an interleaved A/B against checkpoint 19-2 (arm A) under the same load;
     (iv) independent review of the diff before acceptance. Not changed: admission formulas,
     windows, budgets, the persistence protocol, the 60/40 normal/emergency split.
+
+430. Candidate checkpoint 19-3 8184a2b15 (finding 429 repair, before review). Smoke: test_dispatcher,
+    test_time_context_controls and test_teardown 49 passed, 1 failed
+    (test_duration_defers_step_completion_until_actual_tick, ML-SCHEDULE-TEARDOWN-INCOMPLETE) at
+    load 11.2; whether the new F-09 guard or load causes it is not known yet. T3 alone showed the
+    clean branch in 10 of 10 repeats, but at load 6.9–8.0 versus 10–13 before the change, so that
+    comparison is confounded. Verification plan, recorded before it runs: interleaved A/B
+    (evidence/affa19/ab-f08-repair-20261021a.py), A = 19-2 c3a9213a1, B = 8184a2b15, 10 iterations
+    alternating order, five nodes per run: T3, the native report control [False], the duration
+    test above, the paused-ticks dispatcher control and the DV10 harness control C0. Expected, if
+    the repair works and introduces no regression: B has no run containing ML-PERSIST-TIMEOUT and
+    only the clean T3 variant; B's failures per node are not higher than A's beyond noise (a
+    difference of at most 2 of 10 is treated as noise at this sample size); A reproduces the
+    timeout class. A B failure that A does not show is a regression finding.
+
+431. DV04 dispatcher-level expectations, recorded before test_readiness_dispositions.py first ran
+    (to run after the A/B of finding 430 finishes, so as not to load the host during it). Fixture:
+    the real owned two-unit stack of test_dispatcher.full_stack (native helpers, catalog
+    launchers, gates). Stimuli applied to the prerequisite (source) after it was ready and before
+    the dependent (sink) is released: D1 dead: SIGKILL of the source leader (launcher childfd)
+    immediately before the start-sink step effect; D2 unknown health: SIGSTOP of the source's
+    launcher (issuer) immediately before the start-sink effect, SIGCONT as soon as that effect returns or raises;
+    D3 final guard: SIGKILL of the source leader right after the sink gate's ARM exchange (packet
+    kind 3), the window the provider control final-guard uses. Expected in each: the run does not
+    succeed; the start-sink step disposition is not completed; no step after start-sink is
+    completed; the sink marker never exists (the dependent never executes); unit cleanup is
+    complete (teardown triggered and bounded); the run returns within its terminal deadline. These
+    are the "dependent blocked, start step disposition non-successful, teardown triggered"
+    observations of DV04-N asserted together, which the coverage map found only separately. The
+    running-but-application-not-ready stimulus is not constructible: the catalog admits only the
+    running existence probe, and an application-level probe is rejected at construction, as the
+    coverage map records.
+
+432. DV03 Release-path expectations, recorded before test_permit_release_path.py first ran (to run
+    after the A/B). Fixture: test_persistence.storage (real persistence worker, native gate,
+    owned boundary and child), with a custom sealed configuration passed through start(override=).
+    P1 expiry between intent and Release: permit and approval valid from now-30 s until now+E with
+    E = 2.5 s; commit_intent and stage succeed inside validity; the test waits until 0.3 s after
+    expiry; owner.release must raise, the gate must receive no Release (gate sequence 0), the
+    workload marker must not appear, the latch is cancelled, C1 force cleanup observes
+    termination and the worker is reaped. P2 not yet valid: not_before now+30 s; commit_intent
+    must raise (claim time check), owner.release must then raise without a claim, gate sequence
+    0, no marker. P3 intent-only restart composed with real processes: after a successful intent
+    commit the first storage worker is killed (SIGKILL through its pidfd) before any Release; a
+    second original worker started on a configuration identical except for a fresh Argus root
+    (so the Argus open of finding 425 C4 is not what rejects) and the same M3 journal must refuse
+    the same unit's new claim (durable intent without outcome), and no Release or marker occurs.
+    Not constructible on the Release path, with reason: superset scope, exclusions and changed
+    environment identity are fixed in the sealed configuration and the immutable prepared
+    lifecycle at admission; the Release path revalidates the same stored binding and approval, so
+    no run-time stimulus can change them after admission, and the admission-level rejections
+    (test_admission) are the complete controls for those stimuli.
+
+433. Independent read-only review of candidate 19-3 8184a2b15 (subagent, 2026-10-21, no tests
+    run): verdict FAIL. Accepted findings: (1, high) the F-08 threshold is the full admitted
+    budget, but the schedule admission does not reserve that budget inside the active window
+    (admit_schedule caps active_seconds and sizes only the terminal reserve per operation;
+    schedule_plan.py:100,160-164), so the guard removes about one budget (0.5 s) of usable
+    active window; finding 362 recorded about zero margin on the 4.8 s fixture (clean spans p90
+    4.23 s, p95 4.31 s, p99 4.55 s) and successful sends with 0.481 s and 0.188 s left in run a,
+    which the guard would refuse, so quiet-host runs that used to succeed can end
+    ML-SCHEDULE-SERVICE-DEADLINE. (2, medium) The rationale of finding 429, "the schedule
+    admission sizes every operation at its admitted budget", is wrong; refused operations lie
+    inside the admitted window. That statement is withdrawn. (3, medium) the restart pre-check at
+    dispatcher.py:877 uses the operation budget while _restart_unit (:825) applies the restart
+    budget after quiesce, so a late restart can now fail after the unit has been torn down
+    (mutated, run cancelled) instead of being rejected before mutation. (4, medium) step-dispatch
+    (:1095) and the effect (:1105) each pass _end, so a step can be durably dispatched and then
+    refused. (5, medium, needs measurement) F-09's factor 2 can fire where the old send would have
+    succeeded, inside a normal-path window of about 0.27 s, and then cancels the whole run through
+    the emergency path; the factor is a constant, contrary to finding 429's wording. (6, low)
+    recovery is refused earlier, with a different diagnostic. (7, low) health scans, renewals and
+    teardown opening records can still receive slivers. (8, low) action timeouts set the
+    threshold for plain statements. (9, nit) the lazy terminal-service branch is unreachable from
+    the current terminal=True callers. Consequence: the candidate is not accepted. The threshold
+    must be a service-time estimate calibrated on quiet-host timelines, not the full budget, and
+    the restart pre-check and the statement/effect pair must be consistent. That calibration needs
+    the retained clean timelines and a quieter host. The A/B of finding 430 is completed and
+    recorded regardless, as evidence about the defect, not as acceptance of this candidate.
+
+434. A/B of finding 430 completed (2026-10-21, script ab-f08-repair-20261021a.py sha cadb2274…,
+    receipt evidence/affa19/ab-f08-repair-20261021a/receipt.json sha 45dea170…, 10 interleaved
+    iterations x 5 nodes per arm, 1-minute load before each run 7.3 to 12.0). Arm A (c3a9213a1):
+    ML-PERSIST-TIMEOUT in 8 of 10 runs, at least one failed node in 2 of 10 runs, 4 failed
+    nodes in total (iteration 6: ML-SCHEDULE-TEARDOWN-INCOMPLETE; iteration 9, load 12.0:
+    ML-OWNER-DEADLINE). Arm B (8184a2b15): ML-PERSIST-TIMEOUT in 0 of 10 runs, but at least one
+    failed node in 6 of 10 runs, 16 failed nodes in total (terminal_runtime[False] 5, C0 5,
+    paused_ticks 4, duration 2). Every B failure ends ML-SCHEDULE-SERVICE-DEADLINE or
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE on a fixture with no stimulus. Reading: the guard does remove
+    the late-RPC timeout mechanism, but at the price predicted by finding 433 (1). It refuses
+    sends that would have succeeded, and the fixtures then fail more often than without the
+    guard. This is evidence about the defect and a negative result for the candidate, not
+    acceptance. Consequence: 8184a2b15 is rejected. It is reverted on the branch (history kept)
+    so that the branch tip carries no unaccepted product change. The redesign (a service-time
+    threshold calibrated on quiet-host timelines, consistent restart pre-check and
+    statement/effect pair) is a successor candidate with its own review and A/B. The wait helper
+    used during the run matched its own command line in pgrep -f and was stopped by hand. It
+    did not affect the driver.

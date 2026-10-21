@@ -1,0 +1,36 @@
+.F...                                                                    [100%]
+=================================== FAILURES ===================================
+___ test_actual_native_report_close_and_external_closed_recomputation[False] ___
+
+request = <FixtureRequest for <Function test_actual_native_report_close_and_external_closed_recomputation[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78200d3e3230>
+implicit = False
+
+    @pytest.mark.parametrize('implicit',[False,True])
+    def test_actual_native_report_close_and_external_closed_recomputation(request,monkeypatch,implicit):
+        stack,_,driver=scheduled(request,monkeypatch,implicit=implicit)
+        broker,_,client,work=stack
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='7dac88acacf15ce9265aebe1ce7893c8cb219ef3a3cc1e50f2afd845f33fb20...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:63: AssertionError
+==================================== PASSES ====================================
+_____ test_paused_simulation_does_not_hold_the_run_past_its_host_deadline ______
+----------------------------- Captured stdout call -----------------------------
+return relative to terminal deadline: -11.466 s
+T3-VARIANT ML-SCHEDULE-SERVICE-DEADLINE {'failed': False, 'terminal_recorded': True, 'late_seconds': -11.466}
+__ test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed] ___
+----------------------------- Captured stdout call -----------------------------
+CASE C0-never-armed {'succeeded': True, 'terminal': True, 'diagnostic': None, 'failed': False, 'faults': 0, 'markers': ['sink-binding.marker', 'source-binding.marker'], 'm3': [('intent', 'pending'), ('observation', 'staged'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'staged'), ('observation', 'running'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'stopped'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'cleaned'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'stopped'), ('outcome', 'completed'), ('intent', 'pending'), ('intent', 'pending'), ('outcome', 'cleaned'), ('outcome', 'completed'), ('observation', 'completed'), ('observation', 'completed')], 'armed': [], 'rpc_failure': None, 'raised': []}
+CLOSURE-FULL {"run_id": "fixture-run", "lifecycle_digest": "21397417bdeeccf1c662a6f1833a1f8eff3373e0a0cc84713eec5ff2a093bcc5", "execution_succeeded": true, "normal_unit_records_complete": true, "helpers": [{"slot": 1, "role": 3, "unit_id": "helper:storage", "process_reaped": true, "returncode": 0, "direct_child_reaped": null, "client_retained": true}, {"slot": 2, "role": 4, "unit_id": "helper:authority", "process_reaped": true, "returncode": -9, "direct_child_reaped": true, "client_retained": true}, {"slot": 3, "role": 5, "unit_id": "helper:controller:1", "process_reaped": true, "returncode": -9, "direct_child_reaped": null, "client_retained": true}], "boundaries": [{"unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance", "generation": 1, "empty": true, "released": true, "diagnostic": null}, {"unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance", "generation": 1, "empty": true, "released": true, "diagnostic": null}, {"unit_id": "helper:authority", "generation": 1, "empty": true, "released": true, "diagnostic": null}, {"unit_id": "helper:controller:1", "generation": 1, "empty": true, "released": true, "diagnostic": null}, {"unit_id": "helper:storage", "generation": 1, "empty": true, "released": true, "diagnostic": null}], "root_reaped": true, "final_freeze_acknowledged": true, "unacknowledged_births": 0, "inventory_complete": true, "diagnostics": [], "lifecycle_complete": false, "ready_for_execution": false, "local_control_disposed": false, "native_units": [{"unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance", "generation": 1, "issued": true, "direct_child_reaped": true, "native_retired": true}, {"unit_id": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance", "generation": 1, "issued": true, "direct_child_reaped": true, "native_retired": true}], "authority_fenced": true}
+CLOSURE {'requests': [], 'writers': [], 'diagnostics': ()}
+=========================== short test summary info ============================
+PASSED tests/thesis_lite/maestro/test_time_context_controls.py::test_paused_simulation_does_not_hold_the_run_past_its_host_deadline
+PASSED tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick
+PASSED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+PASSED tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation[False]
+1 failed, 4 passed in 43.10s
