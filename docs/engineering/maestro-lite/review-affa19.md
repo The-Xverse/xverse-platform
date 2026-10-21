@@ -1495,3 +1495,76 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     terminal facts exist are neither finalizable nor finalized. Whether a refused tick-complete
     should itself become a lifecycle obligation is a design-scope question; it is recorded for
     T01 as an observation, not ruled here.
+
+476. Author delegation of the remaining decisions (2026-10-21). The author's texts, verbatim, in
+    order: "do it" (in reply to the task table row "P3-T03 ... Removing the defect needs
+    load-aware budgets, which is a design-scope change"), then "I let you think about the
+    decisions that I need to make and do it by yourself in order to progress". Recorded meaning:
+    the agent takes the decisions still open for this feature (capability 024, P3-T01 to P3-T07)
+    itself, records each with its basis before acting on it, and keeps irreversible steps behind
+    evidence gates. Decisions taken under this delegation:
+    E1 P3-T03: remove F-08/F-09 by load-aware interior budgets (design principle: outer
+       admitted bounds stay hard; only the interior allocation inside them follows service times
+       observed in the same run; identical behaviour on a quiet host). Design, ADR, scope
+       finding, independent review and a loaded A/B precede any acceptance; v2 stays until the
+       design says whether it is subsumed.
+    E2 P3-T01: freeze ML-DESIGN-2026-10-03-v2 as amended by the as-built reconciliation
+       (thesis specs/024-maestro-lite-lifecycle/review/as-built-reconciliation-20261021.md),
+       after E1's design is added to it as an amendment, so the frozen design includes the
+       budget model it is implemented against.
+    E3 D2: accept increment 19 as an engineering increment, merge it into platform main and
+       push, only when all hold: a clean full installed-wheel run on the final head with the
+       host condition recorded (469 (3)), the DV12 gate passing with the 468 inputs, independent
+       reviews of every product change without an open HIGH or MEDIUM item, and the CAPA register
+       successor validated. A run that fails under recorded external load is repeated on a quiet
+       host, not waived.
+    E4 P3-T07: decided when T01-T06 are closed; the G4 disposition for feature acceptance is
+       re-decided then, with source-parent semantic fidelity carried as a stated limit if it is
+       still unproven. No scientific claim, lane activation, M1 admission or factory run follows
+       from this delegation: they are outside the P3 tasks and stay closed.
+    E5 canonical note: engineering-context entries are applied at milestones (increment
+       acceptance, design freeze) with DRAFT or AUTHOR-DELEGATED status, never as scientific
+       results; the research framing RF-2026-08-30-v6 and AEB-EXPERIMENT-2026-08-30-v2 stay
+       unchanged.
+
+477. Load-aware interior budgets (E1, finding 476): design and scope, recorded before any
+    product edit (2026-10-21; ADR-ML3-BUDGET-0001.md). Basis: a read-only inventory of every
+    site where a budget becomes a deadline or a go/no-go decision at dabf858a5. Observed codes
+    traced: ML-SCHEDULE-TEARDOWN-INCOMPLETE from dispatcher _effect stop/cleanup (one
+    now+operation_seconds end shared by stop and cleanup, of which phase() gives the normal path
+    0.6) and from the finished-restart quiesce; ML-PERSIST-TIMEOUT from active-loop RPCs
+    (teardown records without an estimate yet, window-limited statements, or the start effect's
+    commit/issued/probe RPCs; which of these hit the four 467 cases is not determined because
+    the rerun logs do not print client.rpc_failure); terminal-phase phase()/run() slivers while
+    _work_end has slack (427). ML-SCHEDULE-SERVICE-DEADLINE at the active end is the outer bound
+    working and is not removed. Scope: new pure module service_time.py (ServiceTimes, lifetime
+    max per kind, shared by dispatcher and teardowns, v2's _service_seen and _record_seen become
+    views of it); M2 widening-only sizing at effect stop/cleanup, quiesce (both sites), non-lazy
+    terminal phases and the terminal run(), never earlier than today's deadline and capped by the
+    outer bound minus later reserve, health minus scan+renew margin and leases minus renew margin;
+    phase()/run() treat the admitted budget as a floor of the normal share; M1 refusal before a
+    stop/cleanup step-dispatch that no longer fits (ML-SCHEDULE-SERVICE-DEADLINE), rejection
+    before a restart mutation that does not fit (ML-SCHEDULE-RESTART-DEADLINE), finished-restart
+    quiesce deferred to terminal cleanup when it does not fit; no M1 at tick pull (the F-08
+    control asserts the tick-complete refusal); ML-TEARDOWN-RECORD-BUDGET kept as the
+    UnitTeardown diagnostic; observation-only interior trace. Ruling on the open point: declared
+    action timeouts stay hard (no M2 under use_action_timeouts, M1 only), because
+    ADR-ML3-RESTART-0003 clips them to the existing ends. Margins: sizing 1.5, decision 1.0,
+    module constants. No new code, RPC, wire field, admission field or sealed knob; no change to
+    persistence.py, schedule_plan.py or run_closure.py.
+    Expectations, to be verified: (i) seeded controls: a seeded phase:stop of 0.45 s with a
+    0.15 s per-record delay completes normally where the head goes to emergency, every deadline
+    stays at or below its outer bound and the emergency share stays 0.4; a seeded 3600 s
+    phase:stop keeps the stop step blocked with ML-SCHEDULE-SERVICE-DEADLINE, normal terminal
+    cleanup, a finalizable report and a usable channel; a seeded restart:unit rejects the
+    restart unmutated; caps hold for leases and health and no ML-SCHEDULE-LEASE-EXHAUSTED
+    appears; the sizing helper returns today's deadline whenever the need fits; the terminal
+    reserve keeps dispositions, run-terminal and a full terminal_seconds report; a refused
+    record shows ML-TEARDOWN-RECORD-BUDGET in UnitTeardown. (ii) The F-08 and F-09 controls and T3
+    pass unchanged. (iii) Quiet host: the affected modules pass, and the interior trace records
+    whether any widening or M1 stop occurs (expected none or few; the quiet identity is to be
+    measured). (iv) Natural-load A/B against dabf858a5 on the 12 tests of 467, at least 4
+    interleaved pairs triggered by external load at or above 10, with an observation plugin
+    logging client.rpc_failure: candidate failures at most arm A's, fewer ML-PERSIST-TIMEOUT and
+    ML-SCHEDULE-TEARDOWN-INCOMPLETE, no new failure class. (v) Independent review before any
+    acceptance proposal.
