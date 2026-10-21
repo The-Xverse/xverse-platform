@@ -5,6 +5,7 @@ stalls, or it dies right after the sink gate's ARM. The dependent must stay bloc
 must not be completed, teardown must run, and the run must not succeed: the observations of DV04-N
 asserted together rather than separately.
 """
+from dataclasses import replace
 import signal
 import time
 
@@ -25,13 +26,37 @@ def launcher_of(driver, unit):
     return next(binding.launcher for u, binding in driver._bindings if u == unit)
 
 
-@pytest.mark.parametrize("mode", ["dead", "unknown-health", "final-guard"])
+@pytest.mark.parametrize("mode", ["dead", "unknown-health", "final-guard", "stale-reply"])
 def test_lost_prerequisite_blocks_dependent_start_and_tears_down(request, monkeypatch, mode):
     stack = full_stack(request, monkeypatch)
     driver = dispatcher(stack)
     source = launcher_of(driver, SOURCE)
     fired = []
-    if mode in ("dead", "unknown-health"):
+    if mode == "stale-reply":
+        # DV04 n1 (finding 450): the source's replies are older than its freshness during start-sink.
+        observe, freshness = type(source).observe, driver.facade._policies[SOURCE].freshness_seconds
+        deciding = []
+
+        def stale(self, handle, until):
+            value = observe(self, handle, until)
+            if self is source and deciding:
+                fired.append(time.monotonic())
+                return replace(value, observed_at=time.monotonic() - freshness - 1)
+            return value
+
+        effect = FiniteDispatcher._effect
+
+        def deciding_sink(self, step):
+            if step.step_id == "start-sink":
+                deciding.append(True)
+            try:
+                return effect(self, step)
+            finally:
+                deciding.clear()
+
+        monkeypatch.setattr(type(source), "observe", stale)
+        monkeypatch.setattr(FiniteDispatcher, "_effect", deciding_sink)
+    elif mode in ("dead", "unknown-health"):
         effect = FiniteDispatcher._effect
 
         def before_sink(self, step):

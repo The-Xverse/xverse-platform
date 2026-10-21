@@ -857,3 +857,44 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     passed, 1 xfailed. The T02 modules (preparation, preparation rejections, discriminating
     projection, expected-table trace) passed on 9f31771dd: 74 passed. F-10 is a FIX_CANDIDATE
     for ML-CAPA-418. Acceptance stays with the author.
+
+450. Remaining P3-T03 partials, recorded before the new tests run (2026-10-21; task review on
+    the author's instruction "review the open tasks and check if you can close some"; the
+    thesis-side assessment is specs/024-maestro-lite-lifecycle/review/task-closure-assessment-
+    20261021.md). (DV03 p1, durable one-use bootstrap approval) Not a test gap. The product does
+    not implement durable bootstrap-approval consumption: ADR-ML3-BOOTSTRAP-0001.md:68 states
+    that durable bootstrap-permit consumption and authentication "remains a full U2 admission
+    gate", and the approval reference supplies continuity only. Recorded as deferred design
+    scope for the T01 reconciliation and the U2/M1 admission, not approximated. (DV04 n1, stale
+    or expired reply) test_readiness_dispositions.py gains mode "stale-reply": during the
+    start-sink effect, the source launcher's observations come back with observed_at older than
+    the source's freshness. Expected, as in the other modes: start-sink not completed and every
+    later step not completed; no sink marker; unit cleanup complete; return before the terminal
+    deadline; run not successful; diagnostic recorded as observed. (DV04 n2, restarted
+    prerequisite) The release guard queries every prerequisite fresh through its current
+    binding (providers.py:362-371), so a cached ready observation is never used; stale
+    readiness cannot be inherited by construction. The control in
+    test_dv04_restarted_prerequisite.py checks that property on the native stack: source and
+    leaf quiesced, source advanced to generation 2 (fresh ready), then the source's
+    generation-2 observations report not running while its ready observation stays cached, and
+    the leaf's generation-2 start is attempted. Expected: the start raises (ML-PROBE-DEPENDENCY
+    or another ML- probe code, recorded); the latch is cancelled; no started/ready event and no
+    running M3 outcome exist for the leaf at generation 2; RunClosure reaps every helper and
+    leaves every boundary empty and released.
+
+451. Results of the finding-450 controls (2026-10-21, load 4.6 to 4.8, venv of e9b346a05,
+    evidence/affa19/dv04-t03-20261021). (DV04 n1 stale-reply) As expected: ML-PROBE-OBSERVATION,
+    start-sink failed, every later step blocked, no sink marker, cleanup complete, return before
+    the terminal deadline. (DV04 n2) The first run failed on a test-construction error
+    (ProcessObservation has no running field; running is a property of exec_pipe_closed,
+    leader_alive and exec_error, launcher.py:308-310). The stimulus is corrected to
+    leader_alive=False, with no other change. Then, as expected: the leaf's generation-2 start
+    raised ML-PROBE-DEPENDENCY although a generation-2 ready observation of the source was
+    cached; the latch was cancelled; the leaf's generation 2 reached only intent and issued (M3
+    intent pending, observation staged), with no started or ready event and no running outcome.
+    Closure reaped every helper and left every boundary empty and released, with
+    cleanup_complete False and ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN for the staged leader (the same
+    pattern as the stage-ack-pending authority case). Three repeats: 5 of 5 pass each. With
+    450's DV03 p1 design finding, every DV03-DV06 partial of the reconciliation is now either
+    covered or recorded as not constructible or deferred by design. The remaining P3-T03 blocker
+    is defect F-08/F-09.

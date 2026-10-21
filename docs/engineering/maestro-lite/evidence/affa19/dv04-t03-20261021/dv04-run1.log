@@ -1,0 +1,116 @@
+DV04 dead {'fired': True, 'diagnostic': 'ML-LAUNCH-CHILD-EXIT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.DV04 unknown-health {'fired': True, 'diagnostic': 'ML-LAUNCH-TIMEOUT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.DV04 final-guard {'fired': True, 'diagnostic': 'ML-LAUNCH-CHILD-EXIT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.DV04 stale-reply {'fired': True, 'diagnostic': 'ML-PROBE-OBSERVATION', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.F
+=================================== FAILURES ===================================
+_ test_dependent_start_is_blocked_by_a_restarted_prerequisite_that_is_not_running _
+
+request = <FixtureRequest for <Function test_dependent_start_is_blocked_by_a_restarted_prerequisite_that_is_not_running>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77e137aebac0>
+
+    def test_dependent_start_is_blocked_by_a_restarted_prerequisite_that_is_not_running(request, monkeypatch):
+        stack, controller, leaf, _ = ready(request, monkeypatch)
+        broker, facade, client, work = stack
+        source = broker.owner._prepared.resource_order[0]
+        release(controller, leaf)
+        release(controller, source)
+        advance(stack, controller, source)
+        cached = facade._observations.get(source)
+        observe, lost = RunUnitIssuer.observe, []
+    
+        def not_running(self, handle, until):
+            value = observe(self, handle, until)
+            if self.unit_id == source and self.recipe.descriptor.generation == 2:
+                lost.append(time.monotonic())
+                return replace(value, running=False)
+            return value
+    
+        monkeypatch.setattr(RunUnitIssuer, "observe", not_running)
+        old = broker.issuer(leaf).recipe.descriptor
+        descriptor = BoundaryDescriptor(old.run_id, leaf, old.generation + 1,
+                                        'explicit-' + str(broker.issuer(leaf).slot) + '-' + str(old.generation + 1),
+                                        broker.session.boundaries.release_epoch)
+        broker.session.boundaries.create_frozen(descriptor)
+        end = deadline(1.3)
+        prepared = broker._prepare_generation(controller, leaf, descriptor, end)
+        fresh = broker.advance_generation(prepared, end)
+        handle = fresh.stage(end)
+        facade.bind(fresh, handle)
+        with pytest.raises(ValueError) as raised:
+>           facade.start(leaf, descriptor, broker.connection, end)
+
+tests/thesis_lite/maestro/test_dv04_restarted_prerequisite.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/providers.py:400: in start
+    self._owner.release(
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/owner.py:825: in release
+    return self._run_broker_pin.release(
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/run_broker.py:542: in release
+    readiness_guard.check(self.owner, unit_id, deadline)
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/providers.py:118: in check
+    coordinator._check_prerequisites(unit_id, deadline)
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/providers.py:366: in _check_prerequisites
+    if not self._query(prerequisite, deadline).ready:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/providers.py:291: in _query
+    return self._query_original(unit_id, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/dev/shm/affa19-venv-f10t/lib/python3.13/site-packages/xverse/maestro/providers.py:312: in _query_original
+    observed = binding.launcher.observe(
+tests/thesis_lite/maestro/test_dv04_restarted_prerequisite.py:40: in not_running
+    return replace(value, running=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.pyenv/versions/3.13.13/lib/python3.13/dataclasses.py:1596: in replace
+    return _replace(obj, **changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ProcessObservation(handle=OwnedResourceHandle(opaque_id='e2ab350b7258d0c637f32b4755cdfffae696e6a622117670c4d6e27e197a2..._alive=True, leader_reaped=False, exec_error=False, returncode=None, ready_for_execution=False, cleanup_complete=False)
+changes = {'exec_error': False, 'exec_pipe_closed': True, 'handle': OwnedResourceHandle(opaque_id='e2ab350b7258d0c637f32b4755cdf...2', action_id='start', provider_id='maestro-process-v1', provider_kind='process'), 'host_session': 'host-session', ...}
+f = Field(name='cleanup_complete',type=<class 'bool'>,default=False,default_factory=<dataclasses._MISSING_TYPE object at 0x77e1394f4830>,init=False,repr=True,hash=None,compare=True,metadata=mappingproxy({}),kw_only=False,_field_type=_FIELD)
+
+    def _replace(self, /, **changes):
+        # We're going to mutate 'changes', but that's okay because it's a
+        # new dict, even if called with 'replace(self, **my_changes)'.
+    
+        # It's an error to have init=False fields in 'changes'.
+        # If a field is not in 'changes', read its value from the provided 'self'.
+    
+        for f in getattr(self, _FIELDS).values():
+            # Only consider normal fields or InitVars.
+            if f._field_type is _FIELD_CLASSVAR:
+                continue
+    
+            if not f.init:
+                # Error if this field is specified in changes.
+                if f.name in changes:
+                    raise TypeError(f'field {f.name} is declared with '
+                                    f'init=False, it cannot be specified with '
+                                    f'replace()')
+                continue
+    
+            if f.name not in changes:
+                if f._field_type is _FIELD_INITVAR and f.default is MISSING:
+                    raise TypeError(f"InitVar {f.name!r} "
+                                    f'must be specified with replace()')
+                changes[f.name] = getattr(self, f.name)
+    
+        # Create the new object, which calls __init__() and
+        # __post_init__() (if defined), using all of the init fields we've
+        # added and/or left in 'changes'.  If there are values supplied in
+        # changes that aren't fields, this will correctly raise a
+        # TypeError.
+>       return self.__class__(**changes)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: ProcessObservation.__init__() got an unexpected keyword argument 'running'
+
+../../.pyenv/versions/3.13.13/lib/python3.13/dataclasses.py:1630: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[dead]
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[unknown-health]
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[final-guard]
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[stale-reply]
+FAILED tests/thesis_lite/maestro/test_dv04_restarted_prerequisite.py::test_dependent_start_is_blocked_by_a_restarted_prerequisite_that_is_not_running
+1 failed, 4 passed in 11.00s
