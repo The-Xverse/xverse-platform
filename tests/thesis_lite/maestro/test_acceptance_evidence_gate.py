@@ -81,3 +81,29 @@ def test_g4_record_without_approval_or_with_unknown_disposition_is_missing(tmp_p
         path.write_text(json.dumps(record))
         result = gate.check(run, HEAD, path, ALLOW, ARCHIVE)
         assert "B5-missing-g4-disposition" in result["blockers"], (name, result)
+
+
+def test_allowlisted_xfail_passes_and_unlisted_blocks(tmp_path):
+    """Finding 463: the xfail branch of B3 in both directions."""
+    line = "XFAIL tests/test_d.py::test_x - DIVERGENT D-00\n"
+    run = write_run(tmp_path, collected=4, summary="2 passed, 1 skipped, 1 xfailed in 1.00s", extra=line)
+    allow = ALLOW + [dict(kind="xfailed", match="test_d.py::test_x", reason="design divergence", approval="SYNTHETIC")]
+    assert gate.check(run, HEAD, g4(tmp_path), allow, ARCHIVE)["blockers"] == []
+    assert any(b.startswith("B3-xfailed-unlisted") for b in gate.check(run, HEAD, g4(tmp_path), ALLOW, ARCHIVE)["blockers"])
+
+
+def test_not_installed_wheel_and_missing_run_files_block(tmp_path):
+    """Finding 463: B4 not-installed-wheel-of-frozen-src and B0."""
+    run = write_run(tmp_path, installed=False)
+    assert any(b.startswith("B4-not-installed") for b in verdict(run, tmp_path)["blockers"])
+    (run / "wheel.log").unlink()
+    assert verdict(run, tmp_path)["blockers"][0].startswith("B0-missing-run-files")
+
+
+def test_code_scope_ignores_head_difference_when_code_is_identical_and_blocks_otherwise(tmp_path):
+    """Finding 463: path-scoped staleness."""
+    run = write_run(tmp_path)
+    same = gate.check(run, "d" * 40, g4(tmp_path), ALLOW, None, ("x" * 64, "x" * 64))
+    differ = gate.check(run, "d" * 40, g4(tmp_path), ALLOW, None, ("x" * 64, "y" * 64))
+    assert same["blockers"] == [], same
+    assert any(b.startswith("B4-code-mismatch") for b in differ["blockers"]), differ

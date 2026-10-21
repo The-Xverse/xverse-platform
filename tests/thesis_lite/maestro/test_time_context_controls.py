@@ -102,13 +102,8 @@ def test_paused_simulation_does_not_hold_the_run_past_its_host_deadline(request,
     client = driver.client
     print("T3-VARIANT", result.diagnostic, dict(failed=client._failed, terminal_recorded=result.terminal_recorded,
                                                 late_seconds=round(late, 3)))
-    if result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE":
-        # Clean end: the active-end check fired between RPCs; the terminal record is durable.
-        assert result.terminal_recorded and not client._failed and not client._aborted
-    else:
-        # F-08 (finding 418): an RPC sent at the active end with less budget than its service
-        # time fails the persistence channel; the run still ends fail-closed, without a terminal
-        # record and without fabricated facts. Tighten to the clean branch once F-08 is repaired.
-        assert result.diagnostic in ("ML-PERSIST-TIMEOUT", "ML-PERSIST-SENDER"), result.diagnostic
-        assert client._failed and not result.terminal_recorded
-        assert client.drain(deadline(1)).worker_reaped
+    # Only the clean end is accepted now that the F-08 guard is on this branch (findings 418,
+    # 429 (i), 462): the active end refuses before a send, so the terminal record is durable and
+    # the channel usable. ML-PERSIST-TIMEOUT/-SENDER here is an F-08 regression.
+    assert result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE", result.diagnostic
+    assert result.terminal_recorded and not client._failed and not client._aborted

@@ -59,7 +59,8 @@ def test_never_returning_probe_returns_by_its_own_bound_without_a_detached_worke
         signal.pidfd_send_signal(launcher._pidfd, signal.SIGCONT)
     remaining = original.monotonic_seconds - began
     print("DV05-PROBE", dict(elapsed=elapsed, bound=bound, original_remaining=remaining, error=str(raised.value)))
-    assert elapsed <= bound + SLACK
+    assert str(raised.value) == "ML-LAUNCH-TIMEOUT", raised.value  # the stopped issuer's own timeout (462)
+    assert bound - 0.05 <= elapsed <= bound + SLACK  # waited for the probe bound, not an unrelated fast error
     assert elapsed < remaining
     assert set(threading.enumerate()) == threads
     assert boot_stack[2].cancelled

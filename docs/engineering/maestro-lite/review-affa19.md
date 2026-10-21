@@ -1072,3 +1072,137 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     under-budget RPCs. A failure in arm A that shows a sub-service-time send while arm B shows a
     guard refusal at the same place would support, not verify, a link to F-08; any other failure
     keeps its record UNKNOWN. No cause status changes from this campaign alone.
+
+462. Independent read-only review of increment 19 as a whole (subagent, 2026-10-21, head
+    07a9bb75a, code and evidence reading only). Recommendation: NOT READY to accept the
+    increment as a whole. F-10 is close to an author decision; F-08/F-09 v2 is not ready by the
+    increment's own record. Passed: the product diff is exactly the two candidate patches; the
+    8184a2b15 revert is complete; no accepted pre-existing test or script was modified; the
+    numbers in findings match the receipts (runs t and u, the three A/Bs, calibration, CAPA);
+    no product edit was made while a full run was live; no acceptance, merge, M1, factory or
+    scientific claim. Accepted findings and their dispositions:
+    - (FAIL) The product candidates have no targeted tests. No test exercises the F-08 refusal,
+      the F-09 refusal or its emergency path (never executed in any evidence), or the limits of
+      the F-10 relaxation (non-empty dependencies, a wrong handleRef, health-loss/failed keeping
+      both checks; 448's tightening is unasserted). Adopted: targeted tests follow.
+    - Vacuity notes, adopted:
+      - DV05 n1 has an upper bound only and no code, so an unrelated fast ValueError passes;
+      - the DV09 strict test does not assert that a health-loss/unknown event exists;
+      - the D-09 xfail has no raises=;
+      - DV09 (a)/(b) do not run verify(), leaving the generation-2 coverage row open (448);
+      - DV04 n2 asserts neither the code nor the cached generation 2;
+      - DV03 P1 records no observed code;
+      - T3 still accepts the F-08 timeout branch, so the full run cannot detect an F-08
+        regression. With v2 on the branch, T3 is tightened to the clean variant (planned in
+        418 and 429 (i)).
+    - Gate notes, adopted: no test of an allowlisted xfail, of B4 not-installed or of B0; the
+      B4 whole-tree archive comparison would block a candidate whose only later commits are
+      docs. B4 gains a path-scoped mode (src, tests, scripts, xdl, pyproject.toml), recorded and
+      tested; which scope is authoritative is the author's decision.
+    - Record notes:
+      - finding 447 named 9f31771dd as the v2 base; the real base was e9b346a05 (findings 452,
+        454, and the installed coverage.py hash);
+      - run u's tmpfs directory carries the driver's "t" prefix;
+      - the CAPA register's inherited top-level accepted/merged flags refer to increments 17 and
+        18; increment19.accepted is false;
+      - the T04 closure note's "second logical domain" wording is to be checked against the
+        test.
+    - Expectation ordering is verifiable from Git only where the finding was committed before
+      its test or edit (438, 439, 447). Elsewhere findings and their tests share a commit; this
+      is stated, not repaired.
+    - Risks for the author: v2 is unmeasured under load (high); F-09 is unexercised (high,
+      addressed by the targeted test); D-09, CP-10, W-01 and the gate's allowlist and G4
+      decisions remain open.
+    The test hardening starts after the running step-4 campaign ends, because the campaign uses
+    the live worktree's tests.
+
+463. Hardening and targeted controls after review 462, recorded before they run (2026-10-21;
+    run on the venv of f4262c285, after the campaign ends). Hardened assertions:
+    - T3 accepts only the clean end (ML-SCHEDULE-SERVICE-DEADLINE, terminal recorded, client
+      usable);
+    - DV05 n1 requires ML-LAUNCH-TIMEOUT and elapsed within [bound - 0.05 s, bound + SLACK];
+    - DV04 n2 requires ML-PROBE-DEPENDENCY and a cached generation of 2;
+    - the strict DV09 test requires the recorded health-loss/unknown event with handleRef;
+    - the D-09 xfail is restricted to raises=AssertionError;
+    - DV09 (a) and (b) also run the offline verification and require that the assessor rejects
+      no health-loss event of the lost generation (1, and 2 after the restart; 448's open
+      point).
+    New test_candidate_guards_and_f10_limits.py:
+    - F-08: with the per-run estimate for tick-complete seeded above any window, the first
+      tick-complete is refused before any send (no tick-complete request bytes reach
+      schedule_call). The run ends ML-SCHEDULE-SERVICE-DEADLINE with the terminal recorded, the
+      client usable and no RPC failure.
+    - F-09: with the teardown estimate seeded the same way, a teardown record is refused
+      (ML-TEARDOWN-RECORD-BUDGET observed at its source). The run does not succeed. The client
+      stays usable with no RPC failure, unit cleanup is complete, normal records are
+      incomplete, and every unit without normal records was handled on the emergency path. This
+      is the first execution of the F-09 branch.
+    - F-10 limits: the recorded lost observation, as the assessor reads it, is mutated three
+      ways (a dependency added, a foreign handleRef, outcome changed to failed). Each mutation
+      must make that event non-satisfied.
+    Gate:
+    - three more tests (an allowlisted xfail passes and an unlisted one blocks; B4
+      not-installed; B0 missing run files);
+    - --scope code compares content-addressed listings (git ls-tree -r of src, tests, scripts,
+      xdl, pyproject.toml), because archive bytes also carry the commit id and time (two
+      archives of identical src differed). On run u, code scope against the current head
+      leaves only the three author-decision blockers.
+    The gate tests (14) already pass. Seeding the estimates is a test stimulus standing for an
+    earlier slow round trip; it changes no product code. If any expectation fails, the failure
+    is recorded before any change.
+
+464. Campaign and hardening results (2026-10-21). Step-4 campaign (receipt
+    evidence/affa19/campaign-unknown-causes-20261021/receipt.json sha 39ad4881…; 10 interleaved
+    iterations, load 3.6 to 5.5; installed dispatchers e59f6499… (A) and 9a4b3a0a… (B)): 11
+    reproducers x 10 x 2 arms = 220 node runs, no failure, no guard refusal. As stated in 461,
+    this is absence of recurrence on a quiet host. No record's cause changes, and the ten
+    unknown-cause records stay UNKNOWN; reproduction under load stays owed. Hardened and
+    targeted controls of 463 (venv of f4262c285): 37 passed, 1 xfailed (D-09), 1 failed.
+    - Passed as expected:
+      - T3 strict: clean end, terminal recorded;
+      - DV05 n1 with its code and bounds;
+      - DV04 n2 with ML-PROBE-DEPENDENCY and generation 2;
+      - the strict DV09 test with the recorded loss;
+      - DV09 (a) and (b) with no rejected loss in the offline verification, which closes 448's
+        open point for generation 2;
+      - F-08 targeted: tick-complete refused before any send, ML-SCHEDULE-SERVICE-DEADLINE,
+        terminal recorded, client usable, no RPC failure;
+      - the three F-10 limit mutations, each rejected (1 of 1);
+      - the 14 gate tests.
+    - DV03 P1's observed refusal code is ML-PERSIST-ACK, with 1.9 s of the deadline left (not a
+      deadline refusal), and is now pinned.
+    - Failed: F-09 targeted, on its assertion result.cleanup.unit_cleanup_complete. The guard
+      refused the sink's teardown record (ML-TEARDOWN-RECORD-BUDGET observed at its source). The
+      run ended ML-SCHEDULE-TEARDOWN-INCOMPLETE with the terminal recorded and the client
+      usable. The final TeardownResult (reason dispatcher-terminal) has units=(), and
+      unit_cleanup_complete is defined as bool(units) and all(...), so it is False for an
+      empty tuple. Recorded before any change. Open question: wrong assertion target (the
+      units were handled earlier, on the refused phase's emergency path), or under-reported
+      cleanup after an F-09 refusal. Next: a read of the actual boundaries (RunClosure) in the
+      same scenario before any conclusion.
+
+465. The F-09 targeted failure of 464 resolved by reading the boundaries (2026-10-21). In the
+    same scenario, with a RunClosure read added: after the refusal rpc_failure is None and the
+    client is usable, the terminal is recorded, all five boundaries end empty and released, and
+    every helper is reaped. The physical cleanup is RunClosure's, with diagnostics
+    ML-CLOSURE-REPORT-INCOMPLETE, ML-CLOSURE-UNIT-UNRESOLVED and ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN.
+    The dispatcher's final TeardownResult carries no units, and the teardown objects hold no
+    normal stop or cleanup result. This is the existing emergency contract (finding 426): units
+    that leave the normal path are unresolved, and their containment is released by closure.
+    Not a product defect. The 463 expectation "result.cleanup.unit_cleanup_complete" targeted
+    the wrong object and is replaced by the closure facts plus the pinned unresolved-unit
+    semantics. Consequence for F-09: a refused teardown record trades the old RPC timeout for an
+    emergency end with a usable channel and a recorded terminal. Units that would otherwise have
+    been cleaned on the normal path end unresolved, which a false refusal under load would make
+    costly. That cost is the reason 453 item 2 stays the open risk. DV03 P1 now asserts
+    ML-PERSIST-ACK.
+
+466. Hardening confirmed (2026-10-21, evidence/affa19/hardening-20261021). The hardened and
+    targeted set (T3 strict, DV05 n1, DV04 n2, DV09 strict, (a) and (b) with verification, D-09
+    with raises=, F-08 and F-09 targeted with the closure facts, three F-10 limit mutations,
+    DV03 P1 with ML-PERSIST-ACK, 14 gate tests): 38 passed, 1 xfailed in each of three repeats
+    at load 4.0 to 6.0. Discrimination of the strict T3: six runs on the venv of e9b346a05 (no
+    guard) gave 3 passed and 3 failed (ML-PERSIST-TIMEOUT); six runs on the venv of f4262c285
+    gave 6 passed (clean). The full run therefore now detects an F-08 regression (review 462
+    item 3). Run v follows on the hardened head: the same driver, a new frozen archive, a clean
+    full installed-wheel run expected but not presumed.

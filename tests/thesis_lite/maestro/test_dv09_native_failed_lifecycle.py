@@ -73,23 +73,24 @@ def failed_run(request, monkeypatch):
     assert killed
     assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
     assert result.cleanup.unit_cleanup_complete
-    return result, checked, facts, coverage, open_rows, invalid
+    return result, checked, facts, coverage, open_rows, invalid, leaf_events
 
 
 def test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_execution_outcome(request, monkeypatch):
     """F-10 (findings 439-443): every lifecycle obligation of the failed run is satisfied."""
-    result, checked, facts, coverage, open_rows, invalid = failed_run(request, monkeypatch)
+    result, checked, facts, coverage, open_rows, invalid, leaf_events = failed_run(request, monkeypatch)
     assert not invalid and not open_rows, (invalid, open_rows)
+    assert ("health-loss", "unknown", True) in leaf_events, leaf_events  # F-10 path exercised (finding 462)
     assert coverage["normalRecordStatus"] == "complete"
     assert facts["report"]["normalComplete"] and facts["report"]["requiredRowsSatisfied"]
     assert facts["report"]["blockers"] == ["terminal-outcome"]
 
 
-@pytest.mark.xfail(strict=True, reason="DIVERGENT D-09 (finding 444): writer is aborted, not closed, after a failed "
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="DIVERGENT D-09 (finding 444): writer is aborted, not closed, after a failed "
                                        "execution, so offline overall stays incomplete; author ruling at T01")
 def test_actual_native_failed_lifecycle_is_overall_complete_per_design_branch(request, monkeypatch):
     """Design branch normal-documented-failure: overall complete, execution failed."""
-    result, checked, facts, coverage, open_rows, invalid = failed_run(request, monkeypatch)
+    result, checked, facts, coverage, open_rows, invalid, leaf_events = failed_run(request, monkeypatch)
     assert checked.complete, checked
 
 
@@ -109,6 +110,24 @@ def lost_observation(monkeypatch, unit, generation):
     return fired
 
 
+def assessed_losses(client, work, monkeypatch, unit, generation):
+    """Offline verification of the closed run; returns the health-loss events the assessor rejected."""
+    from xverse.maestro import coverage as coverage_module
+    rejected, assess = [], coverage_module._Assessment.assess
+
+    def observed(self):
+        value = assess(self)
+        rejected.extend((eid, state) for eid, state in self.valid.items() if state != "satisfied"
+                        and self.payloads.get(eid, {}).get("action") == "health-loss"
+                        and self.payloads[eid].get("unitId") == unit and self.payloads[eid].get("generation") == generation)
+        return value
+
+    with monkeypatch.context() as patch:
+        patch.setattr(coverage_module._Assessment, "assess", observed)
+        verify(client, work.parent / "argus")
+    return rejected
+
+
 def recorded_loss(client, work, unit, generation):
     events = EvidenceStore.read_run(work.parent / "argus").records()
     losses = [p for p in (e.get("extensions", {}).get("xverse.maestro", {}) for e in events)
@@ -126,11 +145,14 @@ def test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle(reque
     fired = lost_observation(monkeypatch, leaf, 1)
     result = run(driver)
     losses, expected = recorded_loss(client, work, leaf, 1)
+    rejected = assessed_losses(client, work, monkeypatch, leaf, 1)
     print("F10-A", json.dumps(dict(fired=bool(fired), diagnostic=result.diagnostic, rpc_failure=str(client.rpc_failure),
-                                   terminal=result.terminal_recorded, losses=losses, expected=expected), default=str))
+                                   terminal=result.terminal_recorded, losses=losses, expected=expected,
+                                   rejected=rejected), default=str))
     assert fired and client.rpc_failure is None and not client._failed, client.rpc_failure
     assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
     assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
+    assert not rejected, rejected  # the assessor accepts the recorded loss of this generation (findings 448, 462)
 
 
 def test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance(request, monkeypatch):
@@ -155,9 +177,11 @@ def test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance(re
     result = run(driver)
     outcome = driver.restart_result(tickets[0]) if tickets else None
     losses, expected = recorded_loss(client, work, leaf, 2)
+    rejected = assessed_losses(client, work, monkeypatch, leaf, 2)
     print("F10-B", json.dumps(dict(fired=bool(fired), outcome=outcome, diagnostic=result.diagnostic,
                                    rpc_failure=str(client.rpc_failure), terminal=result.terminal_recorded,
-                                   losses=losses, expected=expected), default=str))
+                                   losses=losses, expected=expected, rejected=rejected), default=str))
     assert tickets and fired and client.rpc_failure is None and not client._failed, client.rpc_failure
     assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
     assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
+    assert not rejected, rejected  # the assessor accepts the recorded loss of this generation (findings 448, 462)

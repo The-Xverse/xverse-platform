@@ -63,7 +63,8 @@ def test_dependent_start_is_blocked_by_a_restarted_prerequisite_that_is_not_runn
                           cached_generation=getattr(cached, "generation", None), leaf_generation2_events=leaf2,
                           leaf_generation2_m3=m3, closure_complete=closure.cleanup_complete,
                           diagnostics=closure.diagnostics))
-    assert lost and cached is not None and cached.ready
+    assert lost and cached is not None and cached.ready and cached.generation == 2  # finding 462
+    assert str(raised.value) == "ML-PROBE-DEPENDENCY", raised.value
     assert broker.owner.latch.cancelled
     assert not any(a in ("started", "ready") for a, _ in leaf2), leaf2
     assert ("outcome", "running") not in m3, m3

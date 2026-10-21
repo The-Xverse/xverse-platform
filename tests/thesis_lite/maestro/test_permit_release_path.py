@@ -62,8 +62,9 @@ def test_permit_expiring_between_intent_and_release_blocks_release(storage, nati
     wait = (expiry - datetime.now(timezone.utc)).total_seconds() + 0.3
     assert wait > 0, "stage outlived the permit before the stimulus"
     time.sleep(wait)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as raised:
         owner.release(unit_id, descriptor, gate, original)
+    assert str(raised.value) == "ML-PERSIST-ACK", raised.value  # the worker refuses the expired permit (findings 463-465)
     no_workload(marker, gate)
     assert latch.cancelled
     assert manager.force_cleanup(descriptor).termination_observed

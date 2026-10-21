@@ -6,7 +6,14 @@ with the same receipt fields) and decides whether it may be presented as accepta
 an expected candidate commit. Every blocker is reported; the gate never repairs or reruns.
 
 Usage: validate_maestro_acceptance_evidence.py <run-dir> --candidate <commit> --g4 <file>
-       [--allowlist <file>] [--repo <path>] [--archive-sha <hex>]
+       [--allowlist <file>] [--repo <path>] [--archive-sha <hex>] [--scope tree|code]
+
+Staleness (B4): --scope tree (default) requires the run's archive to equal the candidate's whole
+git archive; --scope code (finding 463) instead requires the git archives of CODE_PATHS to be equal
+between the run's head and the candidate, so documentation-only commits after the run do not
+block. Code identity is the content-addressed listing `git ls-tree -r <commit> -- CODE_PATHS` (modes,
+blob ids, paths), because archive bytes also carry the commit id and time. Which scope is
+authoritative for acceptance is an author decision.
 
 Allowlist: JSON list of {"kind": "skipped"|"xfailed", "match": <substring of the -ra line>,
 "reason": <text>, "approval": <author reference>}. G4 file: JSON object with "gate": "G4",
@@ -22,6 +29,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+CODE_PATHS = ("src", "tests", "scripts", "xdl", "pyproject.toml")
 COUNT = re.compile(r"(\d+) (passed|failed|errors?|skipped|xfailed|xpassed|deselected|warnings?)")
 
 
@@ -48,7 +56,13 @@ def archive_sha(repo: Path, commit: str) -> str:
     return digest.hexdigest()
 
 
-def check(run: Path, candidate: str, g4: Path | None, allowlist: list, expected_archive: str | None) -> dict:
+def code_digest(repo: Path, commit: str) -> str:
+    listing = subprocess.check_output(["git", "ls-tree", "-r", commit, "--", *CODE_PATHS], cwd=repo)
+    return hashlib.sha256(listing).hexdigest()
+
+
+def check(run: Path, candidate: str, g4: Path | None, allowlist: list, expected_archive: str | None,
+          code_digests: tuple | None = None) -> dict:
     blockers = []
     try:
         configuration = json.loads((run / "configuration.json").read_text())
@@ -77,9 +91,12 @@ def check(run: Path, candidate: str, g4: Path | None, allowlist: list, expected_
         blockers.extend(f"B3-{kind}-unlisted: {line[:200]}" for line in listed)
     if counts.get("xpassed"):
         blockers.append(f"B3-xpassed: {counts['xpassed']}")
-    if receipt.get("git_head") != candidate or configuration.get("git_head") != candidate:
+    if code_digests is not None:
+        if receipt.get("git_head") != configuration.get("git_head") or code_digests[0] != code_digests[1]:
+            blockers.append(f"B4-code-mismatch: run {receipt.get('git_head')} code differs from candidate {candidate}")
+    elif receipt.get("git_head") != candidate or configuration.get("git_head") != candidate:
         blockers.append(f"B4-stale-head: run {receipt.get('git_head')} vs candidate {candidate}")
-    if expected_archive is not None and (receipt.get("archive_sha256") != expected_archive
+    if code_digests is None and expected_archive is not None and (receipt.get("archive_sha256") != expected_archive
                                          or configuration.get("archive_sha256") != expected_archive):
         blockers.append("B4-archive-mismatch: run archive is not the candidate's git archive")
     if configuration.get("installed_equals_frozen_src") is not True or configuration.get("wheel_verification") is not True:
@@ -105,10 +122,18 @@ def main(argv=None) -> int:
     parser.add_argument("--allowlist", type=Path)
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--archive-sha")
+    parser.add_argument("--scope", choices=("tree", "code"), default="tree")
     args = parser.parse_args(argv)
     allowlist = json.loads(args.allowlist.read_text()) if args.allowlist else []
-    expected = args.archive_sha or archive_sha(args.repo, args.candidate)
-    verdict = check(args.run, args.candidate, args.g4, allowlist, expected)
+    if args.scope == "code":
+        head = json.loads((args.run / "wheel-receipt.json").read_text()).get("git_head")
+        digests = (code_digest(args.repo, head), code_digest(args.repo, args.candidate))
+        verdict = check(args.run, args.candidate, args.g4, allowlist, None, digests)
+        verdict["scope"] = dict(mode="code", paths=list(CODE_PATHS), run_code_sha256=digests[0], candidate_code_sha256=digests[1])
+    else:
+        expected = args.archive_sha or archive_sha(args.repo, args.candidate)
+        verdict = check(args.run, args.candidate, args.g4, allowlist, expected)
+        verdict["scope"] = dict(mode="tree")
     print(json.dumps(verdict, indent=2))
     return 0 if verdict["accepted_as_evidence"] else 1
 
