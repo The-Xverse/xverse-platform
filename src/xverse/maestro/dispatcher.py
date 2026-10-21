@@ -289,6 +289,10 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
             base["cause"] = request["cause"]
         if kind == "failure":
             base["diagnosticCode"] = request["diagnostic"]
+            if request["observation_missing"] and unit in dispatcher.facade._bindings:
+                # Mirror of the worker's lost-observation handleRef (F-10, findings 441-443).
+                base['handleRef'] = 'handle-' + hashlib.sha256(canonical_bytes([
+                    client.run_id, asdict(dispatcher.facade._bindings[unit].handle)])).hexdigest()
         if (
             type(value) is not dict
             or set(value) != set(base) | {"sourceRefs"}

@@ -528,7 +528,10 @@ class _Assessment:
             if p['action']=='intent' and e['producerId']=='maestro.owner7':phase_kind_status=('start','intent',{'pending'})
             elif p['action']=='issued':phase_kind_status=('start','observation',{'staged'})
             elif p['action']=='started':phase_kind_status=('start','outcome',{'running'} if p['outcome']=='succeeded' else {'failed','unresolved','not-ready'})
-            elif p['action'] in ('probe','ready','health','health-loss'):phase_kind_status=('observe','observation',{'running'} if p['outcome']=='succeeded' else {'not-ready'})
+            elif p['action'] in ('probe','ready','health','health-loss'):
+                # A lost observation is recorded as health-loss/unknown over an M3 'unknown' observation (F-10, findings 439-440).
+                phase_kind_status=('observe','observation',{'running'} if p['outcome']=='succeeded'
+                                   else {'unknown'} if p['action']=='health-loss' and p['outcome']=='unknown' else {'not-ready'})
             elif p['action'] in ('stop','cleanup'):phase_kind_status=(p['action'],'outcome',{'stopped'} if p['action']=='stop' else {'cleaned'})
             if phase_kind_status and not self.source_ok(e,*phase_kind_status):self.valid[eid]='conflicting'
             row=self.brows.get(key)
@@ -543,7 +546,8 @@ class _Assessment:
                 elif row.get('issued') is not True:self.valid[eid]='conflicting';self.errors.append('issued/inactive contradiction')
                 elif p.get('handleRef')!=row.get('handleRef'):self.valid[eid]='conflicting'
             if p['action']=='started' and row and row.get('issuedEventId') and not self.ancestor(eid,row['issuedEventId']):self.valid[eid]='conflicting'
-            if p['action'] in ('started','probe','ready','health','health-loss'):
+            if p['action'] in ('started','probe','ready','health','health-loss') and not (
+                    p['action']=='health-loss' and p['outcome']=='unknown'):  # lost observation: no parent proof (F-10, finding 440)
                 if not self.dependencies(e):self.valid[eid]='conflicting'
         if set(self.sources)-referenced:self.errors.append('unmirrored original M3 source')
         if any(v!='satisfied' for v in self.valid.values()):self.errors.append('invalid/missing source or annotation')

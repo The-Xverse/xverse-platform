@@ -675,3 +675,95 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     with overall complete and execution failed; the existing coverage, collection, terminal and
     DV09 controls are unchanged. Until the repair, the DV09 p1 test is marked xfail(strict) with
     this finding as its reason.
+
+440. Correction of the F-10 cause in finding 439, recorded before a second product edit
+    (2026-10-21). With the status-set repair of 439 applied on the working tree (not committed),
+    DV09 p1 still failed with the same single conflicting event. Instrumentation of the
+    assessor on the retained run (observational prints in the DV09 test) shows two independent
+    rejections of the sink's health-loss/unknown event. (a) The status set: now passes
+    (source_ok with {"unknown"} is True). (b) The dependency proof: coverage.py:549-550 requires
+    every started/probe/ready/health/health-loss event of a unit with parents to carry fresh
+    parent-probe proofs equal to its parent set. The schedule failure path emits dependencies []
+    for the sink, whose parent set is {source}. The design fixes only the shape of dependencies
+    (payload-options.md:40, array 0..16) and states no rule for which actions need proofs. The
+    readiness producer copies the probe's dependencies onto health-loss/failed
+    (lifecycle_evidence.py:385). The failure path documents a lost observation and has no fresh
+    parent probe to cite, and coverage.py:359 already treats health-loss with outcome failed or
+    unknown, like validate failures, as a failure annotation. 439's statement that the status set
+    alone is the cause is withdrawn. Revised F-10 scope (product, coverage.py only): a
+    health-loss event with outcome "unknown" is (1) matched against the M3 observation status
+    {"unknown"} and (2) not subject to the parent-probe dependency proof. health-loss/failed and
+    every other action keep both checks, and source_ok keeps every other condition. Expected:
+    DV09 p1 passes (overall complete, execution failed). The coverage, coverage_dv09,
+    collection_runtime, terminal_runtime, lazy_dispatcher and readiness modules are unchanged in
+    outcome. The candidate is a separate commit with an independent review; acceptance stays with
+    the author. The instrumentation prints stay in the DV09 test as observations.
+
+441. Third F-10 rejection, found by tracing rather than inferred (2026-10-21), recorded before
+    the producer edit. With both assessor edits of finding 440 on the working tree, DV09 p1
+    still failed. A write trace of the assessor's validity map (a test-only dict subclass
+    recording the source line of every non-satisfied write) shows exactly one write:
+    coverage.py:547, the handleRef check, for the same health-loss/unknown event. The failure
+    path omits handleRef, while the broker row of the issued sink carries it. That check binds
+    an observation event to the exact issued handle. It is an integrity property and is not
+    relaxed. The schedule evidence already keeps the unit's handle (self.handles) and derives
+    handleRef from it for start/observe/stop/cleanup statements (schedule_evidence.py:556).
+    Final F-10 scope, replacing 439 and 440: (1) coverage.py: a health-loss event with outcome
+    "unknown" matches the M3 observation status {"unknown"}; (2) coverage.py: such an event is
+    not subject to the parent-probe dependency proof; (3) schedule_evidence.py failure branch:
+    when the observation is missing and the unit has a recorded handle, the health-loss
+    annotation carries handleRef derived exactly as at line 556. Every other check stays as it
+    is. Lesson recorded for the CAPA: the cause in 439 was stated from one reading of the code
+    before verification; from here a cause is stated only after the trace shows no remaining
+    rejection.
+
+442. Harness boundary found while testing F-10 (2026-10-21). The native bootstrap starts the
+    persistence worker as python -I -m xverse.maestro.persistence_worker with an empty
+    environment, so the worker ignores PYTHONPATH and imports xverse from the interpreter's
+    site-packages (/tmp/maestro-lite-platform-regression-target-20261020h, verified with
+    env -i python -I). In the focused runner (PYTHONPATH=src), parent-process code (dispatcher,
+    teardown, owner, the offline verify path) therefore comes from the worktree, while
+    worker-side code (persistence_worker, schedule_evidence, lifecycle_evidence, the worker's
+    terminal/preclosure assessment) comes from the installed copy. The installed copy is
+    identical to main 557619e0c and to src at c3a9213a1 (diff -r; only xcom absent and the XDL
+    data directories present). So no earlier result mixed versions. The 8184a2b15 A/B is also
+    unaffected: that candidate changed only dispatcher.py and teardown.py, both parent-side, so
+    both arms shared one worker. The F-10 producer edit (schedule_evidence.py) cannot be observed
+    with this runner, which explains its "no effect" in finding 441. Consequence: worker-side
+    candidates are tested with a separate interpreter. A --system-site-packages venv on /dev/shm
+    gets the wheel built from the candidate tree (no-deps), and the runner sets no PYTHONPATH, so
+    parent and worker load one version. Every candidate A/B from here installs each arm in its
+    own venv. The F-08/F-09 v2 change is parent-side only, but its A/B follows the same rule.
+
+443. Fourth step of the F-10 trace (2026-10-21). Built as a candidate venv (finding 442), the
+    producer part of 441 made DV09 p1 lose every record after the unknown observation:
+    rpc_failure kind schedule, stage validation, ML-PERSIST-CHILD; no coverage report. A
+    debug-only venv (same wheel; its installed persistence_worker logs main() entry and any
+    exception to /dev/shm; never in product sources) showed that the worker started and did not
+    end through an exception. The cause is on the parent side: dispatcher.py:150-293 rebuilds
+    every expected schedule event payload and requires its exact key set. The added handleRef
+    made the failure reply mismatch (ML-SCHEDULE-ACK), the client failed and aborted, and the
+    worker ended normally on abort, so the next request found the child gone. The F-10 producer
+    part therefore needs its exact mirror in that expected payload: for kind failure with
+    observation_missing and a bound unit, handleRef is derived from facade._bindings[unit].handle,
+    as the same builder does for step-complete phase actions (dispatcher.py:266-268). The F-10
+    scope becomes 441 (1)-(3) plus (4) this mirror. A mismatch between the two sides still fails
+    closed (ML-SCHEDULE-ACK).
+
+444. F-10 candidate result and a design divergence D-09 (2026-10-21). With the four F-10
+    parts (441 (1)-(3), 443 (4)) in a candidate venv: no event is invalid, no row is open,
+    normalRecordStatus is complete, required rows are satisfied, and the report's only blocker
+    is terminal-outcome. The offline overall status is still incomplete. That is not F-10: the
+    offline verifier sets overall to incomplete whenever the Argus writer state is not closed
+    (coverage.py:937). The terminal path finalizes the writer only for an eligible report, and
+    a failed execution (blocker terminal-outcome) is never eligible, so the writer is aborted.
+    By product policy no failed execution can reach overall complete, while the design branch
+    normal-documented-failure (coverage-expected-tables.json) expects overall complete with
+    execution failed ("a failed run can be factually complete"). Recorded as DIVERGENT D-09 for
+    the author's ruling at T01, next to CP-10 and W-01 and related to W-01 (writer closure
+    policy). Not repaired: the choice between finalizing the writer for factually complete
+    failed runs and amending the design branch is a design decision. The DV09 test is split:
+    the F-10 part (normal complete, no open rows, only terminal-outcome blocking) is asserted
+    strictly; the overall-complete expectation is xfail(strict) naming D-09. The tracing
+    instrumentation of 441-443 is removed from the test; the invalid-event list and open rows
+    stay as observations.

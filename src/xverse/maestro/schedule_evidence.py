@@ -667,6 +667,9 @@ class ScheduleJournal:
                 cause=body["cause"],
                 diagnosticCode=body["diagnostic"],
                 **({"probeId": "running"} if body["observation_missing"] else {}),
+                # The lost observation names the exact issued handle, as the phase statements do (F-10, finding 441).
+                **({"handleRef": "handle-" + _digest([self.evidence.permits._run_id, asdict(self.handles[unit])])[7:]}
+                   if body["observation_missing"] and unit in self.handles else {}),
             )
             self.failures.add(unit)
             self.closing = True
