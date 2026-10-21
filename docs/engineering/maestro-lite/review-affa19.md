@@ -1051,3 +1051,24 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     ML-CAPA-445-F11 and ML-CAPA-448-F12 (pre-existing review observations, TRIAGED). No cause is
     VERIFIED and every effectiveness stays NOT_DEMONSTRATED. The ten unknown-cause records are
     unchanged.
+
+461. Run u, the first clean full platform run with one installed version, and the step-4
+    campaign plan (2026-10-21). Run u (evidence/affa19/platform-regression-20261021u; driver
+    as run t; head e2c338033 with the repaired venv script; 2201 collected; 2440 s; load 4.1;
+    fsync probe 0 spikes on tmpfs): return code 0, 2199 passed, 1 skipped (lane admission,
+    under its own driver), 1 xfailed (D-09), 24 subtests passed. It exercises both product
+    candidates (F-10, F-08/F-09 v2), every increment-19 control and the DV12 gate tests together.
+    Neither candidate is accepted. DV12 gate on run u (candidate e2c33803…): blocked only by
+    B3 unlisted skip (lane admission), B3 unlisted xfail (D-09) and B5 missing G4 disposition.
+    B1, B2 and B4 pass. All three remaining blockers are author decisions: whether the lane
+    skip and the D-09 xfail may be allowlisted with their reasons, and the G4 waiver scope
+    record. Receipts archived (receipts.tar.gz) and the tmpfs work directory removed. Step-4
+    campaign (campaign-unknown-causes-20261021.py, authorized in finding 414): the original
+    reproducers of the ten unknown-cause records (135, 286, 287, 318, 324, 330, 331, 332, 337,
+    and 359 as two nodes), 10 interleaved iterations, arm A = venv of e9b346a05 (no guard),
+    arm B = venv of f4262c285 (v2), with the RPC timeline and guard-trace plugins (observation
+    only). Expectations: on a quiet host the reproducers may well all pass, and a pass is
+    recorded as absence of recurrence, not as a cause. Any failure is recorded with its late or
+    under-budget RPCs. A failure in arm A that shows a sub-service-time send while arm B shows a
+    guard refusal at the same place would support, not verify, a link to F-08; any other failure
+    keeps its record UNKNOWN. No cause status changes from this campaign alone.
