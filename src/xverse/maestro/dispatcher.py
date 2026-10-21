@@ -483,6 +483,7 @@ class FiniteDispatcher(_Original):
         )
         self._lock = threading.Lock()
         self._active = None
+        self._service_seen = {}  # statement kind -> longest observed round trip (F-08)
         self._result = None
         self._scope = None
         self._tick = 0
@@ -962,11 +963,19 @@ class FiniteDispatcher(_Original):
         statement = _Statement(
             "tick" if kind == "tick" else "schedule", canonical_bytes(body)
         )
+        # F-08 (finding 438): a statement is not sent with less time left than the longest round
+        # trip this run has already observed for its kind; it is refused before the send, so the
+        # channel stays usable for the terminal records instead of timing out and failing.
+        began = time.monotonic()
+        if deadline.monotonic_seconds - began < self._service_seen.get(kind, 0.0):
+            raise OwnerError("ML-SCHEDULE-SERVICE-DEADLINE")
         self._active = statement
         try:
-            return self.client.schedule_call(self, statement, deadline)
+            reply = self.client.schedule_call(self, statement, deadline)
         finally:
             self._active = None
+        self._service_seen[kind] = max(self._service_seen.get(kind, 0.0), time.monotonic() - began)
+        return reply
 
     def _end(self, *, terminal=False, restart=False, recovery=False, unit=None, phase=None):
         now = time.monotonic()

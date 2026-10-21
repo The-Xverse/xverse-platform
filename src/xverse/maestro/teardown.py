@@ -96,6 +96,7 @@ class ReverseTeardown(_Original):
         self._active = None
         self._intents = {}
         self._receipts = {}
+        self._record_seen = 0.0  # longest observed teardown record round trip (F-09)
         self._known_reaps = set()
         self._stopped = {}
         self._stop_results = {}
@@ -193,8 +194,14 @@ class ReverseTeardown(_Original):
             time.monotonic(),
             **observed,
         )
+        # F-09 (finding 438): the same rule for teardown records, so a phase deadline shared
+        # through a sequence never hands its last record less than an observed record round trip.
+        began = time.monotonic()
+        if deadline.monotonic_seconds - began < self._record_seen:
+            raise TeardownError("ML-TEARDOWN-RECORD-BUDGET")
         self._active = step
         receipt = self.owner.persistence.record_teardown(self, step, deadline)
+        self._record_seen = max(self._record_seen, time.monotonic() - began)
         self._receipts[step.step_id] = receipt
         if stage == "intent":
             self._intents[unit, phase] = receipt

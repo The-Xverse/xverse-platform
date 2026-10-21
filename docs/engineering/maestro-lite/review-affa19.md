@@ -898,3 +898,11 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     450's DV03 p1 design finding, every DV03-DV06 partial of the reconciliation is now either
     covered or recorded as not constructible or deferred by design. The remaining P3-T03 blocker
     is defect F-08/F-09.
+
+452. F-08/F-09 v2 first results and commit (2026-10-21). The v2 venv (finding-438 patch on
+    e9b346a05; applied with evidence/affa19/f08v2-apply.py) passed the 35-module set plus
+    test_teardown.py at load 3.9: 389 passed, 1 skipped, 1 xfailed (D-09), with no failure of any
+    kind, so no normal-path test was refused by the new guards (expectation 447 (i);
+    evidence/affa19/f08v2-20261021). The same patch is now committed on the branch head; the
+    worktree src equals the tested venv. Next: the interleaved A/B (447 (ii)) against the venv of
+    e9b346a05 and an independent review (447 (iii)). Not accepted.
