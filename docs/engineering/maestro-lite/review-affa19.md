@@ -767,3 +767,49 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     strictly; the overall-complete expectation is xfail(strict) naming D-09. The tracing
     instrumentation of 441-443 is removed from the test; the invalid-event list and open rows
     stay as observations.
+
+445. Independent read-only review of F-10 candidate 17da15b50 (subagent, 2026-10-21, code
+    reading only): verdict FAIL. Accepted findings. (1, high) In lazy native mode the start
+    step-dispatch is logical (handle None), so the worker never records self.handles[unit]
+    (schedule_evidence.py:331 is its only writer; :510-516). If the unit's own start probe
+    raises inside facade.start (providers.py:403-405), the failure statement has
+    observation_missing; the parent mirror sees a binding and adds handleRef while the worker
+    omits it, so the reply fails with ML-SCHEDULE-ACK where 17da15b50's parent acknowledged it.
+    (2, high) After a generation advance, commit_generation deletes self.handles[unit]
+    (schedule_evidence.py:51-61) while _restart_unit rebinds the facade (dispatcher.py:844), so
+    a lost observation of the new generation gives the same mismatch. (3, low) The worker
+    accepts observation_missing with any phase; the dispatcher only sends "observe", so
+    source_ok's observe phase is right for every reachable case. Left as is. (4, low,
+    pre-existing) a stale _probe_failure, left by a check_health that _drain_controller_recovery
+    swallowed (dispatcher.py:754, 774-783), can be reported for an unrelated later failure.
+    Before F-10 the assessor happened to reject such an event; now it is accepted as a recorded
+    loss. Recorded for the root-cause campaign as ML-CAPA-418 input F-11 (misattribution
+    candidate), not changed here. (5, nit) cancel with observation_missing is unreachable. The
+    coverage relaxations were found not to weaken any obligation: health-loss events satisfy no
+    ready, health, outcome or dependency row, and generation and identity checks remain.
+    Revised F-10 producer and mirror rule (replacing 441 (3) and 443 (4); 441 (1)-(2)
+    unchanged): both sides take handleRef from the issuance of the unit's current generation.
+    The worker uses evidence.issued_handles[(unit, generation)] (issuance_evidence.py:120). The
+    parent uses the handleRef of the validated issuance receipt client._issued_receipts[(unit,
+    generation)] (persistence.py:1010), which the client stores only after validating the
+    worker's issued event. Both exist exactly when the issued RPC succeeded, so they agree while
+    the channel is alive; if not, the ACK fails closed as before. Expectations for two new
+    regression tests in test_dv09_native_failed_lifecycle.py, written before they run: (a)
+    lazy start-probe loss (the sink's own first query in facade.start raises): no
+    ML-SCHEDULE-ACK, client not failed, failure annotation health-loss/unknown recorded with
+    the issued handleRef, terminal recorded, run not successful; (b) lost observation of a
+    restarted generation (the leaf's first query of generation 2 raises): the same, with the
+    generation-2 handleRef. On 17da15b50 both are expected to fail (ML-SCHEDULE-ACK path); on the
+    revision both pass.
+
+446. F-10 revision results (2026-10-21, load 3.5 to 4.4, evidence/affa19/f10-20261021). DV09
+    file in three venvs. 17da15b50 (f10): the strict F-10 test passes; (a) and (b) fail with a
+    validation-stage RPC failure, the ML-SCHEDULE-ACK path the review traced, confirming
+    review items 1 and 2 by execution. Revision (f10r): all four pass, apart from the strict
+    xfail for D-09; (a) and (b) record health-loss/unknown with the handleRef of the issued
+    generation (1 and 2) and the client stays usable. Baseline (dd00c1db5): the strict test fails
+    (conflicting event); (a) and (b) are acknowledged but carry no handleRef. The 35-module set
+    (coverage, collection runtime, terminal runtime, dispatchers, restart, runtime and the new
+    controls) passed in the f10 venv: 360 passed, 1 skipped, 1 xfailed. The baseline venv failed
+    only the DV09 strict test and the two new tests. The revision gets the same regression run
+    and a second independent review before any acceptance proposal.

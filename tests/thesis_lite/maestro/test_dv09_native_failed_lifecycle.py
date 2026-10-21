@@ -91,3 +91,73 @@ def test_actual_native_failed_lifecycle_is_overall_complete_per_design_branch(re
     """Design branch normal-documented-failure: overall complete, execution failed."""
     result, checked, facts, coverage, open_rows, invalid = failed_run(request, monkeypatch)
     assert checked.complete, checked
+
+
+def lost_observation(monkeypatch, unit, generation):
+    """The unit's first readiness query at `generation` raises, as a lost observation."""
+    from xverse.maestro.providers import ProcessReadiness, ReadinessError
+    query, fired = ProcessReadiness._query_original, []
+
+    def losing(self, unit_id, deadline):
+        if (unit_id == unit and not fired
+                and self._bound(unit_id).launcher.recipe.descriptor.generation == generation):
+            fired.append(time.monotonic())
+            raise ReadinessError("ML-PROBE-OBSERVATION")
+        return query(self, unit_id, deadline)
+
+    monkeypatch.setattr(ProcessReadiness, "_query_original", losing)
+    return fired
+
+
+def recorded_loss(client, work, unit, generation):
+    events = EvidenceStore.read_run(work.parent / "argus").records()
+    losses = [p for p in (e.get("extensions", {}).get("xverse.maestro", {}) for e in events)
+              if p.get("action") == "health-loss" and p.get("unitId") == unit and p.get("generation") == generation]
+    issued = client._issued_receipts.get((unit, generation))
+    expected = json.loads(issued.public_bytes)["event"]["extensions"]["xverse.maestro"]["handleRef"] if issued else None
+    return losses, expected
+
+
+def test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle(request, monkeypatch):
+    """Finding 445 (a): the lazy start step never sent a handle; the loss still names the issuance."""
+    stack, _, driver = scheduled(request, monkeypatch)
+    broker, facade, client, work = stack
+    source, leaf = driver.prepared.resource_order
+    fired = lost_observation(monkeypatch, leaf, 1)
+    result = run(driver)
+    losses, expected = recorded_loss(client, work, leaf, 1)
+    print("F10-A", json.dumps(dict(fired=bool(fired), diagnostic=result.diagnostic, rpc_failure=str(client.rpc_failure),
+                                   terminal=result.terminal_recorded, losses=losses, expected=expected), default=str))
+    assert fired and client.rpc_failure is None and not client._failed, client.rpc_failure
+    assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
+    assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
+
+
+def test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance(request, monkeypatch):
+    """Finding 445 (b): commit_generation dropped the worker's handle; the loss names generation 2."""
+    from xverse.maestro.time import HostDeadline
+    from .test_terminal_controller_inventory import scheduled as restart_scheduled
+    stack, controller, driver = restart_scheduled(request, monkeypatch, restarts=True, restart_leaf_artifact=True)
+    broker, facade, client, work = stack
+    source, leaf = driver.prepared.resource_order
+    context = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+    tickets, statement = [], driver._statement
+
+    def enqueue(kind, step, **kw):
+        response = statement(kind, step, **kw)
+        if kind == "step-complete" and step.step_id == "observe-sink" and not tickets:
+            end = HostDeadline(client.session, driver._active_end)
+            tickets.append(driver.restart(client.run_id, leaf, permit=context.binding.permit, generation=2, deadline=end))
+        return response
+
+    monkeypatch.setattr(driver, "_statement", enqueue)
+    fired = lost_observation(monkeypatch, leaf, 2)
+    result = run(driver)
+    outcome = driver.restart_result(tickets[0]) if tickets else None
+    losses, expected = recorded_loss(client, work, leaf, 2)
+    print("F10-B", json.dumps(dict(fired=bool(fired), outcome=outcome, diagnostic=result.diagnostic,
+                                   rpc_failure=str(client.rpc_failure), terminal=result.terminal_recorded,
+                                   losses=losses, expected=expected), default=str))
+    assert tickets and fired and client.rpc_failure is None and not client._failed, client.rpc_failure
+    assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
+    assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]

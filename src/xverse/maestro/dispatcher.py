@@ -289,10 +289,11 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
             base["cause"] = request["cause"]
         if kind == "failure":
             base["diagnosticCode"] = request["diagnostic"]
-            if request["observation_missing"] and unit in dispatcher.facade._bindings:
-                # Mirror of the worker's lost-observation handleRef (F-10, findings 441-443).
-                base['handleRef'] = 'handle-' + hashlib.sha256(canonical_bytes([
-                    client.run_id, asdict(dispatcher.facade._bindings[unit].handle)])).hexdigest()
+            issued = client._issued_receipts.get((unit, dispatcher._generation(unit))) if unit is not None else None
+            if request["observation_missing"] and issued is not None:
+                # Mirror of the worker's lost-observation handleRef: the validated issuance of the
+                # current generation, the same source the worker uses (F-10, findings 443, 445).
+                base['handleRef'] = json.loads(issued.public_bytes)['event']['extensions']['xverse.maestro']['handleRef']
         if (
             type(value) is not dict
             or set(value) != set(base) | {"sourceRefs"}
