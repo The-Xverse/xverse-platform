@@ -10,6 +10,7 @@ import pytest
 
 from xverse.maestro.dispatcher import FiniteDispatcher
 from xverse.maestro.teardown import ReverseTeardown
+from xverse.maestro.terminal_runtime import finalizable
 from .test_terminal_runtime import scheduled, run, verify
 from .test_dv09_native_failed_lifecycle import failed_run
 from .test_run_broker import broker_stack as broker_stack
@@ -55,6 +56,13 @@ def test_f08_refuses_a_statement_below_its_observed_round_trip_and_keeps_the_ter
     assert result.diagnostic == "ML-SCHEDULE-SERVICE-DEADLINE" and not result.execution_succeeded
     assert result.terminal_recorded and not client._failed and client.rpc_failure is None
     assert result.cleanup.unit_cleanup_complete
+    # Findings 474 item 7, 475: a refused statement ends the run on the normal teardown path with
+    # every lifecycle obligation recorded (ticks are not coverage obligations), so the run is a
+    # documented failure: C1 finalizes it, offline evidence is complete, execution still failed.
+    facts = result.terminal.public_data()
+    assert facts["report"]["blockers"] == ["terminal-outcome"] and finalizable(facts["report"]), facts["report"]
+    assert facts["writer"]["finalize_completed"] and not facts["writer"]["abort_attempted"], facts["writer"]
+    assert verify(client, stack[3].parent / "argus").complete and not result.execution_succeeded
 
 
 def test_f09_refuses_a_teardown_record_and_takes_the_emergency_path_with_a_usable_channel(request, monkeypatch):
@@ -84,6 +92,11 @@ def test_f09_refuses_a_teardown_record_and_takes_the_emergency_path_with_a_usabl
     # (finding 465; the same contract as finding 426), never a fabricated normal cleanup.
     assert "ML-CLOSURE-UNIT-UNRESOLVED" in closure.diagnostics and not closure.lifecycle_complete
     assert not result.cleanup.units
+    # Finding 474 item 7: whatever terminal facts exist, none is finalizable or finalized.
+    facts = result.terminal.public_data() if result.terminal is not None else None
+    print("F09-REPORT", facts and facts["report"], facts and facts["writer"])
+    assert facts is None or facts["report"] is None or not finalizable(facts["report"]), facts
+    assert facts is None or facts["writer"] is None or not facts["writer"]["finalize_attempted"], facts
 
 
 @pytest.mark.parametrize("mutation", ["dependency-added", "foreign-handle", "outcome-failed"])

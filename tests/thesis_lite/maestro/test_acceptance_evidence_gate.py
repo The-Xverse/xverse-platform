@@ -3,6 +3,7 @@
 The gate script is loaded from scripts/ by path, as the repository's other validator tests do.
 Synthetic receipts are labelled; no real run, allowlist or G4 record is approved here.
 """
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -23,9 +24,10 @@ def write_run(tmp_path, *, collected=3, summary="2 passed, 1 skipped in 1.00s", 
     run.mkdir()
     (run / "configuration.json").write_text(json.dumps(dict(git_head=head, archive_sha256=archive,
         installed_equals_frozen_src=installed, wheel_verification=True, synthetic=True)))
+    log = "..s\n" + extra + "SKIPPED [1] tests/test_lane.py:7: lane proposal absent\n" + summary + "\n"
+    (run / "wheel.log").write_text(log)
     (run / "wheel-receipt.json").write_text(json.dumps(dict(git_head=head, archive_sha256=archive, collected=collected,
-        returncode=returncode, outer_timeout=timeout, synthetic=True)))
-    (run / "wheel.log").write_text("..s\n" + extra + "SKIPPED [1] tests/test_lane.py:7: lane proposal absent\n" + summary + "\n")
+        returncode=returncode, outer_timeout=timeout, log_sha256=hashlib.sha256(log.encode()).hexdigest(), synthetic=True)))
     return run
 
 
@@ -107,3 +109,36 @@ def test_code_scope_ignores_head_difference_when_code_is_identical_and_blocks_ot
     differ = gate.check(run, "d" * 40, g4(tmp_path), ALLOW, None, ("x" * 64, "y" * 64))
     assert same["blockers"] == [], same
     assert any(b.startswith("B4-code-mismatch") for b in differ["blockers"]), differ
+    own = gate.check(run, "d" * 40, g4(tmp_path), ALLOW, "b" * 64, ("x" * 64, "x" * 64))
+    assert any(b.startswith("B4-archive-mismatch") and "its own head" in b for b in own["blockers"]), own
+
+
+@pytest.mark.parametrize("path,kept", [
+    ("src/xverse/maestro/dispatcher.py", True),
+    ("docs/engineering/maestro-lite/expected-table-trace-20261021.json", True),
+    ("docs/engineering/maestro-lite/design-oracle/ML-DESIGN-2026-10-03-v2/writer-closure-tables.json", True),
+    ("docs/engineering/xcom/x.md", True),
+    ("specs/007-xcom-core/spec.md", True),
+    ("docs/engineering/maestro-lite/README.md", True),
+    ("docs/engineering/maestro-lite/review-sub/notes.md", True),
+    ("docs/engineering/maestro-lite/evidence/affa19/run/wheel.log", False),
+    ("docs/engineering/maestro-lite/review-affa19.md", False),
+])
+def test_code_scope_keeps_every_path_a_test_may_read(path, kept):
+    """Finding 474 item 1: only evidence folders and top-level review logs are outside the scope."""
+    assert gate.in_code_scope(path) is kept
+
+
+def test_log_not_bound_to_receipt_blocks(tmp_path):
+    """Finding 474 item 2: a replaced wheel.log is not this run's evidence."""
+    run = write_run(tmp_path)
+    (run / "wheel.log").write_text((run / "wheel.log").read_text().replace("..s", ".s."))
+    assert any(b.startswith("B2-log-unbound") for b in verdict(run, tmp_path)["blockers"])
+
+
+def test_grouped_skip_line_counts_its_n(tmp_path):
+    """Finding 474 item 6: SKIPPED [2] reports two skips, so a fully listed run passes."""
+    line = "SKIPPED [2] tests/test_lane.py:9: lane proposal absent\n"
+    run = write_run(tmp_path, collected=5, summary="2 passed, 3 skipped in 1.00s", extra=line)
+    allow = ALLOW + [dict(kind="skipped", match="test_lane.py:9", reason="needs the lane proposal", approval="SYNTHETIC")]
+    assert gate.check(run, HEAD, g4(tmp_path), allow, ARCHIVE)["blockers"] == []

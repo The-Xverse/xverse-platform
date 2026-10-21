@@ -1436,3 +1436,62 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     ML-CAPA-444-D09 TRIAGED -> FIX_CANDIDATE on C1 cc3d444c1; ML-CAPA-359 UNRESOLVED/UNKNOWN ->
     TRIAGED/HYPOTHESIS (468 D4). No cause verified, no effectiveness claimed. This finding is
     bound by the next successor. Run w (full installed-wheel run on cc3d444c1) is in progress.
+
+474. Complete independent review of increment 19 for P3-T06 (2026-10-21; read-only, whole diff
+    557619e0c..d6a905a8d of src, tests, scripts, pyproject.toml), recorded before any repair.
+    Verdict READY for an author acceptance proposal of increment 19 as an engineering
+    increment (not feature acceptance); no HIGH item. Verified: a v2 refusal or an F-10
+    health-loss failure can never leave a report whose only blocker is terminal-outcome
+    (emergency teardown writes no stop/cleanup outcome, so required rows stay missing or
+    unverifiable and normal-records blocks; a refused disposition or terminal send blocks
+    publication), so C1 cannot finalize an incomplete run; lifecycle_complete and
+    ready_for_execution stay False; execution success comes only from the dispatcher;
+    eligibility keeps its meaning; no new wait, retry, RPC, action, stage or blocker value;
+    every test file in the diff is new, so no assertion was weakened.
+    Items. (1) MEDIUM gate: --scope code (src, tests, scripts, xdl, pyproject.toml) omits docs/
+    and specs/ paths that the full run's tests read (test_expected_table_trace.py reads the
+    design-oracle tables and the trace; xcom tests read docs/engineering/xcom and specs/), so a
+    docs-only commit after a run could change a test input without staling the run; decision B4
+    assumed docs do not affect tests. (2) MEDIUM gate: wheel.log is not checked against the
+    receipt's log_sha256, and in code scope the run's archive_sha256 is not checked against its
+    head. (3) LOW: ML-TEARDOWN-RECORD-BUDGET (F-09 refusal) is caught in run() and phase() and
+    reported as ML-TEARDOWN-NORMAL-INCOMPLETE, so results cannot separate F-09 refusals from other
+    teardown failures (469's arm-B counts rest on the trace plugin, as recorded there). (4) LOW:
+    ML-SCHEDULE-SERVICE-DEADLINE already existed on main, so the strict T3 discriminates against
+    ML-PERSIST-TIMEOUT only, probabilistically (466 measured 3/6 vs 6/6). (5) LOW: the dispatcher
+    switch to finalizable (472) cannot change behaviour: a failed run always has an earlier
+    diagnostic, and for a succeeded run finalizable equals eligible; kept for one rule
+    everywhere, recorded as unreachable. (6) LOW gate: -ra folds identical skips into one
+    "SKIPPED [N]" line, which the gate counts as one, so a valid run with grouped skips is falsely
+    blocked (fails safe). (7) LOW: no integrated control drives a v2 refusal through the terminal
+    report and asserts its blockers and writer outcome.
+    Repairs, scope recorded here: (1) the code scope becomes the whole tree except
+    docs/engineering/maestro-lite/evidence/ and docs/engineering/maestro-lite/review-*.md (no
+    test reads them; the lane-admission test reads evidence/affa17 only when its own driver sets
+    MAESTRO_LANE_PROPOSAL, and it is skipped in full runs); this replaces the B4 path list, as
+    the ruling's intent ("documentation-only commits after a run keep it valid") holds only for
+    files no test reads. (2) the gate checks sha256(wheel.log) == receipt log_sha256 (B2-log) and,
+    in code scope, the receipt archive_sha256 against git archive of the run head (B4-archive).
+    (6) skip and xfail counts read the [N] of grouped lines. (7) the targeted F-08 and F-09 tests
+    also assert that the report is not finalizable and the writer is not finalized. (3) and (4)
+    are recorded, not repaired: (3) changes product observability and belongs with the open
+    F-08/F-09 design-scope work; (4) is a limit of the T3 control. Because the gate and tests
+    change, run w no longer covers the final head; a further full run follows the repair.
+
+475. Item 7 of 474 resolved by observation, and one verified-OK claim of 474 corrected
+    (2026-10-21). The added control first asserted that no v2 refusal leaves a finalizable
+    report. On the C1 venv (worktree src, verified equal) the F-09 control holds it (emergency
+    path; blockers normal-records, required-coverage, collection, terminal-outcome; writer not
+    finalized). The F-08 control refutes it: after a refused tick-complete the dispatcher ends
+    on the normal teardown path (unit cleanup complete, terminal recorded, channel usable), and
+    the report's only blocker is terminal-outcome, so C1 finalizes the writer. The 474 claim
+    "a v2 refusal can never leave only terminal-outcome" therefore holds for F-09 only. This is
+    not a defect: v2 coverage obligations are lifecycle facts (intent, ready, health slots,
+    stop, cleanup, disposition, terminal), not ticks, and the independent assessor finds every
+    one recorded. A run refused at a tick is a documented failure in the sense of design branch
+    normal-documented-failure (kept by C1, 468). The F-08 control now asserts that integrated
+    outcome: blockers exactly terminal-outcome, writer finalized and never aborted, offline
+    verification complete, execution not succeeded. The F-09 control asserts that whatever
+    terminal facts exist are neither finalizable nor finalized. Whether a refused tick-complete
+    should itself become a lifecycle obligation is a design-scope question; it is recorded for
+    T01 as an observation, not ruled here.
