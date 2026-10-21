@@ -546,8 +546,10 @@ class _Assessment:
                 elif row.get('issued') is not True:self.valid[eid]='conflicting';self.errors.append('issued/inactive contradiction')
                 elif p.get('handleRef')!=row.get('handleRef'):self.valid[eid]='conflicting'
             if p['action']=='started' and row and row.get('issuedEventId') and not self.ancestor(eid,row['issuedEventId']):self.valid[eid]='conflicting'
-            if p['action'] in ('started','probe','ready','health','health-loss') and not (
-                    p['action']=='health-loss' and p['outcome']=='unknown'):  # lost observation: no parent proof (F-10, finding 440)
+            if p['action']=='health-loss' and p['outcome']=='unknown':
+                # A lost observation carries no parent proof, and so no dependencies (F-10, findings 440, 448).
+                if p['dependencies']!=[]:self.valid[eid]='conflicting'
+            elif p['action'] in ('started','probe','ready','health','health-loss'):
                 if not self.dependencies(e):self.valid[eid]='conflicting'
         if set(self.sources)-referenced:self.errors.append('unmirrored original M3 source')
         if any(v!='satisfied' for v in self.valid.values()):self.errors.append('invalid/missing source or annotation')

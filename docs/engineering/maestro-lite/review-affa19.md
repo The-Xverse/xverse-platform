@@ -813,3 +813,47 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     controls) passed in the f10 venv: 360 passed, 1 skipped, 1 xfailed. The baseline venv failed
     only the DV09 strict test and the two new tests. The revision gets the same regression run
     and a second independent review before any acceptance proposal.
+
+447. F-08/F-09 v2 candidate preparation and expectations, recorded before it runs (2026-10-21).
+    The finding-438 patch is applied to an export of 9f31771dd (/dev/shm/affa19-tree-v2) and
+    installed as its own venv. The diff is exactly the 438 scope: dispatcher.py __init__ and
+    _send, teardown.py __init__ and _record; _end is untouched. It is committed on the branch
+    only after its first results are recorded. A/B script ab-f08v2-20261021b.py (finding 442
+    rule: arm A = venv of 9f31771dd, arm B = venv of the v2 tree; same test tree, no PYTHONPATH;
+    installed file hashes in the receipt; same five nodes as finding 434). Expectations: (i) the
+    six calibration modules and the 35-module set pass in the v2 venv on a quiet host, with no
+    new ML-SCHEDULE-SERVICE-DEADLINE or ML-TEARDOWN-RECORD-BUDGET in any normal-path test;
+    (ii) in the A/B, arm B has no ML-PERSIST-TIMEOUT in these nodes; T3 shows only the clean
+    variant (ML-SCHEDULE-SERVICE-DEADLINE); arm B has no failure class that arm A lacks; under
+    a quiet host both arms are expected to pass most runs, so the A/B mainly checks for new
+    refusals; (iii) an independent review of the v2 diff. Pass rates under load are recorded,
+    not claimed.
+
+448. Second independent read-only review (subagent, 2026-10-21, code reading only) of the whole F-10
+    change dd00c1db5..9f31771dd: verdict PASS, no high or medium finding. Worker and parent now
+    agree in every reachable case traced (lazy start-probe loss, restart after advance, failed
+    stage, never-issued units, recovery views, cancellation). Both issuance maps have one writer
+    and are never deleted, and they can only diverge once the client has already failed. The
+    handleRef values are identical by construction. The coverage relaxations satisfy no
+    obligation. Low items: (1) the dependency exemption skipped the dependencies array entirely,
+    so arbitrary entries would pass; adopted as a tightening here: a health-loss/unknown event
+    must carry dependencies [] (its only producer emits []). (2) F-11 (stale _probe_failure):
+    every _query failure cancels the owner, so the reported unit is the one whose observation
+    failed; only the diagnostic code can be misattributed; stays an input to the root-cause
+    campaign. (3) Pre-existing: between the worker's prepare_generation and the parent's
+    _claims update, or after a failed advance, the two generation counters differ, so a failure
+    statement naming that unit fails ML-SCHEDULE-ACK on the generation field (already true at
+    dd00c1db5); recorded as ML-CAPA-418 input F-12, not changed. (4) The legacy CatalogLauncher
+    path carries no handleRef on a lost observation; unchanged from baseline. (5) The revision's
+    own regression log was pending at review time; it follows with this tightening. Not
+    determined by the review: whether the generation-2 broker row's handleRef equals the
+    issuance value at coverage.py:547. Test (b) asserts the recorded value only.
+
+449. F-10 regression evidence (2026-10-21, evidence/affa19/f10-20261021). The revision
+    9f31771dd in its own venv passed the 35-module set at load 5.5: 362 passed, 1 skipped, 1
+    xfailed (D-09), including the two finding-445 tests and the T04 time-context controls. With
+    the finding-448 tightening (health-loss/unknown requires dependencies []), the coverage,
+    DV09, collection-runtime, terminal-runtime and runtime-verification subset passed: 135
+    passed, 1 xfailed. The T02 modules (preparation, preparation rejections, discriminating
+    projection, expected-table trace) passed on 9f31771dd: 74 passed. F-10 is a FIX_CANDIDATE
+    for ML-CAPA-418. Acceptance stays with the author.
