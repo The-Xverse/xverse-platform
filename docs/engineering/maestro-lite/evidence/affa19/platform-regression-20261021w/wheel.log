@@ -1,4 +1,1588 @@
 ................................................ [  2%]
 ........................................................................ [  5%]
 ........................................................................ [  8%]
-............................................................
+............................................................F........... [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 31%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+..............FF.....F...................FFs............................ [ 79%]
+...............FFF...................................................... [ 82%]
+.....................................FF................................. [ 86%]
+...................................................FFFFF...FFFFFFF..FFF. [ 89%]
+FFF..............F.FF................................................... [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError:  unset>.wait
+E         
+E         tests/thesis_lite/maestro/test_runtime_entry.py:214: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[foreign-session-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_control_deadlines.py::test_original_control_rejection_keeps_unspent_authority[expire-queued-recovery]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[planned]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[dead-before-drain]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[generation2]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[restart-after]
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[external-thread]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[parent-reject]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[controller-loss]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+E         FAILED tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[disabled]
+E         FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+E         FAILED tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes
+E         FAILED tests/thesis_lite/maestro/test_launcher_composition.py::test_actual_original_startup_through_terminal_and_helper_closure[closed]
+E         FAILED tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_lazy_nominal_stages_only_at_eligible_start_then_collects_before_terminal
+E         FAILED tests/thesis_lite/maestro/test_native_storage_faults.py::test_storage_full_inside_the_original_worker_fails_closed[C0-never-armed]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]
+E         FAILED tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[close-after]
+E         FAILED tests/thesis_lite/maestro/test_rpc_failure_context.py::test_actual_stopped_storage_returns_original_context_after_runtime_cleanup
+E         FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_whole_original_start_returns_after_actual_terminal_and_helper_closure[closed]
+E         FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_whole_original_start_returns_after_actual_terminal_and_helper_closure[lost-close-ack]
+E         FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_actual_concurrent_stop_preserves_original_cleanup_facts
+E         26 failed, 1921 passed, 1 skipped, 24 subtests passed in 2260.14s (0:37:40)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/dev/shm/maestro-platform-20261021t-1uo6gfp8/venv/bin/python', '-m', 'pytest', '-q', '-p', 'no...rves_original_cleanup_facts\n26 failed, 1921 passed, 1 skipped, 24 subtests passed in 2260.14s (0:37:40)\n', stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+_ test_whole_original_start_returns_after_actual_terminal_and_helper_closure[closed] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb02b33e0>, RuntimeScope(startup=HostDeadline(sessio...0.683608155)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_whole_original_start_retu0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddabfa8a60>
+case = 'closed'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack'])
+    def test_whole_original_start_returns_after_actual_terminal_and_helper_closure(runtime,monkeypatch,case):
+        entry,scope,work=runtime
+        original=PersistenceClient._rpc
+        def rpc(self,kind,body,end,**kw):
+            reply=original(self,kind,body,end,**kw)
+            if case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':raise PersistenceError('ML-TEST-LOST-ACK')
+            return reply
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        result=entry.start(scope)
+>       assert result.execution_succeeded and result.cleanup_complete,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=None, closure=RunClosureResult(run_id='fixture-run', lifecycle_digest='95...7462, failed_ns=1178239139232060, diagnostic='ML-PERSIST-SENDER'), lifecycle_complete=False, ready_for_execution=False)
+E       assert (None)
+E        +  where None = RuntimeResult(run_id='fixture-run', dispatch=None, closure=RunClosureResult(run_id='fixture-run', lifecycle_digest='95...7462, failed_ns=1178239139232060, diagnostic='ML-PERSIST-SENDER'), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_entry.py:146: AssertionError
+_ test_whole_original_start_returns_after_actual_terminal_and_helper_closure[lost-close-ack] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb01ad400>, RuntimeScope(startup=HostDeadline(sessio...3.567489631)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_whole_original_start_retu1/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddb15ee660>
+case = 'lost-close-ack'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack'])
+    def test_whole_original_start_returns_after_actual_terminal_and_helper_closure(runtime,monkeypatch,case):
+        entry,scope,work=runtime
+        original=PersistenceClient._rpc
+        def rpc(self,kind,body,end,**kw):
+            reply=original(self,kind,body,end,**kw)
+            if case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':raise PersistenceError('ML-TEST-LOST-ACK')
+            return reply
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        result=entry.start(scope)
+>       assert result.execution_succeeded and result.cleanup_complete,result
+E       AssertionError: RuntimeResult(run_id='fixture-run', dispatch=None, closure=RunClosureResult(run_id='fixture-run', lifecycle_digest='c8...7330, failed_ns=1178242089910521, diagnostic='ML-PERSIST-SENDER'), lifecycle_complete=False, ready_for_execution=False)
+E       assert (None)
+E        +  where None = RuntimeResult(run_id='fixture-run', dispatch=None, closure=RunClosureResult(run_id='fixture-run', lifecycle_digest='c8...7330, failed_ns=1178242089910521, diagnostic='ML-PERSIST-SENDER'), lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_entry.py:146: AssertionError
+_________ test_actual_concurrent_stop_preserves_original_cleanup_facts _________
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb01af2f0>, RuntimeScope(startup=HostDeadline(sessio...0.860349859)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_concurrent_stop_pr0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddb194cc20>
+
+    def test_actual_concurrent_stop_preserves_original_cleanup_facts(runtime,monkeypatch):
+        from xverse.maestro.dispatcher import FiniteDispatcher
+        entry,scope,work=runtime;reached=threading.Event();resume=threading.Event()
+        original=FiniteDispatcher._statement;results=[];errors=[];held=[]
+        def statement(self,kind,step,**kw):
+            result=original(self,kind,step,**kw)
+            if kind=='step-complete' and step.phase=='start' and not held:
+                held.append(True);reached.set()
+                assert resume.wait(1.5)
+            return result
+        monkeypatch.setattr(FiniteDispatcher,'_statement',statement)
+        def run():
+            try:results.append(entry.start(scope))
+            except BaseException as error:errors.append(repr(error))
+        thread=threading.Thread(target=run);thread.start()
+        try:
+>           assert reached.wait(2)
+E           assert False
+E            +  where False = wait(2)
+E            +    where wait = <threading.Event at 0x70ddab7240b0: unset>.wait
+
+tests/thesis_lite/maestro/test_runtime_entry.py:214: AssertionError
+_ test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb02b0f50>, RuntimeScope(startup=HostDeadline(sessio....0633440511)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_original_whole_start_reta0/work'))
+request = <FixtureRequest for <Function test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab88a740>
+sentinel = <function sentinel.<locals>.observe at 0x70ddabb237e0>
+window = 'before-handle'
+
+    @pytest.mark.parametrize('window', ['before-handle', 'after-release'])
+    def test_original_whole_start_retains_primary_cleanup_after_issuer_loss(
+            runtime, request, monkeypatch, sentinel, window):
+        entry, scope, work = runtime
+        registry = _OriginalRuntimeRegistry(1)
+        registry.reserve(entry)
+        source = entry._pins[2][0].descriptor.unit_id
+        launcher = entry._pins[1]
+        captured, facts = {}, dict(window=window, injection_reached=False,
+            primary_returned=False, primary_exceptions=[], fallback=None,
+            original_fixture=str(work.parent), full_M1_complete=False,
+            full_runtime_case_complete=False, actual_M1_admissions=0,
+            source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        facts['sentinel_before'] = sentinel()
+    
+        def retain(value, end, root, manager, out):
+            # This runs after the primary assertions, preserving failures before any
+            # harness cleanup. Original descriptors are never acquired by discovery.
+            primary = value._result
+            facts['primary_returned'] = primary is not None
+            facts['primary_closure'] = closure_data(primary.closure) if primary else None
+            session = value._runtime_pins[0]
+            broker = captured.get('broker', value._runtime_pins[2])
+            try:
+                if session is not None and (session._root_result is None
+                        or any(c._result is None for c in session._children.values())
+                        or any(e.state != 'released' for e in manager._entries.values())):
+                    fallback = RunClosure(session).close(end.closure, reason='external-owned-issuer-loss-fallback')
+                    facts['fallback'] = closure_data(fallback)
+                assert session is not None and session._root_result is not None
+                assert all(c._result is not None for c in session._children.values())
+                assert all(e.state == 'released' for e in manager._entries.values())
+                facts.update(actual_original_root_wait=True, actual_original_helper_waits=True,
+                    actual_registered_helpers=len(session._children), all_original_C1_released=True,
+                    ordinary_map_restored_after_actual_cleanup=False)
+                if captured:
+                    broker._generation_issuers = captured['original_map']
+                    facts['ordinary_map_restored_after_actual_cleanup'] = True
+                assert launcher._process.stderr.read() == b''
+                if primary is not None:
+                    value.dispose()
+                else:
+                    if broker is not None:
+                        broker.dispose()
+                    launcher.dispose()
+            finally:
+                if out:
+                    with (Path(out) / ('runtime-issuer-loss-' + window + '.json')).open('x') as stream:
+                        json.dump(facts, stream, indent=2)
+                        stream.write('\n')
+    
+        request.node._runtime_failure_retainer = retain
+    
+        def lose(broker):
+            assert not captured and entry._lock.locked()
+            issuer = broker.issuer(source)
+            boundary = broker.session.boundaries._entries[issuer._image.admission.descriptor.key]
+            members = list(observed_members(boundary.fd))
+            assert members, 'original native child must exist at injection'
+            captured.update(broker=broker, original_map=broker._generation_issuers)
+            facts.update(injection_reached=True, injected_at=time.monotonic(),
+                native_members_before_loss=members, handle_published_before_loss=issuer._handle is not None,
+                release_ack_before_loss=issuer._release_ack is not None,
+                start_lock_held=True, ordinary_rejected=False)
+            if window == 'before-handle':
+                assert issuer._handle is None and issuer._release_ack is None
+                assert not list(work.glob('*.marker'))
+            else:
+                assert issuer._handle is not None and issuer._release_ack is not None
+                wait_for(lambda: (work / 'source-binding.marker').is_file())
+                assert (work / 'source-binding.marker').read_bytes() == b'EXEC\n'
+            broker._generation_issuers = {}
+            sequence = broker.connection.sequence
+            forged = object.__new__(RunBroker)
+            forged.__dict__.update(broker.__dict__)
+            with pytest.raises(ValueError):
+                RunClosure(broker.session, broker=forged)
+            closer = RunClosure(broker.session, broker=broker)
+            assert closer._broker is broker and broker.connection.sequence == sequence
+            facts['explicit_original_cleanup_constructor_accepted_without_IO'] = True
+            facts['copied_broker_rejected_without_IO'] = True
+            with pytest.raises(ValueError):
+                broker.issuer(source)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            facts['ordinary_rejected'] = True
+            assert registry.stop('fixture-run', reason='owned-inner-issuer-loss') == 1
+            assert registry.stop('fixture-run', reason='owned-inner-issuer-loss') == 1
+            assert broker.owner.latch.cancelled
+            facts['original_stop_returned'] = True
+    
+        exchange = AuthorityConnection._exchange
+        statement = FiniteDispatcher._statement
+    
+        def staged(connection, frame, **kw):
+            reply = exchange(connection, frame, **kw)
+            broker = entry._runtime_pins[2]
+            if (window == 'before-handle' and frame.kind == K.STAGE and not captured
+                    and broker is not None and connection is broker.connection):
+                lose(broker)
+            return reply
+    
+        def released(driver, kind, step, **kw):
+            reply = statement(driver, kind, step, **kw)
+            if (window == 'after-release' and kind == 'step-complete'
+                    and step.phase == 'start' and not captured):
+                lose(entry._runtime_pins[2])
+            return reply
+    
+        monkeypatch.setattr(AuthorityConnection, '_exchange', staged)
+        monkeypatch.setattr(FiniteDispatcher, '_statement', released)
+        try:
+            result = registry.start('fixture-run', scope)
+        except Exception as error:
+            facts['primary_exceptions'].append(type(error).__name__ + ': ' + str(error))
+            raise
+        facts.update(primary_returned=True, execution_succeeded=result.execution_succeeded,
+            primary_closure=closure_data(result.closure), startup=asdict(result.startup),
+            diagnostics=list(result.diagnostics), markers={p.name:p.read_text() for p in work.glob('*.marker')})
+>       assert facts['injection_reached'] and facts['ordinary_rejected']
+E       assert (False)
+
+tests/thesis_lite/maestro/test_runtime_issuer_loss.py:154: AssertionError
+_ test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb01af7a0>, RuntimeScope(startup=HostDeadline(sessio...6.237162936)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_original_whole_start_reta1/work'))
+request = <FixtureRequest for <Function test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddabfa9470>
+sentinel = <function sentinel.<locals>.observe at 0x70ddaba9e160>
+window = 'after-release'
+
+    @pytest.mark.parametrize('window', ['before-handle', 'after-release'])
+    def test_original_whole_start_retains_primary_cleanup_after_issuer_loss(
+            runtime, request, monkeypatch, sentinel, window):
+        entry, scope, work = runtime
+        registry = _OriginalRuntimeRegistry(1)
+        registry.reserve(entry)
+        source = entry._pins[2][0].descriptor.unit_id
+        launcher = entry._pins[1]
+        captured, facts = {}, dict(window=window, injection_reached=False,
+            primary_returned=False, primary_exceptions=[], fallback=None,
+            original_fixture=str(work.parent), full_M1_complete=False,
+            full_runtime_case_complete=False, actual_M1_admissions=0,
+            source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        facts['sentinel_before'] = sentinel()
+    
+        def retain(value, end, root, manager, out):
+            # This runs after the primary assertions, preserving failures before any
+            # harness cleanup. Original descriptors are never acquired by discovery.
+            primary = value._result
+            facts['primary_returned'] = primary is not None
+            facts['primary_closure'] = closure_data(primary.closure) if primary else None
+            session = value._runtime_pins[0]
+            broker = captured.get('broker', value._runtime_pins[2])
+            try:
+                if session is not None and (session._root_result is None
+                        or any(c._result is None for c in session._children.values())
+                        or any(e.state != 'released' for e in manager._entries.values())):
+                    fallback = RunClosure(session).close(end.closure, reason='external-owned-issuer-loss-fallback')
+                    facts['fallback'] = closure_data(fallback)
+                assert session is not None and session._root_result is not None
+                assert all(c._result is not None for c in session._children.values())
+                assert all(e.state == 'released' for e in manager._entries.values())
+                facts.update(actual_original_root_wait=True, actual_original_helper_waits=True,
+                    actual_registered_helpers=len(session._children), all_original_C1_released=True,
+                    ordinary_map_restored_after_actual_cleanup=False)
+                if captured:
+                    broker._generation_issuers = captured['original_map']
+                    facts['ordinary_map_restored_after_actual_cleanup'] = True
+                assert launcher._process.stderr.read() == b''
+                if primary is not None:
+                    value.dispose()
+                else:
+                    if broker is not None:
+                        broker.dispose()
+                    launcher.dispose()
+            finally:
+                if out:
+                    with (Path(out) / ('runtime-issuer-loss-' + window + '.json')).open('x') as stream:
+                        json.dump(facts, stream, indent=2)
+                        stream.write('\n')
+    
+        request.node._runtime_failure_retainer = retain
+    
+        def lose(broker):
+            assert not captured and entry._lock.locked()
+            issuer = broker.issuer(source)
+            boundary = broker.session.boundaries._entries[issuer._image.admission.descriptor.key]
+            members = list(observed_members(boundary.fd))
+            assert members, 'original native child must exist at injection'
+            captured.update(broker=broker, original_map=broker._generation_issuers)
+            facts.update(injection_reached=True, injected_at=time.monotonic(),
+                native_members_before_loss=members, handle_published_before_loss=issuer._handle is not None,
+                release_ack_before_loss=issuer._release_ack is not None,
+                start_lock_held=True, ordinary_rejected=False)
+            if window == 'before-handle':
+                assert issuer._handle is None and issuer._release_ack is None
+                assert not list(work.glob('*.marker'))
+            else:
+                assert issuer._handle is not None and issuer._release_ack is not None
+                wait_for(lambda: (work / 'source-binding.marker').is_file())
+                assert (work / 'source-binding.marker').read_bytes() == b'EXEC\n'
+            broker._generation_issuers = {}
+            sequence = broker.connection.sequence
+            forged = object.__new__(RunBroker)
+            forged.__dict__.update(broker.__dict__)
+            with pytest.raises(ValueError):
+                RunClosure(broker.session, broker=forged)
+            closer = RunClosure(broker.session, broker=broker)
+            assert closer._broker is broker and broker.connection.sequence == sequence
+            facts['explicit_original_cleanup_constructor_accepted_without_IO'] = True
+            facts['copied_broker_rejected_without_IO'] = True
+            with pytest.raises(ValueError):
+                broker.issuer(source)
+            with pytest.raises(ValueError):
+                issuer.observe(issuer._handle, deadline(.3))
+            assert broker.connection.sequence == sequence
+            facts['ordinary_rejected'] = True
+            assert registry.stop('fixture-run', reason='owned-inner-issuer-loss') == 1
+            assert registry.stop('fixture-run', reason='owned-inner-issuer-loss') == 1
+            assert broker.owner.latch.cancelled
+            facts['original_stop_returned'] = True
+    
+        exchange = AuthorityConnection._exchange
+        statement = FiniteDispatcher._statement
+    
+        def staged(connection, frame, **kw):
+            reply = exchange(connection, frame, **kw)
+            broker = entry._runtime_pins[2]
+            if (window == 'before-handle' and frame.kind == K.STAGE and not captured
+                    and broker is not None and connection is broker.connection):
+                lose(broker)
+            return reply
+    
+        def released(driver, kind, step, **kw):
+            reply = statement(driver, kind, step, **kw)
+            if (window == 'after-release' and kind == 'step-complete'
+                    and step.phase == 'start' and not captured):
+                lose(entry._runtime_pins[2])
+            return reply
+    
+        monkeypatch.setattr(AuthorityConnection, '_exchange', staged)
+        monkeypatch.setattr(FiniteDispatcher, '_statement', released)
+        try:
+            result = registry.start('fixture-run', scope)
+        except Exception as error:
+            facts['primary_exceptions'].append(type(error).__name__ + ': ' + str(error))
+            raise
+        facts.update(primary_returned=True, execution_succeeded=result.execution_succeeded,
+            primary_closure=closure_data(result.closure), startup=asdict(result.startup),
+            diagnostics=list(result.diagnostics), markers={p.name:p.read_text() for p in work.glob('*.marker')})
+>       assert facts['injection_reached'] and facts['ordinary_rejected']
+E       assert (False)
+
+tests/thesis_lite/maestro/test_runtime_issuer_loss.py:154: AssertionError
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb02b0aa0>, RuntimeScope(startup=HostDeadline(sessio...9.568430775)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_original_startup_failure_3/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddb1a46190>
+fault = 'session-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+        assert not errors,errors
+        assert result is not None and result.closure is not None,result
+        assert result.closure.root_reaped and all(h.process_reaped for h in result.closure.helpers)
+        assert all(b.empty and b.released for b in result.closure.boundaries)
+        assert result.dispatch is None and result.execution_succeeded is None
+        assert result.diagnostics and not result.ready_for_execution and not result.lifecycle_complete
+        assert not list(work.glob('*.marker'))
+        if fault.endswith('-alias'):
+>           with pytest.raises(ValueError,match='ENTRY-REPLACED'):entry.collect('fixture-run')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:114: Failed
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb1a3ef30>, RuntimeScope(startup=HostDeadline(sessio...3.046326983)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_original_startup_failure_4/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab7afa10>
+fault = 'broker-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+        assert not errors,errors
+        assert result is not None and result.closure is not None,result
+        assert result.closure.root_reaped and all(h.process_reaped for h in result.closure.helpers)
+        assert all(b.empty and b.released for b in result.closure.boundaries)
+        assert result.dispatch is None and result.execution_succeeded is None
+        assert result.diagnostics and not result.ready_for_execution and not result.lifecycle_complete
+        assert not list(work.glob('*.marker'))
+        if fault.endswith('-alias'):
+>           with pytest.raises(ValueError,match='ENTRY-REPLACED'):entry.collect('fixture-run')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:114: Failed
+_ test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias] _
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x70ddb01adf40>, RuntimeScope(startup=HostDeadline(sessio...6.491273309)), PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_original_startup_failure_5/work'))
+request = <FixtureRequest for <Function test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab4859b0>
+fault = 'launcher-alias'
+
+    @pytest.mark.parametrize('fault',['after-storage','after-authority','after-controller','session-alias','broker-alias','launcher-alias'])
+    def test_original_startup_failure_returns_primary_cleanup_without_fallback(runtime,request,monkeypatch,fault):
+        entry,scope,work=runtime;launcher=entry._pins[1];retained={};observations={}
+        def retain(value,end,root,manager,out):
+            # Capture primary before any external cleanup, including an exception
+            # that prevented creation of a RuntimeResult. Never rewrite that result.
+            primary=value._result
+            observations['primary']=None if primary is None else dict(
+                startup=asdict(primary.startup),closure=closure_data(primary.closure),diagnostics=primary.diagnostics,
+                dispatch_returned=primary.dispatch is not None)
+            session=launcher._session
+            broker=retained.get('broker',value._runtime_pins[2]);driver=value._runtime_pins[3]
+            fallback=None
+            if session is not None and (not session._drained or not session._drained.supervisor_reaped
+                or not session._drained.registered_children_reaped or any(e.state!='released' for e in manager._entries.values())):
+                fallback=RunClosure(session,dispatcher=driver,broker=broker).close(end.closure,reason='external-owned-startup-fallback')
+            observations['fallback']=closure_data(fallback)
+            assert session is not None and session._root_result is not None
+            assert all(c._result is not None for c in session._children.values())
+            assert all(e.state=='released' for e in manager._entries.values())
+            assert not list(root.glob('*.marker'))
+            observations['actual_original_root_wait']=True
+            observations['actual_registered_helpers']=len(session._children)
+            observations['all_original_C1_released']=True
+            observations['ordinary_alias_restoration_after_cleanup']=True
+            value._session,value._storage,value._broker,value._driver=value._runtime_pins
+            value._launcher=launcher
+            if broker is not None:broker.dispose()
+            assert launcher._process.stderr.read()==b''
+            launcher.dispose()
+            if out:
+                (Path(out)/('runtime-startup-fault-'+root.parent.name+'.json')).write_text(json.dumps(dict(
+                    case=fault,observations=observations,original_fixture=str(root.parent),
+                    full_M1_complete=False,source_sha256=__import__('hashlib').sha256(Path(__file__).read_bytes()).hexdigest()),indent=2)+'\n')
+        request.node._runtime_failure_retainer=retain
+        persistence=BootstrapSession.persistence;admit=RunBroker.admit;controller=RunBroker.admit_controller
+        def storage(self,*a,**kw):
+            result=persistence(self,*a,**kw)
+            if fault=='after-storage':raise OwnerError('ML-TEST-AFTER-STORAGE')
+            return result
+        def authority(cls,*a,**kw):
+            result=admit(*a,**kw);retained['broker']=result
+            if fault=='after-authority':raise OwnerError('ML-TEST-AFTER-AUTHORITY')
+            return result
+        def control(self,*a,**kw):
+            result=controller(self,*a,**kw)
+            if fault=='after-controller':raise OwnerError('ML-TEST-AFTER-CONTROLLER')
+            return result
+        def dispatch(self,*a,**kw):
+            assert fault.endswith('-alias')
+            setattr(entry,{'session-alias':'_session','broker-alias':'_broker','launcher-alias':'_launcher'}[fault],object())
+            raise OwnerError('ML-TEST-ORDINARY-ALIAS-LOST')
+        monkeypatch.setattr(BootstrapSession,'persistence',storage)
+        monkeypatch.setattr(RunBroker,'admit',classmethod(authority))
+        monkeypatch.setattr(RunBroker,'admit_controller',control)
+        if fault.endswith('-alias'):monkeypatch.setattr(FiniteDispatcher,'run',dispatch)
+        result=None;errors=[]
+        try:result=entry.start(scope)
+        except Exception as error:errors.append(type(error).__name__+': '+str(error))
+        observations['primary_exceptions']=errors
+        assert not errors,errors
+        assert result is not None and result.closure is not None,result
+        assert result.closure.root_reaped and all(h.process_reaped for h in result.closure.helpers)
+        assert all(b.empty and b.released for b in result.closure.boundaries)
+        assert result.dispatch is None and result.execution_succeeded is None
+        assert result.diagnostics and not result.ready_for_execution and not result.lifecycle_complete
+        assert not list(work.glob('*.marker'))
+        if fault.endswith('-alias'):
+>           with pytest.raises(ValueError,match='ENTRY-REPLACED'):entry.collect('fixture-run')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/thesis_lite/maestro/test_runtime_startup_failures.py:114: Failed
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab218910>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='ec0f28e41ace68eebf364004711e33e04dd0a79ce5b99dd0eb3a96cd058a8c0...'ML-SCHEDULE-SERVICE-DEADLINE', health_scans=4, lease_renewals=10, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:152: AssertionError
+_____ test_stopped_controller_records_failure_without_unacknowledged_start _____
+
+request = <FixtureRequest for <Function test_stopped_controller_records_failure_without_unacknowledged_start>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab180750>
+
+    def test_stopped_controller_records_failure_without_unacknowledged_start(request, monkeypatch):
+>       stack, controller, driver = scheduled(request, monkeypatch)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_shared_dispatcher.py:111: in scheduled
+    stage_all(stack)
+tests/thesis_lite/maestro/test_run_broker.py:169: in stage_all
+    handle = issuer.stage(end)
+             ^^^^^^^^^^^^^^^^^
+../venv/lib/python3.13/site-packages/xverse/maestro/run_broker.py:1087: in stage
+    until = self.broker._until(deadline, claim=claim)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.run_broker.RunBroker object at 0x70ddb0299ba0>
+deadline = HostDeadline(session='host-session', monotonic_seconds=1178480.086548052)
+
+    def _until(self, deadline, *, claim=None, cleanup=False):
+        until = _deadline(deadline, self.session.session)
+        if (
+            until > self.connection._lease
+            and not (cleanup and self.connection._starts_closed)
+            or until > self.session._generation - 2_000_000_000
+            or claim
+            and until > claim.deadline_ns
+        ):
+>           raise OwnerError("ML-RUN-ORIGINAL-END")
+E           xverse.maestro.owner.OwnerError: ML-RUN-ORIGINAL-END
+
+../venv/lib/python3.13/site-packages/xverse/maestro/run_broker.py:467: OwnerError
+_ test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-live] _
+
+request = <FixtureRequest for <Function test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-live]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab02f9a0>
+mode = 'successor-live'
+
+    @pytest.mark.parametrize('mode',['successor-live','successor-dead'])
+    def test_original_terminal_report_keeps_retired_current_controllers_and_future_universe(request,monkeypatch,mode):
+        stack,old,driver=scheduled(request,monkeypatch);broker,facade,client,work=stack
+        ad=client.coverage.data(client.coverage_digest);current=[];transitions=[];closed=None;result=None
+        assert len(client._future_contexts)==len(ad['units'])==2 and len(ad['contexts'])==4
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('controller-inventory-inputs-'+mode+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        cleanup=driver._cleanup
+        def replace_after_productive_steps():
+            assert len(driver._outcomes)==len(driver.prepared.steps)==10
+            assert all(s.disposition=='completed' for s in driver._outcomes.values())
+            def end():return HostDeadline(client.session,min(driver._work_end,broker.session._lease/1e9,time.monotonic()+.5))
+            retired=old.retire(end(),terminate=True)
+            assert retired.original_child_dead and retired.original_child_reaped and retired.own_boundary_released
+            fresh=broker.admit_controller('terminal-successor',end());current.append(fresh)
+            assert broker._current_controller is fresh and fresh.session_id!=old.session_id
+            # Terminal inventory admission is not recovery and grants no productive
+            # access. The original dispatcher still retains its original controller.
+            with pytest.raises(ValueError,match='NOT-RECONCILED'):fresh._start_access()
+            assert driver._controller is old and driver.facade is facade
+            transitions.append(dict(old_session=old.session_id,new_session=fresh.session_id,
+                old_retirement=asdict(retired),old_slot=old.process._slot,new_slot=fresh.process._slot,
+                successor_productive_access_rejected=True,observed_at=time.monotonic()))
+            return cleanup()
+        monkeypatch.setattr(driver,'_cleanup',replace_after_productive_steps)
+        finish=PersistenceClient.finish_run
+        def terminal(self,owner,end):
+            if self is client and mode=='successor-dead':
+                fresh=current[0];fd=fresh.process._capability.fileno()
+                signal.pidfd_send_signal(fd,signal.SIGKILL)
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    observed=os.waitid(os.P_PIDFD,fd,os.WEXITED|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None and observed.si_code==os.CLD_KILLED and observed.si_status==signal.SIGKILL
+                transitions[0]['successor_death_observed_without_reap']=True
+            return finish(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',terminal)
+        no_replay=False;counterexamples=[]
+        try:
+            result=run(driver)
+>           assert len(transitions)==len(current)==1
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:126: AssertionError
+_ test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-dead] _
+
+request = <FixtureRequest for <Function test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-dead]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab02d320>
+mode = 'successor-dead'
+
+    @pytest.mark.parametrize('mode',['successor-live','successor-dead'])
+    def test_original_terminal_report_keeps_retired_current_controllers_and_future_universe(request,monkeypatch,mode):
+        stack,old,driver=scheduled(request,monkeypatch);broker,facade,client,work=stack
+        ad=client.coverage.data(client.coverage_digest);current=[];transitions=[];closed=None;result=None
+        assert len(client._future_contexts)==len(ad['units'])==2 and len(ad['contexts'])==4
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('controller-inventory-inputs-'+mode+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        cleanup=driver._cleanup
+        def replace_after_productive_steps():
+            assert len(driver._outcomes)==len(driver.prepared.steps)==10
+            assert all(s.disposition=='completed' for s in driver._outcomes.values())
+            def end():return HostDeadline(client.session,min(driver._work_end,broker.session._lease/1e9,time.monotonic()+.5))
+            retired=old.retire(end(),terminate=True)
+            assert retired.original_child_dead and retired.original_child_reaped and retired.own_boundary_released
+            fresh=broker.admit_controller('terminal-successor',end());current.append(fresh)
+            assert broker._current_controller is fresh and fresh.session_id!=old.session_id
+            # Terminal inventory admission is not recovery and grants no productive
+            # access. The original dispatcher still retains its original controller.
+            with pytest.raises(ValueError,match='NOT-RECONCILED'):fresh._start_access()
+            assert driver._controller is old and driver.facade is facade
+            transitions.append(dict(old_session=old.session_id,new_session=fresh.session_id,
+                old_retirement=asdict(retired),old_slot=old.process._slot,new_slot=fresh.process._slot,
+                successor_productive_access_rejected=True,observed_at=time.monotonic()))
+            return cleanup()
+        monkeypatch.setattr(driver,'_cleanup',replace_after_productive_steps)
+        finish=PersistenceClient.finish_run
+        def terminal(self,owner,end):
+            if self is client and mode=='successor-dead':
+                fresh=current[0];fd=fresh.process._capability.fileno()
+                signal.pidfd_send_signal(fd,signal.SIGKILL)
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    observed=os.waitid(os.P_PIDFD,fd,os.WEXITED|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None and observed.si_code==os.CLD_KILLED and observed.si_status==signal.SIGKILL
+                transitions[0]['successor_death_observed_without_reap']=True
+            return finish(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',terminal)
+        no_replay=False;counterexamples=[]
+        try:
+            result=run(driver)
+>           assert len(transitions)==len(current)==1
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_controller_inventory.py:126: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab04d4e0>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_nonopen_writer_clo0/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+>       stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_terminal_faults.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_runtime.py:22: in scheduled
+    stack,controller,driver=original_scheduled(request,monkeypatch,**kw)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:88: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,implicit=implicit)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:108: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+../venv/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+../venv/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:94: in broker_stack
+    storage = session.persistence(
+../venv/lib/python3.13/site-packages/xverse/maestro/bootstrap.py:1124: in persistence
+    client = PersistenceClient(
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:598: in __init__
+    init_operation, _, facts = self._rpc("init", {}, deadline)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:35: in observed
+    return original(self, kind, body, end, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:798: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:409: in _receive
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=24, family=1, type=5, proto=0, laddr=b'\x00eca38', raddr=b'\x00115c2'>
+peer = (518449, 1000, 1000), until = 1178556904550929
+check = <function PersistenceClient._rpc.<locals>.check at 0x70ddab048680>
+
+    def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
+        while True:
+            check()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+>               raise PersistenceError("ML-PERSIST-TIMEOUT")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-TIMEOUT
+
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:369: PersistenceError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab1801a0>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_nonopen_writer_clo1/owned-report-fault-helper/run-bootstrap')
+changed_receipt = False
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='737b5c7cd977e2a4f49ef1c97a81fe83e3ba140c8cce0e6d7681c752becbb7f...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+_ test_actual_nonopen_writer_close_requires_original_report_receipt[True-failed] _
+
+request = <FixtureRequest for <Function test_actual_nonopen_writer_close_requires_original_report_receipt[True-failed]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab183310>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_nonopen_writer_clo2/owned-report-fault-helper/run-bootstrap')
+changed_receipt = True
+
+    @pytest.mark.parametrize('run_bootstrap_binary',['failed','closed'],indirect=True)
+    @pytest.mark.parametrize('changed_receipt',[False,True])
+    def test_actual_nonopen_writer_close_requires_original_report_receipt(request,monkeypatch,run_bootstrap_binary,changed_receipt):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and changed_receipt and kind=='terminal-report' and body['action']=='publish':
+                operation,until,reply=result;reply=dict(reply,annotationCount=reply['annotationCount']+1)
+                return operation,until,reply
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='cd4f89828f8093292f7b4396ae1fd23780424d13034d983d916b73dc07722a9...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_faults.py:80: AssertionError
+_ test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing] _
+
+request = <FixtureRequest for <Function test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab24e200>
+case = 'required-missing'
+
+    @pytest.mark.parametrize('case',['closed','lost-close-ack','required-missing'])
+    def test_original_helper_closure_retains_terminal_outcome_without_replaying_writer(request,monkeypatch,case):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        original_rpc=PersistenceClient._rpc;original_collect=PersistenceClient.collect_outputs
+        def rpc(self,kind,body,end,**kw):
+            result=original_rpc(self,kind,body,end,**kw)
+            if self is client and case=='lost-close-ack' and kind=='terminal-report' and body['action']=='close':
+                raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        def collect(self,owner,end):
+            if self is client and case=='required-missing':
+                for p in work.glob('*.marker'):p.unlink()
+            return original_collect(self,owner,end)
+        monkeypatch.setattr(PersistenceClient,'_rpc',rpc)
+        monkeypatch.setattr(PersistenceClient,'collect_outputs',collect)
+        result=run(driver);assert result.terminal is not None,result.diagnostic
+        before_failed=client._failed;before_writer=client.last_writer_state
+        raw=(work.parent/'argus/manifest.json').read_bytes();calls=[]
+        original_incomplete=PersistenceClient.close_incomplete
+        def incomplete(self,end):
+            calls.append(self)
+            return original_incomplete(self,end)
+        monkeypatch.setattr(PersistenceClient,'close_incomplete',incomplete)
+        closer=RunClosure(broker.session,dispatcher=driver);end=deadline(6)
+        closed=closer.close(end)
+        assert not calls,'completed original writer must not receive abort-only closure RPC'
+>       assert closed.cleanup_complete and closed.root_reaped and closed.normal_unit_records_complete,closed
+E       AssertionError: RunClosureResult(run_id='fixture-run', lifecycle_digest='d27aae2f0ec1e1c1af701ec03271f3fc20d40ebae4cc4de06cecbd283e647...aped=True, native_retired=True)), authority_fenced=True, terminal_reports=(TerminalReceipt(lifecycle_complete=False),))
+E       assert (True and True and False)
+E        +  where True = RunClosureResult(run_id='fixture-run', lifecycle_digest='d27aae2f0ec1e1c1af701ec03271f3fc20d40ebae4cc4de06cecbd283e647...aped=True, native_retired=True)), authority_fenced=True, terminal_reports=(TerminalReceipt(lifecycle_complete=False),)).cleanup_complete
+E        +  and   True = RunClosureResult(run_id='fixture-run', lifecycle_digest='d27aae2f0ec1e1c1af701ec03271f3fc20d40ebae4cc4de06cecbd283e647...aped=True, native_retired=True)), authority_fenced=True, terminal_reports=(TerminalReceipt(lifecycle_complete=False),)).root_reaped
+E        +  and   False = RunClosureResult(run_id='fixture-run', lifecycle_digest='d27aae2f0ec1e1c1af701ec03271f3fc20d40ebae4cc4de06cecbd283e647...aped=True, native_retired=True)), authority_fenced=True, terminal_reports=(TerminalReceipt(lifecycle_complete=False),)).normal_unit_records_complete
+
+tests/thesis_lite/maestro/test_terminal_helper_closure.py:45: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-once] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-once]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaaf081a0>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail0/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+>       stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_terminal_runtime.py:22: in scheduled
+    stack,controller,driver=original_scheduled(request,monkeypatch,**kw)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:88: in scheduled
+    return test_shared_dispatcher.scheduled(request,monkeypatch,implicit=implicit)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_shared_dispatcher.py:108: in scheduled
+    stack = request.getfixturevalue('broker_stack')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:539: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:627: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1110: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+../venv/lib/python3.13/site-packages/pluggy/_caller.py:197: in __call__
+    return self._hookexec(
+../venv/lib/python3.13/site-packages/pluggy/_manager.py:183: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:1202: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jefferson/.pyenv/versions/3.13.13/lib/python3.13/site-packages/_pytest/fixtures.py:908: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_run_broker.py:94: in broker_stack
+    storage = session.persistence(
+../venv/lib/python3.13/site-packages/xverse/maestro/bootstrap.py:1124: in persistence
+    client = PersistenceClient(
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:598: in __init__
+    init_operation, _, facts = self._rpc("init", {}, deadline)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/thesis_lite/maestro/test_lazy_dispatcher.py:35: in observed
+    return original(self, kind, body, end, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:798: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:409: in _receive
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=25, family=1, type=5, proto=0, laddr=b'\x00bfa6a', raddr=b'\x009e093'>
+peer = (522831, 1000, 1000), until = 1178603701690116
+check = <function PersistenceClient._rpc.<locals>.check at 0x70ddaa811120>
+
+    def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
+        while True:
+            check()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+>               raise PersistenceError("ML-PERSIST-TIMEOUT")
+E               xverse.maestro.persistence.PersistenceError: ML-PERSIST-TIMEOUT
+
+../venv/lib/python3.13/site-packages/xverse/maestro/persistence.py:369: PersistenceError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaaf0a890>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail1/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='10e4e7bc117671bdfe64c5e53f89562c34f44f6c18c831ec314020491fea88a...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaab76820>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail2/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='5b6b6c2dfbfaaae4ded3037e5f4ce4516f7b938333629bb78e5473cc6deef77...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaa8371c0>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail3/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='7ebfe96827d5e8c7810ae30f5c617ed63378244e8efeca354c45cc9bf1c979c...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaa837c40>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail4/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='453123d7626ab1469b5dd2caa030f856db600d2781506249f2d48821411bb82...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaa710980>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-1uo6gfp8/basetemp/test_actual_native_writer_fail5/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='b1cf52fa68efc434b8bbf01ef5284525f48bf5e411c65a28a5acae9e7cb2849...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack] _
+
+request = <FixtureRequest for <Function test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaab74f30>
+fault = 'lost-report-ack'
+
+    @pytest.mark.parametrize('fault',['lost-report-ack','changed-report-ack','lost-close-ack'])
+    def test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc;intercepted=[]
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and kind=='terminal-report':
+                intercepted.append(body['action'])
+                if body['action']=='publish' and fault=='lost-report-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+                if body['action']=='publish' and fault=='changed-report-ack':
+                    operation,until,reply=result;reply=deepcopy(reply);reply['annotationCount']+=1
+                    return operation,until,reply
+                if body['action']=='close' and fault=='lost-close-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='e095bea42487be910453c44189fdd7313ccc366f399bf71f783690c2ddb61f8...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=1, lease_renewals=4, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:116: AssertionError
+_ test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[changed-report-ack] _
+
+request = <FixtureRequest for <Function test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[changed-report-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaab758d0>
+fault = 'changed-report-ack'
+
+    @pytest.mark.parametrize('fault',['lost-report-ack','changed-report-ack','lost-close-ack'])
+    def test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc;intercepted=[]
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and kind=='terminal-report':
+                intercepted.append(body['action'])
+                if body['action']=='publish' and fault=='lost-report-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+                if body['action']=='publish' and fault=='changed-report-ack':
+                    operation,until,reply=result;reply=deepcopy(reply);reply['annotationCount']+=1
+                    return operation,until,reply
+                if body['action']=='close' and fault=='lost-close-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='c00cf976eedb195c8c6deaa7b8f6ddeb5cf89056424ccac80d56a80d1670625...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:116: AssertionError
+_ test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack] _
+
+request = <FixtureRequest for <Function test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaab74ec0>
+fault = 'lost-close-ack'
+
+    @pytest.mark.parametrize('fault',['lost-report-ack','changed-report-ack','lost-close-ack'])
+    def test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        original=PersistenceClient._rpc;intercepted=[]
+        def observed(self,kind,body,end,**kw):
+            result=original(self,kind,body,end,**kw)
+            if self is client and kind=='terminal-report':
+                intercepted.append(body['action'])
+                if body['action']=='publish' and fault=='lost-report-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+                if body['action']=='publish' and fault=='changed-report-ack':
+                    operation,until,reply=result;reply=deepcopy(reply);reply['annotationCount']+=1
+                    return operation,until,reply
+                if body['action']=='close' and fault=='lost-close-ack':
+                    raise PersistenceError('ML-TEST-LOST-ACK')
+            return result
+        monkeypatch.setattr(PersistenceClient,'_rpc',observed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='fb42dfa345280ef8e7e285881d83d35f6c127aa9a0948a89bc93c8f86c2b6b4...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:116: AssertionError
+__ test_terminal_before_collection_rejects_without_consuming_original_request __
+
+request = <FixtureRequest for <Function test_terminal_before_collection_rejects_without_consuming_original_request>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab47d240>
+
+    def test_terminal_before_collection_rejects_without_consuming_original_request(request,monkeypatch):
+        stack,_,driver=scheduled(request,monkeypatch);client=stack[2]
+        sequence=client._sequence
+        with pytest.raises(ValueError,match='ML-TERMINAL-BUDGET'):client.finish_run(stack[0],deadline(1))
+        assert client._sequence==sequence and not client._terminal_attempted and not client._failed
+        result=run(driver)
+>       assert result.terminal.public_data()['writer']['evidence_complete'],result.terminal.public_data()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:157: AttributeError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[False] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab47e740>
+optional = False
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='d5eeed7c700277ff29e658ff8859337739ce4571909663ac3818768ab6cd123...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:172: AssertionError
+_ test_actual_changed_collected_output_blocks_finalize_even_when_optional[True] _
+
+request = <FixtureRequest for <Function test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddab24f3f0>
+optional = True
+
+    @pytest.mark.parametrize('optional',[False,True])
+    def test_actual_changed_collected_output_blocks_finalize_even_when_optional(request,monkeypatch,optional):
+        stack,_,driver=scheduled(request,monkeypatch,optional=optional);client=stack[2]
+        original=PersistenceClient.finish_run
+        def changed(self,broker,end):
+            if self is client:
+                destination=stack[3].parent/'argus'/self.collection.declarations[0].destination
+                destination.write_bytes(b'changed')
+            return original(self,broker,end)
+        monkeypatch.setattr(PersistenceClient,'finish_run',changed)
+        result=run(driver);facts=result.terminal.public_data()
+>       assert result.execution_succeeded and result.terminal_recorded
+E       AssertionError: assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='71b0dd279e6156a77fdafae8fe964ef3219b9ed244ffa62eda23d4ae7c8e7f2...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_runtime.py:172: AssertionError
+_ test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall] _
+
+request = <FixtureRequest for <Function test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaa9a23c0>
+fault = 'storage-stall'
+
+    @pytest.mark.parametrize('fault',['storage-stall','storage-death','source-root-loss','evidence-root-loss'])
+    def test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        root=work.parent/'argus';actual_root=root;observations=[];closed=None;result=None
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=digest(Path(__file__)))
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('loss-original-inputs-'+fault+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        original=PersistenceClient.finish_run
+    
+        def lose(self,owner,end):
+            nonlocal actual_root
+            if self is not client:return original(self,owner,end)
+            assert owner is broker and not observations
+            assert self._collection_outcome is not None and self._collection_outcome[0] is broker
+            collection=self._collection_outcome[2].public_data();assert collection['collectionComplete']
+            rows=EvidenceStore.read_run(root).records()
+            terminal=[e for e in rows if e.get('extensions',{}).get('xverse.maestro',{}).get('action')=='run-terminal']
+            assert len(terminal)==1 and terminal[0]['extensions']['xverse.maestro']['outcome']=='succeeded'
+            assert driver.teardown._result.unit_cleanup_complete and driver.teardown._result.normal_records_complete
+            before=dict(fault=fault,original_report_end=[end.session,end.monotonic_seconds],
+                before_manifest_sha256=digest(root/'manifest.json'),before_evidence_identity=identity(root),
+                before_source_identity=identity(work),before_m3_sha256=digest(work.parent/'m3.jsonl'),
+                before_events_sha256=digest(root/'events.jsonl'),collection=collection,
+                original_terminal_event=terminal[0],original_helper_retained=self.process is self._pins[0],
+                observed_at=time.monotonic(),nonconsuming_signal_observation=None,
+                retained_source_path=None,retained_evidence_path=str(root))
+            observations.append(before)
+            if fault in ('storage-stall','storage-death'):
+                child=self.process;child._holder();fd=child._capability.fileno()
+                signum=signal.SIGSTOP if fault=='storage-stall' else signal.SIGKILL
+                signal.pidfd_send_signal(fd,signum)
+                # This observes only the original pidfd; it does not consume exit
+                # status or substitute a PID/path for signal or cleanup ownership.
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    flags=os.WSTOPPED if fault=='storage-stall' else os.WEXITED
+                    observed=os.waitid(os.P_PIDFD,fd,flags|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None
+                assert observed.si_code==(os.CLD_STOPPED if fault=='storage-stall' else os.CLD_KILLED)
+                assert observed.si_status==signum
+                before['nonconsuming_signal_observation']=dict(code=observed.si_code,status=observed.si_status)
+            elif fault=='source-root-loss':
+                retained=work.with_name('source-retained-after-loss');assert not retained.exists()
+                work.rename(retained)
+                assert not work.exists() and identity(retained)==before['before_source_identity']
+                before['retained_source_path']=str(retained)
+            else:
+                retained=root.with_name('evidence-retained-after-loss');assert not retained.exists()
+                root.rename(retained);actual_root=retained
+                assert not root.exists() and identity(retained)==before['before_evidence_identity']
+                before['retained_evidence_path']=str(retained)
+            before['injection_completed_at']=time.monotonic()
+            return original(self,owner,end)
+    
+        monkeypatch.setattr(PersistenceClient,'finish_run',lose)
+        no_replay=False
+        try:
+            result=run(driver)
+>           assert len(observations)==1,'original post-collection fault boundary not reached'
+E           AssertionError: original post-collection fault boundary not reached
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_storage_root_loss.py:99: AssertionError
+_ test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[source-root-loss] _
+
+request = <FixtureRequest for <Function test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[source-root-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaa8238c0>
+fault = 'source-root-loss'
+
+    @pytest.mark.parametrize('fault',['storage-stall','storage-death','source-root-loss','evidence-root-loss'])
+    def test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        root=work.parent/'argus';actual_root=root;observations=[];closed=None;result=None
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=digest(Path(__file__)))
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('loss-original-inputs-'+fault+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        original=PersistenceClient.finish_run
+    
+        def lose(self,owner,end):
+            nonlocal actual_root
+            if self is not client:return original(self,owner,end)
+            assert owner is broker and not observations
+            assert self._collection_outcome is not None and self._collection_outcome[0] is broker
+            collection=self._collection_outcome[2].public_data();assert collection['collectionComplete']
+            rows=EvidenceStore.read_run(root).records()
+            terminal=[e for e in rows if e.get('extensions',{}).get('xverse.maestro',{}).get('action')=='run-terminal']
+            assert len(terminal)==1 and terminal[0]['extensions']['xverse.maestro']['outcome']=='succeeded'
+            assert driver.teardown._result.unit_cleanup_complete and driver.teardown._result.normal_records_complete
+            before=dict(fault=fault,original_report_end=[end.session,end.monotonic_seconds],
+                before_manifest_sha256=digest(root/'manifest.json'),before_evidence_identity=identity(root),
+                before_source_identity=identity(work),before_m3_sha256=digest(work.parent/'m3.jsonl'),
+                before_events_sha256=digest(root/'events.jsonl'),collection=collection,
+                original_terminal_event=terminal[0],original_helper_retained=self.process is self._pins[0],
+                observed_at=time.monotonic(),nonconsuming_signal_observation=None,
+                retained_source_path=None,retained_evidence_path=str(root))
+            observations.append(before)
+            if fault in ('storage-stall','storage-death'):
+                child=self.process;child._holder();fd=child._capability.fileno()
+                signum=signal.SIGSTOP if fault=='storage-stall' else signal.SIGKILL
+                signal.pidfd_send_signal(fd,signum)
+                # This observes only the original pidfd; it does not consume exit
+                # status or substitute a PID/path for signal or cleanup ownership.
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    flags=os.WSTOPPED if fault=='storage-stall' else os.WEXITED
+                    observed=os.waitid(os.P_PIDFD,fd,flags|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None
+                assert observed.si_code==(os.CLD_STOPPED if fault=='storage-stall' else os.CLD_KILLED)
+                assert observed.si_status==signum
+                before['nonconsuming_signal_observation']=dict(code=observed.si_code,status=observed.si_status)
+            elif fault=='source-root-loss':
+                retained=work.with_name('source-retained-after-loss');assert not retained.exists()
+                work.rename(retained)
+                assert not work.exists() and identity(retained)==before['before_source_identity']
+                before['retained_source_path']=str(retained)
+            else:
+                retained=root.with_name('evidence-retained-after-loss');assert not retained.exists()
+                root.rename(retained);actual_root=retained
+                assert not root.exists() and identity(retained)==before['before_evidence_identity']
+                before['retained_evidence_path']=str(retained)
+            before['injection_completed_at']=time.monotonic()
+            return original(self,owner,end)
+    
+        monkeypatch.setattr(PersistenceClient,'finish_run',lose)
+        no_replay=False
+        try:
+            result=run(driver)
+>           assert len(observations)==1,'original post-collection fault boundary not reached'
+E           AssertionError: original post-collection fault boundary not reached
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_storage_root_loss.py:99: AssertionError
+_ test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[evidence-root-loss] _
+
+request = <FixtureRequest for <Function test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[evidence-root-loss]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70ddaaabca60>
+fault = 'evidence-root-loss'
+
+    @pytest.mark.parametrize('fault',['storage-stall','storage-death','source-root-loss','evidence-root-loss'])
+    def test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup(request,monkeypatch,fault):
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        root=work.parent/'argus';actual_root=root;observations=[];closed=None;result=None
+        pins=dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+            original_collection=json.loads(client.collection.canonical_bytes),generation_ns=client.generation_ns,
+            runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+            original_fixture=str(work.parent),source_sha256=digest(Path(__file__)))
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            target=Path(output);target.mkdir(parents=True,exist_ok=True)
+            with (target/('loss-original-inputs-'+fault+'.json')).open('x') as f:json.dump(pins,f,indent=2);f.write('\n')
+        original=PersistenceClient.finish_run
+    
+        def lose(self,owner,end):
+            nonlocal actual_root
+            if self is not client:return original(self,owner,end)
+            assert owner is broker and not observations
+            assert self._collection_outcome is not None and self._collection_outcome[0] is broker
+            collection=self._collection_outcome[2].public_data();assert collection['collectionComplete']
+            rows=EvidenceStore.read_run(root).records()
+            terminal=[e for e in rows if e.get('extensions',{}).get('xverse.maestro',{}).get('action')=='run-terminal']
+            assert len(terminal)==1 and terminal[0]['extensions']['xverse.maestro']['outcome']=='succeeded'
+            assert driver.teardown._result.unit_cleanup_complete and driver.teardown._result.normal_records_complete
+            before=dict(fault=fault,original_report_end=[end.session,end.monotonic_seconds],
+                before_manifest_sha256=digest(root/'manifest.json'),before_evidence_identity=identity(root),
+                before_source_identity=identity(work),before_m3_sha256=digest(work.parent/'m3.jsonl'),
+                before_events_sha256=digest(root/'events.jsonl'),collection=collection,
+                original_terminal_event=terminal[0],original_helper_retained=self.process is self._pins[0],
+                observed_at=time.monotonic(),nonconsuming_signal_observation=None,
+                retained_source_path=None,retained_evidence_path=str(root))
+            observations.append(before)
+            if fault in ('storage-stall','storage-death'):
+                child=self.process;child._holder();fd=child._capability.fileno()
+                signum=signal.SIGSTOP if fault=='storage-stall' else signal.SIGKILL
+                signal.pidfd_send_signal(fd,signum)
+                # This observes only the original pidfd; it does not consume exit
+                # status or substitute a PID/path for signal or cleanup ownership.
+                until=min(end.monotonic_seconds,time.monotonic()+.1);observed=None
+                while time.monotonic()<until:
+                    flags=os.WSTOPPED if fault=='storage-stall' else os.WEXITED
+                    observed=os.waitid(os.P_PIDFD,fd,flags|os.WNOHANG|os.WNOWAIT)
+                    if observed is not None:break
+                    select.select([],[],[],.001)
+                assert observed is not None
+                assert observed.si_code==(os.CLD_STOPPED if fault=='storage-stall' else os.CLD_KILLED)
+                assert observed.si_status==signum
+                before['nonconsuming_signal_observation']=dict(code=observed.si_code,status=observed.si_status)
+            elif fault=='source-root-loss':
+                retained=work.with_name('source-retained-after-loss');assert not retained.exists()
+                work.rename(retained)
+                assert not work.exists() and identity(retained)==before['before_source_identity']
+                before['retained_source_path']=str(retained)
+            else:
+                retained=root.with_name('evidence-retained-after-loss');assert not retained.exists()
+                root.rename(retained);actual_root=retained
+                assert not root.exists() and identity(retained)==before['before_evidence_identity']
+                before['retained_evidence_path']=str(retained)
+            before['injection_completed_at']=time.monotonic()
+            return original(self,owner,end)
+    
+        monkeypatch.setattr(PersistenceClient,'finish_run',lose)
+        no_replay=False
+        try:
+            result=run(driver)
+>           assert len(observations)==1,'original post-collection fault boundary not reached'
+E           AssertionError: original post-collection fault boundary not reached
+E           assert 0 == 1
+E            +  where 0 = len([])
+
+tests/thesis_lite/maestro/test_terminal_storage_root_loss.py:99: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/thesis_lite/maestro/test_runtime_lane_admission.py:55: MAESTRO_LANE_PROPOSAL not set: lane admission evidence runs under its own driver
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_whole_original_start_returns_after_actual_terminal_and_helper_closure[closed]
+FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_whole_original_start_returns_after_actual_terminal_and_helper_closure[lost-close-ack]
+FAILED tests/thesis_lite/maestro/test_runtime_entry.py::test_actual_concurrent_stop_preserves_original_cleanup_facts
+FAILED tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]
+FAILED tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[session-alias]
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[broker-alias]
+FAILED tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_original_startup_failure_returns_primary_cleanup_without_fallback[launcher-alias]
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_stopped_controller_records_failure_without_unacknowledged_start
+FAILED tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-live]
+FAILED tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe[successor-dead]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-failed]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[False-closed]
+FAILED tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt[True-failed]
+FAILED tests/thesis_lite/maestro/test_terminal_helper_closure.py::test_original_helper_closure_retains_terminal_outcome_without_replaying_writer[required-missing]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-once]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-report-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[changed-report-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_lost_or_changed_ack_preserves_unknown_state_and_never_replays[lost-close-ack]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_terminal_before_collection_rejects_without_consuming_original_request
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[False]
+FAILED tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_changed_collected_output_blocks_finalize_even_when_optional[True]
+FAILED tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-stall]
+FAILED tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[source-root-loss]
+FAILED tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[evidence-root-loss]
+32 failed, 2199 passed, 1 skipped, 24 subtests passed in 4122.46s (1:08:42)

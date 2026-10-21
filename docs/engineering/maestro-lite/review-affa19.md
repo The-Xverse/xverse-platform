@@ -1568,3 +1568,48 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     logging client.rpc_failure: candidate failures at most arm A's, fewer ML-PERSIST-TIMEOUT and
     ML-SCHEDULE-TEARDOWN-INCOMPLETE, no new failure class. (v) Independent review before any
     acceptance proposal.
+
+478. Run w (2026-10-21, evidence/affa19/platform-regression-20261021w; head cc3d444c1, 2232
+    collected): 32 failed, 2199 passed, 1 skipped, 4122 s. Host: another project's llama-server
+    at about 550 % CPU from about 15 minutes into the run, load 12-15 for most of it (12.9 at the
+    end); fsync probe 0 spikes. Repaired gate (474) on run w against its own head: only B2 (log
+    bound, archive equal to its head, allowlist and G4 satisfied). By 469 (3) this run is an
+    observation, not a regression signal. Classification of the 31 Maestro outer failures, one
+    rerun each from run w's frozen tree at load 11-14: on run w's venv (C1) 27 failed, on the
+    head-without-C1 venv (8a19e35a4 product) 11 failed, run back to back while other test
+    processes also loaded the host. The C1-only failures carry ML-SCHEDULE-TEARDOWN-INCOMPLETE,
+    ML-PERSIST-TIMEOUT, ML-RUN-ORIGINAL-END or a fault boundary not reached; each arises in an
+    active-phase effect or before collection, before the terminal writer close that is the only
+    point where C1 acts, so C1 cannot cause them. Reading: load variation between two single
+    runs, consistent with the interleaved pairs of 472 at load 5-7 (26/26 in both arms). Not
+    proof: a quiet-host full run (run x) is the confirmation, and the gap is listed as an open
+    observation until then.
+
+479. Load-aware budget candidate (E1) implemented as scoped in 477, uncommitted, with two
+    departures recorded here (2026-10-21, evidence/affa19/budget-20261021): (1) an outer bound
+    the inventory missed: owner._deadline rejects any request deadline beyond now + 5 s
+    (ML-OWNER-DEADLINE, channel failed); a first version widened a terminal per-unit window to
+    about 10 s and lost the terminal, so every interior cap includes now + 5 (the whole-run
+    teardown keeps its 80 s bound). (2) M1 refinement: the stop/cleanup dispatch check also
+    requires the phase estimate to fit the normal share of the window the effect can actually
+    get, not only the time before the active end, because in the lazy native profile the
+    lease-renewal margin (service_calls x op + op, about 2-2.5 s) caps M2 for active effects.
+    Files: service_time.py (new, 43 lines), dispatcher.py (+162), teardown.py (+82/-26),
+    tests/thesis_lite/maestro/test_load_aware_budgets.py (new, 185 lines). Controls (candidate
+    venv verified equal to src, head = dabf858a5 product): (e) sizing identity property, 2000
+    random cases; (a) +0.15 s per record with a seeded slow phase completes normally where the
+    head ends TEARDOWN-INCOMPLETE; (b) seeded 3600 s phase:stop gives SERVICE-DEADLINE, every
+    stop/cleanup step blocked, normal terminal cleanup, finalizable report, offline complete;
+    (c) seeded restart:unit is rejected with ML-SCHEDULE-RESTART-DEADLINE unmutated; (d) widening
+    stays within every outer bound, no lease exhaustion (bounds check, not discrimination); (g)
+    ML-TEARDOWN-RECORD-BUDGET visible. Candidate 6/6 pass, head fails each discriminating
+    control. Existing guard controls, T3, DV09 and both C1 modules: 37 passed at load 6.9.
+    Affected modules under rising load (6.8 to 16.6): every failure carries a load-class code and
+    the head fails the same tests on rerun (5/5 and 9 vs 8). Interior trace: at load about 6 the
+    nominal phase spans are about 0.1 s against today's 0.3 s normal share, so no widening and no
+    M1 stop (quiet identity shown on the nominal fixture only); at load 12-15 (24 dispatcher
+    runs) zero widenings (lease margin caps them) and four M1 stops, all at step-dispatch.
+    Reading: in this profile the benefit comes mainly from M1 (emergency ends become documented
+    failures), not from widening. Open: first-of-kind phases fail open; lifetime maxima can cause
+    false M1 refusals; natural-load A/B (477 (iv)) and independent review owed. A/B e starts now:
+    the host is loaded by its own external process.
