@@ -1506,8 +1506,9 @@ class FiniteDispatcher(_Original):
                     report_receipt = self.client.finish_run(
                         self._broker, HostDeadline(self.owner.session, report_end))
                     facts = report_receipt.public_data()
+                    from .terminal_runtime import finalizable  # same evidence rule as RunClosure (finding 472)
                     if (facts['diagnostic'] is not None or facts['writer'] is None
-                        or facts['report'] is None or not facts['report']['eligible']
+                        or facts['report'] is None or not finalizable(facts['report'])
                         or not facts['writer']['evidence_complete']):
                         diagnostic = diagnostic or 'ML-SCHEDULE-EVIDENCE-INCOMPLETE'
                 except Exception:

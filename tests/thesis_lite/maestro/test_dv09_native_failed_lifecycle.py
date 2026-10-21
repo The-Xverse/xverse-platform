@@ -21,9 +21,24 @@ from .test_boundary import environment as environment
 from .test_launcher import binaries as binaries
 
 
-def failed_run(request, monkeypatch):
+def failed_run(request, monkeypatch, gap=None, keep=None):
+    """gap='required-missing' also removes the workload outputs before collection (finding 472 (b)).
+    keep, when a dict, receives the stack and driver for a later RunClosure (finding 472 (a))."""
     stack, _, driver = scheduled(request, monkeypatch)
     broker, facade, client, work = stack
+    if keep is not None:
+        keep.update(stack=stack, driver=driver)
+    if gap == "required-missing":
+        from xverse.maestro.persistence import PersistenceClient
+        collect = PersistenceClient.collect_outputs
+
+        def without_outputs(self, owner, end):
+            if self is client:
+                for marker in work.glob("*.marker"):
+                    marker.unlink()
+            return collect(self, owner, end)
+
+        monkeypatch.setattr(PersistenceClient, "collect_outputs", without_outputs)
     source, leaf = driver.prepared.resource_order
     killed, statement = [], driver._statement
 
@@ -86,12 +101,15 @@ def test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_exec
     assert facts["report"]["blockers"] == ["terminal-outcome"]
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="DIVERGENT D-09 (finding 444): writer is aborted, not closed, after a failed "
-                                       "execution, so offline overall stays incomplete; author ruling at T01")
 def test_actual_native_failed_lifecycle_is_overall_complete_per_design_branch(request, monkeypatch):
-    """Design branch normal-documented-failure: overall complete, execution failed."""
+    """Design branch normal-documented-failure (C1 kept, findings 468, 471): overall complete, execution failed."""
     result, checked, facts, coverage, open_rows, invalid, leaf_events = failed_run(request, monkeypatch)
-    assert checked.complete, checked
+    writer = facts["writer"]
+    assert facts["report"]["blockers"] == ["terminal-outcome"] and not facts["report"]["eligible"], facts["report"]
+    assert writer["finalize_completed"] and not writer["abort_attempted"] and writer["after_state"] == "closed", writer
+    assert writer["evidence_complete"] and writer["durable_writer_state"] == "closed", writer
+    assert checked.complete and checked.lifecycle.coverage.report()["overallStatus"] == "complete", checked
+    assert not result.execution_succeeded  # factually complete evidence never grants execution success
 
 
 def lost_observation(monkeypatch, unit, generation):
@@ -185,3 +203,34 @@ def test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance(re
     assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
     assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
     assert not rejected, rejected  # the assessor accepts the recorded loss of this generation (findings 448, 462)
+
+
+def closure(keep):
+    from xverse.maestro.run_closure import RunClosure
+    from .test_launcher import deadline
+    broker = keep["stack"][0]
+    return RunClosure(broker.session, dispatcher=keep["driver"]).close(deadline(6))
+
+
+def test_run_closure_reports_no_incomplete_evidence_for_a_documented_failure(request, monkeypatch):
+    """C1 change (4), positive direction (finding 472 (a))."""
+    keep = {}
+    result, checked, facts, *_ = failed_run(request, monkeypatch, keep=keep)
+    assert facts["report"]["blockers"] == ["terminal-outcome"] and facts["writer"]["finalize_completed"], facts
+    closed = closure(keep)
+    assert closed.cleanup_complete and not closed.execution_succeeded, closed
+    assert "ML-CLOSURE-REPORT-INCOMPLETE" not in closed.diagnostics, closed.diagnostics
+    assert not closed.lifecycle_complete and not closed.ready_for_execution
+
+
+def test_failed_run_with_another_gap_still_aborts_and_closure_reports_incomplete(request, monkeypatch):
+    """C1 negative control end to end (finding 472 (a), (b)): a second blocker keeps the abort path."""
+    keep = {}
+    result, checked, facts, *_ = failed_run(request, monkeypatch, gap="required-missing", keep=keep)
+    blockers, writer = facts["report"]["blockers"], facts["writer"]
+    assert "terminal-outcome" in blockers and len(blockers) > 1, blockers
+    assert not writer["finalize_attempted"] and writer["abort_completed"] and writer["after_state"] == "failed", writer
+    assert not writer["evidence_complete"] and not checked.complete
+    closed = closure(keep)
+    assert not closed.execution_succeeded and "ML-CLOSURE-REPORT-INCOMPLETE" in closed.diagnostics, closed
+

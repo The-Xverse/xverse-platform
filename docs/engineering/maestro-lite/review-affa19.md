@@ -1393,3 +1393,37 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     report is otherwise complete changes from abort-completed to finalize-completed, and each such
     change is listed in the next finding before tests are edited; reports with any other blocker
     still abort. Independent review before the C1 acceptance proposal; full run after.
+
+472. C1 candidate result, review and added controls (2026-10-21, evidence/affa19/c1-20261021).
+    Independent read-only review of the 471 diff: PASS, no HIGH item. Items: (1)-(4) no path
+    finalizes a report that is not factually complete; worker and parent evaluate finalizable on
+    byte-identical, ACK-validated fields; nothing treats a closed writer as execution success;
+    the W-01/W-02 abort path is unchanged for every non-finalizable report. (3) leftover:
+    dispatcher.py:1510 still used eligible, so a factually complete failed run with no earlier
+    diagnostic would carry ML-SCHEDULE-EVIDENCE-INCOMPLETE; aligned to finalizable (finding 471
+    (4) is corrected accordingly: the dispatcher's evidence rule now equals RunClosure's; its
+    execution diagnostic is unchanged). (5) MEDIUM, three missing controls, added:
+    (a) test_dv09_native_failed_lifecycle.py::test_run_closure_reports_no_incomplete_evidence_for_a_documented_failure,
+    (b) ::test_failed_run_with_another_gap_still_aborts_and_closure_reports_incomplete (outputs
+    removed before collection: a second blocker keeps abort-completed, writer failed, closure
+    ML-CLOSURE-REPORT-INCOMPLETE), (c) test_c1_failed_finalize_fault.py (failed run under the W-04
+    recovery finalize fault: finalize attempted, the W-04 public states, no evidence
+    completeness). (6) allowlist entry B2 removed (acceptance-inputs/allowlist.json), as 468
+    required; terminal_writer.py docstring updated.
+    Changed tests: the D-09 test loses its xfail(strict) and asserts the design branch (writer
+    finalized and never aborted, offline complete, execution failed); no existing test outside
+    the C1 modules asserts a report whose only blocker is terminal-outcome (grep), so no
+    existing expectation changes.
+    Verification with one installed version (venv of the worktree src, verified equal):
+    D-09 test fails on the head without C1 at the abort (discrimination) and passes with it.
+    C1 unit controls 21 passed. Affected set (18 modules plus the three C1 modules): run 1 at
+    load 14 had 6 failures in test_active_controller_recovery, all F-08/F-09 codes; the baseline
+    arm did not run (collection error of the new C1 module on the old product, expected). Run 2:
+    C1 14 failed / 161 passed at load 5.5 rising to 11, baseline 15 failed / 133 passed at load
+    11; every failure in both arms carries ML-SCHEDULE-TEARDOWN-INCOMPLETE,
+    ML-SCHEDULE-SERVICE-DEADLINE, ML-PERSIST-TIMEOUT or a missing terminal, the load class of
+    467-469; all C1 controls passed. Targeted A/B of the finalize- and closure-related failures
+    of run 2 (terminal runtime changed-output, native writer failures, terminal faults, helper
+    closure, runtime entry, storage-root loss, stream faults), two alternating pairs at load 7.5
+    to 5.3: 26 passed in each of the four runs. Reading: no C1-attributable failure; the run-2
+    failures are load. C1 is a fix candidate; acceptance with increment 19 follows the full run.

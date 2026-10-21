@@ -27,15 +27,19 @@ class TerminalWriterObservation:
 
 
 def close_runtime_writer(writer, root, *, eligible, admission, plan, generation_ns,
-                         expected_admission_digest, expected_runtime_digest, check):
-    """Called only after the original worker independently establishes eligibility.
+                         expected_admission_digest, expected_runtime_digest, check, finalize=None):
+    """Called only after the original worker independently establishes eligibility and finalizability.
 
     This routine has no authority authentication or RPC entry point. Its caller
     must bind the original report ACK and fixed end; it never grants lifecycle
     completion. Only public writer operations and independently accepted closed
     evidence can contribute observations.
     """
-    if type(eligible) is not bool:
+    # finalize: eligible, or a factually complete failed run (finding 471, design branch
+    # normal-documented-failure); it never grants eligibility.
+    if finalize is None:
+        finalize=eligible
+    if type(eligible) is not bool or type(finalize) is not bool or eligible and not finalize:
         raise ValueError('ML-TERMINAL-WRITER-ELIGIBILITY')
     pins=dict(expected_admission_digest=expected_admission_digest,
               expected_runtime_digest=expected_runtime_digest,generation_ns=generation_ns)
@@ -44,7 +48,7 @@ def close_runtime_writer(writer, root, *, eligible, admission, plan, generation_
     before=writer.writer_state
     finalize_attempted=finalize_completed=abort_attempted=abort_completed=False
     usability='unknown';stage='not-open'
-    if before=='open' and eligible:
+    if before=='open' and finalize:
         finalize_attempted=True
         try:
             writer.finalize()

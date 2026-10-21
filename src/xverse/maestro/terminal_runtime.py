@@ -30,7 +30,7 @@ class WorkerTerminal:
         self.runtime_digest=runtime_admission_digest(evidence.coverage,self.plan,evidence.collection_generation_ns)
         self.assessment_scope=RuntimeEvidenceScope(self.plan.canonical_bytes,evidence.collection_generation_ns)
         self.end=None;self.publish_attempted=self.close_attempted=False
-        self.receipt_bytes=None;self.eligible=False
+        self.receipt_bytes=None;self.eligible=self.finalizable=False
 
     def checkpoint(self,deadline,check):
         check(deadline)
@@ -156,6 +156,7 @@ class WorkerTerminal:
             normalComplete=normal,requiredRowsSatisfied=required,collectionComplete=collected,
             terminalSucceeded=terminal,eligible=self.eligible,blockers=blockers,stage=stage,
             annotationCount=annotations,m3Count=records)
+        self.finalizable=finalizable(receipt)
         self.receipt_bytes=canonical(receipt)
         if len(self.receipt_bytes)>65536:raise PersistenceError('ML-TERMINAL-RECEIPT-SIZE')
         return receipt
@@ -168,7 +169,8 @@ class WorkerTerminal:
         e=self.evidence
         observation=close_runtime_writer(e.writer,e.root,eligible=self.eligible,admission=e.coverage,
             plan=self.plan,generation_ns=e.collection_generation_ns,expected_admission_digest=e.coverage.digest,
-            expected_runtime_digest=self.runtime_digest,check=lambda:self.checkpoint(deadline,check))
+            expected_runtime_digest=self.runtime_digest,check=lambda:self.checkpoint(deadline,check),
+            finalize=self.finalizable)
         return dict(reportReceiptDigest=receipt_digest,writer=asdict(observation))
 
 
@@ -178,6 +180,14 @@ class TerminalReceipt:
     lifecycle_complete: bool = field(default=False,init=False)
 
     def public_data(self):return _json(self.public_bytes,65536)
+
+
+def finalizable(report):
+    """Eligible, or factually complete with a failed execution (finding 471)."""
+    return report['eligible'] or (report['blockers']==['terminal-outcome'] and report['entry'] is not None
+        and report['retainedEntry'] is not None and report['stage']=='published'
+        and all(report[k] is True for k in ('normalComplete','requiredRowsSatisfied','collectionComplete'))
+        and report['terminalSucceeded'] is False)
 
 
 def _report_ack(client,body,end):
@@ -227,7 +237,7 @@ def _writer_ack(body,report):
         or row['stage'] not in ('not-open','finalize-completed','finalize-error','flush-error','abort-completed','abort-error')
         or row['abort_usability'] not in ('unknown','usable')
         or row['after_usability']!={'open':'unknown','closed':'not-applicable','failed':'unusable'}[row['after_state']]
-        or row['finalize_attempted'] != (report['eligible'] and row['before_state']=='open')
+        or row['finalize_attempted'] != (finalizable(report) and row['before_state']=='open')
         or row['before_state']!='open' and (row['after_state']!=row['before_state'] or row['stage']!='not-open'
             or any(row[k] for k in ('finalize_attempted','finalize_completed','abort_attempted','abort_completed')))
         or row['abort_attempted']!=(row['abort_usability']=='usable')
