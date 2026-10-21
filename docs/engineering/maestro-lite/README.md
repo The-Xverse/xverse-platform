@@ -1,8 +1,18 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increments 17 and 18 accepted (findings 392, 411) and merged into local main as e65965a95 (finding 412; main not pushed to origin); increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **increments 17 and 18 accepted (findings 392, 411) and merged into main (e65965a95, record merge 557619e0c) and published to origin (findings 412-413); canonical-note paragraph applied; increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Main published and canonical note applied (2026-10-20, finding 413)
+
+Checkpoint 18-8 was merged into main as 557619e0c (documentation only; smoke check: 2104
+collected, 7 F-01/F-02 controls passed), and main was pushed to origin as a fast-forward,
+c2997c0f8..557619e0c. The thesis canonical note received the approved increment18 paragraph in
+Note 23 (note sha256 efe32d7a…; not committed in the thesis repository). Record
+[main-push-and-note-20261020.json](evidence/affa18/main-push-and-note-20261020.json); CAPA successor
+[capa-20261020-affa18-published](evidence/affa18/capa-20261020-affa18-published/register.json)
+(50 records/493 bindings, parent preserved). This section is on the candidate branch only.
 
 ## Increments 17 and 18 merged into main (2026-10-20, finding 412)
 

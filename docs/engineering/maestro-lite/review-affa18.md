@@ -462,3 +462,22 @@ candidate/maestro-lite-affa18-20261020, worktree
     Main is **not pushed** to origin; publishing main to the shared remote is a separate author
     decision. Carried open unchanged (finding 411). Not covered: lane activation, M1, factory
     runs, canonical-note edits and scientific claims.
+
+413. Publication of main and canonical-note application, 2026-10-20 (author text "Push main to
+    origin and approve note"). (a) Main: checkpoint 18-8 (051b6abc6, documentation only:
+    finding 412, the merge record and the CAPA merge successor) was merged into
+    /home/jefferson/xverse-platform main with --no-ff (557619e0c; tree equal to the candidate
+    tree; the diff against e65965a95 touches only docs/). Smoke from the main checkout: 2104
+    collected, F-01/F-02 controls 7 passed. A fresh fetch showed origin/main still at
+    c2997c0f8; `git push origin main` published c2997c0f8..557619e0c as a fast-forward (no
+    force); origin/main now equals local main. The author's four untracked files in main are
+    untouched. Main carries the record through finding 412; this finding lives on the
+    candidate branch. (b) Canonical note: the thesis repository's
+    notes/dynamic_thesis_notes.md (freshness check clean: no upstream note change, sha256
+    a1bbca90… before) received, in Note 23, the verbatim paragraph of
+    canonical-note-update-proposal-affa18.md (fbb7ed0e…) under a new dated subsection with
+    status AUTHOR-APPROVED ENGINEERING CONTEXT, a factual status update naming the two merge
+    commits and the push, a minimal update of Note 23's status line, and one change-log row;
+    the author's pre-existing uncommitted note diffs are preserved and nothing was committed
+    in the thesis repository. Note sha256 after: efe32d7a…a711. Not covered: lane activation,
+    M1, factory runs and scientific claims.

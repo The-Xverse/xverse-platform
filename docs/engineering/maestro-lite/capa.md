@@ -352,3 +352,8 @@ Increment18: the [merge successor](evidence/affa18/capa-20261020-affa18-merge/re
 bindings. It binds the merge record of increments 17 and 18 into local main (finding 412, merge
 commit e65965a95, main not pushed) and review span 411, and sets merged true at the top level and in
 the increment18 block. No record state, cause or effectiveness changes.
+
+Increment18: the [published successor](evidence/affa18/capa-20261020-affa18-published/register.json)
+(a6b6c4354d2db6a4…) validates 50 records/493 bindings and preserves all 491 merge parent bindings.
+It binds the publication of main to origin (557619e0c) and the canonical-note application (finding
+413) and review span 412. No record state, cause or effectiveness changes.
