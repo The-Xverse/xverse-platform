@@ -523,3 +523,155 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     granularity is recorded as an observation, not a defect: the behaviour fails closed as
     DV03-N requires. Files: test_permit_release_path.py sha 3d75f3ae…, test_readiness_dispositions.py
     sha 454031a7…. No product source changed (src/ is identical to c3a9213a1 after revert 1dac853ff).
+
+437. Expectations for the remaining step-2 rows, recorded before any of the new tests first runs
+    (2026-10-21). Rows from the coverage detail (0ff30783…): DV05 n1/n4/n5/n9, DV06 n1/n5/n8,
+    DV09 p1, DV10 n10. Design row DV05-N: independent deadline, fail-closed fence, no detached
+    worker, unresolved if containment cannot release. SLACK 0.5 s is a harness allowance.
+    test_dv05_dv06_bounds.py:
+    (n1, never-returning probe) Provider stack. The issuer of a released unit is SIGSTOPped, then
+    the dependent's start is attempted. Expected: it raises within min(probe policy timeout,
+    observe action timeout) + SLACK and before the original deadline; the thread set is
+    unchanged (no detached worker); the latch is cancelled; no dependent marker.
+    (n9, one dropped Cancel delivery) Gates join owner._gates only when Release is attempted, so
+    the window is after the gate's ARM exchange. owner.cancel runs there with the first
+    GateConnection.cancel delivery dropped (never reaches the native guard). Expected: Release
+    raises; no workload byte; the guard still exits 0 with the boundary frozen, either through a
+    later redundant delivery or at its own lease end plus the freeze reserve (which one is
+    recorded); force cleanup observes termination.
+    (n5, never-returning collect) Collection runtime after a normal teardown. The persistence
+    worker is SIGSTOPped as the first collect RPC is sent. Expected: collect_outputs raises
+    within its deadline + SLACK; the client is failed with no collection outcome; a second
+    collect makes no new RPC; the stopped worker is reaped by drain.
+    (n4, never-returning cleanup) The C1 operations (ProcessBoundaryOps release_empty and
+    force_cleanup) are in-process cgroupfs syscalls with no stall point an owned fixture can
+    construct (cgroup.kill also kills stopped tasks; no uninterruptible-sleep facility), so the
+    stalled operation is the native authority's RETIRE inside the cleanup phase (authority
+    SIGSTOPped on the first retire_owned). Expected: ReverseTeardown returns or raises within
+    its deadline + SLACK and normal records are not complete. RunClosure then reaps every helper
+    including the stopped authority, and every boundary is empty and released (containment can
+    release, so not unresolved); the lifecycle is not complete.
+    (DV06 n1, Cancel during restart quiescence) Active-restart fixture with a leaf restart
+    ticket. driver.cancel runs either before the quiesce stop phase or between its stop and
+    cleanup phases. Expected: restart disposition not completed; run not successful; latch
+    cancelled; M3 records only generation 1; the generation-2 permit is not consumed; no new
+    teardown generation; closure complete with helpers reaped and boundaries empty and released.
+    (DV06 n8, PID reuse) Read-only finding: no product source signals by PID number (pidfd and
+    cgroup.kill only); the only native waitpid calls (run_authority.c:135, catalog_launcher.c:94)
+    target the caller's own clone3 child before it is reaped, and the kernel keeps that number
+    reserved until then. A recycled number therefore has no target. A static guard test pins
+    this. A forced recycle is not constructed (it would need a privileged pid-namespace facility
+    and could show nothing beyond the static fact).
+    (DV06 n5, TERM ignored then admitted force) Not applicable to catalog workloads: workload
+    teardown sends no SIGTERM and goes straight to cgroup.kill (prbc.py force_cleanup,
+    run_authority.c). The TERM-then-KILL escalation exists only for helper and worker processes
+    and is already controlled (test_persistence unresponsive_to_term, test_supervisor). Recorded
+    for the T01 reconciliation, not approximated.
+    test_dv09_native_failed_lifecycle.py (DV09 p1): scheduled native stack. The sink workload's
+    own cgroup.kill is written by the test right after start-sink completes (an external crash).
+    Expected: the run does not succeed; the terminal is recorded; unit cleanup is complete; the
+    independent offline verification is complete (every lifecycle obligation of a failed run is
+    recorded) while the execution outcome stays failed. If verification is incomplete, the
+    missing obligations are recorded as a finding (failure path not complete, or the row not
+    constructible this way); the assertion is not weakened.
+    test_native_storage_faults.py C5 (DV10 n10, every report write failing): the test-only
+    interposer gains a compile-time OWNED_PREFIX mode (directory target, every regular file
+    below it; C0-C4 compile with OWNED_PREFIX 0 and are unchanged; passed writes are traced
+    only after arming in prefix mode), armed in role 3 when WorkerTerminal.publish begins.
+    Expected: injected ENOSPC with the native call never made; no report file (or an empty
+    one); the report is not eligible if any terminal facts exist; offline verification not
+    complete; closure as in closed_cleanly; lifecycle not complete.
+    Quiet-host service-time capture (for the F-08/F-09 redesign): rpc_timeline_plugin.py and
+    calibrate.sh in evidence/affa19/service-time-calibration. An observation-only autouse
+    wrapper of PersistenceClient._rpc records kind, action, sent budget, service time and
+    diagnostic for six modules (dispatcher, terminal_runtime, teardown, time_context_controls,
+    active_restart, shared_dispatcher) on the unmodified stack (src == c3a9213a1). The new tests
+    are not run while the capture is running.
+
+438. Quiet-host service times and the F-08/F-09 v2 repair scope (2026-10-21), recorded before
+    any product edit. Capture (finding 437 method, src == c3a9213a1): 9 repeats of the six
+    modules at 1-minute load 3.7 to 5.3, 603 test runs, every test passing, 20 286 persistence
+    requests (evidence/affa19/service-time-calibration/quiet-20261021: timelines.tar.gz, logs,
+    summary.json sha b00a8065…, replay.json sha 87d5e797…, SHA256SUMS). Service time depends strongly on the
+    request type. p50/p99/max in ms: schedule step-complete 40/145/190, step-dispatch 23/88/135,
+    tick-complete 24/53/78, run-terminal 53/126/181, unit-disposition 54/110/128; teardown
+    record 31/76/118; probe 18/56/80; commit 28/63/84; init 298/457/612. Finding 428 measured
+    two to five times these values at load 11-13 (step-complete 210-250, tick-complete 40-100).
+    A single constant cutoff therefore either refuses quiet-host sends or misses loaded ones;
+    the full 0.5 s budget of 8184a2b15 is far above every quiet p99 except init, which matches
+    its A/B result (finding 434). Late requests (ML-PERSIST-TIMEOUT/SENDER/LATE): 48. Of these,
+    45 are designed stalls in five negative tests (9 each: restart controller-loss, two stalled
+    tick workers, the teardown flush hang, the missing record/ack case), and 3 are the T3
+    active-end tick-complete, sent with 41.6, 2.5 and 42.7 ms left after earlier tick-completes
+    in the same run had taken 52.9 to 58.9 ms. Offline replay (replay.py; estimates only,
+    downstream effects ignored) of rules that use only information available before the send:
+    "refuse when the remaining budget is below the longest round trip this run has already
+    observed for the same request type" prevents those 3 and refuses 1 request that in fact
+    succeeded (also a T3 active-end tick-complete, 45.7 ms left, 58.5 ms seen; refusing it gives
+    the designed clean end). Factors 1.5 and 2 refuse 5 and 10 successful requests (the second
+    also in the paused-shared teardown), and "2 x last" refuses 6. The budget-probe tails under
+    load (finding 428) show the same pattern: run 2 sent step-complete with 0.120 s left after
+    step-completes of about 0.19 s, and it timed out.
+    Scope of candidate v2 (ML-CAPA-418), in place of the withdrawn 429 rule: (F-08)
+    FiniteDispatcher._send refuses a schedule or tick statement with ML-SCHEDULE-SERVICE-DEADLINE,
+    before sending, when deadline minus now is below the longest round trip this dispatcher has
+    already observed for that statement kind; after each successful call it updates that
+    maximum. _end is not changed, so the restart pre-check (433 item 3), the double statement/
+    effect evaluation (item 4), the recovery path (item 6) and the effect deadlines are exactly
+    as at c3a9213a1. The first statement of a kind has no estimate and is sent as before. (F-09)
+    ReverseTeardown._record applies the same rule to teardown records with
+    TeardownError ML-TEARDOWN-RECORD-BUDGET and a per-teardown maximum, in place of the
+    factor-2 closing-record check. The refusal raises at the same call sites as the existing
+    _end refusal and the existing record errors, so no new handling path is added. No
+    constant, admission formula, window, budget, lease or protocol changes. Expected effects,
+    to be verified: (i) the focused smoke and the six calibration modules pass on a quiet host;
+    (ii) in an interleaved A/B against the branch without a repair (src == c3a9213a1), arm B
+    has no ML-PERSIST-TIMEOUT on schedule or teardown requests outside designed stalls and no
+    failure class absent from arm A; pass rates under load are recorded, not claimed; (iii) an
+    independent read-only review of the diff before any acceptance proposal. Acceptance stays
+    with the author.
+
+439. First run of the finding-437 controls (2026-10-21, load 4.2 to 4.4, src == c3a9213a1,
+    evidence/affa19/dv05-dv10-20261021 run1.log, dv09-rows*.log, SHA256SUMS): 8 of 9 pass.
+    (n1 probe) Raised ML-LAUNCH-TIMEOUT after 1.0006 s against a probe bound of 1.0 s, with 3.89 s
+    of the original deadline left; thread set unchanged. (n9 dropped Cancel) The first delivery
+    (owner.cancel) was dropped. A second, redundant delivery came at once from the owner's own
+    release-uncertain path, so the guard exited 0 with the boundary frozen before its lease end.
+    Release raised ML-PERSIST-NOT-OPEN with no workload byte. The lease fallback was not needed
+    and is therefore not shown by this case (test_lease_loss shows it alone). (n5 collect)
+    ML-PERSIST-TIMEOUT 1.49 s before the collect deadline (the per-request collection operation
+    bound); client failed, no outcome, no second RPC, worker reaped. (n4 cleanup) Authority
+    stopped at the sink's RETIRE: teardown returned 2.5 s before its deadline. Sink: emergency,
+    cleanup complete. Source: emergency, ML-TEARDOWN-NORMAL-INCOMPLETE. Closure reaped every
+    helper and left every boundary empty and released, with cleanup_complete False and
+    ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN, the same as the storage-loss contract of finding 426.
+    (DV06 quiescence) before-stop: restart failed ML-TEARDOWN-CLOSED; between: failed
+    ML-SCHEDULE-CANCELLED. Both: generation 1 only, generation-2 permit not consumed, closure
+    complete. (PID static guard) passes. (C5 all report writes) 2 injected ENOSPC, no report, no
+    retained entry, blocker "publication". Writer: abort attempted, not completed, usability
+    after the fault unknown; reader diagnostics name the corrupt and missing artifacts. The
+    execution itself succeeded and is reported separately (diagnostic
+    ML-SCHEDULE-EVIDENCE-INCOMPLETE). Closure made no request.
+    (DV09 p1) FAILED, product defect F-10, recorded before any repair. The sink was killed after
+    start-sink completed. The run failed (ML-RUN-CHILD-EXIT), the terminal was recorded, unit
+    cleanup was complete, collection was complete, and M3 holds stop/cleanup intents and the
+    stopped/cleaned outcomes for both units. Every lifecycle row is satisfied except one:
+    ob.input-integrity is conflicting with "invalid/missing source or annotation", so
+    normalRecordStatus and overallStatus are incomplete. Cause: the schedule failure path for a
+    missing observation (schedule_evidence.py:641-668) emits health-loss with outcome "unknown"
+    backed by a logical M3 observation with status "unknown". The design allows exactly that
+    (payload-options.md:95, payload-samples.json: health-loss outcomes failed, unknown), and
+    coverage.py:359 already accepts it as a terminal annotation. The source check
+    (coverage.py:531), however, maps every non-succeeded probe/ready/health/health-loss
+    outcome to the M3 status set {"not-ready"}, so this event is marked conflicting and turns
+    the integrity row conflicting. The design branch "normal-documented-failure"
+    (coverage-expected-tables.json) expects a failed run with exact teardown and collection to
+    be normal-complete and overall-complete with execution failed ("a failed run can be
+    factually complete"). Native failed runs that lose an observation therefore can never be
+    assessed complete. Repair scope (product, ML-CAPA-418 successor): at coverage.py:531 the
+    M3 status set for a health-loss event with outcome "unknown" becomes {"unknown"}. Every
+    other pair is unchanged: succeeded->running, other non-succeeded->not-ready, and every other
+    source_ok condition (action id, execution id, digests, generation). Expected: DV09 p1 passes
+    with overall complete and execution failed; the existing coverage, collection, terminal and
+    DV09 controls are unchanged. Until the repair, the DV09 p1 test is marked xfail(strict) with
+    this finding as its reason.

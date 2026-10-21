@@ -1,6 +1,7 @@
 /* OWNED TEST ONLY (finding 424): persistent ENOSPC from write() on one exact public path.
  * Simulates a full file system at the write call; the kernel is not called for an injected write.
- * Every other descriptor and every close passes through unchanged. */
+ * Every other descriptor and every close passes through unchanged. With OWNED_PREFIX (finding 437)
+ * the target is a directory and every regular file below it is selected, for the all-report-writes case. */
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -52,6 +53,10 @@ static int matching(int fd) {
     if (size <= 0 || (size_t)size >= sizeof(path)) return 0;
     path[size] = 0;
     struct stat descriptor, target;
+#if OWNED_PREFIX
+    return !strncmp(path, OWNED_TARGET "/", strlen(OWNED_TARGET "/"))
+        && !fstat(fd, &descriptor) && S_ISREG(descriptor.st_mode);
+#endif
     return !strcmp(path, OWNED_TARGET) && !fstat(fd, &descriptor)
         && !fstatat(AT_FDCWD, OWNED_TARGET, &target, AT_SYMLINK_NOFOLLOW)
         && S_ISREG(descriptor.st_mode) && S_ISREG(target.st_mode)
@@ -69,7 +74,7 @@ ssize_t write(int fd, const void *buffer, size_t count) {
     errno = saved;
     long result = syscall(SYS_write, fd, buffer, count);
     saved = errno;
-    if (selected) record("write", "passed", count, 1, result, result < 0 ? saved : 0);
+    if (selected && (!OWNED_PREFIX || armed)) record("write", "passed", count, 1, result, result < 0 ? saved : 0);
     errno = saved;
     return (ssize_t)result;
 }

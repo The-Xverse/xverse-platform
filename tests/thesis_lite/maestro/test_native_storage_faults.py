@@ -34,6 +34,7 @@ CASES = {
     'C2-m3-outcome-write': ('m3.jsonl', 0, 'm3-outcome'),
     'C3-m3-stop-write': ('m3.jsonl', 0, 'm3-stopped'),
     'C4-argus-open': ('argus/events.jsonl', 1, 'load'),
+    'C5-all-report-writes': ('argus', 0, 'terminal-report'),  # prefix: every file under argus/ (finding 437)
 }
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 
@@ -59,6 +60,15 @@ library.owned_storage_arm.argtypes=[];library.owned_storage_arm.restype=None
 log('loader',image_sha256=image_hash,seals=seals)
 append_event=EvidenceRun.append_event
 journal_append=FileEvidenceJournal.append
+from xverse.maestro.terminal_runtime import WorkerTerminal
+terminal_publish=WorkerTerminal.publish
+def publish(self,*args,**kwargs):
+    if rule=='terminal-report':
+        library.owned_storage_arm();log('armed',at=rule)
+    try:return terminal_publish(self,*args,**kwargs)
+    except Exception as error:
+        log('terminal-publish-raised',error=type(error).__name__,code=str(error)[:64]);raise
+WorkerTerminal.publish=publish
 def event(self,*args,**kwargs):
     payload=(kwargs.get('extensions') or {}).get('xverse.maestro') or {}
     if rule=='argus-ready' and payload.get('action')=='ready':
@@ -92,6 +102,7 @@ def run_bootstrap_binary(request, tmp_path):
     source = Path(__file__).with_name('owned_storage_fault.c')
     header = root / 'owned-storage-fault-config.h'
     header.write_text('#define OWNED_ARM_AT_LOAD ' + str(at_load) + '\n'
+                      + '#define OWNED_PREFIX ' + str(int(rule == 'terminal-report')) + '\n'
                       + '#define OWNED_TARGET ' + json.dumps(str(target)) + '\n'
                       + '#define OWNED_TRACE ' + json.dumps(str(native_trace)) + '\n')
     library = root / 'owned-storage-fault.so'
@@ -189,7 +200,8 @@ def closed_cleanly(broker, driver, client, monkeypatch):
     return closure
 
 
-@pytest.mark.parametrize('run_bootstrap_binary', [c for c in CASES if c != 'C4-argus-open'], indirect=True)
+@pytest.mark.parametrize('run_bootstrap_binary', [c for c in CASES if c not in ('C4-argus-open', 'C5-all-report-writes')],
+                         indirect=True)
 def test_storage_full_inside_the_original_worker_fails_closed(request, monkeypatch, run_bootstrap_binary):
     case = request.node.callspec.params['run_bootstrap_binary']
     stack, _, driver = scheduled(request, monkeypatch)
@@ -239,3 +251,30 @@ def test_argus_open_failure_rejects_before_any_release(request, monkeypatch, run
                           markers=sorted(p.name for p in tmp_path.rglob('*.marker'))))
     assert any(r['action'] == 'injected-before-syscall' and r['errno'] == 28 for r in native)
     assert not list(tmp_path.rglob('*.marker'))
+
+
+@pytest.mark.parametrize('run_bootstrap_binary', ['C5-all-report-writes'], indirect=True)
+def test_every_report_write_failing_leaves_no_report_and_closes_honestly(request, monkeypatch, run_bootstrap_binary):
+    """DV10-N all-report-writes (finding 437): armed when the worker begins the terminal publish."""
+    stack, _, driver = scheduled(request, monkeypatch)
+    broker, _, client, work = stack
+    result = run(driver)
+    public, native = traces(work)
+    faults = [r for r in native if r['action'] == 'injected-before-syscall']
+    passed = [r for r in native if r['action'] == 'passed']
+    admission = json.loads(client.coverage.public_bytes)
+    report = work.parent / 'argus' / admission['reportPath']
+    facts = result.terminal.public_data() if result.terminal is not None else None
+    print('CASE C5', dict(succeeded=result.execution_succeeded, terminal=result.terminal_recorded,
+                          diagnostic=result.diagnostic, failed=client._failed, faults=len(faults),
+                          passed_after_arm=len(passed), armed=[r for r in public if r['operation'] == 'armed'],
+                          raised=[r for r in public if r['operation'].endswith('raised')],
+                          report_exists=report.exists(), terminal_facts=facts,
+                          m3=[(r['kind'], r['status']) for r in m3(work)]))
+    assert [r['at'] for r in public if r['operation'] == 'armed'] == ['terminal-report']
+    assert faults and all(f['errno'] == 28 and not f['native_called'] for f in faults)
+    assert not report.exists() or report.stat().st_size == 0
+    assert facts is None or not facts['report']['eligible']
+    assert not verify(client, work.parent / 'argus').complete
+    closure = closed_cleanly(broker, driver, client, monkeypatch)
+    assert not closure.lifecycle_complete
