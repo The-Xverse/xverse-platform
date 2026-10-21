@@ -483,3 +483,43 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     statement/effect pair) is a successor candidate with its own review and A/B. The wait helper
     used during the run matched its own command line in pgrep -f and was stopped by hand. It
     did not affect the driver.
+
+435. First run of the DV04 and DV03 files of findings 431 and 432 (2026-10-21, load 4.4 to 5.0,
+    log evidence/affa19/dv03-dv04-20261021/run1.log sha a5d93968…). DV04: 3 of 3 modes pass as
+    expected. dead and final-guard end ML-LAUNCH-CHILD-EXIT; unknown-health ends
+    ML-LAUNCH-TIMEOUT. In every mode start-sink is failed, observe/stop/cleanup are blocked, the
+    sink marker is absent, cleanup is complete and the run returns before the terminal deadline.
+    DV03: 3 of 3 fail, each against an expectation of finding 432, not against the product.
+    (P1) The intent deadline of 8 s lies past the fixture's teardown deadline. commit_intent
+    refuses it with ML-OWNER-DEADLINE (owner.py:722) before any stimulus, so the test never
+    reached the expiry. (P2) A permit that is not yet valid is already rejected when the
+    configuration is sealed (encode_configuration -> validate_permits, ML-PERMIT-M3
+    XVERSE-PERMIT-NOT-YET-VALID), before any worker exists. With validity checked at sealing and
+    a monotonic clock, "not yet valid at claim" cannot be constructed on the Release path. That
+    item of 432 is reclassified to a seal-level rejection with zero effect, and the Release-path
+    variant is recorded as not constructible. (P3) The killed worker makes client.abort raise
+    ConnectionResetError, not ValueError. _rpc records the RPC failure, calls _fail() and
+    re-raises (persistence.py:814-834). The product callers catch (ValueError, OSError)
+    (teardown.py:378-508), so this matches the contract and the expectation was too narrow.
+    Repairs, tests only: P1 uses the 4 s intent deadline that P3 already uses successfully; P2
+    asserts the seal-time rejection and that no worker or journal is created; P3 accepts
+    ValueError or OSError and also asserts that the client is failed.
+
+436. DV03 repairs of finding 435 and one further deviation (2026-10-21, load 2.9 to 5.0, logs in
+    evidence/affa19/dv03-dv04-20261021/ with SHA256SUMS). After the P1 and P2 repairs, run2 has
+    P1 and P2 passing. P3 failed at the second start(): ML-PERSIST-CLOSED
+    (persistence.py:724), because the first worker's failure had cancelled the run's latch.
+    That is correct product behaviour (inside one run a cancelled latch refuses any new
+    original worker), but it shows that the test of 432 never reached a restart. The fixture's
+    start() is bound to one run boundary. P3 now asserts the same-run refusal and then performs
+    the restart proper: a fresh run boundary (environment factory, new manager and latch, same
+    run id) opens a new original worker on the same M3 journal through a local helper that
+    mirrors start() without fault modes. Observed in run3 and five repeats (rep1-rep5, 6 of 6
+    nodes passing each time): the new worker refuses at init, and the client sees
+    ML-PERSIST-ACK. The journal record count is unchanged, so no claim exists and Release cannot
+    be reached. The refusal comes from the worker's PermitSession construction (consumed permit
+    or unresolved intent, admission.py:562,567). The client-side code is the generic
+    ML-PERSIST-ACK, so the evidence cannot say which of the two fired. That diagnostic
+    granularity is recorded as an observation, not a defect: the behaviour fails closed as
+    DV03-N requires. Files: test_permit_release_path.py sha 3d75f3ae…, test_readiness_dispositions.py
+    sha 454031a7…. No product source changed (src/ is identical to c3a9213a1 after revert 1dac853ff).
