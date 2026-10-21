@@ -1758,3 +1758,12 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     load seen today; active-window exhaustion (outer bound) and the unwidened restart path remain.
     Next: commit E1 (budget3 state plus the 484 comment and ADR corrections), CAPA step 4, then
     the full installed-wheel run on the final head under the quiet-host watcher (469 (3), E3).
+
+486. CAPA successor step 4 (2026-10-21, evidence/affa19/capa-20261021-affa19-step4, builder
+    build-capa-20261021-affa19-step4.py), parent step 3 (dc3a67a8…), additive: review spans
+    473-485, the gate repair and refusal controls (dabf858a5), the E1 patch (897d9dc50 against
+    its parent), the budget evidence and A/B e/f. ML-CAPA-418 (F-08/F-09) stays FIX_CANDIDATE, now
+    on E1 (load-aware interior budgets) with v2 kept as the last pre-send check; three reviews
+    (FAIL, FAIL, PASS) and the natural-load A/Bs e and f; effectiveness not claimed beyond the
+    observed load. ML-CAPA-359 notes E1 as its tracked correction (cause still HYPOTHESIS). No
+    record closed, no cause verified. This finding is bound by the next successor.
