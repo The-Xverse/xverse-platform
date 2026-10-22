@@ -443,10 +443,11 @@ class _Assessment:
                 if stamp.tzinfo is None or stamp.utcoffset() is None:raise ValueError('unqualified source UTC')
             except (TypeError,ValueError):self.errors.append('public M3 timestamp');continue
             self.sources[index]=record
-        ordinals=set();sequences=set();self.fault_events=[]
+        ordinals=set();sequences=set()
         for e in self.events:
-            if type(e) is dict and type(e.get('extensions')) is dict and 'io.xverse.faults' in e['extensions'] and e.get('producerId')=='xverse.faults':
-                self.fault_events.append(e);continue  # Phase 5 fault evidence is not lifecycle coverage
+            if (type(e) is dict and e.get('producerId')=='xverse.faults' and type(e.get('extensions')) is dict
+                    and set(e['extensions'])=={'io.xverse.faults'}):
+                continue  # Phase 5 fault evidence is not lifecycle coverage (checked by xverse.faults.evidence)
             total+=len(canonical(e))
             if total>MAX_BYTES:raise CoverageError('ML-COVERAGE-SOURCE-SIZE')
             if (type(e) is not dict or set(e)!=FIELDS or len(canonical(e))>65536 or not _identifier(e.get('eventId'))

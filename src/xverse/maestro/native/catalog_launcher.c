@@ -115,16 +115,17 @@ static int write_freeze(struct launcher *g,char value) {
     ssize_t n=write(fd,&value,1);close(fd);return n==1?0:-1;
 }
 static unsigned owned_fault(struct launcher *g,unsigned kind) {
+    /* 0 done, 6 refused (nothing changed; a timed-out freeze/thaw is rolled back first),
+     * 7 indeterminate (rollback failed): the caller fails closed. */
     if(g->child<=0||g->reaped||!alive(g->childfd))return 6U;
     if(kind==FAULT_KILL)return syscall(SYS_pidfd_send_signal,g->childfd,SIGKILL,NULL,0)?6U:0U;
-    char value=kind==FAULT_FREEZE?'1':'0';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
+    char value=kind==FAULT_FREEZE?'1':'0',undo=kind==FAULT_FREEZE?'0':'1';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
     if(write_freeze(g,value))return 6U;
     for(int i=0;i<200;i++){
-        if(field(g,"cgroup.events","frozen",&frozen))return 6U;
-        if(frozen==want)return 0U;
+        if(!field(g,"cgroup.events","frozen",&frozen)&&frozen==want)return 0U;
         struct pollfd p={.fd=g->childfd,.events=POLLIN};poll(&p,1,1);
     }
-    return 6U;
+    return write_freeze(g,undo)?7U:6U;
 }
 static int respond(struct launcher *g,unsigned kind,unsigned reason,int transfer) {
     unsigned char p[PACKET]={0};memcpy(p,"LC09",4);p[7]=(unsigned char)kind;
@@ -285,7 +286,7 @@ int main(int argc,char **argv) {
             if(get64(p+80)!=(uint64_t)g.child||memcmp(p+88,g.token,32))return cleanup(&g);
             if(kind==CANCEL){int result=cleanup(&g);respond(&g,CANCELLED,result?6U:0U,-1);return result;}
             if(kind==QUERY){if(respond(&g,OBSERVED,0,-1))return cleanup(&g);}
-            else{unsigned reason=owned_fault(&g,kind);if(respond(&g,FAULTED,reason,-1))return cleanup(&g);}
+            else{unsigned reason=owned_fault(&g,kind);if(reason==7U||respond(&g,FAULTED,reason,-1))return cleanup(&g);}
         }else return cleanup(&g);
     }
 }

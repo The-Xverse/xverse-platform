@@ -537,6 +537,9 @@ class FiniteDispatcher(_Original):
         )
         self._steps = {s.step_id: s for s in self.prepared.steps}
         self._faults = None  # Phase 5 scheduler, built at begin when the prepared lifecycle has faults
+        self._fault_entries = {}
+        self._fault_unit = None  # unit terminated by an applied crash fault
+        self._fault_best_effort = False
         # One per-run estimator shared with every teardown (ADR-ML3-BUDGET-0001).
         self._times = ServiceTimes()
         self.teardown = ReverseTeardown(
@@ -1296,30 +1299,56 @@ class FiniteDispatcher(_Original):
                 unit = f"{entry.target_uri}#componentInstances/{entry.target_element}"
                 boundaries[key] = ProcessBoundary(
                     entry.target_element, _LauncherFaultOperations(self, unit),
-                    intend=lambda entry_id, tick, unit=unit: self.facade.terminate_by_fault(unit, entry_id))
+                    intend=lambda entry_id, tick, unit=unit: self.facade.terminate_by_fault(unit, entry_id),
+                    retract=lambda entry_id, unit=unit: self.facade.retract_termination(unit, entry_id))
             elif entry.target_collection == "flows":
                 boundaries[key] = MessageRelayBoundary(entry.target_element, seed=seed)
             else:
                 boundaries[key] = ObservationRelayBoundary(entry.target_element)
         self._fault_boundaries = boundaries
+        self._fault_entries = {entry.entry_id: entry for entry in entries}
         self._faults = FaultScheduler(self.client.run_id, entries, boundaries, self.plan.ticks, seed=seed,
                                       listener=_FaultStatements(self))
         for entry in entries:
+            mode = ("owned-process" if entry.boundary_class == "process"
+                    else "owned-relay-fixture-no-traffic" if entry.executable else "declared-only")
             self._send("fault", self._end(), entry=entry.entry_id, fault=entry.fault_id, faultKind=entry.fault_kind,
                        phase="intent", outcome="declared", tick=self._tick, diagnostic=None,
                        detail={"dueTick": entry.due_tick, "effectiveTick": entry.effective_tick,
-                               "durationTicks": entry.duration_ticks, "executable": entry.executable})
+                               "durationTicks": entry.duration_ticks, "executable": entry.executable,
+                               "boundaryClass": entry.boundary_class, "boundaryMode": mode,
+                               "parameters": dict(entry.parameters.values)})
         self._faults.start()
         if self._faults.run_failed:
             raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
 
     def _advance_faults(self):
-        """Run the scheduler for the current tick; a refused application ends the run as declared."""
+        """Run the scheduler for the current tick; a refused application ends the run as declared.
+
+        An applied crash ends the run at once as a documented failure of the crashed unit
+        (``recovery: manual``; D5-2 open): the failure statement carries the unit and the
+        diagnostic ``ML-SCHEDULE-TERMINATED-BY-FAULT``, and teardown reaps the killed child."""
         if self._faults is None:
             return
-        self._faults.advance(self._tick)
+        decisions = self._faults.advance(self._tick)
         if self._faults.run_failed:
             raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
+        for decision in decisions:
+            entry = self._fault_entries.get(decision.entry_id)
+            if entry is not None and entry.fault_kind == "crash" and decision.phase == "apply" and decision.outcome == "applied":
+                self._fault_unit = f"{entry.target_uri}#componentInstances/{entry.target_element}"
+                raise OwnerError("ML-SCHEDULE-TERMINATED-BY-FAULT")
+
+    def _cancel_faults(self, reason):
+        """Best effort on any failure: clear every active fault (thaw frozen units) and close every
+        entry as cancelled; statements that cannot be sent any more are skipped, not retried."""
+        if self._faults is None:
+            return
+        self._fault_best_effort = True
+        try:
+            self._faults.cancel(self._tick, reason)
+        except Exception:
+            pass
 
     def _finish_faults(self):
         """Finalize every entry at the horizon; an incomplete clearing is a documented failure."""
@@ -1597,14 +1626,17 @@ class FiniteDispatcher(_Original):
                     failure.unit_id
                     if failure
                     else (
-                        current.unit_id
+                        self._fault_unit
+                        if self._fault_unit and not self._cancel_requested
+                        else current.unit_id
                         if current and not self._cancel_requested
                         else None
                     )
                 )
                 phase = (
-                    "observe" if failure else (current.phase if current else "prepare")
+                    "observe" if failure or self._fault_unit else (current.phase if current else "prepare")
                 )
+                self._cancel_faults("run-failed" if not self._cancel_requested else "cancelled")
                 self.owner.cancel("dispatcher-failed")
                 try:
                     self._send(
@@ -1833,6 +1865,10 @@ class _FaultStatements:
 
     def decision(self, entry, decision):
         dispatcher = self._dispatcher
-        dispatcher._send("fault", dispatcher._end(), entry=entry.entry_id, fault=entry.fault_id,
-                         faultKind=entry.fault_kind, phase=decision.phase, outcome=decision.outcome,
-                         tick=decision.tick, diagnostic=decision.diagnostic, detail=dict(decision.detail))
+        try:
+            dispatcher._send("fault", dispatcher._end(), entry=entry.entry_id, fault=entry.fault_id,
+                             faultKind=entry.fault_kind, phase=decision.phase, outcome=decision.outcome,
+                             tick=decision.tick, diagnostic=decision.diagnostic, detail=dict(decision.detail))
+        except Exception:
+            if not dispatcher._fault_best_effort:
+                raise

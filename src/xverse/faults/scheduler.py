@@ -74,7 +74,7 @@ class FaultScheduler:
 
         self.run_id = run_id
         self.seed = int(seed)
-        self._ticks = tuple(planned_ticks)
+        self._ticks = tuple(sorted(set(planned_ticks)))  # pauses repeat a tick; decisions are idempotent per tick
         self._boundaries = dict(boundaries)
         self._states: dict[str, _State] = {entry.entry_id: _State(entry) for entry in entries}
         self._listener = listener
@@ -197,8 +197,10 @@ class FaultScheduler:
         state.entry_clear_at = effective_tick(window_end, self._ticks) if window_end > tick else tick  # type: ignore[attr-defined]
         self._record(tick, state, "apply", APPLIED, effective_tick=tick, window_end=window_end, clear_at=state.entry_clear_at)
 
-    def _clear(self, state: _State, tick: int, *, superseded_by: str | None = None) -> None:
-        """Clear ``state`` at ``tick``; failure blocks the target and marks the run incomplete."""
+    def _clear(self, state: _State, tick: int, *, superseded_by: str | None = None, finalize: bool = True) -> None:
+        """Clear ``state`` at ``tick``; failure blocks the target and marks the run incomplete.
+
+        With ``finalize`` false the caller sets the final outcome (cancellation)."""
 
         outcome = state.boundary.clear(state.handle, tick)
         if not outcome.ok:
@@ -214,7 +216,8 @@ class FaultScheduler:
             self._finalize(tick, state, CANCELLED, "XVERSE-FAULT-SUPERSEDED", superseded_by=superseded_by)
         else:
             self._record(tick, state, "clear", CLEARED)
-            self._finalize(tick, state, CLEARED)
+            if finalize:
+                self._finalize(tick, state, CLEARED)
 
     def advance(self, tick: int) -> list[Decision]:
         """Run clearing then application for ``tick``; return the decisions taken at this tick."""
@@ -242,13 +245,12 @@ class FaultScheduler:
         before = len(self.decisions)
         for state in sorted(self._states.values(), key=lambda item: item.entry.tie_key):
             if state.applied_tick is not None and state.clear_tick is None and state.final is None:
-                self._clear(state, tick, superseded_by=None)
-                if state.final == CLEARED:
-                    state.final = None
-                    self._states[state.entry.entry_id].final = CANCELLED
-                    self._record(tick, state, "final", CANCELLED, "XVERSE-FAULT-CANCELLED", reason=reason)
-            elif state.final is None:
+                self._clear(state, tick, finalize=False)  # a failed clear finalizes incomplete-clearing itself
+            if state.final is None:
                 self._finalize(tick, state, CANCELLED, "XVERSE-FAULT-CANCELLED", reason=reason)
+        for state in self._states.values():
+            if state.boundary is not None and state.handle is not None:
+                state.boundary.release(state.handle)
         return self.decisions[before:]
 
     def finish(self, tick: int) -> dict[str, str]:

@@ -207,12 +207,11 @@ static int run_reply(struct authority *g,unsigned kind,uint64_t state_value,unsi
     if(kind==READY||kind==RENEWED)put64(p+304,g->lease);
     return send_packet(g,p,-1);
 }
-static int unit_reply_extra(struct authority *g,const unsigned char *request,unsigned kind,struct generation *e,int transfer,uint64_t extra) {
+static int unit_reply(struct authority *g,const unsigned char *request,unsigned kind,struct generation *e,int transfer) {
     unsigned char p[PACKET];memcpy(p,request,PACKET);put32(p+4,kind);put64(p+64,g->epoch);
     uint64_t flags=(kind==STOPPED&&e->stop_saved)?e->stop_state:
         ((kind==RETIRED&&e->retire_saved)?e->retire_state:state(e));
     if(flags==UINT64_MAX)return -1;
-    flags|=extra;
     put64(p+288,flags);put64(p+296,0);put64(p+304,0);
     if(kind!=REGISTERED)memcpy(p+80,e->proof,144);
     if(e->staged)memcpy(p+256,e->token,32);
@@ -220,22 +219,20 @@ static int unit_reply_extra(struct authority *g,const unsigned char *request,uns
     else memset(p+224,0,32);
     return send_packet(g,p,transfer);
 }
-static int unit_reply(struct authority *g,const unsigned char *request,unsigned kind,struct generation *e,int transfer) {
-    return unit_reply_extra(g,request,kind,e,transfer,0);
-}
 /* Phase 5 owned fault operations on the exact registered generation: kill through its pidfd,
- * freeze/thaw through its owned cgroup with cgroup.events observed; a refusal changes nothing. */
-static unsigned owned_fault(struct generation *e,unsigned kind) {
-    uint64_t flags=state(e);if(flags==UINT64_MAX||e->pid<=0||e->reaped||!(flags&4))return 1U;
-    if(kind==FAULT_KILL)return syscall(SYS_pidfd_send_signal,e->pidfd,SIGKILL,NULL,0)?1U:0U;
-    char value=kind==FAULT_FREEZE?'1':'0';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
-    if(e->cg<0||write_freeze(e->cg,value))return 1U;
+ * freeze/thaw through its owned cgroup with cgroup.events observed. Returns 0 done, 1 refused
+ * (nothing changed: a timed-out freeze/thaw is rolled back first), -1 indeterminate (the rollback
+ * itself failed; the caller fails closed). */
+static int owned_fault(struct generation *e,unsigned kind) {
+    uint64_t flags=state(e);if(flags==UINT64_MAX||e->pid<=0||e->reaped||!(flags&4))return 1;
+    if(kind==FAULT_KILL)return syscall(SYS_pidfd_send_signal,e->pidfd,SIGKILL,NULL,0)?1:0;
+    char value=kind==FAULT_FREEZE?'1':'0',undo=kind==FAULT_FREEZE?'0':'1';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
+    if(e->cg<0||write_freeze(e->cg,value))return 1;
     for(int i=0;i<200;i++){
-        if(field(e->cg,"cgroup.events","frozen",&frozen))return 1U;
-        if(frozen==want)return 0U;
+        if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==want)return 0;
         struct pollfd wait={.fd=e->pidfd,.events=POLLIN};poll(&wait,1,1);
     }
-    return 1U;
+    return write_freeze(e->cg,undo)?-1:1;
 }
 static int receive(struct authority *g,unsigned char *p,int *fds,unsigned *count) {
     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(struct ucred))+CMSG_SPACE(8*sizeof(int))];}control;
@@ -482,7 +479,12 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
     }
     if(!zero(p+224,32))return -1;
     if(kind==QUERY)return unit_reply(g,p,OBSERVED,e,-1);
-    if(kind==FAULT_KILL||kind==FAULT_FREEZE||kind==FAULT_THAW)return unit_reply(g,p,owned_fault(e,kind)?FAULT_REFUSED:FAULTED,e,-1);
+    if(kind==FAULT_KILL||kind==FAULT_FREEZE||kind==FAULT_THAW){
+        /* Only a released, unretired latest generation of an open authority may be faulted. */
+        if(!enabled(g)||g->closed||!e->released||e->retired||e!=&u->history[u->used-1])return unit_reply(g,p,FAULT_REFUSED,e,-1);
+        int result=owned_fault(e,kind);if(result<0)return -1;
+        return unit_reply(g,p,result?FAULT_REFUSED:FAULTED,e,-1);
+    }
     if(kind==STOP){
         if(!e->stop_saved){
             if(stop_child(g,e))return -1;

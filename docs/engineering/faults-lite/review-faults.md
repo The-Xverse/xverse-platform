@@ -109,3 +109,39 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     time reserve for fault statements, frozen-before-first-observation probe, design-doc retry
     wording. The quiet-host loop started on 2b89b2060 was stopped before it triggered (no run
     recorded). Repairs follow in finding 8.
+
+8. Repairs of implementation review 1 (2026-10-22). H1: an applied crash now ends the run at once
+    as a documented failure of the crashed unit (`_advance_faults` raises
+    `ML-SCHEDULE-TERMINATED-BY-FAULT`; the dispatcher's failure statement carries that unit and
+    diagnostic into the journal and Argus); this follows the planning package's proposed `manual`
+    semantics and leaves D5-2 (automatic restart) open; the earlier test asserting success after a
+    tick-2 crash was wrong and is replaced by a parametrized test for both timings. H2: the
+    failure path calls `_cancel_faults` before cancelling the owner (best effort: statements that
+    cannot be sent are skipped), so active faults are cleared (frozen units thawed) and every entry
+    is closed; `FaultScheduler.cancel` clears without finalizing and then finalizes once
+    (`cancelled`, or `incomplete-clearing` when the clear fails) and releases handles. M1: a
+    freeze/thaw that is not observed in time is rolled back before answering "refused" (run
+    authority and catalog launcher); if the rollback fails the helper/authority fails closed. M2:
+    the run authority refuses fault kinds unless the authority is enabled and open and the
+    generation is released, unretired and the latest. M3: a refused kill retracts the termination
+    record; the "durable" wording is corrected (the fault's journaled intent precedes the in-run
+    record). M4: intent statements carry boundary class, boundary mode (`owned-process`,
+    `owned-relay-fixture-no-traffic`, `declared-only`) and parameters; the per-fault Argus
+    obligation is replaced in the thesis contract (rule 7, FR-007) by run-enforced closure plus
+    offline reconstruction, because Argus's `causal-closure` is run-level. M5: added tests:
+    single final outcome on cancel (and on a failing clear), refused kill retracts the record,
+    kill after the window is refused, identical Argus chains for the same plan and seed (V03),
+    native forged-token refusal with an unrelated sentinel process left alone, sentinel survival
+    across freeze/thaw/kill, run-authority refusal before release, fault-less digest equal to
+    platform main computed from the sibling checkout. LOW: dead `unit_reply_extra` removed; the
+    coverage skip now requires producer `xverse.faults` and exactly the `io.xverse.faults`
+    extension; design-doc retry wording corrected; the planner reserves operation time and
+    budget for five statements per fault. Found while repairing: three faults add 12 worker round
+    trips, which overran the fixture's 4.8 s window at host load 11–12
+    (`ML-SCHEDULE-SERVICE-DEADLINE`, refused safely); the fault end-to-end tests use the fixture's
+    8 s paused window, and the resolver/scheduler now accept paused (non-decreasing) planned ticks.
+    Results: tests/thesis_lite/faults 46 passed twice (load 8–12); Maestro slice
+    (preparation, launcher, run broker, shared and lazy dispatcher, coverage, AFFA native,
+    AFFA protocol, schedule plan) passed. Not repaired, recorded: the system URI for faults is
+    taken from the fault target (all targets are System elements of the one selected system); a
+    unit frozen before its first health observation is still probed once.

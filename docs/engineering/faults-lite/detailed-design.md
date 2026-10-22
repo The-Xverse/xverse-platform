@@ -31,8 +31,8 @@ document maps the requirements onto platform code. It adds no requirement.
   `reject` → `XVERSE-FAULT-OVERLAP`; `serialize` → later entry waits; `supersede` → earlier
   entry cleared with outcome `cancelled`.
 - Tie key `(declaredOrder or inf, faultId)`.
-- Bounded retry (Phase 1 `retry.policy == bounded`): each attempt re-enters arbitration and emits
-  its own apply-failed/applied pair; the entry's final outcome is one value.
+- No retry: compiled fault entries carry no `retry` field in Phase 1, so Phase 5 applies each
+  entry at most once (a future bounded retry would re-enter arbitration per attempt).
 
 ## Outcomes and run status
 

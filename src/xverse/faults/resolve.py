@@ -78,12 +78,13 @@ def effective_tick(due: int, planned_ticks: Sequence[int]) -> int | None:
 
 
 def _planned(planned_ticks: Sequence[int]) -> tuple[int, ...]:
-    """Validate the planned tick list: non-empty, integers, strictly ascending."""
+    """Validate the planned tick list (non-empty, non-negative integers, non-decreasing: Maestro
+    allows pauses that repeat a tick) and return its distinct ticks in order."""
 
     ticks = tuple(planned_ticks)
-    if not ticks or any(type(tick) is not int or tick < 0 for tick in ticks) or any(b <= a for a, b in zip(ticks, ticks[1:])):
-        raise FaultError("XVERSE-FAULT-TICKS", "planned ticks must be a strictly ascending list of non-negative integers")
-    return ticks
+    if not ticks or any(type(tick) is not int or tick < 0 for tick in ticks) or any(b < a for a, b in zip(ticks, ticks[1:])):
+        raise FaultError("XVERSE-FAULT-TICKS", "planned ticks must be a non-decreasing list of non-negative integers")
+    return tuple(sorted(set(ticks)))
 
 
 def resolve_entry(entry: Mapping[str, Any], system_uri: str, planned_ticks: Sequence[int]) -> ResolvedEntry:

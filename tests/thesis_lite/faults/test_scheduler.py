@@ -125,6 +125,17 @@ def test_u_sch_06_cancellation_mid_window():
     decisions = scheduler.cancel(4, "operator")
     assert scheduler.outcomes == {"fault:f-a": "cancelled"}
     assert any(d.phase == "clear" and d.outcome == "cleared" for d in decisions)
+    finals = [d for d in scheduler.decisions if d.phase == "final"]
+    assert [(d.entry_id, d.outcome) for d in finals] == [("fault:f-a", "cancelled")]  # exactly one final per entry
+
+
+def test_u_sch_06b_cancel_with_a_failing_clear_finalizes_once_as_incomplete():
+    entries = resolve_schedule(compiled_plan([fault("f-a", "stale", "sample-flow", at=2, duration=20)]), PLANNED_TICKS)
+    bounds = boundaries(); bounds[("flows", "sample-flow")].refuse_clear = True
+    scheduler = FaultScheduler("run-a", entries, bounds, PLANNED_TICKS)
+    scheduler.start(); scheduler.advance(0); scheduler.advance(2); scheduler.cancel(4, "run-failed")
+    finals = [d for d in scheduler.decisions if d.phase == "final"]
+    assert [(d.entry_id, d.outcome) for d in finals] == [("fault:f-a", "incomplete-clearing")] and scheduler.incomplete
 
 
 def test_u_sch_07_foreign_or_revoked_handle_is_refused():
@@ -150,6 +161,27 @@ def test_u_sch_08_vanished_owned_child():
     bounds = boundaries(); bounds[("componentInstances", "source-instance")] = boundary
     scheduler, outcomes = run_all(entries, bounds)
     assert outcomes == {"fault:f-c": "failed-to-apply"} and scheduler.run_failed and process.calls == []
+
+
+def test_u_sch_08b_kill_after_the_fault_window_is_refused():
+    process = FakeProcess()
+    boundary = ProcessBoundary("source-instance", process)
+    entry = resolve_schedule(compiled_plan([fault("f-c", "crash", "source-instance", at=2, duration=0)]), PLANNED_TICKS)[0]
+    handle = boundary.arm("run-a", entry)
+    assert boundary.apply(handle, 2, {"_kind": "crash"}).ok and boundary.clear(handle, 2).ok
+    boundary.release(handle)
+    assert boundary.apply(handle, 4, {"_kind": "crash"}).diagnostic == "XVERSE-FAULT-HANDLE"
+    assert process.calls == ["kill"]
+
+
+def test_u_sch_08c_refused_kill_retracts_the_termination_record():
+    intents, retracted = [], []
+    process = FakeProcess(refuse={"kill"})
+    boundary = ProcessBoundary("source-instance", process, intend=lambda e, t: intents.append(e), retract=retracted.append)
+    entry = resolve_schedule(compiled_plan([fault("f-c", "crash", "source-instance", at=2, duration=0)]), PLANNED_TICKS)[0]
+    handle = boundary.arm("run-a", entry)
+    assert not boundary.apply(handle, 2, {"_kind": "crash"}).ok
+    assert intents == ["fault:f-c"] and retracted == ["fault:f-c"]
 
 
 def test_u_sch_09_seeded_loss_is_counter_based():
@@ -252,6 +284,25 @@ def test_u_evd_01_four_event_chain_with_causation(tmp_path):
 
 
 EXTENSION_KEY = "io.xverse.faults"
+
+
+def test_u_evd_01b_same_plan_gives_identical_argus_chains(tmp_path):
+    """V03: two runs of one plan and seed give identical per-entry chains (phases, outcomes, ticks)."""
+
+    plan = compiled_plan(six_kind_faults())
+    entries = resolve_schedule(plan, PLANNED_TICKS)
+    shapes = []
+    for name in ("run-1", "run-2"):
+        writer = _open_run(tmp_path, plan, name)
+        evidence = FaultEvidence(writer, "run-a", _clocks)
+        for entry in entries:
+            evidence.intent(entry, 0)
+        run_all(entries, boundaries(seed=5), seed=5, listener=evidence)
+        writer.finalize()
+        chains = reconstruct(EvidenceStore.read_run(tmp_path / name).records())
+        shapes.append({f: [(e["eventId"], e[EXTENSION_KEY]["phase"], e[EXTENSION_KEY].get("outcome"), e[EXTENSION_KEY]["tick"]) for e in c.events]
+                       for f, c in chains.items()})
+    assert shapes[0] == shapes[1]
 
 
 def test_u_evd_02_failure_chains(tmp_path):

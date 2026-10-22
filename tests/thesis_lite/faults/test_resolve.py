@@ -113,3 +113,11 @@ def test_u_flt_10_durations_are_exact_compiled_ticks():
     entry = resolve_schedule(plan, PLANNED_TICKS)[0]
     assert entry.duration_ticks == plan["faultSchedule"][0]["duration"]["ticks"] == 3
     assert not hasattr(entry, "rounding")
+
+
+def test_u_flt_11_paused_planned_ticks_are_accepted():
+    entry = resolve_schedule(compiled_plan([fault("f-p", "stale", "sample-flow", at=1, duration=1)]), (0, 0, 1, 2, 3))[0]
+    assert (entry.effective_tick, entry.clear_tick) == (1, 2)
+    with pytest.raises(FaultError) as caught:
+        resolve_schedule(compiled_plan([fault("f-p", "stale", "sample-flow", at=1, duration=1)]), (0, 2, 1, 3))
+    assert caught.value.code == "XVERSE-FAULT-TICKS"

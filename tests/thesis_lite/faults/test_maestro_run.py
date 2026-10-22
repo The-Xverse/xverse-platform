@@ -74,6 +74,11 @@ def _scheduled_with_faults(request, monkeypatch, faults):
         return docs
 
     monkeypatch.setattr(test_launcher, "documents", documents)
+    # Fault statements are extra bounded round trips inside the active window: use the fixture's
+    # paused variant (8 s window instead of 4.8 s) so the window holds them under host load.
+    shared = test_shared_dispatcher.scheduled
+    monkeypatch.setattr(test_shared_dispatcher, "scheduled",
+                        lambda request, monkeypatch, **kw: shared(request, monkeypatch, pauses=2, **kw))
     return test_lazy_dispatcher.scheduled(request, monkeypatch)
 
 
@@ -104,32 +109,77 @@ def _unit(driver, element):
     return f"{driver.prepared.units[0].unit_id.split('#')[0]}#componentInstances/{element}"
 
 
-def test_fault_run_crash_before_a_health_obligation_is_attributed(request, monkeypatch):
-    """A crash applied at tick 1, before observe-source runs at tick 1, ends the run as a documented
-    failure whose diagnostic names the fault, not an anonymous health loss."""
+def _failure_events(stack, diagnostic):
+    return [e for e in _events(stack) if e.get("extensions", {}).get("xverse.maestro", {}).get("diagnosticCode") == diagnostic]
 
-    faults = [fault("f-crash", "crash", "source-instance", at=1, duration=0, recovery="manual")]
+
+@pytest.mark.parametrize("tick", [1, 2])
+def test_fault_run_manual_crash_is_a_documented_failure_of_the_unit(request, monkeypatch, tick):
+    """H1: an applied crash with recovery: manual ends the run at once as a documented failure of the
+    crashed unit, journaled and in Argus, whether or not a health obligation of the unit follows."""
+
+    faults = [fault("f-crash", "crash", "source-instance", at=tick, duration=0, recovery="manual")]
     stack, _, driver = _scheduled_with_faults(request, monkeypatch, faults)
     result = run(driver)
     assert not result.execution_succeeded
-    assert result.diagnostic == "ML-PROBE-TERMINATED-BY-FAULT", result.diagnostic
-    assert driver.facade._terminated.get(_unit(driver, "source-instance")) == "fault:f-crash"
-    applied = [d for d in driver._faults.decisions if d.entry_id == "fault:f-crash" and d.phase == "apply"]
-    assert applied and applied[0].outcome == "applied" and applied[0].tick == 1
+    assert result.diagnostic == "ML-SCHEDULE-TERMINATED-BY-FAULT", result.diagnostic
+    unit = _unit(driver, "source-instance")
+    assert driver.facade._terminated.get(unit) == "fault:f-crash"
+    failures = _failure_events(stack, "ML-SCHEDULE-TERMINATED-BY-FAULT")
+    assert failures and failures[0]["extensions"]["xverse.maestro"]["unitId"] == unit
     chains = reconstruct(_events(stack))
-    assert chains["f-crash"].applied
+    assert chains["f-crash"].applied and chains["f-crash"].status in ("closed", "open")
+    finals = [d for d in driver._faults.decisions if d.phase == "final"]
+    assert [(d.entry_id, d.outcome) for d in finals] == [("fault:f-crash", "cancelled")]
 
 
-def test_fault_run_crash_before_stop_completes_with_the_termination_recorded(request, monkeypatch):
-    """A crash applied at tick 2, after the last health obligation of the unit, leaves the run to
-    complete through the ordinary stop/cleanup of a reaped leader; the fault is cleared by
-    definition and the termination stays attributed in the facade and the Argus chain."""
+def test_fault_run_failure_thaws_an_active_freeze(request, monkeypatch):
+    """H2: when the run fails while a freeze is active, the scheduler is cancelled first: the frozen
+    unit is thawed (clear decision) and every entry gets exactly one final outcome."""
 
-    faults = [fault("f-crash", "crash", "source-instance", at=2, duration=0, recovery="manual")]
+    faults = [
+        fault("f-freeze", "freeze", "sink-instance", at=1, duration=2),
+        fault("z-crash", "crash", "source-instance", at=1, duration=0, recovery="manual"),
+    ]
     stack, _, driver = _scheduled_with_faults(request, monkeypatch, faults)
     result = run(driver)
-    assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
-    assert driver._faults.outcomes == {"fault:f-crash": "cleared"}
-    assert driver.facade._terminated.get(_unit(driver, "source-instance")) == "fault:f-crash"
-    report = closure_report(reconstruct(_events(stack)))
-    assert report["complete"] and report["statuses"] == {"f-crash": "closed"}
+    assert result.diagnostic == "ML-SCHEDULE-TERMINATED-BY-FAULT"
+    clears = [d for d in driver._faults.decisions if d.entry_id == "fault:f-freeze" and d.phase == "clear"]
+    assert clears and clears[0].outcome == "cleared"
+    finals = sorted((d.entry_id, d.outcome) for d in driver._faults.decisions if d.phase == "final")
+    assert finals == [("fault:f-freeze", "cancelled"), ("fault:z-crash", "cancelled")]
+    assert _unit(driver, "sink-instance") not in driver.facade._suspended
+
+
+def test_run_authority_refuses_faults_before_release(request, monkeypatch):
+    """M2: the native authority refuses a fault on a staged but unreleased generation (a thaw there
+    would undo the staging freeze); the run then completes normally."""
+
+    stack, _, driver = test_shared_dispatcher.scheduled(request, monkeypatch)
+    broker = stack[0]
+    for issuer in broker.issuers:
+        # within the lease: the authority's lease is short before the run renews it
+        assert issuer.fault(issuer._handle, "thaw", test_launcher.deadline(0.3)) == (False, 6)
+        assert issuer.fault(issuer._handle, "kill", test_launcher.deadline(0.3)) == (False, 6)
+    result = test_shared_dispatcher.run(driver)
+    assert result.execution_succeeded, result.diagnostic
+
+
+def test_u_adm_03b_faultless_digest_equals_platform_main():
+    """U-ADM-03: a fault-less plan prepared by this candidate has the same lifecycle digest as the
+    accepted platform main (read-only sibling checkout), so Phase 3 plans are unchanged."""
+
+    import subprocess, sys
+    from pathlib import Path
+
+    main = Path("/home/jefferson/xverse-platform")
+    if not (main / "src" / "xverse" / "maestro" / "projection.py").is_file():
+        pytest.skip("platform main checkout not available")
+    script = (
+        "import sys; sys.path[:0] = [%r, %r];"
+        "from tests.thesis_lite.maestro.test_preparation import prepared;"
+        "print(prepared().lifecycle_digest)" % (str(main / "src"), str(main))
+    )
+    expected = subprocess.check_output([sys.executable, "-I", "-c", script], text=True, cwd=str(main)).strip()
+    result, resources = compiled()
+    assert prepare(result, resources, provider_descriptors=(PIN,)).lifecycle_digest == expected

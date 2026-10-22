@@ -440,6 +440,11 @@ class ProcessReadiness(_Original):
             raise ReadinessError("ML-PROBE-UNIT")
         self._terminated[unit_id] = entry_id
 
+    def retract_termination(self, unit_id, entry_id):
+        """Phase 5: withdraw the record when the kill was refused (nothing was terminated)."""
+        if self._terminated.get(unit_id) == entry_id:
+            del self._terminated[unit_id]
+
     def check_unit_health(self, unit_id, deadline):
         """Observe only the exact declared unit under its original operation end."""
         self._check(deadline)

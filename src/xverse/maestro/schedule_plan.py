@@ -158,8 +158,10 @@ def admit_schedule(
             raise ScheduleError("ML-SCHEDULE-RECOVERY-CAPACITY")
     # Early scans shorten actual spacing. Count that conservative spacing, not
     # just ceil(active/cadence); pauses never shrink the host obligation universe.
+    # Phase 5: every fault statement is one more bounded worker round trip inside the run.
+    fault_statements = 5 * len(getattr(prepared, "faults", ()))
     reserve = (
-        n * per_unit_seconds + (len(prepared.steps) + 2 * n + 2) * operation_seconds + 2
+        n * per_unit_seconds + (len(prepared.steps) + 2 * n + 2 + fault_statements) * operation_seconds + 2
     )
     horizon = active_seconds + reserve
     if horizon > 394:
@@ -191,7 +193,6 @@ def admit_schedule(
     events = n + 3 * samples + 4 * n + 3 * len(prepared.steps) + len(ticks) + 2 * n + 4
     # Phase 5: intent, apply, clear and outcome statements per executable fault entry
     # (plus one arbitration note), each one request and one event.
-    fault_statements = 5 * len(getattr(prepared, "faults", ()))
     requests += fault_statements
     events += fault_statements
     if requests > request_limit or events > event_limit:

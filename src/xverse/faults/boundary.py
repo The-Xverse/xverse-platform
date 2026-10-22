@@ -310,17 +310,27 @@ class ProcessBoundary:
 
     boundary_class = PROCESS
 
-    def __init__(self, target_element: str, operations: OwnedProcessOperations, *, intend: Callable[[str, int], None] | None = None) -> None:
+    def __init__(
+        self,
+        target_element: str,
+        operations: OwnedProcessOperations,
+        *,
+        intend: Callable[[str, int], None] | None = None,
+        retract: Callable[[str], None] | None = None,
+    ) -> None:
         """Create the boundary for ``target_element`` over ``operations``.
 
         @param target_element Component instance id the boundary acts on.
         @param operations Owned operation set bound to the unit's exact handle.
-        @param intend Callback recording an intended termination before a kill (durable intent first).
+        @param intend Callback recording the intended termination in the run before a kill (the
+               fault's journaled intent event precedes it); the record attributes the death.
+        @param retract Callback withdrawing that record when the kill is refused.
         """
 
         self.target_element = target_element
         self._operations = operations
         self._intend = intend
+        self._retract = retract
         self._registry = _HandleRegistry(PROCESS)
         self._active: dict[str, str] = {}
 
@@ -350,6 +360,8 @@ class ProcessBoundary:
         outcome = self._operations.fault(operation)
         if outcome.ok:
             self._active[handle.entry_id] = kind
+        elif operation == "kill" and self._retract is not None:
+            self._retract(handle.entry_id)
         return outcome
 
     def clear(self, handle: BoundaryHandle, tick: int) -> BoundaryOutcome:

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 import os
+import subprocess
+import sys
 import time
 
 import pytest
@@ -60,9 +62,11 @@ def _frozen(manager, descriptor) -> int:
 
 
 def test_u_prc_02_and_01_freeze_thaw_then_kill_through_owned_handle(launch_stack, tmp_path):
-    """U-PRC-02 then U-PRC-01 on one staged child."""
+    """U-PRC-02 then U-PRC-01 on one staged child; an unrelated sentinel process is never signalled."""
 
     owner, client, manager, config, work, launch, gate = launch_stack
+    sentinel = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"], stdin=subprocess.DEVNULL)
+    request_cleanup = lambda: (sentinel.poll() is None and sentinel.kill(), sentinel.wait())
     descriptor, launcher, handle = _released(launch_stack, work)
     assert _frozen(manager, descriptor) == 0
     assert launcher.fault(replace(handle), "freeze", deadline()) == (True, 0)
@@ -77,6 +81,28 @@ def test_u_prc_02_and_01_freeze_thaw_then_kill_through_owned_handle(launch_stack
         time.sleep(0.01)
         observed = launcher.observe(replace(handle), deadline())
     assert observed.leader_reaped and observed.returncode == -9
+    assert sentinel.poll() is None  # no other process was signalled
+    request_cleanup()
+    _finish(launch_stack, descriptor, launcher)
+
+
+def test_u_prc_03b_native_refuses_a_forged_token(launch_stack):
+    """U-PRC-03 at the native layer: a request whose token is not the staged child's fails closed in
+    the helper (the connection ends and the helper reaps only its own child); a sentinel survives."""
+
+    owner, client, manager, config, work, launch, gate = launch_stack
+    sentinel = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"], stdin=subprocess.DEVNULL)
+    try:
+        descriptor, launcher, handle = _released(launch_stack, work)
+        launcher._token = bytes(32 - 1) + b"\x01"  # bypass the Python pre-check deliberately
+        with pytest.raises(LauncherError):
+            launcher.fault(replace(handle), "freeze", deadline())
+        assert _frozen(manager, descriptor) == 0  # nothing was frozen
+        assert sentinel.poll() is None
+    finally:
+        if sentinel.poll() is None:
+            sentinel.kill()
+        sentinel.wait()
     _finish(launch_stack, descriptor, launcher)
 
 
