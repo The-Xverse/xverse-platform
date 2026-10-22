@@ -1924,3 +1924,41 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     Carried limits: 468 C4, 484 LOW items, 488 asymmetry and 490 observations, E1 effectiveness
     only up to the observed load, ML-CAPA-418 FIX_CANDIDATE and ML-CAPA-359 HYPOTHESIS.
     This finding is bound by the next successor.
+
+494. Post-acceptance record and task rulings (2026-10-22, under the author's delegation of 476).
+    Merge facts: candidate cdac0eb77 merged --no-ff into /home/jefferson/xverse-platform main as
+    63f5cb8c7 (parent 557619e0c); the merged tree equals cdac0eb77 (empty diff); main pushed,
+    origin/main = 63f5cb8c7; the author's four untracked files in that checkout untouched.
+    Rulings on the open P3 tasks against the signed-off closure criteria
+    (specs/024-maestro-lite-lifecycle/review/task-closure-assessment-20261021.md):
+    (1) P3-T03 closes. Its last blocker was F-08/F-09. E1 load-aware budgets are accepted with
+    the increment; the decisive run 22a-1 is clean; under external load above 10 the budgeted
+    operations still end as documented, fail-closed failures (runs x, y, z-1; 469), never as
+    an unsafe or unreleased state. Stated operating limit: on this host, timing outcomes are
+    claimed only at sampled 1-minute load at most 10; ML-CAPA-418 stays FIX_CANDIDATE.
+    (2) ML-CAPA-337 moves from UNRESOLVED/UNKNOWN to TRIAGED/HYPOTHESIS: its first retained bad
+    RPC (review-affa17.md finding 337) is a source-generation-1 teardown record that timed out
+    with ML-PERSIST-TIMEOUT inside a 0.25 s window, the F-09 signature (a teardown record sent
+    with less remaining time than its service time); no recurrence in the quiet step-4 campaign
+    (464) or in the clean run 22a-1; E1 is its tracked correction. Supported, not confirmed.
+    ML-CAPA-286 (registry recovery / nominal lifecycle) stays UNKNOWN: no signature links it to
+    F-08/F-09 and it did not recur (464, 22a-1); it is carried as a stated limit of P3-T05.
+    (3) P3-T05 closes: the DV09/DV10 gaps are closed (F-10 and the C1 D-09 fix are accepted with
+    the increment), 337 is classified as above and 286 is carried as a limit.
+    (4) P3-T06 closes: one clean full installed-wheel run on the final head (491), DV12 blocking
+    and accepted (491), the expected-table check (19-1), the complete independent review (474,
+    READY) with every later product change reviewed (480/482/484, 490). Observations carried:
+    488 nested-versus-outer asymmetry, 490 renewal-count oracle in test_dispatcher.py.
+    (5) P3-T07 is not decided here. Its task text requires explicit author acceptance of the
+    feature acceptance package; E4 placed it after T01-T06 with G4 re-decided and source-parent
+    fidelity carried as a limit. The package is prepared for the author; no feature acceptance
+    is claimed. Next: CAPA successor step 6 for (2), then a documentation-only merge to main.
+
+495. CAPA successor step 6 (2026-10-22, evidence/affa19/capa-20261022-affa19-step6, builder
+    build-capa-20261022-affa19-step6.py), parent step 5 (a934c2d8…), additive: review spans
+    492-494; ML-CAPA-337 UNRESOLVED/UNKNOWN -> TRIAGED/HYPOTHESIS (494 (2)), tracked with
+    ML-CAPA-418; ML-CAPA-286 unchanged (UNKNOWN, limit of P3-T05); the increment19 block records
+    the acceptance (493) and the merge 63f5cb8c7. No record closed, no cause verified, no
+    effectiveness claimed. Register sha fb8d7058…, 56 records / 647 bindings; both validators
+    pass (644 parent bindings checked, none changed, no record lost). This finding is bound by
+    the next successor.
