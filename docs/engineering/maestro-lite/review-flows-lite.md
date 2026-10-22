@@ -198,3 +198,18 @@ finding 15).
    clean venv `/dev/shm/compat-p6-venv` with the candidate platform wheel, gives 16/16 for
    `test_bridge_route.py`. The full compat suite gives 90 passed and 1 failed: the known
    content-lock drift, re-pinned after the platform merge (finding 6).
+
+10. Independent implementation review 2 (2026-10-22, on `4d43f93c3` plus compat `932f251`): **PASS**.
+    M1–M5, L1, L2 and L4–L6 are resolved; L3 is partial. The reviewer's checks:
+    - re-ran 144 platform tests and 16 compat tests (both passed);
+    - fuzzed 20 000 legitimate receiver runs through `reconstruct_flows` with zero false positives;
+    - confirmed the M3 test reads `boundaryMode` from the Argus intent payloads.
+
+    It raised four new LOW findings, recorded here before their dispositions:
+
+    | # | Finding | Disposition |
+    | --- | --- | --- |
+    | N1 | The L3 repair (top-level `flowId` on `XCOM-CROSSCHECK`) contradicts design §2 ("`flowId` null"), and no test covers it. | Keep the repair and amend design §2 under the author's delegation (a per-flow refusal names its flow); add a record-level test. |
+    | N2 | `_expected_verdict` skips `queue-full` labels although stale ranks above them; the regression diagnostic is not checked against reception order. | Re-derive stale for `queue-full` labels. Regression ordering cannot be checked from recorded events alone, because delivered in-order receptions are not recorded; stated limit. |
+    | N3 | The "recorded X, derived Y" branch has no test. | Add a self-consistent relabel-to-`delivered` tamper test. |
+    | N4 | A cleanup failure inside `_final` can lose outbox items already taken, `cleanup_failure` is untested, and it is not written to evidence. | Add a test that sets `cleanup_failure`. Stated limit: this arises only in runs that already re-raise; the failure is kept on the harness, not in Argus. |
