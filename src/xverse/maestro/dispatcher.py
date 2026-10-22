@@ -137,6 +137,9 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
             raise PersistenceError("ML-SCHEDULE-ACK")
         events = reply["events"]
         m3 = reply["m3_sequence"]
+        if kind == "fault":
+            _validate_fault_reply(events, m3, request, dispatcher, client, clock_tick)
+            return
         disposition = request.get("disposition")
         status = {
             "completed": "succeeded",
@@ -377,6 +380,60 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
     client._evidence_m3 = m3
 
 
+def _validate_fault_reply(events, m3, request, dispatcher, client, clock_tick):
+    """Phase 5: exact acknowledgement of one fault statement (one xverse.faults annotation event)."""
+    if len(events) != 1 or m3 != client._evidence_m3:
+        raise PersistenceError("ML-SCHEDULE-ACK")
+    event = events[0]
+    sequence = getattr(client, "_fault_sequence", 0) + 1
+    intents = getattr(client, "_fault_intents", {})
+    last = getattr(client, "_fault_last", {})
+    phase = "outcome" if request["phase"] == "final" else request["phase"]
+    expected_id = f"fault.{request['fault']}.intent" if phase == "intent" else f"fault.{request['fault']}.{phase}.{sequence}"
+    payload = {
+        "entryId": request["entry"], "faultId": request["fault"], "faultKind": request["faultKind"], "phase": phase,
+        "tick": request["tick"], "outcome": request["outcome"], "diagnostic": request["diagnostic"], "detail": request["detail"],
+        "runId": client.run_id, "lifecycleDigest": "sha256:" + dispatcher.prepared.lifecycle_digest,
+    }
+    if (
+        type(event) is not dict
+        or set(event) != {"eventId", "producerId", "eventKind", "producerSequence", "correlationId", "causationId",
+                          "clocks", "annotation", "extensions", "ingestionOrdinal"}
+        or event["eventId"] != expected_id
+        or event["producerId"] != "xverse.faults"
+        or event["eventKind"] != "annotation"
+        or event["producerSequence"] != sequence
+        or event["correlationId"] != intents.get(request["entry"])
+        or event["causationId"] != last.get(request["entry"])
+        or event["extensions"] != {"io.xverse.faults": payload}
+        or type(event["ingestionOrdinal"]) is not int
+        or event["ingestionOrdinal"] <= client._evidence_ordinal
+    ):
+        raise PersistenceError("ML-SCHEDULE-ACK")
+    clocks = event["clocks"]
+    if type(clocks) is not dict or set(clocks) != {"host", "utc", "simulation"}:
+        raise PersistenceError("ML-SCHEDULE-ACK")
+    for name, domain, measurement, expected_value in (
+        ("host", "host:" + client.session, "s", request["observed_at"]),
+        ("utc", "utc:" + client.session, "s", None),
+        ("simulation", dispatcher.prepared.clock.domain, "tick", clock_tick),
+    ):
+        clock = clocks[name]
+        if (
+            type(clock) is not dict or set(clock) != {"domain", "unit", "value"}
+            or clock["domain"] != domain or clock["unit"] != measurement
+            or type(clock["value"]) not in (int, float) or not math.isfinite(clock["value"])
+            or (expected_value is not None and clock["value"] != expected_value)
+        ):
+            raise PersistenceError("ML-SCHEDULE-ACK")
+    if phase == "intent":
+        intents = dict(intents, **{request["entry"]: event["eventId"]})
+    client._fault_intents = intents
+    client._fault_last = dict(last, **{request["entry"]: event["eventId"]})
+    client._fault_sequence = sequence
+    client._evidence_ordinal = event["ingestionOrdinal"]
+
+
 class FiniteDispatcher(_Original):
     def __init__(self, facade, bootstrap, *, gates, controller=None, allow_restarts=False,
                  allow_controller_recovery=False):
@@ -479,6 +536,7 @@ class FiniteDispatcher(_Original):
             self.plan,
         )
         self._steps = {s.step_id: s for s in self.prepared.steps}
+        self._faults = None  # Phase 5 scheduler, built at begin when the prepared lifecycle has faults
         # One per-run estimator shared with every teardown (ADR-ML3-BUDGET-0001).
         self._times = ServiceTimes()
         self.teardown = ReverseTeardown(
@@ -1213,6 +1271,64 @@ class FiniteDispatcher(_Original):
             handle=asdict(binding.handle) if binding is not None else None,
         )
 
+    # -- Phase 5 (thesis-lite faults) -------------------------------------------------------
+
+    def _begin_faults(self):
+        """Resolve the prepared fault schedule against the planned ticks and arm its boundaries."""
+        faults = getattr(self.prepared, "faults", ())
+        if not faults:
+            return
+        from xverse.faults import FaultError, resolve_schedule
+        from xverse.faults.boundary import MessageRelayBoundary, ObservationRelayBoundary, ProcessBoundary
+        from xverse.faults.scheduler import FaultScheduler
+        plan_view = {"selection": {"system": {"uri": faults[0]["targetRef"]["uri"]}}, "faultSchedule": list(faults)}
+        try:
+            entries = resolve_schedule(plan_view, self.plan.ticks)
+        except FaultError as error:
+            raise OwnerError("ML-SCHEDULE-FAULT-RESOLVE") from error
+        seed = getattr(self.prepared, "fault_seed", 0)
+        boundaries = {}
+        for entry in entries:
+            key = (entry.target_collection, entry.target_element)
+            if key in boundaries:
+                continue
+            if entry.target_collection == "componentInstances":
+                unit = f"{entry.target_uri}#componentInstances/{entry.target_element}"
+                boundaries[key] = ProcessBoundary(
+                    entry.target_element, _LauncherFaultOperations(self, unit),
+                    intend=lambda entry_id, tick, unit=unit: self.facade.terminate_by_fault(unit, entry_id))
+            elif entry.target_collection == "flows":
+                boundaries[key] = MessageRelayBoundary(entry.target_element, seed=seed)
+            else:
+                boundaries[key] = ObservationRelayBoundary(entry.target_element)
+        self._fault_boundaries = boundaries
+        self._faults = FaultScheduler(self.client.run_id, entries, boundaries, self.plan.ticks, seed=seed,
+                                      listener=_FaultStatements(self))
+        for entry in entries:
+            self._send("fault", self._end(), entry=entry.entry_id, fault=entry.fault_id, faultKind=entry.fault_kind,
+                       phase="intent", outcome="declared", tick=self._tick, diagnostic=None,
+                       detail={"dueTick": entry.due_tick, "effectiveTick": entry.effective_tick,
+                               "durationTicks": entry.duration_ticks, "executable": entry.executable})
+        self._faults.start()
+        if self._faults.run_failed:
+            raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
+
+    def _advance_faults(self):
+        """Run the scheduler for the current tick; a refused application ends the run as declared."""
+        if self._faults is None:
+            return
+        self._faults.advance(self._tick)
+        if self._faults.run_failed:
+            raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
+
+    def _finish_faults(self):
+        """Finalize every entry at the horizon; an incomplete clearing is a documented failure."""
+        if self._faults is None:
+            return
+        self._faults.finish(self._tick)
+        if self._faults.incomplete:
+            raise OwnerError("ML-SCHEDULE-FAULT-INCOMPLETE")
+
     def _effect(self, step):
         self._service()
         unit = step.unit_id
@@ -1396,6 +1512,7 @@ class FiniteDispatcher(_Original):
             current = None
             try:
                 self._send("begin", self._end())
+                self._begin_faults()
                 for index in range(1, len(self.plan.ticks) + 1):
                     cycle_began = time.monotonic()
                     self._service()
@@ -1404,6 +1521,7 @@ class FiniteDispatcher(_Original):
                     )
                     self._tick = tick["tick"]
                     self._index = index
+                    self._advance_faults()
                     if any(
                         s.latest_ticks < self._tick and s.step_id not in self._outcomes
                         for s in self.prepared.steps
@@ -1464,6 +1582,7 @@ class FiniteDispatcher(_Original):
                         )
                 if self._pending or set(self._outcomes) != set(self._steps):
                     raise OwnerError("ML-SCHEDULE-INCOMPLETE")
+                self._finish_faults()
             except Exception as error:
                 code = str(error)
                 diagnostic = (
@@ -1666,3 +1785,54 @@ class FiniteDispatcher(_Original):
         super()._holder()
         self._cancel_requested = True
         self._pins[1].cancel(reason)
+
+
+class _LauncherFaultOperations:
+    """Phase 5 owned operation set of one unit: kill/freeze/thaw through its launcher and exact handle."""
+
+    def __init__(self, dispatcher, unit_id):
+        self._dispatcher, self._unit = dispatcher, unit_id
+
+    def _binding(self):
+        return self._dispatcher.facade._bindings.get(self._unit)
+
+    def revalidate(self):
+        binding = self._binding()
+        if binding is None or self._unit in self._dispatcher.facade._terminated:
+            return False
+        try:
+            return bool(binding.launcher.revalidate_issued(binding.handle))
+        except Exception:
+            return False
+
+    def fault(self, operation):
+        from xverse.faults.boundary import BoundaryOutcome
+        binding = self._binding()
+        if binding is None:
+            return BoundaryOutcome(False, "XVERSE-FAULT-BOUNDARY-GONE", {"reason": "unit not bound"})
+        dispatcher = self._dispatcher
+        try:
+            done, reason = binding.launcher.fault(binding.handle, operation, dispatcher._end(unit=self._unit, phase="observe"))
+        except Exception as error:
+            code = str(error)
+            return BoundaryOutcome(False, code if re.fullmatch("ML-[A-Z-]+", code) else "XVERSE-FAULT-BOUNDARY-REFUSED")
+        if not done:
+            return BoundaryOutcome(False, "XVERSE-FAULT-BOUNDARY-REFUSED", {"reason": reason})
+        if operation == "freeze":
+            dispatcher.facade.suspend_health(self._unit)
+        elif operation == "thaw":
+            dispatcher.facade.resume_health(self._unit)
+        return BoundaryOutcome(True, detail={"operation": operation})
+
+
+class _FaultStatements:
+    """Phase 5 scheduler listener: every decision becomes one worker-side fault statement."""
+
+    def __init__(self, dispatcher):
+        self._dispatcher = dispatcher
+
+    def decision(self, entry, decision):
+        dispatcher = self._dispatcher
+        dispatcher._send("fault", dispatcher._end(), entry=entry.entry_id, fault=entry.fault_id,
+                         faultKind=entry.fault_kind, phase=decision.phase, outcome=decision.outcome,
+                         tick=decision.tick, diagnostic=decision.diagnostic, detail=dict(decision.detail))

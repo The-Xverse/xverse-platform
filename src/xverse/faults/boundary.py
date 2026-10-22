@@ -329,8 +329,7 @@ class ProcessBoundary:
 
         if entry.boundary_class != PROCESS or entry.target_element != self.target_element:
             return BoundaryOutcome(False, "XVERSE-FAULT-TARGET", {"reason": "boundary mismatch"})
-        if not self._operations.revalidate():
-            return BoundaryOutcome(False, "XVERSE-FAULT-BOUNDARY-GONE", {"reason": "owned process not live"})
+        # The unit may start after arming (lazy binding); liveness is checked at apply time.
         return self._registry.issue(run_id, entry)
 
     def apply(self, handle: BoundaryHandle, tick: int, parameters: Mapping[str, Any]) -> BoundaryOutcome:

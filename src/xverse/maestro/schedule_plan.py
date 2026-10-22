@@ -189,6 +189,11 @@ def admit_schedule(
     if service_operation_count is not None:
         requests += slots
     events = n + 3 * samples + 4 * n + 3 * len(prepared.steps) + len(ticks) + 2 * n + 4
+    # Phase 5: intent, apply, clear and outcome statements per executable fault entry
+    # (plus one arbitration note), each one request and one event.
+    fault_statements = 5 * len(getattr(prepared, "faults", ()))
+    requests += fault_statements
+    events += fault_statements
     if requests > request_limit or events > event_limit:
         raise ScheduleError("ML-SCHEDULE-EVIDENCE-CAPACITY")
     body = dict(

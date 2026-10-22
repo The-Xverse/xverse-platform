@@ -145,6 +145,30 @@ def resolve_entry(entry: Mapping[str, Any], system_uri: str, planned_ticks: Sequ
     )
 
 
+def validate_static(plan: Mapping[str, Any], horizon_ticks: int) -> tuple[ResolvedEntry, ...]:
+    """Validate a compiled schedule before the planned tick list exists (Maestro projection).
+
+    Uses the dense tick list ``0..horizon`` so kinds, targets, parameters, exact durations and the
+    horizon are checked; effective ticks are recomputed later against the real planned ticks.
+    A ``crash`` whose declared XDL ``recovery`` is not ``manual`` is rejected while decision D5-2
+    is open (``XVERSE-FAULT-RECOVERY``).
+
+    @param plan Compiled Phase 1 experiment plan (mapping form).
+    @param horizon_ticks The prepared clock horizon.
+    @return The statically resolved entries.
+    @raises FaultError On any rule violation.
+    """
+
+    horizon = int(horizon_ticks)
+    if horizon < 0 or horizon > 1_000_000:
+        raise FaultError("XVERSE-FAULT-TICKS", "horizon must be a non-negative integer within the engineering cap")
+    entries = resolve_schedule(plan, tuple(range(horizon + 1)))  # every integer tick exists statically
+    for entry in entries:
+        if entry.fault_kind == "crash" and entry.recovery != "manual":
+            raise FaultError("XVERSE-FAULT-RECOVERY", f"fault {entry.fault_id!r}: crash recovery {entry.recovery!r} is not supported while D5-2 is open; declare recovery: manual")
+    return entries
+
+
 def _overlaps(first: ResolvedEntry, second: ResolvedEntry) -> bool:
     """Return whether two entries on one target may hold the target at the same time."""
 

@@ -22,6 +22,9 @@ class AuthorityKind(IntEnum):
     CANCEL = 10
     QUERY_ISSUED = 11
     ADVANCE = 12
+    FAULT_KILL = 13  # Phase 5 owned fault operations (thesis-lite faults)
+    FAULT_FREEZE = 14
+    FAULT_THAW = 15
     READY = 16
     REGISTERED = 17
     INTENT_RECORDED = 18
@@ -35,6 +38,8 @@ class AuthorityKind(IntEnum):
     CANCELLED = 26
     REJECTED = 27
     ADVANCED = 28
+    FAULTED = 29
+    FAULT_REFUSED = 30
 
 
 _PACKET = struct.Struct("!4sIQQ32sQQQ16s32s32s32s32s32s32sQQQ8s")

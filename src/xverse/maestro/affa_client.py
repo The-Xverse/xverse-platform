@@ -30,7 +30,11 @@ _REPLIES = {
     K.CANCEL: K.CANCELLED,
     K.QUERY_ISSUED: K.STAGED,
     K.ADVANCE: K.ADVANCED,
+    K.FAULT_KILL: K.FAULTED,
+    K.FAULT_FREEZE: K.FAULTED,
+    K.FAULT_THAW: K.FAULTED,
 }
+_FAULTS = (K.FAULT_KILL, K.FAULT_FREEZE, K.FAULT_THAW)  # Phase 5: FAULT_REFUSED is their other valid answer
 _CLEANUP = (K.QUERY, K.QUERY_ISSUED, K.STOP, K.RETIRE, K.CANCEL)
 
 
@@ -298,6 +302,8 @@ class AuthorityConnection(_Original):
         if reply.kind is K.REJECTED:
             raise BootstrapError("ML-AFFA-NATIVE-REJECTED")
         kind = _REPLIES[request.kind]
+        if request.kind in _FAULTS and reply.kind is K.FAULT_REFUSED:
+            kind = K.FAULT_REFUSED
         if len(fds) != (1 if kind is K.STAGED else 0):
             raise BootstrapError("ML-AFFA-ACK-RIGHTS")
         if kind is K.CANCELLED:

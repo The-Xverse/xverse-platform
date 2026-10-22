@@ -206,6 +206,7 @@ class ProcessReadiness(_Original):
         self._registry_pins = self._bindings, self._observations
         self._released, self._attempted = set(), set()
         self._state_pins = self._released, self._attempted
+        self._suspended, self._terminated = set(), {}  # Phase 5: frozen units; units killed by a fault
         self._sequence, self._guard = 0, None
         self._probe_failure = None
         self._lock = threading.Lock()
@@ -423,6 +424,22 @@ class ProcessReadiness(_Original):
             self._guard = None
             self._lock.release()
 
+    def suspend_health(self, unit_id):
+        """Phase 5: a frozen unit is not probed until resumed; its prior observation stands."""
+        if type(unit_id) is not str or unit_id not in self._policies:
+            raise ReadinessError("ML-PROBE-UNIT")
+        self._suspended.add(unit_id)
+
+    def resume_health(self, unit_id):
+        """Phase 5: resume probing after a thaw."""
+        self._suspended.discard(unit_id)
+
+    def terminate_by_fault(self, unit_id, entry_id):
+        """Phase 5: record the intended termination before a kill, so the death is attributed."""
+        if type(unit_id) is not str or unit_id not in self._policies:
+            raise ReadinessError("ML-PROBE-UNIT")
+        self._terminated[unit_id] = entry_id
+
     def check_unit_health(self, unit_id, deadline):
         """Observe only the exact declared unit under its original operation end."""
         self._check(deadline)
@@ -430,6 +447,11 @@ class ProcessReadiness(_Original):
             raise ReadinessError("ML-PROBE-UNIT")
         if unit_id not in self._released:
             raise ReadinessError("ML-PROBE-UNRELEASED")
+        if unit_id in self._terminated:
+            self.cancel("terminated-by-fault")
+            raise ReadinessError("ML-PROBE-TERMINATED-BY-FAULT")
+        if unit_id in self._suspended and unit_id in self._observations:
+            return self._observations[unit_id]
         if not self._lock.acquire(blocking=False):
             raise ReadinessError("ML-PROBE-CONFLICT")
         try:
@@ -454,6 +476,10 @@ class ProcessReadiness(_Original):
             values = []
             for unit_id in self._prepared.resource_order:
                 if unit_id not in self._released:
+                    continue
+                if unit_id in self._terminated:
+                    raise ReadinessError("ML-PROBE-TERMINATED-BY-FAULT")
+                if unit_id in self._suspended:
                     continue
                 prior = self._observations.get(unit_id)
                 if (
@@ -480,7 +506,7 @@ class ProcessReadiness(_Original):
         deadlines = tuple(
             value.observed_at + self._policies[unit].cadence_seconds
             for unit, value in self._observations.items()
-            if unit in self._released
+            if unit in self._released and unit not in self._suspended
         )
         if not deadlines:
             return None

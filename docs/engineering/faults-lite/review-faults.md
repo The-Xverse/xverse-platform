@@ -60,3 +60,31 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     (reason 6); forged handle and unknown operation refused before any request. 3 passed (plus
     the 28 pure-Python tests). The test process imports the worktree source; the persistence
     worker runs the installed main package, which this increment does not change.
+
+6. P5-T03/T06 Maestro integration (2026-10-22; one installed version, venv /dev/shm/p5-venv built
+    from this tree). Projection: the Phase 3 `ML-UNSUPPORTED` rejection is replaced by
+    `validate_static` (dense ticks 0..horizon; a crash with XDL recovery other than `manual` is
+    refused while D5-2 is open); resolvable schedules are frozen into `PreparedLifecycle.faults`
+    with `fault_seed`, and only then enter the canonical bytes (fault-less plans keep their bytes
+    and digests). Dispatcher: `_begin_faults` resolves against the planned ticks, builds one
+    boundary per target (process boundaries over the unit's launcher, relays for flows and
+    sensors), sends one `fault` intent statement per entry and starts the scheduler;
+    `_advance_faults` runs after each tick statement; `_finish_faults` at the horizon; a refused
+    application ends the run as `ML-SCHEDULE-FAULT-APPLY`, an incomplete clearing as
+    `ML-SCHEDULE-FAULT-INCOMPLETE`. Worker: `ScheduleJournal` accepts a `fault` statement and
+    writes one annotation event under producer `xverse.faults` (extension `io.xverse.faults`,
+    correlated to the entry's intent, chained by causation); the parent validates the reply
+    exactly (`_validate_fault_reply`); coverage ignores fault events; the schedule budget adds
+    five statements per entry. Facade: `suspend_health`/`resume_health` while frozen;
+    `terminate_by_fault` records the intended termination before a kill, and a later health
+    check ends the run as `ML-PROBE-TERMINATED-BY-FAULT`. Native run authority (the path the
+    live stack uses; the catalog launcher of finding 5 is the other path): request kinds
+    FAULT_KILL=13, FAULT_FREEZE=14, FAULT_THAW=15 on the exact registered generation, replies
+    FAULTED=29 or FAULT_REFUSED=30; the receive loop's kind bound was raised from 12 to 15
+    (first run failed with `ML-AFFA-SENDER`/`ML-BOOT-CLOSED` because the authority closed on an
+    out-of-range kind: recorded, then repaired); `RunUnitIssuer.fault` on the client side.
+    Packaging: `src/xverse/faults` added to the wheel force-include (it was missing from the
+    first wheel). Tests: `test_maestro_run.py` (U-ADM-01…03; end-to-end on the native stack:
+    stale + sensorDropout + freeze/thaw complete with closed Argus chains; a crash before the
+    unit's health obligation ends the run attributed to the fault; a crash after it completes
+    with the termination recorded). Result: tests/thesis_lite/faults 37 passed.

@@ -143,7 +143,9 @@ def test_u_sch_08_vanished_owned_child():
     process = FakeProcess(live=False)
     boundary = ProcessBoundary("source-instance", process)
     entry = resolve_schedule(compiled_plan([fault("f-c", "crash", "source-instance", at=2, duration=0)]), PLANNED_TICKS)[0]
-    assert boundary.arm("run-a", entry).diagnostic == "XVERSE-FAULT-BOUNDARY-GONE"
+    handle = boundary.arm("run-a", entry)  # arming does not need a live unit (lazy binding)
+    assert boundary.apply(handle, 2, {"_kind": "crash"}).diagnostic == "XVERSE-FAULT-BOUNDARY-GONE"
+    boundary = ProcessBoundary("source-instance", process)
     entries = resolve_schedule(compiled_plan([fault("f-c", "crash", "source-instance", at=2, duration=0)]), PLANNED_TICKS)
     bounds = boundaries(); bounds[("componentInstances", "source-instance")] = boundary
     scheduler, outcomes = run_all(entries, bounds)

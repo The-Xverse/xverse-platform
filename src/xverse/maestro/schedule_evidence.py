@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from dataclasses import replace, asdict
+import json
 import re
 from xverse_xdl.lifecycle import OwnedResourceHandle
 from xverse_xdl.models import freeze
@@ -32,6 +33,9 @@ class ScheduleJournal:
         self.request_sequence = 0
         self.lazy = getattr(evidence, 'collection_source', None) is not None
         self.retired_handles = {}
+        self.fault_sequence = 0  # Phase 5 producer sequence for xverse.faults events
+        self.fault_intent = {}
+        self.fault_last = {}
 
     def validate_generation(self, body, claims):
         """Reject a live logical step before successor permit consumption."""
@@ -173,6 +177,50 @@ class ScheduleJournal:
             "tick": self.tick,
             "event": fields,
         }
+
+    def _append_fault(self, body, claims, deadline, check):
+        """Append one Phase 5 fault event (producer xverse.faults, extension io.xverse.faults)."""
+        self.evidence.reserve_event(claims)
+        check(deadline)
+        now = datetime.now(timezone.utc)
+        self.fault_sequence += 1
+        phase = "outcome" if body["phase"] == "final" else body["phase"]
+        event_id = f"fault.{body['fault']}.{phase}.{self.fault_sequence}" if phase != "intent" else f"fault.{body['fault']}.intent"
+        intent = self.fault_intent.get(body["entry"])
+        cause = self.fault_last.get(body["entry"])
+        payload = {
+            "entryId": body["entry"], "faultId": body["fault"], "faultKind": body["faultKind"], "phase": phase,
+            "tick": body["tick"], "outcome": body["outcome"], "diagnostic": body["diagnostic"], "detail": body["detail"],
+            "runId": self.evidence.permits._run_id, "lifecycleDigest": "sha256:" + self.plan.lifecycle_digest,
+        }
+        fields = {
+            "eventId": event_id,
+            "producerId": "xverse.faults",
+            "eventKind": "annotation",
+            "producerSequence": self.fault_sequence,
+            "correlationId": intent,
+            "causationId": cause,
+            "clocks": {
+                "host": {"domain": "host:" + deadline.session, "unit": "s", "value": body["observed_at"]},
+                "utc": {"domain": "utc:" + deadline.session, "unit": "s", "value": now.timestamp()},
+                "simulation": {"domain": self.evidence.permits._prepared.clock.domain, "unit": "tick", "value": self.tick},
+            },
+            "annotation": {"text": f"fault {body['fault']} {phase} {body['outcome']}"},
+            "extensions": {"io.xverse.faults": payload},
+        }
+        ordinal = self.evidence.writer.append_event(
+            event_id=fields["eventId"], producer_id=fields["producerId"], event_kind="annotation",
+            producer_sequence=fields["producerSequence"], correlation_id=fields["correlationId"],
+            causation_id=fields["causationId"], clocks=fields["clocks"], annotation=fields["annotation"],
+            extensions=fields["extensions"],
+        )
+        check(deadline)
+        self.evidence.writer.flush_buffer()
+        fields["ingestionOrdinal"] = ordinal
+        if phase == "intent":
+            self.fault_intent[body["entry"]] = event_id
+        self.fault_last[body["entry"]] = event_id
+        return fields
 
     def _append(
         self,
@@ -614,6 +662,24 @@ class ScheduleJournal:
                 )
                 self.completed.add(step.step_id)
                 self.dispositions[step.step_id] = "completed"
+        elif kind == "fault":
+            # Phase 5 (thesis-lite faults): one annotation event per scheduler decision, under
+            # the io.xverse.faults extension and its own producer, chained to the entry's intent.
+            fields = {"kind", "entry", "fault", "faultKind", "phase", "outcome", "tick", "diagnostic", "detail", "observed_at"}
+            if (
+                set(body) != fields
+                or type(body["entry"]) is not str or not body["entry"]
+                or type(body["fault"]) is not str or not body["fault"]
+                or body["phase"] not in ("intent", "apply", "clear", "outcome", "arbitration", "final")
+                or type(body["tick"]) is not int or body["tick"] != self.tick
+                or (body["diagnostic"] is not None and (type(body["diagnostic"]) is not str
+                    or re.fullmatch("[A-Z]+-[A-Z0-9-]+", body["diagnostic"]) is None))
+                or type(body["detail"]) is not dict
+                or len(json.dumps(body["detail"], sort_keys=True, separators=(",", ":"), default=str)) > 512
+                or (body["phase"] == "intent") != (body["entry"] not in self.fault_last)
+            ):
+                raise PersistenceError("ML-SCHEDULE-FAULT")
+            events.append(self._append_fault(body, claims, deadline, check))
         elif kind == "failure":
             unit = body.get("unit")
             if (

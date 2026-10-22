@@ -6,7 +6,7 @@ tick-driven ``FaultScheduler`` and the Argus evidence helpers. Nothing here star
 opens a socket or touches a resource it does not hold an exact handle for.
 """
 
-from .resolve import ResolvedEntry, effective_tick, resolve_entry, resolve_schedule
+from .resolve import ResolvedEntry, effective_tick, resolve_entry, resolve_schedule, validate_static
 from .vocabulary import (
     APPLY_FAILURE_POLICIES,
     ARBITRATIONS,
@@ -35,4 +35,5 @@ __all__ = [
     "resolve_entry",
     "resolve_schedule",
     "validate_parameters",
+    "validate_static",
 ]
