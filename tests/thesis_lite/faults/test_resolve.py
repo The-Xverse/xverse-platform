@@ -85,11 +85,22 @@ def test_u_flt_07_tie_key_and_declared_order():
     assert ordered.trigger_kind == "declared-order" and ordered.due_tick is None and ordered.window is None
 
 
-def test_u_flt_08_declared_only_hooks():
+def test_u_flt_08_duplicate_reorder_executable_assurance_declared_only():
+    """Phase 6 amendment A1: duplicate/reorder execute on message relays; assurance hooks stay declared-only."""
     plan = compiled_plan([fault("f-dup", "duplicate", "sample-flow", at=2, duration=2, parameters=[parameter("copies", 2)])])
     entry = resolve_schedule(plan, PLANNED_TICKS)[0]
-    assert entry.executable is False and entry.boundary_class == "message"
-    assert VOCABULARY["duplicate"].executable is False
+    assert entry.executable is True and entry.boundary_class == "message"
+    assert VOCABULARY["duplicate"].executable is True and VOCABULARY["reorder"].executable is True
+    assert all(not spec.executable for kind, spec in VOCABULARY.items() if kind.startswith("assurance."))
+
+
+def test_u_flt_08b_overlap_now_covers_duplicate_and_reorder():
+    """Amendment A1 side effect: an unarbitrated overlap with a duplicate on one flow is refused."""
+    faults = [fault("f-delay", "delay", "sample-flow", at=2, duration=4, parameters=[parameter("delay-ticks", 1)]),
+              fault("f-dup", "duplicate", "sample-flow", at=4, duration=2, parameters=[parameter("copies", 1)])]
+    with pytest.raises(FaultError) as caught:
+        resolve_schedule(compiled_plan(faults), PLANNED_TICKS)
+    assert caught.value.code == "XVERSE-FAULT-OVERLAP"
 
 
 def test_u_flt_09_parameter_schema():
@@ -122,3 +133,11 @@ def test_u_flt_11_paused_planned_ticks_are_accepted():
     with pytest.raises(FaultError) as caught:
         resolve_schedule(compiled_plan([fault("f-p", "stale", "sample-flow", at=1, duration=1)]), (0, 2, 1, 3))
     assert caught.value.code == "XVERSE-FAULT-TICKS"
+
+
+def test_u_flt_08c_duplicate_on_a_process_target_is_refused():
+    """Amendment A1 side effect: an executable message kind needs a message (flow) target."""
+    with pytest.raises(FaultError) as caught:
+        resolve_schedule(compiled_plan([fault("f-dup", "duplicate", "source-instance", at=2, duration=2,
+                                              parameters=[parameter("copies", 1)])]), PLANNED_TICKS)
+    assert caught.value.code == "XVERSE-FAULT-TARGET"

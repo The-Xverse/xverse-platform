@@ -186,3 +186,20 @@ def test_u_adm_03b_faultless_digest_equals_platform_main():
     expected = subprocess.check_output([sys.executable, "-I", "-c", script], text=True, cwd=str(main)).strip()
     result, resources = compiled()
     assert prepare(result, resources, provider_descriptors=(PIN,)).lifecycle_digest == expected
+
+
+@pytest.mark.parametrize("kind, parameters", [("duplicate", [parameter("copies", 1)]), ("reorder", [parameter("window", 1)])])
+def test_fault_run_arms_duplicate_and_reorder_on_no_traffic_relays(request, monkeypatch, kind, parameters):
+    """Phase 6 amendment A1 side effects: Maestro arms, applies and clears a duplicate/reorder entry on
+    its owned no-traffic message relay, and the intent evidence names that boundary mode. The fixture's
+    short horizon admits one message fault at tick 1 per run, so each kind runs separately."""
+
+    stack, _, driver = _scheduled_with_faults(request, monkeypatch, [fault("f-x", kind, "sample-flow", at=1, duration=1, parameters=parameters)])
+    result = run(driver)
+    assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
+    assert driver._faults.outcomes == {"fault:f-x": "cleared"}
+    events = _events(stack)
+    payloads = [(record.get("extensions") or {}).get("io.xverse.faults") for record in events]
+    modes = [p["detail"].get("boundaryMode") for p in payloads if p and p.get("phase") == "intent"]
+    assert modes == ["owned-relay-fixture-no-traffic"]
+    assert closure_report(reconstruct(events))["complete"]

@@ -1,0 +1,94 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "extensions": {
+    "io.xverse.xcom": {
+      "kind": "flow-policy",
+      "policy": {
+        "deadlineMs": 0,
+        "observationPoints": [],
+        "ordering": "fifo",
+        "overflow": "reject",
+        "queueDepth": 4,
+        "reliability": "best-effort",
+        "retry": 0
+      },
+      "schemaVersion": "0.1",
+      "target": {
+        "apiVersion": "xverse.io/xdl/v1alpha1",
+        "kind": "Component",
+        "name": "camera-sensor",
+        "namespace": "org.xverse.experiment"
+      }
+    }
+  },
+  "kind": "Component",
+  "metadata": {
+    "name": "camera-sensor",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "capabilities": [
+      "produce-samples"
+    ],
+    "endpoints": [
+      {
+        "direction": "output",
+        "id": "camera-frames-out",
+        "interfaceId": "camera-frames",
+        "ownerId": "camera-sensor"
+      }
+    ],
+    "interfaces": [
+      {
+        "compatibility": "exact",
+        "direction": "output",
+        "extensions": {
+          "io.xverse.xcom": {
+            "kind": "interface-policy",
+            "policy": {
+              "encoding": "json",
+              "interactionKind": "message",
+              "schemaId": "camera-frames-schema",
+              "schemaVersion": "1.0.0",
+              "semanticCompatibility": "exact"
+            },
+            "schemaVersion": "0.1",
+            "target": {
+              "apiVersion": "xverse.io/xdl/v1alpha1",
+              "kind": "Component",
+              "name": "camera-sensor",
+              "namespace": "org.xverse.experiment"
+            }
+          }
+        },
+        "id": "camera-frames",
+        "payloadSchema": "urn:xverse:experiment:camera-frames-v1",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "models": [
+      {
+        "externalRef": "urn:xverse:experiment:model:sample",
+        "id": "sample-model",
+        "inputs": [],
+        "maturity": "prototype",
+        "modelKind": "behavioral",
+        "outputs": []
+      }
+    ],
+    "parameters": [
+      {
+        "id": "nominal-rate",
+        "mutability": "configuration",
+        "unitSemantics": "hertz",
+        "valueType": "integer"
+      }
+    ]
+  }
+}
