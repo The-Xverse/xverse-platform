@@ -12,3 +12,8 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     M3 the dispatcher iterates the planned tick list, so a planned-tick effect rule was added; M4
     V11/V12 added). All verified against the platform before repair; review 2 requested. Code for
     T02 onward waits for its verdict.
+
+2. Planning review 2 (2026-10-22): READY FOR DETAILED DESIGN; DRAFT; NOT READY FOR
+    IMPLEMENTATION. One LOW carried into the design: a bounded retry re-enters arbitration and
+    emits a fresh apply-failed/applied pair per attempt (one final outcome per entry). Detailed
+    design and unit specifications follow in docs/engineering/faults-lite/.
