@@ -1819,3 +1819,36 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     or below 10 (then the 487 rule applies: regression signal, budgeted paths reopened as a
     design item); runs with samples above 10 are archived as observations and repeated; overall
     bound 10 h. Receipts archived and the tmpfs work directory removed.
+
+489. Loop z (2026-10-21/22, run-z-quiet-loop.sh, head 34e140f57, product 897d9dc50): decisive
+    after two attempts. z-1 (trigger 21:31:00Z; 116 samples, load 4.33-14.14, 45 above 10): 6
+    outer failures and 7 nested failures: restart family, paused (shared) ticks, native writer
+    failures [fsync-persistent, artifact-check], registry whole-run replay, and outer
+    test_load_aware_budgets.py::test_widened_deadlines_stay_inside_every_outer_bound; gate
+    B2-failures 6 (sha 87b52df1…); observation under 469 except the last test (below). z-2
+    (trigger 06:56:56Z; 87 samples, load 3.70-5.09, none above 10): 2248 passed, 1 skipped, 2
+    failed, namely the same control (d) test_widened_deadlines_stay_inside_every_outer_bound
+    both in the outer run and as the only nested failure (so the Argus test failed too); gate
+    B2-failures 2 (sha 4c823b32…). Under the 487 rule z-2 is a regression signal; it is read
+    here before any repair. All three failures stop at test_load_aware_budgets.py:171,
+    `assert driver.lease_renewals >= 1`, with result.execution_succeeded, diagnostic None,
+    widening present, every active deadline at or below the active end, every deadline at or
+    below the work end, no stop, scans 0, renewals 0 (BUDGET-D). Cause (verified by reading
+    dispatcher.py:1110-1199): _service renews only when a live lease is within the renewal
+    margin (service_calls x operation_seconds + operation_seconds) or a health scan is due
+    inside that reserve; leases are about 5 s ahead, so a run that completes before any lease
+    comes due makes no renewal, and the count depends on run duration and on where the lease
+    phase falls, not on E1. The assertion was added by the 480 (7) repair ("scans and renewals
+    asserted"); the scan half was already dropped in 483/484 (5) for the same reason ("the
+    fixture scans 0 times"). Classification: test-oracle defect in E1's own control (d), not a
+    product defect: nothing in the failing runs shows a lapsed lease, a missed due renewal or
+    a budget violation, and z-2 is otherwise clean on a quiet host (2248 of 2249 other outer
+    tests and 1965 of 1966 nested). Repair scope (test only, no product change): replace the
+    count with an invariant oracle over every _service entry during the run, namely (i) no live
+    lease has lapsed at entry and (ii) whenever a live lease is within the renewal margin at
+    entry and _service returns, the renewal count has increased; keep the run unchanged and
+    record how many entries were due, so a run with no due entry is visible as vacuous for (ii)
+    (limit, not a failure). The 487 design reopening is not triggered by this signal: its
+    premise (a budget-class failure at low load) does not hold. Next: independent review of
+    the repair, targeted reruns of the file, then a new full run on the repaired head through
+    the loop.

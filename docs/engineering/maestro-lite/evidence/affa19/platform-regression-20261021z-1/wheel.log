@@ -1,0 +1,210 @@
+................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+............................................................F........... [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+.......................................F................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+..........................F...................................s......... [ 78%]
+........................................................................ [ 82%]
+........................................................F............... [ 85%]
+........................................................................ [ 88%]
+........F.F............................................................. [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+...........................................                              [100%]
+=================================== FAILURES ===================================
+____ test_existing_platform_pytest_regression_unchanged_in_assembled_target ____
+
+    def test_existing_platform_pytest_regression_unchanged_in_assembled_target():
+        root = S.platform_source_root()
+        completed = subprocess.run(
+            [
+                sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                "--ignore", str(root / "tests" / "thesis_lite" / "argus"),
+                str(root / "tests"),
+            ],
+            cwd=str(root),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+>       assert completed.returncode == 0, f"{completed.stdout[-4000:]}\n{completed.stderr[-4000:]}"
+E       AssertionError: ed','failed','cancelled'],outcomes
+E         E               AssertionError: [RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', generation...ntInstances/terminal-instance', generation=2, disposition='cancelled', execution_id=None, diagnostic='ML-BOOT-CLOSED')]
+E         E               assert ['failed', 'c..., 'cancelled'] == ['completed',..., 'cancelled']
+E         E                 
+E         E                 At index 0 diff: 'failed' != 'completed'
+E         E                 Use -v to get more diff
+E         
+E         tests/thesis_lite/maestro/test_active_transitive_restart.py:125: AssertionError
+E         _______ test_paused_ticks_still_service_host_health_and_original_leases ________
+E         
+E         request = <FixtureRequest for <Function test_paused_ticks_still_service_host_health_and_original_leases>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7af327ecd0f0>
+E         
+E             def test_paused_ticks_still_service_host_health_and_original_leases(
+E                 request, monkeypatch
+E             ):
+E                 stack = full_stack(request, monkeypatch, pauses=40)
+E                 driver = dispatcher(stack)
+E                 result = driver.run(*ends(driver))
+E         >       assert result.execution_succeeded, result
+E         E       AssertionError: DispatchResult(run_id='fixture-run', lifecycle_digest='f523d1d7b5b078128fbfe0a1772c18888000210ce20f52d144fa2c78cec4db1...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=2, lease_renewals=9, lifecycle_complete=False, ready_for_execution=False)
+E         E       assert False
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='f523d1d7b5b078128fbfe0a1772c18888000210ce20f52d144fa2c78cec4db1...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=2, lease_renewals=9, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_dispatcher.py:313: AssertionError
+E         ____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+E         
+E         request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+E         monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7af324b818d0>
+E         
+E             def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+E                 stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+E                 old_lease = stack[0].connection.lease_ns
+E                 result = run(driver)
+E         >       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E         E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E         E       assert (False)
+E         E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='ded69c36bed1fd8dfee3c6e5bef50a68936256e52e33b4b1fbada9f8d2210dd...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=3, lease_renewals=6, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+E         
+E         tests/thesis_lite/maestro/test_shared_dispatcher.py:152: AssertionError
+E         =========================== short test summary info ============================
+E         FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]
+E         FAILED tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[external-thread]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]
+E         FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]
+E         FAILED tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases
+E         FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+E         7 failed, 1959 passed, 1 skipped, 24 subtests passed in 1781.29s (0:29:41)
+E         
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/dev/shm/maestro-platform-20261021t-zrpfnhnk/venv/bin/python', '-m', 'pytest', '-q', '-p', 'no...al_leases_and_observe_health\n7 failed, 1959 passed, 1 skipped, 24 subtests passed in 1781.29s (0:29:41)\n", stderr='').returncode
+
+tests/thesis_lite/argus/test_argus2_integration.py:173: AssertionError
+_____________ test_widened_deadlines_stay_inside_every_outer_bound _____________
+
+request = <FixtureRequest for <Function test_widened_deadlines_stay_inside_every_outer_bound>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e287a38d320>
+
+    def test_widened_deadlines_stay_inside_every_outer_bound(request, monkeypatch):
+        """(d) Seeded phase estimates widen the active phases; every deadline stays at or below the
+        active end, health scans and renewals still happen, and no lease is exhausted."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.25, phase_cleanup=0.25)  # sized beyond 0.6 x 0.5 s, still fits (M1 passes)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        print("BUDGET-D", dict(diagnostic=result.diagnostic, trace=getattr(driver, "_interior_trace", None),
+                               scans=driver.health_scans, renewals=driver.lease_renewals))
+        assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
+        assert any("widened" in e for e in driver._interior_trace)
+        active = [d for d in deadlines if not d[4]]
+        assert active and all(end <= active_end for _, end, active_end, _, _ in active)
+        assert all(end <= work_end for _, end, _, work_end, _ in deadlines)
+        assert not any(e.get("stopped") for e in driver._interior_trace)
+>       assert driver.lease_renewals >= 1  # renewals still happen (finding 480 (7))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 0 >= 1
+E        +  where 0 = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x7e287b488b90>.lease_renewals
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:171: AssertionError
+----------------------------- Captured stdout call -----------------------------
+BUDGET-D {'diagnostic': None, 'trace': [{'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.49977164389565587, 'need': 0.375, 'widened': 0.075228356057778}, {'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.49992166506126523, 'need': 0.375, 'widened': 0.07507833489216864}, {'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'remaining': 0.4999174880795181, 'need': 0.375, 'widened': 0.0328236639034003}], 'scans': 0, 'renewals': 0}
+_______ test_original_registry_whole_run_replay_and_retained_collection ________
+
+runtime = (<xverse.maestro.runtime_entry._OriginalRuntimeRun object at 0x7e28798ac9e0>, RuntimeScope(startup=HostDeadline(sessio...6.654290863)), PosixPath('/dev/shm/maestro-platform-20261021t-zrpfnhnk/basetemp/test_original_registry_whole_r0/work'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e287a35e900>
+
+    def test_original_registry_whole_run_replay_and_retained_collection(runtime,monkeypatch):
+        entry,scope,work=runtime;registry=_OriginalRuntimeRegistry(1);registry.reserve(entry)
+        result=registry.start('fixture-run',scope)
+>       assert result.execution_succeeded and result.cleanup_complete
+E       AssertionError: assert (False)
+E        +  where False = RuntimeResult(run_id='fixture-run', dispatch=DispatchResult(run_id='fixture-run', lifecycle_digest='87477410655f330065...dy_for_execution=False), diagnostics=(), persistence_failure=None, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_runtime_control_registry.py:60: AssertionError
+____ test_paused_shared_ticks_renew_both_original_leases_and_observe_health ____
+
+request = <FixtureRequest for <Function test_paused_shared_ticks_renew_both_original_leases_and_observe_health>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e2879b1add0>
+
+    def test_paused_shared_ticks_renew_both_original_leases_and_observe_health(request, monkeypatch):
+        stack, controller, driver = scheduled(request, monkeypatch, pauses=70)
+        old_lease = stack[0].connection.lease_ns
+        result = run(driver)
+>       assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='7ae2acedbbe611bc03fb0506e3a6b2c3b4a9b0cad8defdf8029b9c0e7b7058b...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=4, lease_renewals=8, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_shared_dispatcher.py:152: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e2873bf4910>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-zrpfnhnk/basetemp/test_actual_native_writer_fail1/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='e2314efc869b041bc0c4ed42ef4206a6e7adce9ece9e641de7b3c97f0273ec2...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=0, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+_ test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check] _
+
+request = <FixtureRequest for <Function test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e28736a5860>
+run_bootstrap_binary = PosixPath('/dev/shm/maestro-platform-20261021t-zrpfnhnk/basetemp/test_actual_native_writer_fail3/owned-writer-stage-helper/run-bootstrap')
+
+    @pytest.mark.parametrize('run_bootstrap_binary',list(EXPECTED),indirect=True)
+    def test_actual_native_writer_failure_preserves_original_state_and_cleanup(request,monkeypatch,run_bootstrap_binary):
+        mode=request.node.callspec.params['run_bootstrap_binary']
+        expected_stage,after,durable,usability,attempted,completed,_=EXPECTED[mode]
+        stack,_,driver=scheduled(request,monkeypatch);broker,_,client,work=stack
+        result=run(driver)
+        # Retain actual outcomes before checking the independently authored expectations.
+        retain(stack,result,'native-writer-'+mode)
+>       assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E       AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='f40c5dce99b024a921f0baec9e089ed243f3f48070df0d59ea1c44060b96fce...='ML-SCHEDULE-SERVICE-DEADLINE', health_scans=1, lease_renewals=2, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_terminal_native_writer_failures.py:144: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/thesis_lite/maestro/test_runtime_lane_admission.py:55: MAESTRO_LANE_PROPOSAL not set: lane admission evidence runs under its own driver
+FAILED tests/thesis_lite/argus/test_argus2_integration.py::test_existing_platform_pytest_regression_unchanged_in_assembled_target
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_widened_deadlines_stay_inside_every_outer_bound
+FAILED tests/thesis_lite/maestro/test_runtime_control_registry.py::test_original_registry_whole_run_replay_and_retained_collection
+FAILED tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]
+FAILED tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]
+6 failed, 2244 passed, 1 skipped, 24 subtests passed in 3450.94s (0:57:30)
