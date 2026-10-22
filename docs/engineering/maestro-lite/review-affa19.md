@@ -1962,3 +1962,24 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     effectiveness claimed. Register sha fb8d7058…, 56 records / 647 bindings; both validators
     pass (644 parent bindings checked, none changed, no record lost). This finding is bound by
     the next successor.
+
+496. P3-T07 decided (2026-10-22) under the author's delegation; this corrects 494 (5). Finding
+    476 records the delegation as covering the open decisions of capability 024, P3-T01 to
+    P3-T07, and E4 assigns P3-T07 to the agent once T01-T06 are closed, with G4 re-decided and
+    source-parent fidelity carried as a stated limit. 494 (5) left T07 to the author because
+    of the task text ("explicit author acceptance"); the delegation is that acceptance. Delivery
+    identity: the DV12 gate run from platform main against run 22a-1 with --candidate 0a498bb7e
+    (scope code) is accepted with no blocker; run and main code sha f25a295d… are equal. G4 for
+    feature acceptance: WAIVED WITH STATED LIMIT (acceptance-inputs/g4-feature-acceptance.json):
+    the 18 REF-002 parents stay allocation-only, individual source-parent semantic fidelity is
+    unvalidated, FR-001-FR-012 are the approved basis, and no approved public-safe semantics
+    input exists; G4 is not satisfied. Decision: Maestro Lite (capability 024) accepted as an
+    engineering capability at main 0a498bb7e with the limits of the acceptance package (thesis
+    specs/024-maestro-lite-lifecycle/review/t07-acceptance-package-20261022.md): G4 limit, host
+    load envelope (claims only at sampled load at most 10), CAPA states (418 FIX_CANDIDATE, 359
+    and 337 HYPOTHESIS, 286 and the other unknown causes UNKNOWN, effectiveness not
+    demonstrated), observations 468 C4, 484 LOW, 488, 490, and the non-claims (standards
+    compliance, target hardware timing, F02D-01, F-05). Not decided by this: lane activation,
+    M1 admission, factory runs, scientific claims, RF-2026-08-30-v6, AEB-EXPERIMENT-2026-08-30-v2.
+    The author may revoke the delegated acceptance; revocation would reopen P3-T07 only (the
+    increment-19 engineering merge stands on 493). This finding is bound by the next successor.
