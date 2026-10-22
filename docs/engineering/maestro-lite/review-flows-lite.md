@@ -42,3 +42,12 @@ finding 15).
    (b) The data model does not say what happens to an out-of-order item on an `unordered` route
        while the buffer is full. The precedence rule keeps the verdict `out-of-order`, so the
        item is withheld with diagnostic `queue-full` (receiver).
+
+3. Implementation finding (2026-10-22). The experiment plan normalizes a Scenario mapping tolerance
+   to `{value, unit, ticks}` (`experiment_plan._quantity`). The binder's quantity parser accepts
+   exactly `{value, unit}`, so the first owned fixture refused the camera flow with
+   `MAPPING-UNSUPPORTED`. Repair: the binder parses `{value, unit}` and requires the plan's
+   `ticks` to equal the parsed nanoseconds (1 tick = 1 ns); a disagreement is
+   `MAPPING-UNSUPPORTED`. With the repair the owned `uniform` set compiles to an `activatable`
+   `xcom_plan` with no diagnostics, and the `distinct` set compiles to an `inspectable` plan with
+   only `XCOM-PLAN-POLICY-CONFLICT`, as FR-013 requires.
