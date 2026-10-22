@@ -257,3 +257,55 @@ finding 15).
     **Process repair:** commit the review log before building any CAPA step, so every bound log
     version is a committed blob. Phase 5's acceptance is unaffected: its CAPA verified at the time,
     and the bound content is recovered exactly.
+
+14. CAPA successor step 8 (`evidence/affa19/capa-20261022-flows-step8/`), built by
+    `build-capa-20261022-flows-step8.py` after the log was committed (finding 13's process
+    repair). It is additive over step 7 (`76a60c17…`), and no record was opened, changed or
+    closed: every Phase 6 defect was a defect of this unaccepted candidate (findings 2–11),
+    repaired before acceptance.
+    - Register `49f25e7488667b61c6b8e9e82c5f2d58d4b97f8e00b5f0a8664077a72fd16f84`: 56 records and
+      665 bindings, which add the review log, the run's SHA256SUMS and gate verdict, the V10
+      SHA256SUMS and the Phase 6 test modules.
+    - `verify-capa-register-20261020.py` passes (rc 0).
+    - Parent preservation passes: 654 parent bindings, none changed or lost.
+    - No cause is verified and no effectiveness is claimed.
+
+15. **Acceptance decision, Phase 6 (communication integration), recorded before merge**
+    (2026-10-22).
+
+    **Basis.** The author's goal of 2026-10-22, plus the delegation "propose something and go"
+    (thesis `specs/021-thesis-lite-program/review/delegated-decisions-20261022.md`: DLG-5 for
+    D6-11 and DLG-6 for D6-4, D6-5 and D6-8). Specification: thesis `specs/027-lite-flow-runtime`
+    (planning rev 8b, detailed design rev 3a with the N1 amendment, data model with the L4
+    addition) and the 026 amendment A1.
+
+    **Evidence.**
+    - Implementation review 1 FAIL (finding 8), repaired (9); review 2 PASS (10); LOWs
+      dispositioned (11).
+    - V10 FR-024 gtest 3/3 on the reconstructed toolchain (7).
+    - Decisive clean run h-1 with the DV12 gate accepted (12).
+    - CAPA step 8 valid (14).
+    - The `xverse-compat` suite was run against the candidate wheel before the merge (finding 6's
+      process repair): 90 passed; the 1 failure is the content lock, re-pinned after this merge.
+
+    **Decision.** Accept `candidate/flows-lite-20261022` and merge it `--no-ff` into platform main,
+    then push. The delivery identity check is the gate against the merge commit, which must give
+    the run's code SHA-256 `8a3e6740…`. Then re-pin the `xverse-compat` lock to the new main, run
+    its suite, review, and merge it.
+
+    **Limits carried.**
+    - The flow layer mirrors the C++ loopback rules and opens no X-COM route (D6-7). Only
+      ordered/best-effort flows bind.
+    - Policy-distinct flows cannot activate the C++ core (D6-10).
+    - Maestro-driven flow traffic is not exercised; verification uses the tick-driven harness, and
+      the assembled system is carried to Phase 7 (D6-11).
+    - The bridge age excludes publication latency (D6-3).
+    - The time and capability conventions live in `quality` and in strings, not in the schema
+      (D6-4, D6-5, D6-8).
+    - Offline reconstruction checks delivered in-order items by count only.
+    - A harness cleanup failure is kept on the harness, not in Argus.
+    - Live camera, radar and bridge paths are gated by Phase 4b and Phase 7, and G3 and G6 stay
+      open.
+    - Timing outcomes are claimed only up to a sampled host load of 10.
+    - The 18 REF-002 parents get bounded partial contributions only.
+    - No scientific claim, M1, lane activation or factory run.
