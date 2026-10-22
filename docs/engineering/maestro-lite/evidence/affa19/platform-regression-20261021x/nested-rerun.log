@@ -1,0 +1,21 @@
+9
+== rep1 load 9.51 9.46 9.95 17:17:59
+                with pytest.raises(ValueError):broker._current_controller._start_access()
+            else:
+                assert outcome.disposition=='completed' and outcome.ordinary_reconciled,outcome
+>               assert result.execution_succeeded and result.terminal_recorded,result.diagnostic
+E               AssertionError: ML-SCHEDULE-SERVICE-DEADLINE
+E               assert (False)
+E                +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='59be54eef29016c06e867ea16ea53e247a0b08634d9f728775a9f6e864f5797...'ML-SCHEDULE-SERVICE-DEADLINE', health_scans=4, lease_renewals=10, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_active_controller_recovery.py:202: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[cleaned-then-restart]
+1 failed, 8 passed in 93.63s (0:01:33)
+end load 10.64 10.05 10.12
+== rep2 load 10.64 10.05 10.12 17:19:33
+.........                                                                [100%]
+9 passed in 82.98s (0:01:22)
+end load 10.46 10.13 10.14
+
+[exited with code 0]

@@ -1,0 +1,219 @@
+DV04 dead {'fired': True, 'diagnostic': 'ML-LAUNCH-CHILD-EXIT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.DV04 unknown-health {'fired': True, 'diagnostic': 'ML-LAUNCH-TIMEOUT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.DV04 final-guard {'fired': True, 'diagnostic': 'ML-LAUNCH-CHILD-EXIT', 'dispositions': {'prepare-source': 'completed', 'prepare-sink': 'completed', 'start-source': 'completed', 'start-sink': 'failed', 'observe-source': 'blocked', 'observe-sink': 'blocked', 'stop-sink': 'blocked', 'cleanup-sink': 'blocked', 'stop-source': 'blocked', 'cleanup-source': 'blocked'}, 'markers': ['source-binding.marker']}
+.FFF
+=================================== FAILURES ===================================
+________ test_permit_expiring_between_intent_and_release_blocks_release ________
+
+storage = (<function storage.<locals>.start at 0x7409a57ebc40>, <function storage.<locals>.stage at 0x7409a57e9a80>, Persistence...c.ProcessBoundaryOps object at 0x7409a57ed6e0>, <xverse.maestro.supervisor.CancellationLatch object at 0x7409a57ec640>)
+native = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/releasegate-native0/release-gate')
+tmp_path = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/test_permit_expiring_between_i0')
+
+    def test_permit_expiring_between_intent_and_release_blocks_release(storage, native, guard_binary, tmp_path):
+        start, stage, config, manager, latch = storage
+        now = datetime.now(timezone.utc)
+        expiry = now + timedelta(seconds=2.5)
+        owner, client, announce, release = start(override=sealed(tmp_path, manager, not_before=now - timedelta(seconds=30),
+                                                                 expires_at=expiry))
+        unit_id = config.prepared.units[0].unit_id
+        original = deadline(8)
+>       owner.commit_intent(unit_id, original)
+
+tests/thesis_lite/maestro/test_permit_release_path.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/owner.py:773: in commit_intent
+    until = self._check(deadline)
+            ^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/owner.py:722: in _check
+    until = _deadline(deadline, self.session)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = HostDeadline(session='host-session', monotonic_seconds=1151992.509208935)
+session = 'host-session'
+
+    def _deadline(value, session):
+        if type(value) is not HostDeadline or value.session != session:
+            raise OwnerError("ML-OWNER-HOST-SESSION")
+        value.__post_init__()
+        remaining = value.monotonic_seconds - time.monotonic()
+        if not 0 < remaining <= 5:
+>           raise OwnerError("ML-OWNER-DEADLINE")
+E           xverse.maestro.owner.OwnerError: ML-OWNER-DEADLINE
+
+src/xverse/maestro/owner.py:59: OwnerError
+_______________ test_not_yet_valid_permit_never_reaches_release ________________
+
+prepared = PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='f570fa42244c1550be6bc6aeb8665050826b7c45227db0b9faf1ab3cbccb4b7a')
+run_id = 'fixture-run'
+unit = Unit(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', binding_id='source-b...st='sha256:1111111111111111111111111111111111111111111111111111111111111111', environment_identity='isolated-fixture'))
+binding = PermitBinding(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', execution_id='fixture-execution-0', generation=1)
+approval = PermitApproval(approval_ref='urn:xverse:test:approval:0', issuer_label='test-approval-owner', run_id='fixture-run', un...nfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 21, 7, 30, 2, 138468, tzinfo=datetime.timezone.utc))
+now = datetime.datetime(2026, 10, 21, 7, 29, 2, 416750, tzinfo=datetime.timezone.utc)
+initial_generation = 1
+
+    def _validate_one(
+        prepared: PreparedLifecycle,
+        run_id: str,
+        unit: Unit,
+        binding: PermitBinding,
+        approval: PermitApproval,
+        now: datetime,
+        initial_generation: int = 0,
+    ) -> None:
+        _aware(now)
+        _identifier(binding.execution_id)
+        if type(binding.generation) is not int or binding.generation != initial_generation:
+            _deny(
+                "ML-PERMIT-GENERATION",
+                "binding must match explicit initial generation; restart needs prior release evidence",
+            )
+        permit = binding.permit
+        if type(permit) is not ExecutionPermit:
+            _deny("ML-PERMIT-TYPE", "accepted M3 permit required")
+        try:
+>           permit.validate(unit.plan, now)
+
+src/xverse/maestro/admission.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ExecutionPermit(permit_id='fixture-permit-0', nonce='private-test-nonce-0', plan_digest='sha256:83f3e4c526d422b08aec93...nfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 21, 7, 30, 2, 138468, tzinfo=datetime.timezone.utc))
+plan = LifecyclePlan(catalog_identity='xdl://org.xverse.experiment/deployment/local-simulated-loop#binding/source-binding', e...s=(), digest='sha256:83f3e4c526d422b08aec939372c5c0458ed97eeb3dafdbd3fa28820a44fb3aaf', requires_execution_permit=True)
+now = datetime.datetime(2026, 10, 21, 7, 29, 2, 416750, tzinfo=datetime.timezone.utc)
+
+    def validate(self, plan: LifecyclePlan, now: datetime) -> None:
+        """Validate temporal, identity, action, and operation bindings.
+    
+        @raises LifecycleError If the permit does not authorize the exact plan at *now*.
+        """
+    
+        if self.not_before.tzinfo is None or self.expires_at.tzinfo is None or now.tzinfo is None:
+            raise _lifecycle_error("XVERSE-PERMIT-TIME", "authorization", plan, "permit times must be timezone-aware", "Use UTC-aware validity bounds.")
+        if now < self.not_before:
+>           raise _lifecycle_error("XVERSE-PERMIT-NOT-YET-VALID", "authorization", plan, "execution permit is not yet valid", "Wait for notBefore or issue a correct permit.")
+E           xverse_xdl.lifecycle.LifecycleError: XVERSE-PERMIT-NOT-YET-VALID: execution permit is not yet valid
+
+src/xverse_xdl/lifecycle.py:127: LifecycleError
+
+The above exception was the direct cause of the following exception:
+
+storage = (<function storage.<locals>.start at 0x7409a5a84180>, <function storage.<locals>.stage at 0x7409a5a859e0>, Persistence...c.ProcessBoundaryOps object at 0x7409a593f950>, <xverse.maestro.supervisor.CancellationLatch object at 0x7409a593f490>)
+native = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/releasegate-native0/release-gate')
+tmp_path = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/test_not_yet_valid_permit_neve0')
+
+    def test_not_yet_valid_permit_never_reaches_release(storage, native, guard_binary, tmp_path):
+        start, stage, config, manager, latch = storage
+        now = datetime.now(timezone.utc)
+>       owner, client, announce, release = start(override=sealed(tmp_path, manager, not_before=now + timedelta(seconds=30),
+                                                                 expires_at=now + timedelta(seconds=60)))
+
+tests/thesis_lite/maestro/test_permit_release_path.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_permit_release_path.py:33: in sealed
+    return encode_configuration(prepared, result, resources, run_id="fixture-run", bindings=new_bindings,
+src/xverse/maestro/persistence.py:146: in encode_configuration
+    futures = validate_generation_contexts(
+src/xverse/maestro/admission.py:443: in validate_generation_contexts
+    initial = validate_permits(
+src/xverse/maestro/admission.py:355: in validate_permits
+    _validate_one(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prepared = PreparedLifecycle(experiment_digest='82ccfafc31d442d35272fc44deaf26a16e07c593702902046eee618ce732222b', resource_diges...onentInstances/sink-instance"}]}', lifecycle_digest='f570fa42244c1550be6bc6aeb8665050826b7c45227db0b9faf1ab3cbccb4b7a')
+run_id = 'fixture-run'
+unit = Unit(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', binding_id='source-b...st='sha256:1111111111111111111111111111111111111111111111111111111111111111', environment_identity='isolated-fixture'))
+binding = PermitBinding(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', execution_id='fixture-execution-0', generation=1)
+approval = PermitApproval(approval_ref='urn:xverse:test:approval:0', issuer_label='test-approval-owner', run_id='fixture-run', un...nfo=datetime.timezone.utc), expires_at=datetime.datetime(2026, 10, 21, 7, 30, 2, 138468, tzinfo=datetime.timezone.utc))
+now = datetime.datetime(2026, 10, 21, 7, 29, 2, 416750, tzinfo=datetime.timezone.utc)
+initial_generation = 1
+
+    def _validate_one(
+        prepared: PreparedLifecycle,
+        run_id: str,
+        unit: Unit,
+        binding: PermitBinding,
+        approval: PermitApproval,
+        now: datetime,
+        initial_generation: int = 0,
+    ) -> None:
+        _aware(now)
+        _identifier(binding.execution_id)
+        if type(binding.generation) is not int or binding.generation != initial_generation:
+            _deny(
+                "ML-PERMIT-GENERATION",
+                "binding must match explicit initial generation; restart needs prior release evidence",
+            )
+        permit = binding.permit
+        if type(permit) is not ExecutionPermit:
+            _deny("ML-PERMIT-TYPE", "accepted M3 permit required")
+        try:
+            permit.validate(unit.plan, now)
+        except LifecycleError as error:
+>           raise AdmissionError("ML-PERMIT-M3", error.diagnostic.code) from error
+E           xverse.maestro.admission.AdmissionError: ML-PERMIT-M3: XVERSE-PERMIT-NOT-YET-VALID
+
+src/xverse/maestro/admission.py:211: AdmissionError
+____ test_intent_only_restart_cannot_reclaim_through_a_new_original_worker _____
+
+storage = (<function storage.<locals>.start at 0x7409a5a86a20>, <function storage.<locals>.stage at 0x7409a5a874c0>, Persistence...c.ProcessBoundaryOps object at 0x7409a591da30>, <xverse.maestro.supervisor.CancellationLatch object at 0x7409a591d490>)
+native = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/releasegate-native0/release-gate')
+tmp_path = PosixPath('/dev/shm/maestro-affa19-focused-PNDS7l/base/test_intent_only_restart_canno0')
+
+    def test_intent_only_restart_cannot_reclaim_through_a_new_original_worker(storage, native, guard_binary, tmp_path):
+        start, stage, config, manager, latch = storage
+        now = datetime.now(timezone.utc)
+        times = dict(not_before=now - timedelta(seconds=30), expires_at=now + timedelta(seconds=60))
+        owner, client, announce, release = start(override=sealed(tmp_path, manager, **times))
+        unit_id = config.prepared.units[0].unit_id
+        owner.commit_intent(unit_id, deadline(4))
+        signal.pidfd_send_signal(client._pidfd, signal.SIGKILL)
+        with pytest.raises(ValueError):
+>           client.abort(deadline(1))  # the dead worker cannot answer; the client is marked failed
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_permit_release_path.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/xverse/maestro/persistence.py:1311: in abort
+    _, _, body = self._rpc("abort", {}, deadline)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:798: in _rpc
+    reply = _receive(self._pins[1], self._peer, until, check)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/xverse/maestro/persistence.py:409: in _receive
+    packet=_receive_packet(channel,peer,until,check,maximum_blob=maximum_blob,blob_purposes=blob_purposes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+channel = <socket.socket fd=8, family=1, type=5, proto=0, laddr=b'\x004933e', raddr=b'\x002cc28'>
+peer = (1196549, 1000, 1000), until = 1151987483475116
+check = <function PersistenceClient._rpc.<locals>.check at 0x7409a56345e0>
+
+    def _receive_packet(channel, peer, until, check, *, maximum_blob=0, blob_purposes=('broker-projection',)):
+        while True:
+            check()
+            remaining = (until - time.monotonic_ns()) / 1e9
+            if remaining <= 0:
+                raise PersistenceError("ML-PERSIST-TIMEOUT")
+            if not select.select([channel], [], [], min(remaining, 0.01))[0]:
+                continue
+            try:
+>               data, anc, flags, _ = channel.recvmsg(
+                    MAX_PACKET + 1,
+                    socket.CMSG_SPACE(12) + socket.CMSG_SPACE(32),
+                    socket.MSG_CMSG_CLOEXEC,
+                )
+E               ConnectionResetError: [Errno 104] Connection reset by peer
+
+src/xverse/maestro/persistence.py:373: ConnectionResetError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[dead]
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[unknown-health]
+PASSED tests/thesis_lite/maestro/test_readiness_dispositions.py::test_lost_prerequisite_blocks_dependent_start_and_tears_down[final-guard]
+FAILED tests/thesis_lite/maestro/test_permit_release_path.py::test_permit_expiring_between_intent_and_release_blocks_release
+FAILED tests/thesis_lite/maestro/test_permit_release_path.py::test_not_yet_valid_permit_never_reaches_release
+FAILED tests/thesis_lite/maestro/test_permit_release_path.py::test_intent_only_restart_cannot_reclaim_through_a_new_original_worker
+3 failed, 3 passed in 11.16s

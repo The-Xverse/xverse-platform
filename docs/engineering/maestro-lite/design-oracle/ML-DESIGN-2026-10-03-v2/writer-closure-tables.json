@@ -1,0 +1,90 @@
+{
+  "maturity": "DRAFT",
+  "verification_executed": false,
+  "schema_version": 1,
+  "status": "independently_authored_expected_tables_not_runtime_evidence",
+  "revision": "ML-DESIGN-2026-10-03-v2",
+  "findings_addressed": ["ML-IR-08"],
+  "context": "At the accepted object, finalize calls flush_buffer, stream flush and stream close BEFORE the try/except that assigns the failed state; later recovery/artifact/publication errors assign failed. v1's universal statement that finalize failure moves the writer to failed is therefore inaccurate. These rows separate observed in-memory state, usability and the last durable manifest. No writer-fault test was executed.",
+  "stage_rows": [
+    {
+      "id": "W-01",
+      "stage": "early flush_buffer/fsync error",
+      "possible_state": ["open"],
+      "usability": "usable",
+      "bounded_abort_permitted": true,
+      "actual_durable_observation": "last durable open/incomplete manifest (prior flushed state)",
+      "notes": "stream still open; report state and last durable manifest separately"
+    },
+    {
+      "id": "W-02",
+      "stage": "early stream flush error",
+      "possible_state": ["open"],
+      "usability": "uncertain",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "last durable open/incomplete manifest",
+      "notes": "partial stream; abort only if usability is positively demonstrated"
+    },
+    {
+      "id": "W-03",
+      "stage": "early stream close error",
+      "possible_state": ["open"],
+      "usability": "unknown_or_unusable",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "last durable open/incomplete manifest; do not infer closure",
+      "notes": "an open flag after partial close does not prove usability"
+    },
+    {
+      "id": "W-04",
+      "stage": "post-close recovery error",
+      "possible_state": ["failed"],
+      "usability": "unusable",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "last durable manifest observed by the accepted reader",
+      "notes": "never reopen"
+    },
+    {
+      "id": "W-05",
+      "stage": "post-close artifact verification error",
+      "possible_state": ["failed"],
+      "usability": "unusable",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "manifest may list artifacts whose bytes fail verification; reader diagnostic retained",
+      "notes": "never reopen; do not suppress corruption diagnostics"
+    },
+    {
+      "id": "W-06",
+      "stage": "post-close publication error",
+      "possible_state": ["failed"],
+      "usability": "unusable",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "last durable manifest; recorded/assessed status verbatim",
+      "notes": "terminal-report.json records actual subsequent recorded/assessed state"
+    },
+    {
+      "id": "W-07",
+      "stage": "successful finalize",
+      "possible_state": ["closed"],
+      "usability": "not-applicable",
+      "bounded_abort_permitted": false,
+      "actual_durable_observation": "published manifest as read by the accepted reader",
+      "notes": "do not modify indexed artifacts after closure"
+    }
+  ],
+  "invariants": [
+    "Report observed in-memory writer state, supported usability evidence and last durable manifest independently for each stage.",
+    "Do not infer the actual durable manifest from intended closure or in-memory state; the accepted reader is authoritative.",
+    "Permit at most one bounded abort only when the writer is open AND usable; never abort/reopen failed or closed writers.",
+    "Never inspect private stream state.",
+    "Cleanup proceeds independently of writer state in every row."
+  ],
+  "coverage_feed": {
+    "normal_record_gap_rule": "where a required normal mirror/outcome record is missing, an emergency unresolved disposition documents the failure but does not satisfy the mandatory normal-record obligation (see coverage-expected-tables.json)",
+    "finalize_rule": "finalize is permitted only when Maestro required coverage is complete and collection/terminal records are retained"
+  },
+  "independence_note": "Rows are authored from the accepted-source observation recorded in ML-IR-2026-10-03-v1 and the admitted design, not from any Maestro implementation.",
+  "limitations": [
+    "No writer, accept path, disk-full condition or fault injection was executed.",
+    "Stage coverage is expected, not measured."
+  ]
+}

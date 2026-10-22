@@ -1,0 +1,94 @@
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+.....................FxFF............................................... [ 59%]
+....................................................................s... [ 79%]
+........................................................................ [ 98%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_execution_outcome _
+
+request = <FixtureRequest for <Function test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_execution_outcome>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75b53e323000>
+
+    def test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_execution_outcome(request, monkeypatch):
+        """F-10 (findings 439-443): every lifecycle obligation of the failed run is satisfied."""
+        result, checked, facts, coverage, open_rows, invalid = failed_run(request, monkeypatch)
+>       assert not invalid and not open_rows, (invalid, open_rows)
+E       AssertionError: ([('health-loss', 'unknown', 'conflicting')], [{'diagnostic': 'invalid/missing source or annotation', 'obligationId': 'ob.input-integrity', 'status': 'conflicting'}])
+E       assert (not [('health-loss', 'unknown', 'conflicting')])
+
+tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py:82: AssertionError
+----------------------------- Captured stdout call -----------------------------
+DV09-P1 {"killed": true, "succeeded": false, "terminal": true, "diagnostic": "ML-RUN-CHILD-EXIT", "rpc_failure": "None", "invalid": [["health-loss", "unknown", "conflicting"]], "open_rows": [{"obligationId": "ob.input-integrity", "status": "conflicting", "diagnostic": "invalid/missing source or annotation"}], "statuses": {"emergencyFactStatus": "not-needed", "normalRecordStatus": "incomplete", "overallStatus": "incomplete"}, "report": {"admissionDigest": "sha256:2208c7d3503f90e44d67de320b291e7b2a363c0e31a5aa2a72edda43e35044c6", "annotationCount": 50, "blockers": ["normal-records", "required-coverage", "terminal-outcome"], "collectionComplete": true, "coreDigest": "sha256:aced2d9373fc88d97a361ff17a8cd9a87a8be4e7f1f83fcd31cdf57534623eaa", "eligible": false, "entry": {"bytes": 18049, "mediaType": "application/json", "path": "lifecycle-coverage.json", "role": "evidence", "schemaVersion": "2.0", "sha256": "aced2d9373fc88d97a361ff17a8cd9a87a8be4e7f1f83fcd31cdf57534623eaa"}, "m3Count": 31, "normalComplete": false, "reportEndNs": 1156488306922386, "requiredRowsSatisfied": false, "retainedEntry": {"bytes": 129333, "mediaType": "application/json", "path": "retained-inputs.json", "role": "evidence", "schemaVersion": "1.0", "sha256": "fdb2d1912a93af3ddce58434553a2a0ccee41641ea6f30ba91e36fa63fb7dc31"}, "runtimeAdmissionDigest": "sha256:874c60dc646303b9fc9faaa8b5a2b847f06946f94c5c55d6a2e82e3eb040dba3", "schemaVersion": "1.0", "stage": "published", "terminalSucceeded": false}, "offline_complete": false, "leaf_events": [["intent", "pending", false], ["issued", "succeeded", true], ["started", "succeeded", true], ["probe", "succeeded", true], ["ready", "succeeded", true], ["health-loss", "unknown", false], ["intent", "pending", true], ["stop", "succeeded", true], ["intent", "pending", true], ["cleanup", "succeeded", true]], "m3": [["intent", "pending"], ["observation", "staged"], ["outcome", "running"], ["observation", "running"], ["outcome", "completed"], ["intent", "pending"], ["observation", "staged"], ["observation", "running"], ["outcome", "running"], ["observation", "running"], ["outcome", "completed"], ["intent", "pending"], ["observation", "running"], ["outcome", "completed"], ["intent", "pending"], ["observation", "unknown"], ["intent", "pending"], ["outcome", "stopped"], ["intent", "pending"], ["outcome", "cleaned"], ["intent", "pending"], ["outcome", "stopped"], ["intent", "pending"], ["outcome", "cleaned"], ["outcome", "failed"], ["outcome", "blocked"], ["outcome", "blocked"], ["outcome", "blocked"], ["outcome", "blocked"], ["observation", "unresolved"], ["observation", "unresolved"]]}
+____ test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle ____
+
+request = <FixtureRequest for <Function test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75b53e35a0b0>
+
+    def test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle(request, monkeypatch):
+        """Finding 445 (a): the lazy start step never sent a handle; the loss still names the issuance."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        source, leaf = driver.prepared.resource_order
+        fired = lost_observation(monkeypatch, leaf, 1)
+        result = run(driver)
+        losses, expected = recorded_loss(client, work, leaf, 1)
+        print("F10-A", json.dumps(dict(fired=bool(fired), diagnostic=result.diagnostic, rpc_failure=str(client.rpc_failure),
+                                       terminal=result.terminal_recorded, losses=losses, expected=expected), default=str))
+        assert fired and client.rpc_failure is None and not client._failed, client.rpc_failure
+        assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
+>       assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
+E       AssertionError: assert ('handle-e682f9d9797cf3d52aae35425ecbcca4cdbec2ba317f84aae49d7850da0b9e64' is not None and [('unknown', None)] == [('unknown', ...850da0b9e64')]
+E         
+E         At index 0 diff: ('unknown', None) != ('unknown', 'handle-e682f9d9797cf3d52aae35425ecbcca4cdbec2ba317f84aae49d7850da0b9e64')
+E         Use -v to get more diff)
+
+tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py:133: AssertionError
+----------------------------- Captured stdout call -----------------------------
+F10-A {"fired": true, "diagnostic": "ML-PROBE-OBSERVATION", "rpc_failure": "None", "terminal": true, "losses": [{"action": "health-loss", "cause": "external", "dependencies": [], "diagnosticCode": "ML-PROBE-OBSERVATION", "generation": 1, "lifecycleDigest": "sha256:3b3a97b27d1a39c72beb9c6d7022ba52de05e46d5e2d54a1a62c6a77655988ae", "operationId": "ml-f546dfeb7ed1440ca0bc12d8d4c80425", "outcome": "unknown", "probeId": "running", "runId": "fixture-run", "schemaVersion": "2.0", "scope": "unit", "sessionId": "host-session", "sourceRefs": [{"id": "m3-record-9", "kind": "m3-record", "sequence": 9, "sha256": "sha256:5a79507e607a5bc049fb21042724cfb086383068b055c4af6f0d1cdc4f0b52be"}], "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}], "expected": "handle-e682f9d9797cf3d52aae35425ecbcca4cdbec2ba317f84aae49d7850da0b9e64"}
+__ test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance ___
+
+request = <FixtureRequest for <Function test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75b53e359550>
+
+    def test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance(request, monkeypatch):
+        """Finding 445 (b): commit_generation dropped the worker's handle; the loss names generation 2."""
+        from xverse.maestro.time import HostDeadline
+        from .test_terminal_controller_inventory import scheduled as restart_scheduled
+        stack, controller, driver = restart_scheduled(request, monkeypatch, restarts=True, restart_leaf_artifact=True)
+        broker, facade, client, work = stack
+        source, leaf = driver.prepared.resource_order
+        context = next(c for c in client._future_contexts if c.binding.unit_id == leaf)
+        tickets, statement = [], driver._statement
+    
+        def enqueue(kind, step, **kw):
+            response = statement(kind, step, **kw)
+            if kind == "step-complete" and step.step_id == "observe-sink" and not tickets:
+                end = HostDeadline(client.session, driver._active_end)
+                tickets.append(driver.restart(client.run_id, leaf, permit=context.binding.permit, generation=2, deadline=end))
+            return response
+    
+        monkeypatch.setattr(driver, "_statement", enqueue)
+        fired = lost_observation(monkeypatch, leaf, 2)
+        result = run(driver)
+        outcome = driver.restart_result(tickets[0]) if tickets else None
+        losses, expected = recorded_loss(client, work, leaf, 2)
+        print("F10-B", json.dumps(dict(fired=bool(fired), outcome=outcome, diagnostic=result.diagnostic,
+                                       rpc_failure=str(client.rpc_failure), terminal=result.terminal_recorded,
+                                       losses=losses, expected=expected), default=str))
+        assert tickets and fired and client.rpc_failure is None and not client._failed, client.rpc_failure
+        assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
+>       assert expected is not None and [(p["outcome"], p.get("handleRef")) for p in losses] == [("unknown", expected)]
+E       AssertionError: assert ('handle-90b4d13554662743b9c8b1059e16dc6eb0b091e5425b2437f864c5d2a8a952d0' is not None and [('unknown', None)] == [('unknown', ...5d2a8a952d0')]
+E         
+E         At index 0 diff: ('unknown', None) != ('unknown', 'handle-90b4d13554662743b9c8b1059e16dc6eb0b091e5425b2437f864c5d2a8a952d0')
+E         Use -v to get more diff)
+
+tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py:163: AssertionError
+----------------------------- Captured stdout call -----------------------------
+F10-B {"fired": true, "outcome": "RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='failed', execution_id=None, diagnostic='ML-PROBE-OBSERVATION')", "diagnostic": "ML-PROBE-OBSERVATION", "rpc_failure": "None", "terminal": true, "losses": [{"action": "health-loss", "cause": "external", "dependencies": [], "diagnosticCode": "ML-PROBE-OBSERVATION", "generation": 2, "lifecycleDigest": "sha256:d4df88083430f2c1380ac50b60a1e848133624e94398668b02dcfbe9f1b5f847", "operationId": "ml-0f50e1c8394e484c807989fd388b10af", "outcome": "unknown", "probeId": "running", "runId": "fixture-run", "schemaVersion": "2.0", "scope": "unit", "sessionId": "host-session", "sourceRefs": [{"id": "m3-record-25", "kind": "m3-record", "sequence": 25, "sha256": "sha256:1bc90eaebcb2b895a01379fa478e3c4608a592ce129686d127a9cc1cdb68d5ce"}], "unitId": "xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance"}], "expected": "handle-90b4d13554662743b9c8b1059e16dc6eb0b091e5425b2437f864c5d2a8a952d0"}
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py::test_actual_native_failed_lifecycle_records_are_complete_apart_from_the_execution_outcome
+FAILED tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py::test_lazy_start_probe_loss_is_acknowledged_and_names_the_issued_handle
+FAILED tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py::test_restarted_generation_loss_is_acknowledged_and_names_its_own_issuance
+3 failed, 359 passed, 1 skipped, 1 xfailed in 559.06s (0:09:19)

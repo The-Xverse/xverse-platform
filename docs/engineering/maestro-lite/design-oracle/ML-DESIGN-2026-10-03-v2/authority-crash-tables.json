@@ -1,0 +1,55 @@
+{
+  "maturity": "DRAFT",
+  "verification_executed": false,
+  "schema_version": 1,
+  "status": "independently_authored_expected_tables_not_runtime_evidence",
+  "revision": "ML-DESIGN-2026-10-03-v2",
+  "findings_addressed": ["ML-IR-01", "ML-IR-02"],
+  "authority_vocabulary": {
+    "ordinary_handle": "full provider-issued handle plus live issuing-registry identity; required for ordinary mutation/reconciliation",
+    "cleanup_only_capability": "C1 pre-registered boundary capability; non-bearer, private, cleanup-only, exact scope, epoch- and deadline-bound",
+    "none": "neither authority is provable; ownership is unresolved"
+  },
+  "ordering_table": [
+    { "case": "release committed before cancel", "workload_instructions": "at most one", "residual": "unit may require teardown", "expected_cleanup": "ordinary or cleanup-only over exact boundary" },
+    { "case": "cancel committed before release", "workload_instructions": "zero", "residual": "none from this ticket", "expected_cleanup": "release tickets dead; boundary stays frozen" },
+    { "case": "release and cancel same epoch, exact linearization", "workload_instructions": "determined by the single winning transition", "residual": "explicit and accounted", "expected_cleanup": "deterministic per winner" },
+    { "case": "stale-epoch ticket presented after cancel", "workload_instructions": "zero", "residual": "none", "expected_cleanup": "ticket rejected at launcher gate" },
+    { "case": "stalled broker/launcher resumes after fallback cleanup", "workload_instructions": "zero", "residual": "none; boundary already certified empty", "expected_cleanup": "re-entry rejected by stale epoch and frozen boundary" }
+  ],
+  "crash_points": [
+    { "id": "CP-01", "stage": "prior to containment creation", "live_processes": "none", "surviving_authority": "none", "successful_writes": "none", "allowed_operations": ["none"], "provable_cleanup": "nothing to clean; unresolved-free" },
+    { "id": "CP-02", "stage": "after retaining containment identity, before child", "live_processes": "none", "surviving_authority": "none", "successful_writes": "boundary identity retained in memory only", "allowed_operations": ["release boundary"], "provable_cleanup": "boundary release; no workload existed" },
+    { "id": "CP-03", "stage": "capability registration before Stage child creation", "live_processes": "none", "surviving_authority": "cleanup_only_capability (if the AFFA/supervisor survives)", "successful_writes": "capability registered privately", "allowed_operations": ["cancel-check", "observe", "release"], "provable_cleanup": "empty boundary release; no launch rights" },
+    { "id": "CP-04", "stage": "during spawn", "live_processes": "possibly a partial child", "surviving_authority": "cleanup_only_capability", "successful_writes": "private capability; boundary identity", "allowed_operations": ["freeze", "exact-scope terminate", "observe", "release"], "provable_cleanup": "exact-scope termination and empty-membership observation, else unresolved" },
+    { "id": "CP-05", "stage": "after child issuance, before issuance persistence", "live_processes": "child", "surviving_authority": "cleanup_only_capability", "successful_writes": "private capability; boundary identity", "allowed_operations": ["freeze", "exact-scope terminate", "observe", "release"], "provable_cleanup": "exact-scope termination; ordinary handle not yet provable" },
+    { "id": "CP-06", "stage": "after issuance persistence", "live_processes": "child", "surviving_authority": "ordinary_handle (if issuer registry survives) or cleanup_only_capability", "successful_writes": "issuance record", "allowed_operations": ["ordinary stop/cleanup", "or cleanup-only"], "provable_cleanup": "ordinary revalidation, else cleanup-only" },
+    { "id": "CP-07", "stage": "before durable mirror acknowledgement (append not flushed)", "live_processes": "no workload released", "surviving_authority": "cleanup_only_capability", "successful_writes": "M3 intent durable; append maybe buffered", "allowed_operations": ["cancel staging", "burn intent", "cleanup-only"], "provable_cleanup": "staging cancels; zero workload instructions; normal-record gap recorded" },
+    { "id": "CP-08", "stage": "after durable mirror acknowledgement, before ticket", "live_processes": "no workload released", "surviving_authority": "cleanup_only_capability", "successful_writes": "M3 intent; public append+flush durable", "allowed_operations": ["burn ticket", "cleanup-only"], "provable_cleanup": "zero workload instructions" },
+    { "id": "CP-09", "stage": "before supervisor acknowledgement", "live_processes": "staged child exists", "surviving_authority": "cleanup_only_capability", "successful_writes": "private capability; boundary identity", "allowed_operations": ["cancel staging", "cleanup-only"], "provable_cleanup": "exact-scope termination and empty-membership observation" },
+    { "id": "CP-10", "stage": "after supervisor acknowledgement, before Release linearization", "live_processes": "staged child", "surviving_authority": "cleanup_only_capability", "successful_writes": "capability; boundary; acknowledgement", "allowed_operations": ["cancel (bump epoch)", "cleanup-only"], "provable_cleanup": "zero workload instructions after epoch bump" },
+    { "id": "CP-11", "stage": "after Release, before M3 outcome", "live_processes": "running workload", "surviving_authority": "ordinary_handle if live registry, else cleanup_only_capability", "successful_writes": "M3 intent; mirror; issuance; ticket consumed", "allowed_operations": ["stop/cleanup ordinary", "or cleanup-only"], "provable_cleanup": "observed termination + empty boundary; normal outcome may be a mandatory gap" },
+    { "id": "CP-12", "stage": "during termination", "live_processes": "leader and/or descendants", "surviving_authority": "cleanup_only_capability", "successful_writes": "prior records", "allowed_operations": ["force within admitted scope", "observe", "release"], "provable_cleanup": "empty-membership observation; escaping descendant ⇒ verification failure" }
+  ],
+  "capability_lifecycle_tests": [
+    { "case": "forged capability identity", "expected": "rejected; no target mutated" },
+    { "case": "expired capability past teardown deadline", "expected": "revoked; unresolved if boundary non-empty" },
+    { "case": "issuer registry replaced while capability survives", "expected": "ordinary ownership unresolved; cleanup-only may still clean exact boundary" },
+    { "case": "AFFA/supervisor lost", "expected": "ownership unresolved; no PID/path/boundary-name reconstruction; no adoption" },
+    { "case": "replacement supervisor/AFFA exists", "expected": "gains no launch or adoption rights; cannot mint tickets" },
+    { "case": "sentinel in unrelated boundary", "expected": "untouched in every row above" }
+  ],
+  "supervisor_lease": {
+    "mechanism": "bounded AFFA lease tied to the admitted supervisor session",
+    "on_expiry": "fail-closed: bump epoch, revoke tickets, re-freeze run boundaries",
+    "detection": "within the admitted lease bound, not instantaneous",
+    "during_detection_interval": "bounded to already-consumed tickets; accounted per ordering_table",
+    "stale_acknowledgement": "cannot authorize release or renewal",
+    "proposed_bound": "AFFA lease <= 5 s (proposed and unmeasured)"
+  },
+  "independence_note": "Rows are authored from the admitted design and the accepted-source observations in ML-IR-2026-10-03-v1, not from any Maestro implementation, which does not exist.",
+  "limitations": [
+    "No runtime harness, containment, pidfd or facility evidence exists; all rows are design expectations.",
+    "No provider/sink/facility is asserted to support the M1 gate or C1 boundary identity."
+  ]
+}

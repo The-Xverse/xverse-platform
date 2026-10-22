@@ -667,6 +667,11 @@ class ScheduleJournal:
                 cause=body["cause"],
                 diagnosticCode=body["diagnostic"],
                 **({"probeId": "running"} if body["observation_missing"] else {}),
+                # The lost observation names the handle issued for the unit's current generation (F-10, findings 441, 445).
+                **({"handleRef": "handle-" + _digest([self.evidence.permits._run_id, asdict(
+                    self.evidence.issued_handles[unit, self._generation(unit, claims)][0])])[7:]}
+                   if body["observation_missing"] and unit is not None
+                   and (unit, self._generation(unit, claims)) in self.evidence.issued_handles else {}),
             )
             self.failures.add(unit)
             self.closing = True

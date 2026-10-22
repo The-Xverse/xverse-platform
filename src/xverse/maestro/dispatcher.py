@@ -24,6 +24,7 @@ from .owner import _Original, OwnerError, GateConnection
 from .persistence import PersistenceError
 from .providers import ProcessReadiness
 from .teardown import ReverseTeardown, TeardownResult
+from .service_time import DECISION_MARGIN, NORMAL_SHARE, RPC_MAX_SECONDS, RUN_MAX_SECONDS, SIZING_MARGIN, ServiceTimes, sized
 from .time import HostDeadline
 
 
@@ -289,6 +290,11 @@ def validate_schedule_reply(reply, request, dispatcher, operation, channel):
             base["cause"] = request["cause"]
         if kind == "failure":
             base["diagnosticCode"] = request["diagnostic"]
+            issued = client._issued_receipts.get((unit, dispatcher._generation(unit))) if unit is not None else None
+            if request["observation_missing"] and issued is not None:
+                # Mirror of the worker's lost-observation handleRef: the validated issuance of the
+                # current generation, the same source the worker uses (F-10, findings 443, 445).
+                base['handleRef'] = json.loads(issued.public_bytes)['event']['extensions']['xverse.maestro']['handleRef']
         if (
             type(value) is not dict
             or set(value) != set(base) | {"sourceRefs"}
@@ -473,11 +479,16 @@ class FiniteDispatcher(_Original):
             self.plan,
         )
         self._steps = {s.step_id: s for s in self.prepared.steps}
+        # One per-run estimator shared with every teardown (ADR-ML3-BUDGET-0001).
+        self._times = ServiceTimes()
         self.teardown = ReverseTeardown(
-            facade, per_unit_seconds=self.plan.per_unit_seconds
+            facade, per_unit_seconds=self.plan.per_unit_seconds, times=self._times
         )
         self._lock = threading.Lock()
         self._active = None
+        self._service_seen = self._times.seen  # statement kind -> longest observed round trip (F-08)
+        self._deferred_quiesce = set()
+        self._interior_trace = []  # observation only: widenings and M1 stops
         self._result = None
         self._scope = None
         self._tick = 0
@@ -708,7 +719,7 @@ class FiniteDispatcher(_Original):
         if view._owner is not self.owner or tuple(view._policies.values()) != self.plan.policies:
             raise OwnerError("ML-SCHEDULE-RECOVERY-VIEW")
         old = self.teardown
-        current = ReverseTeardown(view, per_unit_seconds=self.plan.per_unit_seconds)
+        current = ReverseTeardown(view, per_unit_seconds=self.plan.per_unit_seconds, times=self._times)
         for name in ('_stopped', '_stop_results', '_cleaned', '_receipts', '_intents'):
             getattr(current, name).update(getattr(old, name))
         current._known_reaps.update(old._known_reaps)
@@ -789,8 +800,8 @@ class FiniteDispatcher(_Original):
                 self._restart_busy = False
         return True
 
-    def _restart_end(self, ticket, *, phase=None, restart=False):
-        current = self._end(unit=ticket.unit_id, phase=phase, restart=restart)
+    def _restart_end(self, ticket, *, phase=None, restart=False, need=0.0, reserve=0.0):
+        current = self._end(unit=ticket.unit_id, phase=phase, restart=restart, need=need, reserve=reserve)
         return HostDeadline(self.owner.session, min(current.monotonic_seconds,
                                                     ticket.deadline.monotonic_seconds))
 
@@ -801,11 +812,16 @@ class FiniteDispatcher(_Original):
             if not self.teardown._released_current(unit, self._restart_end(ticket)):
                 raise OwnerError("ML-GENERATION-PRIOR-RELEASE")
             return
-        unit_end = min(ticket.deadline.monotonic_seconds, self._active_end,
-                       time.monotonic() + self.plan.per_unit_seconds)
+        # The restart itself keeps its estimated span before the ticket or active end.
+        reserve = SIZING_MARGIN * self._times.est("restart:unit")
+        unit_end = self._sized(min(ticket.deadline.monotonic_seconds, self._active_end,
+                                   time.monotonic() + self.plan.per_unit_seconds),
+                               self.teardown._need(unit, "cleanup"), self.plan.per_unit_seconds,
+                               min(ticket.deadline.monotonic_seconds, self._active_end) - reserve,
+                               "restart-quiesce", unit)
         for phase in ("stop", "cleanup"):
             self._service()
-            bound = self._restart_end(ticket, phase=phase)
+            bound = self._restart_end(ticket, phase=phase, need=self.teardown._need(unit, phase), reserve=reserve)
             until = HostDeadline(self.owner.session, min(bound.monotonic_seconds, unit_end))
             self._controller.request(unit, phase, until)
             result = self.teardown.phase(unit, phase, until)
@@ -828,7 +844,7 @@ class FiniteDispatcher(_Original):
         issuer = self._broker.advance_generation(prepared, until)
         # Authentic ADVANCE already retired the old binding, including on Stage loss.
         self._bindings = tuple(self.facade._bindings.items())
-        current = ReverseTeardown(self.facade, per_unit_seconds=self.plan.per_unit_seconds)
+        current = ReverseTeardown(self.facade, per_unit_seconds=self.plan.per_unit_seconds, times=self._times)
         for name in ("_stopped", "_stop_results", "_cleaned"):
             getattr(current, name).update({u: value for u, value in getattr(old_teardown, name).items() if u != unit})
         current._receipts.update(old_teardown._receipts)
@@ -879,6 +895,13 @@ class FiniteDispatcher(_Original):
                        and other not in selected and not self.teardown._released_current(other, bound)
                        for other in self.owner._claims if other != ticket.unit_id):
                     raise OwnerError("ML-GENERATION-DEPENDENTS")
+            # M1 (ADR-ML3-BUDGET-0001): no mutation that its estimated spans cannot finish.
+            need = DECISION_MARGIN * sum(self._quiesce_need(ticket) + self._times.est("restart:unit")
+                                         for ticket in tickets)
+            remaining = min(min(t.deadline.monotonic_seconds for t in tickets), self._active_end) - time.monotonic()
+            if need and remaining < need:
+                self._trace("restart", None, remaining, need, stopped=True)
+                raise OwnerError("ML-SCHEDULE-RESTART-DEADLINE")
             # Every dependency check above completes before the first stop.
             mutated = True
             by_unit = {ticket.unit_id: ticket for ticket in tickets}
@@ -888,7 +911,13 @@ class FiniteDispatcher(_Original):
                     self._quiesce_restart_unit(current)
             for ticket in tickets:
                 current = ticket
-                outcome = self._restart_unit(ticket)
+                began = time.monotonic()
+                try:
+                    outcome = self._restart_unit(ticket)
+                except BaseException:
+                    self._times.censor("restart:unit", time.monotonic() - began)
+                    raise
+                self._times.observe("restart:unit", time.monotonic() - began)
                 with self._restart_lock:
                     self._restart_results[id(ticket)] = outcome
         except BaseException as error:
@@ -928,10 +957,19 @@ class FiniteDispatcher(_Original):
                 or not (self._tick == self.prepared.clock.horizon_ticks
                         or stopping.intersection(_parents(self.prepared, unit)))):
                 continue
-            unit_end = min(self._active_end, time.monotonic() + self.plan.per_unit_seconds)
+            # M1: a quiesce that no longer fits is left to the normal terminal cleanup.
+            need = self.teardown._need(unit, "cleanup")
+            decision = DECISION_MARGIN * need / SIZING_MARGIN
+            if decision and self._active_end - time.monotonic() < decision:
+                if (unit, generation) not in self._deferred_quiesce:  # traced once (finding 482 (7))
+                    self._deferred_quiesce.add((unit, generation))
+                    self._trace("finished-quiesce", unit, self._active_end - time.monotonic(), decision, stopped=True)
+                continue
+            unit_end = self._sized(min(self._active_end, time.monotonic() + self.plan.per_unit_seconds),
+                                   need, self.plan.per_unit_seconds, self._active_end, "finished-quiesce", unit)
             for phase in ("stop", "cleanup"):
                 self._service()
-                cap = self._end(unit=unit, phase=phase)
+                cap = self._end(unit=unit, phase=phase, need=self.teardown._need(unit, phase))
                 outcome = self.teardown.phase(unit, phase, HostDeadline(self.owner.session,
                     min(unit_end, cap.monotonic_seconds)))
                 if outcome.emergency or phase == "cleanup" and not outcome.normal_records_complete:
@@ -957,13 +995,22 @@ class FiniteDispatcher(_Original):
         statement = _Statement(
             "tick" if kind == "tick" else "schedule", canonical_bytes(body)
         )
+        # F-08 (finding 438): a statement is not sent with less time left than the longest round
+        # trip this run has already observed for its kind; it is refused before the send, so the
+        # channel stays usable for the terminal records instead of timing out and failing.
+        began = time.monotonic()
+        if deadline.monotonic_seconds - began < self._times.est(kind):
+            raise OwnerError("ML-SCHEDULE-SERVICE-DEADLINE")
         self._active = statement
         try:
-            return self.client.schedule_call(self, statement, deadline)
+            reply = self.client.schedule_call(self, statement, deadline)
         finally:
             self._active = None
+        self._times.observe(kind, time.monotonic() - began)
+        return reply
 
-    def _end(self, *, terminal=False, restart=False, recovery=False, unit=None, phase=None):
+    def _end(self, *, terminal=False, restart=False, recovery=False, unit=None, phase=None,
+             need=0.0, reserve=0.0, trace=True):
         now = time.monotonic()
         budget = self.plan.recovery_operation_seconds if recovery else self.plan.restart_operation_seconds if restart else self.plan.operation_seconds
         if not restart and self.plan.use_action_timeouts and unit is not None and phase is not None:
@@ -971,8 +1018,9 @@ class FiniteDispatcher(_Original):
                            if uid == unit and name == phase), None)
             if budget is None:
                 raise OwnerError("ML-SCHEDULE-ACTION-TIMEOUT")
+        window = self._work_end if terminal else self._active_end
         end = min(
-            self._work_end if terminal else self._active_end,
+            window,
             now + budget,
         )
         end = min(end, self.bootstrap._lease / 1e9)
@@ -983,12 +1031,81 @@ class FiniteDispatcher(_Original):
         health = self.facade.next_health_deadline
         if health is not None:
             end = min(end, health.monotonic_seconds - self.plan.health_scan_seconds)
-        for unit, gate in self.gates.items():
-            if unit not in self.teardown._stopped:
+        leases = [self.bootstrap._lease / 1e9]
+        for other, gate in self.gates.items():
+            if other not in self.teardown._stopped:
                 end = min(end, gate.lease_ns / 1e9)
+                leases.append(gate.lease_ns / 1e9)
         if end <= now:
             raise OwnerError("ML-SCHEDULE-SERVICE-DEADLINE")
+        if need and end == now + budget:
+            # M2 (ADR-ML3-BUDGET-0001): only the budget term may grow, never past the window
+            # minus later reserve, nor into the next health scan's or lease renewal's margin.
+            margin = self._service_calls * self.plan.operation_seconds + self.plan.operation_seconds
+            cap = min(window - reserve, min(leases) - margin,
+                      health.monotonic_seconds - self.plan.health_scan_seconds - margin
+                      if health is not None else window)
+            end = self._sized(end, need, budget, cap, "end", unit, trace=trace)
         return HostDeadline(self.owner.session, end)
+
+    def _sized(self, base, need, window, cap, site, unit, *, trace=True, rpc=True):
+        """M2 sizing with the admitted outer bounds in `cap`; no widening under declared action
+        timeouts (ADR-ML3-RESTART-0003 clips them to the existing ends). A deadline handed to
+        requests (rpc) never exceeds the owner's per-request bound."""
+        if not need or self.plan.use_action_timeouts:
+            return base
+        now = time.monotonic()
+        value = sized(base, now, need, window, min(cap, now + RPC_MAX_SECONDS) if rpc else cap)
+        if value > base and trace:
+            self._trace(site, unit, base - now, need, widened=value - base)
+        return value
+
+    def _trace(self, site, unit, remaining, need, **values):
+        self._interior_trace.append(dict(site=site, unit=unit, remaining=remaining, need=need, **values))
+
+    def _quiesce_need(self, ticket):
+        """Estimated stop and cleanup spans before a restart (decision margin)."""
+        normal = self.teardown._cleaned.get(ticket.unit_id)
+        if normal is not None and normal.generation == ticket.generation - 1:
+            return 0.0
+        return self.teardown._need(ticket.unit_id, "cleanup") / SIZING_MARGIN
+
+    def _fits_before_active_end(self, step):
+        """M1 before a stop or cleanup step-dispatch: a step whose estimated dispatch, phases and
+        (zero-duration) completion no longer fit before the active end is refused before any
+        effect, so the run ends through normal terminal teardown as a documented failure."""
+        if step.phase not in ("stop", "cleanup"):
+            return
+        phases = self.teardown._need(step.unit_id, step.phase) / SIZING_MARGIN
+        if not phases:
+            return
+        # Findings 480 (2), 482 (2): only when M1 can act, refresh scans and renewals first, so the
+        # check sees the window the dispatch will actually get.
+        self._service()
+        need = DECISION_MARGIN * (self._times.est("step-dispatch") + phases
+                                  + (self._times.est("step-complete") if step.duration_ticks == 0 else 0.0))
+        remaining = self._active_end - time.monotonic()
+        # The phases must also fit the normal share of the window the effect can actually get
+        # (every outer bound, including the lease-renewal margin, applies to it).
+        reserve = SIZING_MARGIN * self._times.est("step-complete") if step.duration_ticks == 0 else 0.0
+        window = self._end(unit=step.unit_id, phase=step.phase, need=SIZING_MARGIN * phases,
+                           reserve=reserve, trace=False).monotonic_seconds - time.monotonic()
+        achievable = min(window, RPC_MAX_SECONDS) - (1 - NORMAL_SHARE) * min(window, self.plan.per_unit_seconds)
+        if remaining < need or achievable < DECISION_MARGIN * phases:
+            self._trace("step-dispatch", step.unit_id, remaining, need, achievable=achievable, stopped=True)
+            raise OwnerError("ML-SCHEDULE-SERVICE-DEADLINE")
+
+    def _post_reserve(self, later_units=()):
+        """Terminal work after teardown: step and unit dispositions, run-terminal, and in the lazy
+        profile collection and the report (ADR-ML3-BUDGET-0001)."""
+        statement = self._times.statement_max(self.plan.operation_seconds)
+        reserve = SIZING_MARGIN * statement * (len(self._steps) - len(self._outcomes) + len(self.prepared.units) + 1)
+        for other in later_units:
+            need = self.teardown._need(other, "cleanup")
+            reserve += max(self.plan.operation_seconds, need + (1 - NORMAL_SHARE) * self.plan.operation_seconds)
+        if self._lazy:
+            reserve += self.client.collection.collection_seconds + self.client.collection.terminal_seconds
+        return reserve
 
     def _service(self, *, terminal=False):
         if not terminal:
@@ -1099,7 +1216,12 @@ class FiniteDispatcher(_Original):
     def _effect(self, step):
         self._service()
         unit = step.unit_id
-        until = self._end(unit=unit, phase=step.phase)
+        need = reserve = 0.0
+        if step.phase in ("stop", "cleanup"):
+            need = self.teardown._need(unit, step.phase)
+            if step.duration_ticks == 0:
+                reserve = SIZING_MARGIN * self._times.est("step-complete")
+        until = self._end(unit=unit, phase=step.phase, need=need, reserve=reserve)
         binding = self.facade._bindings.get(unit)
         if self._controller is not None:
             self._controller.request(unit, step.phase, until)
@@ -1136,11 +1258,11 @@ class FiniteDispatcher(_Original):
             self._broker.cancel('dispatcher-terminal-fence', deadline=HostDeadline(self.owner.session, end))
             self._broker.service_terminal(HostDeadline(self.owner.session, end))
             self._terminal_phase = True
-            end = min(self._work_end, time.monotonic() + len(self.prepared.units) * self.plan.per_unit_seconds)
-            return self.teardown.run(HostDeadline(self.owner.session, end), reason='dispatcher-terminal')
+            return self.teardown.run(HostDeadline(self.owner.session, self._run_end()), reason='dispatcher-terminal')
         try:
             if not self.owner.latch.cancelled:
-                for unit in self.teardown._order():
+                order = self.teardown._order()
+                for position, unit in enumerate(order):
                     if self._lazy and unit not in self.facade._bindings:
                         continue
                     if unit in self.teardown._cleaned:
@@ -1148,7 +1270,8 @@ class FiniteDispatcher(_Original):
                     self._service(terminal=True)
                     for phase in ("stop", "cleanup"):
                         result = self.teardown.phase(
-                            unit, phase, self._end(terminal=True)
+                            unit, phase, self._end(terminal=True, need=self.teardown._need(unit, phase),
+                                                   reserve=self._post_reserve(order[position + 1:]))
                         )
                         if result.emergency:
                             break
@@ -1156,13 +1279,30 @@ class FiniteDispatcher(_Original):
                         break
         except Exception:
             self.owner.cancel("dispatcher-cleanup-failed")
-        end = min(
-            self._work_end,
-            time.monotonic() + len(self.prepared.units) * self.plan.per_unit_seconds,
-        )
         return self.teardown.run(
-            HostDeadline(self.owner.session, end), reason="dispatcher-terminal"
+            HostDeadline(self.owner.session, self._run_end()), reason="dispatcher-terminal"
         )
+
+    def _run_end(self):
+        """The terminal teardown window: today's n x per-unit budget, widened only by the
+        estimated remaining normal work and never into the post-teardown reserve."""
+        units = [u for u in self.teardown._order() if u not in self.teardown._cleaned]
+        now = time.monotonic()
+        # Findings 480 (1), 482 (1): the widening is also capped by teardown._deadline's 80 s and the
+        # boundary teardown deadline. Nothing renews a lease inside run() in the non-lazy profile,
+        # so there the live leases themselves cap it; in the lazy profile every terminal record
+        # renews the lease through service_terminal, so no lease cap applies. Health is not a cap:
+        # nothing inside run() consumes the next health deadline (finding 484 (4)).
+        cap = min(self._work_end - self._post_reserve(), now + RUN_MAX_SECONDS - 1,
+                  self.teardown.manager._admission.teardown_deadline.monotonic_seconds)
+        if not self._lazy:
+            cap = min([cap, self.bootstrap._lease / 1e9] + [gate.lease_ns / 1e9 for other, gate in self.gates.items()
+                                                            if other not in self.teardown._stopped])
+        return self._sized(
+            min(self._work_end, now + len(self.prepared.units) * self.plan.per_unit_seconds),
+            sum(self.teardown._need(u, "cleanup") for u in units),
+            len(self.prepared.units) * self.plan.per_unit_seconds,
+            cap, "run", None, rpc=False)
 
     def _admissible(self, step):
         if step.phase == "stop":
@@ -1295,6 +1435,7 @@ class FiniteDispatcher(_Original):
                             ):
                                 continue
                             current = step
+                            self._fits_before_active_end(step)
                             self._statement("step-dispatch", step)
                             self._pending[step.step_id] = (
                                 self._tick,
@@ -1492,8 +1633,9 @@ class FiniteDispatcher(_Original):
                     report_receipt = self.client.finish_run(
                         self._broker, HostDeadline(self.owner.session, report_end))
                     facts = report_receipt.public_data()
+                    from .terminal_runtime import finalizable  # same evidence rule as RunClosure (finding 472)
                     if (facts['diagnostic'] is not None or facts['writer'] is None
-                        or facts['report'] is None or not facts['report']['eligible']
+                        or facts['report'] is None or not finalizable(facts['report'])
                         or not facts['writer']['evidence_complete']):
                         diagnostic = diagnostic or 'ML-SCHEDULE-EVIDENCE-INCOMPLETE'
                 except Exception:

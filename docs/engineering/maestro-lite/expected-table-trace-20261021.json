@@ -1,0 +1,2471 @@
+{
+ "schema": 1,
+ "revision": "ML-EXPECTED-TRACE-2026-10-21-v1",
+ "status": "MAPPING_NOT_ACCEPTANCE",
+ "method": "Read-only mapping of every table row to the tests that inject its condition (subagent, 2026-10-21), spot-checked by the main session (both DIVERGENT rows and a 4-row MATCH sample read in full); projection rows updated for the increment19 tests (findings 416 and 419).",
+ "verdicts": [
+  "MATCH",
+  "PARTIAL",
+  "DIVERGENT",
+  "NO_TEST"
+ ],
+ "tables": {
+  "affa-expected.json": {
+   "path": "docs/engineering/maestro-lite/affa-expected.json",
+   "origin": null,
+   "sha256": "d8beda43fbf2fb8de1fb3c899e5d7615f5018b0e2e3c0fae19324c0a920acaea",
+   "sections": [
+    "/controls",
+    "/invariants"
+   ],
+   "cases": [
+    {
+     "id": "AF01",
+     "locator": "/controls/0",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_cancel_fences_both_already_staged_units"
+     ],
+     "note": "test_affa_native.py:353-362 stages+arms both units, Cancel (epoch==1), asserts release(i) REJECTED and no u{i}.marker for both, then stop_retire. test_run_broker.py:216-226 asserts native_epoch_confirmed, frozen_units==3, facade.start raises for every issuer, no markers. Both stated observations asserted, but 'irrevocably' is only checked by a single Release attempt per unit after Cancel (no repeated/later attempt, no later-epoch attempt); conservative PARTIAL."
+    },
+    {
+     "id": "AF02",
+     "locator": "/controls/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_committed_release_before_cancel_runs_once_and_other_unit_never_runs",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa"
+     ],
+     "note": "test_affa_native.py:365-377: release(0) RELEASED, cancel, release(1) REJECTED; stop_retire for both (helper asserts STOPPED state&8 and RETIRED state&128, test_affa_native.py:189-196); u0.marker == b'EXEC\\n' exactly once; u1.marker absent. test_runtime_actual.py:88-113 repeats the ordering, also asserts release(0) REJECTED on replay after cancel."
+    },
+    {
+     "id": "AF03",
+     "locator": "/controls/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_duplicate_ticket_cannot_release_twice",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_consumed_ticket_cannot_release_or_arm_again[release]"
+     ],
+     "note": "test_affa_native.py:380-388: first release RELEASED, duplicate REJECTED, marker == b'EXEC\\n' (one execution). Unfreeze is observed via marker count, not via cgroup.freeze read after the duplicate; releasegate test is the legacy gate component (not AFFA)."
+    },
+    {
+     "id": "AF04",
+     "locator": "/controls/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[wrong-ticket]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[forged-handle]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[changed-proof]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[stale-epoch]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_generation_advance_cannot_change_the_original_action_digest",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_bad_release_never_unfreezes",
+      "tests/thesis_lite/maestro/test_affa_protocol.py::test_native_frame_mutations_reject_without_callbacks"
+     ],
+     "note": "AFFA native test (test_affa_native.py:514-569) mutates ticket bytes, handle, proof field (offset 128) and epoch; asserts REJECTED, no markers, residual_membership()==() and stop_retire succeeds (cleanup scope available). Not injected at AFFA level: changed unit, run, generation (non-zero valid value), operation, nonce, permit digest, supervisor identity. Legacy release-gate test (test_releasegate.py:179-208) covers scope/operation/intent/flush/stage/nonce/epoch with frozen(fd) + force_cleanup.termination_observed, but that is the superseded gate component. test_affa_protocol mutations are codec zero/garbage rejections only."
+    },
+    {
+     "id": "AF05",
+     "locator": "/controls/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_cancelled_stage_creates_no_workload",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[stage-before-send]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[stage-ack-pending]"
+     ],
+     "note": "Cancel branch: test_affa_native.py:492-497 asserts STAGE REJECTED after cancel, residual_membership==() (no child), no marker. Stale-ack branch: test_composed_authority_interruptions.py:251-255 asserts a later issuer.stage raises with connection.sequence unchanged after cancel during stage-ack-pending. Missing: 'original lease expiry' branch of the condition is not injected for Stage; stale acknowledgement reopening is only approximated by a fresh host-side stage call, not by replaying the late STAGED ack."
+    },
+    {
+     "id": "AF06",
+     "locator": "/controls/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[release]",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[stage]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_stopped_old_authority_is_actually_revoked_before_original_c1_release",
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_delayed_production_gate_cannot_thaw_after_exact_cleanup"
+     ],
+     "note": "test_composed_issuer_loss.py:136-217: AFFA SIGSTOPped with queued Release/Stage; cancel asserts issuer_dead+issuer_reaped; every removal fence records issuer_reaped and pidfd_dead and before_removal >= wait time (death actual before certification); boundaries empty+released; no markers; late exchange rejected. However the 'AFFA later resumes' part is not exercised for AFFA: it is killed, and SIGCONT raises ProcessLookupError (test_composed_issuer_loss.py:202-203; test_affa_native.py:640-649). The stop-cleanup-resume sequence with actual resume is only exercised on the legacy release gate (test_releasegate.py:284-322: SIGSTOP, pending release, force_cleanup, SIGCONT, no marker). Arguably the design makes resume impossible, so this could be MATCH; kept PARTIAL conservatively."
+    },
+    {
+     "id": "AF07",
+     "locator": "/controls/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-ack-pending-authority]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-before-send-authority]"
+     ],
+     "note": "test_composed_authority_interruptions.py:240-264: boundaries empty+released via closure (C1 cleanup), authority_fenced, no started event, zero markers; for stage-ack-pending asserts first.direct_child_reaped is None (no invented wait, :261), issued is None unless a STAGED reply was actually exchanged, cleanup_complete False and ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN. Full-handle non-invention is not strictly asserted: host_handle_after_run is only retained in the receipt, and :250 'assert not facade._bindings or set(facade._bindings) <= {unit}' permits a binding for the unit (comment: real issued fact may survive). Not contradictory, but weaker than 'do not invent full handle'."
+    },
+    {
+     "id": "AF08",
+     "locator": "/controls/7",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_scoped_native_leaf_cleanup_keeps_other_original_unit_live",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_actual_native_wait_survives_later_c1_observation_failure",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_native_reverse_teardown_has_original_wait_and_normal_records",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_query_issued_retains_one_exact_original_pidfd"
+     ],
+     "note": "test_run_teardown.py:76-90 stop result asserts leader_reaped and boundary_empty as separate fields, cleanup separately asserts unit_cleanup_complete; :171-185 C1 terminate made unavailable yet leader_reaped True and _stop_ack.state&8 (wait observed independently of boundary observation); :32-50 _stop_ack.state&8 and _retire_ack.state&128 per issuer. test_affa_client.py:241-249 one exact original pidfd retained for the genuine handle."
+    },
+    {
+     "id": "AF09",
+     "locator": "/controls/8",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_client.py::test_client_refuses_a_copied_or_forked_holder",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_authority_rejects_an_actual_forked_peer",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_original_issuer_and_registry_cannot_be_reconstructed",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_invalid_renewal_rejects_before_rpc_or_cancellation[session]"
+     ],
+     "note": "Copy/fork: copy.copy raises TypeError and forked child _holder() raises (test_affa_client.py:99-111); forked peer frame closes native authority, no markers (test_affa_native.py:599-612); issuer copy/handle replace rejected (test_run_broker.py:265-274). Registry replacement: broker.issuer and issuer.observe raise with connection.sequence unchanged (no new native frame, so no ticket minting) and cleanup continues (test_composed_issuer_loss.py:79-86). Renewal under a replaced/copied authority identity is not injected (renewal test only changes the session of the lease argument); explicit old-ticket minting attempt by a copied identity not tested."
+    },
+    {
+     "id": "AF10",
+     "locator": "/controls/9",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup[lease]",
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup[channel]",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_native_watchdog_observes_actual_storage_death_without_python_cancel",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_stopped_storage_prevents_shared_renewal_and_fences_authority",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_original_supervisor_pidfd_independent_of_socket_loss"
+     ],
+     "note": "Renewal ceases ([lease]): test_run_bootstrap.py:329-358 waits for authority death, asserts every unit cgroup.events 'frozen 1', authority SIGKILLed and not resumable. Supervisor-side death: storage SIGKILL → all issuer boundaries 'frozen 1' (test_run_broker.py:323-346); legacy leaseguard owner loss freezes (test_leaseguard.py:440-478). 'Report actual waits and unknowns separately' only partially: test_run_renewal.py:77-88 asserts issuer_dead/issuer_reaped with workload_waits_known False; the lease-expiry tests themselves assert no separated wait/unknown report."
+    },
+    {
+     "id": "AF11",
+     "locator": "/controls/10",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[after-intent-flush]",
+      "tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[before-intent-append]",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_mirror_loss_before_stage_revokes_without_workload_birth",
+      "tests/thesis_lite/maestro/test_admission.py::test_failed_fsync_returns_no_receipt_and_surviving_intent_prevents_replay"
+     ],
+     "note": "[after-intent-flush]: storage worker stopped after the Argus intent append+flush but before the host receives the ACK; asserts no STAGE/ARM/RELEASE exchanged (test_composed_persistence_termination.py:193), no markers, issued False, single intent payload in trace (:196) and exactly one mirror intent. The exact 'append exists but flush absent' state (between append return and flush) is not injected ([before-intent-append] stops before append). 'Never replayed' is only shown within the run (no second intent append) and by the M3-journal fsync test (ML-PERMIT-REPLAY on reopen, test_admission.py:318-345), not for the Argus-mirror-ACK-absent case."
+    },
+    {
+     "id": "AF12",
+     "locator": "/controls/11",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[release-ack-pending-storage]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[release-after-reply-storage]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_spawn_time_storage_loss",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_worker_stall_does_not_hold_independent_native_cancel",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_stopped_storage_prevents_shared_renewal_and_fences_authority"
+     ],
+     "note": "Storage SIGKILL after Release: asserts latch cancelled, authority_fenced, root_reaped, all helpers reaped, all boundaries empty+released, not lifecycle_complete (test_composed_post_release_loss.py:114-125). 'Missing records remain missing' is only bounded: ':121 assert len(started) <= expected[\"started_events_max\"]' (max 1) and ':122 assert len(outcomes) <= ...' (max 1) — allows records actually written before the loss; no assertion that a specific record absent at loss stays absent. Stall case (test_run_broker.py:229-262) shows cancel does not wait on stopped worker. Argus-only worker stop not separately injected."
+    },
+    {
+     "id": "AF13",
+     "locator": "/controls/12",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_controller_death_preserves_original_storage_authority_and_workloads",
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[False]",
+      "tests/thesis_lite/maestro/test_controller.py::test_stopped_controller_request_is_bounded_and_only_its_helper_is_retired"
+     ],
+     "note": "test_controller.py:65-77: after controller SIGKILL+retire, storage process and authority child identity unchanged, every issuer and _handle identical, health ready, latch not cancelled, old.request raises (channel retired). test_controller.py:99-119 asserts start intents in m3 unchanged after controller replacement (after == before). C1 authority retention is shown via unchanged broker.connection.child, not a separate C1 observation (minor)."
+    },
+    {
+     "id": "AF14",
+     "locator": "/controls/13",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[False]",
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes[True]",
+      "tests/thesis_lite/maestro/test_controller.py::test_missing_durable_mirror_does_not_reconcile_controller",
+      "tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access"
+     ],
+     "note": "test_controller.py:85-94 new session/process/descriptor differ, _start_access raises NOT-RECONCILED before reconcile, old facade STALE-VIEW, recovered observations all ready; :112-119 same worker, identical original handles, no new start intents, every new probe sequence > prior and on current generation. Missing durable mirror rejects reconcile (:152-162). Active-coordinator variant asserts per-unit reconciliation states and new probes only for owned units (test_active_controller_recovery.py:209-215)."
+    },
+    {
+     "id": "AF15",
+     "locator": "/controls/14",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_controller_death_preserves_original_storage_authority_and_workloads",
+      "tests/thesis_lite/maestro/test_controller.py::test_controller_admission_rejects_live_old_duplicate_and_budget_without_effect",
+      "tests/thesis_lite/maestro/test_controller.py::test_actual_replacement_reconciles_original_handles_and_new_probes",
+      "tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access"
+     ],
+     "note": "Old controller request after death/replacement raises ValueError (test_controller.py:77-78; test_active_controller_recovery.py:208); old view gets STALE-VIEW instead of freshness credit (test_controller.py:90-91; test_active_controller_recovery.py:207); copy.copy(controller) raises TypeError (test_controller.py:142-143). Missing: no assertion of zero mutation (journal/sequence unchanged) around the rejected old request, and no actual forked controller proxy sending a well-formed request (fork controls exist only for the AFFA client, test_affa_client.py:99-111, and native peer, test_affa_native.py:599)."
+    },
+    {
+     "id": "AF16",
+     "locator": "/controls/15",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_replacement_owner_cannot_adopt_original_issuer_objects",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_original_issuer_and_registry_cannot_be_reconstructed",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_issued_metadata_cannot_be_relabelled[recipe]",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_issued_metadata_cannot_be_relabelled[handle]",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup",
+      "tests/thesis_lite/maestro/test_teardown.py::test_missing_original_registry_never_adopts_handle"
+     ],
+     "note": "Approximation: ReleaseOwner.from_persistence replacement (older owner component) is not ordinarily reconciled, cleanup still releases (test_recovery.py:278-286); copied/replaced registry rejects ordinary access with no native sequence change (test_composed_issuer_loss.py:78-84); copied issuer TypeError and replaced handle rejected (test_run_broker.py:269-274); relabelled recipe/handle rejected (:295-300). No test has a new AFFA broker/authority attempt reconstruction from durable public metadata (public M3/Argus records)."
+    },
+    {
+     "id": "AF17",
+     "locator": "/controls/16",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[parent-reject]"
+     ],
+     "note": "Dependents-first is enforced as a precondition: stopping a prerequisite with active dependents raises DEPENDENTS with journal unchanged (test_generation_dependents.py:99-102), dependents released leaf->middle->source before advance (:103-104), fresh execution ids (:110); cohort mode asserts old-generation cleanup order [leaf,middle,source] and new execution ids (test_active_transitive_restart.py:142-153); copied permit RESTART-PERMIT (:83-84). But a lone prerequisite restart request is REJECTED, not served by stopping dependents: test_active_restart.py:134 'outcome.disposition==\"rejected\" and outcome.diagnostic==\"ML-GENERATION-DEPENDENTS\"' and :138 'not execution_threads and not driver._teardown_history'; same for omitted-dependent (test_active_transitive_restart.py:137-140). Consistent with the table if 'stop dependents first' is read as a required precondition; would diverge if read as an action the system performs. Flagged for author interpretation. | Parent review: test_active_restart.py:134 asserts rejection ML-GENERATION-DEPENDENTS and :138 no teardown history when dependents are active; this is DIVERGENT only if the table \"stop/release dependents first\" means the system itself must stop dependents (rather than require them to be stopped first). Author ruling recommended."
+    },
+    {
+     "id": "AF18",
+     "locator": "/controls/17",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes",
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_actual_successor_intent_uses_original_worker_and_preserves_old_identity",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]"
+     ],
+     "note": "New epoch asserted (test_generation_dependents.py:115 epochs==[0,1,2,3]; test_generation_restart.py:54); new generation-2 ready events cite generation-2 dependency probe events (test_generation_dependents.py:119-129); fresh permit consumed exactly once (test_generation_claim.py:83-93). 'No old writer root reopened' is only approximated by 'client.process is worker' (same persistence worker, test_generation_dependents.py:117); no test forbids EvidenceStore.open_run or asserts the Argus root/writer identity unchanged during a generation advance."
+    },
+    {
+     "id": "AF19",
+     "locator": "/controls/18",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_native_broker_lock_conflict_does_not_mutate_normal_records",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_renewal_lock_conflict_has_no_effects[owner]",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_renewal_lock_conflict_has_no_effects[broker]",
+      "tests/thesis_lite/maestro/test_broker_projection.py::test_normal_projection_conflict_and_foreign_deadline_do_not_mutate",
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_shared_closure_normal_conflict_has_no_cancel_effect",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_worker_stall_does_not_hold_independent_native_cancel"
+     ],
+     "note": "With broker lock held, stop raises CONFLICT, journal unchanged, then broker.cancel succeeds with native_epoch_confirmed while lock still held (test_run_teardown.py:162-168); renewal/projection/closure conflicts raise CONFLICT with sequences unchanged (test_run_renewal.py:67-74; test_broker_projection.py:130-136; test_shared_closure.py:127-131); stalled worker does not block native cancel (test_run_broker.py:256-262). 'Without waiting' is inferred from the CONFLICT code only; no elapsed-time bound is asserted."
+    },
+    {
+     "id": "AF20",
+     "locator": "/controls/19",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_protocol.py::test_native_frame_mutations_reject_without_callbacks",
+      "tests/thesis_lite/maestro/test_affa_protocol.py::test_authority_values_are_strict_inert_bounded_fields",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_extra_reply_right_is_closed_and_issuer_revoked",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_uncorrelated_real_reply_revokes_original_issuer",
+      "tests/thesis_lite/maestro/test_controller.py::test_controller_receiver_disposes_every_unexpected_right",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload",
+      "tests/thesis_lite/maestro/test_launcher.py::test_native_rejects_malformed_or_duplicate_control_and_closes_insertion",
+      "tests/thesis_lite/maestro/test_run_bootstrap_values.py::test_watch_rejects_nonempty_or_out_of_range_fields"
+     ],
+     "note": "Native frame short/long/magic/reserved/kind/field mutations raise ProtocolError (test_affa_protocol.py:33-63); extra reply fd closed and issuer revoked (test_affa_client.py:215-219); controller receiver rejects FD-bearing frame with fd table unchanged (test_controller.py:218-223); native release with extra rights rejected, no workload (test_affa_native.py:534-569); watch packet with pid field rejected (test_run_bootstrap_values.py:56). Missing: controller JSON frame with duplicate/unknown fields is not injected (only the FD-bearing hello), and no direct assertion that path/PID data cannot confer authority in the controller/AFFA parser."
+    },
+    {
+     "id": "AF21",
+     "locator": "/controls/20",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-after-reply]",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_cancellation_before_native_renewal_ack_commit_cannot_succeed"
+     ],
+     "note": "Cancellation while Release ACK pending/after reply: no 'started' event, execution not succeeded, at most one marker, closure facts (authority_fenced, boundaries empty/released) recorded (test_composed_authority_interruptions.py:241-256); actual RENEWED reply after cancel cannot commit renewal (test_run_renewal.py:105-109). Missing: late success reply after a deadline (as opposed to cancellation) is not injected (test_affa_release_timeout_fence.py covers a REJECTED reply), and readiness absence is inferred from no 'started' event rather than asserted on a ready event/flag."
+    },
+    {
+     "id": "AF22",
+     "locator": "/controls/21",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_boundary.py::test_non_cgroup_parent_rejects_without_effect"
+     ],
+     "note": "Approximation only: a non-cgroup parent makes ProcessBoundaryOps raise FILESYSTEM with no allocation (test_boundary.py:427-431). No test injects a host that cannot demonstrate frozen clone/exec or original descriptor/pidfd identity, and none asserts process-mode rejection before Stage with ready_for_execution false for that condition. Could reasonably be classed NO_TEST."
+    },
+    {
+     "id": "AF23",
+     "locator": "/controls/22",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running",
+      "tests/thesis_lite/maestro/test_affa_epoch.py::test_two_actual_advances_extend_only_original_creation_epochs",
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_affa_watch_token.py::test_advance_requires_the_supervisor_watch_token[correct]"
+     ],
+     "note": "New frozen C1 scope plus fresh operation/intent/mirror/boundary digests, ADVANCED epoch==1, new generation released, unrelated u1 still running (test_affa_native.py:430-453); repeated advances extend epochs and stale-epoch creation rejects (test_affa_epoch.py:53-75); fresh executions with live unchanged prerequisite (test_generation_restart.py:59-64). Missing: no test presents an armed-but-unreleased (unused) ticket after the advance to show it is burned in this selective-advance scenario."
+    },
+    {
+     "id": "AF24",
+     "locator": "/controls/23",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_successor_consumption_requires_actual_prior_cleanup[running]",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_successor_consumption_requires_actual_prior_cleanup[stopped]",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_generation_budget_is_not_a_successor_approval",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_actual_successor_intent_uses_original_worker_and_preserves_old_identity",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_copied_old_native_ack_cannot_authorize_a_successor",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_advance_requires_actual_original_watched_C1_before_send",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_generation_advance_cannot_change_the_original_action_digest",
+      "tests/thesis_lite/maestro/test_affa_config.py::test_generation_budget_is_explicit_and_jointly_bounded",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_joint_generation_capacity_is_not_a_new_permission",
+      "tests/thesis_lite/maestro/test_affa_epoch.py::test_capacity_is_checked_before_authority_birth"
+     ],
+     "note": "Lacking old release: PRIOR-RELEASE with journal unchanged and no cancel (test_generation_claim.py:140-143); repeat of same successor descriptor/statement rejects with journal count unchanged (:98-104); copied stop ACK rejects (:190-196); unwatched C1 rejects before send (test_affa_client.py:236-238); wrong action digest REJECTED (test_affa_native.py:488). Budget overrun is tested only at config/admission/birth level (test_affa_config.py:117-127; test_generation_admission.py:204-205; test_affa_epoch.py:104-106), not as a runtime advance exceeding max_generation. 'No child creation / descriptor adoption / new lease' is not asserted explicitly in the advance-rejection tests."
+    },
+    {
+     "id": "AF25",
+     "locator": "/controls/24",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running",
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement"
+     ],
+     "note": "After the new generation starts, repeated stop/cleanup return the identical cached old objects (test_generation_restart.py:55-56 'is old_stop' / 'is old_clean') while the new unit stays healthy (:58); native old QUERY returns generation 1 retired state, old STOP/RETIRE return cached states, new generation still running (test_affa_native.py:451-456); old cached cleanup cannot stop the prerequisite of the live replacement and fresh handle is unchanged (test_generation_dependents.py:44-50)."
+    },
+    {
+     "id": "INV01",
+     "locator": "/invariants/0",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_epoch.py::test_native_cancel_without_local_latch_closes_new_C1_creation",
+      "tests/thesis_lite/maestro/test_affa_epoch.py::test_raw_epoch_or_parsed_ack_is_not_an_original_receipt",
+      "tests/thesis_lite/maestro/test_broker_projection.py::test_original_ack_replacement_rejects_without_rpc"
+     ],
+     "note": "Native cancel closes C1 creation without the local latch and release_epoch stays 0 because 'local fence is not a native ACK' (test_affa_epoch.py:125-131); raw epoch/config/parsed ACK not admitted as receipts (:86-91); replaced release ACK/epoch history rejected in projection (test_broker_projection.py:120-124). No test sets the client latch alone and asserts that it is not treated as the native transition, and no test feeds an exported registry snapshot as a transition."
+    },
+    {
+     "id": "INV02",
+     "locator": "/invariants/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_cancel_fences_both_already_staged_units"
+     ],
+     "note": "One cancel returns epoch==1 and both armed units are REJECTED with no markers (test_affa_native.py:358-361); broker cancel is native_epoch_confirmed with frozen_units==3 and every unit start fails, no markers (test_run_broker.py:219-226)."
+    },
+    {
+     "id": "INV03",
+     "locator": "/invariants/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[stage]",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[release]",
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_stopped_authority_with_queued_request_is_dead_before_scope_release",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_stopped_old_authority_is_actually_revoked_before_original_c1_release",
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_stopped_authority_cannot_thaw_after_watchdog_cleanup"
+     ],
+     "note": "Every scoped removal observed issuer_reaped and pidfd_dead and occurred after the original wait (test_composed_issuer_loss.py:205-207); late replay of the queued frame rejected and SIGCONT fails with ProcessLookupError (:195-200); queued stage: authority dead, boundaries released, no marker (test_shared_closure.py:111-117); stopped old authority killed before C1 release (test_affa_native.py:645-652)."
+    },
+    {
+     "id": "INV04",
+     "locator": "/invariants/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_actual_helper_loss_keeps_native_workload_waits_unknown[authority]",
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_actual_helper_loss_keeps_native_workload_waits_unknown[storage]",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_independent_revocation_during_stopped_native_exchange",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_actual_native_wait_survives_later_c1_observation_failure"
+     ],
+     "note": "Boundaries empty/released while direct_child_reaped False and ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN (test_shared_closure.py:80-85); revoke reports issuer_reaped/dead with workload_waits_known False and boundaries_released False (test_affa_client.py:157-159). Issuer death, membership and direct-child wait are separated; signal delivery is not reported or asserted as its own observation in these tests."
+    },
+    {
+     "id": "INV05",
+     "locator": "/invariants/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_reconstructed_view_and_original_owner_never_reopen_start",
+      "tests/thesis_lite/maestro/test_recovery.py::test_reconstruction_calls_no_start_stage_claim_or_new_writer"
+     ],
+     "note": "Reconstructed view and owner cannot start/release (test_recovery.py:109-112); reconcile calls no release/commit_intent/stage/open_run (:257-271). No test (grep 'subtract'/'cross-session' over tests/thesis_lite: zero hits) injects cross-session subtraction."
+    },
+    {
+     "id": "INV06",
+     "locator": "/invariants/5",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[snapshot-loss]",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_actual_native_wait_survives_later_c1_observation_failure",
+      "tests/thesis_lite/maestro/test_teardown.py::test_missing_original_registry_never_adopts_handle",
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_original_never_attempted_generations_need_no_invented_child_wait"
+     ],
+     "note": "closure.cleanup_complete and not closure.normal_unit_records_complete, lifecycle_complete False (test_active_controller_recovery.py:227-231); boundary_released and leader_reaped but not normal_records_complete (test_run_teardown.py:183-184; test_teardown.py:335-336); cleanup_complete with normal records incomplete (test_shared_closure.py:139)."
+    },
+    {
+     "id": "INV07",
+     "locator": "/invariants/6",
+     "verdict": "NO_TEST",
+     "tests": [],
+     "note": "Scope/labelling invariant, not a behavioural condition. Tests only write receipt flags such as accepted=False, scientific_result=False, full_M1_complete=False (e.g. test_composed_issuer_loss.py:53; test_active_restart.py:171) without asserting them."
+    }
+   ]
+  },
+  "affa-fresh-context-expectations.json": {
+   "path": "docs/engineering/maestro-lite/affa-fresh-context-expectations.json",
+   "origin": null,
+   "sha256": "1849dfc093ed060a35766f6b84c692502e4224547043193f931b3232b4699043",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "FG01",
+     "locator": "/cases/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_worker.py::test_actual_original_worker_retains_future_contexts_without_consuming_them",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_are_pure_exact_consecutive_and_canonical",
+      "tests/thesis_lite/maestro/test_generation_worker.py::test_future_permit_cannot_be_consumed_through_initial_commit_rpc",
+      "tests/thesis_lite/maestro/test_generation_worker.py::test_default_empty_future_context_preserves_original_version1_bytes"
+     ],
+     "note": "test_generation_worker.py:92 asserts sealed version 2, client._future_contexts is config.future_contexts (4 retained), journal generations == {1}, no future permit consumed, original worker process unchanged; test_generation_admission.py:63 asserts pure validation (open/Popen forbidden) and ready_for_execution False; :119 initial commit RPC cannot consume a future permit. Initial-tuple retention is evidenced by successful generation-1 starts rather than a direct identity assertion on the initial tuple."
+    },
+    {
+     "id": "FG02",
+     "locator": "/cases/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[permit-id]",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[nonce]",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_identity_cannot_reuse_initial_or_other_future[execution]",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation[duplicate]"
+     ],
+     "note": "Pure validator raises AdmissionError 'REPLAY' when a future reuses the INITIAL permit_id/nonce/execution_id (test_generation_admission.py:86-113). Reuse of another FUTURE context's identity is only approximated by the 'duplicate' mode (same context twice, also a duplicate generation; asserts only AdmissionError, no REPLAY match). No sealed-input/worker-level test asserts 'before worker birth or journal mutation' for duplicate identities (test_generation_worker.py:140 covers approval/extra/empty/version modes only)."
+    },
+    {
+     "id": "FG03",
+     "locator": "/cases/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_contexts_reject_wrong_unit_or_generation",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_approval_must_match_every_exact_original_pin",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_joint_generation_capacity_is_not_a_new_permission",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_generation_budget_is_not_a_successor_approval",
+      "tests/thesis_lite/maestro/test_generation_worker.py::test_malformed_sealed_future_context_never_opens_journal_or_writer[approval]"
+     ],
+     "note": "gap/duplicate/unknown-unit/bool/initial generation reject (admission.py:116-141); 14 approval pin fields each reject (:144-175); 127th future context raises CAPACITY (:200-205); with no future contexts a real successor preparation raises NOT-ADMITTED with journal unchanged and latch not cancelled (test_generation_claim.py:146-155); sealed approval mismatch never opens journal/writer (test_generation_worker.py:140)."
+    },
+    {
+     "id": "FG04",
+     "locator": "/cases/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_expiry_is_revalidated_without_rewriting_initial_api"
+     ],
+     "note": "Only the pure validator is exercised: approval expiring at NOW+1s validates at NOW and raises 'APPROVAL' at NOW+2s (test_generation_admission.py:178-186). No test lets an admitted future approval/permit expire and then attempts actual consumption via broker._prepare_generation / driver.restart; 'no successor manufactured' is not asserted. (test_active_control_deadlines.py expire-queued concerns the restart request deadline, not permit/approval validity.)"
+    },
+    {
+     "id": "FG05",
+     "locator": "/cases/4",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_successor_consumption_requires_actual_prior_cleanup[running]",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_successor_consumption_requires_actual_prior_cleanup[stopped]",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_copied_old_native_ack_cannot_authorize_a_successor"
+     ],
+     "note": "running (no stop/wait) and stopped (no cleanup/C1 release) both raise 'PRIOR-RELEASE' with M3 journal records unchanged and latch not cancelled (test_generation_claim.py:131-143); copied STOP ACK raises with journal unchanged (:182-196). Absence of a generation statement is implied by the raise before prepared is returned; retirement-only absence is not isolated."
+    },
+    {
+     "id": "FG06",
+     "locator": "/cases/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_missing_actual_old_mirror_blocks_fresh_permit_consumption"
+     ],
+     "note": "Deleting the Argus event stream makes _prepare_generation raise; future permit not consumed and no generation-2 journal record (test_generation_claim.py:158-179). Not injected: missing/damaged normal stop or cleanup M3 record. Not asserted: that the rejection happens in the same original worker (client.process identity) or that the missing evidence stays missing (no later re-creation check)."
+    },
+    {
+     "id": "FG07",
+     "locator": "/cases/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_actual_successor_intent_uses_original_worker_and_preserves_old_identity",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_copied_old_native_ack_cannot_authorize_a_successor",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations"
+     ],
+     "note": "Re-presenting the retained statement to client.prepare_generation raises ValueError and copy.copy(prepared) raises TypeError with journal record count unchanged (test_generation_claim.py:97-104); controller-supplied copied permit (replace(permit)) raises 'RESTART-PERMIT' (test_active_restart.py:64-65; test_active_transitive_restart.py:83-84, journal unchanged at :89). Not injected: a copied/forged generation statement object actually submitted, or a public descriptor used as authority."
+    },
+    {
+     "id": "FG08",
+     "locator": "/cases/7",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_generation_claim.py::test_actual_successor_intent_uses_original_worker_and_preserves_old_identity"
+     ],
+     "note": "test_generation_restart.py:21-80: three distinct executions, per-generation intent + running outcome records, old.stop_owned(...).leader_reaped, cached old stop/cleanup phases, source handle is original_source and source health ready, same worker process. Once-only consumption: test_generation_claim.py:83-104 asserts permit_consumed for the selected gen-2 permit, exactly one fresh intent, and a repeated _prepare_generation raises with no journal growth. Permit consumption for generation 3 is not separately asserted."
+    },
+    {
+     "id": "FG09",
+     "locator": "/cases/8",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[stale-epoch]"
+     ],
+     "note": "After advance the old readiness binding is retired (assert unit not in facade._bindings and unit not in facade._released, test_generation_restart.py:49) and a new stage/bind/start is required; generation-2 ready events cite generation-2 dependency probes (test_generation_dependents.py:119-129). No test presents an OLD pending native ticket after an actual ADVANCE and asserts REJECTED; the stale-epoch Release mode (test_affa_native.py:536-537) uses epoch+1 without an advance."
+    },
+    {
+     "id": "FG10",
+     "locator": "/cases/9",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_selective_generation_advance_keeps_unrelated_original_resource_running",
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_old_cached_dependent_cleanup_cannot_stop_prerequisite_of_live_replacement"
+     ],
+     "note": "After the replacement starts, controller.phase(unit,'stop'/'cleanup') returns the identical old objects and replacement health stays ready (test_generation_restart.py:52-58); native old QUERY/STOP/RETIRE frames return cached generation-1 states while the new unit stays running (test_affa_native.py:447-454); old cached dependent cleanup cannot stop the prerequisite of the live replacement (test_generation_dependents.py:37-50)."
+    },
+    {
+     "id": "FG11",
+     "locator": "/cases/10",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_stopped_storage_after_preparation_fences_original_native",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[stage-storage-loss]",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[mid-storage-loss]"
+     ],
+     "note": "Storage SIGSTOP before ADVANCE: cancel result set, no advance receipt, no gen-2 handle, revoke observes issuer dead/reaped, workload_waits_known False, new descriptor still frozen (test_generation_restart.py:127-151). Storage stopped after ADVANCE (Stage): failed disposition, latch cancelled, closure not cleanup_complete with ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN, gen-2 unit issued None and direct_child_reaped None (test_active_restart.py:140-153). Not injected: AFFA stopped during these phases; storage stopped during fresh intent write. Normal-record unknownness not explicitly asserted."
+    },
+    {
+     "id": "FG12",
+     "locator": "/cases/11",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_dependents.py::test_actual_transitive_restart_requires_new_generations_and_fresh_probes",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cohort]",
+      "tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[omitted-dependent]",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[parent-reject]"
+     ],
+     "note": "Stopping prerequisites with live dependents raises 'DEPENDENTS' with journal unchanged (test_generation_dependents.py:99-102); cohort generation-1 cleaned order == [leaf, middle, source] and both generations' cleaned records retained (test_active_transitive_restart.py:146-153); executions equal admitted context execution IDs (:144) with only chosen permits consumed (:168-170); gen-2 ready dependencies are gen-2 probes (:155-159); omitted dependent / parent restart rejected with ML-GENERATION-DEPENDENTS (:137-140; test_active_restart.py:133-138)."
+    },
+    {
+     "id": "FG13",
+     "locator": "/cases/12",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_generation_restart.py::test_actual_same_run_leaf_generations1_2_3_preserve_live_prerequisite",
+      "tests/thesis_lite/maestro/test_retained_inputs.py::test_retained_export_preserves_original_and_successor_generation_sources",
+      "tests/thesis_lite/maestro/test_issuance.py::test_actual_new_generation_has_distinct_durable_issuance_and_retained_old_source",
+      "tests/thesis_lite/maestro/test_generation_admission.py::test_future_expiry_is_revalidated_without_rewriting_initial_api",
+      "tests/thesis_lite/maestro/test_active_restart.py::test_original_active_explicit_restart_and_closed_generation_universe[leaf]"
+     ],
+     "note": "Worker not reset (client.process is original_worker, test_generation_restart.py:61; test_active_restart.py:143); generations 1 and 2 intents/issuances retained in the same journal/export (test_retained_inputs.py:136-139; test_issuance.py:98-106); validate_permits(initial_generation=2) raises GENERATION (test_generation_admission.py:187-197). Not asserted: that the Argus root/writer is never reopened (no open_run prohibition or writer-identity check in the generation tests)."
+    }
+   ]
+  },
+  "bootstrap-expected.json": {
+   "path": "docs/engineering/maestro-lite/bootstrap-expected.json",
+   "origin": null,
+   "sha256": "4e43eb16ac1675430463669dc02fe376b11c78e8cafb44300f5846f41e2c5a1f",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "three_helpers",
+     "locator": "/cases/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_three_actual_helpers_without_coordinator_popen"
+     ],
+     "note": "Popen patched to pytest.fail; start() yields storage/launcher/gate; asserts native_unfreeze_observed and not ready_for_execution, marker EXEC, len(session._children)==3 (test_bootstrap.py:256-281)."
+    },
+    {
+     "id": "born_frozen",
+     "locator": "/cases/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_frozen_birth_precedes_helper_instructions_and_shared_actual_wait"
+     ],
+     "note": "Asserts child alive (_wait None), registered membership == (child.pid,), and no channel bytes within 30 ms before activate (test_bootstrap.py:305-308). 'Instructions absent' is approximated by channel silence over a short window; no direct instruction-count/marker check."
+    },
+    {
+     "id": "cancel_before_activate",
+     "locator": "/cases/2",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_cancel_before_activation_cannot_run_persistence_helper"
+     ],
+     "note": "Asserts activate raises after cancel, drain().registered_children_reaped, channel EOF, no argus directory (test_bootstrap.py:327-333). Zero instructions approximated by no argus dir; C1 cleanup being separate from the reap is not asserted."
+    },
+    {
+     "id": "late_birth",
+     "locator": "/cases/3",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_late_genuine_birth_ack_retains_cleanup_only_pidfd",
+      "tests/thesis_lite/maestro/test_bootstrap_late_birth.py::test_original_late_or_unknown_birth_never_replays_or_adopts_external_wait[late-return]"
+     ],
+     "note": "LATE-ACK raised; one child, child._cleanup_only and not _active; activate raises; drain reaps (test_bootstrap.py:348-355). Late-birth file covers the launcher-level analogue."
+    },
+    {
+     "id": "unknown_birth",
+     "locator": "/cases/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_cancel_during_stopped_birth_keeps_unacknowledged_accounting",
+      "tests/thesis_lite/maestro/test_bootstrap_launch_unknown.py::test_failed_original_identity_is_retained_without_adoption_or_recreation[pidfd-open]",
+      "tests/thesis_lite/maestro/test_bootstrap_late_birth.py::test_original_late_or_unknown_birth_never_replays_or_adopts_external_wait[pidfd-open-loss]"
+     ],
+     "note": "Helper-level test asserts unacknowledged_births==1, diagnostic ML-BOOT-DRAIN-UNRESOLVED, not cleanup_complete (test_bootstrap.py:370-374) but has no no-scan/no-adoption assertion. No-rediscovery (pidfd_open/Popen patched to fail, drain supervisor_reaped None, dispose RETAINED) is asserted only for the supervisor launch (test_bootstrap_launch_unknown.py:113-118), a different component."
+    },
+    {
+     "id": "removed_helper",
+     "locator": "/cases/5",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_birth_helper_boundary_removed_before_native_dispatch"
+     ],
+     "note": "Birth packet queued while supervisor SIGSTOPped; force_cleanup(helper).boundary_released; after SIGCONT supervisor exits (pidfd readable), parent.recv EOF (no child holds peer), no argus dir (test_bootstrap.py:379-415)."
+    },
+    {
+     "id": "bad_image",
+     "locator": "/cases/6",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_independent_image_and_input_validation_rejects[wrong-pin]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_independent_image_and_input_validation_rejects[unsealed-image]",
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_rejection_before_creation_preserves_latch_and_original_parent[helper-bytes]",
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_rejection_before_creation_preserves_latch_and_original_parent[unsealed]"
+     ],
+     "note": "Supervisor exits 64 with empty stderr; wrong-pin BootstrapSession raises (test_bootstrap.py:647-652). Launcher rejects before any creation."
+    },
+    {
+     "id": "bad_input",
+     "locator": "/cases/7",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_independent_image_and_input_validation_rejects[bad-config]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_failed_persistence_constructor_keeps_actual_child_for_bootstrap_drain",
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_rejection_before_creation_preserves_latch_and_original_parent[private-bytes]"
+     ],
+     "note": "Invalid config (b'FAIL' prefix) -> supervisor exit 64; wrong lifecycle_digest -> persistence() raises and latch cancelled (test_bootstrap.py:685-688). No test injects a wrong sealed-input scope for a helper birth."
+    },
+    {
+     "id": "bad_protocol",
+     "locator": "/cases/8",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_malformed_control_cancels_insertion[kind]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_malformed_control_cancels_insertion[scope]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_malformed_control_cancels_insertion[rights]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_malformed_control_cancels_insertion[sequence]",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_malformed_control_cancels_insertion[foreign]"
+     ],
+     "note": "Each mode asserts supervisor pidfd becomes readable (supervisor exits) (test_bootstrap.py:600-606)."
+    },
+    {
+     "id": "replay",
+     "locator": "/cases/9",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_duplicate_activation_rejects_without_reissuing"
+     ],
+     "note": "Duplicate activation raises ACTIVATION, latch not cancelled, one child (test_bootstrap.py:424-427). No test injects a duplicate birth slot (grep 'slot' finds only slot=1 in the removed-helper packet)."
+    },
+    {
+     "id": "lease",
+     "locator": "/cases/10",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_expired_native_lease_rejects_renewal",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_lease_expiry_kills_helpers_then_refreezes_original_workload",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_original_root_lease_renewal_is_exact_and_finite"
+     ],
+     "note": "Renewal after expiry raises and no children remain (test_bootstrap.py:508-510); after expiry supervisor exits and workload membership is residual, writerState 'open' (test_bootstrap.py:711-715). Helper death is not asserted per helper and 'refrozen' is approximated by residual membership (no freezer-state check)."
+    },
+    {
+     "id": "issuer_loss",
+     "locator": "/cases/11",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_supervisor_loss_closes_child_ordinary_authority"
+     ],
+     "note": "After supervisor SIGKILL: activate raises, drain registered_children_reaped, not final_workload_freeze_acknowledged, diagnostic ML-BOOT-SUPERVISOR-UNRESOLVED (test_bootstrap.py:534-543). C1 boundary cleanup exactness not asserted."
+    },
+    {
+     "id": "copy_fork",
+     "locator": "/cases/12",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_original_child_registry_copy_fork_and_replacement_denied",
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_original_registry_reservations_capacity_and_no_copy"
+     ],
+     "note": "copy.copy(session/child) TypeError; forked child's session.cancel raises and parent latch not cancelled (test_bootstrap.py:437-455)."
+    },
+    {
+     "id": "replace",
+     "locator": "/cases/13",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_supervisor_socket_replacement_does_not_retain_authority",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_original_child_registry_copy_fork_and_replacement_denied",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_foreign_pidfd_cannot_replace_child_or_supplied_wait_fd",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_foreign_pidfd_cannot_replace_supervisor_capability[foreign]"
+     ],
+     "note": "Socket dup2 -> REPLACED (test_bootstrap.py:481-482); registry swap -> REGISTRY-REPLACED (test_bootstrap.py:444-445); child pidfd swap -> MISMATCH (test_bootstrap.py:776-777)."
+    },
+    {
+     "id": "shared_wait",
+     "locator": "/cases/14",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_frozen_birth_precedes_helper_instructions_and_shared_actual_wait"
+     ],
+     "note": "client.drain worker_reaped, then session.drain registered_children_reaped, and child._wait(consume=True) is child._result (test_bootstrap.py:313-318)."
+    },
+    {
+     "id": "constructor_failure",
+     "locator": "/cases/15",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_failed_persistence_constructor_keeps_actual_child_for_bootstrap_drain"
+     ],
+     "note": "persistence() raises; latch cancelled, len(_children)==1, no pending; drain supervisor_reaped and registered_children_reaped (test_bootstrap.py:687-690)."
+    },
+    {
+     "id": "cancel_during_rpc",
+     "locator": "/cases/16",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_nonblocking_normal_lock_does_not_block_cancel",
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_cancel_during_stopped_ready_does_not_wait_on_startup_lock"
+     ],
+     "note": "With session._lock held, renew raises CONFLICT and cancel thread finishes within 0.5 s with latch cancelled (test_bootstrap.py:494-499). Launcher test cancels while a real stopped startup holds the lock. Bootstrap test holds the lock rather than an in-flight RPC."
+    },
+    {
+     "id": "sentinel",
+     "locator": "/cases/17",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_unrelated_original_sentinel_survives_bootstrap_cancellation",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_persistence_failure_signals_original_child_not_borrowed_sentinel"
+     ],
+     "note": "After cancel/drain sentinel.poll() is None, membership unchanged, no marker signal (test_bootstrap.py:741-744, 823-827)."
+    }
+   ]
+  },
+  "closure-expected.json": {
+   "path": "docs/engineering/maestro-lite/closure-expected.json",
+   "origin": null,
+   "sha256": "905f1cfecda0c6822d0270924b23943e228b4a35913c0e365ac1de22d763f12d",
+   "sections": [
+    "/expected_cases"
+   ],
+   "cases": [
+    {
+     "id": "normal",
+     "locator": "/expected_cases/normal",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_all_original_helpers_and_extra_boundary_close_with_separate_writer_facts",
+      "tests/thesis_lite/maestro/test_closure.py::test_full_dispatcher_result_precedes_full_helper_closure"
+     ],
+     "note": "Asserts cleanup_complete, 3 helpers all process_reaped, role-1 direct_child_reaped, extra boundary released, writer abort_completed/after_state failed/durable incomplete, not lifecycle_complete (test_closure.py:49-63). It does not separately assert root_reaped or that every boundary is released (only any(extra released)); these rest on the aggregate cleanup_complete."
+    },
+    {
+     "id": "partial",
+     "locator": "/expected_cases/partial",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_partial_bootstrap_closes_exact_resources_without_normal_unit_records",
+      "tests/thesis_lite/maestro/test_closure.py::test_failed_adapter_construction_retains_original_birth_and_unknown_writer",
+      "tests/thesis_lite/maestro/test_closure.py::test_invalid_original_adapter_alias_keeps_cleanup_only_root_and_c1_authority"
+     ],
+     "note": "Missing adapter: len(root._issued)==1, cleanup_complete, client_retained False, writer last state 'unknown' (test_closure.py:318-323). 'No fabricated normal records' (normal_unit_records_complete False) is asserted only in the staged-bootstrap test (test_closure.py:77), not in the missing-adapter injection."
+    },
+    {
+     "id": "writer-flush-fault",
+     "locator": "/expected_cases/writer-flush-fault",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_actual_writer_fault_stage_keeps_public_state_and_durable_manifest_separate[flush-fail]"
+     ],
+     "note": "abort_attempted False, abort_usability 'unknown', after_state 'open', manifest hash equals reader manifest, durable status 'unassessed' (test_closure.py:203-221)."
+    },
+    {
+     "id": "writer-abort-fault",
+     "locator": "/expected_cases/writer-abort-fault",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_actual_writer_fault_stage_keeps_public_state_and_durable_manifest_separate[abort-before]",
+      "tests/thesis_lite/maestro/test_closure.py::test_actual_writer_fault_stage_keeps_public_state_and_durable_manifest_separate[abort-after]"
+     ],
+     "note": "abort-before -> after_state 'open' (not inferred failed); abort-after -> 'failed'; manifest hash compared with reader (test_closure.py:210-219)."
+    },
+    {
+     "id": "writer-rpc-stall",
+     "locator": "/expected_cases/writer-rpc-stall",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_actual_storage_stall_keeps_unknown_state_and_still_closes_owned_boundaries",
+      "tests/thesis_lite/maestro/test_closure.py::test_cancel_bypasses_active_closure_locks_and_real_blocked_storage",
+      "tests/thesis_lite/maestro/test_closure.py::test_malformed_actual_closure_ack_is_not_current_writer_evidence"
+     ],
+     "note": "SIGSTOPped storage: cleanup_complete, not acknowledged, after_state None, last_acknowledged_state 'open', no manifest hash (test_closure.py:90-94)."
+    },
+    {
+     "id": "issuer-loss",
+     "locator": "/expected_cases/issuer-loss",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_forced_native_issuer_loss_does_not_fabricate_direct_wait"
+     ],
+     "note": "Launcher SIGKILL: root_reaped, all boundaries released, not cleanup_complete, role-1 direct_child_reaped is False (test_closure.py:102-105)."
+    },
+    {
+     "id": "conflict",
+     "locator": "/expected_cases/conflict",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_normal_conflicts_reject_and_independent_cancel_does_not_wait",
+      "tests/thesis_lite/maestro/test_closure.py::test_unit_mutation_conflict_rejects_before_closure_cancellation[owner]",
+      "tests/thesis_lite/maestro/test_closure.py::test_cancel_bypasses_active_closure_locks_and_real_blocked_storage",
+      "tests/thesis_lite/maestro/test_closure.py::test_active_dispatcher_normal_conflict_preserves_its_original_authority"
+     ],
+     "note": "Lock held: close raises ClosureError, latch not cancelled; cancel() succeeds while lock held (test_closure.py:125-131); concurrent cancel with real blocked storage completes (test_closure.py:376-380)."
+    },
+    {
+     "id": "short-window",
+     "locator": "/expected_cases/short-window",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_short_original_window_returns_unknown_without_a_new_cleanup_deadline"
+     ],
+     "note": "Elapsed < 0.8 s (harness allowance), not cleanup_complete, same end returns cached result, new end rejects (test_closure.py:353-357). Unresolved state is asserted only as aggregate cleanup_complete False; individual late/missing observations are not checked as unknown/None."
+    },
+    {
+     "id": "repeat",
+     "locator": "/expected_cases/repeat",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_closure.py::test_all_original_helpers_and_extra_boundary_close_with_separate_writer_facts",
+      "tests/thesis_lite/maestro/test_closure.py::test_short_original_window_returns_unknown_without_a_new_cleanup_deadline",
+      "tests/thesis_lite/maestro/test_closure.py::test_copied_and_changed_scope_reject_before_mutation"
+     ],
+     "note": "closer.close(until) is result; reason='different' raises ClosureError (test_closure.py:64-66); changed end raises (test_closure.py:355-356); changed session rejects with latch not cancelled (test_closure.py:141-143)."
+    }
+   ]
+  },
+  "outcomes-expected.json": {
+   "path": "docs/engineering/maestro-lite/outcomes-expected.json",
+   "origin": null,
+   "sha256": "ff6b999cd252bdbb9066cba0123d7f8583683ee32e21ecb422aa66faefa16903",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "positive",
+     "locator": "/cases/positive",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_real_start_probe_and_dependency_records_before_ready_return"
+     ],
+     "note": "After facade.start returns, re-reads durable m3.jsonl and Argus run: exactly one M3 outcome for the execution, last M3 record a separate 'observation' with status running (test_outcomes.py:46-50), Argus actions end ['started','probe','ready'] (:53), LifecycleReceipt sample_sequence equals ready.sequence (:42)."
+    },
+    {
+     "id": "dependent",
+     "locator": "/cases/dependent",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_real_start_probe_and_dependency_records_before_ready_return"
+     ],
+     "note": "Asserts dependent 'started' payload has exactly one dependency on the source unit generation 1 whose probeEventId resolves to an earlier durable source 'health' event (test_outcomes.py:68-76). Does not assert that the referenced event is the LATEST predecessor probe/health event."
+    },
+    {
+     "id": "health",
+     "locator": "/cases/health",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_public_source_hashes_and_payload_schema_match_actual_records"
+     ],
+     "note": "After check_health(force=True) asserts Argus 'started' count == 1 and last event action 'health' (test_outcomes.py:112-115). Duplicate check is on Argus 'started' events only; M3 'outcome' record count after the health query is not asserted."
+    },
+    {
+     "id": "pending_exec",
+     "locator": "/cases/pending_exec",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_pending_exec_has_probe_record_without_false_started_credit"
+     ],
+     "note": "exec_pipe_closed forced False; asserts no M3 outcome, exactly 3 Argus probe events all outcome 'failed', and no 'started'/'ready' events (test_outcomes.py:148-158)."
+    },
+    {
+     "id": "forgery",
+     "locator": "/cases/forgery",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_only_exact_current_observation_can_be_recorded[copy]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_only_exact_current_observation_can_be_recorded[changed]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_only_exact_current_observation_can_be_recorded[duplicate]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_only_exact_current_observation_can_be_recorded[foreign-session]"
+     ],
+     "note": "record_probe raises ValueError and owner.persistence._sequence is unchanged (no RPC dispatched) for copy, changed sequence, duplicate re-record and foreign session (test_outcomes.py:130-132)."
+    },
+    {
+     "id": "continuity",
+     "locator": "/cases/continuity",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_durable_history_loss_blocks_new_ready[journal-history]"
+     ],
+     "note": "Journal-prefix change after Release (first row status rewritten, test_outcomes.py:175-179) rejects: raises, latch cancelled, no ready, no probe receipt (:187-190). The 'changed recorded handle' branch is not injected in the outcomes tests (closest is the recovery-snapshot handle_digest substitution in tests/thesis_lite/maestro/test_recovery.py::test_bad_original_snapshot_ack_never_restores_an_observation_view[handle], a different path)."
+    },
+    {
+     "id": "storage_failure",
+     "locator": "/cases/storage_failure",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_storage_worker_failure_after_release_never_returns_ready[append-fail]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_storage_worker_failure_after_release_never_returns_ready[flush-fail]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_durable_history_loss_blocks_new_ready[journal-loss]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_durable_history_loss_blocks_new_ready[argus-loss]"
+     ],
+     "note": "Real append/flush fault worker: latch cancelled (starts closed), no ready observation, no probe receipt, worker reaped, last ACK writer state 'open' (test_outcomes.py:356-363). Only one unit is staged; 'dependent does not execute' is not injected or asserted (no second unit / no dependent marker check)."
+    },
+    {
+     "id": "storage_hang",
+     "locator": "/cases/storage_hang",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_real_journal_lock_after_release_times_out_without_ready",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_original_storage_worker_failure_after_release_never_returns_ready[flush-hang]"
+     ],
+     "note": "Real flock taken after Release (packet kind 4); deadline began+0.4 s; asserts elapsed < 1.5 s (approximate bound, not the 0.4 s deadline), latch cancelled, no ready, no receipt (test_outcomes.py:219-221). 'Cleanup remains independent' is not asserted (no stop/cleanup/boundary release observation); flush-hang variant only asserts storage worker reaped (:357)."
+    },
+    {
+     "id": "public",
+     "locator": "/cases/public",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_public_source_hashes_and_payload_schema_match_actual_records"
+     ],
+     "note": "Every Argus payload validated against tests/thesis_lite/maestro/lifecycle-payload-v2.schema.json (test_outcomes.py:85-95); m3-record sourceRefs sha256 equal canonical hash of public M3 record (:96-102); opaque_id, resource_identity, 'private-process-nonce-', 'MAESTRO_VISIBLE', 'declared-image' absent (:104-111). The schema is a test-local copy whose identity with the unchanged external schema is not checked in the test; 'commands' coverage is limited to those literal strings."
+    },
+    {
+     "id": "identity",
+     "locator": "/cases/identity",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_outcomes.py::test_only_exact_current_observation_can_be_recorded[foreign-session]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_substituted_actual_worker_ack_never_returns_ready[clock]",
+      "tests/thesis_lite/maestro/test_outcomes.py::test_substituted_actual_worker_ack_never_returns_ready[dependency]"
+     ],
+     "note": "Session substitution of the observation rejects with no dispatch (test_outcomes.py:128-132); foreign clock domain / foreign dependency in the worker ACK rejects (:258-262, :274-277). No outcomes test substitutes a different facade, issuer, or generation for outcome recording (provider tests cover copied facade separately)."
+    }
+   ]
+  },
+  "provider-expected.json": {
+   "path": "docs/engineering/maestro-lite/provider-expected.json",
+   "origin": null,
+   "sha256": "fa5b2cbe2c277841c63d5440164f823f4c934ff6ef62d8ba3a3151cff62e9c51",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "positive_dependency",
+     "locator": "/cases/positive_dependency",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_real_current_generation_probe_precedes_dependent_release"
+     ],
+     "note": "Asserts source ready with probe_id 'running', generation 1; dependent ready; source observation sequence advanced during dependent start (test_provider.py:69-74); both markers read 'EXEC\\n' (:83-86). Ordering of the fresh source probe relative to the dependent Release is inferred from the sequence increase, not directly asserted against the Release event."
+    },
+    {
+     "id": "pending_exec",
+     "locator": "/cases/pending_exec",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_query_exhaustion_is_not_ready_and_never_releases_twice"
+     ],
+     "note": "exec_pipe_closed forced False: raises ML-PROBE-NOT-READY, exactly 3 bounded queries, observation not ready, latch cancelled (test_provider.py:311-315). The permissive branch (a pending exec that reaches running within the bounded queries becomes ready) is not injected; 'never releases twice' in the name is not asserted."
+    },
+    {
+     "id": "unreleased_prerequisite",
+     "locator": "/cases/unreleased_prerequisite",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_failed_prerequisite_cannot_release_dependent[unreleased]",
+      "tests/thesis_lite/maestro/test_provider.py::test_step_dependency_without_flow_still_blocks_dependent"
+     ],
+     "note": "Dependent start raises; latch cancelled (boot_stack[2].cancelled); no ready observation; dependent marker absent (test_provider.py:114-120). Step-only variant raises ML-PROBE-UNRELEASED with no markers (:293-295) but does not assert latch closure."
+    },
+    {
+     "id": "dead_prerequisite",
+     "locator": "/cases/dead_prerequisite",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_failed_prerequisite_cannot_release_dependent[dead]"
+     ],
+     "note": "Source ready asserted then SIGKILL via childfd; dependent start raises; no observation ready; dependent marker absent; latch cancelled (test_provider.py:97-120)."
+    },
+    {
+     "id": "issuer_loss",
+     "locator": "/cases/issuer_loss",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_failed_prerequisite_cannot_release_dependent[issuer-loss]"
+     ],
+     "note": "Helper loss approximated by SIGSTOP of launcher._pidfd (test_provider.py:103), later SIGCONT; asserts dependent rejected (ValueError/TimeoutError), latch cancelled, marker absent. 'No PID adoption' is not asserted."
+    },
+    {
+     "id": "forged_handle",
+     "locator": "/cases/forged_handle",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[forged-handle]"
+     ],
+     "note": "facade.bind with handle execution_id='forged' raises ValueError; no markers (test_provider.py:131-132,167). Only one handle field changed; no assertion that no Query was sent."
+    },
+    {
+     "id": "unsupported_probe",
+     "locator": "/cases/unsupported_probe",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_complete_admitted_policy_set_and_running_catalog_condition[unsupported]"
+     ],
+     "note": "Observe-phase condition replaced by 'application-ready'; ProcessReadiness constructor raises ValueError; no markers (test_provider.py:189-202)."
+    },
+    {
+     "id": "policy_bounds",
+     "locator": "/cases/policy_bounds",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_invalid_policy_values",
+      "tests/thesis_lite/maestro/test_provider.py::test_all_policy_domains_are_finite_and_explicit",
+      "tests/thesis_lite/maestro/test_provider.py::test_complete_admitted_policy_set_and_running_catalog_condition[missing]",
+      "tests/thesis_lite/maestro/test_provider.py::test_complete_admitted_policy_set_and_running_catalog_condition[duplicate]",
+      "tests/thesis_lite/maestro/test_provider.py::test_complete_admitted_policy_set_and_running_catalog_condition[unknown]"
+     ],
+     "note": "True/nan/inf/0/-1/6 and per-field bool/huge/out-of-range values raise ValueError (test_provider.py:170-173, 250-271); missing/duplicate/unknown policy sets raise at construction with no markers (:181-202)."
+    },
+    {
+     "id": "stale_reply",
+     "locator": "/cases/stale_reply",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_expired_actual_reply_cannot_be_reused"
+     ],
+     "note": "observe() reply back-dated (observed_at = now-1, freshness 0.5); dependent start raises; latch cancelled; dependent marker absent (test_provider.py:224-234)."
+    },
+    {
+     "id": "final_guard",
+     "locator": "/cases/final_guard",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_failed_prerequisite_cannot_release_dependent[final-guard]"
+     ],
+     "note": "Source child SIGKILLed after dependent gate packet kind 3 exchange (test_provider.py:107-113); dependent start raises; no ready; dependent marker absent; latch cancelled (:114-120). Assumes packet kind 3 is Arm (pre-Release); not independently verified here."
+    },
+    {
+     "id": "original_deadline",
+     "locator": "/cases/original_deadline",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[wrong-session]",
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[expired]"
+     ],
+     "note": "Foreign-session and past HostDeadline raise ValueError; no workload markers (test_provider.py:133-140,159-167)."
+    },
+    {
+     "id": "duplicate_start",
+     "locator": "/cases/duplicate_start",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_real_current_generation_probe_precedes_dependent_release"
+     ],
+     "note": "Second facade.start for the source raises ValueError (test_provider.py:87-88). Marker content is checked only before the second start (:83-86); absence of a second workload execution after the rejected start is not asserted."
+    },
+    {
+     "id": "health_loss",
+     "locator": "/cases/health_loss",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_sampled_health_loss_invalidates_ready"
+     ],
+     "note": "SIGKILL after ready; check_health(force=True) raises; latch cancelled and no observation ready (test_provider.py:208-212)."
+    },
+    {
+     "id": "identity",
+     "locator": "/cases/identity",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[copy]",
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[wrong-session]",
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[registry]"
+     ],
+     "note": "copy.copy(facade) raises TypeError; foreign-session deadline and replaced _bindings registry raise ValueError; no markers (test_provider.py:141-149,167). 'Changed session' is exercised via the deadline session label."
+    },
+    {
+     "id": "conflict_cancel",
+     "locator": "/cases/conflict_cancel",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_exact_identity_and_deadline_rejections_before_dispatch[lock]"
+     ],
+     "note": "With facade._lock held, start raises ValueError (non-blocking) and facade.cancel succeeds with latch cancelled (test_provider.py:150-158). Promptness is implied (held lock would otherwise block), not timed."
+    },
+    {
+     "id": "bootstrap_session",
+     "locator": "/cases/bootstrap_session",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_provider.py::test_bootstrap_public_session_label_checked_before_dispatch"
+     ],
+     "note": "session.session substituted; renew raises ValueError; session._sequence unchanged (no native request) (test_provider.py:240-246)."
+    }
+   ]
+  },
+  "recovery-expected.json": {
+   "path": "docs/engineering/maestro-lite/recovery-expected.json",
+   "origin": null,
+   "sha256": "1687f60370c7e69f15f2364e53738d077071f42afa9021ab3be0e3098031a677",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "normal",
+     "locator": "/cases/normal",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_two_unit_recovery_retires_old_view_and_requires_new_health",
+      "tests/thesis_lite/maestro/test_recovery.py::test_reconstructed_view_and_original_owner_never_reopen_start",
+      "tests/thesis_lite/maestro/test_recovery.py::test_reconstruction_calls_no_start_stage_claim_or_new_writer"
+     ],
+     "note": "ordinary_reconciled, new view is not facade and has no observations, old facade health raises (test_recovery.py:76-80); view.start and owner.release raise (:109-112); no release/commit_intent/stage/open_run called (:257-271). Preconditions (handle/intent/journal) are shown necessary by the history-loss and handle-fault tests."
+    },
+    {
+     "id": "fresh-health",
+     "locator": "/cases/fresh-health",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_two_unit_recovery_retires_old_view_and_requires_new_health",
+      "tests/thesis_lite/maestro/test_recovery.py::test_bad_original_snapshot_ack_never_restores_an_observation_view[source]"
+     ],
+     "note": "Asserts new health observations ready with sequence > old_sequence and started-event count unchanged at 2 (test_recovery.py:82-94). Public M3 hash and Argus payload schema validation are not asserted in pytest; they are checked only by the out-of-pytest verifier docs/engineering/maestro-lite/verify-recovery16.py:610-627 over retained receipts. The bad-ack[source] mode rejects a changed source hash."
+    },
+    {
+     "id": "staged",
+     "locator": "/cases/staged",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_staged_handle_without_normal_durable_outcome_is_cleanup_only"
+     ],
+     "note": "not ordinary_reconciled, cleanup present and cleanup_complete, latch cancelled, workload marker absent (test_recovery.py:117-122). Use of the original C1 specifically is not separately asserted (cleanup_complete only)."
+    },
+    {
+     "id": "history-loss",
+     "locator": "/cases/history-loss",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_durable_or_exact_handle_loss_blocks_recovery_and_preserves_original_cleanup[journal]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_durable_or_exact_handle_loss_blocks_recovery_and_preserves_original_cleanup[mirror]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_bad_original_snapshot_ack_never_restores_an_observation_view[status]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_recovery_lock_covers_failure_cleanup_and_cancel_remains_independent"
+     ],
+     "note": "Whole M3 journal deletion and whole Argus stream deletion block ordinary reconciliation, all cleanup boundaries released, latch cancelled (test_recovery.py:131-142); permit_consumed=False in the snapshot ACK rejects (:210-211). Missing intent, missing consumption record and missing outcome are not injected individually against the durable journal (only whole-file deletion)."
+    },
+    {
+     "id": "issuer-loss",
+     "locator": "/cases/issuer-loss",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_dead_original_native_issuer_never_becomes_replacement_ownership",
+      "tests/thesis_lite/maestro/test_recovery.py::test_real_original_native_query_stall_returns_unknown_and_cleanup_only",
+      "tests/thesis_lite/maestro/test_recovery.py::test_replacement_owner_cannot_adopt_original_issuer_objects"
+     ],
+     "note": "Killed issuer: not reconciled, view None, root reaped, boundaries released, cleanup_complete False (test_recovery.py:389-397); stalled issuer analogous (:164-172); replacement owner with copied claims/launchers cannot reconcile (:274-286). Not injected: PID- or path-based substitution. Unknown wait is represented only by cleanup_complete False, not an explicit wait-unknown field."
+    },
+    {
+     "id": "conflict",
+     "locator": "/cases/conflict",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_normal_recovery_conflict_has_no_retirement_or_cancellation[owner]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_normal_recovery_conflict_has_no_retirement_or_cancellation[view]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_normal_recovery_conflict_has_no_retirement_or_cancellation[root]",
+      "tests/thesis_lite/maestro/test_recovery.py::test_recovery_lock_covers_failure_cleanup_and_cancel_remains_independent"
+     ],
+     "note": "With each lock held, reconcile raises RecoveryError, latch not cancelled, observation still ready, and recovery.cancel() then cancels while the lock is still held (test_recovery.py:153-161); concurrent reconcile rejects and cancel works while failure cleanup holds the recovery lock (:430-435)."
+    },
+    {
+     "id": "scope",
+     "locator": "/cases/scope",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_recovery_object_is_not_an_authority_after_fork",
+      "tests/thesis_lite/maestro/test_recovery.py::test_changed_host_session_rejects_without_borrowing_old_freshness",
+      "tests/thesis_lite/maestro/test_recovery.py::test_copied_active_recovery_statement_cannot_authorize_snapshot_rpc",
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_two_unit_recovery_retires_old_view_and_requires_new_health"
+     ],
+     "note": "copy.copy raises and forked child's cancel raises ValueError, owner not cancelled (test_recovery.py:349-360); new host session raises RecoveryError (:179-183); copied statement raises without sequence change (:238-240); identical repeat returns the cached result and changed-deadline repeat raises RecoveryError (:95-97)."
+    },
+    {
+     "id": "limits",
+     "locator": "/cases/limits",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_two_unit_recovery_retires_old_view_and_requires_new_health",
+      "tests/thesis_lite/maestro/test_recovery.py::test_original_recovery_object_is_not_an_authority_after_fork"
+     ],
+     "note": "Scope/non-claim statement. Tests assert not result.fresh_ready and not result.lifecycle_complete (test_recovery.py:77) and that a forked process gains no authority (:351-360); the remaining non-claims (global M1/U7/U8/admission) are not test-observable and are checked only in verify-recovery16.py:612 (fresh_ready/lifecycle_complete/ready_for_execution False)."
+    }
+   ]
+  },
+  "scheduler-expected.json": {
+   "path": "docs/engineering/maestro-lite/scheduler-expected.json",
+   "origin": null,
+   "sha256": "413fb9534036d2f09589e63e958d37a5f3b4c38870a887ba009c694f3f017926",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "admission",
+     "locator": "/cases/admission",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_schedule_plan.py::test_invalid_admission_rejects",
+      "tests/thesis_lite/maestro/test_schedule_plan.py::test_worker_rederives_instead_of_trusting_serialized_budget",
+      "tests/thesis_lite/maestro/test_schedule_plan.py::test_admission_itself_has_no_storage_or_process_effect",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_actual_remaining_rpc_budget_rejects_before_any_release",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_invalid_dispatch_scope_rejects_without_release_or_cancellation",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_legacy_session_keeps_original_cap_and_rejects_tick"
+     ],
+     "note": "Client admit_schedule rejects bad policy/tick/window/budget values (parametrized); decode_schedule (the function persistence_worker.py:112 uses) rederives and rejects serialized budget changes; dispatcher rejects exhausted RPC budget and invalid windows with no *.marker and no cancellation; legacy session asserts _request_limit == 128 and rejects tick. Worker-side validation is exercised through decode_schedule as a pure call, not via a malformed schedule sent to the live worker process."
+    },
+    {
+     "id": "normal",
+     "locator": "/cases/normal",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_independent_worker_rejects_step_success_without_real_readiness",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick",
+      "tests/thesis_lite/maestro/test_shared_dispatcher.py::test_actual_shared_five_phase_dispatch_and_complete_helper_cleanup"
+     ],
+     "note": "Full run asserts 10 completed steps and the set of phases, but compares sorted(phases) == sorted([...]*2) (test_dispatcher.py:274), so the dependency order of the phases is not asserted. Readiness before start completion is asserted negatively (when the start effect is omitted, no 'started' event appears and the worker fails). Ordering is checked only for start-source to start-sink ticks (duration test) and cleanup order (implicit horizon test)."
+    },
+    {
+     "id": "duration",
+     "locator": "/cases/duration",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_duration_defers_step_completion_until_actual_tick"
+     ],
+     "note": "Asserts source dispatch_tick == 0, completion_tick == 1, sink dispatch_tick == 1 and execution_succeeded. 'Dispatch once' (no repeated dispatch of the step) is not asserted; the window is checked only through execution_succeeded."
+    },
+    {
+     "id": "pause",
+     "locator": "/cases/pause",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_paused_ticks_still_service_host_health_and_original_leases",
+      "tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_actual_supervised_tick_pauses_interleave_with_durable_health"
+     ],
+     "note": "pauses=40/70 with health_scans >= 1 and lease_renewals >= 3/2; the shared variant also asserts that both original leases increased; the worker test interleaves repeated tick 0 with durable health probes."
+    },
+    {
+     "id": "health",
+     "locator": "/cases/health",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_missing_prerequisite_probe_names_the_actual_original_unit",
+      "tests/thesis_lite/maestro/test_schedule_plan.py::test_subnormal_cadence_rejects_derived_budget_without_overflow",
+      "tests/thesis_lite/maestro/test_schedule_plan.py::test_invalid_admission_rejects",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_first_release_without_sample_has_no_invented_health_deadline"
+     ],
+     "note": "A failed observation is injected (prerequisite SIGKILLed before start-sink) and the test asserts one health-loss event for the source with outcome 'unknown', no sink marker and unit_cleanup_complete. Finite cadence is covered only at admission. The 'missing observation' variant (no sample arriving, as opposed to a failed one) is not injected in the scheduler tests, and the before-dependent probe ordering is not asserted here."
+    },
+    {
+     "id": "tick_fault",
+     "locator": "/cases/tick_fault",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-index]",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-prior]",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[double-pull]",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[wrong-tick]",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_worker_rejects_tick_state_forgery[without-pull]",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_actual_tick_worker_stall_returns_incomplete_with_owned_cleanup",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_bad_schedule_ack_never_becomes_completed_step_authority",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_missed_tick_window_has_no_fabricated_step_or_probe_success"
+     ],
+     "note": "Forgery and rewind (wrong-prior) cause rejection, cancellation and no markers. A stall (SIGSTOP) and a bad step-complete ack (altered simulation clock) give not execution_succeeded with no markers. Explicit exhaustion (pulling past the final admitted tick) is not injected. The stall and bad-ack tests do not assert step dispositions, so 'cannot complete steps' is inferred from execution_succeeded/terminal_recorded."
+    },
+    {
+     "id": "evidence",
+     "locator": "/cases/evidence",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_actual_supervised_tick_pauses_interleave_with_durable_health",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_unexpected_effect_failure_records_honest_dispositions_and_cleanup",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_terminal_service_failure_still_attempts_original_c1_cleanup"
+     ],
+     "note": "Argus payloads are validated against lifecycle-payload-v2.schema.json. The M3 source-hash check sits in the full_stack retain() finalizer, which returns early unless MAESTRO_BOUNDARY_RECEIPTS is set (test_dispatcher.py:126-128), so it is conditional. Flush ACKs are not asserted. Missing records staying missing is asserted (not cleanup.normal_records_complete after a failure)."
+    },
+    {
+     "id": "teardown",
+     "locator": "/cases/teardown",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_phase_rejects_prerequisite_or_premature_cleanup_without_effect",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_implicit_horizon_stop_respects_dependencies_before_compiler_rank",
+      "tests/thesis_lite/maestro/test_teardown.py::test_original_issuer_loss_preserves_explicit_unresolved_reap"
+     ],
+     "note": "Scoped stop leaves the boundary empty and not released, a separate cleanup completes, and the final run order is [b, a]; implicit cleanup order is cleanup-z-sink then cleanup-a-source. Explicit unresolved child reaping is asserted only in the teardown component test (lost.emergency and not lost.leader_reaped), not in a scheduler/dispatcher-driven run."
+    },
+    {
+     "id": "authority",
+     "locator": "/cases/authority",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_copied_statement_cannot_issue_original_schedule_rpc",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_invalid_dispatch_scope_rejects_without_release_or_cancellation[foreign-session]",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_invalid_dispatch_scope_rejects_without_release_or_cancellation[copy]",
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_full_five_phase_dispatch_records_actual_outcomes_and_dispositions",
+      "tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_actual_worker_rejects_synthetic_handle_without_original_issuance",
+      "tests/thesis_lite/maestro/test_lazy_dispatcher.py::test_lazy_constructor_rejects_foreign_authority_and_eager_initial_work"
+     ],
+     "note": "Covered: copied schedule statement (no RPC sequence advance, no markers), foreign session, copy(driver) TypeError, a changed repeat (driver.run with different bounds raises ValueError, test_dispatcher.py:239-243), a synthetic handle (lazy dispatcher). Not covered: registry substitution in a scheduler test, and path/PID adoption, which no test asserts as absent."
+    },
+    {
+     "id": "conflict",
+     "locator": "/cases/conflict",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_dispatcher.py::test_normal_conflict_rejects_without_cancelling_but_operator_cancel_bypasses_locks",
+      "tests/thesis_lite/maestro/test_dispatch_observe.py::test_targeted_health_input_and_lock_conflicts_preserve_original_readiness"
+     ],
+     "note": "A concurrent check_health raises ValueError ('conflict') without cancelling; with the facade and owner locks held, cancel completes within 1 s and latch.cancelled is True; all steps end 'cancelled'."
+    },
+    {
+     "id": "leases",
+     "locator": "/cases/leases",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_original_native_gate_renewal_updates_only_after_exact_ack",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_invalid_gate_renewal_has_no_release_or_lease_change",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_original_root_lease_renewal_is_exact_and_finite",
+      "tests/thesis_lite/maestro/test_shared_dispatcher.py::test_paused_shared_ticks_renew_both_original_leases_and_observe_health",
+      "tests/thesis_lite/maestro/test_supervisor.py::test_latch_is_irreversible_and_idempotent",
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_cancellation_before_native_renewal_ack_commit_cannot_succeed"
+     ],
+     "note": "Gate renewal and root renewal are tested separately; paused shared ticks assert that both connection.lease_ns and session._lease increased; the latch is irreversible; a cancel that races a renewal ACK makes the renewal fail. The irreversibility evidence comes from supervisor/renewal tests, not from inside a scheduler run."
+    }
+   ]
+  },
+  "teardown-expected.json": {
+   "path": "docs/engineering/maestro-lite/teardown-expected.json",
+   "origin": null,
+   "sha256": "cac33b963accd12a4ac03ce15c4694c78fcd9ae0dda344726224cfd3ec936b51",
+   "sections": [
+    "/cases"
+   ],
+   "cases": [
+    {
+     "id": "normal",
+     "locator": "/cases/normal",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_normal_reverse_stop_reap_and_separate_release_with_durable_records",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_native_reverse_teardown_has_original_wait_and_normal_records"
+     ],
+     "note": "Asserts unit order [b, a], M3 stopped/cleaned with executionIds [b, b, a, a], Argus teardown13 actions [intent, stop, intent, cleanup]*2 with outcomes [pending, succeeded, pending, succeeded]*2, plus a native variant with 8 teardown13 events and _stop_ack/_retire_ack wait states. The relative order of the reap events (dependent reap before prerequisite stop) is not asserted directly, and per-unit leader_reaped is not asserted in the component normal test."
+    },
+    {
+     "id": "split",
+     "locator": "/cases/split",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_c1_termination_retains_controls_until_separate_release",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts"
+     ],
+     "note": "After terminate: state == 'empty', identity_retained, residual_count == 0 and not boundary_released; release_empty is then required to release. That the boundary is still frozen is not asserted."
+    },
+    {
+     "id": "premature",
+     "locator": "/cases/premature",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_release_without_stop_observation_cannot_kill_or_remove",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_phase_rejects_prerequisite_or_premature_cleanup_without_effect"
+     ],
+     "note": "release_empty on a staged boundary raises ValueError, the boundary is not released and no marker exists; a premature scoped cleanup raises and units stay ready. 'Cannot kill' (member process still alive afterwards) is not asserted, and the component test uses a staged, not running, boundary."
+    },
+    {
+     "id": "staged",
+     "locator": "/cases/staged",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_stage_only_teardown_never_fabricates_start_outcome",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_unstaged_native_units_are_fenced_without_invented_workload_wait"
+     ],
+     "note": "Stage-only teardown: no 'running' outcome, outcome statuses exactly [stopped, cleaned], no marker, and cleanup and normal records complete."
+    },
+    {
+     "id": "exited_descendant",
+     "locator": "/cases/exited_descendant",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_already_exited_leader_with_live_descendant_requires_c1_cleanup"
+     ],
+     "note": "In descendant mode the leader is reaped before teardown; afterwards unit_cleanup_complete, leader_reaped and boundary_empty are asserted. The test never asserts that the boundary was still non-empty after leader death, nor a C1 termination observation distinct from the final empty state, so 'dead leader is not sufficient' is implied, not asserted."
+    },
+    {
+     "id": "identity",
+     "locator": "/cases/identity",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_identity_and_nonblocking_conflicts_have_no_teardown_effect[foreign-session]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_identity_and_nonblocking_conflicts_have_no_teardown_effect[copy]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_copied_active_step_cannot_authorize_normal_record",
+      "tests/thesis_lite/maestro/test_teardown.py::test_missing_original_registry_never_adopts_handle"
+     ],
+     "note": "Covered: session (foreign deadline rejects), copied controller (TypeError), copied step (no persistence sequence advance; emergency, not normal complete), missing registry entry (emergency, no leader_reaped). Not covered: a changed (mutated) handle in any teardown test."
+    },
+    {
+     "id": "issuer_loss",
+     "locator": "/cases/issuer_loss",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_original_issuer_loss_preserves_explicit_unresolved_reap"
+     ],
+     "note": "Issuer SIGKILLed: all units boundary_empty and boundary_released; lost unit emergency, not leader_reaped, not normal_records_complete; overall normal_records_complete is False."
+    },
+    {
+     "id": "persistence",
+     "locator": "/cases/persistence",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_missing_normal_record_or_ack_uses_original_cleanup_only[m3-lock]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_missing_normal_record_or_ack_uses_original_cleanup_only[m3-loss]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_actual_teardown_flush_fault_retains_missing_normal_records[teardown-flush-fail]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_actual_teardown_flush_fault_retains_missing_normal_records[teardown-flush-hang]",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_short_scoped_window_retains_emergency_c1_reserve"
+     ],
+     "note": "A real flock on m3.jsonl.lock, a replaced m3 path, and worker flush fail/hang all end with boundaries released, emergency, not normal_records_complete, and no fabricated 'stopped' outcome."
+    },
+    {
+     "id": "bounded_continue",
+     "locator": "/cases/bounded_continue",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_lost_original_c1_is_unresolved_and_other_owned_cleanup_continues",
+      "tests/thesis_lite/maestro/test_teardown.py::test_original_issuer_loss_preserves_explicit_unresolved_reap"
+     ],
+     "note": "With the C1 cap removed for b: lost not released and emergency; other (a) boundary_released, all within one run(deadline(2)). Use of the original end is implied by the single deadline, not timed."
+    },
+    {
+     "id": "repeat",
+     "locator": "/cases/repeat",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_normal_reverse_stop_reap_and_separate_release_with_durable_records",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_scoped_native_leaf_cleanup_keeps_other_original_unit_live",
+      "tests/thesis_lite/maestro/test_schedule_worker.py::test_scoped_stop_and_cleanup_keep_other_unit_health_and_repeat_facts"
+     ],
+     "note": "controller.run(reason='normal-stop') is result and the M3 record count is unchanged; reason='changed' raises ValueError; scoped phase repeats return the identical objects without new records."
+    },
+    {
+     "id": "cancel_conflict",
+     "locator": "/cases/cancel_conflict",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_teardown.py::test_identity_and_nonblocking_conflicts_have_no_teardown_effect[owner-lock]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_identity_and_nonblocking_conflicts_have_no_teardown_effect[facade-lock]",
+      "tests/thesis_lite/maestro/test_teardown.py::test_expired_c1_deadline_and_lock_conflict_cannot_mutate",
+      "tests/thesis_lite/maestro/test_run_teardown.py::test_native_broker_lock_conflict_does_not_mutate_normal_records",
+      "tests/thesis_lite/maestro/test_teardown.py::test_emergency_status_conflict_never_blocks_or_infers_release"
+     ],
+     "note": "With owner or facade lock held, run raises ValueError in < 0.1 s and controller.cancel still sets the latch while the lock is held; the native broker-lock conflict leaves records unchanged and broker.cancel succeeds under the lock."
+    }
+   ]
+  },
+  "projection-fixtures.json": {
+   "path": "docs/engineering/maestro-lite/design-oracle/ML-DESIGN-2026-10-03-v2/projection-fixtures.json",
+   "origin": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/projection-fixtures.json",
+   "sha256": "a4991bda1529ffefb93220e0720e55e170169cd75c2386862ccfb070dfcf431f",
+   "sections": [
+    "/positive",
+    "/discriminating_cases",
+    "/negative_controls"
+   ],
+   "cases": [
+    {
+     "id": "positive",
+     "locator": "/positive",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation.py::test_real_xdl_catalog_plans_and_combined_phase_edges",
+      "tests/thesis_lite/maestro/test_preparation.py::test_static_eligibility_requires_flow_and_step_predecessor_completion",
+      "tests/thesis_lite/maestro/test_preparation.py::test_source_pointers_and_full_logical_identity_survive_projection",
+      "tests/thesis_lite/maestro/test_preparation.py::test_no_logical_node_is_launched_as_an_extra_unit"
+     ],
+     "note": "test_preparation.py:75-87 asserts a SUBSET (expected <= pairs) of unit-level edges: (SOURCE,dispatch)->(SOURCE,release)->probe->ready->start-complete, (SOURCE,ready)->(SINK,dispatch), step start-source complete->start-sink dispatch, and (SINK,cleanup)->(SOURCE,termination); flow pointer '#/spec/flows/0' (l.89); resource_order (SOURCE,SINK) (l.66); acyclic via rank check (l.91); eligibility start-source then start-sink (l.266-272). Not asserted: the sink-side release/probe/ready/complete chain, per-unit terminated->stop->cleanup edges, step-keyed dispatch nodes (implementation uses unit-keyed dispatch: refinement), dependsOn pointer '/0' suffix (test checks '.../dependsOn' l.260), compiler_kind_order for this fixture (xdl test_dependency_order_stable_tie_break uses a different xdl/support fixture with prepare-source), and the 'running existence-only probe' readiness statement."
+    },
+    {
+     "id": "flow-only-reversed-steps",
+     "locator": "/discriminating_cases/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_projection_discriminating.py::test_flow_only_reversed_steps_start_by_flow_not_declaration_rank"
+     ],
+     "note": "Finding 419: dependsOn removed, steps reversed, flow kept; asserts the flow edge source ready -> sink dispatch, no step edge either way, start-source eligible first and start-sink after it, acyclic."
+    },
+    {
+     "id": "step-only-reversed-instances",
+     "locator": "/discriminating_cases/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_projection_discriminating.py::test_step_only_reversed_instances_keep_dependency_without_inter_unit_flow_edge"
+     ],
+     "note": "Finding 419: self-unit flow source-out -> source-in, instances reversed, dependsOn kept; asserts the dependsOn edge, no inter-unit flow edge touching the sink, start-source first, acyclic."
+    },
+    {
+     "id": "opposing-start-dependency",
+     "locator": "/discriminating_cases/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation.py::test_combined_cycle_rejects_even_when_xdl_order_is_valid",
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[Z-combined-cycle]"
+     ],
+     "note": "Retains flow, sets start-source dependsOn ['start-sink'] and start-sink dependsOn [] (test_preparation.py:186-188); compiled() asserts XDL result.is_valid (l.49); asserts PreparationError match 'ML-PROJECTION-CYCLE' (l.189). Rejection-file case additionally asserts no prepared value and zero file/process/socket/lock/thread/clock effects (whole rejection, zero starts). Caveat: test_preparation_rejections.py is UNTRACKED and was being edited during this mapping."
+    },
+    {
+     "id": "unbound-sink",
+     "locator": "/negative_controls/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[R3-unbound-sink]"
+     ],
+     "note": "Finding 416: sink binding removed through the source-document route (validate_sources, compile valid); prepare rejects with ML-PROJECTION ('step target must resolve one executable instance'), no value returned, zero recorded effects."
+    },
+    {
+     "id": "feedback-cycle",
+     "locator": "/negative_controls/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/xdl/test_xdl1_order_unit.py::test_dependency_cycle_rejected"
+     ],
+     "note": "Adds sink-out/source-in endpoints and return-flow (test_xdl1_order_unit.py:124-138); asserts result.plan is None (l.140) and XDL1-PLAN-DEPENDENCY-CYCLE diagnostic with related {source-instance, sink-instance} (l.141-143). Uses xdl/support fixture, not maestro fixture; no Maestro-side check."
+    },
+    {
+     "id": "bad-schedule",
+     "locator": "/negative_controls/2",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation.py::test_impossible_step_duration_and_dependency_window_reject",
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[Z-impossible-window]"
+     ],
+     "note": "Approximated condition + code refinement: test keeps start-source at tick 0 but sets duration 2 / tolerance 2 (test_preparation.py:249-251) so the predecessor completes after start-sink's tick-0/tol-0 window; asserts ML-TIME (l.252) rather than ML-PROJECTION; compiler validity asserted via compiled(). The table's literal schedule (start-source at=2) is not injected."
+    },
+    {
+     "id": "node-target",
+     "locator": "/negative_controls/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation.py::test_no_logical_node_is_launched_as_an_extra_unit",
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[Z-node-target]"
+     ],
+     "note": "Different injection point + code refinement: tests change the source BINDING logicalRef element to 'source-node' (test_preparation.py:218-219), not the start-sink step targetRef to sink-node; assert compiler valid (l.231) and PreparationError 'ML-REALIZATION|ML-CATALOG' (l.232-233); positive run asserts no '#nodes/' unit (l.216)."
+    },
+    {
+     "id": "duplicate-binding",
+     "locator": "/negative_controls/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation.py::test_duplicate_realization_rejects_before_graph_creation",
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[Z-duplicate-realization]"
+     ],
+     "note": "Approximated + code refinement: test retargets sink-binding to source-instance (test_preparation.py:208-209), giving two bindings for SOURCE and leaving sink unbound, rather than adding a second sink binding; asserts ML-REALIZATION (l.210)."
+    },
+    {
+     "id": "unsupported-action",
+     "locator": "/negative_controls/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_rejection_is_whole_and_effect_free[R5-set-parameter-action]",
+      "tests/thesis_lite/maestro/test_preparation.py::test_unsupported_actions_do_not_reach_provider_or_graph"
+     ],
+     "note": "code refinement: set_parameter_action() changes steps[1] (start-sink) actionKind/operation to set-parameter, direct() asserts compiler valid, asserts '^ML-UNSUPPORTED$' plus no value/zero effects (untracked in-flux file). Tracked test_preparation.py:332-347 covers an unexpected action field (not set-parameter) with ML-UNSUPPORTED."
+    },
+    {
+     "id": "no-payload-mapping",
+     "locator": "/negative_controls/6",
+     "verdict": "NO_TEST",
+     "tests": [],
+     "note": "No test introduces a supported phase/action pair lacking a payload v2.0 mapping; grep for IR-06/payload mapping finds nothing. R4-step-parameters and Z-unexpected-command are different conditions. Finding 419: not constructible, every supported phase/action pair has a payload mapping, so a stimulus needs a product change."
+    },
+    {
+     "id": "original-argus-fixture",
+     "locator": "/negative_controls/7",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_preparation_rejections.py::test_original_argus_fixture_is_rejected_whole"
+     ],
+     "note": "Finding 416: the accepted Argus fixture set compiles and is rejected whole with ML-UNSUPPORTED (fault execution) and zero effects. The missing-sink-binding part of the design expectation is not observed separately because the fault check rejects first."
+    }
+   ]
+  },
+  "authority-crash-tables.json": {
+   "path": "docs/engineering/maestro-lite/design-oracle/ML-DESIGN-2026-10-03-v2/authority-crash-tables.json",
+   "origin": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/authority-crash-tables.json",
+   "sha256": "bac7af209574d4ab32b3fd83e4a0c63c3a8bcd5aa3f809fb6838b1f3a757f75e",
+   "sections": [
+    "/ordering_table",
+    "/crash_points",
+    "/capability_lifecycle_tests",
+    "/supervisor_lease/on_expiry",
+    "/supervisor_lease/stale_acknowledgement",
+    "/supervisor_lease/during_detection_interval"
+   ],
+   "cases": [
+    {
+     "id": "ordering:release-committed-before-cancel",
+     "locator": "/ordering_table/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_committed_release_before_cancel_runs_once_and_other_unit_never_runs",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_actual_release_then_cancel_runs_one_fixed_child",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-after-reply]"
+     ],
+     "note": "u0 marker exactly b'EXEC\\n' after Release then Cancel, stop_retire teardown (test_affa_native.py:365-377); composed windows assert len(markers)==1 and all boundaries empty+released after closure (test_composed_authority_interruptions.py:244,248); releasegate asserts refreeze and termination_observed (test_releasegate.py:142-143)."
+    },
+    {
+     "id": "ordering:cancel-committed-before-release",
+     "locator": "/ordering_table/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_cancel_fences_both_already_staged_units",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_cancel_before_release_executes_no_workload",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-before-send]"
+     ],
+     "note": "Release REJECTED and no marker after Cancel (test_affa_native.py:353-362); broker cancel asserts native_epoch_confirmed and frozen_units==3 and no markers (test_run_broker.py:219-226); gate asserts epoch 8, frozen(fd), ticket send fails (test_releasegate.py:150-157)."
+    },
+    {
+     "id": "ordering:release-and-cancel-same-epoch-exact-linearization",
+     "locator": "/ordering_table/2",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-before-send]"
+     ],
+     "note": "Only fixed barrier windows are exercised (cancel injected strictly before Release send, or after the Release is already sent and its marker observed: wait_for marker at test_composed_authority_interruptions.py:203-204). No test races Release and Cancel concurrently in the same epoch and checks that the outcome follows whichever transition the native authority linearized first."
+    },
+    {
+     "id": "ordering:stale-epoch-ticket-presented-after-cancel",
+     "locator": "/ordering_table/3",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_affa",
+      "tests/thesis_lite/maestro/test_releasegate.py::test_cancel_before_release_executes_no_workload",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[stale-epoch]"
+     ],
+     "note": "Pre-cancel ticket presented after Cancel returns K.REJECTED with no marker (test_affa_native.py:360-361; test_runtime_actual.py:103-106); gate closes and refuses the old ticket after cancel (test_releasegate.py:151-157)."
+    },
+    {
+     "id": "ordering:stalled-broker-launcher-resumes-after-fallback-cleanup",
+     "locator": "/ordering_table/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_releasegate.py::test_delayed_production_gate_cannot_thaw_after_exact_cleanup",
+      "tests/thesis_lite/maestro/test_launcher.py::test_cancelled_late_stage_cannot_birth_after_boundary_removal",
+      "tests/thesis_lite/maestro/test_launcher.py::test_queued_stage_rejects_original_removed_boundary_fd",
+      "tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[stage]",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_queued_request_is_dead_before_exact_fallback_release[release]"
+     ],
+     "note": "Asserted: zero workload marker, boundary released before resume, resumed gate exits 70, retained freeze fd write fails ENODEV/ENOENT (test_releasegate.py:300-308); resumed launcher Stage rejects removed boundary (test_launcher.py:636-662). The stale-epoch reason is checked only conditionally ('if packet: ... epoch == 8', test_releasegate.py:313-315). For the AFFA, the implementation kills the stalled authority before fallback release instead of letting it resume (test_composed_issuer_loss.py:187,206-207), so AFFA resumption is not exercised. Re-entry is rejected through a removed boundary, not a frozen one."
+    },
+    {
+     "id": "CP-01",
+     "locator": "/crash_points/0",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap_launcher.py::test_rejection_before_creation_preserves_latch_and_original_parent",
+      "tests/thesis_lite/maestro/test_runtime_startup_failures.py::test_constructor_conflicts_reject_before_process_or_C1",
+      "tests/thesis_lite/maestro/test_boundary.py::test_cancel_before_stage_allocates_nothing",
+      "tests/thesis_lite/maestro/test_boundary.py::test_closed_options_reject_before_allocation"
+     ],
+     "note": "Zero creation is asserted: no birth attempted, no boundary entries, root identity unchanged (test_bootstrap_launcher.py:163-168), no Popen or C1 (test_runtime_startup_failures.py:41-43), directory listing unchanged (test_boundary.py:331-332). 'Unresolved-free' is not positively asserted. The launcher outcome asserts `not owner.outcome.cleanup_complete` (test_bootstrap_launcher.py:165), but cleanup_complete is a fixed field=False init=False in src/xverse/maestro/bootstrap_launcher.py:45, so it says nothing about whether anything is unresolved."
+    },
+    {
+     "id": "CP-02",
+     "locator": "/crash_points/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_boundary.py::test_cp02_empty_reservation_is_not_c1[True]",
+      "tests/thesis_lite/maestro/test_boundary.py::test_cp02_empty_reservation_is_not_c1[False]",
+      "tests/thesis_lite/maestro/test_boundary.py::test_cp02_live_allocation_never_gains_force_or_freeze",
+      "tests/thesis_lite/maestro/test_boundary.py::test_lost_identity_during_allocation_never_uses_name_as_authority"
+     ],
+     "note": "Downgraded from DIVERGENT on parent review. [True] (reservation-approval admitted) releases the boundary with no termination: matches. [False] (factory reservation=False -> no \"reservation-approval\", test_boundary.py:150) asserts boundary_released is False and state==\"unresolved\", identity_retained (test_boundary.py:467-470). Implementation refinement: release of an empty retained identity requires an admitted reservation approval; the table row (surviving_authority \"none\", allowed \"release boundary\") does not state that precondition. Author ruling recommended. | original fork note: Table CP-02: allowed_operations ['release boundary'], provable_cleanup 'boundary release; no workload existed'. Test, param reservation=False (identity retained, no C1, no child): `assert result.boundary_released is reservation` (test_boundary.py:467), i.e. not released, plus `assert result.state == \"unresolved\" and result.identity_retained` (test_boundary.py:470). With reservation=True the boundary is released without a termination claim, which matches. UNCERTAIN: the table row also lists surviving_authority 'none', which its own vocabulary defines as 'ownership is unresolved', so the row is internally ambiguous. The implementation releases only when a reservation capability exists."
+    },
+    {
+     "id": "CP-03",
+     "locator": "/crash_points/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_boundary.py::test_real_cp03_empty_boundary_release",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_prbc",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_cancelled_stage_creates_no_workload"
+     ],
+     "note": "Frozen, identity retained, membership complete with 0 residuals; force_cleanup gives boundary_released, not termination_observed, not ready_for_execution; repeat is idempotent and observation is then closed (test_boundary.py:252-267). The reserved unit releases without a termination claim (test_runtime_actual.py:169-171)."
+    },
+    {
+     "id": "CP-04",
+     "locator": "/crash_points/3",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[stage-before-send]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[stage-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-before-send-authority]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-ack-pending-authority]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_spawn_time_storage_loss[stage-before-send]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_spawn_time_storage_loss[stage-ack-pending]",
+      "tests/thesis_lite/maestro/test_boundary.py::test_cancel_during_allocation_retains_original_epoch_for_cleanup",
+      "tests/thesis_lite/maestro/test_boundary.py::test_real_frozen_birth_force_cleanup_and_deleted_fd_fence"
+     ],
+     "note": "execute() asserts after closure: all boundaries empty and released, helpers reaped, authority fenced, zero markers, late stage rejected (test_composed_authority_interruptions.py:241-256). At stage-ack-pending the frozen member is observed (line 201-202), and closure reports issued True/None, direct_child_reaped None, not cleanup_complete and ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN (lines 257-263), so an unknown wait stays unresolved. The sentinel fixture asserts that the unrelated boundary is unchanged."
+    },
+    {
+     "id": "CP-05",
+     "locator": "/crash_points/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[issuance-before-record-storage]"
+     ],
+     "note": "Asserted: issued_receipts==0 (test_composed_authority_interruptions.py:266-267), all boundaries empty and released, zero markers. 'Ordinary handle not yet provable' is recorded (observations host_handle_retained, line 208) but never asserted."
+    },
+    {
+     "id": "CP-06",
+     "locator": "/crash_points/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[issuance-after-record-storage]",
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup"
+     ],
+     "note": "Asserted: issued_receipts==1 (line 264-265), boundaries empty and released, no markers, late stage rejected. The test does not check which authority path performed the cleanup, ordinary revalidation or cleanup-only. The registry-loss test (after Release, not exactly at this stage) asserts that ordinary use is rejected and cleanup-only succeeds (test_composed_issuer_loss.py:80-84,104-105)."
+    },
+    {
+     "id": "CP-07",
+     "locator": "/crash_points/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[before-intent-append]",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_mirror_loss_before_stage_revokes_without_workload_birth",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_actual_durable_loss_before_release_prevents_execution[mirror]"
+     ],
+     "note": "Zero workload is asserted: no markers, no STAGE/ARM/RELEASE exchange, native units issued False, cleanup_complete, mirror count 0 (test_composed_persistence_termination.py:190-198); mirror loss gives latch.cancelled and no pidfds or markers (test_run_broker.py:210-213). Implementation order differs from the design: the intent and mirror precede STAGE, so 'cancel staging' becomes 'no Stage sent'. 'Normal-record gap recorded' is not asserted beyond not lifecycle_complete / not original_runtime_verification_complete."
+    },
+    {
+     "id": "CP-08",
+     "locator": "/crash_points/7",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_intent_frontier_loader_and_loss[after-intent-flush]",
+      "tests/thesis_lite/maestro/test_launcher.py::test_storage_timeout_after_arm_never_executes_catalog_workload"
+     ],
+     "note": "after-intent-flush: one mirror intent event, no STAGE/ARM/RELEASE, no markers, cleanup_complete (test_composed_persistence_termination.py:190-198). Ticket burning is not observable because no Arm occurred. The legacy launcher storage-after-arm case asserts a failed Release and no marker (test_launcher.py:610-613), but the ticket already exists there."
+    },
+    {
+     "id": "CP-09",
+     "locator": "/crash_points/8",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[stage-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_pre_handle_crash_survival[stage-ack-pending-authority]",
+      "tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[before-handle]",
+      "tests/thesis_lite/maestro/test_shared_closure.py::test_stopped_authority_with_queued_request_is_dead_before_scope_release"
+     ],
+     "note": "The staged child is observed frozen (test_composed_authority_interruptions.py:199-202); after closure all boundaries are empty and released, there are zero markers, and the unknown wait stays explicit (ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN, lines 244,248,257-263); queued Stage: issued None, boundaries empty and released, no marker (test_shared_closure.py:111-115)."
+    },
+    {
+     "id": "CP-10",
+     "locator": "/crash_points/9",
+     "verdict": "DIVERGENT",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-before-send]",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_one_cancel_fences_both_units_before_release",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_actual_durable_loss_before_release_prevents_execution[mirror]",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_actual_durable_loss_before_release_prevents_execution[journal]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_release_before_send_loss[authority]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_release_before_send_loss[storage]"
+     ],
+     "note": "The cancel, authority-loss and durable-loss variants match (0 markers: test_composed_authority_interruptions.py:248; test_composed_post_release_loss.py:144 released_markers_max=0; test_run_broker.py:316-320). The storage-worker loss at the same window diverges: EXPECTED_RELEASE_BEFORE_SEND[('release-before-send','storage')] = dict(released_markers_max=1, ...) (test_composed_post_release_loss.py:146), asserted by `assert len(markers) <= expected[\"released_markers_max\"]` (test_composed_post_release_loss.py:222). The barrier is before the Release send and after STAGED/ARM (line 216 asserts 0 RELEASE exchanges and no markers at fault time), and the test permits one workload execution. Table CP-10 lists allowed_operations ['cancel (bump epoch)','cleanup-only'] and provable_cleanup 'zero workload instructions after epoch bump'. The test comment (lines 134-142) says the first-authored expectation was 0 markers and was 'corrected after observation', reclassifying the case as CP-11. The legacy launcher component asserts zero for storage failure after Arm (test_launcher.py:606-613).",
+     "finding": 420
+    },
+    {
+     "id": "CP-11",
+     "locator": "/crash_points/10",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[('release-ack-pending', 'authority')]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[('release-ack-pending', 'storage')]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[('release-after-reply', 'authority')]",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome[('release-after-reply', 'storage')]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-ack-pending]",
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage[release-after-reply]",
+      "tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss[after-release]"
+     ],
+     "note": "Exactly one EXEC marker, execution not succeeded, not lifecycle_complete, authority fenced, root and helpers reaped, all boundaries empty and released, started events <=1, outcome/stop/cleanup records <=1 (outcome may be absent), late stage rejected, sentinel untouched (test_composed_post_release_loss.py:115-125)."
+    },
+    {
+     "id": "CP-12",
+     "locator": "/crash_points/11",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_persistence_termination.py::test_original_termination_with_live_leader_descendant",
+      "tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched",
+      "tests/thesis_lite/maestro/test_launcher.py::test_dead_leader_does_not_hide_live_contained_descendant",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_residual_membership"
+     ],
+     "note": "Asserted: with leader and descendant live and authority/storage killed at STOP windows, all boundaries end empty and released, markers are retained, and WAIT-UNKNOWN is reported when cleanup is not complete (test_composed_persistence_termination.py:145-148,253-259). A live descendant stays in scope after leader death and is terminated, with the sentinel untouched (test_boundary.py:292-322). No test injects a descendant escaping the boundary to check that this yields a verification failure."
+    },
+    {
+     "id": "capability:forged-capability-identity",
+     "locator": "/capability_lifecycle_tests/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_boundary.py::test_fields_copies_and_replacement_registry_do_not_grant_authority",
+      "tests/thesis_lite/maestro/test_boundary.py::test_forked_holder_cannot_use_original_c1",
+      "tests/thesis_lite/maestro/test_launcher.py::test_original_registry_rejects_forged_handle_fork_and_second_stage",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_foreign_pidfd_cannot_replace_supervisor_capability",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_foreign_pidfd_cannot_replace_child_or_supplied_wait_fd",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_native_malformed_or_forged_release_never_executes_workload[forged-handle]"
+     ],
+     "note": "A forked holder gets ML-OWNERSHIP-BOUNDARY-HOLDER and the original later releases, which shows the target was not mutated (test_boundary.py:653-676); a forged ProcessBoundaryOps or replacement registry gets OWNERSHIP (test_boundary.py:356-368); a forged handle gives HANDLE and no marker (test_launcher.py:505-525); a foreign pidfd gives MISMATCH with _result None (test_bootstrap.py:772-785)."
+    },
+    {
+     "id": "capability:expired-capability-past-teardown-deadline",
+     "locator": "/capability_lifecycle_tests/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_boundary.py::test_expired_original_authority_stays_unresolved",
+      "tests/thesis_lite/maestro/test_teardown.py::test_expired_c1_deadline_and_lock_conflict_cannot_mutate",
+      "tests/thesis_lite/maestro/test_supervisor.py::test_expired_entire_lease_returns_unresolved_without_new_force",
+      "tests/thesis_lite/maestro/test_affa_client.py::test_expired_original_revoke_end_still_attempts_kill"
+     ],
+     "note": "An expired authority on an empty boundary gives unresolved, identity retained, ML-TIMEOUT-BOUNDARY-AUTHORITY (test_boundary.py:514-521). With a staged boundary (non-empty) the expired deadline raises and the boundary is not released (test_teardown.py:339-354), but the unresolved state itself is not asserted there. The test's empty-boundary unresolved result does not contradict the table, which is silent on empty boundaries."
+    },
+    {
+     "id": "capability:issuer-registry-replaced-while-capability-survives",
+     "locator": "/capability_lifecycle_tests/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_issuer_loss.py::test_original_registry_loss_denies_adoption_but_preserves_cancellation_and_cleanup",
+      "tests/thesis_lite/maestro/test_runtime_issuer_loss.py::test_original_whole_start_retains_primary_cleanup_after_issuer_loss",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_original_child_registry_copy_fork_and_replacement_denied"
+     ],
+     "note": "After registry copy/empty/non-mapping replacement, broker.issuer and issuer.observe raise without IO (sequence unchanged); primary closure cleans all boundaries empty and released; not cleanup_complete, with ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN (test_composed_issuer_loss.py:80-84,104-105,129-130)."
+    },
+    {
+     "id": "capability:affa-supervisor-lost",
+     "locator": "/capability_lifecycle_tests/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_native_supervisor_loss_closes_child_ordinary_authority",
+      "tests/thesis_lite/maestro/test_recovery.py::test_dead_original_native_issuer_never_becomes_replacement_ownership",
+      "tests/thesis_lite/maestro/test_boundary.py::test_replaced_name_is_not_targeted",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome"
+     ],
+     "note": "Supervisor SIGKILL: activate rejected, drain diagnostic ML-BOOT-SUPERVISOR-UNRESOLVED (test_bootstrap.py:535-544); dead issuer: not ordinary_reconciled, view None, not cleanup_complete (test_recovery.py:389-399); a boundary replaced by name is not targeted (test_boundary.py:524-533). 'No PID reconstruction' is stated only in a comment (test_bootstrap.py:537) and is not asserted as an observable."
+    },
+    {
+     "id": "capability:replacement-supervisor-affa-exists",
+     "locator": "/capability_lifecycle_tests/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_recovery.py::test_replacement_owner_cannot_adopt_original_issuer_objects",
+      "tests/thesis_lite/maestro/test_owner.py::test_replaced_original_authority_cannot_release",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_supervisor_socket_replacement_does_not_retain_authority",
+      "tests/thesis_lite/maestro/test_launcher.py::test_replaced_socket_fd_cannot_retain_original_issuer_authority"
+     ],
+     "note": "A replacement owner object with copied claims/launchers is not ordinarily reconciled and receives only cleanup (test_recovery.py:274-287); replaced supervisor/gate objects cannot release (test_owner.py:355+). No test starts an actual replacement AFFA/supervisor process and checks that it cannot launch or mint tickets for the original resources."
+    },
+    {
+     "id": "capability:sentinel-in-unrelated-boundary",
+     "locator": "/capability_lifecycle_tests/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_composed_authority_interruptions.py::test_atomic_release_cancel_stage",
+      "tests/thesis_lite/maestro/test_composed_post_release_loss.py::test_post_release_loss_before_outcome",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_unrelated_sentinel",
+      "tests/thesis_lite/maestro/test_boundary.py::test_real_leader_death_keeps_descendant_in_scope_and_sentinel_untouched",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_unrelated_original_sentinel_survives_bootstrap_cancellation",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_expiry_is_native_and_preserves_live_membership"
+     ],
+     "note": "The sentinel fixture asserts unchanged membership, identity and a fresh heartbeat in the composed crash and interruption tests (test_composed_authority_interruptions.py:83-98; test_composed_post_release_loss.py:125). It is not present in every capability row; the forged/expired component tests in test_boundary.py have no sentinel."
+    },
+    {
+     "id": "supervisor_lease:on_expiry",
+     "locator": "/supervisor_lease/on_expiry",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss",
+      "tests/thesis_lite/maestro/test_bootstrap.py::test_lease_expiry_kills_helpers_then_refreezes_original_workload",
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_authority_death_triggers_watchdog_before_lease",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_expiry_is_native_and_preserves_live_membership",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_queued_heartbeat_after_expiry_does_not_revive",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_killed_guard_is_not_a_fail_closed_fence"
+     ],
+     "note": "Gate-level lease expiry gives epoch 8, reason 1, frozen(fd), dead armed ticket and membership kept (test_runtime_actual.py:209-216): this matches. The bootstrap root lease expiry asserts supervisor exit and residual membership but not frozen state or epoch (test_bootstrap.py:709-710). UNCERTAIN: the leaseguard tests assert that when the enforcer itself is SIGSTOPped or killed, the boundary is NOT refrozen after the lease expires (`assert not frozen(fd)` test_leaseguard.py:363 and :419, comment line 362 'SIGSTOP is outside any bounded lease proof'). These inject loss of the enforcer, not loss of the supervisor, so they are not counted as divergent from 'detection: within the admitted lease bound', but they bound that claim."
+    },
+    {
+     "id": "supervisor_lease:stale_acknowledgement",
+     "locator": "/supervisor_lease/stale_acknowledgement",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_run_renewal.py::test_cancellation_before_native_renewal_ack_commit_cannot_succeed",
+      "tests/thesis_lite/maestro/test_affa_native.py::test_stopped_authority_cannot_release_an_expired_original_ticket",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_queued_heartbeat_after_expiry_does_not_revive",
+      "tests/thesis_lite/maestro/test_leaseguard.py::test_duplicate_renewal_cannot_replay",
+      "tests/thesis_lite/maestro/test_provider.py::test_expired_actual_reply_cannot_be_reused"
+     ],
+     "note": "An actual RENEWED reply racing cancel makes renew raise, with latch cancelled and connection revoked (test_run_renewal.py:91-109); a stopped authority resumed past the ticket deadline closes with no marker (test_affa_native.py:572-596); a queued renewal after expiry does not revive and the guard ends frozen (test_leaseguard.py:364-373)."
+    },
+    {
+     "id": "supervisor_lease:during_detection_interval",
+     "locator": "/supervisor_lease/during_detection_interval",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_run_bootstrap.py::test_authority_death_triggers_watchdog_before_lease",
+      "tests/thesis_lite/maestro/test_run_broker.py::test_native_watchdog_observes_actual_storage_death_without_python_cancel",
+      "tests/thesis_lite/maestro/test_runtime_actual.py::test_lease_loss"
+     ],
+     "note": "After authority or storage death post-Release, all unit boundaries report 'frozen 1' before the lease deadline (test_run_bootstrap.py:367-373; test_run_broker.py:335-345). No test presents an unconsumed ticket inside the detection interval (between supervisor loss and lease expiry) and checks that it cannot release. test_lease_loss only checks that the ticket is dead after expiry."
+    }
+   ]
+  },
+  "writer-closure-tables.json": {
+   "path": "docs/engineering/maestro-lite/design-oracle/ML-DESIGN-2026-10-03-v2/writer-closure-tables.json",
+   "origin": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/writer-closure-tables.json",
+   "sha256": "2c985f915ccaa84ac8d08eb22597da02add7d361a46633a3ff764e1d89c07e6a",
+   "sections": [
+    "/stage_rows",
+    "/invariants"
+   ],
+   "cases": [
+    {
+     "id": "W-01",
+     "locator": "/stage_rows/0",
+     "verdict": "DIVERGENT",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-once]",
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[fsync-persistent]",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_finalize_flush_error_open_state_is_not_abort_usability"
+     ],
+     "note": "Transient variant agrees: test_terminal_native_writer_failures.py:25 'fsync-once':('abort-completed','failed','failed','usable',True,True,'W-01') (usable, one abort; durable 'failed' is post-abort, not contradictory). Persistent variant contradicts the row's usability/abort classification: test_terminal_native_writer_failures.py:26 \"'fsync-persistent':('flush-error','open','open','unknown',False,False,'W-01')\" (asserted at l.150-151) and test_terminal_writer.py:73,77 \"patch.setattr(f.writer,'abort',lambda **kw:pytest.fail('abort without positive flush'))\" / \"assert not result.abort_attempted and result.abort_usability=='unknown'\" vs table W-01 \"usability\": \"usable\", \"bounded_abort_permitted\": true. Caveat: plausibly a deliberate refinement (implementation requires a positive fresh flush, consistent with W-02 notes and WINV03); the table does not distinguish transient vs persistent faults. Needs adjudication. | Parent verified: test_terminal_native_writer_failures.py:26 EXPECTED fsync-persistent=(flush-error, open, open, unknown, abort_attempted False, abort_completed False, W-01) asserted at :150-151; test_terminal_writer.py:73 patches abort to pytest.fail(\"abort without positive flush\") and :77 asserts not abort_attempted and abort_usability==\"unknown\"; table W-01: usability \"usable\", bounded_abort_permitted true. Possible intended refinement (abort only after a fresh successful flush, consistent with WINV03), but contradicts the row as written.",
+     "finding": 420
+    },
+    {
+     "id": "W-02",
+     "locator": "/stage_rows/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-once]",
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[seeded-flush-persistent]"
+     ],
+     "note": "Uncertain mapping: seeded-flush modes inject native write() EIO at the finalize public flush (l.147-153); not labelled with a W-id. seeded-flush-persistent ('flush-error','open','open','unknown',False,False; l.27) matches row. seeded-flush-once ('abort-completed','failed','failed','usable',True,True; l.26) aborts after a positive fresh flush (l.158-161): agrees with row notes ('abort only if usability is positively demonstrated') but not with the literal bounded_abort_permitted=false flag. Not marked DIVERGENT because the row's own note permits it and it is unclear whether this fault is W-01 (flush_buffer) or W-02 (stream flush)."
+    },
+    {
+     "id": "W-03",
+     "locator": "/stage_rows/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[close-after]"
+     ],
+     "note": "EXPECTED 'close-after':('flush-error','open','open','unknown',False,False) (l.28) asserted l.134-135; close fault injected with native close called (l.154-157); no abort entry (l.163); reader writerState 'open' (l.165); evidence_complete False (l.137); manifest unchanged and cleanup complete (l.172-175). Stage label 'flush-error' for a close error is an implementation naming detail."
+    },
+    {
+     "id": "W-04",
+     "locator": "/stage_rows/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[recovery]"
+     ],
+     "note": "Asserts ('finalize-error','failed','open','unknown',False,False) (l.27, l.150-151), reader writerState=='open' and manifest hash (l.159-160), no writer RPC and unchanged manifest after closure (l.173-180: never reopen). Table usability 'unusable' is not asserted: test checks abort_usability=='unknown' and never checks after_usability; outcome (no abort) agrees."
+    },
+    {
+     "id": "W-05",
+     "locator": "/stage_rows/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[artifact-check]"
+     ],
+     "note": "Same assertions as W-04 (l.28): failed, durable open, abort_usability 'unknown', no abort, never reopened. Not asserted: retention of reader/corruption diagnostics (only verify(...).complete False, l.161) and 'unusable' usability."
+    },
+    {
+     "id": "W-06",
+     "locator": "/stage_rows/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[manifest-replace]",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_actual_manifest_publication_error_failed_writer_is_never_aborted"
+     ],
+     "note": "Native: ('finalize-error','failed','open','unknown',False,False) (l.29). Unit: after_state 'failed', stage 'finalize-error', abort forbidden, durable_writer_state 'open', manifest bytes/hash unchanged (test_terminal_writer.py:89-94). Not asserted: durable recorded/assessed status for this case, terminal-report recording of the subsequent state, 'unusable' usability."
+    },
+    {
+     "id": "W-07",
+     "locator": "/stage_rows/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_actual_finalize_closed_reader_and_raw_manifest_hash",
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup[loader-only]"
+     ],
+     "note": "Asserts finalize-completed, after_state==durable_writer_state=='closed', after_usability 'not-applicable', no abort, recorded/assessed 'complete', no reader diagnostics, manifest hash (test_terminal_writer.py:24-32); repeated close is 'not-open' and leaves manifest bytes unchanged (l.34-36). Indexed artifact bytes after closure are not re-hashed (only manifest.json)."
+    },
+    {
+     "id": "WINV01",
+     "locator": "/invariants/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup",
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_actual_manifest_publication_error_failed_writer_is_never_aborted"
+     ],
+     "note": "Separate after_state / abort_usability / durable_writer_state fields asserted per mode, including after 'failed' with durable 'open' (test_terminal_native_writer_failures.py:150-151; test_terminal_writer.py:90-92)."
+    },
+    {
+     "id": "WINV02",
+     "locator": "/invariants/1",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup",
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup"
+     ],
+     "note": "EvidenceStore.read_run(...).manifest['writerState'] compared to reported durable state and raw manifest sha256 (test_terminal_native_writer_failures.py:159-160; test_native_writer_stream_faults.py:164-166)."
+    },
+    {
+     "id": "WINV03",
+     "locator": "/invariants/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup",
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup[abort-entry]",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_actual_manifest_publication_error_failed_writer_is_never_aborted",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_finalize_flush_error_open_state_is_not_abort_usability",
+      "tests/thesis_lite/maestro/test_terminal_writer.py::test_actual_finalize_closed_reader_and_raw_manifest_hash",
+      "tests/thesis_lite/maestro/test_terminal_faults.py::test_actual_nonopen_writer_close_requires_original_report_receipt"
+     ],
+     "note": "Exactly one abort entry after positive fresh flush (stream l.158-161; native l.166-171, abort-entry has a single failed abort); failed writer abort forbidden (test_terminal_writer.py:87,91); closed/failed pre-existing writers get no finalize/abort (test_terminal_faults.py:99-100); repeat close is 'not-open' (test_terminal_writer.py:35,49)."
+    },
+    {
+     "id": "WINV04",
+     "locator": "/invariants/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup"
+     ],
+     "note": "Tests use public traces and native syscall interposition; receipts write private_stream_access=False as a constant (not a check). No assertion that product code avoids private stream attributes. test_terminal_writer.py:86 itself patches private f.writer._publish for fault injection (test-side only)."
+    },
+    {
+     "id": "WINV05",
+     "locator": "/invariants/4",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_native_writer_failures.py::test_actual_native_writer_failure_preserves_original_state_and_cleanup",
+      "tests/thesis_lite/maestro/test_native_writer_stream_faults.py::test_native_stream_fault_preserves_public_writer_and_original_cleanup"
+     ],
+     "note": "Every native mode asserts closure.cleanup_complete, root_reaped, helpers reaped, all boundaries empty and released, no writer RPC (test_terminal_native_writer_failures.py:173-178; test_native_writer_stream_faults.py:169-174). Unit-level test_terminal_writer cases do not exercise cleanup."
+    }
+   ]
+  },
+  "coverage-expected-tables.json": {
+   "path": "docs/engineering/maestro-lite/design-oracle/ML-DESIGN-2026-10-03-v2/coverage-expected-tables.json",
+   "origin": "/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/engineering/successors/ML-DESIGN-2026-10-03-v2/coverage-expected-tables.json",
+   "sha256": "f914a315469f2eec2dffbe03df2f77d6c64352021547b97b53542f4df11702b6",
+   "sections": [
+    "/branch_expectations",
+    "/deletion_mutations_that_must_not_reduce_universe",
+    "/aggregation_precedence",
+    "/obligation_templates"
+   ],
+   "cases": [
+    {
+     "id": "nominal",
+     "locator": "/branch_expectations/0",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_actual_closed_writer_independent_coverage_separates_execution_outcome[False]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_universe_and_provisional_nominal_cannot_promote_execution",
+      "tests/thesis_lite/maestro/test_terminal_runtime.py::test_actual_native_report_close_and_external_closed_recomputation"
+     ],
+     "note": "Closed fixture asserts overallStatus==complete and normalRecordStatus==complete (test_coverage.py:146); emergencyFactStatus==not-needed asserted only on the pre-closure report (test_coverage.py:131), not on the closed one; execution succeeded asserted only in the separate actual-run test (test_terminal_runtime.py:62, overall complete at :75). No single test asserts all four observations."
+    },
+    {
+     "id": "normal-documented-failure",
+     "locator": "/branch_expectations/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_actual_closed_writer_independent_coverage_separates_execution_outcome[True]"
+     ],
+     "note": "Fixture(failed=True) records failed outcome, cancellation, blocked dependent disposition, teardown/collect and failed run-terminal; asserts overall complete and normal complete (test_coverage.py:146). emergencyFactStatus not-needed and execution=failed are not asserted."
+    },
+    {
+     "id": "missing-normal-outcome-without-disposition",
+     "locator": "/branch_expectations/2",
+     "verdict": "NO_TEST",
+     "tests": [],
+     "note": "Every outcome-omission test also changes the unit disposition cause (journal-failure at test_coverage.py:209, issuer-loss/unresolved at :389). The deletion parametrization (test_coverage.py:152) does not include the started/outcome event. Nearest analog test_future_intent_without_acknowledged_issuer_never_becomes_inactive asserts outcome g2 missing (:369) but under a different condition (future intent without issuance) and asserts no status aggregates."
+    },
+    {
+     "id": "missing-normal-outcome-with-emergency-unresolved",
+     "locator": "/branch_expectations/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_missing_normal_outcome_remains_missing_with_complete_emergency_facts",
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait[True]"
+     ],
+     "note": "Asserts outcome row missing, normal incomplete, emergency complete, overall incomplete (test_coverage.py:211-213; :395-397). In the first test the emergency disposition is only cause=journal-failure with disposition still completed/succeeded (:209), not an explicit unresolved disposition; the second test sets disposition=unresolved (:389). Execution status (unresolved_or_failed) is not asserted in either."
+    },
+    {
+     "id": "emergency-cleanup-complete-normal-gap",
+     "locator": "/branch_expectations/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait[True]"
+     ],
+     "note": "Outcome lost, C1 termination/empty/release observed (test_coverage.py:393); asserts outcome missing + normal incomplete, emergency complete, overall incomplete (:395-397). Cleanup completeness itself is not asserted as a separate observation (the fixture still emits ordinary cleanup events)."
+    },
+    {
+     "id": "issuer-loss-cleanup-only",
+     "locator": "/branch_expectations/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait[True]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait[False]"
+     ],
+     "note": "Issuer loss modelled by cause=issuer-loss and nulled directChildReaped/nativeRetired (test_coverage.py:389,393), not by actual registry replacement. Statuses asserted (:395-397). Execution=unresolved not asserted. Refinement: [False] variant (c1Released=True but c1TerminationObserved=False) asserts emergencyFactStatus==unverifiable (:396); the table keys cleanup completion only on release observation, the implementation additionally requires termination observation (coverage.py:748). Stricter, not contradictory, but flagged as uncertain."
+    },
+    {
+     "id": "all-persistence-failure",
+     "locator": "/branch_expectations/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_terminal_storage_root_loss.py::test_original_post_collection_loss_retains_unknown_ack_and_original_cleanup[storage-death]"
+     ],
+     "note": "Storage loss after collection (writer terminal RPC lost) asserts last acknowledged writer state open, durable manifest writerState==open (test_terminal_storage_root_loss.py:97,111) and verification not complete (:113). Condition is a post-collection storage fault, not all sinks failing after issued workload; no test asserts normalRecordStatus/overallStatus==unverifiable."
+    },
+    {
+     "id": "coverage-artifact-lost",
+     "locator": "/branch_expectations/7",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_report_artifact_loss_keeps_normal_record_status_separate",
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure[missing-report]"
+     ],
+     "note": "Asserts normal complete and overall != complete (test_coverage.py:281) and row operationId ob.coverage-report status missing (:282-283). Code refinement of row id (ob.coverage-report vs ob.artifact.lifecycle-coverage.json). Overall asserted only as != complete (not ==incomplete); emergency not-needed not asserted."
+    },
+    {
+     "id": "conflicting-generation",
+     "locator": "/branch_expectations/8",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_inconsistent_original_identities_never_complete[generation]"
+     ],
+     "note": "Mutation sets ready generation=2 (a future, not previous, generation) (test_coverage.py:234); asserts normal != complete and ready g1 conflicting (:247-248). Overall/emergency not asserted (pre-closure overall is always incomplete, coverage.py:765)."
+    },
+    {
+     "id": "generic-complete-missing-ready",
+     "locator": "/branch_expectations/9",
+     "verdict": "NO_TEST",
+     "tests": [],
+     "note": "No test removes the ready event. Nearest analog: test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe forges dropped future contexts/report rows, asserts generic reader closed without ARTIFACT diagnostics (:170-171) but Maestro verification not complete (:172); different mutation."
+    },
+    {
+     "id": "deletion:delete-entire-admitted-unit",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/0",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[unit]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_admission_digest_and_template_deletion_are_checked"
+     ],
+     "note": "Removing all annotations of unit A leaves obligation id list identical and normal != complete (test_coverage.py:163-164); popping a unit from admission raises CoverageError (:303-304)."
+    },
+    {
+     "id": "deletion:delete-intent-issuance-export",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[issued]",
+      "tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe"
+     ],
+     "note": "Deleting issued events keeps obligation ids identical (test_coverage.py:163). Deletion of intent records is not parametrized; broker export future-context drop is rejected (test_terminal_controller_inventory.py:158-172) but universe size not asserted there."
+    },
+    {
+     "id": "deletion:delete-health-slot-record",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/2",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[health]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_missing_original_interval_bounds_leave_health_unverifiable"
+     ],
+     "note": "Deleting unit A health events keeps obligation ids and expectedObligationsDigest identical (test_coverage.py:163,165); missing interval endpoints keep row count and mark health.1 unverifiable (:222-223)."
+    },
+    {
+     "id": "deletion:delete-mandatory-obligation-row",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure[changed-row]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_admission_digest_and_template_deletion_are_checked",
+      "tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe"
+     ],
+     "note": "Popped report row yields closed overall != complete (test_coverage.py:259,267); template pop in admission raises CoverageError (:300-302); dropped generation-2 report rows rejected (test_terminal_controller_inventory.py:162,172). Detection asserted, but retained universe size of the recomputation is not asserted."
+    },
+    {
+     "id": "deletion:forge-not-applicable-row",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure[false-applicability]"
+     ],
+     "note": "Forged applicable=False/not-applicable row yields closed overall != complete (test_coverage.py:260,267); recomputed row applicability not asserted."
+    },
+    {
+     "id": "deletion:delete-step-disposition",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/5",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[step-disposition]"
+     ],
+     "note": "Obligation ids unchanged and normal != complete (test_coverage.py:163-164)."
+    },
+    {
+     "id": "deletion:delete-unit-disposition-blocked-unit",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[unit-disposition]"
+     ],
+     "note": "Deletes the unit disposition of unit A in the nominal fixture (not a blocked unit) (test_coverage.py:154,159); ids unchanged (:163). Blocked-unit variant not injected."
+    },
+    {
+     "id": "deletion:alter-recorded-coverage-report",
+     "locator": "/deletion_mutations_that_must_not_reduce_universe/7",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure[changed-row]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure[corrupt-report]",
+      "tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe"
+     ],
+     "note": "Changed/corrupt report never closes complete (test_coverage.py:267) and corrupt report produces reader diagnostics (:268); forged report with updated manifest hashes rejected (test_terminal_controller_inventory.py:172)."
+    },
+    {
+     "id": "aggregation_precedence",
+     "locator": "/aggregation_precedence",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_universe_and_provisional_nominal_cannot_promote_execution",
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait[False]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_closed_reader_rejects_report_loss_tampering_or_failed_closure",
+      "tests/thesis_lite/maestro/test_terminal_controller_inventory.py::test_original_terminal_report_keeps_retired_current_controllers_and_future_universe"
+     ],
+     "note": "Pre-closure never authoritative asserted (nominal pre-closure overall incomplete, test_coverage.py:132); generic closed reader does not promote (test_terminal_controller_inventory.py:170-172); missing/conflicting rows make status non-complete in many tests. unverifiable > incomplete is never positively asserted: closed reader-diagnostic cases assert only != complete (test_coverage.py:267). Uncertain point: [False] variant asserts emergencyFactStatus==unverifiable with overallStatus==incomplete (test_coverage.py:396-397); under a literal precedence over all components this would be unverifiable, but it is a pre-closure report whose overall is hard-set to incomplete (coverage.py:765), so not classed DIVERGENT."
+    },
+    {
+     "id": "template:intent",
+     "locator": "/obligation_templates/0",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_universe_and_provisional_nominal_cannot_promote_execution",
+      "tests/thesis_lite/maestro/test_coverage.py::test_future_intent_without_acknowledged_issuer_never_becomes_inactive",
+      "tests/thesis_lite/maestro/test_coverage.py::test_completed_never_issued_unit_is_not_a_false_inactive_start"
+     ],
+     "note": "Applicability asserted: future g2 intent not-applicable when not started (test_coverage.py:135), applicable when future intent emitted (:368), unknown (None) for never-issued unit (:441). No test removes only the public intent or only the durable M3 intent to show both are required."
+    },
+    {
+     "id": "template:issued",
+     "locator": "/obligation_templates/1",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[issued]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_future_intent_without_acknowledged_issuer_never_becomes_inactive"
+     ],
+     "note": "Deleting issued event: normal != complete (test_coverage.py:164), row status not asserted; issued g2 unverifiable without acknowledged issuer (:370). Broker-issuance-record half not separately injected."
+    },
+    {
+     "id": "template:ready",
+     "locator": "/obligation_templates/2",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_inconsistent_original_identities_never_complete[generation]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_stale_same_generation_prerequisite_is_not_fresh_evidence"
+     ],
+     "note": "Wrong-generation ready -> conflicting (test_coverage.py:248); stale dependency probe -> normal != complete (:352). Missing ready event and the dependent-only applicability condition are not tested."
+    },
+    {
+     "id": "template:outcome",
+     "locator": "/obligation_templates/3",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_missing_normal_outcome_remains_missing_with_complete_emergency_facts",
+      "tests/thesis_lite/maestro/test_coverage.py::test_cleanup_only_c1_facts_are_independent_of_missing_ordinary_wait",
+      "tests/thesis_lite/maestro/test_coverage.py::test_future_intent_without_acknowledged_issuer_never_becomes_inactive"
+     ],
+     "note": "Removing the public started projection makes outcome missing (test_coverage.py:211,395; g2 at :369). Missing/changed durable M3 outcome with public projection retained is not injected."
+    },
+    {
+     "id": "template:health.<slot>",
+     "locator": "/obligation_templates/4",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[health]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_missing_original_interval_bounds_leave_health_unverifiable"
+     ],
+     "note": "Universe preserved on deletion (test_coverage.py:163,165), missing interval endpoint -> health.1 unverifiable (:223). No test that a health event for a wrong slot fails to satisfy, and deleted-slot row status not asserted (only normal != complete)."
+    },
+    {
+     "id": "template:stop",
+     "locator": "/obligation_templates/5",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_teardown_proof_references_bind_paired_m3_and_exact_context",
+      "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations"
+     ],
+     "note": "Teardown proof mutations make stop conflicting (test_coverage.py:430); actual run stop rows satisfied (test_coverage_producers.py:99). Missing stop outcome not injected."
+    },
+    {
+     "id": "template:cleanup",
+     "locator": "/obligation_templates/6",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage_producers.py::test_real_validation_flush_precedes_stage_and_reader_resolves_original_correlations"
+     ],
+     "note": "Only positive: actual cleanup rows satisfied (test_coverage_producers.py:99). No test removes the cleanup outcome or sets c1Released false to show release is required (implementation checks it at coverage.py:795)."
+    },
+    {
+     "id": "template:unit-disposition",
+     "locator": "/obligation_templates/7",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_original_universe_and_provisional_nominal_cannot_promote_execution",
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[unit-disposition]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_completed_never_issued_unit_is_not_a_false_inactive_start",
+      "tests/thesis_lite/maestro/test_coverage.py::test_inconsistent_original_identities_never_complete[disposition-source]"
+     ],
+     "note": "Satisfied in nominal (test_coverage.py:134), deletion keeps universe (:163), impossible completed disposition for blocked unit conflicting (:440), wrong source conflicting (:250). Duplicate disposition (exactly-one) not injected; the duplicate mutation duplicates annotations[0], the validation anchor (:230)."
+    },
+    {
+     "id": "template:step-disposition",
+     "locator": "/obligation_templates/8",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_deletions_never_shrink_original_template_universe[step-disposition]",
+      "tests/thesis_lite/maestro/test_coverage.py::test_completed_never_issued_unit_is_not_a_false_inactive_start"
+     ],
+     "note": "Deletion keeps universe, normal != complete (test_coverage.py:163-164); conflicting step disposition for impossible completion (:442). Duplicate step disposition not injected."
+    },
+    {
+     "id": "template:artifact.<path>",
+     "locator": "/obligation_templates/9",
+     "verdict": "MATCH",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage.py::test_required_artifact_missing_is_distinct_from_normal_record_coverage",
+      "tests/thesis_lite/maestro/test_coverage.py::test_actual_indexed_output_byte_mutation_never_keeps_complete_coverage",
+      "tests/thesis_lite/maestro/test_coverage.py::test_optional_missing_output_does_not_create_false_offline_corruption"
+     ],
+     "note": "Required missing -> artifact row missing (test_coverage.py:311); indexed with bytes -> satisfied (:339) and closed complete (:341); byte mutation -> not complete with reader diagnostics (:344); optional missing does not block complete (:318)."
+    },
+    {
+     "id": "template:run-terminal",
+     "locator": "/obligation_templates/10",
+     "verdict": "PARTIAL",
+     "tests": [
+      "tests/thesis_lite/maestro/test_coverage_native.py::test_actual_original_public_inputs_do_not_fill_missing_runtime_producers",
+      "tests/thesis_lite/maestro/test_collection_runtime.py::test_actual_collection_retained_inputs_and_provisional_coverage_after_closed_reader",
+      "tests/thesis_lite/maestro/test_coverage.py::test_future_intent_without_acknowledged_issuer_never_becomes_inactive",
+      "tests/thesis_lite/maestro/test_coverage.py::test_other_run_validation_records_do_not_replace_or_duplicate_original_root",
+      "tests/thesis_lite/maestro/test_terminal_runtime.py::test_terminal_before_collection_rejects_without_consuming_original_request"
+     ],
+     "note": "Missing before terminal (test_coverage_native.py:43-44; test_collection_runtime.py:178); later events after terminal make it conflicting (test_coverage.py:371,407); runtime refuses terminal before collection (test_terminal_runtime.py:151). A coverage-level run-terminal event placed before collect/teardown is not injected."
+    }
+   ]
+  }
+ },
+ "summary": {
+  "affa-expected.json": {
+   "PARTIAL": 22,
+   "MATCH": 9,
+   "NO_TEST": 1
+  },
+  "affa-fresh-context-expectations.json": {
+   "MATCH": 6,
+   "PARTIAL": 7
+  },
+  "bootstrap-expected.json": {
+   "MATCH": 11,
+   "PARTIAL": 7
+  },
+  "closure-expected.json": {
+   "PARTIAL": 3,
+   "MATCH": 6
+  },
+  "outcomes-expected.json": {
+   "MATCH": 3,
+   "PARTIAL": 7
+  },
+  "provider-expected.json": {
+   "PARTIAL": 5,
+   "MATCH": 11
+  },
+  "recovery-expected.json": {
+   "MATCH": 4,
+   "PARTIAL": 4
+  },
+  "scheduler-expected.json": {
+   "MATCH": 4,
+   "PARTIAL": 7
+  },
+  "teardown-expected.json": {
+   "PARTIAL": 5,
+   "MATCH": 6
+  },
+  "projection-fixtures.json": {
+   "PARTIAL": 6,
+   "MATCH": 5,
+   "NO_TEST": 1
+  },
+  "authority-crash-tables.json": {
+   "MATCH": 10,
+   "PARTIAL": 15,
+   "DIVERGENT": 1
+  },
+  "writer-closure-tables.json": {
+   "DIVERGENT": 1,
+   "PARTIAL": 6,
+   "MATCH": 5
+  },
+  "coverage-expected-tables.json": {
+   "PARTIAL": 23,
+   "NO_TEST": 2,
+   "MATCH": 5
+  },
+  "_total": {
+   "PARTIAL": 117,
+   "MATCH": 85,
+   "NO_TEST": 4,
+   "DIVERGENT": 2
+  }
+ }
+}

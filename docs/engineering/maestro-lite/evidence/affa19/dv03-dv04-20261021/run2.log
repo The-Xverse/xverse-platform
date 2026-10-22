@@ -1,0 +1,61 @@
+..F                                                                      [100%]
+=================================== FAILURES ===================================
+____ test_intent_only_restart_cannot_reclaim_through_a_new_original_worker _____
+
+storage = (<function storage.<locals>.start at 0x78af1dd3f420>, <function storage.<locals>.stage at 0x78af1dd3ed40>, Persistence...c.ProcessBoundaryOps object at 0x78af1dcfac10>, <xverse.maestro.supervisor.CancellationLatch object at 0x78af1dcfaad0>)
+native = PosixPath('/dev/shm/maestro-affa19-focused-aVB9OI/base/boundary-native0/boundary-fixture')
+guard_binary = PosixPath('/dev/shm/maestro-affa19-focused-aVB9OI/base/releasegate-native0/release-gate')
+tmp_path = PosixPath('/dev/shm/maestro-affa19-focused-aVB9OI/base/test_intent_only_restart_canno0')
+
+    def test_intent_only_restart_cannot_reclaim_through_a_new_original_worker(storage, native, guard_binary, tmp_path):
+        start, stage, config, manager, latch = storage
+        now = datetime.now(timezone.utc)
+        times = dict(not_before=now - timedelta(seconds=30), expires_at=now + timedelta(seconds=60))
+        owner, client, announce, release = start(override=sealed(tmp_path, manager, **times))
+        unit_id = config.prepared.units[0].unit_id
+        owner.commit_intent(unit_id, deadline(4))
+        signal.pidfd_send_signal(client._pidfd, signal.SIGKILL)
+        with pytest.raises((ValueError, OSError)):  # the product callers catch both (finding 435)
+            client.abort(deadline(1))
+        assert client._failed
+        assert client.drain(deadline(1)).worker_reaped
+>       second, second_client, _, _ = start(override=sealed(tmp_path, manager, evidence="argus-reopened", **times))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/thesis_lite/maestro/test_permit_release_path.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/thesis_lite/maestro/test_persistence.py:127: in start
+    client = PersistenceClient(
+src/xverse/maestro/persistence.py:594: in __init__
+    self._live()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <xverse.maestro.persistence.PersistenceClient object at 0x78af1dcfa350>
+
+    def _live(self, *, allow_cancel=False, allow_exit=False):
+        self._holder()
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        channel = self._pins[1]
+        info = os.fstat(channel.fileno())
+        if (
+            self._pidfd < 0
+            or self._pins[0].pid != self._pid_pin
+            or (info.st_dev, info.st_ino) != self._socket_identity
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        exited = wait_child(self._pins[0], self._pidfd)
+        if not allow_exit and (
+            exited is not None or select.select([self._pidfd], [], [], 0)[0]
+        ):
+            raise PersistenceError("ML-PERSIST-CHILD")
+        if self._failed or (self._pins[2].cancelled and not allow_cancel):
+>           raise PersistenceError("ML-PERSIST-CLOSED")
+E           xverse.maestro.persistence.PersistenceError: ML-PERSIST-CLOSED
+
+src/xverse/maestro/persistence.py:725: PersistenceError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/thesis_lite/maestro/test_permit_release_path.py::test_permit_expiring_between_intent_and_release_blocks_release
+PASSED tests/thesis_lite/maestro/test_permit_release_path.py::test_not_yet_valid_permit_is_refused_at_seal_before_any_worker
+FAILED tests/thesis_lite/maestro/test_permit_release_path.py::test_intent_only_restart_cannot_reclaim_through_a_new_original_worker
+1 failed, 2 passed in 5.74s

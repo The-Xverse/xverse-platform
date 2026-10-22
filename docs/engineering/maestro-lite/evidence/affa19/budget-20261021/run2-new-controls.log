@@ -1,0 +1,111 @@
+load 6.42
+FBUDGET-A {'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'widened': [{'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'remaining': 0.4998433431610465, 'need': 0.675, 'widened': 0.07604024093598127}, {'site': 'run', 'unit': None, 'remaining': 1.9999764889944345, 'need': 2.7, 'widened': 1.5000235110055655}], 'teardown': [{'site': 'phase', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'need': 0.675, 'window': 0.5742556580808014, 'normal': 0.3445533949416131, 'end': 0.5742556580808014}]}
+FFBUDGET-C {'outcome': RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', generation=2, disposition='rejected', execution_id=None, diagnostic='ML-SCHEDULE-RESTART-DEADLINE'), 'diagnostic': 'ML-SCHEDULE-COLLECTION-INCOMPLETE', 'trace': [{'site': 'restart', 'unit': None, 'remaining': 3.800990218995139, 'need': 3600.0, 'stopped': True}]}
+.BUDGET-D {'diagnostic': None, 'trace': [{'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'remaining': 0.49978046398609877, 'need': 0.75, 'widened': 0.2167004719376564}, {'site': 'end', 'unit': 'xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'remaining': 0.49999174010008574, 'need': 0.75, 'widened': 0.45000825985334814}], 'scans': 0, 'renewals': 2}
+FBUDGET-G {'diagnostic': 'ML-SCHEDULE-TEARDOWN-INCOMPLETE', 'emergencies': {'xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance': 'ML-TEARDOWN-RECORD-BUDGET'}}
+.
+=================================== FAILURES ===================================
+_______ test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits ________
+
+    def test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits():
+        """(e) Pure identity and bounds of the sizing functions."""
+        from xverse.maestro.service_time import NORMAL_SHARE, sized
+        from xverse.maestro.teardown import ReverseTeardown
+        holder = type("Holder", (), {"_interior_trace": []})()
+        rng = random.Random(477)
+        for _ in range(2000):
+            now, window = rng.uniform(0, 100), rng.uniform(0.01, 5)
+            base = now + window
+            cap = now + rng.uniform(0, 20)
+            need = rng.uniform(0, 3 * window)
+            value = sized(base, now, need, window, cap)
+            if need <= NORMAL_SHARE * window:
+                assert value == base
+            else:
+                assert base <= value <= max(base, cap)
+            began, end0 = now, now + window
+            normal, end = ReverseTeardown._split(holder, began, end0, max(end0, cap), need, "unit", "u")
+            if need <= NORMAL_SHARE * window:
+>               assert (normal, end) == (began + NORMAL_SHARE * window, end0)
+E               assert (36.027978474...1575015159834) == (36.027978474...1575015159834)
+E                 
+E                 At index 0 diff: 36.02797847425303 != 36.02797847425304
+E                 Use -v to get more diff
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:64: AssertionError
+________ test_slow_teardown_records_complete_normally_with_sized_phases ________
+
+request = <FixtureRequest for <Function test_slow_teardown_records_complete_normally_with_sized_phases>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x737186f296e0>
+
+    def test_slow_teardown_records_complete_normally_with_sized_phases(request, monkeypatch):
+        """(a) Each teardown record takes 0.15 s longer; with the estimate of an earlier slow phase the
+        active stop and cleanup phases are sized and complete normally inside the active end."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.45, phase_cleanup=0.45)
+        record = PersistenceClient.record_teardown
+    
+        def slow(self, controller, step, deadline):
+            time.sleep(0.15)
+            return record(self, controller, step, deadline)
+    
+        monkeypatch.setattr(PersistenceClient, "record_teardown", slow)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        trace = [e for t in teardowns(driver) for e in t._interior_trace]
+        print("BUDGET-A", dict(diagnostic=result.diagnostic, widened=driver._interior_trace, teardown=trace))
+>       assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
+E       AssertionError: ML-SCHEDULE-TEARDOWN-INCOMPLETE
+E       assert (False)
+E        +  where False = DispatchResult(run_id='fixture-run', lifecycle_digest='eaa1d993f81a395ac24bce7c18ddfa0c5e74d93461164b209cd70d49a7c21dc...L-SCHEDULE-TEARDOWN-INCOMPLETE', health_scans=0, lease_renewals=0, lifecycle_complete=False, ready_for_execution=False).execution_succeeded
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:87: AssertionError
+_ test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure _
+
+request = <FixtureRequest for <Function test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73718604a2c0>
+
+    def test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure(request, monkeypatch):
+        """(b), (f) M1: the stop step is never dispatched; normal terminal teardown and the whole
+        terminal sequence still fit, so the report is finalizable and the channel usable."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=3600.0)
+        result = run(driver)
+>       facts = result.terminal.public_data()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'public_data'
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:102: AttributeError
+_____________ test_widened_deadlines_stay_inside_every_outer_bound _____________
+
+request = <FixtureRequest for <Function test_widened_deadlines_stay_inside_every_outer_bound>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371862d7ac0>
+
+    def test_widened_deadlines_stay_inside_every_outer_bound(request, monkeypatch):
+        """(d) Seeded phase estimates widen the active phases; every deadline stays at or below the
+        active end, health scans and renewals still happen, and no lease is exhausted."""
+        stack, _, driver = scheduled(request, monkeypatch)
+        client = stack[2]
+        seed(driver, phase_stop=0.5, phase_cleanup=0.5)
+        deadlines = spy_phase_deadlines(monkeypatch, driver)
+        result = run(driver)
+        print("BUDGET-D", dict(diagnostic=result.diagnostic, trace=driver._interior_trace,
+                               scans=driver.health_scans, renewals=driver.lease_renewals))
+        assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
+        assert any("widened" in e for e in driver._interior_trace)
+        active = [d for d in deadlines if not d[4]]
+        assert active and all(end <= active_end for _, end, active_end, _, _ in active)
+        assert all(end <= work_end for _, end, _, work_end, _ in deadlines)
+>       assert driver.health_scans > 0 and driver.lease_renewals > 0
+E       assert (0 > 0)
+E        +  where 0 = <xverse.maestro.dispatcher.FiniteDispatcher object at 0x737185f4bed0>.health_scans
+
+tests/thesis_lite/maestro/test_load_aware_budgets.py:163: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_sizing_helpers_keep_todays_deadline_whenever_the_need_fits
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_slow_teardown_records_complete_normally_with_sized_phases
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_a_stop_that_no_longer_fits_is_refused_and_the_run_ends_as_a_documented_failure
+FAILED tests/thesis_lite/maestro/test_load_aware_budgets.py::test_widened_deadlines_stay_inside_every_outer_bound
+4 failed, 2 passed in 18.53s

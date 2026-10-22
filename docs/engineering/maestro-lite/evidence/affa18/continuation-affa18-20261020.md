@@ -120,10 +120,25 @@ capa-20261020-affa18-merge/register.json
 64579304880cd7c1791f68b2800ea3fb42dd533614406ec06820c5ab685f291f (50/491; merged true). Next
 finding: 413 (span 412 is bound by the next successor).
 
-## Next (current)
+## Next (superseded by step 8 below)
 
-1. AUTHOR: push main to origin (git@github.com:The-Xverse/xverse-platform.git); main is 28 commits
-   ahead of origin/main. Optionally bring this candidate branch's findings 412+ into main afterwards.
-2. AUTHOR: approve or amend the canonical-note paragraph (../../canonical-note-update-proposal-affa18.md).
+1. ~~Push main to origin~~ done (finding 413).
+2. ~~Canonical-note paragraph~~ applied (finding 413).
 3. Lane activation and M1 stay blocked by the readiness check (ten unknown causes). Later increments:
    F02D-01 hardening, F-05 wire revision, the remaining 024 scope.
+
+## Step 8 done: main published, note applied (finding 413)
+
+origin/main = 557619e0c5a43886e40b16706b329c9aaa5189ed (fast-forward from c2997c0f8). Thesis note
+sha256 efe32d7af703662228ece1ac84817dee5de0954465f0fa06754a838444c8a711 (Note 23 final subsection,
+status line, change-log row; uncommitted, the author's own diffs preserved). CAPA successor
+capa-20261020-affa18-published/register.json
+a6b6c4354d2db6a467e087bd910198690727e0af2cd607b174b9eeb91e47d615 (50/493). Next finding: 414.
+
+## Next (current)
+
+1. Lane activation and M1 stay blocked by the readiness check (ten unknown causes). The next
+   engineering work is explaining those causes, then F02D-01 hardening, the F-05 wire revision and
+   the remaining 024 scope, each as a new increment from main 557619e0c.
+2. AUTHOR: whether to commit the thesis note (the working tree mixes the author's own uncommitted
+   diffs with Note 23).

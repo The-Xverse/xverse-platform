@@ -1,0 +1,60 @@
+DV09-P1 {'killed': True, 'succeeded': False, 'terminal': True, 'diagnostic': 'ML-RUN-CHILD-EXIT', 'complete': False, 'blockers': None, 'report': {'admissionDigest': 'sha256:00e388215765aadd56f2e7aeaec44592dbf729d0c8f775788f0de917a462892a', 'annotationCount': 50, 'blockers': ['normal-records', 'required-coverage', 'terminal-outcome'], 'collectionComplete': True, 'coreDigest': 'sha256:3606531cd5feb37666419682f542bd6e93ee0ac0edc40241484a45d2ac2f8114', 'eligible': False, 'entry': {'bytes': 18049, 'mediaType': 'application/json', 'path': 'lifecycle-coverage.json', 'role': 'evidence', 'schemaVersion': '2.0', 'sha256': '3606531cd5feb37666419682f542bd6e93ee0ac0edc40241484a45d2ac2f8114'}, 'm3Count': 31, 'normalComplete': False, 'reportEndNs': 1154011256277055, 'requiredRowsSatisfied': False, 'retainedEntry': {'bytes': 129335, 'mediaType': 'application/json', 'path': 'retained-inputs.json', 'role': 'evidence', 'schemaVersion': '1.0', 'sha256': 'bc636866bfc0ad689446f1e7d670a5d9fea081060aeb512867bb449601d52956'}, 'runtimeAdmissionDigest': 'sha256:2abe19efa6a19b34526a704511f2411f01801bcf2c41f29b9b3e40821af52a3d', 'schemaVersion': '1.0', 'stage': 'published', 'terminalSucceeded': False}, 'dispositions': {('prepare-source', 'step'): 'completed', ('prepare-sink', 'step'): 'completed', ('start-source', 'step'): 'completed', ('start-sink', 'step'): 'completed', ('observe-source', 'step'): 'completed', ('observe-sink', 'step'): 'failed', ('stop-sink', 'step'): 'blocked', ('cleanup-sink', 'step'): 'blocked', ('stop-source', 'step'): 'blocked', ('cleanup-source', 'step'): 'blocked', ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/source-instance', 'unit'): 'unresolved', ('xdl://org.xverse.experiment/system/sample-loop#componentInstances/sink-instance', 'unit'): 'unresolved', (None, 'run'): 'failed'}, 'm3': [('intent', 'pending'), ('observation', 'staged'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'staged'), ('observation', 'running'), ('outcome', 'running'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'running'), ('outcome', 'completed'), ('intent', 'pending'), ('observation', 'unknown'), ('intent', 'pending'), ('outcome', 'stopped'), ('intent', 'pending'), ('outcome', 'cleaned'), ('intent', 'pending'), ('outcome', 'stopped'), ('intent', 'pending'), ('outcome', 'cleaned'), ('outcome', 'failed'), ('outcome', 'blocked'), ('outcome', 'blocked'), ('outcome', 'blocked'), ('outcome', 'blocked'), ('observation', 'unresolved'), ('observation', 'unresolved')]}
+DV09-P1-ROWS {"statuses": {"emergencyFactStatus": "not-needed", "normalRecordStatus": "incomplete", "overallStatus": "incomplete"}, "open_rows": [{"obligationId": "ob.input-integrity", "obligationClass": "normal-record", "status": "conflicting", "required": true, "applicable": true, "reason": null}]}
+F
+=================================== FAILURES ===================================
+_ test_actual_native_failed_lifecycle_is_assessed_apart_from_its_execution_outcome _
+
+request = <FixtureRequest for <Function test_actual_native_failed_lifecycle_is_assessed_apart_from_its_execution_outcome>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x6ffe7972c050>
+
+    def test_actual_native_failed_lifecycle_is_assessed_apart_from_its_execution_outcome(request, monkeypatch):
+        stack, _, driver = scheduled(request, monkeypatch)
+        broker, facade, client, work = stack
+        source, leaf = driver.prepared.resource_order
+        killed, statement = [], driver._statement
+    
+        def crash_sink_after_start(kind, step, **kw):
+            response = statement(kind, step, **kw)
+            if kind == "step-complete" and step.step_id == "start-sink" and not killed:
+                descriptor = broker.issuer(leaf)._image.admission.descriptor
+                fd = broker.session.boundaries._entries[descriptor.key].fd
+                control = os.open("cgroup.kill", os.O_WRONLY | os.O_CLOEXEC, dir_fd=fd)
+                try:
+                    os.write(control, b"1")
+                finally:
+                    os.close(control)
+                killed.append(time.monotonic())
+            return response
+    
+        monkeypatch.setattr(driver, "_statement", crash_sink_after_start)
+        result = run(driver)
+        checked = verify(client, work.parent / "argus")
+        facts = result.terminal.public_data() if result.terminal is not None else None
+        events = EvidenceStore.read_run(work.parent / "argus").records()
+        dispositions = {(p.get("stepId") or p.get("unitId"), p.get("scope")): p.get("disposition")
+                        for p in (e.get("extensions", {}).get("xverse.maestro", {}) for e in events)
+                        if p.get("action") == "disposition"}
+        print("DV09-P1", dict(killed=bool(killed), succeeded=result.execution_succeeded, terminal=result.terminal_recorded,
+                              diagnostic=result.diagnostic, complete=checked.complete,
+                              blockers=getattr(checked, "blockers", None), report=facts and facts["report"],
+                              dispositions=dispositions,
+                              m3=[(r.kind, r.status) for r in FileEvidenceJournal(work.parent / "m3.jsonl").records]))
+        import json
+        coverage = json.loads((work.parent / "argus" / "lifecycle-coverage.json").read_text())
+        print("DV09-P1-ROWS", json.dumps(dict(
+            statuses={k: v for k, v in coverage.items() if k.endswith("Status")},
+            open_rows=[{k: r.get(k) for k in ("obligationId", "obligationClass", "status", "required", "applicable", "reason")}
+                       for r in coverage.get("rows", []) if r.get("status") not in ("satisfied", "not-applicable")])))
+        assert killed
+        assert not result.execution_succeeded and result.terminal_recorded, result.diagnostic
+        assert result.cleanup.unit_cleanup_complete
+        # The assessment is recorded, not forced: finding 437 states the expected value and its reading.
+>       assert checked.complete, checked
+E       AssertionError: RuntimeVerification(lifecycle=OfflineCoverageResult(coverage=CoverageResult(public_bytes=b'{"admittedTemplatesDigest":...d":"maestro.scheduler14","producerSequence":28}]'), collection_verified=True, collection_complete=True, diagnostics=())
+E       assert False
+E        +  where False = RuntimeVerification(lifecycle=OfflineCoverageResult(coverage=CoverageResult(public_bytes=b'{"admittedTemplatesDigest":...d":"maestro.scheduler14","producerSequence":28}]'), collection_verified=True, collection_complete=True, diagnostics=()).complete
+
+tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py:63: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_dv09_native_failed_lifecycle.py::test_actual_native_failed_lifecycle_is_assessed_apart_from_its_execution_outcome
+1 failed in 4.90s

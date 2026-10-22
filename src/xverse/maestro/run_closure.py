@@ -19,7 +19,7 @@ from .persistence import PersistenceClient
 from .teardown import ReverseTeardown
 from .time import HostDeadline
 from .writer_closure import WriterClosure, unresolved
-from .terminal_runtime import TerminalReceipt
+from .terminal_runtime import TerminalReceipt, finalizable
 
 
 class ClosureError(OwnerError):
@@ -403,7 +403,7 @@ class RunClosure(_Original):
                         terminal_reports.append(outcome)
                         facts = outcome.public_data()
                         if (facts['diagnostic'] is not None or facts['writer'] is None
-                            or facts['report'] is None or not facts['report']['eligible']
+                            or facts['report'] is None or not finalizable(facts['report'])
                             or not facts['writer']['evidence_complete']):
                             diagnostics.append('ML-CLOSURE-REPORT-INCOMPLETE')
                         continue

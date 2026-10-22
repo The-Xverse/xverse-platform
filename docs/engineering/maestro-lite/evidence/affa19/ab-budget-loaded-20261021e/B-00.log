@@ -1,0 +1,102 @@
+F...........                                                             [100%]
+=================================== FAILURES ===================================
+_ test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf] _
+
+request = <FixtureRequest for <Function test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]>>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76ac25bd5f30>
+mode = 'cleaned-leaf'
+
+    @pytest.mark.parametrize('mode',['cohort','omitted-dependent','mid-storage-loss','cleaned-leaf'])
+    def test_original_transitive_cohort_retains_unrelated_and_all_generations(request,monkeypatch,mode):
+        names=() if mode=='omitted-dependent' else ('terminal-instance',) if mode=='cleaned-leaf' else (
+            'source-instance','sink-instance','terminal-instance')
+        stack,controller,driver=scheduled(request,monkeypatch,restarts=True,transitive=True,restart_artifact_names=names)
+        broker,facade,client,work=stack
+        named={u.unit_id.rsplit('/',1)[-1]:u.unit_id for u in driver.prepared.units}
+        source,middle,leaf,unrelated=[named[n+'-instance'] for n in ('source','sink','terminal','unrelated')]
+        assert driver.plan.use_action_timeouts and driver.plan.operation_seconds==.3
+        assert driver.plan.active_seconds==20 and driver.plan.restart_operation_seconds==2
+        assert driver.plan.per_unit_seconds==2 and len(driver.prepared.steps)==20
+        contexts={c.binding.unit_id:c for c in client._future_contexts}
+        chosen=(leaf,) if mode=='cleaned-leaf' else (source,middle) if mode=='omitted-dependent' else (source,middle,leaf)
+        tickets=[];old_handles={};prepared_order=[];live_unrelated=[];result=None;closure=None
+        statement_bounds=[]
+        send=driver._send
+        def observe_statement(kind,end,**values):
+            if kind in ('step-dispatch','step-complete'):
+                step=driver._steps[values['step']]
+                cap=next(a.timeout_seconds for u in driver.prepared.units if u.unit_id==step.unit_id
+                         for a in u.plan.actions if a.phase==step.phase)
+                remaining=end.monotonic_seconds-time.monotonic()
+                assert 0<remaining<=cap
+                statement_bounds.append(dict(kind=kind,step=step.step_id,cap=cap,remaining=remaining,
+                                             end=end.monotonic_seconds))
+            return send(kind,end,**values)
+        monkeypatch.setattr(driver,'_send',observe_statement)
+        original_worker=client.process;statement=driver._statement
+        def enqueue(kind,step,**kw):
+            response=statement(kind,step,**kw)
+            observed=sum(s.phase=='observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+            trigger=(step.step_id=='cleanup-terminal' if mode=='cleaned-leaf' else step.phase=='observe' and observed==3)
+            if kind=='step-complete' and trigger and not tickets:
+                old_handles.update({u:broker.issuer(u)._handle for u in named.values()})
+                end=HostDeadline(client.session,driver._active_end)
+                inputs=tuple((u,contexts[u].binding.permit,2) for u in chosen)
+                before=FileEvidenceJournal(work.parent/'m3.jsonl').records
+                with pytest.raises(ValueError,match='RESTART-INPUT'):
+                    driver.restart_many(client.run_id,(inputs[0],inputs[0]),deadline=end)
+                with pytest.raises(ValueError,match='RESTART-PERMIT'):
+                    driver.restart_many(client.run_id,((chosen[0],replace(contexts[chosen[0]].binding.permit),2),),deadline=end)
+                accepted=driver.restart_many(client.run_id,tuple(reversed(inputs)),deadline=end)
+                assert tuple(t.unit_id for t in accepted)==chosen
+                tickets.extend(accepted)
+                assert tuple(driver.restart_many(client.run_id,inputs,deadline=end))==tuple(tickets)
+                assert FileEvidenceJournal(work.parent/'m3.jsonl').records==before
+                assert all(driver.restart_result(t) is None for t in tickets)
+            return response
+        monkeypatch.setattr(driver,'_statement',enqueue)
+        prepare=broker._prepare_generation
+        def original_prepare(teardown,unit,descriptor,end):
+            assert threading.get_ident()==broker.owner._dispatch_thread
+            assert broker.issuer(unrelated)._handle is old_handles[unrelated]
+            assert unrelated in facade._released and unrelated not in driver.teardown._stopped
+            live_unrelated.append(dict(unit=unit,handle=asdict(broker.issuer(unrelated)._handle),observed_at=__import__('time').monotonic()))
+            prepared_order.append(unit)
+            return prepare(teardown,unit,descriptor,end)
+        monkeypatch.setattr(broker,'_prepare_generation',original_prepare)
+        advance=broker.advance_generation
+        def original_advance(prepared,end):
+            issuer=advance(prepared,end)
+            if mode=='mid-storage-loss' and issuer.unit_id==middle:
+                signal.pidfd_send_signal(client.process._capability.fileno(),signal.SIGSTOP)
+            return issuer
+        monkeypatch.setattr(broker,'advance_generation',original_advance)
+        output=os.environ.get('MAESTRO_BOUNDARY_RECEIPTS')
+        if output:
+            out=Path(output);out.mkdir(parents=True,exist_ok=True)
+            with (out/('cohort-inputs-'+mode+'.json')).open('x') as stream:
+                json.dump(dict(original_admission=json.loads(client.coverage.public_bytes),admission_digest=client.coverage_digest,
+                    original_collection=json.loads(client.collection.canonical_bytes),original_schedule=json.loads(client.schedule.canonical_bytes),
+                    generation_ns=client.generation_ns,runtime_digest=runtime_admission_digest(client.coverage,client.collection,client.generation_ns),
+                    original_fixture=str(work.parent),source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()),stream,indent=2)
+                stream.write('\n')
+        try:
+            result=run(driver)
+            assert len(tickets)==len(chosen),result.diagnostic
+            outcomes=[driver.restart_result(t) for t in tickets]
+            assert all(r is not None for r in outcomes)
+            records=FileEvidenceJournal(work.parent/'m3.jsonl').records
+            if mode=='mid-storage-loss':
+                assert [r.disposition for r in outcomes]==['completed','failed','cancelled'],outcomes
+                assert prepared_order==[source,middle] and not result.execution_succeeded
+            else:
+                expected='rejected' if mode=='omitted-dependent' else 'completed'
+>               assert all(r.disposition==expected for r in outcomes),outcomes
+E               AssertionError: [RestartResult(unit_id='xdl://org.xverse.experiment/system/sample-loop#componentInstances/terminal-instance', generation=2, disposition='failed', execution_id=None, diagnostic='ML-PERSIST-TIMEOUT')]
+E               assert False
+E                +  where False = all(<generator object test_original_transitive_cohort_retains_unrelated_and_all_generations.<locals>.<genexpr> at 0x76ac24954c70>)
+
+tests/thesis_lite/maestro/test_active_transitive_restart.py:129: AssertionError
+=========================== short test summary info ============================
+FAILED tests/thesis_lite/maestro/test_active_transitive_restart.py::test_original_transitive_cohort_retains_unrelated_and_all_generations[cleaned-leaf]
+1 failed, 11 passed in 83.22s (0:01:23)
