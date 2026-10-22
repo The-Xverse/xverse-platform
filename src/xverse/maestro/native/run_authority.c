@@ -30,9 +30,11 @@
 #define MAX_IMAGE (32U*1024U*1024U)
 enum { REGISTER=1, INTENT=2, STAGE=3, ARM=4, RELEASE=5, QUERY=6, STOP=7,
  RETIRE=8, RENEW=9, CANCEL=10, QUERY_ISSUED=11, ADVANCE=12,
+ FAULT_KILL=13, FAULT_FREEZE=14, FAULT_THAW=15,
  READY=16, REGISTERED=17, INTENT_RECORDED=18, STAGED=19, ARMED=20,
  RELEASED=21, OBSERVED=22, STOPPED=23, RETIRED=24, RENEWED=25,
- CANCELLED=26, REJECTED=27, ADVANCED=28 };
+ CANCELLED=26, REJECTED=27, ADVANCED=28, FAULTED=29, FAULT_REFUSED=30 };
+/* Phase 5 (thesis-lite faults): FAULTED answers a performed operation, FAULT_REFUSED a refused one. */
 enum { NONE=0, LEASE=1, OWNER=2, CONTROL=3, PROTOCOL=4, CANCEL_REASON=5, FREEZE_FAILED=6, EXPIRED=7 };
 struct generation {
  int cg,pidfd,errorfd; pid_t pid;
@@ -216,6 +218,21 @@ static int unit_reply(struct authority *g,const unsigned char *request,unsigned 
     if(kind==ARMED||kind==RELEASED)memcpy(p+224,e->ticket,32);
     else memset(p+224,0,32);
     return send_packet(g,p,transfer);
+}
+/* Phase 5 owned fault operations on the exact registered generation: kill through its pidfd,
+ * freeze/thaw through its owned cgroup with cgroup.events observed. Returns 0 done, 1 refused
+ * (nothing changed: a timed-out freeze/thaw is rolled back first), -1 indeterminate (the rollback
+ * itself failed; the caller fails closed). */
+static int owned_fault(struct generation *e,unsigned kind) {
+    uint64_t flags=state(e);if(flags==UINT64_MAX||e->pid<=0||e->reaped||!(flags&4))return 1;
+    if(kind==FAULT_KILL)return syscall(SYS_pidfd_send_signal,e->pidfd,SIGKILL,NULL,0)?1:0;
+    char value=kind==FAULT_FREEZE?'1':'0',undo=kind==FAULT_FREEZE?'0':'1';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
+    if(e->cg<0||write_freeze(e->cg,value))return 1;
+    for(int i=0;i<200;i++){
+        if(!field(e->cg,"cgroup.events","frozen",&frozen)&&frozen==want)return 0;
+        struct pollfd wait={.fd=e->pidfd,.events=POLLIN};poll(&wait,1,1);
+    }
+    return write_freeze(e->cg,undo)?-1:1;
 }
 static int receive(struct authority *g,unsigned char *p,int *fds,unsigned *count) {
     union{struct cmsghdr align;unsigned char data[CMSG_SPACE(sizeof(struct ucred))+CMSG_SPACE(8*sizeof(int))];}control;
@@ -462,6 +479,12 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
     }
     if(!zero(p+224,32))return -1;
     if(kind==QUERY)return unit_reply(g,p,OBSERVED,e,-1);
+    if(kind==FAULT_KILL||kind==FAULT_FREEZE||kind==FAULT_THAW){
+        /* Only a released, unretired latest generation of an open authority may be faulted. */
+        if(!enabled(g)||g->closed||!e->released||e->retired||e!=&u->history[u->used-1])return unit_reply(g,p,FAULT_REFUSED,e,-1);
+        int result=owned_fault(e,kind);if(result<0)return -1;
+        return unit_reply(g,p,result?FAULT_REFUSED:FAULTED,e,-1);
+    }
     if(kind==STOP){
         if(!e->stop_saved){
             if(stop_child(g,e))return -1;
@@ -528,7 +551,7 @@ int main(int argc,char **argv) {
         int received=receive(g,p,fds,&count);
         if(received==1)continue;
         now=now_ns();unsigned kind=received?0:get32(p+4);uint64_t until=received?0:get64(p+16);
-        int valid=!received&&!memcmp(p,"AF17",4)&&kind>=1&&kind<=12&&
+        int valid=!received&&!memcmp(p,"AF17",4)&&kind>=1&&kind<=15&&
             !memcmp(p+24,g->scope,32)&&get64(p+8)==g->sequence+1&&g->sequence<8192&&
             get64(p+64)==g->epoch&&zero(p+288,16)&&zero(p+312,8)&&
             until>now&&until-now<=5*NS&&until<=g->generation-2*NS&&(g->closed||until<=g->lease);

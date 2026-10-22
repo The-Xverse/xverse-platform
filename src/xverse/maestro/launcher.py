@@ -68,14 +68,14 @@ class LaunchPacket:
             if type(value) is not int or not 0 <= value < 2**64:
                 raise LauncherError("ML-LAUNCH-WIRE-INTEGER")
         if (
-            self.kind not in (1, 2, 3, 16, 17, 18, 19, 20)
+            self.kind not in (1, 2, 3, 4, 5, 6, 16, 17, 18, 19, 20, 21)
             or self.reason > 7
             or not self.deadline_ns
         ):
             raise LauncherError("ML-LAUNCH-WIRE-HEADER")
         if any(type(v) is not bytes or len(v) != 32 for v in (self.scope, self.token)):
             raise LauncherError("ML-LAUNCH-WIRE-DIGEST")
-        if self.kind in (1, 2, 3) and (not self.sequence or self.reason or self.state):
+        if self.kind in (1, 2, 3, 4, 5, 6) and (not self.sequence or self.reason or self.state):
             raise LauncherError("ML-LAUNCH-WIRE-COMMAND")
         if self.kind == 16 and (
             self.sequence
@@ -93,7 +93,7 @@ class LaunchPacket:
             or (self.state & 0xFFFFFFE0)
         ):
             raise LauncherError("ML-LAUNCH-WIRE-CHILD")
-        if self.kind in (17, 20) and not self.child_pid:
+        if self.kind in (17, 20, 21) and not self.child_pid:
             raise LauncherError("ML-LAUNCH-WIRE-CHILD")
 
     def encode(self):
@@ -498,7 +498,7 @@ class CatalogLauncher(_Original):
                 for fd in received:
                     os.close(fd)
 
-    def _rpc(self, kind, deadline, expected, count):
+    def _rpc(self, kind, deadline, expected, count, *, allowed_reasons=(0,)):
         if not self._lock.acquire(False):
             raise LauncherError("ML-LAUNCH-CONFLICT")
         try:
@@ -530,7 +530,6 @@ class CatalogLauncher(_Original):
                     reply.scope,
                     reply.device,
                     reply.inode,
-                    reply.reason,
                 ) != (
                     expected,
                     request.sequence,
@@ -538,8 +537,7 @@ class CatalogLauncher(_Original):
                     request.scope,
                     request.device,
                     request.inode,
-                    0,
-                ):
+                ) or reply.reason not in allowed_reasons:
                     raise LauncherError("ML-LAUNCH-ACK")
                 if kind != 1 and (reply.child_pid, reply.token) != (
                     self._child_pid,
@@ -658,6 +656,26 @@ class CatalogLauncher(_Original):
             bool(flags & 16),
             code,
         )
+
+    FAULT_KINDS = {"kill": 4, "freeze": 5, "thaw": 6}
+
+    def fault(self, handle, operation, deadline):
+        """Phase 5 owned fault operation on the staged child this launcher owns.
+
+        ``operation`` is ``kill`` (SIGKILL through the helper's owned pidfd), ``freeze`` or ``thaw``
+        (``cgroup.freeze`` on the owned cgroup, observed through ``cgroup.events``). The helper
+        verifies the child pid and token like an observation and answers reason 0 (done) or 6
+        (refused: child gone, cgroup unsupported or write failed); a refusal changes nothing.
+        Returns ``(done, reason)``; a protocol failure raises ``LauncherError`` as for observe.
+        """
+        self._holder()
+        self._live()
+        if self._handle is None or handle != self._handle:
+            raise LauncherError("ML-LAUNCH-HANDLE")
+        if operation not in self.FAULT_KINDS:
+            raise LauncherError("ML-LAUNCH-FAULT-OPERATION")
+        reply, _ = self._rpc(self.FAULT_KINDS[operation], deadline, 21, 0, allowed_reasons=(0, 6))
+        return reply.reason == 0, reply.reason
 
     def cancel(self, reason="launcher-cancel"):
         super()._holder()

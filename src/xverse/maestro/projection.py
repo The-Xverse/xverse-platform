@@ -19,9 +19,10 @@ from xverse_xdl.experiment_plan import (
     plan_matches_digest,
     resource_semantic_digest,
 )
-from xverse_xdl.models import NormalizedResource, ResourceIdentity
+from xverse_xdl.models import NormalizedResource, ResourceIdentity, freeze
 
 from .time import TickDomain
+from xverse.faults import FaultError, validate_static
 
 PHASE_RANK = {"prepare": 0, "start": 1, "observe": 2, "stop": 3, "cleanup": 4}
 OPERATIONS = {
@@ -151,6 +152,8 @@ class PreparedLifecycle:
     limits: Limits
     canonical_bytes: bytes
     lifecycle_digest: str
+    faults: tuple = ()  # Phase 5: compiled fault-schedule entries (frozen), empty for fault-less plans
+    fault_seed: int = 0
 
     @property
     def ready_for_execution(self) -> bool:
@@ -261,8 +264,6 @@ def prepare_lifecycle(
     if not recomputed.is_valid or _json(recomputed.plan) != _json(supplied):
         _reject("ML-PLAN-INPUT", "normalized XDL does not reproduce the supplied plan")
     plan = recomputed.plan
-    if plan["faultSchedule"]:
-        _reject("ML-UNSUPPORTED", "fault execution belongs to Phase 5")
     selected = plan["selection"]
     by_uri = {item.identity.uri: item for item in resources}
     system = by_uri[selected["system"]["uri"]]
@@ -612,6 +613,17 @@ def _project(
                 "dependency completion cannot meet the step window",
                 f"{scenario.identity.uri}#/spec/steps/{step_indices[step.step_id]}",
             )
+    fault_entries = tuple(freeze(_plain_fault(item)) for item in plan["faultSchedule"])
+    fault_seed = 0
+    if fault_entries:
+        # Phase 5 (thesis-lite faults): admit only statically resolvable schedules; the planned
+        # tick list is unknown here, so effective ticks are resolved again at dispatch.
+        try:
+            validate_static(plan, clock.horizon_ticks)
+        except FaultError as error:
+            _reject("ML-UNSUPPORTED", f"fault schedule not admissible: {error.code}")
+        seed_value = (plan.get("seed") or {}).get("value") if isinstance(plan.get("seed"), dict) else None
+        fault_seed = int(seed_value) if type(seed_value) is int else 0
     body = {
         "increment": "maestro-preparation-1",
         "executionEligible": False,
@@ -636,6 +648,9 @@ def _project(
         "clock": asdict(clock),
         "limits": asdict(limits),
     }
+    if fault_entries:  # fault-less plans keep their Phase 3 canonical bytes and digests
+        body["faults"] = [_plain_fault(item) for item in plan["faultSchedule"]]
+        body["faultSeed"] = fault_seed
     encoded = _json(body)
     return PreparedLifecycle(
         plan["digest"]["value"],
@@ -650,4 +665,12 @@ def _project(
         limits,
         encoded,
         hashlib.sha256(DIGEST_DOMAIN + encoded).hexdigest(),
+        fault_entries,
+        fault_seed,
     )
+
+
+def _plain_fault(item):
+    """Return a compiled fault entry as plain JSON-compatible data."""
+
+    return json.loads(_json(item))

@@ -1,0 +1,302 @@
+# Thesis Lite Phase 5 (deterministic fault injection) — engineering review log
+
+Branch `candidate/faults-lite-20261022` from platform main `744b66f9c`. Planning package
+(authoritative): `distributed_safety_critical_thesis/specs/026-lite-fault-schedules/`. Findings are
+numbered and recorded before any repair. No legacy artifact executes; no factory run.
+
+1. Planning package written (2026-10-22): spec (FR-001–FR-010, V01–V12, decision D5-2), plan,
+    research, data model, execution contract, quickstart, tasks. Planning review 1: NOT READY
+    (H1 durations are already exact compiled ticks; M1 `arbitration`/failure policy are not
+    Profile keys, now reserved typed parameter ids; M2 `kill`/`freeze` are native containment
+    paths only, so Phase 5 adds owned `kill`/`freeze`/`thaw` operations with Phase 3 transitions;
+    M3 the dispatcher iterates the planned tick list, so a planned-tick effect rule was added; M4
+    V11/V12 added). All verified against the platform before repair; review 2 requested. Code for
+    T02 onward waits for its verdict.
+
+2. Planning review 2 (2026-10-22): READY FOR DETAILED DESIGN; DRAFT; NOT READY FOR
+    IMPLEMENTATION. One LOW carried into the design: a bounded retry re-enters arbitration and
+    emits a fresh apply-failed/applied pair per attempt (one final outcome per entry). Detailed
+    design and unit specifications follow in docs/engineering/faults-lite/.
+
+3. P5-T01 increment (2026-10-22): `xverse.faults.vocabulary` (six executable kinds, declared-only
+    hooks, typed parameter validators, reserved ids) and `xverse.faults.resolve` (boundary class
+    from the target collection, due/effective/clear ticks over the planned tick list, exact
+    compiled durations, tie keys, overlap arbitration, horizon), with `tests/thesis_lite/faults/`
+    (fixture builder over the Maestro fixture graph plus a sensor; U-FLT-01…10). Facts learnt from
+    the Phase 1 validator and corrected in the design and the thesis package: parameter ids must
+    be kebab-case identifiers (`delay-ticks`, `loss-ratio`, `every`, `copies`, `window`,
+    `arbitration`, `on-apply-failure`), and a declared-order fault-intent must not carry a
+    `timeDomainId`. Result: 10 passed (pure Python, PYTHONPATH run; worker-side changes come later
+    with a candidate venv).
+
+4. P5-T02/T04 increment and the relays of T03 (2026-10-22): `xverse.faults.boundary` (exact
+    handles per run and entry; `MessageRelayBoundary` with delay/loss/stale, `ObservationRelayBoundary`,
+    `ProcessBoundary` over an owned operation set with the intended termination recorded before a
+    kill; `CounterGenerator`, seeded and counter-based), `xverse.faults.scheduler` (clearing then
+    application per planned tick, `(declaredOrder or inf, faultId)` order, serialize/supersede
+    arbitration, blocked targets, cancellation, one final outcome per entry, run failure per
+    `on-apply-failure`), `xverse.faults.evidence` (Argus annotation events with the
+    `io.xverse.faults` extension chained intent → apply → clear → outcome; offline
+    `reconstruct`/`closure_report`). Tests U-SCH-01…09, U-BND-01…05, U-EVD-01…03 plus scheduler
+    guards: 28 passed. Design notes: Argus's `causal-closure` obligation is run-level (every
+    causation id resolves), so per-entry closure is checked by `closure_report` offline and by the
+    scheduler's `incomplete` flag, not by one obligation per entry (the contract's rule 7 is met
+    by the pair; recorded for the thesis package); compiled entries carry no `retry` field, so no
+    retry happens in Phase 5 (the review-2 LOW on retry is moot until Phase 1 exposes it).
+    Process faults still act on fakes here; the owned native operations follow.
+
+5. P5-T03 owned process operations (2026-10-22): `native/catalog_launcher.c` gains request kinds
+    FAULT_KILL=4, FAULT_FREEZE=5, FAULT_THAW=6 and reply FAULTED=21, verified by child pid and
+    token exactly like QUERY; `owned_fault` acts only on the helper's own staged child (SIGKILL
+    through the owned pidfd; `cgroup.freeze` on the owned cgroup with `cgroup.events frozen`
+    observed within a bounded wait) and answers reason 6 without acting when the child is gone,
+    the cgroup cannot be written or the state is not observed. `launcher.py`: `LaunchPacket`
+    accepts the new kinds, `_rpc` takes `allowed_reasons` so a refusal is an answer rather than a
+    protocol failure, and `CatalogLauncher.fault(handle, operation, deadline)` returns
+    `(done, reason)` after the holder, liveness and exact-handle checks. Native tests
+    `tests/thesis_lite/faults/test_process_ops.py` on the Maestro launcher stack (real helper
+    compiled from the worktree source, real child in an owned cgroup-v2 boundary): freeze observed
+    (frozen 1), thaw (frozen 0), kill reaped with returncode -9; kill and freeze after exit refused
+    (reason 6); forged handle and unknown operation refused before any request. 3 passed (plus
+    the 28 pure-Python tests). The test process imports the worktree source; the persistence
+    worker runs the installed main package, which this increment does not change.
+
+6. P5-T03/T06 Maestro integration (2026-10-22; one installed version, venv /dev/shm/p5-venv built
+    from this tree). Projection: the Phase 3 `ML-UNSUPPORTED` rejection is replaced by
+    `validate_static` (dense ticks 0..horizon; a crash with XDL recovery other than `manual` is
+    refused while D5-2 is open); resolvable schedules are frozen into `PreparedLifecycle.faults`
+    with `fault_seed`, and only then enter the canonical bytes (fault-less plans keep their bytes
+    and digests). Dispatcher: `_begin_faults` resolves against the planned ticks, builds one
+    boundary per target (process boundaries over the unit's launcher, relays for flows and
+    sensors), sends one `fault` intent statement per entry and starts the scheduler;
+    `_advance_faults` runs after each tick statement; `_finish_faults` at the horizon; a refused
+    application ends the run as `ML-SCHEDULE-FAULT-APPLY`, an incomplete clearing as
+    `ML-SCHEDULE-FAULT-INCOMPLETE`. Worker: `ScheduleJournal` accepts a `fault` statement and
+    writes one annotation event under producer `xverse.faults` (extension `io.xverse.faults`,
+    correlated to the entry's intent, chained by causation); the parent validates the reply
+    exactly (`_validate_fault_reply`); coverage ignores fault events; the schedule budget adds
+    five statements per entry. Facade: `suspend_health`/`resume_health` while frozen;
+    `terminate_by_fault` records the intended termination before a kill, and a later health
+    check ends the run as `ML-PROBE-TERMINATED-BY-FAULT`. Native run authority (the path the
+    live stack uses; the catalog launcher of finding 5 is the other path): request kinds
+    FAULT_KILL=13, FAULT_FREEZE=14, FAULT_THAW=15 on the exact registered generation, replies
+    FAULTED=29 or FAULT_REFUSED=30; the receive loop's kind bound was raised from 12 to 15
+    (first run failed with `ML-AFFA-SENDER`/`ML-BOOT-CLOSED` because the authority closed on an
+    out-of-range kind: recorded, then repaired); `RunUnitIssuer.fault` on the client side.
+    Packaging: `src/xverse/faults` added to the wheel force-include (it was missing from the
+    first wheel). Tests: `test_maestro_run.py` (U-ADM-01…03; end-to-end on the native stack:
+    stale + sensorDropout + freeze/thaw complete with closed Argus chains; a crash before the
+    unit's health obligation ends the run attributed to the fault; a crash after it completes
+    with the termination recorded). Result: tests/thesis_lite/faults 37 passed.
+
+7. Implementation review 1 (2026-10-22, independent read-only; 37 Phase 5 tests passed in its
+    run): FAIL, recorded before any repair. HIGH: (H1) `terminated-by-fault` exists only as an
+    in-memory facade record and a probe diagnostic; no journal or Argus outcome carries it, and a
+    run with an unrecovered `recovery: manual` crash after the unit's last health obligation ends
+    as success (test_maestro_run.py asserted that), contradicting the proposed `manual`
+    semantics (documented failure). (H2) `FaultScheduler.cancel` is never called from the
+    dispatcher's failure path, so a failed or cancelled run leaves frozen units unthawed and
+    entries without an outcome (contract rule 6); `cancel` also emits two `final` decisions for an
+    active entry. MEDIUM: (M1) native freeze/thaw that times out answers "refused" with the write
+    left in place; (M2) the run authority does not check `enabled`, `released`, `retired` or the
+    latest generation for fault requests (only the Python side guards it); (M3) the termination
+    record is not retracted when a kill is refused, and its docstring calls it durable; (M4) no
+    run-level `causal-closure` obligation, the extension lacks boundary class and parameters, and
+    relay faults in a Maestro run carry no traffic without saying so; (M5) several claimed V-case
+    tests are missing (native token/pid refusal, "no other pid signalled", run-authority negatives,
+    kill after the window, V03 Argus chains, U-ADM-03 digest equality with main). LOW: dead
+    `unit_reply_extra`, unused `coverage.fault_events`, system URI taken from the first fault, no
+    time reserve for fault statements, frozen-before-first-observation probe, design-doc retry
+    wording. The quiet-host loop started on 2b89b2060 was stopped before it triggered (no run
+    recorded). Repairs follow in finding 8.
+
+8. Repairs of implementation review 1 (2026-10-22). H1: an applied crash now ends the run at once
+    as a documented failure of the crashed unit (`_advance_faults` raises
+    `ML-SCHEDULE-TERMINATED-BY-FAULT`; the dispatcher's failure statement carries that unit and
+    diagnostic into the journal and Argus); this follows the planning package's proposed `manual`
+    semantics and leaves D5-2 (automatic restart) open; the earlier test asserting success after a
+    tick-2 crash was wrong and is replaced by a parametrized test for both timings. H2: the
+    failure path calls `_cancel_faults` before cancelling the owner (best effort: statements that
+    cannot be sent are skipped), so active faults are cleared (frozen units thawed) and every entry
+    is closed; `FaultScheduler.cancel` clears without finalizing and then finalizes once
+    (`cancelled`, or `incomplete-clearing` when the clear fails) and releases handles. M1: a
+    freeze/thaw that is not observed in time is rolled back before answering "refused" (run
+    authority and catalog launcher); if the rollback fails the helper/authority fails closed. M2:
+    the run authority refuses fault kinds unless the authority is enabled and open and the
+    generation is released, unretired and the latest. M3: a refused kill retracts the termination
+    record; the "durable" wording is corrected (the fault's journaled intent precedes the in-run
+    record). M4: intent statements carry boundary class, boundary mode (`owned-process`,
+    `owned-relay-fixture-no-traffic`, `declared-only`) and parameters; the per-fault Argus
+    obligation is replaced in the thesis contract (rule 7, FR-007) by run-enforced closure plus
+    offline reconstruction, because Argus's `causal-closure` is run-level. M5: added tests:
+    single final outcome on cancel (and on a failing clear), refused kill retracts the record,
+    kill after the window is refused, identical Argus chains for the same plan and seed (V03),
+    native forged-token refusal with an unrelated sentinel process left alone, sentinel survival
+    across freeze/thaw/kill, run-authority refusal before release, fault-less digest equal to
+    platform main computed from the sibling checkout. LOW: dead `unit_reply_extra` removed; the
+    coverage skip now requires producer `xverse.faults` and exactly the `io.xverse.faults`
+    extension; design-doc retry wording corrected; the planner reserves operation time and
+    budget for five statements per fault. Found while repairing: three faults add 12 worker round
+    trips, which overran the fixture's 4.8 s window at host load 11–12
+    (`ML-SCHEDULE-SERVICE-DEADLINE`, refused safely); the fault end-to-end tests use the fixture's
+    8 s paused window, and the resolver/scheduler now accept paused (non-decreasing) planned ticks.
+    Results: tests/thesis_lite/faults 46 passed twice (load 8–12); Maestro slice
+    (preparation, launcher, run broker, shared and lazy dispatcher, coverage, AFFA native,
+    AFFA protocol, schedule plan) passed. Not repaired, recorded: the system URI for faults is
+    taken from the fault target (all targets are System elements of the one selected system); a
+    unit frozen before its first health observation is still probed once.
+
+9. Implementation review 2 (2026-10-22, same reviewer; 46 tests passed): FAIL, no HIGH. H1, M1,
+    M2, M3, M5 resolved; H2 partly (see N1); M4 code resolved. The rule-7 amendment is acceptable
+    in substance (Argus's causal-closure is run-level) but overclaims: "a failed or cancelled run
+    closes every entry" while `_cancel_faults` is best effort (statement failures are skipped) and
+    the H1 test accepted an open chain (N1, MEDIUM). An applied crash that ends the run was
+    finalized as `cancelled`, misreporting FR-005 (N2, MEDIUM). LOW: integer parameters had no
+    upper bound (a huge value could overflow the 512-byte intent detail and fail the run at
+    begin); pre-release is the only run-authority refusal tested; the digest test skips without
+    the sibling checkout. Process note: the planning package is untracked in the thesis
+    repository, so the amendments of FR-007, rule 7 and the new FR-006a must be named in the
+    acceptance record with their file hashes. Repairs follow in finding 10.
+
+10. Repairs of implementation review 2 (2026-10-22). N2: `FaultScheduler.cancel(..., ended_by=)`
+    finalizes the applied entry that ended the run as `applied` with diagnostic
+    `XVERSE-FAULT-ENDED-RUN` (the dispatcher records the crash entry id when it raises
+    `ML-SCHEDULE-TERMINATED-BY-FAULT`); every other entry is cancelled once. N1: contract rule 7
+    now states the failure path as best effort (boundary operations always run, entries are
+    finalized in memory, an outcome statement that can no longer be sent leaves its chain open and
+    offline reconstruction reports it), and the end-to-end tests now assert closed chains on the
+    failure path when the channel is up (crash at tick 1 and 2; failure during an active freeze:
+    both chains closed). LOW: integer parameters are bounded to 1..1,000,000. Thesis planning
+    package (untracked in the thesis repository) amended in this phase, named for the acceptance
+    record: `specs/026-lite-fault-schedules/spec.md` (FR-006a manual crash; FR-007 run-enforced
+    closure) sha256 770136fac4c65e1e4678655b735d9ddc3b8289f3eb7d05a051acd555714c5ac8, `contracts/fault-execution.md` (rule 7) sha256 6c00f8bd93295390d5f6bebd6a76be3e69b864c2094cdbf68c6712f6398d891f.
+    Results: tests/thesis_lite/faults 47 passed twice (load 8.6). Review 3 requested.
+
+11. Log location (2026-10-22): this log moved from `docs/engineering/faults-lite/review-faults.md`
+    to `docs/engineering/maestro-lite/review-faults-lite.md`, and Phase 5 run evidence goes under
+    `docs/engineering/maestro-lite/evidence/affa19/faults-lite/`, because the DV12 gate's code scope
+    excludes exactly `docs/engineering/maestro-lite/evidence/` and `docs/engineering/maestro-lite/review-*.md`;
+    findings recorded after the full run then leave the tested code-scope hash unchanged. Content
+    of findings 1–10 is unchanged.
+
+12. Implementation review 3 (2026-10-22, same reviewer, on a986cc935; 47 tests passed): PASS, no
+    HIGH or MEDIUM. N1 and N2 resolved (file:line cited); the recorded hashes of the amended spec
+    and contract verified. Residual LOW, accepted as limits: the run-authority fault guard is tested
+    only before release (after-close and stale-generation refusals are covered by the same guard
+    expression, untested); the digest-equality test skips when the sibling platform main checkout
+    is absent. The reviewer lists as open gates, not defects: the author's acceptance of the
+    amended FR-006a/FR-007/rule 7, decision D5-2, the full installed-wheel run with the DV12 gate,
+    the CAPA successor and the acceptance before merge.
+
+13. Full installed-wheel run, attempt 1 (2026-10-22, `faults-lite/platform-regression-20261022f-1`,
+    head `df49fdef1`). The result was 3 failed, 2294 passed, 1 skipped in 3512 s. Load was sampled
+    118 times, with a maximum of 15.19. Under the recorded ruling (increment 19 finding 469) this
+    is an **observation, not a regression signal**: a sample exceeded 10, so the quiet-host loop
+    archived the receipts and started attempt 2 at 14:28Z.
+
+    The failures were:
+    - `test_schedule_worker::test_original_native_gate_renewal_updates_only_after_exact_ack`;
+    - `test_shared_dispatcher::test_paused_shared_ticks_renew_both_original_leases_and_observe_health`;
+    - the Argus nested-regression wrapper (`test_existing_platform_pytest_regression_unchanged_in_assembled_target`).
+      It fails whenever its nested platform run fails, so it is not an independent signal.
+
+    Both direct failures are lease-renewal timing tests that are already recorded as load-sensitive
+    in `review-affa17.md` and `review-affa18.md`. Neither touches `xverse.faults` code paths. No
+    repair follows; the decisive run is a later attempt.
+
+14. Full installed-wheel run, attempt 2 (`platform-regression-20261022f-2`, same head; started
+    14:28Z at load 3.48). The result was 72 failed, 2225 passed, 1 skipped, 1 error in 4532 s. Load
+    was sampled 148 times, with a maximum of 18.1, because external load rose to 15–18 during the
+    run. This is an **observation** under finding 469.
+
+    Every failure is in `tests/thesis_lite/maestro` native lifecycle and timing suites
+    (`test_terminal_*`, `test_*restart*`, `test_load_aware_budgets`, `test_shared_dispatcher`,
+    `test_rpc_*` and others), plus the Argus nested-regression wrapper. **None is in
+    `tests/thesis_lite/faults`.** This matches the recorded load sensitivity of these suites:
+    increment 19's loaded A/B gave 19 and 20 failures at load 13–15. No repair follows.
+
+15. Harness defect, found after attempt 3 (2026-10-22). Attempt 3 was triggered at 17:40Z. It
+    **never ran tests**, because the frozen-run driver refused a tracked change in the worktree:
+    this log, modified by finding 13 and left uncommitted. Edits to the gate-excluded log path keep
+    the code hash, but they still make the worktree dirty for the driver. The loop then read an
+    empty load maximum as ≤ 10 and printed "decisive: failed-at-low-load".
+
+    **That verdict is false and is void.** No attempt-3 directory exists, and no work directory
+    was left behind.
+
+    Repairs, in documentation and evidence only, both outside the DV12 code scope
+    (`NON_TEST_INPUTS` and `NON_TEST_LOGS`):
+    - `run-z-quiet-loop.sh` now exits 4 ("driver did not run tests; not decisive") when the attempt
+      has no load samples or wheel log;
+    - log edits are committed before any run starts.
+
+    The decisive run is attempt 1 of the next loop.
+
+16. Loop g, attempt 1 (`platform-regression-20261022g-1`, head `b590f2865`; started 17:45Z at load
+    3.64). The result was 1 failed, 2296 passed, 1 skipped in 2984 s. Load was sampled 100 times;
+    the first about 60 samples stayed at or below 6.44, and external load then peaked at 23.99.
+    This is an **observation** under finding 469.
+
+    The single failure is
+    `test_shared_dispatcher::test_paused_shared_ticks_renew_both_original_leases_and_observe_health`,
+    the same lease-renewal timing test as in finding 13; it is load-sensitive per `review-affa17`
+    and `review-affa18`. No test in `tests/thesis_lite/faults` failed. The loop waits for a quiet
+    host and repeats.
+
+17. Decisive full installed-wheel run, loop g attempt 2 (`platform-regression-20261022g-2`, head
+    `476ed1f3f`; started 18:59Z at load 4.86). **Clean**: 2297 passed, 1 skipped, 0 failed in
+    3013 s. Load was sampled about 100 times, with a maximum of 8.51 (≤ 10). The loop classified it
+    `decisive: clean`.
+
+    The DV12 gate (`scripts/validate_maestro_acceptance_evidence.py --scope code --g4
+    acceptance-inputs/g4.json --allowlist acceptance-inputs/allowlist.json`) gave
+    `accepted_as_evidence: true` with no blockers. The run code SHA-256 equals the candidate code
+    SHA-256, `80a43a3ab143b780…`, so the docs-only commits since `df49fdef1` leave the code
+    unchanged.
+
+    Verdict and checksums: `dv12-gate-verdict.json` and `SHA256SUMS` (13 files) in the run
+    directory. Receipts are archived in `receipts.tar.gz`, and the tmpfs work directory was removed
+    by the loop.
+
+18. CAPA successor step 7 (`evidence/affa19/capa-20261022-faults-step7/`), built by
+    `build-capa-20261022-faults-step7.py` over the decisive run
+    `faults-lite/platform-regression-20261022g-2`. It is additive over step 6 (`fb8d7058…`), and
+    no record was opened, changed or closed. Every Phase 5 defect was a defect of this unaccepted
+    candidate, recorded here and repaired before acceptance.
+    - Register `76a60c17b33046468a604fcf280b0af60b5fc34f3a521dc2d2631dce09cd541f`: 56 records and
+      654 bindings.
+    - `verify-capa-register-20261020.py` passes (rc 0; `verification-recheck.json`).
+    - `check-capa-parent-preservation-20261019.py` passes: 647 parent bindings checked, none
+      changed or lost, policy and schema unchanged (`parent-preservation.json`).
+    - No cause is verified and no effectiveness is claimed.
+
+19. **Acceptance decision, Phase 5 (deterministic fault injection), recorded before merge**
+    (2026-10-22).
+
+    **Basis.** The author's goal of 2026-10-22, plus the delegation "propose something and go"
+    (thesis `specs/021-thesis-lite-program/review/delegated-decisions-20261022.md`):
+    - DLG-3: crash recovery is manual only, and `automatic` is refused;
+    - DLG-4: the amendments FR-006a, FR-007 and contract rule 7 are accepted.
+
+    Specification hashes: thesis `specs/026-lite-fault-schedules/spec.md` `f0c479e4e2352fc0…` (with
+    the DLG-3/4 decision text) and `contracts/fault-execution.md` `6c00f8bd93295390…`.
+
+    **Evidence.**
+    - Implementation reviews 1 FAIL, 2 FAIL and 3 PASS (finding 12).
+    - The decisive clean run g-2 with the DV12 gate accepted (finding 17).
+    - CAPA step 7 valid (finding 18).
+    - Loaded observations 13, 14 and 16, none in the faults suite. Attempt 3 was void (15).
+
+    **Decision.** Accept candidate `candidate/faults-lite-20261022` and merge it `--no-ff` into
+    platform main, then push. The delivery identity check is that the merged tree's code-scope
+    SHA-256 equals the run's `80a43a3a…`.
+
+    **Limits carried.**
+    - Residual LOWs of implementation review 3.
+    - `duplicate` and `reorder` remain declared-only. Executing them is the Phase 6 successor change
+      (thesis `specs/027` detailed design §9a).
+    - The `XVERSE-FAULT-RECOVERY` message still reads "while D5-2 is open" (Phase 6 §9b).
+    - In Maestro runs, message and observation relays are owned no-traffic fixtures.
+    - Timing outcomes are claimed only up to a sampled host load of 10.
+    - The 9 REF-002 parents get bounded partial contributions only.
+    - No scientific claim, M1, lane activation or factory run.

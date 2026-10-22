@@ -1228,6 +1228,24 @@ class RunUnitIssuer(_Original):
             None,
         )
 
+    FAULT_KINDS = {"kill": K.FAULT_KILL, "freeze": K.FAULT_FREEZE, "thaw": K.FAULT_THAW}
+
+    def fault(self, handle, operation, deadline):
+        """Phase 5 owned fault operation on this unit's exact registered generation.
+
+        ``kill`` sends SIGKILL through the authority-held pidfd; ``freeze``/``thaw`` write the owned
+        cgroup's ``cgroup.freeze`` and the authority observes ``cgroup.events``. Returns
+        ``(done, reason)`` with reason 6 when the authority refused (child gone, not running,
+        cgroup unavailable); a refusal changes nothing.
+        """
+        self._issued(handle)
+        self.owner._check(deadline)
+        if operation not in self.FAULT_KINDS:
+            raise OwnerError("ML-RUN-FAULT-OPERATION")
+        reply = self._native(self.FAULT_KINDS[operation], deadline)
+        refused = reply.kind is K.FAULT_REFUSED
+        return (not refused, 6 if refused else 0)
+
     def stop_owned(self, handle, deadline):
         self.revalidate_issued(handle)
         if self._stop_ack is None:
