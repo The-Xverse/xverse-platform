@@ -1852,3 +1852,29 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     premise (a budget-class failure at low load) does not hold. Next: independent review of
     the repair, targeted reruns of the file, then a new full run on the repaired head through
     the loop.
+
+490. 489 repair applied (test only, tests/thesis_lite/maestro/test_load_aware_budgets.py; no
+    product change, product still 897d9dc50) and reviewed. Helper spy_service_points records every
+    FiniteDispatcher._service entry of the control's driver (lease set and margin as
+    dispatcher.py:1116-1121); control (d) asserts (i) no live lease lapsed at any entry and (ii)
+    every entry with a lease inside the renewal margin that returns has raised the renewal count;
+    the count assertion is removed. The number of due entries is written to
+    budget-d-service-points.json under the boundary-receipt namespace, so a full run's archived
+    receipts show whether (ii) was exercised. Reruns on the budget4 venv (src equal to the
+    worktree) at load 3.4-3.6: 6 file runs, 8 passed each; due points 0, 0, 1, 0, 1, 0, with
+    renewals only in the runs that had a due point, which confirms 489's cause. Mutant
+    (_renew_service a no-op): fails in 1 of 4 runs (the run with due points), passes otherwise;
+    so (ii) discriminates only when a lease comes due. Independent review: PASS, no HIGH.
+    Cause analysis confirmed (renewal only inside the 2.5 s native margin; leases about 5 s
+    ahead; a lapsed lease would be rejected by bootstrap.renew, so successful runs show none
+    missed); (ii) is guaranteed whenever _service returns, including the native early return
+    after controller recovery (the drain counts +2), so no false failure. MEDIUM (vacuous case
+    visible only under -s): repaired by the receipt above. LOW: docstring overstated the oracle
+    in the non-native profile (one bootstrap renewal satisfies (ii) even if a gate is skipped):
+    reworded; margin written as n x op + op to mirror dispatcher.py:1117: done; conditional
+    discrimination of (d): accepted limit, because test_shared_dispatcher.py:148-160 forces
+    native renewals by a time floor (73 ticks x 0.05 s > 2.5 s margin) and asserts that the
+    lease values advanced. Observation, not repaired: test_dispatcher.py:307-314 (non-native)
+    also uses a renewal count (>= 3) whose floor is only just above its margin; it failed in
+    z-1 under load (samples above 10) and is kept under T06 observation. Next: commit, then the
+    loop on the repaired head; E3 still requires a clean run, the gate and a CAPA successor.

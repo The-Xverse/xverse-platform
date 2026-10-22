@@ -6,8 +6,11 @@ decision path runs in every execution. On the head without this change the seeds
 go and each control fails at its first assertion about the new behaviour. Worker-side code is
 involved: run with one installed version (finding 442).
 """
+import json
+import os
 import random
 import time
+from pathlib import Path
 
 import pytest
 
@@ -42,6 +45,29 @@ def spy_phase_deadlines(monkeypatch, driver):
         return phase(self, unit, name, deadline)
 
     monkeypatch.setattr(ReverseTeardown, "phase", recording)
+    return seen
+
+
+def spy_service_points(monkeypatch, driver):
+    """Record each FiniteDispatcher._service entry of this driver: whether a live lease had lapsed,
+    whether one was inside the renewal margin (due), and whether the call renewed before returning."""
+    from xverse.maestro.dispatcher import FiniteDispatcher
+    service, seen = FiniteDispatcher._service, []
+
+    def recording(self, *a, **kw):
+        if self is not driver:
+            return service(self, *a, **kw)
+        leases = [self.bootstrap._lease / 1e9] + [
+            gate.lease_ns / 1e9 for unit, gate in self.gates.items() if unit not in self.teardown._stopped]
+        margin = self._service_calls * self.plan.operation_seconds + self.plan.operation_seconds
+        now, before = time.monotonic(), self.lease_renewals
+        point = dict(lapsed=min(leases) <= now, due=min(leases) - now <= margin, returned=False)
+        seen.append(point)
+        value = service(self, *a, **kw)
+        point.update(returned=True, renewed=self.lease_renewals > before)
+        return value
+
+    monkeypatch.setattr(FiniteDispatcher, "_service", recording)
     return seen
 
 
@@ -154,21 +180,35 @@ def test_a_restart_that_cannot_finish_is_rejected_before_any_mutation(request, m
 
 def test_widened_deadlines_stay_inside_every_outer_bound(request, monkeypatch):
     """(d) Seeded phase estimates widen the active phases; every deadline stays at or below the
-    active end, health scans and renewals still happen, and no lease is exhausted."""
+    active end, no live lease lapses, a service point at which a lease is due renews before it
+    returns (the count rises), and no lease is exhausted. Whether any lease comes due depends on
+    run duration; the number of due points is kept as a receipt, so a vacuous (ii) is visible."""
     stack, _, driver = scheduled(request, monkeypatch)
     client = stack[2]
     seed(driver, phase_stop=0.25, phase_cleanup=0.25)  # sized beyond 0.6 x 0.5 s, still fits (M1 passes)
     deadlines = spy_phase_deadlines(monkeypatch, driver)
+    services = spy_service_points(monkeypatch, driver)
     result = run(driver)
+    due = [s for s in services if s["due"]]
     print("BUDGET-D", dict(diagnostic=result.diagnostic, trace=getattr(driver, "_interior_trace", None),
-                           scans=driver.health_scans, renewals=driver.lease_renewals))
+                           scans=driver.health_scans, renewals=driver.lease_renewals,
+                           service_points=len(services), due_points=len(due)))
+    target = os.environ.get("MAESTRO_BOUNDARY_RECEIPTS")
+    if target:  # finding 489: the evidence of a full run records whether (ii) was exercised
+        Path(target).mkdir(parents=True, exist_ok=True)
+        (Path(target) / "budget-d-service-points.json").write_text(json.dumps(dict(
+            service_points=len(services), due_points=len(due), renewals=driver.lease_renewals,
+            due_returned_renewed=sum(1 for s in due if s["returned"] and s["renewed"])), indent=2) + "\n")
     assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
     assert any("widened" in e for e in driver._interior_trace)
     active = [d for d in deadlines if not d[4]]
     assert active and all(end <= active_end for _, end, active_end, _, _ in active)
     assert all(end <= work_end for _, end, _, work_end, _ in deadlines)
     assert not any(e.get("stopped") for e in driver._interior_trace)
-    assert driver.lease_renewals >= 1  # renewals still happen (finding 480 (7))
+    # Finding 489: a renewal count depends on run duration (leases are about 5 s ahead), so the
+    # control checks the renewal invariant at every service point instead of a count.
+    assert services and all(s["lapsed"] is False for s in services)
+    assert all(s["renewed"] for s in due if s["returned"])
     assert not client._failed and client.rpc_failure is None
 
 
