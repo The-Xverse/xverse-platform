@@ -196,3 +196,10 @@ def test_v02_step_precedence_with_two_defects(change, expected):
 def test_v01_fixture_declares_the_bridge_recorder_domain():
     plan, _ = compile_fixture(documents("uniform"))
     assert "bridge-recorder-monotonic" in {d["id"] for d in plan["timeDomains"]}
+
+
+def test_v01_crosscheck_refusal_names_its_flow(monkeypatch):
+    monkeypatch.setattr(binding_module, "_crosscheck", lambda block, policy: ["queueDepth"])
+    record = bind(*compile_fixture(documents("uniform")))
+    assert {(r["flowId"], r["code"]) for r in record.refusals} == {("camera-flow", "XVERSE-FLOW-XCOM-CROSSCHECK"), ("radar-flow", "XVERSE-FLOW-XCOM-CROSSCHECK")}
+    assert record.refusals[0]["detail"] == {"fields": ["queueDepth"]}

@@ -101,11 +101,12 @@ def _expected_verdict(payload: Mapping[str, Any], binding: FlowBinding) -> str |
         return "invalid"
     if age < -binding.mapping.tolerance_ns:
         return "clock-error"
-    if payload.get("verdict") in ("duplicate", "out-of-order", "queue-full"):
+    stale = binding.freshness_ns > 0 and max(age, 0) > binding.freshness_ns
+    if payload.get("verdict") in ("duplicate", "out-of-order"):
         return None
-    if binding.freshness_ns > 0 and max(age, 0) > binding.freshness_ns:
-        return "stale"
-    return "delivered"
+    if payload.get("verdict") == "queue-full":
+        return "stale" if stale else None  # stale outranks queue-full and is decidable from the item (N2)
+    return "stale" if stale else "delivered"
 
 
 def reconstruct_flows(payloads: Iterable[Mapping[str, Any]], record: FlowBindingRecord) -> dict[str, dict[str, Any]]:

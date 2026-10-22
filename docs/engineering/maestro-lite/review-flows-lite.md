@@ -213,3 +213,16 @@ finding 15).
     | N2 | `_expected_verdict` skips `queue-full` labels although stale ranks above them; the regression diagnostic is not checked against reception order. | Re-derive stale for `queue-full` labels. Regression ordering cannot be checked from recorded events alone, because delivered in-order receptions are not recorded; stated limit. |
     | N3 | The "recorded X, derived Y" branch has no test. | Add a self-consistent relabel-to-`delivered` tamper test. |
     | N4 | A cleanup failure inside `_final` can lose outbox items already taken, `cleanup_failure` is untested, and it is not written to evidence. | Add a test that sets `cleanup_failure`. Stated limit: this arises only in runs that already re-raise; the failure is kept on the harness, not in Argus. |
+
+11. Review 2 LOW findings dispositioned (2026-10-22):
+    - **N1:** thesis detailed design §2 amended (a cross-check refusal carries its binding's
+      `flowId`); `test_v01_crosscheck_refusal_names_its_flow`.
+    - **N2:** `_expected_verdict` re-derives stale for `queue-full` labels; the regression-ordering
+      limit is stated.
+    - **N3:** `test_rule_13_relabel_to_delivered_hits_the_derivation_branch`, which covers relabels
+      to `queue-full` and to `delivered`.
+    - **N4:** `test_cleanup_failure_is_recorded_without_masking_the_original_error`; the limit is
+      stated.
+
+    Wheel rebuilt; the flows and faults suites give 147 passed. Next: the full installed-wheel run
+    on a quiet host (loop `flows-lite/platform-regression-20261022h`).

@@ -186,3 +186,37 @@ def test_rule_13_reconstruction_flags_each_kind_of_tampering():
     assert not reconstruct_flows(payloads + [dict(summary, flowId="ghost-flow")], harness.record)["<foreign>"]["ok"]
     wrong_delivered = [dict(p, deliveredCount=p["deliveredCount"] + 1) if p is summary else p for p in payloads]
     assert "deliveredCount" in reconstruct_flows(wrong_delivered, harness.record)["camera-flow"]["mismatches"]
+
+
+def test_rule_13_relabel_to_delivered_hits_the_derivation_branch():
+    writer = Writer()
+    evidence = FlowEvidence(writer, "run-r", lambda tick: {})
+    harness, _ = run([fault("f-delay", "delay", "camera-flow", at=10, duration=10, parameters=[parameter("delay-ticks", 8)])], listener=evidence)
+    payloads = [e["extensions"]["io.xverse.flows"] for e in writer.events]
+    stale = next(i for i, p in enumerate(payloads) if p.get("verdict") == "stale")
+    relabel = [dict(p, verdict="queue-full") if i == stale else p for i, p in enumerate(payloads)]
+    mismatches = reconstruct_flows(relabel, harness.record)["camera-flow"]["mismatches"]
+    assert any("recorded queue-full, derived stale" in m for m in mismatches)
+    relabel = [dict(p, verdict="delivered") if i == stale else p for i, p in enumerate(payloads)]
+    assert any("recorded delivered, derived stale" in m for m in reconstruct_flows(relabel, harness.record)["camera-flow"]["mismatches"])
+
+
+def test_cleanup_failure_is_recorded_without_masking_the_original_error():
+    class FailingSummary:
+        def verdict(self, binding, result):
+            if result.sequence == 3:
+                raise RuntimeError("original")
+
+        def deadline(self, binding, k, now):
+            pass
+
+        def summary(self, binding, summary):
+            raise ValueError("summary sink down")
+
+    plan, resources = compile_fixture(documents("uniform"))
+    harness = FlowRunHarness(bind(plan, resources), PLANNED_TICKS, (), seed=7, clock=TickClock({"control-time": 1}), listener=FailingSummary())
+    for tick in PLANNED_TICKS:
+        harness.offer(tick, "radar-flow", tick // 2)
+    with pytest.raises(RuntimeError, match="original"):
+        harness.run()
+    assert harness.cleanup_failure == "ValueError: summary sink down"
