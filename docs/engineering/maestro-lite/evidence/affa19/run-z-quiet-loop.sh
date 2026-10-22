@@ -7,7 +7,8 @@
 # Each attempt waits for the run-x/run-y quiet condition (1-minute load < 7 at five consecutive
 # checks one minute apart), samples /proc/loadavg every 30 s into <out>/load-samples.jsonl, then
 # archives the receipts and removes only that attempt's own tmpfs work directory. Overall bound
-# 10 h; never generates load while waiting; one driver at a time.
+# 10 h; never generates load while waiting; one driver at a time. Exit 4: the driver did not run
+# tests (harness abort), which is never classified (faults-lite finding 15).
 HERE=$(dirname "$(realpath "$0")"); PREFIX=$1; DEADLINE=$(( $(date +%s) + 36000 )); attempt=0
 while [ "$(date +%s)" -lt "$DEADLINE" ]; do
   quiet=0
@@ -25,6 +26,11 @@ while [ "$(date +%s)" -lt "$DEADLINE" ]; do
     sleep 30
   done
   wait $driver; rc=$?
+  if [ ! -s "$OUT/load-samples.jsonl" ] || [ ! -s "$OUT/wheel.log" ]; then
+    # faults-lite finding 15: a driver that aborts before testing (e.g. dirty worktree) is not a
+    # test result; never classify it (an empty max previously compared as <= 10).
+    echo "attempt $attempt: driver did not run tests (rc $rc); not decisive"; exit 4
+  fi
   max=$(python3 -c "import json,sys;print(max(float(json.loads(l)['loadavg'].split()[0]) for l in open(sys.argv[1])))" "$OUT/load-samples.jsonl")
   work=$(python3 -c "import json,sys,os;print(os.path.dirname(json.load(open(sys.argv[1]))['receipts_root']))" "$OUT/wheel-receipt.json" 2>/dev/null)
   case "$work" in

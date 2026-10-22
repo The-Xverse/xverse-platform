@@ -187,3 +187,47 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     is absent. The reviewer lists as open gates, not defects: the author's acceptance of the
     amended FR-006a/FR-007/rule 7, decision D5-2, the full installed-wheel run with the DV12 gate,
     the CAPA successor and the acceptance before merge.
+
+13. Full installed-wheel run, attempt 1 (2026-10-22, `faults-lite/platform-regression-20261022f-1`,
+    head `df49fdef1`). The result was 3 failed, 2294 passed, 1 skipped in 3512 s. Load was sampled
+    118 times, with a maximum of 15.19. Under the recorded ruling (increment 19 finding 469) this
+    is an **observation, not a regression signal**: a sample exceeded 10, so the quiet-host loop
+    archived the receipts and started attempt 2 at 14:28Z.
+
+    The failures were:
+    - `test_schedule_worker::test_original_native_gate_renewal_updates_only_after_exact_ack`;
+    - `test_shared_dispatcher::test_paused_shared_ticks_renew_both_original_leases_and_observe_health`;
+    - the Argus nested-regression wrapper (`test_existing_platform_pytest_regression_unchanged_in_assembled_target`).
+      It fails whenever its nested platform run fails, so it is not an independent signal.
+
+    Both direct failures are lease-renewal timing tests that are already recorded as load-sensitive
+    in `review-affa17.md` and `review-affa18.md`. Neither touches `xverse.faults` code paths. No
+    repair follows; the decisive run is a later attempt.
+
+14. Full installed-wheel run, attempt 2 (`platform-regression-20261022f-2`, same head; started
+    14:28Z at load 3.48). The result was 72 failed, 2225 passed, 1 skipped, 1 error in 4532 s. Load
+    was sampled 148 times, with a maximum of 18.1, because external load rose to 15–18 during the
+    run. This is an **observation** under finding 469.
+
+    Every failure is in `tests/thesis_lite/maestro` native lifecycle and timing suites
+    (`test_terminal_*`, `test_*restart*`, `test_load_aware_budgets`, `test_shared_dispatcher`,
+    `test_rpc_*` and others), plus the Argus nested-regression wrapper. **None is in
+    `tests/thesis_lite/faults`.** This matches the recorded load sensitivity of these suites:
+    increment 19's loaded A/B gave 19 and 20 failures at load 13–15. No repair follows.
+
+15. Harness defect, found after attempt 3 (2026-10-22). Attempt 3 was triggered at 17:40Z. It
+    **never ran tests**, because the frozen-run driver refused a tracked change in the worktree:
+    this log, modified by finding 13 and left uncommitted. Edits to the gate-excluded log path keep
+    the code hash, but they still make the worktree dirty for the driver. The loop then read an
+    empty load maximum as ≤ 10 and printed "decisive: failed-at-low-load".
+
+    **That verdict is false and is void.** No attempt-3 directory exists, and no work directory
+    was left behind.
+
+    Repairs, in documentation and evidence only, both outside the DV12 code scope
+    (`NON_TEST_INPUTS` and `NON_TEST_LOGS`):
+    - `run-z-quiet-loop.sh` now exits 4 ("driver did not run tests; not decisive") when the attempt
+      has no load samples or wheel log;
+    - log edits are committed before any run starts.
+
+    The decisive run is attempt 1 of the next loop.
