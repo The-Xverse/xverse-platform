@@ -44,3 +44,19 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     by the pair; recorded for the thesis package); compiled entries carry no `retry` field, so no
     retry happens in Phase 5 (the review-2 LOW on retry is moot until Phase 1 exposes it).
     Process faults still act on fakes here; the owned native operations follow.
+
+5. P5-T03 owned process operations (2026-10-22): `native/catalog_launcher.c` gains request kinds
+    FAULT_KILL=4, FAULT_FREEZE=5, FAULT_THAW=6 and reply FAULTED=21, verified by child pid and
+    token exactly like QUERY; `owned_fault` acts only on the helper's own staged child (SIGKILL
+    through the owned pidfd; `cgroup.freeze` on the owned cgroup with `cgroup.events frozen`
+    observed within a bounded wait) and answers reason 6 without acting when the child is gone,
+    the cgroup cannot be written or the state is not observed. `launcher.py`: `LaunchPacket`
+    accepts the new kinds, `_rpc` takes `allowed_reasons` so a refusal is an answer rather than a
+    protocol failure, and `CatalogLauncher.fault(handle, operation, deadline)` returns
+    `(done, reason)` after the holder, liveness and exact-handle checks. Native tests
+    `tests/thesis_lite/faults/test_process_ops.py` on the Maestro launcher stack (real helper
+    compiled from the worktree source, real child in an owned cgroup-v2 boundary): freeze observed
+    (frozen 1), thaw (frozen 0), kill reaped with returncode -9; kill and freeze after exit refused
+    (reason 6); forged handle and unknown operation refused before any request. 3 passed (plus
+    the 28 pure-Python tests). The test process imports the worktree source; the persistence
+    worker runs the installed main package, which this increment does not change.

@@ -28,7 +28,7 @@
 #define SEALS (F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL)
 #define CGROUP2_MAGIC 0x63677270
 #define MAX_IMAGE (8U*1024U*1024U)
-enum { STAGE=1, CANCEL=2, QUERY=3, READY=16, STAGED=17, CANCELLED=18, ERROR=19, OBSERVED=20 };
+enum { STAGE=1, CANCEL=2, QUERY=3, FAULT_KILL=4, FAULT_FREEZE=5, FAULT_THAW=6, READY=16, STAGED=17, CANCELLED=18, ERROR=19, OBSERVED=20, FAULTED=21 };
 struct launcher {
     int cg, socket, parent, childfd, errorfd, image, cwd;
     struct stat identity;
@@ -106,6 +106,25 @@ static uint64_t state(struct launcher *g) {
     if(g->reaped)flags|=8;
     if(g->exec_error)flags|=16;
     return flags|((uint64_t)(unsigned)g->status<<32);
+}
+/* Phase 5 owned fault operations (thesis-lite faults): act only on the staged child this helper
+ * owns, verified by pid and token like QUERY; a refusal answers FAULTED with reason 6 and changes
+ * nothing. freeze/thaw write the owned cgroup's cgroup.freeze and wait briefly for cgroup.events. */
+static int write_freeze(struct launcher *g,char value) {
+    int fd=openat(g->cg,"cgroup.freeze",O_WRONLY|O_CLOEXEC|O_NOFOLLOW);if(fd<0)return -1;
+    ssize_t n=write(fd,&value,1);close(fd);return n==1?0:-1;
+}
+static unsigned owned_fault(struct launcher *g,unsigned kind) {
+    if(g->child<=0||g->reaped||!alive(g->childfd))return 6U;
+    if(kind==FAULT_KILL)return syscall(SYS_pidfd_send_signal,g->childfd,SIGKILL,NULL,0)?6U:0U;
+    char value=kind==FAULT_FREEZE?'1':'0';uint64_t want=kind==FAULT_FREEZE?1:0,frozen=2;
+    if(write_freeze(g,value))return 6U;
+    for(int i=0;i<200;i++){
+        if(field(g,"cgroup.events","frozen",&frozen))return 6U;
+        if(frozen==want)return 0U;
+        struct pollfd p={.fd=g->childfd,.events=POLLIN};poll(&p,1,1);
+    }
+    return 6U;
 }
 static int respond(struct launcher *g,unsigned kind,unsigned reason,int transfer) {
     unsigned char p[PACKET]={0};memcpy(p,"LC09",4);p[7]=(unsigned char)kind;
@@ -262,10 +281,11 @@ int main(int argc,char **argv) {
             if(g.attempted||memcmp(p+80,zero,sizeof(zero)))return cleanup(&g);
             if(stage_child(&g)){respond(&g,ERROR,3,-1);return cleanup(&g);}
             if(respond(&g,STAGED,0,g.childfd))return cleanup(&g);
-        }else if(kind==QUERY||kind==CANCEL){
+        }else if(kind==QUERY||kind==CANCEL||kind==FAULT_KILL||kind==FAULT_FREEZE||kind==FAULT_THAW){
             if(get64(p+80)!=(uint64_t)g.child||memcmp(p+88,g.token,32))return cleanup(&g);
             if(kind==CANCEL){int result=cleanup(&g);respond(&g,CANCELLED,result?6U:0U,-1);return result;}
-            if(respond(&g,OBSERVED,0,-1))return cleanup(&g);
+            if(kind==QUERY){if(respond(&g,OBSERVED,0,-1))return cleanup(&g);}
+            else{unsigned reason=owned_fault(&g,kind);if(respond(&g,FAULTED,reason,-1))return cleanup(&g);}
         }else return cleanup(&g);
     }
 }
