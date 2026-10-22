@@ -116,3 +116,32 @@ finding 15).
    Phase 6 merge. **Process repair:** from now on, an acceptance that changes the platform
    `pyproject.toml` or the locked roots also runs the `xverse-compat` suite against the candidate
    before the merge, and records the expected re-pin.
+
+7. V10 gtest run performed (2026-10-22, author instruction "install again the c++ toolchain, but
+   on loop10"). This supersedes the open item of finding 5.
+
+   **Toolchain.** The X-COM toolchain was reconstructed on the loop10 image
+   (`/media/jefferson/11c42dee-…/.x-verse-build/cache/`). The existing `~/.cache` symlinks resolve
+   again.
+   - The 13 locked Jammy packages (`dependency-lock.md`) were downloaded from the recorded Ubuntu
+     pool coordinates into `xverse-xcom-grpc-packages/`, and each size and SHA-256 equals the lock.
+     The `package-manifest.json` has 13 records. They were extracted with `dpkg-deb -x` only (no
+     install, no maintainer scripts) into the new prefix `xverse-xcom-grpc-prefix/` (80 MB).
+   - The 3 googletest 1.11.0-3 packages (`t025/test-dependency-admission.md`) were handled the
+     same way, into `xverse-xcom-t025-gtest-packages/` and `-prefix/`.
+
+   **Admission.**
+   - `scripts/check_xcom_t025_test_dependencies.py` gives `XCOM-T025-DEP-I000`.
+   - `scripts/xcom_dependency_preflight.py --verify-toolchain` gives `XCOM-BLD-I000` ("exact
+     offline dependency set admitted"), with the documented environment (`PATH`,
+     `LD_LIBRARY_PATH`, `PKG_CONFIG_*`, `CMAKE_PREFIX_PATH`) and `XVERSE_XCOM_T025_TEST_TOOLCHAIN`.
+   - The first two attempts failed, and the failures are recorded: without `LD_LIBRARY_PATH` the
+     `protoc` version probe failed (E039); without the T025 prefix the CMake configure probe failed
+     (E061).
+
+   **Run.** The candidate tree was configured in `/dev/shm/xcom-build-p6` (Debug, testing on). Only
+   `xverse_xcom_core_matrix_fault_boundary_tests` was built (`ninja -j4`), and
+   `ctest -L t016-fault-boundary` passed: 100%, 3/3. One of the three is
+   `CoreMatrixFaultBoundary.CoreSurface_HasNoUncontrolledMutationEntryPoint`. The evidence is
+   in `evidence/affa19/flows-lite/v10-gtest-20261022/` (admission JSON, filtered ctest log,
+   SHA256SUMS). V10 is complete.
