@@ -33,7 +33,7 @@ class FaultEvidence:
         """Create the listener.
 
         @param writer Open Argus run writer (``append_event``).
-        @param run_id Run identity used as correlation id.
+        @param run_id Run identity (recorded in the extension payloads; not a causal reference).
         @param clocks Callable returning the host/utc/simulation clock mapping for a tick.
         """
 
@@ -45,8 +45,12 @@ class FaultEvidence:
         self._last: dict[str, str] = {}
         self.event_ids: list[str] = []
 
-    def _append(self, event_id: str, cause: str | None, tick: int, text: str, payload: Mapping[str, Any]) -> str:
-        """Append one annotation event and return its id."""
+    def _append(self, event_id: str, cause: str | None, tick: int, text: str, payload: Mapping[str, Any], correlation: str | None = None) -> str:
+        """Append one annotation event and return its id.
+
+        Argus resolves correlation and causation ids against accepted events, so decisions
+        correlate to their entry's intent event; the intent itself carries no correlation.
+        """
 
         self._sequence += 1
         self._writer.append_event(
@@ -54,7 +58,7 @@ class FaultEvidence:
             producer_id=PRODUCER,
             event_kind="annotation",
             producer_sequence=self._sequence,
-            correlation_id=self._run_id,
+            correlation_id=correlation,
             causation_id=cause,
             clocks=self._clocks(tick),
             annotation={"text": text},
@@ -71,7 +75,7 @@ class FaultEvidence:
             "entryId": entry.entry_id, "faultId": entry.fault_id, "faultKind": entry.fault_kind,
             "boundaryClass": entry.boundary_class, "phase": "intent", "tick": tick,
             "dueTick": entry.due_tick, "effectiveTick": entry.effective_tick, "durationTicks": entry.duration_ticks,
-            "parameters": dict(entry.parameters.values), "executable": entry.executable,
+            "parameters": dict(entry.parameters.values), "executable": entry.executable, "runId": self._run_id,
         }
         self._intent[entry.entry_id] = self._last[entry.entry_id] = self._append(event_id, None, tick, "fault intent " + entry.fault_id, payload)
         return event_id
@@ -89,7 +93,7 @@ class FaultEvidence:
             "outcome": decision.outcome, "diagnostic": decision.diagnostic, "detail": dict(decision.detail),
         }
         cause = self._last[entry.entry_id]
-        self._last[entry.entry_id] = self._append(event_id, cause, decision.tick, f"fault {entry.fault_id} {phase} {decision.outcome}", payload)
+        self._last[entry.entry_id] = self._append(event_id, cause, decision.tick, f"fault {entry.fault_id} {phase} {decision.outcome}", payload, correlation=self._intent[entry.entry_id])
 
 
 @dataclass
