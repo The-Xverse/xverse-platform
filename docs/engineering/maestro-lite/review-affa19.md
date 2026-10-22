@@ -1878,3 +1878,35 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     also uses a renewal count (>= 3) whose floor is only just above its margin; it failed in
     z-1 under load (samples above 10) and is kept under T06 observation. Next: commit, then the
     loop on the repaired head; E3 still requires a clean run, the gate and a CAPA successor.
+
+491. Run 22a-1 (2026-10-22, evidence/affa19/platform-regression-20261022a-1; run-z-quiet-loop.sh,
+    decisive at attempt 1; driver verify-platform-regression-20261021t.py; head af9bd3c72,
+    product 897d9dc50 plus the 490 test repair; 2251 collected). Trigger 07:53:09Z at load 3.29;
+    90 in-run samples, 1-minute load 3.70-8.29, none above 10. Result: 2250 passed, 1 skipped
+    (lane admission, its own driver), 0 failed, 24 subtests passed in 2691 s; returncode 0, no
+    outer timeout, descendant cleanup known; the Argus nested suite passed (its nested run had
+    no failure). Control (d) receipts: outer and nested each recorded 56 service points with 1
+    due point, renewed before return (budget-d-service-points.json), so invariant (ii) was
+    exercised in both. DV12 gate (candidate af9bd3c72, scope code, G4 and allowlist inputs of
+    468): accepted_as_evidence true, no blocker, run and candidate code sha f25a295d…
+    (dv12-gate-verdict.json sha fdb188ae…, SHA256SUMS sha f847dec7…). Against 476 E3: (1) a
+    clean full installed-wheel run on the final head with host load recorded: met; (2) DV12 gate
+    passing: met; (3) no open HIGH or MEDIUM review item: met (474 items repaired in dabf858a5,
+    480/482 repaired and 484 PASS, 490 PASS with its MEDIUM repaired); (4) validated CAPA
+    successor: step 5 next. Limits carried: effectiveness of E1 is shown only up to the loads
+    observed (about 14); the nested-versus-outer asymmetry (488) and the test_dispatcher.py
+    renewal-count oracle (490) remain T06 observations; one clean run is not a reliability
+    estimate.
+
+492. CAPA successor step 5 (2026-10-22, evidence/affa19/capa-20261022-affa19-step5, builder
+    build-capa-20261022-affa19-step5.py), parent step 4 (7b384e75…), additive: review spans
+    486-491, the quiet-host procedure (run-x/run-y watchers, run-z loop), the full-run evidence
+    of x, y, z-1, z-2 and the decisive run 22a-1 with its gate verdict, and the control (d)
+    oracle repair (f1f0b630e..af9bd3c72, tests only). ML-CAPA-418 stays FIX_CANDIDATE on E1; the
+    increment19 block records the decisive run and its accepted gate, with the increment not
+    yet accepted or merged at build time. No record closed, no cause verified, no effectiveness
+    claimed. Register sha a934c2d8…, 56 records / 644 bindings; verify-capa-register-20261020.py
+    (verification.json) and check-capa-parent-preservation-20261019.py (627 parent bindings
+    checked, none changed, no record lost) both pass. The first build attempt was refused by the
+    schema (root_cause_summary above 2000 characters); the run narrative moved to the action
+    plan. This finding is bound by the next successor.
