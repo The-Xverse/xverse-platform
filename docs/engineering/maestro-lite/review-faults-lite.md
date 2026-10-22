@@ -231,3 +231,14 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     - log edits are committed before any run starts.
 
     The decisive run is attempt 1 of the next loop.
+
+16. Loop g, attempt 1 (`platform-regression-20261022g-1`, head `b590f2865`; started 17:45Z at load
+    3.64). The result was 1 failed, 2296 passed, 1 skipped in 2984 s. Load was sampled 100 times;
+    the first about 60 samples stayed at or below 6.44, and external load then peaked at 23.99.
+    This is an **observation** under finding 469.
+
+    The single failure is
+    `test_shared_dispatcher::test_paused_shared_ticks_renew_both_original_leases_and_observe_health`,
+    the same lease-renewal timing test as in finding 13; it is load-sensitive per `review-affa17`
+    and `review-affa18`. No test in `tests/thesis_lite/faults` failed. The loop waits for a quiet
+    host and repeats.
