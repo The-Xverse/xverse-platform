@@ -178,3 +178,12 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     excludes exactly `docs/engineering/maestro-lite/evidence/` and `docs/engineering/maestro-lite/review-*.md`;
     findings recorded after the full run then leave the tested code-scope hash unchanged. Content
     of findings 1–10 is unchanged.
+
+12. Implementation review 3 (2026-10-22, same reviewer, on a986cc935; 47 tests passed): PASS, no
+    HIGH or MEDIUM. N1 and N2 resolved (file:line cited); the recorded hashes of the amended spec
+    and contract verified. Residual LOW, accepted as limits: the run-authority fault guard is tested
+    only before release (after-close and stale-generation refusals are covered by the same guard
+    expression, untested); the digest-equality test skips when the sibling platform main checkout
+    is absent. The reviewer lists as open gates, not defects: the author's acceptance of the
+    amended FR-006a/FR-007/rule 7, decision D5-2, the full installed-wheel run with the DV12 gate,
+    the CAPA successor and the acceptance before merge.
