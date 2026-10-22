@@ -1910,3 +1910,17 @@ is reused with a new meaning. Branch candidate/maestro-lite-affa19-20261021, wor
     checked, none changed, no record lost) both pass. The first build attempt was refused by the
     schema (root_cause_summary above 2000 characters); the run narrative moved to the action
     plan. This finding is bound by the next successor.
+
+493. Increment 19 acceptance (2026-10-22) under the author's delegation (476 E3: "accept increment
+    19, merge into platform main and push, only when all hold"). All four conditions hold: clean
+    full installed-wheel run on the final head with host load recorded (491, run 22a-1 on
+    af9bd3c72, 2250 passed, 0 failed, load at most 8.29); DV12 gate accepted (491); no open
+    HIGH or MEDIUM review item (491); validated CAPA successor (492, step 5, a934c2d8…, both
+    validators pass). Decision: increment 19 ACCEPTED for engineering integration and merged
+    --no-ff into platform main, then pushed to origin. Scope of the acceptance: engineering
+    increment only; it does not open lane activation, M1, factory runs or any scientific claim,
+    does not change RF-2026-08-30-v6 or AEB-EXPERIMENT-2026-08-30-v2, and does not decide T07
+    (E4: T07 after T01-T06 with G4 re-decided and source-parent fidelity carried as a limit).
+    Carried limits: 468 C4, 484 LOW items, 488 asymmetry and 490 observations, E1 effectiveness
+    only up to the observed load, ML-CAPA-418 FIX_CANDIDATE and ML-CAPA-359 HYPOTHESIS.
+    This finding is bound by the next successor.
