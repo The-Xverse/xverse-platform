@@ -145,3 +145,34 @@ finding 15).
    `CoreMatrixFaultBoundary.CoreSurface_HasNoUncontrolledMutationEntryPoint`. The evidence is
    in `evidence/affa19/flows-lite/v10-gtest-20261022/` (admission JSON, filtered ctest log,
    SHA256SUMS). V10 is complete.
+
+8. Independent implementation review 1 (2026-10-22, on `dd76a8a32` plus compat `f2a5577`): **FAIL**,
+   with no HIGH findings and five MEDIUM ones (recorded here before any repair). The reviewer
+   confirmed that the core logic conforms:
+   - binding steps 0–9, attribution, selection, mask, limits, cross-check and serialization;
+   - receiver precedence, state table, deadline formula and queue;
+   - harness order, outbox and determinism;
+   - A1 semantics.
+
+   It re-ran 121 installed tests and 15 compat tests (both passed), and probed two uncovered paths
+   (`refuse_clear` gives `incomplete` with heldAtEnd 15; an exception drains the outbox), both of
+   which behave correctly.
+
+   | # | Sev | Finding | Planned repair |
+   | --- | --- | --- | --- |
+   | M1 | MEDIUM | `reconstruct_flows` only compares the withheld, gap and deadline event counts with the summary. It does not re-derive verdicts or check the other summary fields, it drops foreign flows silently, it raises `KeyError` on an unknown verdict, and it misses duplicate summaries. | Re-derive each recorded event's verdict from its payload and the binding: age, tolerance, stale, out-of-order. Compare every summary field that can be derived. Flag foreign flows, unknown verdicts and duplicate summaries. Add tamper tests. Stated limit: delivered items are counted, not recorded, so their verdicts are checked only by count. |
+   | M2 | MEDIUM | V06 is incomplete: there is no `bridge-recorder-monotonic` domain in the fixtures, no hand-computed ages, and no receiver-in-loop test. | Add the domain to the fixture System. Add a compat V06 test that feeds the adapter's items through the platform `FlowReceiver` (the compat test environment gets the candidate platform wheel), with hand-computed ages, a deadline check and a final poll. |
+   | M3 | MEDIUM | A1 side-effect tests are missing: the resolve target mismatch, the dispatcher `boundaryMode`, Maestro arming, and relay-level duplicate/reorder. | Add a resolve-refusal test, relay unit tests, and a Maestro-run assertion on the intent `boundaryMode` and the outcomes of a duplicate and a reorder entry. |
+   | M4 | MEDIUM | There is no test of `heldAtEnd > 0` or of the cancel-path outbox drain. | Add a `refuse_clear` test and an exception-with-held-items test. |
+   | M5 | MEDIUM | Missing binding tests: `POLICY-MISSING`, Deployment fallback, Scenario `ignoredPayloads`, provider ambiguity and `networkId` narrowing, the stage-0 `XcomPlanError` path, and multi-defect cases for step precedence. | Extend the builder with payload overrides and add these tests. |
+
+   Repairs for the LOW findings:
+   - **L1:** emit summaries once; record a cleanup failure in `failure`.
+   - **L2:** separate the deadline anchor from the regression baseline.
+   - **L3:** set the top-level `flowId` on cross-check refusals.
+   - **L4:** the data model is amended in the thesis repository (unordered out-of-order with a full
+     buffer keeps verdict `out-of-order`, withheld, with diagnostic `queue-full`), under the
+     author's delegation.
+   - **L5:** fix the vocabulary docstring and add `held_buffer()`.
+   - **L6:** replace the hard-coded pins with a real cross-test against the platform function (made
+     possible by M2's environment).
