@@ -171,3 +171,10 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     record: `specs/026-lite-fault-schedules/spec.md` (FR-006a manual crash; FR-007 run-enforced
     closure) sha256 770136fac4c65e1e4678655b735d9ddc3b8289f3eb7d05a051acd555714c5ac8, `contracts/fault-execution.md` (rule 7) sha256 6c00f8bd93295390d5f6bebd6a76be3e69b864c2094cdbf68c6712f6398d891f.
     Results: tests/thesis_lite/faults 47 passed twice (load 8.6). Review 3 requested.
+
+11. Log location (2026-10-22): this log moved from `docs/engineering/faults-lite/review-faults.md`
+    to `docs/engineering/maestro-lite/review-faults-lite.md`, and Phase 5 run evidence goes under
+    `docs/engineering/maestro-lite/evidence/affa19/faults-lite/`, because the DV12 gate's code scope
+    excludes exactly `docs/engineering/maestro-lite/evidence/` and `docs/engineering/maestro-lite/review-*.md`;
+    findings recorded after the full run then leave the tested code-scope hash unchanged. Content
+    of findings 1–10 is unchanged.
