@@ -88,3 +88,24 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     stale + sensorDropout + freeze/thaw complete with closed Argus chains; a crash before the
     unit's health obligation ends the run attributed to the fault; a crash after it completes
     with the termination recorded). Result: tests/thesis_lite/faults 37 passed.
+
+7. Implementation review 1 (2026-10-22, independent read-only; 37 Phase 5 tests passed in its
+    run): FAIL, recorded before any repair. HIGH: (H1) `terminated-by-fault` exists only as an
+    in-memory facade record and a probe diagnostic; no journal or Argus outcome carries it, and a
+    run with an unrecovered `recovery: manual` crash after the unit's last health obligation ends
+    as success (test_maestro_run.py asserted that), contradicting the proposed `manual`
+    semantics (documented failure). (H2) `FaultScheduler.cancel` is never called from the
+    dispatcher's failure path, so a failed or cancelled run leaves frozen units unthawed and
+    entries without an outcome (contract rule 6); `cancel` also emits two `final` decisions for an
+    active entry. MEDIUM: (M1) native freeze/thaw that times out answers "refused" with the write
+    left in place; (M2) the run authority does not check `enabled`, `released`, `retired` or the
+    latest generation for fault requests (only the Python side guards it); (M3) the termination
+    record is not retracted when a kill is refused, and its docstring calls it durable; (M4) no
+    run-level `causal-closure` obligation, the extension lacks boundary class and parameters, and
+    relay faults in a Maestro run carry no traffic without saying so; (M5) several claimed V-case
+    tests are missing (native token/pid refusal, "no other pid signalled", run-authority negatives,
+    kill after the window, V03 Argus chains, U-ADM-03 digest equality with main). LOW: dead
+    `unit_reply_extra`, unused `coverage.fault_events`, system URI taken from the first fault, no
+    time reserve for fault statements, frozen-before-first-observation probe, design-doc retry
+    wording. The quiet-host loop started on 2b89b2060 was stopped before it triggered (no run
+    recorded). Repairs follow in finding 8.
