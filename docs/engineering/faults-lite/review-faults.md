@@ -28,3 +28,19 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     `arbitration`, `on-apply-failure`), and a declared-order fault-intent must not carry a
     `timeDomainId`. Result: 10 passed (pure Python, PYTHONPATH run; worker-side changes come later
     with a candidate venv).
+
+4. P5-T02/T04 increment and the relays of T03 (2026-10-22): `xverse.faults.boundary` (exact
+    handles per run and entry; `MessageRelayBoundary` with delay/loss/stale, `ObservationRelayBoundary`,
+    `ProcessBoundary` over an owned operation set with the intended termination recorded before a
+    kill; `CounterGenerator`, seeded and counter-based), `xverse.faults.scheduler` (clearing then
+    application per planned tick, `(declaredOrder or inf, faultId)` order, serialize/supersede
+    arbitration, blocked targets, cancellation, one final outcome per entry, run failure per
+    `on-apply-failure`), `xverse.faults.evidence` (Argus annotation events with the
+    `io.xverse.faults` extension chained intent → apply → clear → outcome; offline
+    `reconstruct`/`closure_report`). Tests U-SCH-01…09, U-BND-01…05, U-EVD-01…03 plus scheduler
+    guards: 28 passed. Design notes: Argus's `causal-closure` obligation is run-level (every
+    causation id resolves), so per-entry closure is checked by `closure_report` offline and by the
+    scheduler's `incomplete` flag, not by one obligation per entry (the contract's rule 7 is met
+    by the pair; recorded for the thesis package); compiled entries carry no `retry` field, so no
+    retry happens in Phase 5 (the review-2 LOW on retry is moot until Phase 1 exposes it).
+    Process faults still act on fakes here; the owned native operations follow.
