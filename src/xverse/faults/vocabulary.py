@@ -34,10 +34,13 @@ class FaultError(RuntimeError):
         self.code = code
 
 
-def _positive_int(value: Any) -> bool:
-    """Return whether ``value`` is an integer (not bool) of at least one."""
+MAX_INTEGER_PARAMETER = 1_000_000
 
-    return type(value) is int and value >= 1
+
+def _positive_int(value: Any) -> bool:
+    """Return whether ``value`` is an integer (not bool) in [1, MAX_INTEGER_PARAMETER]."""
+
+    return type(value) is int and 1 <= value <= MAX_INTEGER_PARAMETER
 
 
 def _unit_ratio(value: Any) -> bool:

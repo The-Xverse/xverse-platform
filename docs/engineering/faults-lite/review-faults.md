@@ -157,3 +157,17 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     the sibling checkout. Process note: the planning package is untracked in the thesis
     repository, so the amendments of FR-007, rule 7 and the new FR-006a must be named in the
     acceptance record with their file hashes. Repairs follow in finding 10.
+
+10. Repairs of implementation review 2 (2026-10-22). N2: `FaultScheduler.cancel(..., ended_by=)`
+    finalizes the applied entry that ended the run as `applied` with diagnostic
+    `XVERSE-FAULT-ENDED-RUN` (the dispatcher records the crash entry id when it raises
+    `ML-SCHEDULE-TERMINATED-BY-FAULT`); every other entry is cancelled once. N1: contract rule 7
+    now states the failure path as best effort (boundary operations always run, entries are
+    finalized in memory, an outcome statement that can no longer be sent leaves its chain open and
+    offline reconstruction reports it), and the end-to-end tests now assert closed chains on the
+    failure path when the channel is up (crash at tick 1 and 2; failure during an active freeze:
+    both chains closed). LOW: integer parameters are bounded to 1..1,000,000. Thesis planning
+    package (untracked in the thesis repository) amended in this phase, named for the acceptance
+    record: `specs/026-lite-fault-schedules/spec.md` (FR-006a manual crash; FR-007 run-enforced
+    closure) sha256 770136fac4c65e1e4678655b735d9ddc3b8289f3eb7d05a051acd555714c5ac8, `contracts/fault-execution.md` (rule 7) sha256 6c00f8bd93295390d5f6bebd6a76be3e69b864c2094cdbf68c6712f6398d891f.
+    Results: tests/thesis_lite/faults 47 passed twice (load 8.6). Review 3 requested.

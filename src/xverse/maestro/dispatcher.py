@@ -539,6 +539,7 @@ class FiniteDispatcher(_Original):
         self._faults = None  # Phase 5 scheduler, built at begin when the prepared lifecycle has faults
         self._fault_entries = {}
         self._fault_unit = None  # unit terminated by an applied crash fault
+        self._fault_ended_by = None  # entry id of that crash
         self._fault_best_effort = False
         # One per-run estimator shared with every teardown (ADR-ML3-BUDGET-0001).
         self._times = ServiceTimes()
@@ -1337,16 +1338,19 @@ class FiniteDispatcher(_Original):
             entry = self._fault_entries.get(decision.entry_id)
             if entry is not None and entry.fault_kind == "crash" and decision.phase == "apply" and decision.outcome == "applied":
                 self._fault_unit = f"{entry.target_uri}#componentInstances/{entry.target_element}"
+                self._fault_ended_by = entry.entry_id
                 raise OwnerError("ML-SCHEDULE-TERMINATED-BY-FAULT")
 
     def _cancel_faults(self, reason):
         """Best effort on any failure: clear every active fault (thaw frozen units) and close every
-        entry as cancelled; statements that cannot be sent any more are skipped, not retried."""
+        entry (the run-ending crash as applied, the rest as cancelled). Boundary operations always
+        run; a statement that can no longer be sent is skipped, not retried, which leaves that
+        chain open in Argus: offline reconstruction reports it, the run is already a failure."""
         if self._faults is None:
             return
         self._fault_best_effort = True
         try:
-            self._faults.cancel(self._tick, reason)
+            self._faults.cancel(self._tick, reason, ended_by=self._fault_ended_by)
         except Exception:
             pass
 

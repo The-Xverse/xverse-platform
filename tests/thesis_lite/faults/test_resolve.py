@@ -95,6 +95,7 @@ def test_u_flt_08_declared_only_hooks():
 def test_u_flt_09_parameter_schema():
     cases = (
         ("delay", "sample-flow", [parameter("delay-ticks", 0)]),
+        ("delay", "sample-flow", [parameter("delay-ticks", 10**12)]),
         ("delay", "sample-flow", []),
         ("loss", "sample-flow", [parameter("loss-ratio", 1.5)]),
         ("loss", "sample-flow", [parameter("loss-ratio", 0.5), parameter("every", 2)]),

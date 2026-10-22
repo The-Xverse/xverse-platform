@@ -21,7 +21,7 @@ from .vocabulary import UNEXECUTED, FaultError
 
 APPLIED, CLEARED = "applied", "cleared"
 FAILED_TO_APPLY, INCOMPLETE_CLEARING, CANCELLED = "failed-to-apply", "incomplete-clearing", "cancelled"
-FINAL_OUTCOMES = (APPLIED, CLEARED, FAILED_TO_APPLY, INCOMPLETE_CLEARING, CANCELLED, UNEXECUTED)
+FINAL_OUTCOMES = (APPLIED, CLEARED, FAILED_TO_APPLY, INCOMPLETE_CLEARING, CANCELLED, UNEXECUTED)  # APPLIED only for a run-ending fault
 
 
 @dataclass(frozen=True)
@@ -239,13 +239,18 @@ class FaultScheduler:
                         break
         return self.decisions[before:]
 
-    def cancel(self, tick: int, reason: str = "cancelled") -> list[Decision]:
-        """Clear every active entry and finalize the rest as cancelled."""
+    def cancel(self, tick: int, reason: str = "cancelled", *, ended_by: str | None = None) -> list[Decision]:
+        """Clear every active entry and finalize the rest as cancelled.
+
+        ``ended_by`` names the applied entry whose effect ended the run (a crash): it is cleared and
+        finalized as ``applied`` with diagnostic ``XVERSE-FAULT-ENDED-RUN``, not as cancelled."""
 
         before = len(self.decisions)
         for state in sorted(self._states.values(), key=lambda item: item.entry.tie_key):
             if state.applied_tick is not None and state.clear_tick is None and state.final is None:
                 self._clear(state, tick, finalize=False)  # a failed clear finalizes incomplete-clearing itself
+            if state.final is None and ended_by is not None and state.entry.entry_id == ended_by and state.applied_tick is not None:
+                self._finalize(tick, state, APPLIED, "XVERSE-FAULT-ENDED-RUN", reason=reason)
             if state.final is None:
                 self._finalize(tick, state, CANCELLED, "XVERSE-FAULT-CANCELLED", reason=reason)
         for state in self._states.values():

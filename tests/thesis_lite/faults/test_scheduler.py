@@ -129,6 +129,15 @@ def test_u_sch_06_cancellation_mid_window():
     assert [(d.entry_id, d.outcome) for d in finals] == [("fault:f-a", "cancelled")]  # exactly one final per entry
 
 
+def test_u_sch_06c_run_ending_entry_is_finalized_as_applied():
+    entries = resolve_schedule(compiled_plan([fault("f-c", "crash", "source-instance", at=2, duration=0),
+                                              fault("f-s", "stale", "sample-flow", at=2, duration=4)]), PLANNED_TICKS)
+    scheduler = FaultScheduler("run-a", entries, boundaries(), PLANNED_TICKS)
+    scheduler.start(); scheduler.advance(0); scheduler.advance(2); scheduler.cancel(2, "run-failed", ended_by="fault:f-c")
+    finals = sorted((d.entry_id, d.outcome, d.diagnostic) for d in scheduler.decisions if d.phase == "final")
+    assert finals == [("fault:f-c", "applied", "XVERSE-FAULT-ENDED-RUN"), ("fault:f-s", "cancelled", "XVERSE-FAULT-CANCELLED")]
+
+
 def test_u_sch_06b_cancel_with_a_failing_clear_finalizes_once_as_incomplete():
     entries = resolve_schedule(compiled_plan([fault("f-a", "stale", "sample-flow", at=2, duration=20)]), PLANNED_TICKS)
     bounds = boundaries(); bounds[("flows", "sample-flow")].refuse_clear = True

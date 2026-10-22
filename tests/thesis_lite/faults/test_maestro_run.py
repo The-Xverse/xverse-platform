@@ -128,9 +128,10 @@ def test_fault_run_manual_crash_is_a_documented_failure_of_the_unit(request, mon
     failures = _failure_events(stack, "ML-SCHEDULE-TERMINATED-BY-FAULT")
     assert failures and failures[0]["extensions"]["xverse.maestro"]["unitId"] == unit
     chains = reconstruct(_events(stack))
-    assert chains["f-crash"].applied and chains["f-crash"].status in ("closed", "open")
+    assert chains["f-crash"].applied and chains["f-crash"].status == "closed"  # statements were sent
+    assert chains["f-crash"].phases[-1] == ("outcome", "applied")
     finals = [d for d in driver._faults.decisions if d.phase == "final"]
-    assert [(d.entry_id, d.outcome) for d in finals] == [("fault:f-crash", "cancelled")]
+    assert [(d.entry_id, d.outcome, d.diagnostic) for d in finals] == [("fault:f-crash", "applied", "XVERSE-FAULT-ENDED-RUN")]
 
 
 def test_fault_run_failure_thaws_an_active_freeze(request, monkeypatch):
@@ -147,8 +148,10 @@ def test_fault_run_failure_thaws_an_active_freeze(request, monkeypatch):
     clears = [d for d in driver._faults.decisions if d.entry_id == "fault:f-freeze" and d.phase == "clear"]
     assert clears and clears[0].outcome == "cleared"
     finals = sorted((d.entry_id, d.outcome) for d in driver._faults.decisions if d.phase == "final")
-    assert finals == [("fault:f-freeze", "cancelled"), ("fault:z-crash", "cancelled")]
+    assert finals == [("fault:f-freeze", "cancelled"), ("fault:z-crash", "applied")]
     assert _unit(driver, "sink-instance") not in driver.facade._suspended
+    report = closure_report(reconstruct(_events(stack)))
+    assert report["complete"], report  # both chains closed on the failure path
 
 
 def test_run_authority_refuses_faults_before_release(request, monkeypatch):
