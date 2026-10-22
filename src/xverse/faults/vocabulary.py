@@ -68,8 +68,8 @@ VOCABULARY: Mapping[str, KindSpec] = {
     "crash": KindSpec("crash", PROCESS, True, {}),
     "freeze": KindSpec("freeze", PROCESS, True, {}),
     "sensorDropout": KindSpec("sensorDropout", OBSERVATION, True, {}),
-    "duplicate": KindSpec("duplicate", MESSAGE, False, {"copies": _positive_int}, required=("copies",)),
-    "reorder": KindSpec("reorder", MESSAGE, False, {"window": _positive_int}, required=("window",)),
+    "duplicate": KindSpec("duplicate", MESSAGE, True, {"copies": _positive_int}, required=("copies",)),  # Phase 6 amendment A1
+    "reorder": KindSpec("reorder", MESSAGE, True, {"window": _positive_int}, required=("window",)),  # Phase 6 amendment A1
     "assurance.proposal-unsafe": KindSpec("assurance.proposal-unsafe", ASSURANCE, False, {}),
     "assurance.proposal-mistimed": KindSpec("assurance.proposal-mistimed", ASSURANCE, False, {}),
     "assurance.evidence-loss": KindSpec("assurance.evidence-loss", ASSURANCE, False, {}),

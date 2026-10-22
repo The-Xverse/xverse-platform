@@ -51,3 +51,41 @@ finding 15).
    `MAPPING-UNSUPPORTED`. With the repair the owned `uniform` set compiles to an `activatable`
    `xcom_plan` with no diagnostics, and the `distinct` set compiles to an `inspectable` plan with
    only `XCOM-PLAN-POLICY-CONFLICT`, as FR-013 requires.
+
+4. Implementation complete for P6-T01–T03, T05 and T06 (platform side), 2026-10-22.
+
+   **Product.**
+   - `src/xverse/flows/`: `codes`, `timebase`, `clock`, `provider` (mirror digest
+     `0e38ed80…` over the four provider/loopback files), `convert`, `binding`, `receiver`,
+     `evidence`, `run`.
+   - `pyproject` force-includes `src/xverse/flows`.
+   - The Phase 5 successor change (amendment A1, thesis 026 `spec.md` `1ea98c16…`):
+     - `vocabulary.py`: `duplicate` and `reorder` executable;
+     - `boundary.py`: the two relay kinds, the outbox, `take_outbox` and `held_count`;
+     - `resolve.py`: the DLG-3 message wording.
+
+   **Tests.**
+   - `tests/thesis_lite/flows/`: `support.py` builder plus the committed `fixtures/{uniform,distinct}`,
+     and the test modules `test_binding`, `test_timebase`, `test_receiver`, `test_harness_faults`,
+     `test_mirror` and `test_fixtures`.
+   - `test_mirror` checks that the FR-024 core headers keep digest `67dd25ce…`.
+   - `tests/thesis_lite/faults/test_resolve.py`: `u_flt_08` now asserts A1, and the new
+     `u_flt_08b` asserts the overlap side effect.
+
+   **Test-expectation correction (not a product defect).** A reorder window cannot clear after the
+   last planned tick, because resolution gives `XVERSE-FAULT-HORIZON`. The end-of-run test
+   therefore clears the partial block exactly at the last tick (40) and asserts that it is
+   received.
+
+   **Results.**
+   - From source: 73 flows tests passed.
+   - Installed-wheel venv `/dev/shm/p6-venv`: 121 passed across `tests/thesis_lite/faults` and
+     `tests/thesis_lite/flows`.
+   - Four Maestro-run fault tests failed when run from source with `PYTHONPATH`. They need one
+     installed version, as already recorded for Phase 5, and all pass installed.
+
+   **Pending.**
+   - P6-T04: the `xverse-compat` adapter.
+   - V10's named `fault_boundary_tests` gtest run.
+   - Independent implementation review.
+   - Full installed-wheel run and DV12 gate.

@@ -1,0 +1,67 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "Component",
+  "metadata": {
+    "name": "aeb-ecu",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "capabilities": [
+      "produce-samples"
+    ],
+    "endpoints": [
+      {
+        "direction": "input",
+        "id": "camera-frames-in",
+        "interfaceId": "camera-frames",
+        "ownerId": "aeb-ecu"
+      },
+      {
+        "direction": "input",
+        "id": "radar-tracks-in",
+        "interfaceId": "radar-tracks",
+        "ownerId": "aeb-ecu"
+      }
+    ],
+    "interfaces": [
+      {
+        "compatibility": "exact",
+        "direction": "input",
+        "id": "camera-frames",
+        "payloadSchema": "urn:xverse:experiment:camera-frames-v1",
+        "unitSemantics": "dimensionless"
+      },
+      {
+        "compatibility": "exact",
+        "direction": "input",
+        "id": "radar-tracks",
+        "payloadSchema": "urn:xverse:experiment:radar-tracks-v1",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "models": [
+      {
+        "externalRef": "urn:xverse:experiment:model:sample",
+        "id": "sample-model",
+        "inputs": [],
+        "maturity": "prototype",
+        "modelKind": "behavioral",
+        "outputs": []
+      }
+    ],
+    "parameters": [
+      {
+        "id": "nominal-rate",
+        "mutability": "configuration",
+        "unitSemantics": "hertz",
+        "valueType": "integer"
+      }
+    ]
+  }
+}

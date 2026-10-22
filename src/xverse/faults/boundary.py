@@ -131,6 +131,8 @@ class MessageRelayBoundary:
         self._registry = _HandleRegistry(MESSAGE)
         self._active: dict[str, _ActiveMessageFault] = {}
         self._held: list[tuple[int, Any]] = []
+        self._block: list[Any] = []
+        self._outbox: list[Any] = []
         self._last_delivered: Any = None
         self.delivered: list[tuple[int, Any]] = []
         self.dropped: list[tuple[int, Any]] = []
@@ -167,11 +169,24 @@ class MessageRelayBoundary:
         if self.refuse_clear:
             return BoundaryOutcome(False, "XVERSE-FAULT-BOUNDARY-REFUSED", {"reason": "fixture refusal"})
         del self._active[handle.entry_id]
-        released = [item for _, item in self._held]
+        released = [item for _, item in self._held] + list(reversed(self._block))
         for item in released:
             self._deliver(tick, item)
+        self._outbox.extend(released)
         self._held.clear()
+        self._block.clear()
         return BoundaryOutcome(True, detail={"released": len(released), "tick": tick})
+
+    def take_outbox(self) -> list[Any]:
+        """Return and empty the items released by ``clear`` (Phase 6 amendment A1)."""
+
+        released, self._outbox = self._outbox, []
+        return released
+
+    def held_count(self) -> int:
+        """Return the number of items still held by a delay or a reorder block."""
+
+        return len(self._held) + len(self._block)
 
     def revalidate(self, handle: BoundaryHandle) -> bool:
         """Return whether ``handle`` is exactly one this relay issued."""
@@ -223,6 +238,20 @@ class MessageRelayBoundary:
                 return released
             self._deliver(tick, item)
             return released + [item]
+        if active.kind == "duplicate":
+            copies = [item] * (int(active.parameters["copies"]) + 1)
+            for copy in copies:
+                self._deliver(tick, copy)
+            return released + copies
+        if active.kind == "reorder":
+            self._block.append(item)
+            if len(self._block) < int(active.parameters["window"]) + 1:
+                return released
+            block = list(reversed(self._block))
+            self._block.clear()
+            for held in block:
+                self._deliver(tick, held)
+            return released + block
         if active.kind == "stale":
             if self._last_delivered is None:
                 self.dropped.append((tick, item))

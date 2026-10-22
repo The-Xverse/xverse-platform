@@ -1,0 +1,172 @@
+{
+  "apiVersion": "xverse.io/xdl/v1alpha1",
+  "kind": "System",
+  "metadata": {
+    "name": "sample-loop",
+    "namespace": "org.xverse.experiment",
+    "provenance": {
+      "maturity": "prototype",
+      "revision": "xdl1-rev-1",
+      "source": "xverse-public-example"
+    },
+    "version": "0.1.0"
+  },
+  "spec": {
+    "componentInstances": [
+      {
+        "componentRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "kind": "Component",
+          "name": "camera-sensor",
+          "namespace": "org.xverse.experiment"
+        },
+        "id": "source-instance",
+        "nodeId": "producer-node"
+      },
+      {
+        "componentRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "kind": "Component",
+          "name": "radar-sensor",
+          "namespace": "org.xverse.experiment"
+        },
+        "id": "radar-instance",
+        "nodeId": "producer-node"
+      },
+      {
+        "componentRef": {
+          "apiVersion": "xverse.io/xdl/v1alpha1",
+          "kind": "Component",
+          "name": "aeb-ecu",
+          "namespace": "org.xverse.experiment"
+        },
+        "id": "sink-instance",
+        "nodeId": "sink-node"
+      }
+    ],
+    "defaultTimeDomainId": "experiment-time",
+    "endpoints": [
+      {
+        "direction": "output",
+        "id": "camera-out",
+        "interfaceId": "camera-frames",
+        "ownerId": "source-instance"
+      },
+      {
+        "direction": "output",
+        "id": "radar-out",
+        "interfaceId": "radar-tracks",
+        "ownerId": "radar-instance"
+      },
+      {
+        "direction": "input",
+        "id": "camera-in",
+        "interfaceId": "camera-frames",
+        "ownerId": "sink-instance"
+      },
+      {
+        "direction": "input",
+        "id": "radar-in",
+        "interfaceId": "radar-tracks",
+        "ownerId": "sink-instance"
+      }
+    ],
+    "flows": [
+      {
+        "deliveryIntent": "ordered",
+        "destinationEndpointIds": [
+          "camera-in"
+        ],
+        "id": "camera-flow",
+        "interfaceId": "camera-frames",
+        "quality": {
+          "deadline": {
+            "unit": "tick",
+            "value": 5
+          },
+          "freshness": {
+            "unit": "tick",
+            "value": 6
+          },
+          "receiverTimeDomainId": "control-time"
+        },
+        "sourceEndpointId": "camera-out",
+        "timeDomainId": "experiment-time"
+      },
+      {
+        "deliveryIntent": "ordered",
+        "destinationEndpointIds": [
+          "radar-in"
+        ],
+        "id": "radar-flow",
+        "interfaceId": "radar-tracks",
+        "quality": {
+          "deadline": {
+            "unit": "tick",
+            "value": 5
+          },
+          "freshness": {
+            "unit": "tick",
+            "value": 6
+          }
+        },
+        "sourceEndpointId": "radar-out",
+        "timeDomainId": "experiment-time"
+      }
+    ],
+    "interfaces": [
+      {
+        "compatibility": "exact",
+        "direction": "bidirectional",
+        "id": "camera-frames",
+        "payloadSchema": "urn:xverse:experiment:camera-frames-v1",
+        "unitSemantics": "dimensionless"
+      },
+      {
+        "compatibility": "exact",
+        "direction": "bidirectional",
+        "id": "radar-tracks",
+        "payloadSchema": "urn:xverse:experiment:radar-tracks-v1",
+        "unitSemantics": "dimensionless"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "producer-node",
+        "roles": [
+          "compute"
+        ]
+      },
+      {
+        "id": "sink-node",
+        "roles": [
+          "compute"
+        ]
+      }
+    ],
+    "parameters": [
+      {
+        "id": "loop-count",
+        "mutability": "constant",
+        "unitSemantics": "count",
+        "valueType": "integer"
+      }
+    ],
+    "timeDomains": [
+      {
+        "clockClass": "simulation",
+        "epoch": "0",
+        "id": "experiment-time",
+        "monotonic": true,
+        "rate": "1"
+      },
+      {
+        "clockClass": "logical",
+        "epoch": "0",
+        "id": "control-time",
+        "monotonic": true,
+        "rate": "1"
+      }
+    ]
+  }
+}

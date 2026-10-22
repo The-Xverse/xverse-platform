@@ -166,7 +166,7 @@ def validate_static(plan: Mapping[str, Any], horizon_ticks: int) -> tuple[Resolv
     entries = resolve_schedule(plan, tuple(range(horizon + 1)))  # every integer tick exists statically
     for entry in entries:
         if entry.fault_kind == "crash" and entry.recovery != "manual":
-            raise FaultError("XVERSE-FAULT-RECOVERY", f"fault {entry.fault_id!r}: crash recovery {entry.recovery!r} is not supported while D5-2 is open; declare recovery: manual")
+            raise FaultError("XVERSE-FAULT-RECOVERY", f"fault {entry.fault_id!r}: crash recovery {entry.recovery!r} is not supported in Lite (decision DLG-3); declare recovery: manual")
     return entries
 
 
