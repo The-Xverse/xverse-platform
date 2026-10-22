@@ -145,3 +145,15 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     AFFA protocol, schedule plan) passed. Not repaired, recorded: the system URI for faults is
     taken from the fault target (all targets are System elements of the one selected system); a
     unit frozen before its first health observation is still probed once.
+
+9. Implementation review 2 (2026-10-22, same reviewer; 46 tests passed): FAIL, no HIGH. H1, M1,
+    M2, M3, M5 resolved; H2 partly (see N1); M4 code resolved. The rule-7 amendment is acceptable
+    in substance (Argus's causal-closure is run-level) but overclaims: "a failed or cancelled run
+    closes every entry" while `_cancel_faults` is best effort (statement failures are skipped) and
+    the H1 test accepted an open chain (N1, MEDIUM). An applied crash that ends the run was
+    finalized as `cancelled`, misreporting FR-005 (N2, MEDIUM). LOW: integer parameters had no
+    upper bound (a huge value could overflow the 512-byte intent detail and fail the run at
+    begin); pre-release is the only run-authority refusal tested; the digest test skips without
+    the sibling checkout. Process note: the planning package is untracked in the thesis
+    repository, so the amendments of FR-007, rule 7 and the new FR-006a must be named in the
+    acceptance record with their file hashes. Repairs follow in finding 10.
