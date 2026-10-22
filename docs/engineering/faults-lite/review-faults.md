@@ -17,3 +17,14 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     IMPLEMENTATION. One LOW carried into the design: a bounded retry re-enters arbitration and
     emits a fresh apply-failed/applied pair per attempt (one final outcome per entry). Detailed
     design and unit specifications follow in docs/engineering/faults-lite/.
+
+3. P5-T01 increment (2026-10-22): `xverse.faults.vocabulary` (six executable kinds, declared-only
+    hooks, typed parameter validators, reserved ids) and `xverse.faults.resolve` (boundary class
+    from the target collection, due/effective/clear ticks over the planned tick list, exact
+    compiled durations, tie keys, overlap arbitration, horizon), with `tests/thesis_lite/faults/`
+    (fixture builder over the Maestro fixture graph plus a sensor; U-FLT-01…10). Facts learnt from
+    the Phase 1 validator and corrected in the design and the thesis package: parameter ids must
+    be kebab-case identifiers (`delay-ticks`, `loss-ratio`, `every`, `copies`, `window`,
+    `arbitration`, `on-apply-failure`), and a declared-order fault-intent must not carry a
+    `timeDomainId`. Result: 10 passed (pure Python, PYTHONPATH run; worker-side changes come later
+    with a candidate venv).
