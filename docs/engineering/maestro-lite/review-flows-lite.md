@@ -89,3 +89,19 @@ finding 15).
    - V10's named `fault_boundary_tests` gtest run.
    - Independent implementation review.
    - Full installed-wheel run and DV12 gate.
+
+5. V10 gtest run not performed (2026-10-22). The X-COM C++ toolchain prefixes in `~/.cache`
+   (`xverse-xcom-grpc-prefix`, `xverse-xcom-t025-gtest-prefix` and their package caches) are
+   dangling symlinks. They point to `/media/jefferson/11c42dee-…/.x-verse-build/cache`, which no
+   longer exists on the mounted image; only `repository/` and `runs/` remain. Reprovisioning
+   requires the controlled online staging of the 12 pinned packages
+   (`docs/engineering/xcom/build-environment.md`), which this phase does not perform.
+
+   Substitute evidence, stated as a limit, not as equivalence:
+   - `git diff 2d556ff24 -- src/xverse/xcom tests/xcom` is empty: Phase 6 changes no C++ source,
+     header or C++ test.
+   - `test_mirror::test_v10_core_headers_byte_identical_to_the_phase_6_base` pins the 10 FR-024
+     core headers (`67dd25ce…`).
+   - The FR-024 gtest was accepted on exactly these bytes with platform main.
+
+   The named gtest run stays an open V10 item, to be executed when the toolchain is reprovisioned.
