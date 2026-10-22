@@ -226,3 +226,34 @@ finding 15).
 
     Wheel rebuilt; the flows and faults suites give 147 passed. Next: the full installed-wheel run
     on a quiet host (loop `flows-lite/platform-regression-20261022h`).
+
+12. Decisive full installed-wheel run (2026-10-22): `flows-lite/platform-regression-20261022h-1`,
+    head `74db77112`, started 20:35Z at load 3.43. It was the first attempt.
+    - Result: **clean**, 2397 passed, 1 skipped, 0 failed in 2746 s.
+    - Load: sampled about 90 times, maximum 5.49. The loop reported `decisive: clean`.
+    - DV12 gate (`--scope code`, G4 and allowlist inputs): `accepted_as_evidence: true`, no
+      blockers. The run and candidate code SHA-256 match (`8a3e67405939c6ae…`).
+    - Evidence: `dv12-gate-verdict.json` and `SHA256SUMS` (13 files) in the run directory;
+      receipts archived.
+
+13. CAPA tooling finding (2026-10-22). The first build of CAPA step 8 failed
+    `verify-capa-register-20261020.py` on the inherited binding `E-FAULTS-REVIEW-LOG` (CAPA step
+    7). Step 7 bound `review-faults-lite.md` as it stood with findings 1–17
+    (SHA-256 `6558cc6fd8cfdda5…`). Findings 18–19 were then appended, and only that later version
+    was committed (`45daf1c53`). The bound bytes therefore never entered git history.
+
+    Step 7 verified at Phase 5 time because the file on disk still matched. Once the file changed,
+    the verifier's committed-blob fallback (finding 391) found no blob with that hash.
+
+    The bound version reconstructs exactly: the committed log cut before "18. CAPA successor
+    step 7", plus a newline, hashes to the bound value.
+
+    **Repair**, documentation-only and in the gate-excluded path, so the code hash is unchanged:
+    two commits on this candidate. The first sets `review-faults-lite.md` to the reconstructed
+    bytes; the second restores its current content (net change zero). The bound blob is then in
+    history at its path. The partial step-8 build was discarded and is rebuilt after this log is
+    committed.
+
+    **Process repair:** commit the review log before building any CAPA step, so every bound log
+    version is a committed blob. Phase 5's acceptance is unaffected: its CAPA verified at the time,
+    and the bound content is recovered exactly.
