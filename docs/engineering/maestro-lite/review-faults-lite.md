@@ -257,3 +257,46 @@ numbered and recorded before any repair. No legacy artifact executes; no factory
     Verdict and checksums: `dv12-gate-verdict.json` and `SHA256SUMS` (13 files) in the run
     directory. Receipts are archived in `receipts.tar.gz`, and the tmpfs work directory was removed
     by the loop.
+
+18. CAPA successor step 7 (`evidence/affa19/capa-20261022-faults-step7/`), built by
+    `build-capa-20261022-faults-step7.py` over the decisive run
+    `faults-lite/platform-regression-20261022g-2`. It is additive over step 6 (`fb8d7058…`), and
+    no record was opened, changed or closed. Every Phase 5 defect was a defect of this unaccepted
+    candidate, recorded here and repaired before acceptance.
+    - Register `76a60c17b33046468a604fcf280b0af60b5fc34f3a521dc2d2631dce09cd541f`: 56 records and
+      654 bindings.
+    - `verify-capa-register-20261020.py` passes (rc 0; `verification-recheck.json`).
+    - `check-capa-parent-preservation-20261019.py` passes: 647 parent bindings checked, none
+      changed or lost, policy and schema unchanged (`parent-preservation.json`).
+    - No cause is verified and no effectiveness is claimed.
+
+19. **Acceptance decision, Phase 5 (deterministic fault injection), recorded before merge**
+    (2026-10-22).
+
+    **Basis.** The author's goal of 2026-10-22, plus the delegation "propose something and go"
+    (thesis `specs/021-thesis-lite-program/review/delegated-decisions-20261022.md`):
+    - DLG-3: crash recovery is manual only, and `automatic` is refused;
+    - DLG-4: the amendments FR-006a, FR-007 and contract rule 7 are accepted.
+
+    Specification hashes: thesis `specs/026-lite-fault-schedules/spec.md` `f0c479e4e2352fc0…` (with
+    the DLG-3/4 decision text) and `contracts/fault-execution.md` `6c00f8bd93295390…`.
+
+    **Evidence.**
+    - Implementation reviews 1 FAIL, 2 FAIL and 3 PASS (finding 12).
+    - The decisive clean run g-2 with the DV12 gate accepted (finding 17).
+    - CAPA step 7 valid (finding 18).
+    - Loaded observations 13, 14 and 16, none in the faults suite. Attempt 3 was void (15).
+
+    **Decision.** Accept candidate `candidate/faults-lite-20261022` and merge it `--no-ff` into
+    platform main, then push. The delivery identity check is that the merged tree's code-scope
+    SHA-256 equals the run's `80a43a3a…`.
+
+    **Limits carried.**
+    - Residual LOWs of implementation review 3.
+    - `duplicate` and `reorder` remain declared-only. Executing them is the Phase 6 successor change
+      (thesis `specs/027` detailed design §9a).
+    - The `XVERSE-FAULT-RECOVERY` message still reads "while D5-2 is open" (Phase 6 §9b).
+    - In Maestro runs, message and observation relays are owned no-traffic fixtures.
+    - Timing outcomes are claimed only up to a sampled host load of 10.
+    - The 9 REF-002 parents get bounded partial contributions only.
+    - No scientific claim, M1, lane activation or factory run.
