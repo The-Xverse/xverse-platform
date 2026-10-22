@@ -105,3 +105,14 @@ finding 15).
    - The FR-024 gtest was accepted on exactly these bytes with platform main.
 
    The named gtest run stays an open V10 item, to be executed when the toolchain is reprovisioned.
+
+6. Cross-repository finding (2026-10-22), recorded with `xverse-compat` candidate
+   `candidate/phase6-bridge-route-20261022` (its finding 2). The `xverse-compat` content lock
+   includes the platform `pyproject.toml`, which the Phase 5 merge changed. `xverse-compat` main
+   has therefore failed `test_platform_dependency_source_matches_content_lock` against platform
+   main since `2d556ff24`; Phase 5's acceptance did not run that suite.
+
+   This candidate changes `pyproject.toml` again (`xverse.flows`). The re-pin follows the platform
+   Phase 6 merge. **Process repair:** from now on, an acceptance that changes the platform
+   `pyproject.toml` or the locked roots also runs the `xverse-compat` suite against the candidate
+   before the merge, and records the expected re-pin.
