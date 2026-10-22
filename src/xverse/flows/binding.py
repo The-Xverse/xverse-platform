@@ -266,7 +266,7 @@ def _bind_flows(plan: Mapping[str, Any], resources: Sequence[NormalizedResource]
         for item in bindings:
             differ = _crosscheck(block, item.policy)
             if differ:
-                refusals.append(C.refusal(C.XCOM_CROSSCHECK, None, flowId=item.flow_id, fields=differ))
+                refusals.append(C.refusal(C.XCOM_CROSSCHECK, item.flow_id, fields=differ))  # L3
     return FlowBindingRecord(plan_sha, digests, xcom.get("sha"), xcom.get("graph"), xcom.get("status"), tuple(xcom.get("diagnostics") or ()),
                              None, tuple(bindings), tuple(refusals), tuple(ignored), ignored_quality)
 

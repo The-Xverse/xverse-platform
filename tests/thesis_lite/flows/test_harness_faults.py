@@ -123,3 +123,66 @@ def test_rule_13_evidence_reconstructs_offline_and_detects_tampering():
     withheld = next(i for i, p in enumerate(payloads) if p.get("event") == "withheld")
     tampered = reconstruct_flows(payloads[:withheld] + payloads[withheld + 1:], harness.record)
     assert not tampered["camera-flow"]["ok"]
+
+
+def test_v08_failed_clear_leaves_items_held_and_the_run_incomplete():
+    plan, resources = compile_fixture(documents("uniform"), [fault("f-delay", "delay", "camera-flow", at=10, duration=4, parameters=[parameter("delay-ticks", 20)])])
+    record = bind(plan, resources)
+    harness = FlowRunHarness(record, PLANNED_TICKS, resolve_schedule(plan, PLANNED_TICKS), seed=7, clock=TickClock({"control-time": 1}))
+    harness.relays["camera-flow"].refuse_clear = True
+    for tick in PLANNED_TICKS:
+        harness.offer(tick, "camera-flow", tick // 2)
+    result = harness.run()
+    assert result.status == "incomplete" and result.incomplete and result.held_at_end["camera-flow"] > 0
+    assert result.summaries["camera-flow"]["heldAtEnd"] == result.held_at_end["camera-flow"]
+
+
+def test_v08_exception_cancels_and_drains_held_items_to_the_receiver():
+    class Boom:
+        def __init__(self):
+            self.summaries = []
+            self.raised = False
+
+        def verdict(self, binding, result):
+            if result.sequence == 9 and not self.raised:  # fail once, at radar sequence 9 (tick 18)
+                self.raised = True
+                raise RuntimeError("listener failure")
+
+        def deadline(self, binding, k, now):
+            pass
+
+        def summary(self, binding, summary):
+            self.summaries.append(summary)
+
+    listener = Boom()
+    plan, resources = compile_fixture(documents("uniform"), [fault("f-delay", "delay", "camera-flow", at=10, duration=20, parameters=[parameter("delay-ticks", 20)])])
+    record = bind(plan, resources)
+    harness = FlowRunHarness(record, PLANNED_TICKS, resolve_schedule(plan, PLANNED_TICKS), seed=7, clock=TickClock({"control-time": 1}), listener=listener)
+    for tick in PLANNED_TICKS:
+        harness.offer(tick, "radar-flow", tick // 2)
+        harness.offer(tick, "camera-flow", tick // 2)
+    with pytest.raises(RuntimeError):
+        harness.run()
+    received = {v.sequence for v in harness.receivers["camera-flow"].verdicts}
+    assert {5, 6, 7, 8, 9} <= received  # held by the delay, released by cancel through the outbox
+    assert len(listener.summaries) == 2 and harness.relays["camera-flow"].held_count() == 0 and harness.cleanup_failure is None
+
+
+def test_rule_13_reconstruction_flags_each_kind_of_tampering():
+    writer = Writer()
+    evidence = FlowEvidence(writer, "run-z", lambda tick: {"simulation": {"domain": "experiment-time", "unit": "tick", "value": tick or 0}})
+    harness, _ = run([fault("f-delay", "delay", "camera-flow", at=10, duration=10, parameters=[parameter("delay-ticks", 8)])], listener=evidence)
+    payloads = [e["extensions"]["io.xverse.flows"] for e in writer.events]
+    assert reconstruct_flows(payloads, harness.record)["camera-flow"]["ok"]
+    stale = next(i for i, p in enumerate(payloads) if p.get("verdict") == "stale")
+    relabelled = [dict(p, verdict="duplicate") if i == stale else p for i, p in enumerate(payloads)]
+    assert not reconstruct_flows(relabelled, harness.record)["camera-flow"]["ok"]
+    aged = [dict(p, ageNs=0) if i == stale else p for i, p in enumerate(payloads)]
+    assert "inconsistent age" in " ".join(reconstruct_flows(aged, harness.record)["camera-flow"]["mismatches"])
+    unknown = [dict(p, verdict="vanished") if i == stale else p for i, p in enumerate(payloads)]
+    assert not reconstruct_flows(unknown, harness.record)["camera-flow"]["ok"]
+    summary = next(p for p in payloads if p.get("event") == "summary" and p["flowId"] == "camera-flow")
+    assert reconstruct_flows(payloads + [summary], harness.record)["camera-flow"]["mismatches"] == ["2 summaries"]
+    assert not reconstruct_flows(payloads + [dict(summary, flowId="ghost-flow")], harness.record)["<foreign>"]["ok"]
+    wrong_delivered = [dict(p, deliveredCount=p["deliveredCount"] + 1) if p is summary else p for p in payloads]
+    assert "deliveredCount" in reconstruct_flows(wrong_delivered, harness.record)["camera-flow"]["mismatches"]

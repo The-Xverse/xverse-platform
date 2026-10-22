@@ -132,3 +132,11 @@ def test_v05_unordered_out_of_order_with_full_buffer_keeps_its_verdict():
     at(receiver, clock, 2, 2, 2)
     held = at(receiver, clock, 3, 1, 3)
     assert (held.verdict, held.delivered, held.diagnostic) == ("out-of-order", False, "queue-full")
+
+
+def test_activation_is_the_deadline_anchor_not_a_regression_baseline():
+    receiver, clock = make(deadline=5)
+    clock.now = 10
+    receiver.activate()
+    assert at(receiver, clock, 8, 0, 8).verdict == "delivered"  # the data model compares to the previous reception only
+    assert receiver.held_buffer() == 1

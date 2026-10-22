@@ -102,9 +102,7 @@ class FlowReceiver:
     def activate(self) -> None:
         """Start the route: the activation reading is the first deadline anchor."""
 
-        now = self._read()
-        self._anchor = now
-        self._last_reception = now
+        self._anchor = self._read()  # deadline anchor only; the regression baseline is the previous reception (L2)
         self._k = 0
 
     def _check_deadline(self, now: int) -> None:
@@ -194,6 +192,11 @@ class FlowReceiver:
         if self._listener is not None:
             self._listener.verdict(self.binding, result)
         return result
+
+    def held_buffer(self) -> int:
+        """Return the number of delivered items pending in the receiver buffer (design §7)."""
+
+        return self.pending
 
     def summary(self, held_at_end: int = 0) -> dict[str, Any]:
         """Return the per-flow summary."""

@@ -74,6 +74,8 @@ class FlowRunHarness:
         self.scheduler = FaultScheduler(run_id, entries, boundaries, ticks, seed=seed, listener=None)
         self._started = False
         self._finished = False
+        self._summarized = False
+        self.cleanup_failure: str | None = None
 
     def offer(self, tick: int, flow_id: str, sequence: int) -> None:
         """Queue sender item ``sequence`` of ``flow_id`` for ``tick``."""
@@ -98,7 +100,7 @@ class FlowRunHarness:
             self._receive_all(flow_id, self.relays[flow_id].take_outbox())
 
     def _final(self) -> tuple[dict[str, dict[str, Any]], dict[str, int]]:
-        """Final drain and poll; return summaries and held counts; emit summaries."""
+        """Final drain and poll; return summaries and held counts; emit summaries once (L1)."""
 
         self._drain_outboxes()
         summaries: dict[str, dict[str, Any]] = {}
@@ -108,8 +110,10 @@ class FlowRunHarness:
             receiver.poll()
             held[flow_id] = self.relays[flow_id].held_count()
             summaries[flow_id] = receiver.summary(held_at_end=held[flow_id])
-            if self._listener is not None:
-                self._listener.summary(receiver.binding, summaries[flow_id])
+        if self._listener is not None and not self._summarized:
+            self._summarized = True
+            for flow_id in sorted(summaries):
+                self._listener.summary(self.receivers[flow_id].binding, summaries[flow_id])
         return summaries, held
 
     def run(self) -> HarnessResult:
@@ -150,8 +154,8 @@ class FlowRunHarness:
                 outcomes = {k: v or "cancelled" for k, v in self.scheduler.outcomes.items()}
             try:
                 self._final()
-            except Exception:  # pragma: no cover - cleanup must not mask the original error
-                pass
+            except Exception as cleanup:  # cleanup must not mask the original error (L1)
+                self.cleanup_failure = f"{type(cleanup).__name__}: {cleanup}"
             raise error
         incomplete = bool(self.scheduler.incomplete) or any(held.values())
         return HarnessResult(INCOMPLETE if incomplete else COMPLETED, tick, summaries, dict(outcomes), held, incomplete, None,

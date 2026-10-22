@@ -60,7 +60,9 @@ def _sensor_component(base: dict[str, Any], name: str, interface: str, policy: d
 
 def documents(kind: str = "uniform", *, radar_policy: dict[str, Any] | None = None, camera_policy: dict[str, Any] | None = None,
               intents: dict[str, str] | None = None, quality: dict[str, dict[str, Any]] | None = None,
-              mappings: list[dict[str, Any]] | None = None, tokens: tuple[str, ...] = ()) -> dict[str, dict[str, Any]]:
+              mappings: list[dict[str, Any]] | None = None, tokens: tuple[str, ...] = (), omit_camera_policy: bool = False,
+              deployment_policy: dict[str, Any] | None = None, scenario_policy: dict[str, Any] | None = None,
+              second_provider: bool = False) -> dict[str, dict[str, Any]]:
     """Return the fixture documents keyed by file name.
 
     @param kind ``uniform`` or ``distinct``.
@@ -69,6 +71,10 @@ def documents(kind: str = "uniform", *, radar_policy: dict[str, Any] | None = No
     @param quality Overrides of ``quality`` per flow id.
     @param mappings Override of the Scenario ``timeMappings``.
     @param tokens Extra provider capability tokens (the V02 mask fixture declares reliable/unordered).
+    @param omit_camera_policy Drop the camera Component's flow-policy (attribution falls back to the Deployment).
+    @param deployment_policy Resource-level Deployment flow-policy (an X-COM payload on the Deployment).
+    @param scenario_policy Resource-level Scenario flow-policy (ignored by binding, listed as ``ignoredPayloads``).
+    @param second_provider Also attach a network-provider at the target element (two qualifying providers).
     """
 
     docs = faults_support.documents()
@@ -76,6 +82,8 @@ def documents(kind: str = "uniform", *, radar_policy: dict[str, Any] | None = No
     camera = dict(FLOW_POLICY, **(camera_policy or {}))
     radar = dict(FLOW_POLICY, **({"queueDepth": 2} if kind == "distinct" else {}), **(radar_policy or {}))
     docs["camera-component.json"] = _sensor_component(base_component, "camera-sensor", "camera-frames", camera)
+    if omit_camera_policy:
+        del docs["camera-component.json"]["extensions"]
     docs["radar-component.json"] = _sensor_component(base_component, "radar-sensor", "radar-tracks", radar)
     docs["ecu-component.json"] = copy.deepcopy(base_component)
     docs["ecu-component.json"]["metadata"]["name"] = "aeb-ecu"
@@ -87,6 +95,8 @@ def documents(kind: str = "uniform", *, radar_policy: dict[str, Any] | None = No
     ecu["endpoints"] = [{"direction": "input", "id": f"{i}-in", "interfaceId": i, "ownerId": "aeb-ecu"} for i in ("camera-frames", "radar-tracks")]
     system = docs["system.json"]["spec"]
     system["timeDomains"].append({"clockClass": "logical", "epoch": "0", "id": "control-time", "monotonic": True, "rate": "1"})
+    system["timeDomains"].append({"clockClass": "monotonic", "epoch": "recording-host-boot", "id": "bridge-recorder-monotonic",
+                                  "monotonic": True, "rate": "wall-rate"})  # V06 bridge origin domain (FR-013, M2)
     ref = lambda name: {"apiVersion": API, "kind": "Component", "name": name, "namespace": NAMESPACE}
     system["componentInstances"] = [
         {"componentRef": ref("camera-sensor"), "id": "source-instance", "nodeId": "producer-node"},
@@ -120,12 +130,24 @@ def documents(kind: str = "uniform", *, radar_policy: dict[str, Any] | None = No
     deployment["spec"]["targets"][0]["capabilities"] = ["execute-model", "xcom.delivery.best-effort", "xcom.ordering.per-route-fifo", *tokens]
     deployment["extensions"] = {"io.xverse.xcom": _xcom("network-provider", _target("Deployment", deployment["metadata"]["name"]), {
         "requiredCapabilities": ["execute-model"], "fidelity": "declared", "limitations": ["owned Phase 6 fixture"]})}
+    if second_provider:
+        deployment["spec"]["targets"][0]["extensions"] = {"io.xverse.xcom": _xcom("network-provider", _target("Deployment", deployment["metadata"]["name"]), {
+            "requiredCapabilities": ["execute-model"], "fidelity": "declared", "limitations": ["second owned provider"]})}
+    if deployment_policy is not None:
+        target = deployment["spec"]["targets"][0]
+        target["extensions"] = {"io.xverse.xcom": _xcom("network-provider", _target("Deployment", deployment["metadata"]["name"]), {
+            "requiredCapabilities": ["execute-model"], "fidelity": "declared", "limitations": ["owned Phase 6 fixture"]})}
+        deployment["extensions"] = {"io.xverse.xcom": _xcom("flow-policy", _target("Deployment", deployment["metadata"]["name"]),
+                                                            dict(FLOW_POLICY, **deployment_policy))}
     scenario = docs["scenario.json"]["spec"]
     scenario["timeMappings"] = mappings if mappings is not None else [
         {"sourceTimeDomainId": "experiment-time", "targetTimeDomainId": "control-time", "mapping": "offset:1tick", "tolerance": {"value": 2, "unit": "tick"}}]
     for observer in scenario.get("observers") or ():
         observer["targetRef"]["element"] = "camera-flow"
     scenario["faults"] = []
+    if scenario_policy is not None:
+        docs["scenario.json"].setdefault("extensions", {})["io.xverse.xcom"] = _xcom(
+            "flow-policy", _target("Scenario", docs["scenario.json"]["metadata"]["name"]), dict(FLOW_POLICY, **scenario_policy))
     profile = copy.deepcopy(docs["profile.json"])
     profile["metadata"]["name"] = "xcom-lite"
     profile["spec"].update(extensionNamespace="io.xverse.xcom", schemaRef="https://xverse.io/profiles/xcom/v0.1/schema.json",

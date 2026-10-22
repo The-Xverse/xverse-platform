@@ -134,3 +134,65 @@ def test_v02_flow_id_hash_collision_is_refused(monkeypatch):
     monkeypatch.setattr(binding_module, "flow_hash", lambda flow_id: "0" * 16)
     record = bind(*compile_fixture(documents("uniform")))
     assert [(r["code"], r["detail"].get("reason")) for r in record.refusals] == [("XVERSE-FLOW-INPUT-MISMATCH", "flow-id-hash-collision")]
+
+
+def test_v02_policy_missing_without_component_or_deployment_payload():
+    record = bind(*compile_fixture(documents("uniform", omit_camera_policy=True)))
+    assert _codes(record) == [("camera-flow", "XVERSE-FLOW-POLICY-MISSING", None)]
+
+
+def test_v01_deployment_payload_is_the_fallback_attribution():
+    record = bind(*compile_fixture(documents("uniform", omit_camera_policy=True, deployment_policy={})))
+    assert record.activatable() and record.binding("camera-flow").policy.queue_depth == 4
+
+
+def test_v01_scenario_flow_policy_is_ignored_and_listed():
+    record = bind(*compile_fixture(documents("uniform", scenario_policy={})))
+    assert record.activatable() and record.ignored_payloads == ("Scenario/sample-observation-run/extensions/io.xverse.xcom",)
+
+
+def test_v02_two_qualifying_providers_are_ambiguous():
+    record = bind(*compile_fixture(documents("uniform", second_provider=True)))
+    assert {(r["flowId"], r["code"]) for r in record.refusals} == {("camera-flow", "XVERSE-FLOW-PROVIDER"), ("radar-flow", "XVERSE-FLOW-PROVIDER")}
+    assert record.refusals[0]["detail"]["qualifying"] == ["local-simulated-loop", "model-unit-target"]
+
+
+def test_v02_network_id_narrows_candidates_through_the_network_binding():
+    deployment = {"networkBindings": [{"id": "can-binding", "logicalNetworkRef": {"element": "can-a"}, "profileRef": {"name": "p"}}],
+                  "targets": [{"id": "t1", "profileRefs": [{"name": "p"}]}, {"id": "t2", "profileRefs": []}]}
+    tokens = ["xcom.delivery.best-effort", "xcom.ordering.per-route-fifo"]
+    xplan = {"providers": [{"providerId": "t1", "capabilities": tokens}, {"providerId": "t2", "capabilities": tokens},
+                           {"providerId": "can-binding", "capabilities": []}]}
+    chosen = binding_module._select_provider({"networkId": "can-a"}, ("best_effort", "per_route_fifo"), deployment, xplan)
+    assert chosen == {"id": "t1"}
+    ambiguous = binding_module._select_provider({}, ("best_effort", "per_route_fifo"), deployment, xplan)
+    assert ambiguous["code"] == "XVERSE-FLOW-PROVIDER" and ambiguous["qualifying"] == ["t1", "t2"]
+
+
+def test_v02_stage_0_xcom_plan_error_is_one_plan_level_refusal(monkeypatch):
+    from xverse_xdl.xcom_plan import XcomPlanError
+
+    def broken(document):
+        raise XcomPlanError("XCOM-PLAN-PROFILE", "synthetic")
+
+    monkeypatch.setattr(binding_module, "compile_plan", broken)
+    record = bind(*compile_fixture(documents("uniform")))
+    assert [(r["flowId"], r["code"], r["detail"]) for r in record.refusals] == [(None, "XVERSE-FLOW-XCOM-PLAN", {"xcomPlanError": "XCOM-PLAN-PROFILE"})]
+    assert record.xcom_plan_error == "XCOM-PLAN-PROFILE" and record.bindings == ()
+
+
+@pytest.mark.parametrize("change, expected", [
+    # two defects each: the earlier step reports
+    (dict(camera_policy={"ordering": "priority", "overflow": "drop-oldest"}), ("camera-flow", "XVERSE-FLOW-UNSUPPORTED", "unsupported_ordering")),
+    (dict(intents={"camera-flow": "latest-value"}, camera_policy={"ordering": "priority"}), ("camera-flow", "XVERSE-FLOW-UNSUPPORTED", None)),
+    (dict(intents={"camera-flow": "reliable"}, camera_policy={"retry": 3}), ("camera-flow", "XVERSE-FLOW-POLICY-CONFLICT", None)),
+    (dict(camera_policy={"retry": 3, "queueDepth": 9}), ("camera-flow", "XVERSE-FLOW-UNSUPPORTED", "unsupported_policy")),
+    (dict(camera_policy={"queueDepth": 9}, mappings=[]), ("camera-flow", "XVERSE-FLOW-UNSUPPORTED", "queue_limit_exceeded")),
+])
+def test_v02_step_precedence_with_two_defects(change, expected):
+    assert _codes(bind(*compile_fixture(documents("uniform", **change)))) == [expected]
+
+
+def test_v01_fixture_declares_the_bridge_recorder_domain():
+    plan, _ = compile_fixture(documents("uniform"))
+    assert "bridge-recorder-monotonic" in {d["id"] for d in plan["timeDomains"]}

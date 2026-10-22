@@ -133,3 +133,11 @@ def test_u_flt_11_paused_planned_ticks_are_accepted():
     with pytest.raises(FaultError) as caught:
         resolve_schedule(compiled_plan([fault("f-p", "stale", "sample-flow", at=1, duration=1)]), (0, 2, 1, 3))
     assert caught.value.code == "XVERSE-FAULT-TICKS"
+
+
+def test_u_flt_08c_duplicate_on_a_process_target_is_refused():
+    """Amendment A1 side effect: an executable message kind needs a message (flow) target."""
+    with pytest.raises(FaultError) as caught:
+        resolve_schedule(compiled_plan([fault("f-dup", "duplicate", "source-instance", at=2, duration=2,
+                                              parameters=[parameter("copies", 1)])]), PLANNED_TICKS)
+    assert caught.value.code == "XVERSE-FAULT-TARGET"

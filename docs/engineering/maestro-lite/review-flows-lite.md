@@ -176,3 +176,25 @@ finding 15).
    - **L5:** fix the vocabulary docstring and add `held_buffer()`.
    - **L6:** replace the hard-coded pins with a real cross-test against the platform function (made
      possible by M2's environment).
+
+9. Repairs for implementation review 1 (2026-10-22). Each finding was recorded in finding 8 before
+   its repair.
+
+   | # | Repair |
+   | --- | --- |
+   | M1 | `reconstruct_flows` re-derives each recorded event's verdict from its payload and the binding (age through the mapping, tolerance, freshness, regression). It compares `withheldCount`, `gapCount`, `deadlineMissedCount`, `queueFullCount`, every withheld verdict count, the out-of-order count (withheld plus delivered), `filledGapCount`, `deliveredCount` and `heldAtEnd`. It flags foreign flows, unknown verdicts and events, and duplicate summaries. The stated limit remains: delivered in-order items are counted, not recorded. New tamper tests cover a relabelled verdict, an inconsistent age, an unknown verdict, a duplicate summary, a foreign flow and a wrong `deliveredCount`. |
+   | M2 | The fixture System declares `bridge-recorder-monotonic`, with a test. Compat test `test_v06_adapter_items_through_the_platform_receiver_with_hand_computed_ages` feeds adapter items through `xverse.flows.FlowReceiver`: ages of 5, 5 and 70 ms, the third stale against a 60 ms freshness bound; three deadline events at the 80 ms deadline, one at reception and two at the final poll. |
+   | M3 | New tests: `test_relay_kinds.py` (duplicate, reorder, the outbox from a delay or reorder clear, `release` keeping held items counted); `test_u_flt_08c` (a duplicate on a process target gives `XVERSE-FAULT-TARGET`); `test_fault_run_arms_duplicate_and_reorder_on_no_traffic_relays[duplicate|reorder]` (a Maestro run per kind: outcome `cleared`, intent `boundaryMode` `owned-relay-fixture-no-traffic`, closure complete). The Maestro fixture's short horizon admits one message fault at tick 1, so each kind runs on its own. |
+   | M4 | `test_v08_failed_clear_leaves_items_held_and_the_run_incomplete`, and `test_v08_exception_cancels_and_drains_held_items_to_the_receiver` (held sequences 5–9 reach the receiver through the cancel-path outbox; summaries emitted once; no cleanup failure). |
+   | M5 | Tests for `POLICY-MISSING`, the Deployment fallback, Scenario `ignoredPayloads`, two-provider ambiguity, `networkId` narrowing (unit level), the stage-0 `XcomPlanError` path, and five two-defect step-precedence cases. The builder gains `omit_camera_policy`, `deployment_policy`, `scenario_policy` and `second_provider`; the committed fixtures are regenerated. |
+   | L1 | Summaries are emitted once. A cleanup failure is recorded in `FlowRunHarness.cleanup_failure` and does not mask the original error. |
+   | L2 | Activation sets only the deadline anchor; the regression baseline is the previous reception, with a test. |
+   | L3 | A cross-check refusal carries the top-level `flowId`. |
+   | L4 | The thesis data model is amended (unordered out-of-order with a full buffer). |
+   | L5 | The vocabulary docstring now says eight executable kinds, and `FlowReceiver.held_buffer()` is added. |
+   | L6 | The compat pins are compared live with `xverse.flows.seconds_to_ns`. |
+
+   **Results.** The wheel was rebuilt; the flows and faults suites give 144 passed. Compat, in the
+   clean venv `/dev/shm/compat-p6-venv` with the candidate platform wheel, gives 16/16 for
+   `test_bridge_route.py`. The full compat suite gives 90 passed and 1 failed: the known
+   content-lock drift, re-pinned after the platform merge (finding 6).

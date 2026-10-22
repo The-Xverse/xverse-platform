@@ -84,48 +84,118 @@ class FlowEvidence:
         self._append(self._event_id(binding.flow_id, "sum"), f"flow {binding.flow_id} summary", dict(summary, event="summary"))
 
 
+def _expected_verdict(payload: Mapping[str, Any], binding: FlowBinding) -> str | None:
+    """Re-derive the verdict class a recorded item must carry from its own fields and the binding.
+
+    Returns ``None`` when the recorded fields alone cannot decide (duplicate, out-of-order and
+    queue-full depend on receiver history, which is checked through counts instead).
+    """
+
+    if payload.get("diagnostic") == "XVERSE-FLOW-CLOCK-REGRESSION":
+        return "clock-error"
+    reception, origin = payload.get("receptionNs"), payload.get("originNs")
+    if type(reception) is not int or type(origin) is not int:
+        return "invalid"
+    age = reception - (origin + binding.mapping.offset_ns)
+    if payload.get("ageNs") != age:
+        return "invalid"
+    if age < -binding.mapping.tolerance_ns:
+        return "clock-error"
+    if payload.get("verdict") in ("duplicate", "out-of-order", "queue-full"):
+        return None
+    if binding.freshness_ns > 0 and max(age, 0) > binding.freshness_ns:
+        return "stale"
+    return "delivered"
+
+
 def reconstruct_flows(payloads: Iterable[Mapping[str, Any]], record: FlowBindingRecord) -> dict[str, dict[str, Any]]:
-    """Recompute per-flow counts from recorded ``io.xverse.flows`` payloads and compare summaries.
+    """Check recorded ``io.xverse.flows`` payloads against the binding record (contract rule 13).
+
+    Every recorded event's verdict is re-derived where its own fields decide it (age through the
+    mapping, tolerance, freshness, regression); counts of withheld, out-of-order, gap and deadline
+    events are compared with the per-flow summary; foreign flows, unknown verdicts or events and
+    duplicate summaries are reported. Delivered in-order items are counted, not recorded, so their
+    verdicts are checked through ``deliveredCount`` only (stated limit).
 
     @param payloads The extension payloads of a run's flow events, in append order.
     @param record The binding record of the run.
-    @return ``{flowId: {"ok": bool, "mismatches": [...]}}``.
+    @return ``{flowId: {"ok": bool, "mismatches": [...]}}`` plus ``"<foreign>"`` when foreign flows appear.
     """
 
-    bound = {b.flow_id for b in record.bindings}
-    seen: dict[str, dict[str, Any]] = {f: {"withheld": 0, "gap": 0, "deadline": 0, "verdicts": {v: 0 for v in VERDICTS}, "summary": None} for f in bound}
+    bindings = {b.flow_id: b for b in record.bindings}
+    state = {f: {"withheld": {v: 0 for v in VERDICTS}, "ooo_delivered": 0, "fills": 0, "gap": 0, "deadline": 0,
+                 "summaries": [], "bad": []} for f in bindings}
+    foreign: list[str] = []
     for payload in payloads:
         flow = payload.get("flowId")
-        if flow not in seen:
+        if flow not in state:
+            foreign.append(str(flow))
             continue
-        state = seen[flow]
+        entry = state[flow]
         event = payload.get("event")
+        verdict = payload.get("verdict")
+        if event in ("withheld", "out-of-order", "gap"):
+            if verdict not in VERDICTS:
+                entry["bad"].append(f"unknown verdict {verdict!r}")
+                continue
+            expected = _expected_verdict(payload, bindings[flow])
+            if expected == "invalid":
+                entry["bad"].append(f"inconsistent age for sequence {payload.get('sequence')}")
+            elif expected is not None and expected != verdict:
+                entry["bad"].append(f"sequence {payload.get('sequence')}: recorded {verdict}, derived {expected}")
         if event == "withheld":
-            state["withheld"] += 1
-            state["verdicts"][payload["verdict"]] += 1
-            if payload.get("verdict") == DELIVERED or payload.get("delivered"):
-                state.setdefault("bad", []).append("withheld event for a delivered item")
+            if payload.get("delivered"):
+                entry["bad"].append("withheld event for a delivered item")
+            entry["withheld"][verdict] += 1
+        elif event == "out-of-order":
+            if verdict != OUT_OF_ORDER or not payload.get("delivered"):
+                entry["bad"].append("out-of-order event is not a delivered out-of-order item")
+            entry["ooo_delivered"] += 1
+            entry["fills"] += 1 if payload.get("fillsGap") else 0
         elif event == "gap":
-            state["gap"] += 1
+            if not isinstance(payload.get("gapBefore"), int) or payload["gapBefore"] <= 0:
+                entry["bad"].append("gap event without gapBefore > 0")
+            entry["gap"] += 1
+            if payload.get("delivered") and payload.get("fillsGap"):
+                entry["bad"].append("gap event cannot fill a gap")
         elif event == "deadline-missed":
-            state["deadline"] += 1
+            entry["deadline"] += 1
         elif event == "summary":
-            state["summary"] = payload
-    result: dict[str, dict[str, Any]] = {}
-    for flow, state in seen.items():
-        mismatches = list(state.get("bad", []))
-        summary = state["summary"]
-        if summary is None:
-            mismatches.append("no summary")
+            entry["summaries"].append(payload)
         else:
-            if summary.get("withheldCount") != state["withheld"]:
-                mismatches.append("withheldCount")
-            if summary.get("gapCount") != state["gap"]:
-                mismatches.append("gapCount")
-            if summary.get("deadlineMissedCount") != state["deadline"]:
-                mismatches.append("deadlineMissedCount")
-            for verdict, count in state["verdicts"].items():
-                if verdict != DELIVERED and verdict != OUT_OF_ORDER and summary.get("counts", {}).get(verdict) != count:
+            entry["bad"].append(f"unknown event {event!r}")
+    result: dict[str, dict[str, Any]] = {}
+    for flow, entry in state.items():
+        mismatches = list(entry["bad"])
+        if len(entry["summaries"]) != 1:
+            mismatches.append(f"{len(entry['summaries'])} summaries")
+        else:
+            summary = entry["summaries"][0]
+            counts = summary.get("counts") or {}
+            withheld_total = sum(entry["withheld"].values())
+            checks = {
+                "withheldCount": withheld_total,
+                "gapCount": entry["gap"],
+                "deadlineMissedCount": entry["deadline"],
+                "queueFullCount": entry["withheld"]["queue-full"],
+            }
+            for field_name, value in checks.items():
+                if summary.get(field_name) != value:
+                    mismatches.append(field_name)
+            for verdict in ("clock-error", "duplicate", "stale", "queue-full"):
+                if counts.get(verdict) != entry["withheld"][verdict]:
                     mismatches.append(f"counts.{verdict}")
+            if counts.get(OUT_OF_ORDER) != entry["withheld"][OUT_OF_ORDER] + entry["ooo_delivered"]:
+                mismatches.append("counts.out-of-order")
+            if summary.get("filledGapCount") != entry["fills"]:
+                mismatches.append("filledGapCount")
+            delivered = summary.get("deliveredCount")
+            if not isinstance(delivered, int) or delivered != counts.get(DELIVERED, -1) + entry["ooo_delivered"]:
+                mismatches.append("deliveredCount")
+            held = summary.get("heldAtEnd")
+            if not isinstance(held, int) or held < 0:
+                mismatches.append("heldAtEnd")
         result[flow] = {"ok": not mismatches, "mismatches": mismatches}
+    if foreign:
+        result["<foreign>"] = {"ok": False, "mismatches": sorted(set(foreign))}
     return result

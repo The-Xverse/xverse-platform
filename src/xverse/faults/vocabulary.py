@@ -1,7 +1,8 @@
 """Closed fault vocabulary for Thesis Lite Phase 5 (FR-001).
 
-Six executable kinds act through owned boundaries; declared-only kinds are validated and never
-applied (their owning phase implements the boundary). Parameters arrive as the compiled Phase 1
+Eight executable kinds act through owned boundaries (``duplicate`` and ``reorder`` since Phase 6
+amendment A1); declared-only kinds are validated and never applied (their owning phase implements
+the boundary). Parameters arrive as the compiled Phase 1
 typed parameter list; two ids are reserved for the scheduler: ``arbitration`` and
 ``on-apply-failure``. Everything outside this module's tables is rejected.
 """
