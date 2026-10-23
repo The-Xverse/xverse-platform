@@ -186,3 +186,69 @@ decision S-D2, approved on 2026-10-23).
      5). After it: `tests/test_m3_catalog_runtime.py`, `tests/test_sd0001_validator.py`, `tests/test_schema.py`
      and `tests/thesis_lite/xdl` gave 182 passed and 39 subtests passed (load 3.7). After the `__main__` guard was
      moved back to the end of the file, `tests/test_m3_catalog_runtime.py` gave 27 passed and 34 subtests passed.
+7. **S1b step 3: the broker, the teardown and the schedule are implemented (written at 20:20:07 2026-10-23, load
+   about 6.18).**
+   - **`run_broker.py`.**
+     - `UnitAdmission.stderr_directory` (default `None`, not in `repr`): an absolute path without `.`/`..`
+       components or NUL, from the trusted caller.
+     - Admission (`_controls` in `_admit_image`): `grace_ms = max(1, round(graceSeconds·1000))`, `stderr_max`
+       from the plan, and `probe` from the observe condition, which must be in `READINESS_PROBES`
+       (`ML-RUN-PROBE-UNSUPPORTED`). A declared stderr requires a directory, and a directory requires a
+       declaration (`ML-RUN-STDERR-ADMISSION`). The directory is opened component by component with
+       `O_NOFOLLOW|O_DIRECTORY`. It must be owned by the uid, with `mode & 0o077 == 0`, and empty
+       (`ML-RUN-STDERR-DIRECTORY`); not the cwd (`ML-RUN-STDERR-SHARED`); and not inside the collection source
+       root, by a `..` walk against `storage.collection.source_identity` (`ML-RUN-STDERR-ROOT`). A probe unit
+       needs no stale `.xverse-ready` (`ML-RUN-PROBE-STALE`) and a cwd inside the source root
+       (`ML-RUN-PROBE-ROOT`, also when no collection is admitted).
+     - Across units (`_admit_distinct`): stderr directories are distinct from each other and from every unit's
+       cwd (`ML-RUN-STDERR-SHARED`); a probe unit's cwd is shared with no other unit (`ML-RUN-PROBE-CWD`); and
+       Σ coverage artifact `maximumBytes` + Σ `stderr_max` × generations ≤ 16 MiB (`ML-RUN-STDERR-BUDGET`).
+     - The AR17 v2 recipe is emitted only for declared controls. REGISTER sends the directory as a fifth fd, which
+       is retained in `_Image.stderr_fd`, kept on ADVANCE, and closed by `dispose` or by the admission failure
+       path.
+     - `stop_owned(handle, deadline, *, grace_until=None)` is two-step. If a grace is declared, `grace_until`
+       is set (finite, else `ML-RUN-STOP-GRACE`), no TERM is held, and starts are not closed and the latch is not
+       cancelled: TERM is sent with the end `min(deadline, now + 0.5, lease − 1 µs, generation − 2 s − 1 µs)`, and
+       its ack is retained in `_term_ack`, pinned in `_identity`. If bit 512 is set, the retained pidfd is
+       waited on in steps ≤ 10 ms until `min(t + grace, grace_until)`, an exit, a cancel or closed starts, with
+       the exchange lock free. Then STOP as before. A STOPPED with 1024 and without 512 is `ML-RUN-STOP-ACK`.
+     - `NativeGenerationClosure.stop_mode` (default `None`): `exited-on-term` or `forced` once an actual
+       STOPPED ack is held. The broker projection is unchanged.
+     - `observe` sets `ProcessObservation.marker_ready` from bit 2048. The new field defaults to `False` and
+       is never set by LC09. New properties: `RunUnitIssuer.stop_grace_seconds` and `readiness_probe`.
+   - **`probe_identity.py`** (named in the design for step 4) is added here, because the broker admission needs
+     `READINESS_PROBES = ("running", "nonce-marker")`. The probe admission itself is tested in step 4.
+   - **`teardown.py`, `service_time.py`, `schedule_plan.py`.**
+     - `STOP_FORCE_RESERVE_SECONDS = 0.5`.
+     - `_stop` passes `grace_until = deadline − 0.5 − SIZING_MARGIN·record` for a declared grace only.
+       `_emergency` passes nothing, so it is always forced.
+     - `_need`: `max(SIZING_MARGIN·est('phase:stop'), grace + 0.5) + SIZING_MARGIN·est('phase:cleanup')` when a
+       grace is declared and the stop is pending. This is my reading of the design's
+       `max(est('phase:stop'), grace + reserve)`: the margin widens the estimate, not the admitted bound. The
+       undeclared expression is unchanged.
+     - `admit_schedule` rejects `grace + 0.5 > NORMAL_SHARE·per_unit_seconds` (`ML-SCHEDULE-STOP-GRACE`). An
+       undeclared schedule keeps its digest.
+   - **Tests: new `test_stabilization_s1b_broker.py`, 19 tests on real broker stacks**, with controls declared
+     in the actual v0.2 catalog payload:
+     - undeclared units keep AR17 v1 and a forced stop;
+     - a scenario `stop` with TERM honoured (`exited-on-term`, TERM in the marker, the epoch unchanged, the
+       other unit forced);
+     - TERM ignored, then forced after the grace;
+     - the terminal fence after a cancel is forced with no TERM;
+     - the emergency path passes no grace;
+     - a non-finite `grace_until` is refused;
+     - the `_need` values;
+     - the declared stderr end to end (the recipe identity, 5-fd REGISTER, the cut to 1000 bytes, bit 4096,
+       mode 0600);
+     - nine stderr admission refusals: undeclared, missing, group-readable, not empty, a symlink component,
+       absent, shared, the cwd, and the budget with 2 units × 9 generations × 1 MiB;
+     - the directory inside the collection source root;
+     - the schedule grace bound.
+   - **Runs (installed wheel).**
+     - Before the new tests: `test_run_broker.py`, `test_run_teardown.py`, `test_teardown.py`,
+       `test_schedule_plan.py`, `test_stabilization_cancel_conflict.py`: 99 passed (load 3.8).
+     - `test_stabilization_s1b_broker.py`: 17 passed (load 3.4); after the distinct codes and two added cases,
+       19 passed (load 4.0).
+     - `test_run_broker.py`, `test_run_teardown.py`, `test_teardown.py`, `test_schedule_plan.py`,
+       `test_stabilization_cancel_conflict.py`, `test_dv05_dv06_bounds.py`, `test_launcher.py`,
+       `test_provider.py`: 163 passed (load 4.0 at start, 6.0 at end).

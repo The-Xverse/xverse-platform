@@ -8,6 +8,7 @@ import math
 from .projection import PreparedLifecycle
 from .providers import ProbePolicy
 from .lifecycle_evidence import _parents
+from .service_time import NORMAL_SHARE, STOP_FORCE_RESERVE_SECONDS
 
 MAX_REQUESTS = 8192
 MAX_EVENTS = 8192
@@ -101,6 +102,12 @@ def admit_schedule(
     _seconds(operation_seconds, 5, "OPERATION")
     _seconds(poll_seconds, 0.05, "POLL")
     _seconds(per_unit_seconds, 5, "TEARDOWN")
+    for unit in getattr(prepared, "units", ()):
+        controls = getattr(unit.plan, "process_controls", None)
+        grace = controls.stop_grace_seconds if controls is not None else None
+        # S1b: the TERM grace and its forced-stop reserve stay inside the normal teardown share.
+        if grace is not None and grace + STOP_FORCE_RESERVE_SECONDS > NORMAL_SHARE * per_unit_seconds:
+            raise ScheduleError("ML-SCHEDULE-STOP-GRACE")
     if type(use_action_timeouts) is not bool:
         raise ScheduleError("ML-SCHEDULE-ACTION-TIMEOUTS")
     action_timeouts = ()

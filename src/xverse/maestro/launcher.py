@@ -302,6 +302,7 @@ class ProcessObservation:
     leader_reaped: bool
     exec_error: bool
     returncode: int | None
+    marker_ready: bool = False  # S1b: the native nonce-marker latch (bit 2048); never set by LC09
     ready_for_execution: bool = field(default=False, init=False)
     cleanup_complete: bool = field(default=False, init=False)
 

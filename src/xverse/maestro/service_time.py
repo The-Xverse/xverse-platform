@@ -12,6 +12,7 @@ DECISION_MARGIN = 1.0  # go/no-go before a mutation; no floor (findings 433, 434
 NORMAL_SHARE = 0.6     # the normal path's share of an admitted teardown window, unchanged
 RPC_MAX_SECONDS = 5    # owner._deadline: no single request deadline beyond now + 5 s (hard)
 RUN_MAX_SECONDS = 80   # teardown._deadline: no whole-run teardown deadline beyond now + 80 s (hard)
+STOP_FORCE_RESERVE_SECONDS = 0.5  # S1b: kept after a TERM grace for the forced STOP and the boundary check
 
 
 def valid(seconds):
