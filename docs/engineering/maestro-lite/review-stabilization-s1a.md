@@ -748,3 +748,34 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       - The live terminal cost was 1.5–2.5 times the bench cost under load 6–8.4, so the expected live figures are
         at most about 0.7 s and 1.3 s.
       - The run succeeded, with cleanup complete.
+30. **Independent review of S1a-3 (`2497b5a4d`; written at 22:22:19 2026-10-23): PASS, LOW only.**
+    - **Confirmed.**
+      - The reviewer's 48-case standalone probe on the venv's Python 3.13.13, with the C encoder active, gave
+        identical bytes or the identical exception type. It covered:
+        - tuples, `OrderedDict`, dict and list subclasses;
+        - int, float and str subclasses, and `IntEnum`;
+        - big ints and the 4300-digit limit;
+        - `-0.0`, `5e-324` and other awkward floats;
+        - nested and top-level non-str keys (the fallback path);
+        - surrogates, NaN, cycles and shared references.
+      - A cap sweep over 300 bodies gave 0 mismatches. Memory is about one element plus the cap.
+      - A 64 KiB element encodes in about 2 ms.
+      - The figures in finding 29 are consistent with finding 28.
+      - The commit order is correct.
+      - 362 differential cases passed.
+    - **LOW findings, dispositioned.** The full run had already started on `2497b5a4d`, so no code or test is changed
+      after it.
+      - **(1)** An element that both crosses the cap and fails to encode raises `ValueError` instead of
+        `ML-EVIDENCE-EXPORT-SIZE`. Callers cannot reach this: every element was already serialized with
+        `allow_nan=False`. Accepted.
+      - **(2)** Nesting deeper than about 1200 levels now encodes where the original raised `RecursionError`. The
+        writer bounds nesting at 128. Accepted.
+      - **(3) Wording correction to amendment S1a-4 and finding 28.** The 64 KiB element bound holds for retained
+        claims (`retained_intent`). Internal events and `publicM3` records are small by construction, and only the
+        writer's `max_event_bytes` bounds them. Even a 1 MiB element encodes in tens of ms.
+      - **(4)** The differential test does not generate tuples, subclasses or top-level non-str keys. A mutant that
+        dropped the non-str-key fallback would pass it.
+        - The disposition rests on the reviewer's probe, which covers those cases and is kept as evidence in the
+          thesis scratch record.
+        - The test generator is to be widened with the next code change in this area.
+        - This is recorded for the author.
