@@ -489,3 +489,112 @@ decision S-D2, approved on 2026-10-23).
     - **Effect.** This blocks the S1b and S1a-3 acceptances until it is diagnosed: a start-up failure must still close
       its evidence (P4). Next: a deterministic reproduction in the composed runtime, with a marker unit that never
       becomes ready, and capture of the revoke cause.
+15. **Diagnosis of finding 14: a K.CANCEL whose deadline passes the unrenewed authority lease makes the native
+    authority exit, and the client revokes (written at 23:44:00 2026-10-23, load about 3.7; before any repair).**
+    - **Cause (high confidence).** This is case (e) of the finding-14 list. It is a latent increment-17 defect,
+      and S1b's marker readiness exposes it.
+      1. The last marker attempt fails, and `ProcessReadiness.start` raises `ML-PROBE-NOT-READY`
+         (`providers.py:454`). Its handler cancels (`providers.py:456` → `providers.py:579` → `owner.py:763-765`),
+         so `RunBroker.cancel(reason)` is called with **no deadline**.
+      2. `RunBroker.cancel` sets the CANCEL end to `min(now + 1, generation − 2, limit)` (`run_broker.py:1056`).
+         It is never clamped to `connection._lease`, although the authority is still open. The client-side check
+         exempts the cleanup kinds, CANCEL included, from the lease (`affa_client.py:275-278`), so the frame is
+         sent.
+      3. The native authority admits a frame on an open authority only when `until <= g->lease`, for every kind,
+         CANCEL included (`run_authority.c:666`, unchanged since `1e081a1ba`). It answers an invalid frame with
+         `cleanup` and exit (`run_authority.c:670`). The workloads are killed and waited natively, and the helper
+         exits with status 0.
+      4. The client receives EOF without credentials (`ML-AFFA-SENDER`, `affa_client.py:200`). The error comes
+         after send, so `_exchange` revokes (`affa_client.py:408-421`). `_cancel_exchange` re-raises a
+         non-conflict error, and `cancel` revokes again (`run_broker.py:1067-1083`), giving
+         `native_epoch_confirmed=False, issuer_dead=True, issuer_reaped=True, diagnostic=None`.
+      5. The run-bootstrap root sees that the authority helper is gone outside terminal mode and runs its
+         cleanup, which SIGKILLs every helper, the storage worker included (`bootstrap.c:316`, `bootstrap.c:287`).
+         Any persistence RPC in flight then fails `ML-PERSIST-CHILD` at `receive`. The revocation carries
+         `workload_waits_known=False`, so the closure ends `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN` with
+         `cleanupComplete=False`.
+    - **Why S1b exposes it.**
+      - Before S1b, a start-up failure was a child exit. The `running` probe saw it within milliseconds of
+        RELEASE (5 ms yields), while the lease still had seconds left.
+      - A `nonce-marker` start spends up to the window W inside one start step. The step's end is capped at the
+        bootstrap lease (`dispatcher.py:1088`), and no renewal runs inside `facade.start`. The failure, and its
+        cancel, therefore land near the end of the lease.
+      - The defect does not depend on S1b. Any deadline-free `RunBroker.cancel` in the last second of an
+        unrenewed lease revokes. Every `owner.cancel` reason reaches it this way (for example
+        `readiness-health-failed`, `dispatcher-failed`, `gate-uncertain`), as does `run-release-uncertain`
+        (`run_broker.py:696`).
+      - The dispatcher's terminal fence is not affected, because it clamps its end to the lease
+        (`dispatcher.py:1405-1407`). Here it returns the already revoked `_cancel_result`.
+    - **Evidence from the run record (`dev-s1c2p1-20261023T233239-no-carla`).** Times are relative to
+      `monotonicStartNs`.
+      - `carla-adapter` issued at 2.811 s, with `nonce-marker` probes failed at 2.872, 3.748 and 4.623 s. These
+        are t0 + `readiness_offsets(2.0, 3)` = 0, 0.875 and 1.75 s.
+      - The persistence `schedule` RPC, sequence 29, started at 4.637 s and failed at 4.642 s. That is 14 ms
+        after the last probe and far below the 0.5 s conflict wait, so a K.CANCEL conflict is ruled out.
+      - The authority lease was created between the plan write (`experiment-plan.json` mtime, 0.284 s) and
+        `entry.start` (first event, 1.274 s), as `now + 4.8 s`. Its end was therefore at 5.08–6.07 s, and the
+        CANCEL deadline of about 5.62 s is past it whenever the lease was created before about 0.82 s.
+      - The record does not hold the lease value or the authority helper's return code, so the live run alone does
+        not pin the mechanism. The reproduction below gives the same signature.
+      - The empty `stderr-g1` files and the challenge with no `ready` in `carla-adapter/.xverse-ready` agree with a
+        unit that ran and was killed. They do not agree with an S1b staging fault.
+    - **Ruled out.**
+      - **(a) A conflict longer than 0.5 s.** The 14 ms timing above. The start step runs in the dispatcher
+        thread, and nothing else holds the connection lock there.
+      - **(b) A native REJECTED.** Native CANCEL refuses only a non-zero slot, generation, body or lease field
+        (`run_authority.c:527-530`), and the client frame has none. A REJECTED reply would also leave the helper
+        alive until the client's SIGKILL. In the reproduction it exits by itself with status 0.
+      - **(d) An S1b post-send check.** `_declared` runs after `_exchange` returns (`run_broker.py:1252`, `1290`),
+        outside its revoke-on-error block, and is not applied to CANCEL. The marker unit declares a probe, so bit
+        2048 is legitimate. The dispatch diagnostic was `ML-PROBE-NOT-READY`, not `ML-RUN-STATE-UNDECLARED`. The
+        state mask (`~8191`) admits every S1b bit.
+    - **Reproduction: `tests/thesis_lite/maestro/test_stabilization_s1b_start_failure.py`.** The tests run on the
+      installed wheel (`d0fed3d1…`, built from `34d45f642`). They assert the correct behaviour, so the defect
+      cases fail. The only test-side change is a wait that places the cancel 0.6 s before the lease end. A
+      test-only wrapper records each `_exchange` error as (kind, code, `deadline_ns − lease_ns`).
+      - **Broker level, `broker_stack`, no S1b control declared.** `RunBroker.cancel('readiness-start-failed')`:
+        - with more than 1 s of lease left (control): **passes**;
+        - 0.6 s before the lease end: **fails** in each of 4 runs. The recorded error is
+          `('CANCEL', 'ML-AFFA-SENDER', +0.400 s)`, and the result is `native_epoch_confirmed=False`,
+          `issuer_dead=True`. The authority helper's own exit is `waitid` `si_code=1` (exited), `si_status=0`.
+      - **Composed runtime, the `test_runtime_entry.runtime` fixture through `_OriginalRuntimeRun.start`.** The
+        sink declares `nonce-marker` in `marker-never` mode.
+        - early cancel (control): **passes**. The cancel is confirmed natively, there is no persistence failure,
+          cleanup is complete and the writer is `failed` or `closed`, so the expected outcome is reachable on this
+          stack;
+        - cancel in the last second of the lease: **fails** in each of 6 runs, with `ML-PROBE-NOT-READY`, the
+          revoke as above and `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`.
+        - Five of these runs printed the persistence outcome. In 3 of them the live signature is reproduced in
+          full: `ML-PERSIST-CHILD` (kind `schedule`, stage `receive`), storage helper return code −9, and writer
+          `rpc-unresolved`/`open`. In the other 2 the writer ended `failed`. The probable reason (an inference,
+          not instrumented) is that the dispatcher's terminal service put the root into terminal mode before
+          its 10 ms poll saw the helper's exit. The persistence loss is a race; the revoke is deterministic.
+      - **Last result:** 2 failed, 2 passed in 14.46 s. Temporary RPC-timing instrumentation, used once in the
+        test file, was removed before commit. No `src/` change.
+    - **Proposed repair** (an ADR-ML3-AFFA-0001 amendment first, as for S1a-3):
+      - **R1 (recommended): native.** Admit a CANCEL whose deadline passes the lease:
+        `(g->closed || kind == CANCEL || until <= g->lease)` at `run_authority.c:666`.
+        - CANCEL only closes and freezes, and can never extend the authority. This matches the client's existing
+          exemption of the cleanup kinds, and the native `close_end` already ignores the request deadline.
+        - The authority digest changes and must be re-pinned (S1c re-pins anyway, design risk 1).
+        - Regressions: this file, plus a native test of a CANCEL past the lease on an open authority.
+      - **R2: client only, no re-pin.** Clamp the CANCEL end to `connection._lease − 1 µs` while
+        `_starts_closed` is false, as `_until` (`run_broker.py:595-605`) and the terminal fence already do.
+        - The window shrinks but does not close. A cancel issued a few milliseconds before the lease end gets a
+          deadline shorter than the native freeze and reply, so it times out and revokes.
+        - It changes the bounded-wait arithmetic of `_cancel_exchange` (`wait_until`).
+      - **R3: scheduling, complementary.** Renew before, or cap the end of, a start step whose declared readiness
+        window plus one cancel (1 s) and a reserve does not fit inside the lease. This removes only the start-up
+        trigger, not the health or release triggers.
+      - **Residual in every option: an already expired lease.** At its lease the native authority closes itself
+        and advances its epoch (`run_authority.c:652`). A later CANCEL carries the old epoch, is invalid, and
+        again makes the authority exit. Covering that case needs, for example, a native acceptance of a CANCEL
+        at epoch − 1 after a lease close, answered as CANCELLED at the current epoch, which the client already
+        expects (`affa_client.py:300-304`). This is for the owner to decide with R1.
+    - **Harness (S1c, evidence only).** Record `connection._lease` at cancel time and the closure helpers'
+      return codes in `maestro-run.json`. The helper return code separates a native self-exit (0) from a revoke
+      (−9).
+    - **Effect.** The S1b and S1a-3 acceptances stay blocked until a repair is chosen and passes this file.
+      Finding 18 of the S1a log (persistence child exits after a cancel, 2 of 10 runs) was attributed to the
+      busy-connection conflict, which S1a-2 repaired. This lease mechanism gives the same signature, but this
+      diagnosis does not show that it took part there.
