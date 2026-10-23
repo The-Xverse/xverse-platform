@@ -581,3 +581,47 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       2. The full installed-wheel run, the DV12 gate and CAPA step 10, committing the log before the CAPA build.
       3. The acceptance package.
       4. VS-09 on the merged revision.
+23. **Independent review of S1a-2 at `20dc3dcde` (written at 19:06:24 2026-10-23): FAIL, narrow, with no safety
+    violation (every traced path still ends in the unchanged revoke). Recorded before any repair.**
+    - **MEDIUM-1.** The K.CANCEL frame is built before `_exchange` takes the lock (`run_broker.py`
+      `_cancel_exchange`). ADR S1a-3's Decision says "after".
+      - With two concurrent `RunBroker.cancel` calls — the operator's stop, and the dispatcher's own
+        `owner.cancel("dispatcher-failed")`, which every live cancel takes — the winner's CANCELLED reply raises
+        `connection.epoch` just before it releases the lock.
+      - The loser's frame is then stale, and `_validate` raises `ML-AFFA-REQUEST-SCOPE` before any send. That
+        is not retried, so it reaches revoke and the same kill chain.
+      - The window is a few µs under the GIL, but it is on the live path. Finding 20's timing — the dispatcher's
+        request began 0.93 ms before `stop` returned — fits it.
+    - **MEDIUM-2.**
+      - No test exercises two concurrent cancels on `broker_stack`, a stale frame, or a second K.CANCEL after
+        CANCELLED.
+      - The lock-holding tests never change the sequence or epoch.
+      - Finding 20's step (1), recording the live lock holder, was not done.
+    - **LOW-3.** A cancel with a caller deadline (`teardown._emergency`) can wait until that deadline. Revoke is
+      then left with no time to reap: `issuer_reaped` is false, and `ML-TEARDOWN-ISSUER-UNFENCED` follows.
+      SIGKILL is still sent.
+    - **LOW-4.** The ADR:
+      - (a) The superseded Decision bullets are not withdrawn.
+      - (b) The Cost omits that `owner.cancel`'s gate and launcher cancels, and `runtime_entry.stop`'s
+        `_stop_lock` hold, are delayed by up to 0.5 s; a concurrent stop then gets `ML-RUNTIME-ENTRY-CONFLICT`.
+      - (c) The `_fence` rationale ignores the operator thread. That is pre-existing; `_fence` has its own
+        CANCELLED shortcut.
+    - **Confirmed.**
+      - `ML-AFFA-CONFLICT` is raised only before any send, with no state change.
+      - The double-revoke paths are safe.
+      - A repeated K.CANCEL is idempotent natively.
+      - No deadlock is possible, and the worst-case cancel time is unchanged.
+      - The ADR commits preceded the code.
+      - 127 tests passed across 4 runs at load 3.3–4.4.
+    - **Repair plan.** An ADR note comes first. Then `_cancel_exchange`:
+      - returns the retained CANCELLED reply when the connection is already cancelled, as `_fence` does;
+      - retries a pre-send `ML-AFFA-REQUEST-SCOPE` when the frame's sequence or epoch has gone stale;
+      - keeps a 0.25 s reap reserve before a caller's limit.
+
+      The tests add:
+      - a deterministic stale-frame case: another cancel wins between the frame build and the lock;
+      - a real two-thread concurrent cancel;
+      - a second cancel after CANCELLED.
+
+      Recording the live lock holder is carried to the harness, as a `RunBroker._cancel_result` record in
+      S1c-2. Then a fresh wheel and a re-review.
