@@ -143,3 +143,18 @@ decision S-D2, approved on 2026-10-23).
      - `test_affa_config.py`, `test_affa_protocol.py`, `test_affa_client.py`, `test_affa_native.py`,
        `test_dv05_dv06_bounds.py`: 113 passed and 1 failed (the `state=512` case above, load 3.9); after the
        update, `test_affa_client.py` 22 passed (load 4.3).
+5. **S1b step 2: the schema change breaks the SD-0001 candidate lock; the design does not cover it (written at
+   20:07:42 2026-10-23, load about 3.01, before the re-pin).**
+   - **Fact.** `xdl/candidates/sd0001/candidate.lock.json` pins `profileSchema.sha256` of
+     `xdl/profiles/runtime-compatibility-v0.2.schema.json` (`4aa1c811…`). `scripts/validate_sd0001.py` compares it.
+     With the S1b schema (`process.stop`, `process.stderr`, the `inheritedHandles` description) on the
+     installed wheel, `tests/test_sd0001_validator.py` gives 2 failed and 2 passed:
+     `test_reviewed_candidate_passes_but_remains_unplannable` and
+     `test_resource_digest_drift_fails_before_xdl_validation` (a schema mismatch is reported first).
+   - **The design is not wrong, but incomplete here.** It requires the schema change and does not name the lock.
+     The SD-0001 graph declares no S1b control, so its plan digest (`ccab18b9…`, pinned in the lock and in
+     `test_m3_catalog_runtime.py`) must stay unchanged.
+   - **Correction.** Re-pin only `profileSchema.sha256` in the lock to the new schema hash. Every other lock field,
+     including `planDigest`, stays as is, and the validator must pass unchanged. The historical review records
+     `docs/engineering/{argus,xdl}-lite/internal-review.json` keep the old hash, because they record their own
+     revision. This is implemented in the step 2 commit, and recorded there.
