@@ -779,3 +779,11 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
           thesis scratch record.
         - The test generator is to be widened with the next code change in this area.
         - This is recorded for the author.
+31. **S1a-3: the decisive full installed-wheel run and the DV12 gate (written at 23:03:56 2026-10-23).**
+    - **Run.** `evidence/affa19/stabilization-s1a3/platform-regression-20261023d-1`, head `2497b5a4d`.
+      - Triggered at 21:21:34Z at load 3.22, on the first attempt.
+      - **Clean:** 2886 passed (including the 362 differential cases), 1 skipped (lane admission), 39 subtests, in
+        2438 s.
+      - The maximum sampled load was 5.11.
+    - **DV12 gate** (`--scope code`, candidate `5e81c7b05`): `accepted_as_evidence: true`, with no blockers. The run
+      and candidate code are both `868a21b6…`; the review-log commit after the run is outside the code scope.
