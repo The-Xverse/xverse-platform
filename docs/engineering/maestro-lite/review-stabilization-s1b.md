@@ -66,3 +66,15 @@ decision S-D2, approved on 2026-10-23).
        admission limits).
      - The S1d soak treats any recurrence as a P1 failure, with a finding.
      - No platform change in S1b.
+3. **The S1b design is recorded before any code (written at 19:54:08 2026-10-23):**
+   `design-stabilization-s1b.md`.
+   - It covers the AF17 path only, with every capability opt-in and byte-identical when undeclared.
+   - It defines AR17 version 2, the TERM and TERM_SENT kinds, and state bits 512, 1024, 2048 and 4096.
+   - It specifies the two-step TERM, the private capped stderr file and the native nonce-marker probe.
+   - Its decisions D-1 to D-4 are recorded in the thesis as the delegated revisions DR-7 to DR-10 and are flagged
+     for the author at acceptance:
+     - D-1: the terminal-fence stops stay forced; S1c-2 schedules `stop` steps.
+     - D-2: LC09 is out of scope and refuses the new declarations.
+     - D-3: stderr is retained privately, not collected.
+     - D-4: TERM is two-step, with the lock free during the grace.
+   - The ADR amendments follow in the next commit, before the code.
