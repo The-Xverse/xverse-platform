@@ -226,3 +226,12 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
   - A new test holds the lock past the bound: revoke as before.
   - The existing cancel tests are unchanged.
   - The live cancel-paused runs (VS-09) follow after acceptance.
+- **Implementation form (written at 18:52:06; still before implementation).** The bounded wait is implemented in
+  `RunBroker.cancel`. That keeps `connection._exchange`, its non-blocking lock, and every other caller and test
+  observer unchanged.
+  - A K.CANCEL attempt that is refused with `ML-AFFA-CONFLICT` is retried every 1 ms until 0.5 s have passed or
+    the cancel's end arrives. That refusal comes before any send, so it has no side effect.
+  - Each attempt builds a fresh frame with the then-current sequence.
+  - Any other error, and the expiry of the bound, lead to the unchanged revoke.
+  - The `RunClosure` cancel fence (`run_closure._fence`) runs on the owner's thread after the dispatcher has
+    finished, so this change leaves it as it is.
