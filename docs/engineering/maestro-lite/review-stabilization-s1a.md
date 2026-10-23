@@ -92,3 +92,20 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
      `smoke-1` shows finding 1.
    - **Run data.** On loop10 at `.x-verse-build/runs/lite-stabilization-s1a/`, each with `summary.json`
      from `tools/bench/persistence_scaling/analyze.py`.
+5. **S1-T03: a cancel during an ordinary persistence call poisons storage. Reproduced on main (2026-10-23
+   10:16).**
+   - **The test.** `tests/thesis_lite/maestro/test_stabilization_cancel.py` (FR-004) uses the owned
+     2-unit runtime fixture. It cancels the run at the second ordinary `tick-complete` statement, in two
+     variants:
+     - `pre-send`: the cancel happens before `_rpc` sends;
+     - `in-flight`: the request is sent and its reply is pending (the cancel is placed inside the
+       client's `_receive`).
+   - **Expected after the repair.**
+     - The client is not failed (FR-005).
+     - `last_writer_state` is `failed`, the manifest has `writerState: failed`, and there is no CORRUPT or
+       MUTATED reason (FR-006).
+     - Every issued unit is reaped and retired, and `cleanup_complete` holds (FR-007).
+   - **Result on the bench venv of main `8b3d8c8e8`.** Both variants fail at the first assertion:
+     `storage._failed` is True. This confirms research R-2: both the pre-send refusal and the in-flight
+     `check()` refusal go through `_fail()`. The log is `t03-main-repro.log` in the run directory. The
+     test is committed failing, as the reproduction. The repair follows in a later commit.
