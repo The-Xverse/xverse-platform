@@ -228,3 +228,34 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       first lease renewal, and the heartbeat triggers the replacement exactly as the test intends. The
       pause stops as soon as the ticket exists. Its total is bounded by the 20 s active window that the
       test asserts. Product code is unchanged.
+11. **Independent implementation review 1 on `a803b4087` (2026-10-23 about 11:40): FAIL. Recorded before any
+    repair.**
+    - **HIGH R1-1.** `resume_stream` can return more than `max_read_records`. A clean scan that ended
+      exactly at the cap still produced a checkpoint (`recovery.py:669-681, 702-705`), so a resumed read
+      accepts the next record. The reviewer reproduced it with `max_read_records=3`: the resumed read gave
+      4 records, while `read_run` gave 3 plus `ARGUS2-BOUND-EXCEEDED`. Maestro probably cannot reach it,
+      because `coverage.py:884` sets `max_events == max_read_records`, but the equality claim of section
+      8.6 is false.
+    - **MEDIUM R1-2.** `reconcile_snapshot` (`persistence.py` about 1310-1317) wraps the `recovery` RPC in
+      `except Exception: self._fail()`, so a cancel before that send still fails storage (FR-005).
+    - **MEDIUM R1-3.** The 0.5 s in-flight grace departs from the spec text of FR-005 ("completes within
+      its own deadline"). Its expiry shares the `ML-PERSIST-CLOSED` code.
+    - **MEDIUM R1-4.** The claims overstate the evidence:
+      - FR-006 says `failed`, but the candidate accepts `closed`;
+      - FR-007 (STOP/RETIRE for unacknowledged generations) is not implemented or tested;
+      - FR-003 has no differential or tamper check at Maestro level;
+      - FR-002's full re-read costs at capacity are not reported;
+      - FR-008 is not addressed.
+    - **LOW R1-5.** Ordering and wording:
+      - the S1a-2 amendment shares its commit with the implementation;
+      - the "next commit" wording of finding 10 is wrong;
+      - "damaged evidence never yields a checkpoint" holds only for damage found by the stream scan.
+    - **LOW R1-6.** Weak or missing tests:
+      - a redundant assertion;
+      - no positive check of the terminal events after a cancel;
+      - no test for the grace expiry, a symlink-replaced stream, or a Maestro-level same-size tamper.
+    - **LOW R1-7.** The finding-10 test pause is bounded but timing-based.
+    - **Verified equivalent by the reviewer:** the restored scan state, the prefix read, manifest-only
+      dependence, `EvidenceLimits` equality, the shared-record consumers, `_index` reset paths, no start
+      authority after a late reply, the `_failed` consumers, `_reload` equivalence, and bench files outside
+      the DV12 collection (`pytest tests`).
