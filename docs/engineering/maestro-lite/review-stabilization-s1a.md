@@ -555,3 +555,29 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       fail-safe. The defect is that a merely *busy* connection is treated as unconfirmable.
     - **Next.** An ADR amendment (S1a-3) before the repair: a bounded wait for the exchange lock on K.CANCEL only,
       falling back to the unchanged revoke when the bound expires.
+22. **S1a-2 repair implemented per amendment S1a-3 (written at 18:54:23 2026-10-23).**
+    - **Code.** `run_broker.py`:
+      - `RunBroker._cancel_exchange(end)` retries a K.CANCEL refused with `ML-AFFA-CONFLICT`, which happens
+        before any send. It polls every `CANCEL_LOCK_POLL_SECONDS` = 1 ms, until `CANCEL_LOCK_WAIT_SECONDS` =
+        0.5 s or the cancel's end.
+      - Each attempt builds its frame with the then-current sequence.
+      - Any other error, or the expiry of the bound, reaches the unchanged revoke. `connection._exchange` is
+        unchanged.
+    - **Tests.** `test_stabilization_cancel_conflict.py`:
+
+      | Case | Result | Outcome |
+      | --- | --- | --- |
+      | idle | 0.4 ms | confirmed |
+      | lock held 0.1 s | 0.101 s | confirmed epoch 1, 3 frozen units, storage worker alive |
+      | lock held 0.9 s | 0.501 s | unchanged revoke: `issuer_dead` |
+
+    - **Against the unrepaired main wheel** (`venv-cand`), the 0.1 s case fails: it is revoked at once
+      (0.0005 s). The past-bound case fails only in its timing assertion.
+    - **Wider run** with the S1a-2 wheel (`.x-verse-build/cache/lite-stabilization-s1a2/venv-s1a2`, wheel
+      `6b4f63a7…`; load 3.8): `test_stabilization_cancel_conflict.py`, `test_run_broker.py`,
+      `test_stabilization_cancel.py` and `test_affa_client.py` gave 38 passed in 32 s.
+    - **Next.**
+      1. An independent review.
+      2. The full installed-wheel run, the DV12 gate and CAPA step 10, committing the log before the CAPA build.
+      3. The acceptance package.
+      4. VS-09 on the merged revision.

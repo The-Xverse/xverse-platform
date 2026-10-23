@@ -17,7 +17,7 @@ from .affa_protocol import (
     AuthorityRecipe,
     AuthorityUnit,
 )
-from .bootstrap import BootstrapSession, BootstrapChild, _sealed, seal_helper_image
+from .bootstrap import BootstrapError, BootstrapSession, BootstrapChild, _sealed, seal_helper_image
 from .launcher import ProcessObservation
 from .owner import (
     _Original,
@@ -35,6 +35,9 @@ from .prbc import BoundaryDescriptor
 from .time import HostDeadline
 
 _CREATE = object()
+# ADR-ML3-AFFA-0001 amendment S1a-3: a run cancel waits this long for a busy authority connection.
+CANCEL_LOCK_WAIT_SECONDS = 0.5
+CANCEL_LOCK_POLL_SECONDS = 0.001
 
 
 @dataclass(frozen=True, slots=True)
@@ -870,6 +873,28 @@ class RunBroker(_Original):
         finally:
             self._lock.release()
 
+    def _cancel_exchange(self, end):
+        """K.CANCEL; a busy connection is waited for a bounded time (ADR-ML3-AFFA-0001 amendment S1a-3).
+
+        ``ML-AFFA-CONFLICT`` is raised before any send, so a refused attempt has no effect; each attempt builds
+        its frame with the then-current sequence. Any other error, or the expiry of the bound, propagates to the
+        unchanged revoke."""
+        wait_until = min(time.monotonic() + CANCEL_LOCK_WAIT_SECONDS, end)
+        while True:
+            request = AuthorityFrame(
+                K.CANCEL,
+                self.connection.sequence + 1,
+                int(end * 1e9),
+                self.connection.config.scope,
+                epoch=self.connection.epoch,
+            )
+            try:
+                return self.connection._exchange(request)
+            except BootstrapError as error:
+                if str(error) != "ML-AFFA-CONFLICT" or time.monotonic() >= wait_until:
+                    raise
+            time.sleep(CANCEL_LOCK_POLL_SECONDS)
+
     def cancel(self, reason="run-cancel", *, deadline=None):
         self._cleanup_context()
         if self._cancel_result is not None:
@@ -886,14 +911,7 @@ class RunBroker(_Original):
         self.owner.latch.cancel(reason)
         end = min(time.monotonic() + 1, self.session._generation / 1e9 - 2, limit)
         try:
-            request = AuthorityFrame(
-                K.CANCEL,
-                self.connection.sequence + 1,
-                int(end * 1e9),
-                self.connection.config.scope,
-                epoch=self.connection.epoch,
-            )
-            reply = self.connection._exchange(request)
+            reply = self._cancel_exchange(end)
             result = RunCancellation(
                 True,
                 reply.epoch,
