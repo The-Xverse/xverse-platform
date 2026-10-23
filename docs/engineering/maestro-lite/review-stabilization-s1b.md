@@ -445,3 +445,23 @@ decision S-D2, approved on 2026-10-23).
     - **DV12 gate.** `--scope code`: `accepted_as_evidence: true`, with no blockers. The run and candidate code
       are both `2d17c186…`.
     - **Next.** CAPA step 11 (parent step 10, `4b04cb4a…`), built after this log is committed.
+13. **CAPA successor step 11 for S1b (written at 22:01:43 2026-10-23), built after finding 12 was committed (`681a2d01d`).**
+    - **A process slip, corrected.**
+      - The first attempt to commit finding 12 was refused for paths outside the sparse checkout. A step-11 register
+        had already been built over the uncommitted log; it was deleted unused, before any verification passed.
+      - The sparse checkout was then widened, finding 12 was committed, and the register was rebuilt.
+      - The sparse checkout is now disabled: the verifier needs the bound files of earlier steps.
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1b-step11/`, built by
+      `build-capa-20261023-stabilization-s1b-step11.py` over `platform-regression-20261023c-1`.
+    - **Additive over step 10 (`4b04cb4a…`).** No record was opened, changed or closed.
+    - **Register `3eb39cda32a0376eefe44099e4eff3c573f1d26253986627bde697b0d2ea99d5`:** 56 records and 712 bindings. The 25
+      new bindings cover:
+      - this log, the design record and the three ADRs;
+      - the changed native and Python sources, the schema and the SD-0001 lock;
+      - the four test files;
+      - the run's `SHA256SUMS` and its DV12 verdict.
+    - **Successor verifier:** rc 0, with 56 records and 712 bindings verified.
+    - **Parent preservation:** `parent_preserved: true`. All 687 parent bindings were checked, and none changed or
+      was lost.
+    - **S1b is ready for the author's acceptance.** Delegated revisions DR-7 to DR-10 and the MEDIUM-1 disposition
+      (`stop_mode` carried through the harness's `nativeUnits`) are flagged in the thesis package.
