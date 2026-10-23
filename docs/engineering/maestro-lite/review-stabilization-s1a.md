@@ -502,3 +502,32 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       - Record `RunBroker._cancel_result`, confirmed or revoked, in the owned harness's `maestro-run.json`.
       - Then the ADR amendment and the repair, for example a cancel that waits a bounded time for the lock
         instead of revoking.
+20. **VS-09 attempt 2 on the merged mains reproduces the cancel race (run 18:46; written at 18:48:08 2026-10-23).**
+    - **Revisions.** Platform main `b28a2aacf`, compat main `bb07492` and blueprints main `6ac7703`, from clean
+      detached worktrees. CARLA instance 14, load 5.1.
+    - **Run.** `runs/lite-stabilization-s1/vs09-merged-20261023/lite-…-cancel-paused`. The S1c-2a harness failed
+      visibly (exit 1).
+      - `ML-SCHEDULE-CANCELLED`, but `persistenceFailure` is `ML-PERSIST-CHILD` (kind `schedule`, stage
+        `receive`).
+      - `cleanupComplete` false. The native units are not attested.
+      - The Maestro root is `open`, with CORRUPT, MUTATED and WRITER-STATE.
+      - The guard destroyed the 3 owned actors, and there is no unit residue.
+      - nominal passed on the same revisions.
+    - **Timing.**
+      - `entry.stop` took 5.36 ms. Clean cancel runs took 2.7–3.4 ms; `172145` took 4.81 ms.
+      - The failing request started 0.93 ms *before* `stop` returned, and failed 6.86 ms after it started.
+      - The cancel came at 13.730 s. The last recorded health events were a complete scan at 12.804–12.855 s; at
+        about 1.6 s spacing the next scan was due at about 14.4 s. No health event follows the cancel.
+    - **Effect on the finding-19 hypothesis.** The cancel did not visibly fall inside a health scan. The
+      health-QUERY form of the hypothesis is weakened. The general form remains open: `RunBroker.cancel` meets a
+      busy authority connection (`ML-AFFA-CONFLICT`), revokes it, and the root then kills the worker. A lease
+      renewal, a tick or a scheduled-step exchange could hold that lock, as well as a health QUERY.
+      - The slow `stop` in both failing runs is consistent with the extra revoke-and-reap work.
+    - **Rate.** 2 of 10 post-S1a cancel runs with the cancel path exercised (blueprint heads `f19ae58`,
+      `588f84a`, `8aa57ca` and `6ac7703`).
+    - **S1a-2 diagnosis (author-sequenced before S1b).**
+      - **(1)** Instrument the owned harness to record `RunBroker._cancel_result`, confirmed or revoked, and the
+        identity of the lock holder at cancel time. This is evidence only, with no behaviour change.
+      - **(2)** Build a deterministic bench or unit reproduction: `entry.stop` while the authority connection
+        lock is held by each candidate operation.
+      - **(3)** Only then the ADR amendment and the repair.
