@@ -353,3 +353,66 @@ decision S-D2, approved on 2026-10-23).
      - LOW-2: add a test, and declare the result as expected.
      - LOW-3: reject any `.xverse-ready*` entry in the cwd at admission.
      - LOW-4: per-issuer check that no reply carries a bit for a control the unit did not declare.
+10. **Repair of independent review 1, the finding 9 dispositions (written at 21:04:53 2026-10-23, load about 3.86).**
+    - **LOW-1, repaired.**
+      - `providers.readiness_offsets(W, A)` spaces the marker attempts at `t0 + k·(W − reserve)/(A − 1)`, with
+        `reserve = min(0.25, W/A)`, and makes a single attempt at `t0` when `A = 1`. The last attempt now probes
+        the end of the window less one round trip (W = 1.5 s, A = 3: 0, 0.625 and 1.25 s).
+      - Tests:
+        - pure offsets for A = 3, 2 and 1, and for a window below the reserve;
+        - on a real broker stack, a marker written 0.9 s after exec with A = 2 and W = 1.5 s, which is after
+          (A − 1)/A·W = 0.75 s, the old last attempt. It is found by the second attempt at t0 + 1.25 s: probe
+          failed, probe succeeded, ready.
+      - A = 2 was chosen for this test because it gives a 0.35 s margin. With A = 3, a marker after 1.0 s
+        leaves at most 0.15 s before the attempt at 1.25 s.
+      - New workload mode `marker-after-<ms>`. In the marker-never test, the spacing bound is now ≥ 0.6 s and
+        the elapsed bound ≥ 1.25 s.
+    - **LOW-2, test added; the behaviour is expected (fail-safe), with one addition to the reviewer's
+      expectation.**
+      - **Common to every run.**
+        - A cancel 0.4 s into a 2 s grace is confirmed natively in a few ms, with no revoke, because the exchange
+          lock is free during the grace (D-4).
+        - The grace wait ends at the cancel, and the phase takes under 2 s.
+        - The forced STOP succeeds with bit 512 and without 1024 (`stop_mode = forced`).
+        - The phase returns the existing emergency result `ML-TEARDOWN-NORMAL-INCOMPLETE`, with the leader
+          reaped and C1 empty and released.
+      - **Usual path (7 of 8 local runs), as the reviewer reproduced.** The STOP follows the completed CANCEL, and
+        the storage client refuses the normal outcome record with `PersistenceError('ML-TEARDOWN-TERMINAL-SCOPE')`.
+      - **Second path, observed once in 8 runs.**
+        - `RunBroker.cancel` sets the latch before its CANCEL exchange. The grace wait can therefore see the
+          cancel while the CANCEL still holds the connection lock. The STOP is then refused before send
+          (`ML-AFFA-CONFLICT`, no effect and no revoke), and `_emergency` makes the forced STOP after the cancel
+          completes. The final result is the same emergency result.
+        - A second test makes this path deterministic, by holding the CANCEL exchange 0.15 s under its lock, and
+          passed 3 of 3 runs.
+      - **Disposition, for the reviewer.** Both paths are fail-safe and declared expected here. No code changed for
+        LOW-2.
+      - **An optional tightening, not made.** The grace wait could end on `_starts_closed` only, or a pre-send
+        `ML-AFFA-CONFLICT` on STOP could be retried within the S1a-3 bound. The phase would still be an
+        emergency result, because the outcome record is refused after a cancel.
+    - **LOW-3, repaired.** Admission scans the pinned cwd fd with `os.scandir`, which never follows a link. Any
+      entry named `.xverse-ready` or starting with `.xverse-ready.g` is `ML-RUN-PROBE-STALE`. Tests: an aside
+      directory `.xverse-ready.g1` and a dangling symlink `.xverse-ready.g7`, beside the existing
+      `.xverse-ready` case.
+    - **LOW-4, repaired.**
+      - `RunUnitIssuer._declared` checks every reply of `_native` and the INTENT reply in `stage`. It fails
+        closed with `ML-RUN-STATE-UNDECLARED` when the state carries:
+        - 512 or 1024 without a declared grace;
+        - 2048 for a unit that is not a nonce-marker unit;
+        - 4096 without a declared stderr.
+      - Tests, with crafted replies through a wrapped `AuthorityConnection._exchange`:
+        - each of the four bits on an undeclared unit's QUERY is refused;
+        - on a unit with a grace and a stderr declared, 512|1024|4096 is accepted and 2048 is refused.
+    - **MEDIUM-1, no S1b code change.** `NativeGenerationClosure.stop_mode` is recorded by the owned harness
+      through `nativeUnits`, and S1c-2 part 2 asserts it. S1b persists nothing new, so undeclared evidence bytes
+      stay identical. This is recorded for the author at acceptance.
+    - **Runs (installed wheel, rebuilt; one pytest process at a time).**
+      - First, `test_stabilization_s1b_broker.py` and `test_stabilization_s1b_readiness.py`: 43 passed and 1
+        failed. The LOW-2 assertion expected a `TeardownError`, but the refusal is a `PersistenceError` (load 3.9).
+      - The LOW-2 test alone: 1 failed, the second path above (`ML-AFFA-CONFLICT`); then 6 of 6 runs on the usual
+        path (load about 4.5).
+      - Both LOW-2 tests: 2 passed in each of 3 runs (load 3.8).
+      - The requested set, `test_stabilization_s1b_native.py` (34), `test_stabilization_s1b_broker.py` (26),
+        `test_stabilization_s1b_readiness.py` (19), `test_provider.py` (35), `test_run_teardown.py` (9),
+        `test_teardown.py` (27), `test_affa_client.py` (22), `test_run_broker.py` (11) and
+        `test_stabilization_cancel_conflict.py` (6): 189 passed in 131 s (load 4.1 at start, 4.2 at end).

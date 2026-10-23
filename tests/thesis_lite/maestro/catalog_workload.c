@@ -1,5 +1,5 @@
 /* Exact owned executable fixture; writes evidence only under its declared cwd.
- * S1b modes (design-stabilization-s1b.md): term, ignore-term, marker, marker-late, marker-wrong,
+ * S1b modes (design-stabilization-s1b.md): term, ignore-term, marker, marker-late, marker-after-<ms>, marker-wrong,
  * marker-never, stderr-flood (a generated canary, see test_stabilization_s1b_native.flood) and streams. The marker modes answer the .xverse-ready challenge. */
 #define _GNU_SOURCE
 #include <fcntl.h>
@@ -64,6 +64,10 @@ int main(int argc,char **argv) {
         if(answer(!strcmp(mode,"marker-wrong")))return 12;
     }else if(!strcmp(mode,"marker-late")){
         pause_ms(400);if(answer(0))return 13;
+    }else if(!strncmp(mode,"marker-after-",13)){ /* marker-after-<ms>, 1..5000 ms after exec */
+        char *end;long ms=strtol(mode+13,&end,10);
+        if(*end||ms<1||ms>5000)return 17;
+        pause_ms(ms);if(answer(0))return 13;
     }else if(!strcmp(mode,"stderr-flood")){ /* a generated privacy canary: no literal of it is in this binary */
         char block[4096];unsigned state=20261023U;
         for(int i=0;i<4;++i){

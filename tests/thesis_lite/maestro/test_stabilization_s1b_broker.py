@@ -27,8 +27,8 @@ NS = "io.xverse.runtime.compatibility"
 def declare(monkeypatch, controls, *, stderr=None, maximum_generation=3):
     """Declare S1b controls per binding id in the actual v0.2 catalog payload (before broker_stack runs).
 
-    controls: {binding_id: dict(stop=seconds, stderr=bytes, condition=..., mode=..., cwd=name, stale=bool,
-    observe_timeout=seconds)}.
+    controls: {binding_id: dict(stop=seconds, stderr=bytes, condition=..., mode=..., cwd=name,
+    stale=True|"aside"|"link", observe_timeout=seconds)}.
     stderr: {unit binding_id: directory path} for UnitAdmission.stderr_directory.
     """
     from . import test_launcher, test_run_broker
@@ -54,8 +54,13 @@ def declare(monkeypatch, controls, *, stderr=None, maximum_generation=3):
                 cwd = Path(process["workingDirectory"]) / wanted["cwd"]
                 cwd.mkdir(mode=0o700, exist_ok=True)
                 process["workingDirectory"] = str(cwd)
-                if wanted.get("stale"):
+                stale = wanted.get("stale")
+                if stale is True:
                     (cwd / ".xverse-ready").mkdir(mode=0o700)
+                elif stale == "aside":
+                    (cwd / ".xverse-ready.g1").mkdir(mode=0o700)
+                elif stale == "link":
+                    os.symlink(cwd / "absent-target", cwd / ".xverse-ready.g7")
             observe = next(a for a in payload["actions"] if a["phase"] == "observe")
             if "condition" in wanted:
                 observe["condition"] = wanted["condition"]
@@ -317,3 +322,118 @@ def test_schedule_rejects_a_grace_outside_the_normal_teardown_share():
     accepted = admit_schedule(graced, per_unit_seconds=5, **options)  # 3.0 <= 0.6 x 5
     assert accepted.per_unit_seconds == 5
     assert admit_schedule(value, per_unit_seconds=1, **options).digest == plain.digest
+
+
+def grace_cancel(request, monkeypatch, *, hold=0.0):
+    """A scenario stop of an ignore-term unit (grace 2 s), with an external cancel 0.4 s into the grace.
+    `hold` keeps the CANCEL exchange busy that long after its send (under the connection lock)."""
+    import threading
+    from xverse.maestro.affa_client import AuthorityConnection
+
+    declare(monkeypatch, {"sink-binding": dict(stop=2.0, mode="ignore-term")})
+    stack = request.getfixturevalue("broker_stack")
+    broker, facade, _, work = stack
+    _, sink = started(stack)
+    issuer = broker.issuer(sink)
+    marker(work, "sink-binding", b"EXEC\n")
+    out, errors, cancelling = {}, [], threading.Event()
+    receive = AuthorityConnection._receive
+
+    def held(self, until):
+        if cancelling.is_set() and threading.current_thread() is not threading.main_thread():
+            time.sleep(hold)
+        return receive(self, until)
+
+    if hold:
+        monkeypatch.setattr(AuthorityConnection, "_receive", held)
+
+    def cancel():
+        time.sleep(0.4)
+        began = time.monotonic()
+        cancelling.set()
+        out["cancel"] = broker.cancel("external-during-grace")
+        out["seconds"] = time.monotonic() - began
+
+    original = ReverseTeardown._diagnostic
+
+    def diagnostic(self, error):
+        errors.append(error)
+        return original(self, error)
+
+    monkeypatch.setattr(ReverseTeardown, "_diagnostic", diagnostic)
+    controller = ReverseTeardown(facade, per_unit_seconds=5)
+    thread = threading.Thread(target=cancel)
+    thread.start()
+    began = time.monotonic()
+    result = controller.phase(sink, "stop", deadline(4.9))
+    elapsed = time.monotonic() - began
+    thread.join(3)
+    assert not thread.is_alive()
+    # Common to both observed paths: the cancel is confirmed natively, never revoked, within a short bound
+    # (the exchange lock is free during the grace, D-4); the grace ends at the cancel; the forced STOP succeeds
+    # with no exit on TERM; the phase returns the existing emergency result with a complete forced cleanup.
+    assert out["cancel"].native_epoch_confirmed and out["cancel"].diagnostic is None and out["seconds"] < 1.0
+    assert not broker.connection._revoked and elapsed < 2.0
+    assert issuer._term_ack.state & 512
+    assert issuer._stop_ack.state & 8 and not issuer._stop_ack.state & (4 | 1024)
+    assert issuer._closure_fact().stop_mode == "forced"
+    assert result.emergency and result.diagnostic == "ML-TEARDOWN-NORMAL-INCOMPLETE"
+    assert result.leader_reaped and result.boundary_empty and result.boundary_released
+    return [(type(e).__name__, str(e)) for e in errors]
+
+
+def test_cancel_during_the_term_grace_is_confirmed_and_the_stop_is_an_emergency_result(request, monkeypatch):
+    """S1b review LOW-2 (expected, fail-safe behaviour). The usual path: the STOP follows the completed CANCEL
+    and the normal outcome record is refused (ML-TEARDOWN-TERMINAL-SCOPE). Less often (1 of 8 local runs), the
+    grace wait sees the cancelled latch while the CANCEL exchange still holds the connection, and the STOP is
+    refused before send (ML-AFFA-CONFLICT, no revoke); the emergency path then makes the forced STOP."""
+    assert grace_cancel(request, monkeypatch) in (
+        [("PersistenceError", "ML-TEARDOWN-TERMINAL-SCOPE")], [("BootstrapError", "ML-AFFA-CONFLICT")])
+
+
+def test_stop_colliding_with_an_in_flight_cancel_is_finished_by_the_emergency_path(request, monkeypatch):
+    """S1b review LOW-2, the less frequent path made deterministic: the CANCEL exchange is held 0.15 s."""
+    assert grace_cancel(request, monkeypatch, hold=0.15) == [("BootstrapError", "ML-AFFA-CONFLICT")]
+
+
+@pytest.mark.parametrize("bit", [512, 1024, 2048, 4096])
+def test_a_reply_bit_of_an_undeclared_control_fails_closed(broker_stack, monkeypatch, bit):
+    """S1b review LOW-4: a crafted native reply carrying an undeclared control's bit is never accepted."""
+    from xverse.maestro.affa_client import AuthorityConnection
+
+    broker, facade, _, work = broker_stack
+    source, sink = started(broker_stack)
+    issuer = broker.issuer(sink)
+    exchange = AuthorityConnection._exchange
+
+    def crafted(self, request, *, fds=()):
+        reply = exchange(self, request, fds=fds)
+        return replace(reply, state=reply.state | bit)
+
+    monkeypatch.setattr(AuthorityConnection, "_exchange", crafted)
+    with pytest.raises(OwnerError, match="ML-RUN-STATE-UNDECLARED"):
+        issuer.observe(issuer._handle, deadline(1))
+
+
+def test_declared_control_bits_are_accepted(request, monkeypatch, tmp_path):
+    """S1b review LOW-4: the bits of declared controls pass; the marker bit of a non-marker unit does not."""
+    from xverse.maestro.affa_client import AuthorityConnection
+
+    errors = private(tmp_path, "stderr-declared")
+    declare(monkeypatch, {"sink-binding": dict(stop=1, stderr=100)}, stderr={"sink-binding": str(errors)})
+    stack = request.getfixturevalue("broker_stack")
+    broker, _, _, _ = stack
+    _, sink = started(stack)
+    issuer = broker.issuer(sink)
+    exchange = AuthorityConnection._exchange
+    added = {"bits": 512 | 1024 | 4096}
+
+    def crafted(self, request, *, fds=()):
+        reply = exchange(self, request, fds=fds)
+        return replace(reply, state=reply.state | added["bits"])
+
+    monkeypatch.setattr(AuthorityConnection, "_exchange", crafted)
+    assert issuer.observe(issuer._handle, deadline(1)).leader_alive
+    added["bits"] = 2048
+    with pytest.raises(OwnerError, match="ML-RUN-STATE-UNDECLARED"):
+        issuer.observe(issuer._handle, deadline(1))

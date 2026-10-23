@@ -19,6 +19,7 @@ from .affa_protocol import (
     AuthorityUnit,
     STATE_EXITED_ON_TERM,
     STATE_MARKER_READY,
+    STATE_STDERR_TRUNCATED,
     STATE_TERM_SENT,
 )
 from .bootstrap import BootstrapError, BootstrapSession, BootstrapChild, _sealed, seal_helper_image
@@ -245,12 +246,10 @@ def _controls(storage, unit, setup, cwd):
         raise OwnerError("ML-RUN-STDERR-ADMISSION")
     collection = storage.collection
     if probe:
-        try:
-            os.stat(READY_DIRECTORY, dir_fd=cwd, follow_symlinks=False)
-        except FileNotFoundError:
-            pass
-        else:
-            raise OwnerError("ML-RUN-PROBE-STALE")
+        # S1b review LOW-3: any .xverse-ready or .xverse-ready.g* entry (a link is never followed) is stale.
+        with os.scandir(cwd) as entries:
+            if any(e.name == READY_DIRECTORY or e.name.startswith(READY_DIRECTORY + ".g") for e in entries):
+                raise OwnerError("ML-RUN-PROBE-STALE")
         if collection is None or not _within(cwd, tuple(collection.source_identity)):
             raise OwnerError("ML-RUN-PROBE-ROOT")
     if not stderr_max:
@@ -1250,7 +1249,17 @@ class RunUnitIssuer(_Original):
             else bytes(32),
             ticket=ticket,
         )
-        return self.broker.connection._exchange(request)
+        return self._declared(self.broker.connection._exchange(request))
+
+    def _declared(self, reply):
+        """S1b review LOW-4: a reply never carries a state bit of a control this unit did not declare."""
+        grace, stderr, probe = self._image.controls
+        state = reply.state
+        if (state & (STATE_TERM_SENT | STATE_EXITED_ON_TERM) and not grace
+                or state & STATE_MARKER_READY and not probe
+                or state & STATE_STDERR_TRUNCATED and not stderr):
+            raise OwnerError("ML-RUN-STATE-UNDECLARED")
+        return reply
 
     def stage(self, deadline):
         self._holder()
@@ -1278,7 +1287,7 @@ class RunUnitIssuer(_Original):
                 self._image.c1,
             )
             if self._advance_receipt is None:
-                self.broker.connection._exchange(self._proof)
+                self._declared(self.broker.connection._exchange(self._proof))
             else:
                 self._generation_origin._holder()
                 connection, request, reply, descriptor = self._advance_receipt._holder()

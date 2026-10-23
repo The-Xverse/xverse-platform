@@ -29,19 +29,19 @@ from .test_launcher import binaries as binaries, deadline, launch_stack as launc
 MARKER = dict(condition="nonce-marker", cwd="sink", observe_timeout=1.5)
 
 
-def window(monkeypatch, seconds=1.5):
+def window(monkeypatch, seconds=1.5, attempts=3):
     """The readiness window W = min(policy timeout, observe timeout); the fixture's cadence is kept."""
     from . import test_run_broker
 
-    monkeypatch.setattr(test_run_broker, "ProbePolicy",
-                        lambda unit, freshness, cadence, _timeout: ProbePolicy(unit, freshness, cadence, seconds))
+    monkeypatch.setattr(test_run_broker, "ProbePolicy", lambda unit, freshness, cadence, _timeout: ProbePolicy(
+        unit, freshness, cadence, seconds, attempts))
 
 
-def marker_stack(request, monkeypatch, mode):
+def marker_stack(request, monkeypatch, mode, attempts=3):
     from .test_collection_runtime import configure
 
     saved = configure(monkeypatch)
-    window(monkeypatch)
+    window(monkeypatch, attempts=attempts)
     declare(monkeypatch, {"sink-binding": dict(MARKER, mode=mode)})
     return request.getfixturevalue("broker_stack"), saved
 
@@ -95,6 +95,31 @@ def test_marker_late_within_the_window_is_ready_on_a_spaced_attempt(request, mon
     ReverseTeardown(facade, per_unit_seconds=0.8).run(deadline(2))
 
 
+def test_attempt_offsets_reach_the_end_of_the_window_less_a_reserve():
+    from xverse.maestro.providers import readiness_offsets
+
+    assert readiness_offsets(1.5, 3) == (0.0, 0.625, 1.25)
+    assert readiness_offsets(1.5, 2) == (0.0, 1.25)
+    assert readiness_offsets(0.3, 3) == pytest.approx((0.0, 0.1, 0.2))  # reserve W/A when W/A < 0.25
+    assert readiness_offsets(1.5, 1) == (0.0,)
+
+
+def test_marker_written_after_the_old_last_attempt_is_found_at_the_end_of_the_window(request, monkeypatch):
+    """S1b review LOW-1: with A = 2 and W = 1.5 s the old schedule t0 + k*W/A last probed at 0.75 s; a marker
+    written 0.9 s after exec, after (A - 1)/A * W, is found by the attempt at t0 + W - 0.25 s."""
+    stack, _ = marker_stack(request, monkeypatch, "marker-after-900", attempts=2)
+    broker, facade, _, work = stack
+    source, sink = broker.owner._prepared.resource_order
+    end = stage_all(stack)
+    facade.start(source, broker.issuer(source).recipe.descriptor, broker.connection, end)
+    ready = facade.start(sink, broker.issuer(sink).recipe.descriptor, broker.connection, end)
+    assert ready.ready and ready.probe_id == "nonce-marker"
+    rows = annotations(work, sink)
+    assert [(r["action"], r["outcome"]) for r in rows] == [
+        ("probe", "failed"), ("probe", "succeeded"), ("ready", "succeeded")]
+    ReverseTeardown(facade, per_unit_seconds=0.8).run(deadline(2))
+
+
 def test_marker_that_never_appears_is_not_ready_after_three_spaced_attempts(request, monkeypatch):
     stack, _ = marker_stack(request, monkeypatch, "marker-never")
     broker, facade, _, work = stack
@@ -104,23 +129,25 @@ def test_marker_that_never_appears_is_not_ready_after_three_spaced_attempts(requ
     began = time.monotonic()
     with pytest.raises(ValueError, match="ML-PROBE-NOT-READY"):
         facade.start(sink, broker.issuer(sink).recipe.descriptor, broker.connection, end)
-    assert time.monotonic() - began >= 1.0  # attempts at t0, t0 + W/3 and t0 + 2W/3 with W = 1.5 s
+    assert time.monotonic() - began >= 1.25  # attempts at t0, t0 + 0.625 s and t0 + 1.25 s (W = 1.5 s, LOW-1)
     events = [e for e in EvidenceStore.read_run(work.parent / "argus").records()
               if e.get("extensions", {}).get("xverse.maestro", {}).get("unitId") == sink
               and e["extensions"]["xverse.maestro"]["action"] == "probe"]
     assert [(e["extensions"]["xverse.maestro"]["outcome"], e["extensions"]["xverse.maestro"]["probeId"])
             for e in events] == [("failed", "nonce-marker")] * 3
     times = [e["clocks"]["host"]["value"] for e in events]
-    assert all(b - a >= 0.45 for a, b in zip(times, times[1:]))
+    assert all(b - a >= 0.6 for a, b in zip(times, times[1:]))
     assert broker.owner.latch.cancelled
 
 
-@pytest.mark.parametrize("mode", ["no-collection", "shared-cwd", "stale", "outside-root", "unsupported"])
+@pytest.mark.parametrize("mode", ["no-collection", "shared-cwd", "stale", "stale-aside", "stale-link",
+                                  "outside-root", "unsupported"])
 def test_marker_admission_fails_closed(request, monkeypatch, tmp_path, mode):
     from .test_collection_runtime import configure
 
     controls, code = dict(MARKER, mode="marker"), {
         "no-collection": "ML-RUN-PROBE-ROOT", "shared-cwd": "ML-RUN-PROBE-CWD", "stale": "ML-RUN-PROBE-STALE",
+        "stale-aside": "ML-RUN-PROBE-STALE", "stale-link": "ML-RUN-PROBE-STALE",
         "outside-root": "ML-RUN-PROBE-ROOT", "unsupported": "ML-RUN-PROBE-UNSUPPORTED"}[mode]
     if mode not in ("no-collection", "unsupported"):  # an admitted coverage refuses it earlier (ML-COVERAGE-PROBE)
         configure(monkeypatch)
@@ -128,6 +155,10 @@ def test_marker_admission_fails_closed(request, monkeypatch, tmp_path, mode):
         controls.pop("cwd")
     elif mode == "stale":
         controls["stale"] = True
+    elif mode == "stale-aside":  # S1b review LOW-3: an earlier aside name fails at admission, not at a restart
+        controls["stale"] = "aside"
+    elif mode == "stale-link":  # a dangling link with an aside name; it is never followed
+        controls["stale"] = "link"
     elif mode == "outside-root":
         controls["cwd"] = str(private(tmp_path, "outside-root"))
     elif mode == "unsupported":

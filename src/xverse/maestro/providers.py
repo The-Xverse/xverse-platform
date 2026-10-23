@@ -24,6 +24,18 @@ class ReadinessError(OwnerError):
     pass
 
 
+READINESS_RESERVE_SECONDS = 0.25  # S1b review LOW-1: the last marker attempt keeps one round trip
+
+
+def readiness_offsets(window, attempts):
+    """S1b marker attempt offsets from t0: the first at 0 and the last at the end of the window less a
+    round-trip reserve, min(0.25, W/A); a single attempt is made at t0."""
+    if attempts == 1:
+        return (0.0,)
+    reserve = min(READINESS_RESERVE_SECONDS, window / attempts)
+    return tuple(k * (window - reserve) / (attempts - 1) for k in range(attempts))
+
+
 def _positive(value):
     try:
         valid = type(value) in (int, float) and math.isfinite(value) and 0 < value <= 5
@@ -414,10 +426,11 @@ class ProcessReadiness(_Original):
             policy, probe = self._policies[unit_id], self._probe(unit_id)
             observe = next(a for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
             window, began = min(policy.timeout_seconds, observe.timeout_seconds), time.monotonic()
+            offsets = readiness_offsets(window, policy.attempts)
             for attempt in range(policy.attempts):
                 if probe != RUNNING and attempt:
-                    # S1b: marker attempts are spaced at t0 + k*W/A inside the readiness window.
-                    at = began + attempt * window / policy.attempts
+                    # S1b: marker attempts span the readiness window; the last one probes its end (LOW-1).
+                    at = began + offsets[attempt]
                     if at >= deadline.monotonic_seconds:
                         break
                     select.select([], [], [], max(0, at - time.monotonic()))
