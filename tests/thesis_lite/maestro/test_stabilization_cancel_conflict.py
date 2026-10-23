@@ -73,3 +73,65 @@ def test_cancel_on_a_connection_busy_past_the_bound_still_revokes(broker_stack):
     print("busy-past-bound cancel result:", result, "took", round(took, 4))
     assert not result.native_epoch_confirmed and result.issuer_dead, result  # the unchanged fail-safe
     assert CANCEL_LOCK_WAIT_SECONDS <= took
+
+
+def test_stale_cancel_frame_after_a_concurrent_winner_is_retried(broker_stack, monkeypatch):
+    """Another cancel wins between this cancel's frame build and its lock (review finding 23, MEDIUM-1)."""
+    from xverse.maestro.affa_protocol import AuthorityFrame, AuthorityKind as K
+
+    broker, _, storage, _ = broker_stack
+    connection = broker.connection
+    exchange = connection._exchange
+    refused = []
+
+    def winner_first(request, **kw):
+        if request.kind is K.CANCEL and not refused:
+            fresh = AuthorityFrame(K.CANCEL, connection.sequence + 1, request.deadline_ns, connection.config.scope,
+                                   epoch=connection.epoch)
+            exchange(fresh)  # the concurrent winner: CANCELLED advances the epoch
+            try:
+                return exchange(request, **kw)  # now stale
+            except ValueError as error:
+                refused.append(str(error))
+                raise
+        return exchange(request, **kw)
+
+    monkeypatch.setattr(connection, "_exchange", winner_first)
+    result = broker.cancel("s1a2-stale-frame")
+    print("stale-frame cancel result:", result, refused)
+    assert refused == ["ML-AFFA-REQUEST-SCOPE"]
+    assert result.native_epoch_confirmed and result.frozen_units == 3, result
+    assert not _storage_exited(storage)
+
+
+def test_two_concurrent_cancels_are_both_confirmed(broker_stack):
+    """The operator's stop and the dispatcher's own cancel arrive together (review finding 23, MEDIUM-2)."""
+    broker, _, storage, _ = broker_stack
+    barrier, results, errors = threading.Barrier(2), [], []
+
+    def cancel(name):
+        barrier.wait()
+        try:
+            results.append(broker.cancel(name))
+        except Exception as error:  # recorded, then asserted
+            errors.append(repr(error))
+
+    threads = [threading.Thread(target=cancel, args=(name,)) for name in ("operator-stop", "dispatcher-failed")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(5)
+    print("concurrent cancel results:", results, errors)
+    assert not errors and len(results) == 2
+    assert all(r.native_epoch_confirmed and not r.issuer_dead for r in results), results
+    assert not _storage_exited(storage)
+
+
+def test_cancel_exchange_after_cancelled_returns_the_retained_reply(broker_stack):
+    broker, _, storage, _ = broker_stack
+    first = broker.cancel("s1a2-first")
+    assert first.native_epoch_confirmed
+    sequence = broker.connection.sequence
+    reply = broker._cancel_exchange(time.monotonic() + 1, float("inf"))
+    assert reply is broker.connection._epoch_history[-1] and broker.connection.sequence == sequence
+    assert not _storage_exited(storage)

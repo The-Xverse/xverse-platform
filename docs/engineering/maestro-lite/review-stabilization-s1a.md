@@ -625,3 +625,22 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
 
       Recording the live lock holder is carried to the harness, as a `RunBroker._cancel_result` record in
       S1c-2. Then a fresh wheel and a re-review.
+24. **Finding-23 repairs (written at 19:08:45 2026-10-23), per the ADR revision committed first (`cac6e6135`).**
+    - **Code.** `RunBroker._cancel_exchange(end, limit)`:
+      - returns the retained CANCELLED reply when the connection's epoch history already ends in CANCELLED;
+      - retries a pre-send `ML-AFFA-REQUEST-SCOPE` when the frame's sequence or epoch is stale;
+      - ends its wait `CANCEL_REAP_RESERVE_SECONDS` = 0.25 s before a caller's deadline.
+    - **New tests.**
+
+      | Test | Result |
+      | --- | --- |
+      | stale frame (a winner cancels between the build and the lock) | the refusal is `ML-AFFA-REQUEST-SCOPE`, then a confirmed epoch 1 with 3 frozen units and storage alive |
+      | two concurrent cancels through a barrier | both confirmed, storage alive |
+      | cancel after CANCELLED | the retained reply, with no further exchange |
+
+    - **Run.** Wheel `b253356a…`, installed sources equal to the worktree, load 3.7. The conflict tests (6),
+      `test_run_broker`, `test_affa_client`, `test_stabilization_cancel`, `test_composed_issuer_loss`,
+      `test_runtime_pending_stop`, `test_shared_closure`, `test_runtime_entry` and `test_run_teardown` gave
+      77 passed in 82 s.
+    - **Carried.** Recording the live lock holder and `RunBroker._cancel_result` in the live harness is S1c-2
+      scope.
