@@ -70,7 +70,6 @@ def test_same_size_prefix_rewrite_falls_back_and_matches_complete_read(tmp_path,
     records, following = EvidenceStore.read_records(root, checkpoint=checkpoint)
     assert calls, "a changed prefix byte must force a complete read"
     assert records == tuple(original(root).records())
-    assert "e3" not in {r["eventId"] for r in records} or records == _full(root)
 
 
 def test_truncation_falls_back_and_reports_damage(tmp_path):
@@ -134,3 +133,31 @@ def test_checkpoint_of_another_root_is_not_used(tmp_path, monkeypatch):
     monkeypatch.setattr(reader_module, "read_run", lambda *a, **kw: calls.append(1) or original(*a, **kw))
     records, _ = EvidenceStore.read_records(other, checkpoint=checkpoint)
     assert calls and records == tuple(original(other).records())
+
+
+def test_scan_stopped_at_the_record_cap_is_not_resumable(tmp_path):
+    from xverse.argus import EvidenceLimits
+
+    limits = EvidenceLimits(max_read_records=3)
+    root = S.run_root(tmp_path)
+    run = S.open_run(root)
+    for index in range(3):
+        _append(run, index)
+    records, checkpoint = EvidenceStore.read_records(root, limits=limits)
+    assert len(records) == 3 and checkpoint is None  # review 1 R1-1: a scan at the cap yields no checkpoint
+    _append(run, 3)
+    records, _ = EvidenceStore.read_records(root, limits=limits, checkpoint=checkpoint)
+    assert records == tuple(EvidenceStore.read_run(root, limits=limits).records()) and len(records) == 3
+
+
+def test_stream_replaced_by_a_symlink_falls_back_to_the_complete_read(tmp_path):
+    root, run, checkpoint = _clean_checkpoint(tmp_path)
+    stream = root / "events.jsonl"
+    target = tmp_path / "outside.jsonl"
+    target.write_bytes(stream.read_bytes())
+    stream.unlink()
+    stream.symlink_to(target)
+    records, following = EvidenceStore.read_records(root, checkpoint=checkpoint)
+    assert records == _full(root) and following is None
+    assert "ARGUS2-PATH-SYMLINK" in {d.code for d in EvidenceStore.read_run(root).diagnostics}
+

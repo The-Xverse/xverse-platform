@@ -223,7 +223,7 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
         finishes in about 1.5 s, before any renewal. No heartbeat is sent, and the race is never set up.
     - **Assessment.** The behaviour is correct: no renewal is needed in a short run. The test's trigger
       depended on persistence being slow.
-    - **Repair (test only, in the next commit).** In `heartbeat-race` mode, once three starts are complete
+    - **Repair (test only, committed with this finding in `a803b4087`; review 1 R1-5).** In `heartbeat-race` mode, once three starts are complete
       and no ticket exists, each statement is followed by a bounded 0.25 s pause. The run then reaches the
       first lease renewal, and the heartbeat triggers the replacement exactly as the test intends. The
       pause stops as soon as the ticket exists. Its total is bounded by the 20 s active window that the
@@ -259,3 +259,40 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       dependence, `EvidenceLimits` equality, the shared-record consumers, `_index` reset paths, no start
       authority after a late reply, the `_failed` consumers, `_reload` equivalence, and bench files outside
       the DV12 collection (`pytest tests`).
+12. **Repairs and dispositions for review 1 (finding 11).** The thesis delegated revisions DR-1 to DR-5 were
+    recorded first, in `specs/029-lite-stabilization/review/author-decisions-20261023.md` (spec rev 4b).
+    - **R1-1 (repaired).** No checkpoint is created when `len(records) >= max_read_records`
+      (`recovery.py`). Regression test `test_scan_stopped_at_the_record_cap_is_not_resumable`.
+    - **R1-2 (repaired).** `reconcile_snapshot` re-raises `PersistenceCancelled` before its fail-closed
+      handler.
+    - **R1-3 (repaired, DR-1).** The grace expiry has its own code, `ML-PERSIST-CANCEL-GRACE`. Test
+      `test_in_flight_reply_grace_expiry_fails_closed_with_its_own_code`: a blocked flush, then a cancel;
+      the caller is released after at least 0.5 s and in less than 2 s, and storage is failed and drained.
+    - **R1-4 (dispositioned).**
+      - FR-006 is revised by DR-2: `closed` or `failed`. The cancel test now also asserts exactly one
+        run-terminal event with outcome `cancelled`.
+      - FR-007 is narrowed by DR-3: RunClosure STOP/RETIRE only if VS-09, or a cancel before
+        acknowledgement, shows unattested facts.
+      - FR-003 is scoped by DR-4: new Maestro-level same-size, same-inode tamper variants
+        `argus-same-size` (ordinal byte in the first line) and `journal-same-size` (sequence byte in the
+        first M3 record) of `test_original_durable_history_loss_blocks_new_ready`. They fail closed after
+        earlier successful checks: 5/5 variants pass.
+      - FR-002 full re-read costs, from the worker traces at 450–1 009 events: revalidate ≤ 20.7 ms, audit
+        ≤ 37.8 ms, terminal-report handling 0.42–0.49 s (client round trip ≤ 0.63 s) against the ≤ 2 s
+        terminal budget, init 0.50–0.68 s within the start-up window. The trace writes a request's line
+        only when the next request arrives, so the worker's last request (closure or abort) is not in the
+        trace. Its client-side round trip is in `rpc.jsonl`: closure ≤ 0.4 ms in all runs.
+      - FR-008, derived for 5 units (DR-5):
+        - the terminal reserve admitted by `admit_schedule` is 21.4 s for 4 units at operation 0.38 s and
+          19.4 s for 5 units at 0.2 s;
+        - S1a adds no teardown work: FR-007 is not implemented, and the grace stays inside the existing
+          drain;
+        - the measured terminal calls (≤ 0.63 s each) fit the ≤ 2 s terminal budget;
+        - S1b's graceful stop must re-derive this.
+    - **R1-5 (corrected).** The finding-10 wording now names the commit. Section 8.6 states precisely which
+      damage prevents a checkpoint. In future, amendments get their own commit before the code: S1a-1 did,
+      S1a-2 did not. That is recorded here.
+    - **R1-6 (repaired).** The redundant assertion is removed. Added: the symlink-replaced stream test, the
+      grace-expiry test, the Maestro-level same-size tamper variants and the positive run-terminal check.
+    - **R1-7 (accepted, LOW).** The bounded 0.25 s pause keeps the test's intent without a product hook. A
+      deterministic heartbeat trigger would need a test-only hook in the dispatcher and is not added.

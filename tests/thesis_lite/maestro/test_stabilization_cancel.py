@@ -18,6 +18,7 @@ from .test_boundary import environment as environment
 from .test_launcher import binaries as binaries
 from .test_run_bootstrap import run_bootstrap_binary as run_bootstrap_binary
 from .test_runtime_entry import runtime as runtime
+from .test_persistence import storage as storage
 
 TARGET = 2  # the second ordinary tick-complete statement: every unit is issued by then
 
@@ -75,6 +76,9 @@ def test_cancel_during_ordinary_persistence_call_keeps_storage_and_aborts_writer
     assert reader.manifest['writerState'] == storage.last_writer_state
     reasons = set(reader.assessed_evidence_reasons)
     assert not {r for r in reasons if 'CORRUPT' in r or 'MUTATED' in r or 'WRITER-STATE' in r}, reasons
+    # the run-terminal event records the cancellation (DR-2; review 1 R1-6)
+    terminals = [e for e in reader.records() if e.get('extensions', {}).get('xverse.maestro', {}).get('action') == 'run-terminal']
+    assert len(terminals) == 1 and terminals[0]['extensions']['xverse.maestro']['outcome'] == 'cancelled', terminals
     # the evidence never presents the cancelled run as a success
     terminal = result.dispatch.terminal.public_data() if result.dispatch.terminal is not None else None
     if terminal is not None:
@@ -84,3 +88,41 @@ def test_cancel_during_ordinary_persistence_call_keeps_storage_and_aborts_writer
     issued = [u for u in result.closure.native_units if u.issued is True]
     assert issued and all(u.direct_child_reaped is True and u.native_retired is True for u in issued), result.closure.native_units
     assert result.cleanup_complete, result.closure.diagnostics
+
+
+def test_in_flight_reply_grace_expiry_fails_closed_with_its_own_code(storage):
+    """DR-1: a request in flight when the run is cancelled may wait for its reply for 0.5 s only; a worker that
+    never replies (blocked flush) is then failed closed with ``ML-PERSIST-CANCEL-GRACE``, well inside the
+    admitted cancellation drain (<= 2 s)."""
+    import os
+    import select
+    import time
+
+    from xverse.maestro.persistence import CANCEL_REPLY_GRACE_NS
+
+    from .test_persistence import deadline
+
+    start, stage, config, manager, latch = storage
+    owner, client, announce, release = start("flush-hang")
+    errors, ended = [], []
+
+    def commit():
+        try:
+            owner.commit_intent(config.prepared.units[0].unit_id, deadline(3))
+        except Exception as error:
+            errors.append(error)
+        ended.append(time.monotonic())
+
+    worker = threading.Thread(target=commit)
+    worker.start()
+    try:
+        assert select.select([announce], [], [], 2)[0] and os.read(announce, 1) == b"H"
+        cancelled = time.monotonic()
+        owner.cancel("cancel-isolated-flush")
+    finally:
+        worker.join(2)
+    assert not worker.is_alive() and len(errors) == 1
+    assert 'ML-PERSIST-CANCEL-GRACE' in str(errors[0]) or 'ML-PERSIST-CANCEL-GRACE' == getattr(
+        getattr(errors[0], 'rpc_failure', None), 'diagnostic', None), repr(errors[0])
+    assert CANCEL_REPLY_GRACE_NS / 1e9 <= ended[0] - cancelled < 2.0
+    assert client._failed and client.drain(deadline(1)).worker_reaped

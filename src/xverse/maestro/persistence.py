@@ -803,7 +803,7 @@ class PersistenceClient(_Original):
                 if not cancel_seen:
                     cancel_seen.append(now)
                 elif now - cancel_seen[0] > CANCEL_REPLY_GRACE_NS:
-                    raise PersistenceError("ML-PERSIST-CLOSED")  # no reply within the grace: fail closed
+                    raise PersistenceError("ML-PERSIST-CANCEL-GRACE")  # no reply within the grace: fail closed (DR-1)
             return self._live(
                 allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure") or (
                     kind == 'terminal-report' and body.get('action') == 'close'),
@@ -1312,6 +1312,8 @@ class PersistenceClient(_Original):
             _, _, reply = self._rpc("recovery", body, deadline)
             validate_snapshot(controller, body, reply)
             return reply
+        except PersistenceCancelled:
+            raise  # refused before send because the run was cancelled: storage stays healthy (review 1 R1-2)
         except Exception:
             self._fail()
             raise

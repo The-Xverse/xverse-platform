@@ -397,8 +397,10 @@ the following hold:
 
 Otherwise it returns `None`, and `read_records` performs a complete `read_run`. `read_records` resumes
 only when the manifest bytes are unchanged (SHA-256), because every manifest-derived decision of `read_run`
-before the stream scan then repeats exactly. Damaged evidence never yields a checkpoint, so it is always
-re-read completely.
+before the stream scan then repeats exactly. A scan that emits any stream diagnostic, or that stops at the
+`max_read_records` cap, never yields a checkpoint, so such evidence is always re-read completely.
+Manifest-level findings, such as a recorded size or hash mismatch, do not change the returned records and do
+not prevent a checkpoint.
 
 **Shared records.** The records are shared with the checkpoint and are read-only for the caller.
 

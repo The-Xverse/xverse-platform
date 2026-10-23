@@ -700,7 +700,9 @@ def _recover(root: Any, *, limits: EvidenceLimits, manifest_run_id: str | None, 
         )
 
     checkpoint = None
-    if identity is not None and not collected and not truncated and not over_read_bound and not diagnostics_suppressed:
+    # A scan that stopped at the record cap is not resumable: a complete read would stop there too (review 1 R1-1).
+    if (identity is not None and not collected and not truncated and not over_read_bound and not diagnostics_suppressed
+            and len(records) < limits.max_read_records):
         checkpoint = StreamCheckpoint(identity, total, digest.hexdigest(), line_number, expected_ordinal,
                                       frozenset(seen_ids), tuple(records), limits, manifest_run_id, relative)
     return RecoveryResult(
