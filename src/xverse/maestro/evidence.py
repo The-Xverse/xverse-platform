@@ -63,15 +63,43 @@ def _canonical(value):
 
 
 def _bounded(value, maximum, checkpoint):
+    """Canonical JSON bytes of ``value``, refused above ``maximum`` bytes, with ``checkpoint`` between elements.
+
+    ADR-ML3-EVIDENCE-0001 amendment S1a-4: a top-level object is emitted key by key (sorted, as ``sort_keys``) and a
+    list value element by element, each through the same encoder (its C path), so the bytes are identical to a single
+    ``iterencode`` of ``value`` while the deadline is checked once per element instead of once per pure-Python chunk.
+    Any other shape uses the original chunked encoding."""
     encoder = json.JSONEncoder(sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
     chunks, size = [], 0
-    for part in encoder.iterencode(value):
-        checkpoint()
-        encoded = part.encode()
+
+    def emit(text):
+        nonlocal size
+        encoded = text.encode()
         size += len(encoded)
         if size > maximum:
             raise PublicInputError('ML-EVIDENCE-EXPORT-SIZE')
         chunks.append(encoded)
+
+    if type(value) is not dict or any(type(key) is not str for key in value):
+        for part in encoder.iterencode(value):
+            checkpoint()
+            emit(part)
+        return b''.join(chunks)
+    checkpoint()
+    emit('{')
+    for index, key in enumerate(sorted(value)):
+        emit((',' if index else '') + encoder.encode(key) + ':')
+        item = value[key]
+        if type(item) is list:
+            emit('[')
+            for position, element in enumerate(item):
+                checkpoint()
+                emit((',' if position else '') + encoder.encode(element))
+            emit(']')
+        else:
+            checkpoint()
+            emit(encoder.encode(item))
+    emit('}')
     return b''.join(chunks)
 
 

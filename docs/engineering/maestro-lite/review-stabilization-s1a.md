@@ -723,3 +723,28 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
         generated and recorded bodies.
       - Memory stays bounded by one element plus the cap. The 8192-event and cap checks are unchanged.
       - No incremental cache is introduced unless the re-measurement shows it is still needed.
+29. **The S1a-3 repair, per amendment S1a-4 (written at 22:14:53 2026-10-23).**
+    - **Code.** `evidence._bounded` now emits a top-level object key by key, sorted, and a list value element by
+      element, each through the same `JSONEncoder` (the C path). The size cap is checked after every element and
+      the checkpoint runs once per element. Any other shape keeps the original chunked encoding.
+    - **Differential test** `tests/thesis_lite/maestro/test_stabilization_bounded_encoding.py`: 362 passed. It covers:
+      - byte identity against a verbatim copy of the old implementation, over 300 generated bodies and values
+        (unicode, escapes, `-0.0`, `1e-310`, large integers, nesting);
+      - identical refusal at every cap (60 bodies, four caps each);
+      - NaN and infinity refused as before;
+      - the checkpoint running per element, under a tenth of the previous count, and still able to stop the
+        encoding.
+    - **Re-measurement** on the same bench (600 ticks, 4 units, 4 MiB cap), at load 3.3–3.5:
+
+      | Measure | Before | After (runs `fixed-h600-a/b/c`) |
+      | --- | --- | --- |
+      | `retained_snapshot` | 1090 ms | 46–50 ms |
+      | `publish` | 1303 ms | 269–289 ms |
+      | checkpoint calls | 166,561 | 1810 |
+
+      - `close` takes 491–530 ms: `verify_runtime_closed` (the independent re-read of the closed evidence) 393 ms
+        and `argus.finalize` 90 ms. That is unchanged by design.
+      - Both terminal calls are now about 0.27 s and 0.5 s against their 2 s budget at low load.
+      - The live terminal cost was 1.5–2.5 times the bench cost under load 6–8.4, so the expected live figures are
+        at most about 0.7 s and 1.3 s.
+      - The run succeeded, with cleanup complete.
