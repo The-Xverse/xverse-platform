@@ -644,3 +644,22 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       77 passed in 82 s.
     - **Carried.** Recording the live lock holder and `RunBroker._cancel_result` in the live harness is S1c-2
       scope.
+25. **Independent re-review of S1a-2 at `fb364bfac` (written at 19:17:25 2026-10-23): PASS, with 1 LOW.**
+    - **Confirmed.**
+      - The CANCELLED shortcut cannot return a reply from an earlier epoch or another run. Only CANCELLED and
+        ADVANCED replies, checked by `_match`, enter the history, and nothing follows a CANCELLED. A new
+        RunBroker refuses a closed connection.
+      - The stale-frame retry is bounded, and never retries a refusal caused by the deadline.
+      - The reserve probe: with a 0.4 s deadline the wait ended at 0.151 s, and the revoke reaped.
+      - The fail-safe is preserved. There is no deadlock or livelock.
+      - The ADR text matches the code, and the commit order is correct.
+    - **Runs.** `test_stabilization_cancel_conflict.py` ran three times, 6 passed each time. The related test
+      files gave 35, 36 and 42 passed, at load 3.0–4.7.
+    - **The two discriminating tests.** These fail on the pre-repair `_cancel_exchange` (probe):
+      - the stale-frame test;
+      - the after-CANCELLED test.
+    - **LOW-1.** `test_two_concurrent_cancels_are_both_confirmed` passes on the pre-repair code too. In 1 of 4
+      traced runs it did not overlap. It is therefore a smoke test of the conflict wait, not a test of the
+      stale-frame interleaving.
+    - **Disposition.** The test's docstring and finding 24 now describe it as a smoke test. This changes the
+      docstring only. The change is made before the full run, so the full run covers it.

@@ -105,7 +105,10 @@ def test_stale_cancel_frame_after_a_concurrent_winner_is_retried(broker_stack, m
 
 
 def test_two_concurrent_cancels_are_both_confirmed(broker_stack):
-    """The operator's stop and the dispatcher's own cancel arrive together (review finding 23, MEDIUM-2)."""
+    """Smoke test: the operator's stop and the dispatcher's own cancel arrive together (finding 23, MEDIUM-2).
+
+    It does not force the stale-frame interleaving and may not overlap (re-review, finding 25): the stale-frame and
+    after-CANCELLED tests are the ones that discriminate the repair."""
     broker, _, storage, _ = broker_stack
     barrier, results, errors = threading.Barrier(2), [], []
 
