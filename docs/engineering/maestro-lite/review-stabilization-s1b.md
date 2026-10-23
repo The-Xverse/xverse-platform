@@ -609,3 +609,12 @@ decision S-D2, approved on 2026-10-23).
         the three S1b suites, runtime_entry, run_teardown and dv05/dv06.
       - Further suites: epoch, release-timeout fence, watch token, fenced teardown, leaseguard and fence codec. The
         result is in this log's next update.
+17. **Verification additions to finding 16 (written at 23:51:43 2026-10-23).**
+    - The epoch, release-timeout fence, watch-token, fenced-teardown, leaseguard and fence-codec suites gave 101
+      passed.
+    - **Live development no-carla runs** on `b049585bf` (two runs; compat finding 43):
+      - the cancel was confirmed natively, with no revoke;
+      - no persistence failure, and cleanup complete;
+      - the Maestro writer `failed`, with WRITER-STATE only;
+      - no residue.
+    - **Next.** An independent review of S1a-5, then the full installed-wheel run, DV12 and CAPA step 13 on this head.
