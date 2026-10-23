@@ -109,3 +109,37 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
      `storage._failed` is True. This confirms research R-2: both the pre-send refusal and the in-flight
      `check()` refusal go through `_fail()`. The log is `t03-main-repro.log` in the run directory. The
      test is committed failing, as the reproduction. The repair follows in a later commit.
+6. **Repair of finding 5 (FR-005 to FR-007), with ADR amendment S1a-1 (commit `3f032783e`, recorded before
+   this implementation).**
+   - **Change in `persistence.py`.**
+     - A new `PersistenceCancelled` (code `ML-PERSIST-CLOSED`) is raised before send when the latch is
+       cancelled and the client is not failed. It is checked ahead of `check_child`, because the
+       bootstrap root's `_live` also refuses a cancelled latch, with `ML-BOOT-CLOSED`. That was the first
+       repair attempt's miss: storage was still failed by the `ML-BOOT-CLOSED` path.
+     - `_rpc` re-raises it without `_fail()`, and `_available` does the same.
+     - A request in flight checks the child as the terminal kinds do, and may receive its reply within
+       `CANCEL_REPLY_GRACE_NS` (0.5 s). After that it fails closed.
+   - **Rejected intermediate design (recorded).** Letting the in-flight request run to its own deadline
+     broke `test_persistence.py::test_cancel_while_flush_is_blocked_returns_without_storage_lock`, which
+     requires a cancel to release the caller within 2 s even when the worker's flush hangs. That accepted
+     property is the reason for the bounded grace.
+   - **FR-006 refinement.** After the repair, a cancelled run goes through Maestro's normal terminal path:
+     dispositions, run-terminal, collection, the terminal report and finalize. The writer ends `closed`,
+     with `complete` evidence of a run that did not succeed (`terminalSucceeded: false`,
+     `eligible: false`, blocker `terminal-outcome`). That is an honest closure, and stronger than the
+     spec's abort expectation. The test therefore accepts `closed` or `failed`, requires the manifest
+     state to match, forbids CORRUPT, MUTATED and WRITER-STATE reasons, and requires the success flags to
+     be false.
+   - **FR-007.** Every issued unit was reaped and retired through the normal reverse teardown, and
+     `cleanup_complete` holds, so no RunClosure STOP/RETIRE change was needed for this path. The live
+     cancel-paused confirmation (VS-09) checks the native-frozen live case.
+   - **Verification on venv `venv-cand`** (candidate wheel, no PYTHONPATH):
+     - `test_stabilization_cancel.py`: 2/2 passed, three times in a row.
+     - The previously failing pair (blocked flush; `cancel-queued-recovery`) plus the new test: 13
+       passed.
+     - The focused group (`test_persistence`, `test_runtime_entry`, `test_active_control_deadlines`,
+       `test_lazy_dispatcher`, `test_retained_inputs`, `test_terminal_runtime`, `test_outcomes`) at load
+       4.6–4.8 with the intermediate design gave 111 passed, 2 failed and 1 error. The failures were the
+       blocked-flush regression and a setup `ML-PERSIST-TIMEOUT` in `cancel-queued-recovery`. The latter
+       passes on main and on the final repair; it is classified as load-sensitive setup, and the full
+       run decides.

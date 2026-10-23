@@ -1,6 +1,7 @@
 """S1a (thesis specs/029-lite-stabilization FR-004 to FR-007): a run cancelled while an ordinary persistence
-call is about to be sent, or is in flight, keeps a healthy storage owner. The terminal records and the
-Argus abort are persisted, and the issued units' native facts are attested.
+call is about to be sent, or is in flight, keeps a healthy storage owner. The terminal records are
+persisted, the writer is closed honestly (finalized, or aborted), and the issued units' native facts are
+attested.
 
 Reproduction before repair (S1-T03): on main 8b3d8c8e8 the cancel poisons storage (``_fail()``), so the
 writer stays ``open`` with the opening manifest (research R-2; review-stabilization-s1a.md)."""
@@ -66,12 +67,19 @@ def test_cancel_during_ordinary_persistence_call_keeps_storage_and_aborts_writer
     storage = entry._storage
     # FR-005: a cancel is not a storage failure
     assert not storage._failed, result.diagnostics
-    # FR-006: the writer is aborted through the healthy owner, and the manifest matches the stream
-    assert storage.last_writer_state == 'failed', storage.last_writer_state
+    assert result.dispatch.diagnostic == 'ML-SCHEDULE-CANCELLED'
+    # FR-006: the healthy owner closes the writer, either through the normal terminal path (finalized
+    # ``closed``) or through RunClosure's abort (``failed``), and the manifest matches the stream
+    assert storage.last_writer_state in ('closed', 'failed'), storage.last_writer_state
     reader = EvidenceStore.read_run(work.parent / 'argus')
-    assert reader.manifest['writerState'] == 'failed'
+    assert reader.manifest['writerState'] == storage.last_writer_state
     reasons = set(reader.assessed_evidence_reasons)
-    assert not {r for r in reasons if 'CORRUPT' in r or 'MUTATED' in r}, reasons
+    assert not {r for r in reasons if 'CORRUPT' in r or 'MUTATED' in r or 'WRITER-STATE' in r}, reasons
+    # the evidence never presents the cancelled run as a success
+    terminal = result.dispatch.terminal.public_data() if result.dispatch.terminal is not None else None
+    if terminal is not None:
+        assert terminal['report']['terminalSucceeded'] is False and terminal['report']['eligible'] is False
+        assert 'terminal-outcome' in terminal['report']['blockers']
     # FR-007: every issued unit is attested as reaped and retired, so cleanup is complete
     issued = [u for u in result.closure.native_units if u.issued is True]
     assert issued and all(u.direct_child_reaped is True and u.native_retired is True for u in issued), result.closure.native_units

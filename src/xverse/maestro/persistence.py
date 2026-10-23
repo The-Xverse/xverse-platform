@@ -44,6 +44,20 @@ class PersistenceError(OwnerError):
     pass
 
 
+# A request already sent when the run is cancelled may still receive its reply for this long; then the call
+# fails closed as before. It stays well inside the admitted cancellation drain (<= 2 s, 024 detailed design),
+# so a hung worker still releases a cancel promptly (thesis S1 FR-005).
+CANCEL_REPLY_GRACE_NS = 500_000_000
+
+
+class PersistenceCancelled(PersistenceError):
+    """An ordinary call refused because the run was cancelled, while the storage owner is healthy.
+
+    It keeps the ``ML-PERSIST-CLOSED`` code, but it is not a storage failure: the client is not failed,
+    so the terminal records and the abort still reach the owner (thesis S1 FR-005; amendment of
+    ADR-ML3-PERSISTENCE-0001 for in-flight cancellation)."""
+
+
 @dataclass(frozen=True)
 class PersistenceRPCFailure:
     """One local observation; never a durable outcome, ACK or cause attribution."""
@@ -705,9 +719,16 @@ class PersistenceClient(_Original):
             raise PersistenceError("ML-PERSIST-REPLACED")
         self._pins[2]._check()
 
-    def _live(self, *, allow_cancel=False, allow_exit=False):
+    def _live(self, *, allow_cancel=False, allow_exit=False, in_flight=False):
+        # ``in_flight``: the request is already sent; after a cancel its reply may still arrive within the
+        # caller's bounded grace (S1 FR-005). Child exit, identity and failure are still checked.
         self._holder()
-        check_child(self._pins[0], live=not (allow_exit or allow_cancel))
+        cancelled = self._pins[2].cancelled and not self._failed
+        if cancelled and not allow_cancel and not in_flight:
+            raise PersistenceCancelled("ML-PERSIST-CLOSED")
+        # After a cancel the bootstrap root refuses ordinary use, so a call already in flight checks the
+        # child as the terminal kinds do; exit and identity are still checked below.
+        check_child(self._pins[0], live=not (allow_exit or allow_cancel or (in_flight and cancelled)))
         channel = self._pins[1]
         info = os.fstat(channel.fileno())
         if (
@@ -721,7 +742,7 @@ class PersistenceClient(_Original):
             exited is not None or select.select([self._pidfd], [], [], 0)[0]
         ):
             raise PersistenceError("ML-PERSIST-CHILD")
-        if self._failed or (self._pins[2].cancelled and not allow_cancel):
+        if self._failed or (self._pins[2].cancelled and not allow_cancel and not in_flight):
             raise PersistenceError("ML-PERSIST-CLOSED")
 
     def _available(self):
@@ -733,6 +754,8 @@ class PersistenceClient(_Original):
             self._live()
             if not self._ready:
                 raise PersistenceError("ML-PERSIST-NOT-OPEN")
+        except PersistenceCancelled:
+            raise  # a cancel that raced the check above is not a storage failure (S1 FR-005)
         except Exception:
             self._fail()
             raise
@@ -771,10 +794,20 @@ class PersistenceClient(_Original):
             in ("failure", "step-disposition", "unit-disposition", "run-terminal")
         )
 
+        cancel_seen = []
+
         def check():
+            in_flight = stage in ('receive', 'acknowledgement', 'post-ack')
+            if in_flight and not allow_cancel and self._pins[2].cancelled and not self._failed:
+                now = time.monotonic_ns()
+                if not cancel_seen:
+                    cancel_seen.append(now)
+                elif now - cancel_seen[0] > CANCEL_REPLY_GRACE_NS:
+                    raise PersistenceError("ML-PERSIST-CLOSED")  # no reply within the grace: fail closed
             return self._live(
                 allow_cancel=allow_cancel, allow_exit=kind in ("abort", "closure") or (
-                    kind == 'terminal-report' and body.get('action') == 'close')
+                    kind == 'terminal-report' and body.get('action') == 'close'),
+                in_flight=in_flight,
             )
 
         try:
@@ -811,6 +844,10 @@ class PersistenceClient(_Original):
             if time.monotonic_ns() >= until:
                 raise PersistenceError("ML-PERSIST-LATE")
             return operation, until, reply["body"]
+        except PersistenceCancelled:
+            if stage != 'validation':
+                self._fail()  # defensive: a cancel refusal is only raised before the request is sent
+            raise  # nothing was sent: storage stays healthy and no RPC failure is recorded (S1 FR-005)
         except Exception as error:
             try:
                 if self._rpc_failure_pin is None:
