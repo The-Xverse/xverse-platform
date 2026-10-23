@@ -457,3 +457,48 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       - Record the cause as the next finding, then write the ADR amendment, then the repair. This branch
         (`candidate/lite-stabilization-s1a2-20261023`) holds the record only, until the author decides how it
         is sequenced with S1b.
+19. **Code analysis of finding 18 by independent review 7 of S1c-2a (2026-10-23 about 18:00). The mechanism is a
+    hypothesis, not proven; corrections to finding 18 are included.**
+    - **Shown by the code.**
+      - After a cancel, a `schedule` request passes the client check only for the body kinds `failure`,
+        `step-disposition`, `unit-disposition` and `run-terminal` (`persistence.py` `_rpc`). Its `allow_exit`
+        is false.
+      - At stage `receive`, `ML-PERSIST-CHILD` comes only from `_live`: the child exited, or its pidfd or socket
+        identity changed.
+      - `_failed` was false before the send, and `_rpc` holds a non-blocking lock. So no concurrent `_rpc` and
+        no client `_fail()` preceded this request.
+      - The `stop` path (`runtime_entry.stop` → the dispatcher driver's `cancel` → `owner.cancel`) does not call
+        the persistence client.
+      - The first post-cancel statement is `failure`, and its exception is swallowed.
+      - **A kill chain exists.**
+        - `RunBroker.cancel` turns a `ValueError` from the K.CANCEL exchange into `connection.revoke()`
+          (`run_broker.py` about 905–911).
+        - That includes `ML-AFFA-CONFLICT`, raised when another thread holds the authority connection's
+          non-blocking lock (`affa_client.py` about 340).
+        - `revoke` SIGKILLs the authority (about 425–441).
+        - Before its terminal fence, the bootstrap root reacts to the authority's death by calling `cleanup()`.
+          That kills every child, including the persistence worker (`native/bootstrap.c` about 287 and 316).
+      - Health probes use that same lock: `check_health` → `RunUnitIssuer.observe` → `_native(K.QUERY)` →
+        `connection._exchange`.
+    - **Consistent with the hypothesis.**
+      - Only `172145`'s cancel (13.708 s) fell inside a health scan: lite-driver's health was at 13.686 s, and
+        the carla-adapter record never reached the journal.
+      - The 6 good runs cancelled 1.2–1.6 s after a completed scan.
+      - `stop` took 4.81 ms here, against 2.7–3.4 ms elsewhere.
+    - **Not established.**
+      - That the lock was actually held at that instant.
+      - A worker self-exit is not excluded: the root also kills everything if the worker dies first.
+    - **Corrections to finding 18.**
+      - The rate is 1 of 5 on blueprint `f19ae58`, and 1 of 7 pooled over 3 blueprint revisions and 2 observe
+        paths.
+      - For `164544` and `170215` only the manifests' recorded reasons exist (WRITER-STATE only), not
+        `verify` output.
+      - "Host left clean" covers the 4 unit command lines only.
+      - "The S1a acceptance evidence is unaffected" is withdrawn as unsupported.
+      - Finding 18 was written at about 17:35, with runs up to 17:33, not at 17:22.
+    - **Discriminating diagnosis (proposed; no repair before it).**
+      - A bench or unit reproduction that calls `entry.stop` while the authority connection lock is held by a
+        health QUERY.
+      - Record `RunBroker._cancel_result`, confirmed or revoked, in the owned harness's `maestro-run.json`.
+      - Then the ADR amendment and the repair, for example a cancel that waits a bounded time for the lock
+        instead of revoking.
