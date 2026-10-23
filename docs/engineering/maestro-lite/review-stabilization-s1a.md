@@ -363,3 +363,21 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       in `receipts.tar.gz`. The loop removed its tmpfs work directory.
     - **Next.** CAPA successor step 9 (`build-capa-20261023-stabilization-s1a-step9.py`) is built after
       this log is committed.
+15. **The CAPA register verifier cannot verify step 8 or step 9 on the merged main history. A pre-existing
+    tooling defect (2026-10-23 12:40). Recorded before the successor.**
+    - **What happened.** CAPA step 9 (`capa-20261023-stabilization-s1a-step9`, register `34c742da…`, 56
+      records and 681 bindings) passes parent preservation: 665 parent bindings, none changed or lost.
+      `affa17/verify-capa-register-20261020.py` then fails with `AssertionError: E-FAULTS-REVIEW-LOG`.
+      Re-running that verifier on step 8 (`49f25e74…`) in this worktree fails the same way, so the defect
+      predates S1a.
+    - **Cause, verified.** The binding is to `review-faults-lite.md`, with bound SHA-256 `6558cc6f…`
+      (CAPA step 7). Flows-lite finding 13 placed that blob into history through a restore/re-restore commit
+      pair on the flows branch, whose net change to the path is zero. After the `--no-ff` merge into main,
+      default history simplification of `git rev-list HEAD -- <path>` (`verify-capa-register-20261020.py:36`)
+      drops that side branch:
+      - with the default, 5 commits are listed and none carries the blob;
+      - with `--full-history`, 8 commits are listed and one carries it.
+    - **Disposition.** The frozen `affa17` verifier is not edited. A successor,
+      `affa19/verify-capa-register-20261023.py`, differs only by `--full-history` in the committed-blob
+      search; its docstring records why. Step 8 and step 9 are verified with it. The original verifier's
+      result is recorded as above.
