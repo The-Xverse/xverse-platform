@@ -675,3 +675,21 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       excluded from the comparison.
       - The verdict is `dv12-gate-verdict.json`, and `SHA256SUMS` covers the run directory.
     - **Next.** CAPA step 10 (parent step 9, `34c742da…`) is built after this log is committed.
+27. **CAPA successor step 10 for S1a-2 (written at 20:17:26 2026-10-23), built after finding 26 was committed.**
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1a2-step10/`, built by
+      `build-capa-20261023-stabilization-s1a2-step10.py` over `platform-regression-20261023b-1`.
+    - **Additive over step 9 (`34c742da…`).** No record was opened, changed or closed.
+    - **Register `4b04cb4aee387323fc123395e7ecf58e491f7384b4fbebce8ed668ab747569d0`:** 56 records and 687 bindings.
+      The 6 new bindings cover:
+      - this review log, as committed in `3d66178c4`;
+      - the ADR-ML3-AFFA-0001 S1a-3 amendment;
+      - `run_broker.py`;
+      - `test_stabilization_cancel_conflict.py`;
+      - the run's `SHA256SUMS` and its DV12 verdict.
+    - **Successor verifier** `verify-capa-register-20261023.py`: rc 0, with 56 records and 687 bindings verified
+      (`verification-recheck.json`).
+    - **Parent preservation** (`affa17/check-capa-parent-preservation-20261019.py`): `parent_preserved: true`. All
+      681 parent bindings were checked, none changed or lost, and the policy and schema are unchanged
+      (`parent-preservation.json`).
+    - No cause is verified beyond the deterministic reproduction, and no effectiveness is claimed.
+    - **S1a-2 is ready for the author's acceptance.** VS-09 follows on the merged revision.
