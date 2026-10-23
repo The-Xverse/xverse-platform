@@ -663,7 +663,7 @@ int main(int argc,char **argv) {
         int valid=!received&&!memcmp(p,"AF17",4)&&((kind>=1&&kind<=15)||kind==TERM)&&
             !memcmp(p+24,g->scope,32)&&get64(p+8)==g->sequence+1&&g->sequence<8192&&
             get64(p+64)==g->epoch&&zero(p+288,16)&&zero(p+312,8)&&
-            until>now&&until-now<=5*NS&&until<=g->generation-2*NS&&(g->closed||until<=g->lease);
+            until>now&&until-now<=5*NS&&until<=g->generation-2*NS&&(g->closed||kind==CANCEL||until<=g->lease); /* S1a-5: CANCEL only freezes and closes, so it is accepted past the open lease */
         int result=-1;
         if(valid){g->sequence=get64(p+8);g->deadline=until;result=command(g,p,fds,count);}
         for(unsigned i=0;i<count;++i)close(fds[i]);

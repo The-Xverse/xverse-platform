@@ -598,3 +598,14 @@ decision S-D2, approved on 2026-10-23).
       Finding 18 of the S1a log (persistence child exits after a cancel, 2 of 10 runs) was attributed to the
       busy-connection conflict, which S1a-2 repaired. This lease mechanism gives the same signature, but this
       diagnosis does not show that it took part there.
+16. **Repair of finding 15 per ADR-ML3-AFFA-0001 amendment S1a-5 (thesis DR-13; written at 23:49:11 2026-10-23).**
+    - **Code.** `run_authority.c` main-loop validity: `(g->closed||kind==CANCEL||until<=g->lease)`. One line. Every
+      other frame check is unchanged.
+    - **Tests** (installed wheel rebuilt from the repair, load 3.7–4.1):
+      - `test_stabilization_s1b_start_failure.py`: 4 passed. The broker-level and composed-runtime last-second-of-lease
+        cases now pass: the cancel is confirmed, there is no revoke, cleanup is complete and the writer is
+        `failed`/`closed`. They failed before the repair (finding 15).
+      - Related suites: 234 passed. They cover affa native, client, config and protocol, run_broker, both cancel suites,
+        the three S1b suites, runtime_entry, run_teardown and dv05/dv06.
+      - Further suites: epoch, release-timeout fence, watch token, fenced teardown, leaseguard and fence codec. The
+        result is in this log's next update.
