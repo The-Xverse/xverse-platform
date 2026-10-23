@@ -22,6 +22,12 @@ _SENSITIVE_ARGUMENT = re.compile(
     r"(?:password|passwd|secret|token|api[-_]?key)\s*[:=])"
 )
 _SENSITIVE_ENVIRONMENT = re.compile(r"(?i)(?:password|passwd|secret|token|credential|api_?key)")
+# S1b (design-stabilization-s1b.md): the admitted readiness probes; only a process provider may declare
+# the nonce marker. The probe identity is the observe condition, already part of the plan digest.
+NONCE_MARKER_CONDITION = "nonce-marker"
+STOP_GRACE_MAX_SECONDS = 4
+STDERR_CAPTURE = "run-scoped-private"
+STDERR_MAX_BYTES = 1048576
 
 
 @dataclass(frozen=True)
@@ -46,6 +52,29 @@ class ProcessAction:
             raise ValueError("M3 process actions must not request secret-like environment names")
         if any(_SENSITIVE_ARGUMENT.search(argument) for argument in self.arguments):
             raise ValueError("process arguments must not contain credential-like assignments")
+
+
+@dataclass(frozen=True)
+class ProcessControls:
+    """S1b opt-in process controls; a field is None when it is not declared."""
+
+    stop_grace_seconds: float | None = None
+    stderr_maximum_bytes: int | None = None
+
+    def __post_init__(self) -> None:
+        """Enforce the admitted bounds: grace in (0, 4] seconds and a stderr cap in 1..1 MiB."""
+
+        grace, cap = self.stop_grace_seconds, self.stderr_maximum_bytes
+        if grace is not None and (type(grace) is not float or not 0 < grace <= STOP_GRACE_MAX_SECONDS):
+            raise ValueError("process stop grace must be in (0, 4] seconds")
+        if cap is not None and (type(cap) is not int or not 1 <= cap <= STDERR_MAX_BYTES):
+            raise ValueError("process stderr maximum must be 1..1048576 bytes")
+
+    @property
+    def declared(self) -> bool:
+        """Return whether any control is declared."""
+
+        return self.stop_grace_seconds is not None or self.stderr_maximum_bytes is not None
 
 
 @dataclass(frozen=True)
@@ -121,6 +150,7 @@ class LifecyclePlan:
     blockers: tuple[str, ...]
     digest: str
     requires_execution_permit: bool = field(default=True, compare=True)
+    process_controls: ProcessControls | None = None
 
     @property
     def is_plannable(self) -> bool:
@@ -295,6 +325,15 @@ def derive_catalog(resources: Sequence[NormalizedResource]) -> CatalogBuildResul
                     "Declare an observable condition; a delay alone cannot establish readiness.",
                 ))
                 local_errors = True
+            elif (str(observe.get("condition")) == NONCE_MARKER_CONDITION
+                  and str(_as_mapping(payload.get("provider")).get("kind", "")) != "process"):
+                diagnostics.append(_diagnostic(
+                    "XVERSE-CATALOG-READINESS-PROBE", deployment,
+                    f"{base}/extensions/{RUNTIME_PROFILE_NAMESPACE}/actions",
+                    "the nonce-marker readiness probe is admitted only for a process provider",
+                    "Declare the nonce-marker condition only on an owned process unit, or use running.",
+                ))
+                local_errors = True
             digest_values: list[str] = []
             for artifact_id in _as_sequence(binding.get("artifactIds")):
                 artifact = artifacts.get(str(artifact_id), {})
@@ -396,7 +435,7 @@ def build_lifecycle_plan(entry: CatalogEntry) -> LifecyclePlan:
         timeout_seconds=float(item["timeoutSeconds"]),
         condition=str(item["condition"]) if "condition" in item else None,
     ) for item in action_values)
-    process_action = None
+    process_action = process_controls = None
     if entry.provider_kind == "process":
         process = _as_mapping(payload.get("process"))
         process_action = ProcessAction(
@@ -404,6 +443,13 @@ def build_lifecycle_plan(entry: CatalogEntry) -> LifecyclePlan:
             arguments=tuple(str(item) for item in _as_sequence(process.get("arguments"))),
             working_directory=str(process["workingDirectory"]),
             environment_names=tuple(sorted(str(item) for item in _as_sequence(process.get("environmentNames")))),
+        )
+        stop, stderr = process.get("stop"), process.get("stderr")
+        if stderr is not None and _as_mapping(stderr).get("capture") != STDERR_CAPTURE:
+            raise ValueError("process stderr capture must be run-scoped-private")
+        process_controls = ProcessControls(
+            float(_as_mapping(stop)["graceSeconds"]) if stop is not None else None,
+            _as_mapping(stderr)["maximumBytes"] if stderr is not None else None,
         )
     digest_input = {
         "catalogIdentity": entry.identity,
@@ -442,6 +488,11 @@ def build_lifecycle_plan(entry: CatalogEntry) -> LifecyclePlan:
             "environmentNames": list(process_action.environment_names),
             "inheritedHandles": "closed",
             "implicitShell": False,
+            # S1b: present only when declared, so an undeclared plan keeps its digest.
+            **({"stop": {"graceSeconds": process_controls.stop_grace_seconds}}
+               if process_controls.stop_grace_seconds is not None else {}),
+            **({"stderr": {"capture": STDERR_CAPTURE, "maximumBytes": process_controls.stderr_maximum_bytes}}
+               if process_controls.stderr_maximum_bytes is not None else {}),
         },
         "artifactDigests": list(entry.artifact_digests),
         "blockers": list(entry.planning_blockers),
@@ -464,6 +515,7 @@ def build_lifecycle_plan(entry: CatalogEntry) -> LifecyclePlan:
         process_action=process_action,
         blockers=entry.planning_blockers,
         digest=f"sha256:{hashlib.sha256(encoded).hexdigest()}",
+        process_controls=process_controls,
     )
 
 

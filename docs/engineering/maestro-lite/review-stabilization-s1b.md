@@ -158,3 +158,31 @@ decision S-D2, approved on 2026-10-23).
      including `planDigest`, stays as is, and the validator must pass unchanged. The historical review records
      `docs/engineering/{argus,xdl}-lite/internal-review.json` keep the old hash, because they record their own
      revision. This is implemented in the step 2 commit, and recorded there.
+6. **S1b step 2: the catalog and the schema are implemented (written at 20:09:30 2026-10-23, load about 3.55).**
+   - **Catalog (`src/xverse_xdl/catalog.py`).**
+     - New `ProcessControls(stop_grace_seconds, stderr_maximum_bytes)`, each `None` when undeclared, bounded to
+       (0, 4] s and 1..1048576 bytes. `LifecyclePlan.process_controls` is set for every process plan (an
+       undeclared `ProcessControls()` when nothing is declared) and is `None` otherwise.
+     - The digest input's `process` object carries `stop {graceSeconds}` and
+       `stderr {capture: run-scoped-private, maximumBytes}` only when they are declared.
+     - `XVERSE-CATALOG-READINESS-PROBE` is raised, and the entry is not derived, when an observe action declares
+       `nonce-marker` for a non-process provider. The probe identity is the observe `condition`, already in the
+       digest.
+   - **Schema (`runtime-compatibility-v0.2.schema.json`).** Optional `process.stop` (`graceSeconds` in (0, 4],
+       no other key) and `process.stderr` (`capture: run-scoped-private`, integer `maximumBytes` in 1..1048576,
+       no other key). The `inheritedHandles` description now states that no control descriptor is inherited, that
+       fds 0 and 1 are `/dev/null`, and that fd 2 is `/dev/null` or the declared private stderr file. The v0.1
+       schema is unchanged.
+   - **SD-0001 lock (finding 5).** Only `profileSchema.sha256` is re-pinned, to `cfa7af7f…`. `planDigest`
+     `ccab18b9…` is unchanged, and the validator passes.
+   - **Tests (`tests/test_m3_catalog_runtime.py`, new class `S1bProcessControlTests`, 5 tests).**
+     - A golden check: an undeclared v0.2 process plan keeps the digest `dfdeb5fa…`, computed with the pre-S1b
+       `catalog.py` of `fd3579932` (loaded from `git show`) and identical under the new code.
+     - Declared `stop`, `stderr`, both, and `nonce-marker` each give a distinct digest and the expected controls.
+     - Nine schema rejections (grace 0 and 4.5, an empty `stop`, an extra key, a cap of 0 and 1048577, a wrong
+       capture, a missing cap, an extra `path` key); a grace of 4 is valid.
+     - The probe diagnostic for a fixture provider, and the direct bounds of `ProcessControls`.
+   - **Runs (installed wheel).** Before the re-pin: `tests/test_sd0001_validator.py` 2 failed, 2 passed (finding
+     5). After it: `tests/test_m3_catalog_runtime.py`, `tests/test_sd0001_validator.py`, `tests/test_schema.py`
+     and `tests/thesis_lite/xdl` gave 182 passed and 39 subtests passed (load 3.7). After the `__main__` guard was
+     moved back to the end of the file, `tests/test_m3_catalog_runtime.py` gave 27 passed and 34 subtests passed.
