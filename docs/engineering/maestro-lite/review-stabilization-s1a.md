@@ -347,3 +347,19 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
         `argus/test_argus2_reader_unit`. They ran on `venv-cand` built from the working tree at `3a321a13e`
         (runner `runv.sh`, `-p no:randomly`). Result: 136 passed.
       - R1-2 has no test. It is the same pattern as the other ordinary paths, which are covered.
+14. **Decisive full installed-wheel run, and the DV12 gate (2026-10-23).**
+    - **Run.** `evidence/affa19/stabilization-s1a/platform-regression-20261023a-1`, head `d04bc7937`,
+      driven by `run-z-quiet-loop.sh` with `verify-platform-regression-20261021t.py`. It was triggered at
+      10:48Z at load 5.36, on the first attempt.
+    - **Result: clean.** 2417 passed, 1 skipped, 24 subtests, 0 failed, in 2590 s. It collected 2418
+      tests (2397 for Phase 6, plus the S1a tests). The loop reported `decisive: clean`.
+    - **Load.** Sampled every 30 s, maximum 7.94, ≤ 10.
+    - **The race test.** It passed in the nested platform regression and in the direct run (finding 10).
+    - **DV12 gate.** `scripts/validate_maestro_acceptance_evidence.py --candidate d04bc7937… --g4
+      acceptance-inputs/g4.json --allowlist acceptance-inputs/allowlist.json --scope code`:
+      `accepted_as_evidence: true`, no blockers. The run code SHA-256 equals the candidate code SHA-256,
+      `2a3374670ddd17e7…`.
+    - **Evidence.** `dv12-gate-verdict.json` and `SHA256SUMS` (13 files) in the run directory, receipts
+      in `receipts.tar.gz`. The loop removed its tmpfs work directory.
+    - **Next.** CAPA successor step 9 (`build-capa-20261023-stabilization-s1a-step9.py`) is built after
+      this log is committed.
