@@ -47,3 +47,24 @@ closure or acceptance. No main, legacy, scientific or canonical-note change.
 Sol/high recommended for lifecycle/authority; cheaper models suit receipt handling.
 No factory run; external thesis 024 governs, main default prerequisite resolves
 unrelated 020; no extension hooks. Keep all seven full P3 tasks open.
+
+## Amendment S1b-1: bounded graceful stop on the owned AF17 path (2026-10-23, written at 19:54:35; before implementation)
+
+- **Scope.** This supersedes line 15 in this sense: there is still no application callback, but a unit may
+  declare `process.stop.graceSeconds` ∈ (0, 4] (thesis S1 FR-009; design `design-stabilization-s1b.md`).
+- **Sequence.**
+  1. A scenario `stop` step, or a restart stop, sends the AF17 TERM request: SIGTERM to the leader through its
+     pidfd.
+  2. Python waits on the pidfd, with the exchange lock free, until the grace or the
+     `grace_until = deadline − 0.5 s − record` reserve.
+  3. The unchanged STOP follows: freeze, `cgroup.kill`, wait.
+- **STOPPED** records `exited-on-term` (bit 1024) only when TERM was sent and the cgroup was empty before the
+  freeze. Otherwise the stop is `forced`.
+- **Forced as before:**
+  - the terminal-fence stops after CANCEL;
+  - `_emergency`;
+  - FAULT_KILL (`crash`);
+  - `cleanup()` and `prbc`;
+  - every unit without a declared grace.
+- **TERM is leader-only.** Helpers that outlive the leader make the stop `forced`.
+- **Admission.** `grace + 0.5 > NORMAL_SHARE·per_unit_seconds` is rejected (`ML-SCHEDULE-STOP-GRACE`).

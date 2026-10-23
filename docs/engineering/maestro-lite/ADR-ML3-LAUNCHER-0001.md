@@ -70,3 +70,17 @@ Engineering mechanism sources only:
 [execveat](https://man7.org/linux/man-pages/man2/execveat.2.html),
 [OpenSSL EVP digest](https://docs.openssl.org/3.0/man3/EVP_DigestInit/).
 These API references are not dissertation literature evidence or citation approval.
+
+## Amendment S1b-1: declared private stderr; stdin and stdout stay /dev/null (2026-10-23, written at 19:54:35; before implementation)
+
+- **Scope.** This supersedes lines 42–43, on the AF17 run-authority path only (thesis S1 FR-010; design
+  `design-stabilization-s1b.md`). The LC09 catalog launcher refuses the new declarations with
+  `ML-LAUNCH-CONTROL-UNSUPPORTED`.
+- **Declaration.** A unit may declare `process.stderr {capture: run-scoped-private, maximumBytes ≤ 1 MiB}`. The
+  trusted caller supplies a private directory outside the collection source root.
+- **Admission.** AR17 version 2 seals the directory's dev and inode. REGISTER passes the directory as a fifth fd.
+- **Staging.** STAGE creates `stderr-g<N>` with `O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC`, mode 0600, and the stub makes
+  it fd 2, after the unchanged `close_range`. fds 0 and 1 stay `/dev/null`.
+- **Cap.** The file is capped by `ftruncate` at a successful STOP (bit 4096 records a truncation). It is private
+  and never collected or exported.
+- **Inherited handles.** `inheritedHandles: closed` means that no control descriptor is inherited.
