@@ -196,3 +196,33 @@ service only for the genuine same RunBroker/session after its original cancellat
 Collection uses short service RPCs between items and caps each original storage end
 at the current root lease, preserving the admitted aggregate end and terminal reserve.
 This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
+
+## Amendment S1a-3: a run cancel waits a bounded time for a busy authority connection (2026-10-23, written at 18:51:27; before implementation)
+
+- **Context.** `RunBroker.cancel` sends K.CANCEL through `connection._exchange`, whose lock is non-blocking
+  (`ML-AFFA-CONFLICT`).
+  - An operator cancel (`entry.stop`) runs on its own thread. The dispatcher thread exchanges on the same
+    connection for health queries, renewals and step effects.
+  - A cancel that meets that exchange is refused, treated as unconfirmable and answered with `revoke()`, which
+    SIGKILLs the authority. The bootstrap root then kills every child, including the storage worker. The run
+    closes without its terminal evidence: S1a review log findings 18–21, about 2 in 10 live cancels, and
+    reproduced deterministically in `test_stabilization_cancel_conflict.py`.
+- **Decision.** For K.CANCEL only, the connection offers an exchange that waits for its lock up to
+  `CANCEL_LOCK_WAIT_SECONDS` = 0.5 s, and never past the cancel's own end.
+  - The frame is built *after* the lock is held, so its sequence follows the exchange that just completed.
+  - The exchange is then the unchanged K.CANCEL exchange.
+  - If the lock is not obtained within the bound, the call raises `ML-AFFA-CONFLICT` exactly as before, and
+    `RunBroker.cancel` revokes as before.
+- **Preserved.**
+  - A stalled or unresponsive authority is still never treated as having acknowledged Cancel. Its in-flight
+    exchange keeps the lock, so the bounded wait expires and the revoke follows.
+  - The client latch is still set before the wait, so no new start authority is gained while waiting.
+  - Every other exchange keeps the non-blocking lock, so two ordinary operations still never interleave.
+  - The cancel's end, the generation − 2 s limit and the revoke deadline are unchanged.
+- **Cost.** The confirmed cancel may come up to 0.5 s later. This stays inside the 1 s cancel end and the
+  admitted cancellation drain of ≤ 2 s.
+- **Verification.**
+  - The busy-connection test passes when the lock is released within the bound: confirmed epoch, storage alive.
+  - A new test holds the lock past the bound: revoke as before.
+  - The existing cancel tests are unchanged.
+  - The live cancel-paused runs (VS-09) follow after acceptance.
