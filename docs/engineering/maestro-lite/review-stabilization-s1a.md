@@ -787,3 +787,15 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       - The maximum sampled load was 5.11.
     - **DV12 gate** (`--scope code`, candidate `5e81c7b05`): `accepted_as_evidence: true`, with no blockers. The run
       and candidate code are both `868a21b6…`; the review-log commit after the run is outside the code scope.
+32. **CAPA successor step 12 for S1a-3 (written at 23:05:08 2026-10-23), built after finding 31 was committed (`2d5854876`).**
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1a3-step12/`, built by
+      `build-capa-20261023-stabilization-s1a3-step12.py`.
+    - **Additive over step 11 (`3eb39cda…`).** No record was opened, changed or closed.
+    - **Register `d095ac0769944532d6dd4d93d922dc27bb16421b498f7be22c4946747c36ddec`:** 56 records and 718 bindings. The 6
+      new bindings cover this log, the ADR, `evidence.py`, the differential test, and the run's `SHA256SUMS` and DV12
+      verdict.
+    - **Verifier:** rc 0, with 718 bindings verified.
+    - **Parent preservation:** `true`. All 712 parent bindings were checked, and none changed or was lost.
+    - **Process.** The builder's docstring was corrected after the build; the builder is not a bound file. The partial
+      run files committed with finding 30 were superseded by their final versions in `2d5854876`.
+    - **S1a-3 is ready for the author's acceptance**, stacked on S1b, which is stacked on S1a-2.
