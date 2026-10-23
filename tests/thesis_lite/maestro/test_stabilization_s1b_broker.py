@@ -27,7 +27,8 @@ NS = "io.xverse.runtime.compatibility"
 def declare(monkeypatch, controls, *, stderr=None, maximum_generation=3):
     """Declare S1b controls per binding id in the actual v0.2 catalog payload (before broker_stack runs).
 
-    controls: {binding_id: dict(stop=seconds, stderr=bytes, condition=..., mode=..., cwd=name)}.
+    controls: {binding_id: dict(stop=seconds, stderr=bytes, condition=..., mode=..., cwd=name, stale=bool,
+    observe_timeout=seconds)}.
     stderr: {unit binding_id: directory path} for UnitAdmission.stderr_directory.
     """
     from . import test_launcher, test_run_broker
@@ -49,12 +50,17 @@ def declare(monkeypatch, controls, *, stderr=None, maximum_generation=3):
                 process["stderr"] = {"capture": "run-scoped-private", "maximumBytes": wanted["stderr"]}
             if "mode" in wanted:
                 process["arguments"][1] = wanted["mode"]
-            if "cwd" in wanted:
+            if "cwd" in wanted:  # a name inside the shared work directory, or an absolute path
                 cwd = Path(process["workingDirectory"]) / wanted["cwd"]
                 cwd.mkdir(mode=0o700, exist_ok=True)
                 process["workingDirectory"] = str(cwd)
+                if wanted.get("stale"):
+                    (cwd / ".xverse-ready").mkdir(mode=0o700)
+            observe = next(a for a in payload["actions"] if a["phase"] == "observe")
             if "condition" in wanted:
-                next(a for a in payload["actions"] if a["phase"] == "observe")["condition"] = wanted["condition"]
+                observe["condition"] = wanted["condition"]
+            if "observe_timeout" in wanted:
+                observe["timeoutSeconds"] = wanted["observe_timeout"]
         return original(docs)
 
     monkeypatch.setattr(test_launcher, "compiled", compiled)

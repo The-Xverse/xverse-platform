@@ -32,6 +32,15 @@ from .test_launcher import binaries as binaries
 TERM_SENT, EXITED, MARKER, TRUNCATED = 512, 1024, 2048, 4096
 
 
+def flood(size=16384):
+    """The stderr-flood bytes of catalog_workload.c, generated the same way (a privacy canary)."""
+    state, out = 20261023, bytearray()
+    for _ in range(size):
+        state = (state * 1103515245 + 12345) & 0xFFFFFFFF
+        out.append(ord("a") + (state >> 16) % 26)
+    return bytes(out)
+
+
 @pytest.fixture
 def s1b(environment, authority_binary, binaries, tmp_path):
     """start(specs) registers one unit per spec and records INTENT; specs are dicts with mode and controls."""
@@ -398,7 +407,7 @@ def test_stderr_cap_overflow_is_truncated_at_stop(s1b):
     flags = stop(h, 0)
     info = os.lstat(path)
     assert flags & TRUNCATED and info.st_size == 1000 and stat.S_IMODE(info.st_mode) == 0o600
-    assert stat.S_ISREG(info.st_mode) and path.read_bytes() == b"E" * 1000
+    assert stat.S_ISREG(info.st_mode) and path.read_bytes() == flood(1000)
 
 
 def test_stderr_under_the_cap_is_kept_whole_and_streams_are_closed(s1b):

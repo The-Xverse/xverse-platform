@@ -1,6 +1,6 @@
 /* Exact owned executable fixture; writes evidence only under its declared cwd.
  * S1b modes (design-stabilization-s1b.md): term, ignore-term, marker, marker-late, marker-wrong,
- * marker-never, stderr-flood and streams. The marker modes answer the .xverse-ready challenge. */
+ * marker-never, stderr-flood (a generated canary, see test_stabilization_s1b_native.flood) and streams. The marker modes answer the .xverse-ready challenge. */
 #define _GNU_SOURCE
 #include <fcntl.h>
 #include <dirent.h>
@@ -64,9 +64,12 @@ int main(int argc,char **argv) {
         if(answer(!strcmp(mode,"marker-wrong")))return 12;
     }else if(!strcmp(mode,"marker-late")){
         pause_ms(400);if(answer(0))return 13;
-    }else if(!strcmp(mode,"stderr-flood")){
-        char block[4096];memset(block,'E',sizeof(block));
-        for(int i=0;i<4;++i)if(write(2,block,sizeof(block))!=(ssize_t)sizeof(block))return 14;
+    }else if(!strcmp(mode,"stderr-flood")){ /* a generated privacy canary: no literal of it is in this binary */
+        char block[4096];unsigned state=20261023U;
+        for(int i=0;i<4;++i){
+            for(size_t j=0;j<sizeof(block);++j){state=state*1103515245U+12345U;block[j]=(char)('a'+(state>>16)%26U);}
+            if(write(2,block,sizeof(block))!=(ssize_t)sizeof(block))return 14;
+        }
     }else if(!strcmp(mode,"streams")){
         struct stat err;
         if(!null_stream(0)||!null_stream(1)||fstat(2,&err))return 15;

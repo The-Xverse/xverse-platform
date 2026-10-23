@@ -252,3 +252,73 @@ decision S-D2, approved on 2026-10-23).
      - `test_run_broker.py`, `test_run_teardown.py`, `test_teardown.py`, `test_schedule_plan.py`,
        `test_stabilization_cancel_conflict.py`, `test_dv05_dv06_bounds.py`, `test_launcher.py`,
        `test_provider.py`: 163 passed (load 4.0 at start, 6.0 at end).
+8. **S1b step 4: readiness, evidence, coverage and the LC09 refusal are implemented (written at 20:39:21 2026-10-23,
+   load about 7.67).**
+   - **`providers.py`.**
+     - Admission accepts `READINESS_PROBES`.
+     - `bind` refuses a `CatalogLauncher` for a non-`running` probe (`ML-PROBE-BINDING`).
+     - During `start()`, the unit whose readiness attempts are in progress is marked (`_readying`). Its samples
+       carry the declared probe id, and they are ready only when the unit is running and, for `nonce-marker`,
+       `marker_ready` is set. Every other sample, including the health checks and the dependency checks, stays
+       `running`.
+     - Marker attempts are spaced at `t0 + k·W/A`, with `W = min(policy timeout, observe timeout)` and `t0`
+       taken after RELEASE; an attempt that would fall after the deadline is not made. The result is otherwise
+       `ML-PROBE-NOT-READY`.
+     - **Interpretations.** The `running` probe keeps its existing 5 ms yield, so undeclared units keep their
+       timing. The readiness mode is a marker on the facade rather than a new `_query` parameter, because an
+       existing test (`test_dispatch_observe.py`) wraps `_query(self, unit, until)`. The new parameter broke it
+       (1 failed, 143 passed in the first run), and the marker keeps that contract.
+   - **`lifecycle_evidence.py` (worker and receipt check).** `probe` and `ready` annotations carry the
+     declared observe condition; `health` and `health-loss` carry `running`. The worker derives the identity
+     from the sealed plan, never from the client. `validate_receipt` expects the same.
+   - **`coverage.py`.**
+     - Admission accepts `READINESS_PROBES`, otherwise `ML-COVERAGE-PROBE` as before. A unit row gets
+       `readinessProbe` only for a non-`running` probe, so undeclared admission bytes and digests are unchanged.
+     - Validation accepts that optional key only with the value `nonce-marker`.
+     - `_payload` requires `probeId == readinessProbe` for unit-scope `probe` and `ready` annotations, and
+       `running` for `health`, `health-loss` and step-scope probes. The scenario observe steps stay liveness:
+       `dispatcher.py` and `schedule_evidence.py` are unchanged.
+   - **`launcher.py`.** `make_launch_recipe` refuses any declared control or a non-`running` probe with
+     `ML-LAUNCH-CONTROL-UNSUPPORTED` (D-2).
+   - **Tests.**
+     - `catalog_workload.c` `stderr-flood` now writes a generated canary (an LCG over 16 KiB), so no literal of
+       the content exists in the image. The native cap test checks the first 1000 bytes of the same sequence.
+     - New `test_stabilization_s1b_readiness.py`, 15 tests:
+       - marker readiness on real broker stacks with an admitted collection: the coverage row, probe and ready
+         `nonce-marker`, health `running`, the other unit `running`;
+       - marker late within the window, ready on a spaced attempt;
+       - marker never: `ML-PROBE-NOT-READY` after exactly three failed `nonce-marker` probes spaced ≥ 0.45 s,
+         with the latch cancelled;
+       - five probe admission refusals: no collection, a shared cwd, a stale directory, a cwd outside the root,
+         and an unsupported condition (the last without collection, because an admitted coverage refuses it
+         earlier with `ML-COVERAGE-PROBE`);
+       - the LC09 refusal through `launch_stack`;
+       - the privacy canary: a declared stderr of 4096 bytes on a real run with teardown and collection. Every
+         file under the test directory except the private stderr directory, the broker projection, the
+         collection receipt and the public M3 records contain neither the content windows, nor the directory's
+         random name, nor its path;
+       - synthetic, labelled coverage acceptance (`test_coverage.Fixture` with one unit admitted as
+         `nonce-marker`): complete with matching annotations, not complete with `running` ones;
+       - the payload identity rules;
+       - the admission rejection of `running`, `http-ok` and `1` as `readinessProbe`.
+   - **Runs (installed wheel, load 7.9–8.6 from other host users).**
+     - First run of `test_provider.py`, `test_coverage.py`, `test_launcher.py`,
+       `test_readiness_dispositions.py`, `test_dispatch_observe.py` and `test_coverage_producers.py`: 1 failed,
+       143 passed (above). After the fix, `test_dispatch_observe.py` and `test_provider.py` gave 37 passed.
+     - `test_stabilization_s1b_readiness.py`: first 13 passed and 2 failed (the test's own projection
+       serialization, and the unsupported case reaching coverage first); after the fixes, 15 passed.
+     - Batch 1: the three S1b files, `test_provider`, `test_coverage`, `test_coverage_native`,
+       `test_coverage_producers`, `test_readiness_dispositions`, `test_dispatch_observe`,
+       `test_collection_runtime` and `test_outcomes`: 238 passed.
+     - Batch 2: `test_launcher`, `test_runtime_entry`, `test_affa_native`, `test_affa_config`,
+       `test_affa_client`, `test_run_broker`, `test_run_teardown`, `test_teardown`, `test_dv05_dv06_bounds`,
+       `test_stabilization_cancel_conflict` and `tests/test_m3_catalog_runtime.py`: 200 passed and 34 subtests
+       passed.
+     - Batch 3: `test_schedule_plan`, `test_lazy_dispatcher`, `test_generation_restart`, `test_recovery` and
+       `tests/test_sd0001_validator.py`: 97 passed.
+   - **Open for the owner.**
+     - `stop_mode` is exposed in `NativeGenerationClosure` and in the native STOPPED bits, but no public
+       evidence carries it yet (the broker projection and the teardown records are unchanged, so that undeclared
+       bytes stay identical). If S1c-2 or S1d needs it in `maestro-run.json`, that is a harness capture.
+     - The authority binary digest changed with `run_authority.c`, so S1c re-pins it (design risk 1).
+     - The full suite and DV12 have not been run here; per the instructions, they belong to the owner.

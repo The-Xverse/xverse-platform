@@ -172,6 +172,11 @@ def make_launch_recipe(
         or helper_artifact_digest != unit.provider.artifact_digest
     ):
         raise LauncherError("ML-LAUNCH-PROVIDER")
+    controls = unit.plan.process_controls
+    if (controls is not None and controls.declared
+            or next(a.condition for a in unit.plan.actions if a.phase == "observe") != "running"):
+        # S1b (design D-2): LC09 has no TERM, private stderr or marker probe; a declaration never degrades.
+        raise LauncherError("ML-LAUNCH-CONTROL-UNSUPPORTED")
     owner.scope(unit.unit_id, descriptor, helper_artifact_digest)
     action = unit.plan.process_action
     action.__post_init__()
