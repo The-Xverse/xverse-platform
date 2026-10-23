@@ -235,3 +235,20 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
   - Any other error, and the expiry of the bound, lead to the unchanged revoke.
   - The `RunClosure` cancel fence (`run_closure._fence`) runs on the owner's thread after the dispatcher has
     finished, so this change leaves it as it is.
+- **Revision after the independent review (S1a review log finding 23; written at 19:06:33, before the repair).**
+  This revision supersedes the Decision bullets above about "an exchange offered by the connection" and "the
+  frame is built after the lock is held". The implementation-form note stands, with these additions:
+  - **Already cancelled.** If the connection's retained epoch history already ends in CANCELLED, from a
+    concurrent cancel or the closure fence, `RunBroker.cancel` returns that retained reply without a further
+    exchange. `run_closure._fence` does the same.
+  - **Stale frame.** A frame is built before the exchange lock is taken. A concurrent winner can advance the
+    sequence or epoch in between, and `_validate` then refuses before any send (`ML-AFFA-REQUEST-SCOPE`). Such
+    a refusal is retried within the same bound when the frame's sequence or epoch no longer matches the
+    connection. Any other refusal still reaches the revoke.
+  - **Reap reserve.** The wait ends at least `CANCEL_REAP_RESERVE_SECONDS` = 0.25 s before a caller's deadline
+    (`teardown._emergency`), so the unchanged revoke keeps time to reap.
+  - **Cost, completed.** The wait of up to 0.5 s also delays `owner.cancel`'s gate and launcher cancels, which
+    follow the broker cancel. It also extends `runtime_entry.stop`'s `_stop_lock` hold, so a concurrent stop
+    in that window is refused with `ML-RUNTIME-ENTRY-CONFLICT`, as any concurrent stop already was.
+  - **`_fence`.** It runs after the dispatcher has finished. It can still meet an operator K.CANCEL in flight;
+    that exposure existed before, and this change does not alter it.
