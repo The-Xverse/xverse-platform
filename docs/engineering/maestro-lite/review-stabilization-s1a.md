@@ -296,3 +296,54 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       grace-expiry test, the Maestro-level same-size tamper variants and the positive run-terminal check.
     - **R1-7 (accepted, LOW).** The bounded 0.25 s pause keeps the test's intent without a product hook. A
       deterministic heartbeat trigger would need a test-only hook in the dispatcher and is not added.
+13. **Independent implementation review 2 on `3a321a13e` (2026-10-23 about 12:00): PASS for the code and for
+    the DV12 full run.**
+    - **Verified by the reviewer:**
+      - R1-1 by probe: 0 mismatches on HEAD over 6 limit combinations, against 31 on the old `recovery.py`.
+      - R1-2 is the only `_fail()` gap of its kind.
+      - R1-3 is routed through the generic failure path.
+      - No closed code table needs the new code.
+      - The same-size variants run after two `_revalidate` calls, so the cached-prefix path is exercised.
+      - The worktree is clean, and nothing in `tools/bench` is collected.
+    - **Two MEDIUM record corrections (M1, M2) and LOW wording items, corrected here.**
+    - **M1: corrected figures** (`summary.json` regenerated with the current `analyze.py`, which separates
+      start-up and terminal calls):
+
+      | Run | Per-event p99 / max | Decile means | Terminal calls |
+      | --- | --- | --- | --- |
+      | `t01-main-4u-h300` | 315 / 370 ms | 23 → 149 ms | init 471 ms |
+      | `t02-main-5u-h300` | 294 / 478 ms | — | init 579 ms |
+      | `t04-cand-4u-h800-r4m` | 49.8 / 99.9 ms | +7.9 ms | **terminal-report 991 and 711 ms**, init 576 ms |
+      | `t04-cand-4u-h600-b` | 38.7 / 88.6 ms | +7.6 ms | terminal-report 507 and 445 ms |
+
+      - `t04-cand-4u-h800-r4m` (succeeded, evidence complete) is the case closest to the S-D1 long-run, and
+        it passes FR-002.
+      - The values in findings 2 and 4 were computed before start-up calls were separated, so their maxima
+        were the `init` calls.
+      - In finding 7, the middle deciles were 2.2–6.8 ms and the edge deciles 7–22 ms (start-up and
+        teardown).
+      - Across every candidate run, revalidate ≤ 27.0 ms and audit ≤ 39.6 ms.
+      - The terminal report grows with the run: 0.36–0.51 s at 450–800 events when it stopped early at the
+        retained-inputs stage, and **0.71–0.99 s for a complete 800-tick report**. Both fit the ≤ 2 s
+        terminal budget, with about 1 s of margin at 800 ticks.
+      - No candidate run issued a `closure` or `abort` RPC, so their re-read cost is **not measured**. The
+        "closure ≤ 0.4 ms" of finding 12 came from main runs that failed before any re-read; that claim is
+        withdrawn.
+      - FR-008 still holds against the 2 s budget. The S-D1 long-run of 600 ticks has more margin than the
+        800-tick run.
+    - **M2.** `ADR-ML3-PERSISTENCE-0001` amendment S1a-1 now states the `ML-PERSIST-CANCEL-GRACE` code and
+      the `reconcile_snapshot` path.
+    - **LOW items:**
+      - The docstrings of `StreamCheckpoint` and `read_records` state the record-cap case.
+      - A run that reaches `max_read_records` falls back to a complete read on every check. Below the
+        admitted capacity this does not arise; it is recorded here.
+      - The benchmarks ran on `venv-cand-trace`, which is equivalent to `a803b4087`. Later changes do not
+        touch the measured path: the checkpoint-cap condition is not reached below capacity, and the cancel
+        paths are not exercised by the benchmark.
+      - `focused-r1-repair.log` lists the test files used: `test_persistence`, `test_runtime_entry`,
+        `test_active_control_deadlines`, `test_active_controller_recovery`, `test_terminal_runtime`,
+        `test_outcomes`, `test_stabilization_cancel`, `test_stabilization_journal_reload`,
+        `argus/test_stabilization_read_records`, `argus/test_argus2_recovery_unit` and
+        `argus/test_argus2_reader_unit`. They ran on `venv-cand` built from the working tree at `3a321a13e`
+        (runner `runv.sh`, `-p no:randomly`). Result: 136 passed.
+      - R1-2 has no test. It is the same pattern as the other ordinary paths, which are covered.

@@ -71,6 +71,10 @@ Amended rule:
   reply within a fixed grace (`CANCEL_REPLY_GRACE_NS`, 0.5 s). The grace stays inside the admitted
   cancellation drain of at most 2 s. Without a reply in that grace, the call fails closed exactly as
   before.
+- **Grace expiry, and the recovery path (thesis DR-1, S1a findings 11–12).** Expiry fails closed with its own
+  code, `ML-PERSIST-CANCEL-GRACE`, through the ordinary RPC failure path: the failure is recorded,
+  `_fail()` runs, and the child is terminated. `reconcile_snapshot` re-raises a before-send cancel refusal
+  instead of failing storage.
 - **Unchanged.** Caller-side polling, cancellation and drain still perform no storage I/O. A cancelled run
   still gains no further start authority: ordinary requests are refused, and only the terminal kinds, the
   abort and the closure proceed. Timeouts, protocol errors, identity changes and child loss still close

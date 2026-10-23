@@ -879,8 +879,8 @@ def read_records(root: Any, *, limits: EvidenceLimits | None = None,
     are unchanged (every manifest-derived decision of ``read_run`` before the stream scan is then the same)
     and ``resume_stream`` verifies the unchanged stream prefix byte for byte (SHA-256). Otherwise it is a
     complete ``read_run``. The returned records are shared with the checkpoint and must be treated as
-    read-only. The returned checkpoint is ``None`` when the read was not clean (any stream diagnostic),
-    so damaged evidence is always re-read completely.
+    read-only. The returned checkpoint is ``None`` when the stream scan was not clean (any stream
+    diagnostic) or stopped at ``max_read_records``, so such a stream is always re-read completely.
     """
 
     root_path = Path(root)

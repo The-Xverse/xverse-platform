@@ -69,8 +69,9 @@ class RecoveryResult:
 class StreamCheckpoint:
     """The complete scan state after a *clean* read of a stream prefix (thesis S1 FR-002/FR-003).
 
-    A checkpoint exists only when the read emitted no diagnostic, was not truncated and stayed within
-    every bound. ``resume_stream`` continues the identical scan from ``offset`` only after re-hashing the
+    A checkpoint exists only when the read emitted no diagnostic, was not truncated, stayed within every
+    bound and accepted fewer than ``max_read_records`` records (a scan at the record cap is re-read
+    completely each time). ``resume_stream`` continues the identical scan from ``offset`` only after re-hashing the
     first ``offset`` bytes of the same file (device and inode) and finding ``prefix_sha256`` unchanged, so
     any change of an already-read byte falls back to a complete read. ``records`` are shared with the
     result that produced the checkpoint and must be treated as read-only.
