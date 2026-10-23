@@ -531,3 +531,27 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       - **(2)** Build a deterministic bench or unit reproduction: `entry.stop` while the authority connection
         lock is held by each candidate operation.
       - **(3)** Only then the ADR amendment and the repair.
+21. **S1a-2 diagnosis: the mechanism is reproduced deterministically (written at 18:50:49 2026-10-23; before any repair).**
+    - **Test.** `tests/thesis_lite/maestro/test_stabilization_cancel_conflict.py`, on the real `broker_stack`
+      composition: storage, the native AFFA authority and the run bootstrap. It ran with the installed candidate
+      wheel (`.x-verse-build/cache/lite-stabilization-s1a/venv-cand`, whose code equals main `b28a2aacf`), at
+      load 4.1, in 5.6 s.
+    - **Idle connection.** `RunBroker.cancel` gives
+      `RunCancellation(native_epoch_confirmed=True, epoch=1, frozen_units=3, issuer_dead=False, …)`, and the
+      storage worker stays alive. PASS.
+    - **Busy connection.** The test holds `connection._lock` in place of a concurrent dispatcher exchange.
+      `RunBroker.cancel` gives `RunCancellation(native_epoch_confirmed=False, epoch=None, frozen_units=0,
+      issuer_dead=True, issuer_reaped=True, …)`, and the storage worker exits within 2 s. FAIL, as expected.
+    - **Cause, now established.**
+      1. `connection._exchange` refuses with `ML-AFFA-CONFLICT` when its non-blocking lock is held.
+      2. `RunBroker.cancel` treats that `ValueError` as an unconfirmable cancel and calls `revoke()`, which
+         SIGKILLs the authority.
+      3. The bootstrap root then kills every child, including the persistence worker. The run's closure then
+         fails with `ML-PERSIST-CHILD` (findings 18 and 20).
+    - **In the live harness.** The operator's `entry.stop` runs on its own thread, while the dispatcher thread
+      exchanges on the same connection for health queries, renewals and step effects. The race window is the
+      fraction of time the dispatcher holds that lock, about 2 in 10 cancel runs.
+    - **Not a defect of the revoke itself.** Revoking an authority that cannot confirm a cancel is the designed
+      fail-safe. The defect is that a merely *busy* connection is treated as unconfirmable.
+    - **Next.** An ADR amendment (S1a-3) before the repair: a bounded wait for the exchange lock on K.CANCEL only,
+      falling back to the unchanged revoke when the bound expires.
