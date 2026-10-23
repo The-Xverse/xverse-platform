@@ -322,3 +322,34 @@ decision S-D2, approved on 2026-10-23).
        bytes stay identical). If S1c-2 or S1d needs it in `maestro-run.json`, that is a harness capture.
      - The authority binary digest changed with `run_authority.c`, so S1c re-pins it (design risk 1).
      - The full suite and DV12 have not been run here; per the instructions, they belong to the owner.
+9. **Independent review 1 of S1b at `41a6aa866` (written at 20:57:34 2026-10-23): PASS for the full run and DV12,
+   no HIGH, 1 MEDIUM and 4 LOW. Recorded before any repair.**
+   - **Confirmed.**
+     - Native fd, symlink and TOCTOU safety.
+     - TERM only through the pidfd, never to a frozen, unreleased, stopped or retired unit, or after CANCEL.
+     - The stderr cap and the bounded, non-blocking, latched marker check.
+     - STAGED stays 37, and undeclared units are byte-identical.
+     - The exchange lock is free during the grace (D-4).
+     - Privacy: the canary is complete.
+     - Finding 5 is legitimate. No gate pins the old schema hash; the historical `affa17/*/frozen-inputs.json`
+       records keep it.
+     - 92 and 232 targeted tests passed at load 4–6.5.
+   - **MEDIUM-1.** `stop_mode` (`exited-on-term`/`forced`) exists only natively and in the in-memory
+     `NativeGenerationClosure`. No persisted or public evidence carries it (FR-009, A2).
+   - **LOW-1.** Marker attempts at `t0 + k·W/A` never probe the last `W/A` of the window. A marker written at
+     1.1 s of a 1.5 s window is missed.
+   - **LOW-2.** A cancel during the grace makes the scenario stop an emergency result through the existing
+     `ML-TEARDOWN-TERMINAL-SCOPE` refusal of the outcome record. It is fail-safe, but untested, and S1b widens
+     the window to the grace.
+   - **LOW-3.** The stale check at admission covers `.xverse-ready` only. An existing `.xverse-ready.g<N>` aside
+     name fails late, at the restart STAGE.
+   - **LOW-4.** The widened state mask (`~8191`) applies to undeclared units too. A native regression setting
+     2048 or 4096 there would be accepted.
+   - **Planned dispositions.**
+     - MEDIUM-1: the owned harness records `nativeUnits` (the `stop_mode` field), and S1c-2 part 2 asserts it.
+       S1b persists nothing new. This is recorded for the author at acceptance.
+     - LOW-1: space the marker attempts so that the last one probes the end of the window, keeping a round-trip
+       reserve.
+     - LOW-2: add a test, and declare the result as expected.
+     - LOW-3: reject any `.xverse-ready*` entry in the cwd at admission.
+     - LOW-4: per-issuer check that no reply carries a bit for a control the unit did not declare.
