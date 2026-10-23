@@ -416,3 +416,44 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       feasibility, and the VS-09 live cancel confirmation (S1-T06a), which runs on the merged revision.
     - **Unchanged.** Not M1, not AEB evidence, not a scientific result. Lane activation, M1 admission and
       factory runs stay closed.
+18. **Post-merge live finding: an intermittent persistence child exit right after a cancel (2026-10-23 17:22;
+    S1a successor; recorded before any analysis or repair).**
+    - **Context.** These are the S1 VS-09 development runs on main `b28a2aacf`, with the blueprint S1c-2a
+      candidate (`xverse-blueprints` `f19ae58`). The runs are on loop10 under
+      `.x-verse-build/runs/lite-stabilization-s1/vs09-20261023/`, and the compat log has them as findings
+      15–20. The non-M1 owned harness (`_OriginalRuntimeRun`) calls `entry.stop` about 6 s into a
+      simulation pause.
+    - **Observed: 1 of 7 cancel runs** (`dev-s1c2a-20261023T172145-cancel-paused`, load 7.3).
+      - `entry.stop` returned at 13.7132 s.
+      - A `schedule` request (sequence 452) started at 13.7136 s, which is 0.4 ms later. It failed in stage
+        `receive` at 13.7162 s with `ML-PERSIST-CHILD`: the worker child had exited. Its deadline was 15.71 s.
+      - The outcome is `ML-SCHEDULE-CANCELLED`, with `cleanupComplete` false and closure
+        `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`.
+      - The closure writer is `rpc-unresolved`, with `abort_attempted` false. `dispatchTerminal` is null, and
+        the native units have no retired or reaped facts.
+      - The Argus root keeps its initial open manifest (0 events), while the stream has 269 lines.
+      - The host was left clean: no residue processes or sockets, and the restore guard succeeded.
+    - **The other 6 cancel runs closed as DR-2 requires**: `170215`, `164544`, and `172613`, `172841`,
+      `173109` and `173336`.
+      - The writer ended `failed` by abort, and `xverse-argus verify` gives only WRITER-STATE.
+      - The 4 native units are retired and reaped.
+    - **What is known.**
+      - The request passed the client's `_live` check after the latch was cancelled. So its kind allows a
+        cancel (`schedule` with a failure, disposition or run-terminal body).
+      - It was then refused because the child had exited (`allow_exit` is false for `schedule`).
+      - The worker's own exit reason is not recorded. Unit and worker stderr are not captured; that is GA-30,
+        the S1b FR-010 stderr capture.
+    - **Not known.**
+      - Whether the worker exited on its own: for example, on a request it refuses after the bootstrap
+        root's cancel.
+      - Whether another path signalled it: `_fail()` on a concurrent request, or the native cancel.
+      - Whether the rate depends on load.
+    - **Effect.** GA-11 is not closed. VS-09 and the S1d P3 criterion will fail intermittently until this is
+      understood. The S1a acceptance evidence is unaffected: that suite has no live cancel race at this timing.
+    - **Plan.**
+      - Diagnose before any repair: reproduce on the owned harness with the worker's stderr captured, which
+        is an S1b prerequisite. Alternatively, use a bench reproduction that sends disposition statements
+        immediately after `entry.stop`.
+      - Record the cause as the next finding, then write the ADR amendment, then the repair. This branch
+        (`candidate/lite-stabilization-s1a2-20261023`) holds the record only, until the author decides how it
+        is sequenced with S1b.
