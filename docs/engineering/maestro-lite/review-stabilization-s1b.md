@@ -618,3 +618,26 @@ decision S-D2, approved on 2026-10-23).
       - the Maestro writer `failed`, with WRITER-STATE only;
       - no residue.
     - **Next.** An independent review of S1a-5, then the full installed-wheel run, DV12 and CAPA step 13 on this head.
+18. **Independent review of S1a-5 (`563223f8b`, `b049585bf`; written at 23:55:55 2026-10-24): PASS, LOW only.**
+    - **Confirmed.**
+      - The exemption grants nothing: CANCEL only runs `close_authority`, with its freeze bounded by `close_end`, and
+        it never touches the lease.
+      - The other bounds still apply, the watchdog is single-threaded, and the replay after close is unchanged.
+      - No other frame kind can exceed the open lease: QUERY, STOP, RETIRE, TERM, REGISTER and RENEW are clamped by
+        `_until`. Only K.CANCEL, from `RunBroker.cancel` and `run_closure._fence`, can, and the exemption now covers it.
+      - The reproduction test discriminates. The ADR came before the code, and the diff is one line.
+    - **Dispositions.** A full run was already in progress on this head, so no test or code is changed after it:
+      - **LOW-1 (no native-level test of the exemption and its limits): carried.** The end-to-end reproduction
+        covers the case. The native test is to be added with the next platform change in this area. It should
+        assert: a CANCEL past an open lease is answered CANCELLED and leaves the lease unchanged; a non-CANCEL kind
+        past the lease still makes the helper exit; ARM, RELEASE and RENEW are refused afterwards.
+      - **LOW-2 (the expired-lease residual stays reachable, through `ML-SCHEDULE-LEASE-EXHAUSTED` or a cancel
+        after an attempt capped at the lease): the owner decision is recorded here.** The residual is accepted as
+        fail-safe: workloads are killed natively and only the evidence closure is lost.
+        - R1-epoch−1 (accepting a CANCEL carrying the epoch before a watchdog close) is not adopted.
+        - R3 (renew before a long start step) is not adopted.
+        - S1c records `connection._lease` at cancel time and the helpers' return codes, so that a recurrence is
+          attributable (0 means it exited by itself; −9 means revoked).
+      - **LOW-3 (ADR completeness):** after a CANCEL past the lease, `g->deadline` is briefly past it. Its uses
+        (`enabled`, the ARM ticket end, the stage wait) all require an open authority. The next frame resets it, and
+        `cleanup` and `close_end` do not use it. This note completes the S1a-5 safety reasoning.
