@@ -26,13 +26,23 @@ def summarize(run):
            "units": record.get("units"), "horizon": record.get("horizon"), "load": {"max": max(load, default=None),
            "mean": round(statistics.mean(load), 2) if load else None}, "rpcCount": len(rpc),
            "rpcErrors": [r for r in rpc if r.get("error")][:5]}
-    durations = [r["durationNs"] / 1e6 for r in rpc]
+    # FR-002 per-event metric: ordinary lifecycle/schedule calls; start-up and terminal calls have their own
+    # budgets (start-up window; terminal-report and closure <= 2 s) and are reported separately.
+    terminal_kinds = {"init", "terminal-report", "closure", "abort", "collect", "public-export", "public-blob"}
+    out["terminalCallsMs"] = sorted(([r["kind"], round(r["durationNs"] / 1e6, 1)] for r in rpc if r["kind"] in terminal_kinds),
+                                    key=lambda x: -x[1])[:8]
+    durations = [r["durationNs"] / 1e6 for r in rpc if r["kind"] not in terminal_kinds]
     if durations:
         ordered = sorted(durations)
         out["rpcMs"] = {"p50": round(ordered[len(ordered) // 2], 2), "p99": round(ordered[int(len(ordered) * .99) - 1], 2),
                         "max": round(ordered[-1], 2)}
         n = len(durations)
         out["rpcDecileMeanMs"] = [round(statistics.mean(durations[i * n // 10:(i + 1) * n // 10]), 2) for i in range(10)]
+        out["fr002"] = {"p99Ms": out["rpcMs"]["p99"], "maxMs": out["rpcMs"]["max"],
+                        "lastMinusFirstDecileMs": round(out["rpcDecileMeanMs"][-1] - out["rpcDecileMeanMs"][0], 2),
+                        "pass": out["rpcMs"]["p99"] <= 100 and out["rpcMs"]["max"] <= 250
+                        and out["rpcDecileMeanMs"][-1] - out["rpcDecileMeanMs"][0] <= 50}
+    out["durationS"] = round((record.get("monotonicEndNs", 0) - record.get("monotonicStartNs", 0)) / 1e9, 2)
     if worker:
         n = len(worker)
         deciles = []

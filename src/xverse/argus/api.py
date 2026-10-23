@@ -25,7 +25,7 @@ from .diagnostics import (
 )
 from .limits import EvidenceLimits
 from .planbinding import envelope_run_id, plan_identity
-from .reader import EvidenceReader, read_run
+from .reader import EvidenceReader, read_run, read_records
 from .schema import (
     OBLIGATION_KEYS,
     OBLIGATION_KINDS,
@@ -437,6 +437,13 @@ class EvidenceStore:
         """Return a bounded read-only reader for one run root."""
 
         return read_run(root, limits=limits)
+
+    @classmethod
+    def read_records(cls, root: Any, *, limits: EvidenceLimits | None = None, checkpoint: Any = None):
+        """Return ``(records, checkpoint)``: the records of ``read_run(root, limits=limits).records()``,
+        resuming a clean earlier read of the same run when every verified byte is unchanged."""
+
+        return read_records(root, limits=limits, checkpoint=checkpoint)
 
 
 def _unregister(registry_key: str) -> None:

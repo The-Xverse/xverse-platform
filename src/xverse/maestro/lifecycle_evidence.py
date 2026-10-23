@@ -77,6 +77,11 @@ class OutcomeJournal:
         self.public_exports = export_declarations(public_exports)
         self.export_attempted = set()
         self.export_root = pin_export_root(self) if self.public_exports else None
+        # S1 FR-002/FR-003: a clean, byte-verified read of the stream is resumed, not repeated
+        self._mirror_checkpoint = None
+        self._mirror_events = ()
+        self._mirror_index = {}
+        self._mirror_verified = {}
 
     def retain_claim(self, claim):
         previous = self.retained_claims.get(claim.operation)
@@ -115,13 +120,36 @@ class OutcomeJournal:
             raise PersistenceError("ML-EVIDENCE-HISTORY")
         return records
 
-    def _mirrors(self, claims):
-        events = EvidenceStore.read_run(self.root).records()
-        indexed = {}
-        for event in events:
+    def _index(self, events):
+        """Index the accepted records by event ID, extending the previous index when the earlier records
+        are the very same objects (a resumed read); any other read is indexed from scratch."""
+        previous = self._mirror_events
+        if len(events) >= len(previous) and all(a is b for a, b in zip(previous, events)):
+            indexed, start = self._mirror_index, len(previous)
+        else:
+            indexed, start = {}, 0
+            self._mirror_verified = {}
+        for event in events[start:]:
             if event["eventId"] in indexed:
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
             indexed[event["eventId"]] = event
+        self._mirror_events, self._mirror_index = events, indexed
+        return indexed
+
+    def _mirrors(self, claims):
+        # The Argus stream is re-verified on every check: ``read_records`` re-hashes the already verified
+        # prefix (SHA-256) and resumes the identical acceptance scan only for new bytes; any changed byte,
+        # identity or manifest makes it a complete ``read_run`` (thesis S1 FR-002/FR-003).
+        try:
+            events, self._mirror_checkpoint = EvidenceStore.read_records(self.root, checkpoint=self._mirror_checkpoint)
+        except Exception:
+            self._mirror_checkpoint, self._mirror_events, self._mirror_index, self._mirror_verified = None, (), {}, {}
+            raise
+        try:
+            indexed = self._index(events)
+        except Exception:
+            self._mirror_checkpoint, self._mirror_events, self._mirror_index, self._mirror_verified = None, (), {}, {}
+            raise
         for claim in self._all_claims(claims):
             event = indexed.get(claim.event_id, {})
             from .evidence import retained_intent
@@ -139,10 +167,16 @@ class OutcomeJournal:
                 != "sha256:" + claim.flush_digest.hex()
             ):
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
+        verified = self._mirror_verified
         for event_id, expected in self.events.items():
             actual = indexed.get(event_id, {})
+            pair = verified.get(event_id)
+            if pair is not None and pair[0] is expected and pair[1] is actual:
+                continue  # the same expected fields against the same byte-verified record
             if any(not _same_json(actual.get(k), v) for k, v in expected.items()):
                 raise PersistenceError("ML-EVIDENCE-MIRROR")
+            if actual:
+                verified[event_id] = (expected, actual)
 
     def record(self, body, claims, operation, deadline, check):
         check(deadline)

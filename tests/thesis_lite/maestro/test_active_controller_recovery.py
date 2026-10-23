@@ -104,6 +104,12 @@ def test_original_active_replacement_retains_owner_writer_and_productive_access(
         if mode=='heartbeat-race':
             if kind=='step-complete' and step.phase=='start' and sum(s.phase=='start' and s.step_id in driver._outcomes for s in driver.prepared.steps)==3:
                 race_ready.append(True)
+            if race_ready and not tickets:
+                # Hold the schedule (bounded) until the old controller's first lease-renewal heartbeat, which
+                # enqueues the replacement; a fast persistence path would otherwise end before any renewal
+                # (stabilization S1a finding 10).
+                import time as _time
+                _time.sleep(.25)
             return reply
         if mode=='before-start':
             trigger=step.phase=='prepare' and not broker.owner._claims

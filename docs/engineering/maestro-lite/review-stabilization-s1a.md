@@ -143,3 +143,88 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
        blocked-flush regression and a setup `ML-PERSIST-TIMEOUT` in `cancel-queued-recovery`. The latter
        passes on main and on the final repair; it is classified as load-sensitive setup, and the full
        run decides.
+7. **Repair of findings 2 and 4: resumable byte-verified reads (S1-T04; FR-002, FR-003; S-D7).**
+   - **Argus** (amendment S1a-2, `detailed-design.md` section 8.6). `recover_stream` is refactored into
+     one scan with an optional resume state; the acceptance code is the same. `resume_stream` continues a
+     *clean* scan only when the device and inode match and the SHA-256 of the whole verified prefix,
+     re-read on every call, is unchanged. `read_records(root, checkpoint)` resumes only when the manifest
+     bytes are unchanged; otherwise it is a complete `read_run`. Damaged evidence never yields a
+     checkpoint. `read_run`, `verify`, the exports and the CLI are unchanged.
+   - **Maestro** (`OutcomeJournal._mirrors`). It uses `read_records`, indexes only new records, and
+     compares expected event fields again only when the expected object or the accepted record object
+     changed. A complete read produces new objects, so everything is compared again.
+   - **XDL** (`FileEvidenceJournal._reload`). It re-reads the whole file, re-hashes the verified prefix
+     (which must end at a line boundary, with the same device and inode), and parses only new lines. A
+     claim-wire reload stays complete. The sequence check is unchanged.
+   - **New tests.**
+     - `tests/thesis_lite/argus/test_stabilization_read_records.py`: equality with `read_run` after every
+       one of 40 appends, with only one complete read; a same-size prefix rewrite; truncation; a replaced
+       inode; foreign appends (non-canonical, non-JSON, duplicate); a changed manifest; another root.
+     - `tests/thesis_lite/maestro/test_stabilization_journal_reload.py`: two writers on one journal, at
+       most two lines parsed per reload; a changed prefix byte; a broken sequence; a replaced file.
+     - Result: 13 passed.
+   - **Benchmark on the candidate venv** (load 3.8–5.1; runs in `.x-verse-build/runs/lite-stabilization-s1a/`):
+
+     | Run | Outcome | Events | Per-event p99 / max | Last − first decile | Duration |
+     | --- | --- | --- | --- | --- | --- |
+     | `t04-cand-4u-h300` | succeeded, evidence complete | 450 | 40.5 / 98.3 ms | +6.8 ms | 20.4 s |
+     | `t04-cand-4u-h600` | executed, evidence incomplete (finding 8) | 791 | 31.6 / 79.2 ms | +2.8 ms | 36.1 s |
+     | `t04-cand-5u-h600` | as above | 796 | 40.7 / 106 ms | +3.8 ms | 37.3 s |
+     | `t04-cand-4u-h800` | as above | 1016 | 35.9 / 77.8 ms | +6.8 ms | 46.9 s |
+     | `t04-cand-5u-h800` | as above | 1009 | 35.5 / 97.1 ms | +5.5 ms | 47.4 s |
+     | `t04-cand-4u-h800-r4m` (retained cap 4 MiB) | **succeeded, evidence complete** | — | — | — | 50.5 s |
+     | `t04-cand-4u-h1000` | `ML-SCHEDULE-SERVICE-DEADLINE` (finding 9) | 1218 | 39.7 / 96.9 ms | +5.1 ms | 57.7 s |
+
+     Per-request worker handling is flat at 2.4–3.5 ms; on main it rose from 23 ms to 178 ms. FR-002 passes
+     for every candidate run with 4 and 5 units: p99 ≤ 0.1 s, maximum ≤ 0.25 s, last-decile increase ≤
+     0.05 s.
+   - **Calls outside the per-event metric.** These are start-up and terminal calls, separated in
+     `analyze.py`. `init` takes 0.5–0.68 s (0.47–0.58 s on main), inside the 4 s start-up window. Each
+     `terminal-report` call takes 0.36–0.63 s, inside the ≤ 2 s terminal budget.
+8. **Run length is also bounded by the 1 MiB default cap of `retained-inputs.json` (2026-10-23 10:38).**
+   - **What happened.** At 600 and 800 ticks the terminal report stopped at stage `retained-inputs`, with
+     blocker `publication`. The writer was aborted (`failed`, incomplete), and the dispatcher reported
+     `ML-SCHEDULE-EVIDENCE-INCOMPLETE`.
+   - **Cause.** The retained public inputs grow by about 1.7 KB per event (760 077 bytes at 450 events).
+     When the caller does not declare the artifact, `coverage.py:203` caps it at 1 MiB, which allows about
+     600 events.
+   - **Within the accepted contract.** Coverage admission allows a declared `maximumBytes` up to the
+     16 MiB total (`coverage.py:330-336`). With `ArtifactExpectation("retained-inputs.json", maximum_bytes=4 MiB)`,
+     the 800-tick run succeeded with complete evidence (1 549 471 bytes retained).
+   - **Disposition.** This is not a code defect. It is an admission parameter that long runs must declare.
+     Carried to S1c FR-018: the blueprint declares a retained-inputs cap sized for its horizon. Recorded for
+     Phase 8.
+9. **Admission accepts a horizon that cannot fit its active window (2026-10-23 10:35, runs `h1000`).**
+   - **What happened.** With 1 000 ticks and a 55 s active window, the 4-unit run ended with
+     `ML-SCHEDULE-SERVICE-DEADLINE`. The 5-unit run ended with `ML-SCHEDULE-TEARDOWN-INCOMPLETE` and
+     `cleanupComplete: false`: teardown began too late.
+   - **Cause.** The ticks advance at about 0.05 s (the poll floor) plus the round trips, so 1 000 ticks
+     need more than 55 s. `admit_schedule` checks the event and request capacity, but not that
+     `ticks × poll + calls` fits the window.
+   - **Pre-existing.** Unrelated to the repair.
+   - **Disposition (proposed, LOW).** The blueprint chooses a horizon with margin. The measured capacity
+     is at least 800 ticks with 4 units at load ≤ 5. A feasibility check in admission is a candidate for a
+     later successor and is not implemented in S1a.
+   - **S-D1 consequence**, recorded under the author's delegation and replacing the target in finding 1:
+     the long-run uses **600 Maestro ticks** with 4 units, an active window of 55 s, and a retained-inputs
+     cap of 4 MiB. That is about 0.75 of the measured 800-tick capacity, leaving margin for a slower cycle
+     under load.
+10. **A race test depended on slow persistence (2026-10-23 11:05, found by the nested platform regression in
+    `focused-perf-1.log`).**
+    - **Test.** `test_active_controller_recovery.py::test_original_active_replacement_retains_owner_writer_and_productive_access[heartbeat-race]`.
+    - **Results.** It fails 3/3 on the candidate (`assert len(tickets)==1`: 0 tickets). It passes 3/3 on main,
+      and 2/2 on a cancel-repair-only build (`55838b5f8`, venv `venv-cancel`), so the cause is the
+      finding 7 change.
+    - **Cause, from a debug trace of controller requests** (not committed). The mode enqueues the controller
+      replacement when the old controller sends its first `heartbeat` after three starts. That heartbeat is
+      the lease renewal of `_renew_service`, `dispatcher.py:1207-1229`, first due about 2.4 s into the run.
+      - On the cancel-only build, the run lasts 11.7 s and the old controller sends 2 heartbeats.
+      - On the candidate, the whole schedule (prepare, start, observe, stop and cleanup of 4 units)
+        finishes in about 1.5 s, before any renewal. No heartbeat is sent, and the race is never set up.
+    - **Assessment.** The behaviour is correct: no renewal is needed in a short run. The test's trigger
+      depended on persistence being slow.
+    - **Repair (test only, in the next commit).** In `heartbeat-race` mode, once three starts are complete
+      and no ticket exists, each statement is followed by a bounded 0.25 s pause. The run then reaches the
+      first lease renewal, and the heartbeat triggers the replacement exactly as the test intends. The
+      pause stops as soon as the ticket exists. Its total is bounded by the 20 s active window that the
+      test asserts. Product code is unchanged.

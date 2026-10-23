@@ -215,7 +215,11 @@ def test_persistence_scaling(environment, binaries, authority_binary, run_bootst
                               active_start=time.monotonic(), active_end=time.monotonic() + schedule.active_seconds,
                               source_digests=(pin(schedule.canonical_bytes),),
                               artifacts=[*(ArtifactExpectation(d.destination, True, 256, d.unit_id, 1) for d in declarations),
-                                         ArtifactExpectation("collection-result.json", maximum_bytes=16384)])
+                                         ArtifactExpectation("collection-result.json", maximum_bytes=16384),
+                                         # retained public inputs grow ~1.7 KB per event; the 1 MiB default bounds a run to
+                                         # ~600 events (finding 8). Coverage admission allows up to 16 MiB in total.
+                                         *([ArtifactExpectation("retained-inputs.json", maximum_bytes=int(retained_max))]
+                                           if (retained_max := os.environ.get("XVERSE_BENCH_RETAINED_MAX")) else [])])
     collection = admit_collection(coverage, expected_digest=coverage.digest, source_root=str(work), source_identity=(st.st_dev, st.st_ino),
                                   declarations=declarations, metadata_path="collection-result.json", operation_seconds=1,
                                   per_unit_teardown_seconds=2, collection_seconds=3, terminal_seconds=2, drain_seconds=2)
@@ -271,7 +275,9 @@ def test_persistence_scaling(environment, binaries, authority_binary, run_bootst
                           nativeUnits=[asdict(u) for u in outcome.closure.native_units],
                           persistenceFailure=str(getattr(outcome, "persistence_failure", None)),
                           closureDiagnostics=[str(d) for d in getattr(outcome.closure, "diagnostics", ())],
-                          closureWriters=str(getattr(outcome.closure, "writers", None)))
+                          closureWriters=str(getattr(outcome.closure, "writers", None)),
+                          dispatchTerminal=(outcome.dispatch.terminal.public_data()
+                                            if outcome.dispatch and outcome.dispatch.terminal is not None else None))
         (out / "load.jsonl").write_text("".join(json.dumps(line) + "\n" for line in load_lines))
         (out / "run.json").write_text(json.dumps(record, indent=2, sort_keys=True, default=str) + "\n")
         for name in ("argus-maestro", "m3.jsonl"):

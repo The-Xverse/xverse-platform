@@ -42,6 +42,8 @@ __all__ = [
     "read_confined_bytes",
     "recorded_path_diagnostics",
     "recover_stream",
+    "resume_stream",
+    "StreamCheckpoint",
     "validate_event_record",
 ]
 
@@ -60,6 +62,30 @@ class RecoveryResult:
     sha256: str = ""
     accepted_lines: int = 0
     over_read_bound: bool = False
+    checkpoint: Any = field(default=None, compare=False, repr=False)
+
+
+@dataclass(frozen=True)
+class StreamCheckpoint:
+    """The complete scan state after a *clean* read of a stream prefix (thesis S1 FR-002/FR-003).
+
+    A checkpoint exists only when the read emitted no diagnostic, was not truncated and stayed within
+    every bound. ``resume_stream`` continues the identical scan from ``offset`` only after re-hashing the
+    first ``offset`` bytes of the same file (device and inode) and finding ``prefix_sha256`` unchanged, so
+    any change of an already-read byte falls back to a complete read. ``records`` are shared with the
+    result that produced the checkpoint and must be treated as read-only.
+    """
+
+    identity: tuple[int, int]
+    offset: int
+    prefix_sha256: str
+    line_number: int
+    expected_ordinal: int
+    seen_ids: frozenset
+    records: tuple
+    limits: EvidenceLimits
+    manifest_run_id: str | None
+    relative: Any
 
 
 def recorded_path_diagnostics(relative: Any) -> list[EvidenceDiagnostic]:
@@ -407,10 +433,38 @@ def recover_stream(
     (``AR-F01``, ``detailed-design.md`` section 8.5).
     """
 
+    return _recover(root, limits=limits, manifest_run_id=manifest_run_id, relative=relative, resume=None)
+
+
+def resume_stream(root: Any, *, checkpoint: StreamCheckpoint) -> RecoveryResult | None:
+    """Continue a clean scan of the same stream from ``checkpoint`` (thesis S1 FR-002/FR-003).
+
+    The result is exactly what ``recover_stream`` would return for the whole file now: the confined open,
+    the per-line acceptance rules and every bound are the same code, applied to the same state. It
+    returns ``None`` -- the caller then reads the whole stream -- when the file identity changed, the file
+    is shorter than the checkpoint, or any byte of the verified prefix changed (SHA-256 of the prefix).
+    """
+
+    if type(checkpoint) is not StreamCheckpoint:
+        raise TypeError("checkpoint must be a StreamCheckpoint")
+    return _recover(root, limits=checkpoint.limits, manifest_run_id=checkpoint.manifest_run_id,
+                    relative=checkpoint.relative, resume=checkpoint)
+
+
+def _recover(root: Any, *, limits: EvidenceLimits, manifest_run_id: str | None, relative: Any,
+             resume: StreamCheckpoint | None) -> RecoveryResult | None:
     descriptor, diagnostics = open_confined(root, relative)
     if diagnostics:
-        return RecoveryResult(records=[], diagnostics=tuple(diagnostics))
+        return None if resume is not None else RecoveryResult(records=[], diagnostics=tuple(diagnostics))
     assert descriptor is not None
+    try:
+        opened = os.fstat(descriptor)
+        identity = (opened.st_dev, opened.st_ino)
+    except OSError:
+        identity = None
+    if resume is not None and (identity != resume.identity or opened.st_size < resume.offset):
+        os.close(descriptor)
+        return None
 
     digest = hashlib.sha256()
     total = 0
@@ -440,6 +494,16 @@ def recover_stream(
     try:
         with os.fdopen(descriptor, "rb") as handle:
             descriptor = None
+            if resume is not None:
+                prefix = handle.read(resume.offset)
+                digest.update(prefix)
+                if len(prefix) != resume.offset or digest.hexdigest() != resume.prefix_sha256:
+                    return None  # an already-read byte changed: the caller reads the whole stream
+                total = resume.offset
+                line_number = resume.line_number
+                expected_ordinal = resume.expected_ordinal
+                seen_ids = set(resume.seen_ids)
+                records = list(resume.records)
             while True:
                 raw = handle.readline(limits.max_event_bytes + 1)
                 if raw == b"":
@@ -635,6 +699,10 @@ def recover_stream(
             )
         )
 
+    checkpoint = None
+    if identity is not None and not collected and not truncated and not over_read_bound and not diagnostics_suppressed:
+        checkpoint = StreamCheckpoint(identity, total, digest.hexdigest(), line_number, expected_ordinal,
+                                      frozenset(seen_ids), tuple(records), limits, manifest_run_id, relative)
     return RecoveryResult(
         records=records,
         diagnostics=tuple(collected),
@@ -643,4 +711,5 @@ def recover_stream(
         sha256=digest.hexdigest(),
         accepted_lines=len(records),
         over_read_bound=over_read_bound,
+        checkpoint=checkpoint,
     )
