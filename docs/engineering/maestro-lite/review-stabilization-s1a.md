@@ -402,3 +402,17 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
     - No cause is verified and no effectiveness is claimed.
     - **Worktree.** The sparse checkout was disabled to run the `affa17` tooling, which leaves the
       worktree without exclusions.
+17. **Author acceptance (2026-10-23 about 16:15 WEST).** The author wrote "i accept" in reply to the S1a
+    and S1c-1 acceptance request. This is gate ES-2 of the thesis S1 plan
+    (`specs/029-lite-stabilization`): S1a is accepted as presented in
+    `review/acceptance-package-s1a-20261023.md`, including the delegated revisions DR-1 to DR-5.
+    - **Accepted content.** The code is this candidate at `d04bc7937`; the commits after it add evidence and
+      this log only. The evidence is the clean run `platform-regression-20261023a-1` (2417 passed, 1 skipped),
+      the DV12 verdict and CAPA step 9 `34c742da…` (finding 16).
+    - **Merge.** `--no-ff` into main from base `8b3d8c8e8`, which equals main, so the merged tree equals this
+      candidate's tree. The tree identity is checked before the push.
+    - **Carried, not repaired.** The S1b scope (graceful stop, stderr capture, the challenge-marker probe), the
+      64 KiB persistence configuration bound that limits a run to 5 units, admission not checking horizon
+      feasibility, and the VS-09 live cancel confirmation (S1-T06a), which runs on the merged revision.
+    - **Unchanged.** Not M1, not AEB evidence, not a scientific result. Lane activation, M1 admission and
+      factory runs stay closed.
