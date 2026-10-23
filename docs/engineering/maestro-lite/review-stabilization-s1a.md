@@ -693,3 +693,33 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       (`parent-preservation.json`).
     - No cause is verified beyond the deterministic reproduction, and no effectiveness is claimed.
     - **S1a-2 is ready for the author's acceptance.** VS-09 follows on the merged revision.
+28. **S1a-3 (thesis S-D9, path (a) of FR-002): the long-run terminal report is dominated by the retained-inputs encoder
+    (written at 22:08:50 2026-10-23; before any repair).**
+    - **Branch.** `candidate/lite-stabilization-s1a3-20261023`, stacked on the S1b candidate `0929bd2d5`, because
+      both touch the evidence path.
+    - **Trigger.** S1c finding 32: a live long-run (600 ticks, 4 units, load 8.4) hit the 2 s `terminal-report`
+      deadline (`ML-PERSIST-TIMEOUT`). It took 0.80 s at load 6.3.
+    - **Profile.** The bench is `tools/bench/persistence_scaling` at 600 ticks with 4 units and a 4 MiB retained cap,
+      on the S1b wheel at load 3.7, with a bench-only, measurement-only timer hook in a separate venv
+      (`.x-verse-build/cache/lite-stabilization-s1b/venv-prof`). Run
+      `runs/lite-stabilization-s1/s1a3-profile-20261023/h600-e`:
+      - `WorkerTerminal.publish`: 1303 ms (`terminal-report` client round trip 1313 ms).
+      - `retained_snapshot`: 1090 ms.
+      - `WorkerTerminal.checkpoint`: **166,561 calls**, about 386 ms including the timer overhead.
+      - `assess_preclosure`: 165 ms.
+      - `_json` (11 calls): 36 ms.
+      - `close`: 470 ms, a separate call.
+    - **A cProfile attempt** (`h600-c`) pushed the call to its 1.988 s deadline and was killed. That is a measurement
+      artefact, recorded and not used.
+    - **Cause.** `evidence._bounded` streams the retained-inputs document (about 1.3 MB, about 800 annotations) with
+      `JSONEncoder.iterencode`. That is CPython's pure-Python encoder, which yields very small chunks, and it calls
+      the terminal checkpoint (the worker liveness check plus the deadline) once per chunk. The per-event
+      validation loop in `retained_snapshot` adds one checkpoint per event.
+    - **Repair plan (ADR-ML3-EVIDENCE-0001 amendment S1a-4, before the code).**
+      - Encode the top-level object field by field, and list values element by element, with the same encoder
+        settings. The C encoder is used per element. The size cap is checked after every element; the checkpoint
+        runs once per element and at least every 64 KiB.
+      - The output must be **byte-identical** to today's `_bounded` for every input. A differential test runs over
+        generated and recorded bodies.
+      - Memory stays bounded by one element plus the cap. The 8192-event and cap checks are unchanged.
+      - No incremental cache is introduced unless the re-measurement shows it is still needed.
