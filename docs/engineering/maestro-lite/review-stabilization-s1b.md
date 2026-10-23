@@ -416,3 +416,19 @@ decision S-D2, approved on 2026-10-23).
         `test_stabilization_s1b_readiness.py` (19), `test_provider.py` (35), `test_run_teardown.py` (9),
         `test_teardown.py` (27), `test_affa_client.py` (22), `test_run_broker.py` (11) and
         `test_stabilization_cancel_conflict.py` (6): 189 passed in 131 s (load 4.1 at start, 4.2 at end).
+11. **Independent re-review of the finding-10 repair at `23d781ca2` (written at 21:13:20 2026-10-23): PASS. No HIGH or MEDIUM;
+    3 informational LOW items.**
+    - **Tests.** The s1b broker and readiness tests gave 45 passed in each of 3 runs. native, provider, run_broker,
+      teardown, run_teardown, affa_native and dv05_dv06 gave 140 passed, at load 3.6–4.8.
+    - **Confirmed.**
+      - The readiness offsets are correct across A = 1–3 and windows from 1e-9 s to 5 s, within the native cap of 3.
+      - Both LOW-2 endings are fail-safe and asserted: no revoke, the cancel confirmed, the stop forced.
+      - The stale scan follows no links and leaks no fd.
+      - `_declared` covers every `_native` and INTENT reply and never rejects a legitimate declared reply.
+    - **LOW notes, accepted as is.**
+      - ADVANCED and REGISTERED replies are not passed through `_declared`. Nothing reads that state, and STAGE
+        requires exactly 37.
+      - The scan rule is exactly `.xverse-ready` and `.xverse-ready.g*`, which matches the native aside name.
+      - Under a tight outer deadline, the later final readiness attempt is dropped more often. It fails closed with
+        `ML-PROBE-NOT-READY`.
+    - **Next.** The decisive full installed-wheel run, DV12 and CAPA step 11.
