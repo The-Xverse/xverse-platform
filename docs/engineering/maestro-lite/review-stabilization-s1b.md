@@ -651,3 +651,11 @@ decision S-D2, approved on 2026-10-23).
     - **DV12** (`--scope code`, candidate `a486717d9`): accepted, with no blockers. The code is `a970c8d5…`.
     - **This run supersedes `platform-regression-20261023d-1`** as the decisive run for the stack head. CAPA step 13
       follows, built after this log is committed.
+20. **CAPA successor step 13 (written at 00:39:14 2026-10-24), built after finding 19 was committed (`b06a628f4`).**
+    - **Location.** `evidence/affa19/capa-20261024-stabilization-s1a5-step13/`, built by
+      `build-capa-20261024-stabilization-s1a5-step13.py`.
+    - **Additive over step 12 (`d095ac07…`).** Register `cdbb1506b655708857ee920e0ef968bd2c263ef62e9bda056920edce228284e7`:
+      56 records and 724 bindings.
+    - **Verifier:** rc 0. **Parent preservation:** `true`; all 718 parent bindings were checked and none changed.
+    - **The stack head is ready for the author's acceptance**, with the S1a-5 repair included. The order stays S1a-2,
+      then S1b, then S1a-3 (now including S1a-5).
