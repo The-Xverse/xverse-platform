@@ -432,3 +432,16 @@ decision S-D2, approved on 2026-10-23).
       - Under a tight outer deadline, the later final readiness attempt is dropped more often. It fails closed with
         `ML-PROBE-NOT-READY`.
     - **Next.** The decisive full installed-wheel run, DV12 and CAPA step 11.
+12. **S1b: the decisive full installed-wheel run and the DV12 gate (written at 22:00:48 2026-10-23).**
+    - **Rebase.** Before the run, the branch was rebased onto the S1a-2 candidate head `6f669ec4e`. The commits there
+      after `d8b44719c` are evidence and logs only, so the code did not change; this gives CAPA its step-10 parent.
+      The sparse checkout was widened to the affa19 driver scripts, the inputs, the step-10 register and the affa17
+      tooling.
+    - **Run.** `evidence/affa19/stabilization-s1b/platform-regression-20261023c-1`, head `78ed2f0e6`, driven by
+      `run-z-quiet-loop.sh`.
+      - Triggered at 20:17:51Z at load 3.46, on the first attempt.
+      - **Clean:** 2524 passed, 1 skipped (lane admission, as before), 39 subtests, in 2478 s.
+      - The maximum sampled load was 6.31.
+    - **DV12 gate.** `--scope code`: `accepted_as_evidence: true`, with no blockers. The run and candidate code
+      are both `2d17c186…`.
+    - **Next.** CAPA step 11 (parent step 10, `4b04cb4a…`), built after this log is committed.
