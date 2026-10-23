@@ -78,3 +78,68 @@ decision S-D2, approved on 2026-10-23).
      - D-3: stderr is retained privately, not collected.
      - D-4: TERM is two-step, with the lock free during the grace.
    - The ADR amendments follow in the next commit, before the code.
+4. **S1b step 1: the protocol and the native authority are implemented (written at 20:05:47 2026-10-23, load
+   about 4.2).**
+   - **Protocol (`affa_protocol.py`).** `TERM = 31`, `TERM_SENT = 32`, the state bits 512/1024/2048/4096 and
+     `STATE_MASK = 8191`. `AuthorityRecipe` gains `grace_ms`, `stderr_max`, `probe`, `stderr_device` and
+     `stderr_inode` (all default 0). It emits AR17 version 2 (the 48-byte header of the design) only when a
+     control is declared; otherwise the version 1 bytes are unchanged. Decode accepts versions 1 and 2 and
+     rejects an all-zero v2, a nonzero reserved word, out-of-bound controls, a stderr identity without a cap
+     (or the reverse), a short v2 header and trailing bytes. TERM is a request kind (state and reason 0).
+   - **Client (`affa_client.py`).** `_REPLIES[TERM] = TERM_SENT`, TERM stays out of `_CLEANUP`, the state mask
+     is `~8191`, and a REGISTER may carry 4 or 5 fds. The count is bound by the native side to the sealed recipe.
+   - **Native (`run_authority.c`).**
+     - `recipe()` parses v1 and v2 with the design's rules.
+     - REGISTER requires exactly 5 fds when `stderr_max != 0` and 4 otherwise. The fifth must match the sealed
+       dev/ino, and is dup'd `F_DUPFD_CLOEXEC` ≥ 3.
+     - STAGE, before `clone3`: `stderr-g<N>` is created `O_WRONLY|O_APPEND|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC`,
+       0600. For a probe unit, the earlier `.xverse-ready` is moved to `.xverse-ready.g<N-1>` with
+       `RENAME_NOREPLACE` (N > base), then `.xverse-ready` is created 0700, opened `O_NOFOLLOW|O_DIRECTORY`,
+       checked (directory, own uid, mode 0700), and `challenge` is written: 64 lowercase hex characters from
+       `getrandom`, `O_EXCL|O_NOFOLLOW`, mode 0400.
+     - `child_exec`: after the unchanged `close_range`, fds 0 and 1 are `/dev/null` and fd 2 is the stderr file
+       or `/dev/null`. A declared-grace unit gets SIGTERM set to `SIG_DFL` and unblocked before exec.
+     - TERM: SIGTERM through the pidfd to the leader only, latched in bit 512, idempotent.
+     - `stop_child`: `exited_on_term` (1024) is set before the freeze only if TERM was sent and the leader is
+       reaped with the boundary empty. On success the stderr file is capped by `ftruncate` (bit 4096) and closed,
+       and the probe fd is closed. `cleanup()` caps as a best effort once the leader is reaped and the boundary
+       is empty.
+     - QUERY runs the bounded marker check: `ready` is opened `O_RDONLY|O_NOFOLLOW|O_NONBLOCK`, must be a
+       regular 64-byte file and equal to the nonce under `CRYPTO_memcmp`; bit 2048 latches.
+     - The main loop accepts `kind <= 15 || kind == TERM`. New descriptors are `O_CLOEXEC` and ≥ 3 (a helper
+       moves any lower one up). No signal by PID number is added.
+   - **Interpretations within the design, recorded here (not deviations).**
+     - TERM refusals. A TERM for a unit without a declared grace, or for a superseded generation, is a protocol
+       error (REJECTED, which closes the authority); Python never sends it. A TERM whose runtime conditions fail
+       (not released, not alive, frozen, stop already saved, retired, or the authority closed) changes nothing
+       and is answered TERM_SENT without bit 512, so Python goes straight to the forced STOP (step 3 of the
+       design's Python side).
+     - Every marker check on QUERY counts toward the cap of 3, including a check that finds no `ready` file.
+     - The rename aside accepts `ENOENT`, because a unit may have removed its own earlier directory; an occupied
+       aside name fails STAGE.
+     - The native REGISTER also checks that the stderr directory is owned by the uid with `mode & 0o077 == 0`
+       (defence in depth for the Python admission check of step 3).
+     - A failed cap (`fstat`/`ftruncate`) fails the STOP, and therefore closes the authority (fail-closed).
+   - **Tests.**
+     - `catalog_workload.c` gains the modes `term` (a handler writes `TERM` and exits 0), `ignore-term`,
+       `marker`, `marker-late` (answers after 0.4 s), `marker-wrong`, `marker-never`, `stderr-flood` (16 KiB on
+       fd 2) and `streams`. The mode `marker` (an immediate answer) is an addition to the design's list. The
+       existing modes are unchanged.
+     - New `test_stabilization_s1b_native.py`, 34 tests: the FR-013 cases (TERM honoured with
+       `exited-on-term`; TERM ignored, then forced; marker never; marker late within the bound; stderr cap
+       overflow); cancel, then a forced stop with no TERM; a frozen unit is not sent TERM; TERM rejected without a
+       declared grace; TERM before release signals nothing; the latch; the cap of 3 checks; a wrong nonce, a
+       symlink to the challenge, a FIFO, an oversized file and a directory, none matching and none blocking; the
+       per-generation rename aside; an occupied aside name; a stale directory and a symlinked directory
+       rejecting STAGE; an existing stderr file or symlink rejecting STAGE without touching its target; streams
+       and handles with and without stderr; the REGISTER fd count and directory identity and mode; native
+       rejection of invalid v2 recipes; and the AR17 v1 bytes of an undeclared recipe.
+     - `test_affa_config.py`: the v2 layout bytes, the bounds and the untrusted v2 bytes (+3 tests, 21 cases).
+       `test_affa_client.py`: TERM refused after a cancel before it is sent. The existing case
+       `dict(state=512)` of `test_uncorrelated_real_reply_revokes_original_issuer` becomes `state=8192`: 512 is now
+       a valid bit, so the first unknown bit under the widened mask is tested instead.
+   - **Runs (installed wheel, one pytest process at a time).**
+     - `test_stabilization_s1b_native.py`: 34 passed (load 4.8 at start).
+     - `test_affa_config.py`, `test_affa_protocol.py`, `test_affa_client.py`, `test_affa_native.py`,
+       `test_dv05_dv06_bounds.py`: 113 passed and 1 failed (the `state=512` case above, load 3.9); after the
+       update, `test_affa_client.py` 22 passed (load 4.3).

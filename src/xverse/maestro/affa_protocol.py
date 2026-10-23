@@ -40,6 +40,16 @@ class AuthorityKind(IntEnum):
     ADVANCED = 28
     FAULTED = 29
     FAULT_REFUSED = 30
+    TERM = 31  # S1b (FR-009): SIGTERM through the pidfd to the leader of a declared-grace unit
+    TERM_SENT = 32
+
+
+# S1b state bits (design-stabilization-s1b.md); the native authority latches them per generation.
+STATE_TERM_SENT = 512
+STATE_EXITED_ON_TERM = 1024  # requires STATE_TERM_SENT
+STATE_MARKER_READY = 2048
+STATE_STDERR_TRUNCATED = 4096
+STATE_MASK = 8191
 
 
 _PACKET = struct.Struct("!4sIQQ32sQQQ16s32s32s32s32s32s32sQQQ8s")
@@ -130,7 +140,7 @@ class AuthorityFrame:
                 needs_ticket = kind in (AuthorityKind.RELEASE, AuthorityKind.ARMED, AuthorityKind.RELEASED, AuthorityKind.ADVANCE)
                 if needs_ticket != (self.ticket != _ZERO32):
                     raise ProtocolError("ML-AFFA-TICKET")
-            if kind.value < 16 and (self.state or self.reason):
+            if (kind.value < 16 or kind is AuthorityKind.TERM) and (self.state or self.reason):
                 raise ProtocolError("ML-AFFA-REQUEST")
 
     def _digests(self):
@@ -168,6 +178,10 @@ class AuthorityFrame:
 _CONFIG = struct.Struct("!4sIQQQQ32s32s24s")
 _UNIT = struct.Struct("!32s32s32sQQQQQQ16s")
 _RECIPE = struct.Struct("!4sIII")
+_RECIPE_V2 = struct.Struct("!IIIIQQ")  # grace_ms, stderr_max, probe, reserved, stderr_dev, stderr_ino
+RECIPE_GRACE_MS_MAX = 4000
+RECIPE_STDERR_MAX = 1048576
+RECIPE_PROBES = (0, 1)  # 0 = running, 1 = nonce-marker
 _LENGTH = struct.Struct("!I")
 
 
@@ -275,11 +289,31 @@ class AuthorityConfig:
 
 @dataclass(frozen=True, slots=True)
 class AuthorityRecipe:
+    """AR17 v1, or v2 only when a S1b control is declared (undeclared recipes stay byte-identical)."""
+
     argv: tuple[str, ...] = field(repr=False)
     environment: tuple[str, ...] = field(repr=False)
+    grace_ms: int = 0
+    stderr_max: int = 0
+    probe: int = 0
+    stderr_device: int = field(default=0, repr=False)
+    stderr_inode: int = field(default=0, repr=False)
 
     def __post_init__(self):
         self._payload()
+
+    @property
+    def version(self):
+        return 2 if (self.grace_ms, self.stderr_max, self.probe) != (0, 0, 0) else 1
+
+    def _controls(self):
+        for value, high in ((self.grace_ms, RECIPE_GRACE_MS_MAX), (self.stderr_max, RECIPE_STDERR_MAX),
+                            (self.probe, max(RECIPE_PROBES)), (self.stderr_device, _UINT64),
+                            (self.stderr_inode, _UINT64)):
+            if type(value) is not int or not 0 <= value <= high:
+                raise ProtocolError("ML-AFFA-RECIPE-CONTROL")
+        if (not self.stderr_max) != (not self.stderr_device) or (not self.stderr_max) != (not self.stderr_inode):
+            raise ProtocolError("ML-AFFA-RECIPE-STDERR")
 
     def _payload(self):
         import re
@@ -288,7 +322,11 @@ class AuthorityRecipe:
             or type(self.environment) is not tuple or not 1 <= len(self.argv) <= 32
             or len(self.environment) > 64):
             raise ProtocolError("ML-AFFA-RECIPE-TYPE")
-        body = bytearray(_RECIPE.pack(b"AR17", 1, len(self.argv), len(self.environment)))
+        self._controls()
+        body = bytearray(_RECIPE.pack(b"AR17", self.version, len(self.argv), len(self.environment)))
+        if self.version == 2:
+            body.extend(_RECIPE_V2.pack(self.grace_ms, self.stderr_max, self.probe, 0,
+                                        self.stderr_device, self.stderr_inode))
         keys = set()
         for index, text in enumerate(self.argv + self.environment):
             if type(text) is not str or len(text) > 4096 or "\0" in text:
@@ -320,9 +358,18 @@ class AuthorityRecipe:
         if cls is not AuthorityRecipe or type(data) is not bytes or not 16 <= len(data) <= 65536:
             raise ProtocolError("ML-AFFA-RECIPE-PACKET")
         magic, version, argc, envc = _RECIPE.unpack_from(data)
-        if magic != b"AR17" or version != 1 or not 1 <= argc <= 32 or envc > 64:
+        if magic != b"AR17" or version not in (1, 2) or not 1 <= argc <= 32 or envc > 64:
             raise ProtocolError("ML-AFFA-RECIPE-PACKET")
-        offset, values = 16, []
+        offset, values, controls = 16, [], {}
+        if version == 2:
+            if len(data) < 16 + _RECIPE_V2.size:
+                raise ProtocolError("ML-AFFA-RECIPE-PACKET")
+            grace, stderr, probe, reserved, device, inode = _RECIPE_V2.unpack_from(data, 16)
+            if reserved or (grace, stderr, probe) == (0, 0, 0):
+                raise ProtocolError("ML-AFFA-RECIPE-PACKET")
+            controls = dict(grace_ms=grace, stderr_max=stderr, probe=probe,
+                            stderr_device=device, stderr_inode=inode)
+            offset += _RECIPE_V2.size
         for _ in range(argc + envc):
             if offset + 4 > len(data):
                 raise ProtocolError("ML-AFFA-RECIPE-PACKET")
@@ -338,4 +385,4 @@ class AuthorityRecipe:
             offset += size + 1
         if offset != len(data):
             raise ProtocolError("ML-AFFA-RECIPE-PACKET")
-        return cls(tuple(values[:argc]), tuple(values[argc:]))
+        return cls(tuple(values[:argc]), tuple(values[argc:]), **controls)

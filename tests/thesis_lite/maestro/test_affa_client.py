@@ -177,7 +177,7 @@ def test_independent_revocation_during_stopped_native_exchange(run_stack, monkey
         dict(third=b"x" * 32),
         dict(fourth=b"x" * 32),
         dict(handle=b"x" * 32),
-        dict(state=512),
+        dict(state=8192),  # S1b: the state mask widens from ~511 to ~8191; 8192 is the first unknown bit
     ],
 )
 def test_uncorrelated_real_reply_revokes_original_issuer(
@@ -262,3 +262,17 @@ def test_expired_original_revoke_end_still_attempts_kill(run_stack, monkeypatch)
     import select
 
     assert select.select([client.child._capability.fileno()], [], [], 1)[0]
+
+
+def test_term_is_refused_after_a_cancel_before_it_is_sent(run_stack, monkeypatch):
+    """S1b: TERM is not a cleanup request, so a closed connection never sends it (D-4)."""
+    client = connect(run_stack, monkeypatch)
+    _, _, h, _, _, _, _ = run_stack
+    h.stage(0)
+    h.cancel()
+    frame = replace(h.frame(K.TERM, 0), sequence=client.sequence + 1, deadline_ns=h.end(), epoch=client.epoch)
+    before = client.sequence
+    with pytest.raises(ValueError, match="ML-AFFA-CLOSED"):
+        client._exchange(frame)
+    assert client.sequence == before and not client._revoked
+    h.stop_retire(0)

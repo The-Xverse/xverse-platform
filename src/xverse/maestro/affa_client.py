@@ -10,7 +10,7 @@ import struct
 import threading
 import time
 
-from .affa_protocol import AuthorityConfig, AuthorityFrame, AuthorityKind as K
+from .affa_protocol import AuthorityConfig, AuthorityFrame, AuthorityKind as K, STATE_MASK
 from .bootstrap import BootstrapChild, BootstrapError, _CREATE
 from .child import _PidfdCapability
 from .owner import _Original, _deadline
@@ -33,6 +33,7 @@ _REPLIES = {
     K.FAULT_KILL: K.FAULTED,
     K.FAULT_FREEZE: K.FAULTED,
     K.FAULT_THAW: K.FAULTED,
+    K.TERM: K.TERM_SENT,  # S1b: not in _CLEANUP, so refused after a cancel before it is sent
 }
 _FAULTS = (K.FAULT_KILL, K.FAULT_FREEZE, K.FAULT_THAW)  # Phase 5: FAULT_REFUSED is their other valid answer
 _CLEANUP = (K.QUERY, K.QUERY_ISSUED, K.STOP, K.RETIRE, K.CANCEL)
@@ -275,10 +276,12 @@ class AuthorityConnection(_Original):
             self.child._ordinary()
             if until > self._lease:
                 raise BootstrapError("ML-AFFA-LEASE")
+        # S1b: a REGISTER carries a fifth fd, the private stderr directory, only for a declared stderr;
+        # the native authority checks the count and the identity against the sealed AR17 v2 recipe.
         expected_rights = (
-            4 if request.kind is K.REGISTER else 1 if request.kind is K.ADVANCE else 0
+            (4, 5) if request.kind is K.REGISTER else (1,) if request.kind is K.ADVANCE else (0,)
         )
-        if len(fds) != expected_rights or any(
+        if len(fds) not in expected_rights or any(
             type(fd) is not int or fd < 3 for fd in fds
         ):
             raise BootstrapError("ML-AFFA-RIGHTS")
@@ -330,7 +333,7 @@ class AuthorityConnection(_Original):
                 ticket=reply.ticket if kind is K.ARMED else bytes(32) if kind is K.ADVANCED else request.ticket,
                 lease_ns=request.lease_ns if kind is K.RENEWED else 0,
             )
-            if reply.state & ~511:
+            if reply.state & ~STATE_MASK:
                 raise BootstrapError("ML-AFFA-ACK-STATE")
         if reply != expected:
             raise BootstrapError("ML-AFFA-ACK-SCOPE")
