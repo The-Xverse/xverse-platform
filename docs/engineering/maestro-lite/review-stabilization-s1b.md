@@ -39,3 +39,30 @@ decision S-D2, approved on 2026-10-23).
      It is listed here for completeness and gets no further change.
    - **The design decisions follow as ADR amendments, before the code:** the protocol and recipe form, the
      paths covered, the cap mechanism and the probe placement.
+2. **S1-T10a: the Phase 7 start-up `ML-CONTROLLER-TIMEOUT` (GA-10), diagnosed from its saved evidence (written at
+   19:37:06 2026-10-23).**
+   - **Run.** `runs/xverse-lite-live-20261022/lite-20261023T010731-nominal` on loop10. Platform main `8b3d8c8e8`,
+     before S1a; compat `6fd7f28`, blueprints `085983b`.
+   - **Facts.**
+     - `diagnostics: [ML-CONTROLLER-TIMEOUT]`, dispatch null, persistence `ML-PERSIST-RPC-FAILED` at 2.98 s after
+       the run record started.
+     - No unit was issued, and the cleanup is complete.
+     - The Maestro Argus stream has one event, "original prepared inputs validated". The M3 journal was never
+       written: only its lock exists.
+   - **Code path.**
+     - `ML-CONTROLLER-TIMEOUT` at start-up comes only from `controller._receive`, called by
+       `ControllerClient._ready` in `admit_controller`. That waits for the controller worker's `hello`, within
+       the admission deadline (`controller.py` about 88–95 and 198–202, 326–383).
+     - The owned harness passes a start-up scope of `HostDeadline("host-session", now + 2)`
+       (`test_live_closed_loop.py`, `RuntimeScope`).
+   - **Most likely cause (not proven).** The controller worker is a Python process released from a frozen
+     boundary. It did not finish starting and send `hello` within the harness's 2 s start-up deadline. That run
+     was at host load about 9–10 (Phase 7 log). The worker's own stderr was discarded: Maestro helper streams are
+     not covered by FR-010, which captures unit stderr. So the delay cannot be attributed further.
+   - **Since S1a.** In about 40 post-S1a live runs (load 4–8) it has not recurred.
+   - **Disposition: carried explicitly. GA-10 is narrowed, not closed.**
+     - S1c-2 records the start-up time to `hello` in `maestro-run.json`.
+     - S1c-2 gives the harness start-up scope an admitted margin (proposed 5 s, inside the platform's existing
+       admission limits).
+     - The S1d soak treats any recurrence as a P1 failure, with a finding.
+     - No platform change in S1b.
