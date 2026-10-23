@@ -641,3 +641,13 @@ decision S-D2, approved on 2026-10-23).
       - **LOW-3 (ADR completeness):** after a CANCEL past the lease, `g->deadline` is briefly past it. Its uses
         (`enabled`, the ARM ticket end, the stage wait) all require an open authority. The next frame resets it, and
         `cleanup` and `close_end` do not use it. This note completes the S1a-5 safety reasoning.
+19. **The S1a-5 repair: decisive full installed-wheel run and DV12 (written at 00:38:58 2026-10-24).**
+    - **Erratum to finding 18.** It was written at 23:55 on 2026-10-23, not on the 24th.
+    - **Run.** `evidence/affa19/stabilization-s1a3/platform-regression-20261024e-1`, head `5ae2a3da3` (code equals
+      `b049585bf`).
+      - Triggered at 22:55:44Z at load 3.68, on the first attempt.
+      - **Clean:** 2890 passed, 1 skipped (lane admission), 39 subtests, in 2482 s.
+      - The maximum sampled load was 5.29.
+    - **DV12** (`--scope code`, candidate `a486717d9`): accepted, with no blockers. The code is `a970c8d5…`.
+    - **This run supersedes `platform-regression-20261023d-1`** as the decisive run for the stack head. CAPA step 13
+      follows, built after this log is committed.
