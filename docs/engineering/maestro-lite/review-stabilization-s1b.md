@@ -465,3 +465,27 @@ decision S-D2, approved on 2026-10-23).
       was lost.
     - **S1b is ready for the author's acceptance.** Delegated revisions DR-7 to DR-10 and the MEDIUM-1 disposition
       (`stop_mode` carried through the harness's `nativeUnits`) are flagged in the thesis package.
+14. **Post-candidate live observation on the platform stack (S1a-2 → S1b → S1a-3 at `d747f1e0c`): a start-up
+    readiness failure ends in a revoke and an incomplete closure (written at 23:34:03 2026-10-23; recorded before
+    any diagnosis or repair).**
+    - **Run.** The S1c-2 part 2 development run `runs/lite-stabilization-s1/s1c2-part2-dev-20261023/dev-…-233239-no-carla`
+      (compat finding 42). No simulator was running, so the owned adapter, which declares `nonce-marker`, never
+      wrote its ready file.
+    - **Observed.**
+      - `ML-PROBE-NOT-READY` after 3 attempts.
+      - `persistenceFailure: ML-PERSIST-CHILD` (kind `schedule`, stage `receive`, sequence 29).
+      - The broker cancel result: `native_epoch_confirmed: false`, `issuer_dead: true`, `issuer_reaped: true`.
+      - The closure: `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`, `cleanupComplete: false`, writer `rpc-unresolved`, and the
+        Maestro root `open`.
+      - In the same run set, five successful runs and one cancel run closed normally.
+    - **Contrast.** Before S1b, the same case ended `ML-RUN-CHILD-EXIT` with a clean `failed` writer (S1a-2 runs).
+    - **Not yet known.**
+      - Which path revoked the authority:
+        - a conflict longer than the 0.5 s S1a-3 wait;
+        - a non-conflict refusal;
+        - an authority or worker death before the cancel.
+      - Whether S1b's readiness path (marker QUERYs, `ML-RUN-STATE-UNDECLARED`, the issuer `_declared` check)
+        contributes.
+    - **Effect.** This blocks the S1b and S1a-3 acceptances until it is diagnosed: a start-up failure must still close
+      its evidence (P4). Next: a deterministic reproduction in the composed runtime, with a marker unit that never
+      becomes ready, and capture of the revoke cause.
