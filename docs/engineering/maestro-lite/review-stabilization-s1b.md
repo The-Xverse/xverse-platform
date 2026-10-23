@@ -659,3 +659,22 @@ decision S-D2, approved on 2026-10-23).
     - **Verifier:** rc 0. **Parent preservation:** `true`; all 718 parent bindings were checked and none changed.
     - **The stack head is ready for the author's acceptance**, with the S1a-5 repair included. The order stays S1a-2,
       then S1b, then S1a-3 (now including S1a-5).
+21. **Two failures on the stack `b049585bf` under load 8.4–8.7 (S1c finding 45; written at 00:53:35 2026-10-24, recorded
+    before diagnosis).**
+    - **(A) Start-up readiness against the start deadline and the lease** (`runs/…/s1c2-part2-dev2-20261024/…-004408-freeze-vcu`).
+      - The harness declared a 3.5 s window for the owned units (`ProbePolicy` timeout) inside a 4 s observe budget.
+      - lite-driver's attempts came at 3.41 s and 5.04 s; the third was dropped because the outer start deadline cut
+        it short. Result: `ML-PROBE-NOT-READY`.
+      - Then `ML-PERSIST-CHILD` at validation, the cancel revoked (`issuer_dead`, no native confirmation), and the
+        closure incomplete.
+      - Hypothesis: the start step runs past the authority lease, which is never renewed during one step. That is the
+        declared S1a-5 expired-lease residual (finding 18, LOW-2), now reachable. Recording the lease and helper
+        return codes would decide it.
+    - **(B) A persistence failure at a cancel** (`…-004728-cancel-paused`).
+      - `ML-PERSIST-CLOSED` at `validation` for a `schedule` request at the exact cancel time.
+      - The broker cancel was confirmed natively, yet no terminal or closure events follow. `cleanupComplete` is false
+        and the native facts are unattested.
+      - The plain `PersistenceError` path (`persistence.py:745-746`) requires `_failed` already set. Which path set
+        `_failed` at the cancel is unknown. Earlier cancel runs on this stack closed cleanly.
+    - **Next.** Diagnosis with deterministic reproductions where possible, then ADR notes, then repairs. The stack
+      acceptance is blocked again until both are understood.
