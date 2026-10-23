@@ -55,3 +55,27 @@ Mechanism references (engineering API behavior only, no thesis evidence/citation
 and [parent-death signal semantics](https://www.man7.org/linux/man-pages/man2/PR_SET_PDEATHSIG.2const.html).
 The latter follows the creating parent thread and has initialization/credential
 caveats; it is not equated with hard process-owner-loss containment.
+
+## Amendment S1a-1: in-flight cancellation (2026-10-23, thesis specs/029-lite-stabilization FR-005, S-D2)
+
+Recorded before implementation, under the author's decision S-D2 of 2026-10-23. Before this amendment, only
+*idle* cancellation left a healthy owner: a cancel observed while an ordinary request was about to be sent,
+or was in flight, went through the fail-closed path (`_fail()`). That terminated the child, so the terminal
+records and the Abort could no longer reach the owner (S1a findings 5–6).
+
+Amended rule:
+- **Cancel before send.** A cancel observed before an ordinary request is sent refuses that request with
+  `PersistenceCancelled` (code `ML-PERSIST-CLOSED`). The owner stays healthy, and no RPC failure is
+  recorded.
+- **Cancel in flight.** A request already sent when the cancel is observed may still receive its exact
+  reply within a fixed grace (`CANCEL_REPLY_GRACE_NS`, 0.5 s). The grace stays inside the admitted
+  cancellation drain of at most 2 s. Without a reply in that grace, the call fails closed exactly as
+  before.
+- **Grace expiry, and the recovery path (thesis DR-1, S1a findings 11–12).** Expiry fails closed with its own
+  code, `ML-PERSIST-CANCEL-GRACE`, through the ordinary RPC failure path: the failure is recorded,
+  `_fail()` runs, and the child is terminated. `reconcile_snapshot` re-raises a before-send cancel refusal
+  instead of failing storage.
+- **Unchanged.** Caller-side polling, cancellation and drain still perform no storage I/O. A cancelled run
+  still gains no further start authority: ordinary requests are refused, and only the terminal kinds, the
+  abort and the closure proceed. Timeouts, protocol errors, identity changes and child loss still close
+  starts, revoke native Release and terminate the child.

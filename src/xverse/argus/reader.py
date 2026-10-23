@@ -14,7 +14,10 @@ primary ``complete`` (``detailed-design.md`` sections 11.1, 12, 12.1 and 12.2).
 from __future__ import annotations
 
 import copy
+import hashlib
+import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +32,8 @@ from .recovery import (
     read_confined_bytes,
     recorded_path_diagnostics,
     recover_stream,
+    resume_stream,
+    StreamCheckpoint,
 )
 from .schema import (
     MAX_JSON_NESTING,
@@ -41,7 +46,7 @@ from .schema import (
 )
 from .writer import evaluate_evidence
 
-__all__ = ["MANIFEST_NAME", "EvidenceReader"]
+__all__ = ["MANIFEST_NAME", "EvidenceReader", "ReadCheckpoint", "read_records"]
 
 MANIFEST_NAME = "manifest.json"
 
@@ -454,8 +459,11 @@ def _manifest_metadata_diagnostics(manifest: dict[str, Any], limits: EvidenceLim
     return diagnostics
 
 
-def read_run(root: Any, *, limits: EvidenceLimits | None = None) -> EvidenceReader:
-    """Open one run read-only, verify manifest/stream/artifacts, and return a bounded view."""
+def read_run(root: Any, *, limits: EvidenceLimits | None = None, _capture: list | None = None) -> EvidenceReader:
+    """Open one run read-only, verify manifest/stream/artifacts, and return a bounded view.
+
+    ``_capture`` is private to ``read_records``: when the read reaches the stream scan and that scan is
+    clean, the manifest digest and the stream checkpoint are appended to it. Nothing else changes."""
 
     root_path = Path(root)
     caller = limits
@@ -683,6 +691,8 @@ def read_run(root: Any, *, limits: EvidenceLimits | None = None) -> EvidenceRead
                 relative=stream_relative,
             )
             records = list(recovery.records)
+            if _capture is not None and recovery.checkpoint is not None:
+                _capture.append((hashlib.sha256(manifest_bytes).hexdigest(), recovery.checkpoint))
             diagnostics.extend(recovery.diagnostics)
             assessed_reasons.extend(
                 _REASON_BY_CODE.get(item.code, "ARGUS2-REASON-CORRUPT-EVENT") for item in recovery.diagnostics
@@ -849,3 +859,48 @@ def read_run(root: Any, *, limits: EvidenceLimits | None = None) -> EvidenceRead
         recorded_status=recorded_status if isinstance(recorded_status, str) else None,
         recorded_reasons=recorded_reasons,
     )
+
+
+@dataclass(frozen=True)
+class ReadCheckpoint:
+    """Opaque state that lets ``read_records`` resume a clean read of the same run (thesis S1 FR-002)."""
+
+    root: str
+    caller_limits: EvidenceLimits | None
+    manifest_sha256: str
+    stream: StreamCheckpoint
+
+
+def read_records(root: Any, *, limits: EvidenceLimits | None = None,
+                 checkpoint: ReadCheckpoint | None = None) -> tuple[tuple[dict[str, Any], ...], ReadCheckpoint | None]:
+    """Return ``(records, checkpoint)`` where ``records`` equal ``read_run(root, limits=limits).records()``.
+
+    With a checkpoint from an earlier call on the same run, the read resumes only if the manifest bytes
+    are unchanged (every manifest-derived decision of ``read_run`` before the stream scan is then the same)
+    and ``resume_stream`` verifies the unchanged stream prefix byte for byte (SHA-256). Otherwise it is a
+    complete ``read_run``. The returned records are shared with the checkpoint and must be treated as
+    read-only. The returned checkpoint is ``None`` when the stream scan was not clean (any stream
+    diagnostic) or stopped at ``max_read_records``, so such a stream is always re-read completely.
+    """
+
+    root_path = Path(root)
+    real = os.path.realpath(root_path)
+    if type(checkpoint) is ReadCheckpoint and checkpoint.root == real and checkpoint.caller_limits == limits:
+        base = limits if limits is not None else EvidenceLimits()
+        manifest_bytes, problems = read_confined_bytes(root_path, MANIFEST_NAME, max_bytes=base.max_manifest_bytes,
+                                                       bound_field="max_manifest_bytes")
+        if not problems and manifest_bytes is not None and (
+                hashlib.sha256(manifest_bytes).hexdigest() == checkpoint.manifest_sha256):
+            result = resume_stream(root_path, checkpoint=checkpoint.stream)
+            if result is not None:
+                following = None
+                if result.checkpoint is not None:
+                    following = ReadCheckpoint(real, limits, checkpoint.manifest_sha256, result.checkpoint)
+                return tuple(result.records), following
+    capture: list = []
+    reader = read_run(root_path, limits=limits, _capture=capture)
+    following = None
+    if capture:
+        manifest_sha, stream = capture[-1]
+        following = ReadCheckpoint(real, limits, manifest_sha, stream)
+    return tuple(reader._records), following

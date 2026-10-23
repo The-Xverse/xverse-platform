@@ -488,25 +488,53 @@ class FileEvidenceJournal(InMemoryEvidenceJournal):
             os.close(descriptor)
 
     def _reload(self, *, claims: bool = False) -> None:
-        """Reload and validate the complete contiguous on-disk journal."""
+        """Reload and validate the complete contiguous on-disk journal.
+
+        Every reload reads the whole file. When the bytes already validated by the previous plain reload
+        are unchanged -- same device and inode, the same SHA-256 over that prefix, which ended at a line
+        boundary -- only the following lines are parsed and validated, and the result equals a complete
+        reload (thesis S1 FR-002/FR-003). Claim-wire reloads (``claims=True``) are always complete.
+        """
 
         if not self.path.exists():
             self._records = []
+            self._verified_prefix = None
             return
         if self.path.is_symlink():
             raise EvidenceWriteError("evidence journal must not be a symbolic link")
         try:
+            with open(self.path, "rb") as handle:
+                opened = os.fstat(handle.fileno())
+                data = handle.read()
+            identity = (opened.st_dev, opened.st_ino)
+            cached = None if claims else getattr(self, "_verified_prefix", None)
+            prefix = []
+            if (
+                cached is not None
+                and cached[0] == identity
+                and len(data) >= cached[1]
+                and hashlib.sha256(data[: cached[1]]).hexdigest() == cached[2]
+            ):
+                prefix, data_tail = list(cached[3]), data[cached[1]:]
+            else:
+                data_tail = data
             values = [json.loads(line, object_pairs_hook=_claim_wire_object if claims else dict)
-                      for line in self.path.read_text(encoding="utf-8").splitlines() if line]
+                      for line in data_tail.decode("utf-8").splitlines() if line]
             if claims:
                 for value in values:
                     _claim_wire_record(value)
-            records = [_record_from_data(value) for value in values]
+            records = prefix + [_record_from_data(value) for value in values]
         except (OSError, ValueError, KeyError, TypeError) as error:
+            self._verified_prefix = None
             raise EvidenceWriteError(f"cannot load evidence journal: {error}") from error
         if [item.sequence for item in records] != list(range(1, len(records) + 1)):
+            self._verified_prefix = None
             raise EvidenceWriteError("evidence journal sequence is invalid")
         self._records = records
+        if not claims:
+            self._verified_prefix = (
+                (identity, len(data), hashlib.sha256(data).hexdigest(), tuple(records)) if data.endswith(b"\n") else None
+            )
 
     @property
     def records(self) -> tuple[EvidenceRecord, ...]:

@@ -42,3 +42,19 @@ component. Source semantics remain unvalidated. External thesis 024 governs this
 continuation; main prerequisite detects unrelated 020. No extension hooks exist.
 Sol/high is recommended for lifecycle/evidence authority; cheaper models fit receipt
 processing. This is engineering judgment, not measured cost or a model switch.
+
+## Amendment S1a-2: per-operation mirror check without a per-event full re-parse (2026-10-23)
+
+This is thesis specs/029-lite-stabilization FR-002/FR-003, decision S-D7. The rule "original successful
+intent and mirror must remain present; changed or missing history fails closed" is unchanged, and it is
+still checked on every operation, with these changes:
+- **Argus mirror check.** It uses `EvidenceStore.read_records` with a checkpoint (Argus design section
+  8.6). Every check re-hashes the whole already-verified stream prefix and scans only new bytes with the
+  frozen acceptance rules. Any changed byte, identity or manifest triggers a complete `read_run`.
+- **Event comparison.** Expected event fields are compared again only when the expected object or the
+  accepted record object changed; a complete read produces new objects, so everything is compared.
+- **M3 journal reload.** It re-reads the whole file, re-hashes the verified prefix, and parses only new
+  lines.
+- **Tamper tests.** The existing tests (`test_outcomes.py`) are unchanged. New tests cover same-size
+  rewrites, truncation, replaced files, foreign appends and manifest changes.
+

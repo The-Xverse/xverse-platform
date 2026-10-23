@@ -158,7 +158,8 @@ def test_pending_exec_has_probe_record_without_false_started_credit(
     )
 
 
-@pytest.mark.parametrize("fault", ["journal-loss", "journal-history", "argus-loss"])
+@pytest.mark.parametrize("fault", ["journal-loss", "journal-history", "argus-loss",
+                                   "argus-same-size", "journal-same-size"])  # S1 DR-4: in place, after earlier checks
 def test_original_durable_history_loss_blocks_new_ready(boot_stack, monkeypatch, fault):
     facade, owner, descriptor, launcher, handle, gate, original = runtime(boot_stack)
     root = boot_stack[4].parent
@@ -177,6 +178,18 @@ def test_original_durable_history_loss_blocks_new_ready(boot_stack, monkeypatch,
                 data = json.loads(rows[0])
                 data["status"] = "changed"
                 (root / "m3.jsonl").write_text(json.dumps(data) + "\n")
+            elif fault == "argus-same-size":
+                stream = root / "argus" / "events.jsonl"
+                data = stream.read_bytes()
+                assert data.count(b'"ingestionOrdinal":1,') == 1
+                with open(stream, "r+b") as handle:  # same size, same inode, one changed byte in the verified prefix
+                    handle.write(data.replace(b'"ingestionOrdinal":1,', b'"ingestionOrdinal":9,'))
+            elif fault == "journal-same-size":
+                journal = root / "m3.jsonl"
+                data = journal.read_bytes()
+                assert data.count(b'"sequence":1,') == 1
+                with open(journal, "r+b") as handle:
+                    handle.write(data.replace(b'"sequence":1,', b'"sequence":9,'))
             else:
                 (root / "argus" / "events.jsonl").rename(
                     root / "argus" / "saved-events.jsonl"

@@ -381,6 +381,33 @@ and every indexed artifact path, the reader:
 bound, and an unparseable or oversized echo is a diagnostic, not a new limit set. If both are used, the
 effective bound is the stricter of the two.
 
+### 8.6 Resumable verified read (amendment S1a-2, 2026-10-23; thesis specs/029-lite-stabilization FR-002/FR-003)
+
+**Additive.** It adds `EvidenceStore.read_records(root, *, limits=None, checkpoint=None)`, which returns
+`(records, checkpoint)`. The `records` equal `read_run(root, limits=limits).records()`. The frozen
+`read_run`, `export_*`, `verify` and the CLI are unchanged.
+
+`recover_stream` is refactored into one scan, `_recover`, with an optional resume state; the per-line
+acceptance rules and every bound are the same code. A `StreamCheckpoint` is produced only after a *clean*
+scan: no diagnostic, no truncation, no bound reached. `resume_stream` continues that scan only when all of
+the following hold:
+- the confined open yields the same device and inode;
+- the file is at least as long as the checkpoint;
+- the SHA-256 of the first `offset` bytes, re-read and re-hashed on every call, equals the checkpoint.
+
+Otherwise it returns `None`, and `read_records` performs a complete `read_run`. `read_records` resumes
+only when the manifest bytes are unchanged (SHA-256), because every manifest-derived decision of `read_run`
+before the stream scan then repeats exactly. A scan that emits any stream diagnostic, or that stops at the
+`max_read_records` cap, never yields a checkpoint, so such evidence is always re-read completely.
+Manifest-level findings, such as a recorded size or hash mismatch, do not change the returned records and do
+not prevent a checkpoint.
+
+**Shared records.** The records are shared with the checkpoint and are read-only for the caller.
+
+**Purpose.** It removes the per-event full re-parse that bounded Maestro run length (S1a findings 2 and
+7). Byte-level tamper detection of the verified prefix is kept: INV-06, INV-14 and ADR-ML3-OUTCOMES-0001
+lines 28–29.
+
 ## 9. Confined artifact paths
 
 * Artifact paths are run-relative POSIX paths: must be non-empty, not absolute, contain no `\`, no NUL,
