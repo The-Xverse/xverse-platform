@@ -381,3 +381,24 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       `affa19/verify-capa-register-20261023.py`, differs only by `--full-history` in the committed-blob
       search; its docstring records why. Step 8 and step 9 are verified with it. The original verifier's
       result is recorded as above.
+16. **CAPA successor step 9, built after finding 14 was committed.**
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1a-step9/`, built by
+      `build-capa-20261023-stabilization-s1a-step9.py` over `platform-regression-20261023a-1`.
+    - **Additive over step 8 (`49f25e74…`).** No record was opened, changed or closed. Every S1a defect
+      was a defect of this unaccepted candidate, or a pre-existing limit recorded as a finding (findings
+      1–15), repaired or dispositioned before acceptance.
+    - **Register `34c742da8952960150018f02a4bed8083d3dca0306eef41ac4531a40f767dcf3`:** 56 records and 681
+      bindings. The 16 new bindings cover:
+      - the review log, as committed in `8a3272633`;
+      - the two ADRs and the Argus design;
+      - the run's `SHA256SUMS` and DV12 verdict;
+      - five test modules and the bench tooling.
+    - **Successor verifier** `verify-capa-register-20261023.py` (finding 15): rc 0, 56 records and 681
+      bindings verified (`verification-recheck.json`). With the same verifier, step 8 also verifies (rc
+      0, 665 bindings; `step8-verification-with-successor.json`).
+    - **Parent preservation** (`affa17/check-capa-parent-preservation-20261019.py`): `parent_preserved:
+      true`; 665 parent bindings checked, none changed or lost; policy and schema unchanged
+      (`parent-preservation.json`).
+    - No cause is verified and no effectiveness is claimed.
+    - **Worktree.** The sparse checkout was disabled to run the `affa17` tooling, which leaves the
+      worktree without exclusions.
