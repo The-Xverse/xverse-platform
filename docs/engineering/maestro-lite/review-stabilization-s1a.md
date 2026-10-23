@@ -663,3 +663,15 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       stale-frame interleaving.
     - **Disposition.** The test's docstring and finding 24 now describe it as a smoke test. This changes the
       docstring only. The change is made before the full run, so the full run covers it.
+26. **S1a-2: the decisive full installed-wheel run and the DV12 gate (written at 20:16:35 2026-10-23).**
+    - **Run.** `evidence/affa19/stabilization-s1a2/platform-regression-20261023b-1`, head `d8b44719c`, driven by
+      `run-z-quiet-loop.sh`.
+      - Triggered at 18:21:30Z at load 3.52, on the first attempt.
+      - **Clean:** 2423 passed, 1 skipped (`test_runtime_lane_admission`: `MAESTRO_LANE_PROPOSAL` is not set; as in
+        S1a), 24 subtests, in 2511 s.
+      - The maximum sampled load was 8.07.
+    - **DV12 gate.** `scripts/validate_maestro_acceptance_evidence.py --scope code`: `accepted_as_evidence: true`,
+      with no blockers. The run and candidate code are both `33b2d1fd…`; the evidence and the review logs are
+      excluded from the comparison.
+      - The verdict is `dv12-gate-verdict.json`, and `SHA256SUMS` covers the run directory.
+    - **Next.** CAPA step 10 (parent step 9, `34c742da…`) is built after this log is committed.
