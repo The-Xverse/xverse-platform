@@ -252,3 +252,26 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
     in that window is refused with `ML-RUNTIME-ENTRY-CONFLICT`, as any concurrent stop already was.
   - **`_fence`.** It runs after the dispatcher has finished. It can still meet an operator K.CANCEL in flight;
     that exposure existed before, and this change does not alter it.
+
+## Amendment S1a-5: a run cancel is accepted past the open authority's lease (2026-10-23, written at 23:46:02; before implementation)
+
+- **Context.** This is S1b review-log findings 14–15, diagnosed and reproduced deterministically.
+  - A cancel without a caller deadline sends K.CANCEL with `now + 1 s`.
+  - The native frame check accepts a frame on an open authority only if `until <= lease`, and it treats any other
+    frame as invalid: it cleans up and exits (`run_authority.c`, the main loop).
+  - A cancel issued in the last second of the lease therefore makes the authority exit. The client revokes, and the
+    bootstrap root kills every helper, including the storage worker, so the run's closure is lost. This has been
+    present since increment 17.
+  - A nonce-marker start step, which spends its readiness window without a lease renewal, made it likely.
+- **Decision.** The native validity check becomes `(closed || kind == CANCEL || until <= lease)`. The frame
+  checks are otherwise unchanged: scope, sequence, epoch, the reserved zeros, `until > now`, `until − now ≤ 5 s` and
+  `until ≤ generation − 2 s`.
+- **Why this is safe.** CANCEL only advances the epoch irreversibly, revokes unused tickets and freezes the boundaries.
+  It cannot release, arm or extend anything, so accepting it past the lease grants no authority. Every other kind
+  keeps the lease bound.
+- **Not changed (declared).** Once the lease has actually expired, the authority closes itself and fails closed as
+  before. A later CANCEL with the old epoch still ends it, and the closure of such a run is not guaranteed. Lease
+  expiry remains a fail-closed event.
+- **The authority binary digest changes**, so S1c re-pins it after the merge.
+- **Verification.** `test_stabilization_s1b_start_failure.py` (finding 15) must pass at the broker level and in the
+  composed runtime. The existing native, client, cancel and fence suites must stay unchanged.
