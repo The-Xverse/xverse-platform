@@ -25,7 +25,7 @@
 
 ## Review and evidence
 
-- [ ] T012 Record candidate inventory, tool versions, command outputs, and verification evidence under this feature.
-- [ ] T013 Conduct separate read-only review, record findings, repair later if required, repeat affected verification.
+- [x] T012 Record candidate inventory, tool versions, command outputs, and verification evidence under this feature.
+- [x] T013 Conduct separate read-only review, record findings, repair later if required, repeat affected verification.
 
 Dependencies: T001–T003 precede US1/US2; T006–T008 precede T009–T010; all implementation precedes evidence/review. Independent content inventory research may run alongside setup; file mutations remain owned by the implementing agent. Acceptance/integration/publication are subsequent user decisions and are not checked implementation tasks.
