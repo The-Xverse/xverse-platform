@@ -1,0 +1,20 @@
+apiVersion: xverse.io/xdl/v1alpha1
+kind: System
+metadata:
+  namespace: io.example.lab
+  name: sensor-loop
+  version: 0.1.0
+  provenance:
+    source: example
+    revision: v1
+    maturity: prototype
+spec:
+  nodes:
+    - id: controller
+      roles: [control]
+  timeDomains:
+    - id: experiment-time
+      clockClass: logical
+      epoch: experiment-start
+      rate: one-unit-per-second
+      monotonic: true
