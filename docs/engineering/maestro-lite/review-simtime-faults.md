@@ -705,3 +705,21 @@ and admission refuses while it is unknown.
      - R13 now records an outstanding `resumed` instead of leaving it unchecked.
      - The adversarial-peer limit stays tied to L1.
      - The other residuals are unchanged.
+
+9. **Independent focused Codex re-review of ST-2a (2026-10-24), PASS for entry to full regression.**
+   - Input: `dfc39081e` (product `0d84b6f9a`), findings 6 to 8 and ADR ST-2a/addendum. Reviewed the changed
+     finish/cancel/final-emission paths, their new tests, and the collection-continuity change outside the original
+     dispositions row. No product repair was made.
+   - A truncated applied freeze is thawed and marked incomplete; final statements are deferred and emitted at most
+     once in listing order; benign hub closure and an outstanding resumed ACK are details of that final, not new
+     outcomes. An unconfirmed resumed frame at end is recorded rather than turned into a last-tick race failure.
+   - The collection change preserves exact original-writer ordinal continuity: the fault ordinal is updated only
+     after the fault event is flushed, and collection takes the maximum of fault, lifecycle and retained-intent
+     ordinals. It does not count a fault event as lifecycle coverage or create a new writer/ownership claim.
+   - The previously recorded 199 related installed-wheel and 35 collection tests remain evidence of product
+     `0d84b6f9a`; this re-review has not re-run them or the full suite. The full clean installed-wheel run, DV12,
+     CAPA step 17 and delegated acceptance remain mandatory. No acceptance or platform merge is claimed.
+   - Carried: L1 peer/cgroup validation, L2 horizon derivation, L3 thaw-bound derivation belong to WP-10 #5;
+     other finding 8 residuals, the declared load envelope and CAPA limits remain unchanged.
+   - Run scheduling must preserve the rc.1 soak at 00:00 on 2026-10-25: one heavy test process at a time and no new
+     full-run admission too late to accommodate the driver's existing outer and preparation deadlines before 23:00.
