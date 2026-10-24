@@ -612,3 +612,37 @@ and admission refuses while it is unknown.
      - R13's "not proof against an adversarial peer" is correct, and stays tied to L1 (the connected socketpair or
        the cgroup check) in WP-10 #5.
      - The L1–L3 obligations are recorded for WP-10 #5 as the dispositions row requires.
+
+7. **Dispositions of finding 6, recorded before any repair (written at 15:59:43 2026-10-24).**
+   - **Basis.** The thesis `specs/002-assured-aeb/decisions.md` row "WP-10 #3/#4 re-review notes" (15:58). The
+     coordinator decided it under the author's delegation of 2026-10-24, and it is flagged for the author's review.
+     The compat items of that row (compat N1 and N2) belong to the hub relay and are not part of this repository.
+   - **Order.** This finding comes first. Next is one ADR commit, which updates the ST-2 text (decisions 4 and 7,
+     R13) and adds a short amendment note ST-2a. The code follows, and finding 8 records the verification.
+   - **Repaired.**
+     - **N1, a freeze cut short.** A freeze applied whose clear step is never reached by `finish` is thawed and ends
+       `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`). It also sets `incomplete=True`, as a relay entry
+       applied and not cleared does. A shortened freeze is a different treatment under PAIR-1.
+     - **(b), the placement of `hub-closed`.** It moves into the detail of the final outcome event of the first
+       entry in listing order. There is no second `outcome` event, and each entry has exactly one final outcome.
+       The statement budget is unchanged.
+     - **N2, an outstanding `resumed`.** A `resumed` still outstanding at `finish` or `cancel` is recorded in
+       the evidence, in the final outcome detail of the entry whose ack is unconfirmed. It does not fail the run,
+       because failing would race the last tick (R13).
+   - **Implementation reading, stated before code.**
+     - **Final statements are deferred.** In simulator-time mode, an entry's final outcome is still decided when it
+       happens (`outcomes` changes at once). Its one `final` statement is emitted when the scheduler ends, at
+       `finish` or `cancel`, in compiled listing order. Only then are the benign end-of-file and an outstanding
+       `resumed` known. The `apply` and `clear` statements keep their own ticks. Each entry still takes at most
+       four statements: intent, apply, clear and final.
+     - **Detail keys.** The keys are `hubClosed` (`simulatorStep`, `hostNs`) and `resumedOutstanding`
+       (`phase`, `step`, `ackSeq`), inside the 512-byte detail bound.
+     - **A consequence on failing runs.** On a failing run, the final statements are now sent on the dispatcher's
+       best-effort cancel path. A final that cannot be sent leaves the chain without its `outcome` event. The
+       apply and clear phases, which `closure_report` reads, are unaffected.
+   - **Tests.**
+     - N1: a truncated freeze sets `incomplete`.
+     - `hub-closed` sits in the first entry's final detail, with exactly one final per entry, both in a unit case
+       and in the composed native run where the hub exits.
+     - N2: an outstanding `resumed` is recorded at `finish` and at `cancel`, and the run does not fail.
+     - The L4 literals are re-verified unchanged (tick mode).
