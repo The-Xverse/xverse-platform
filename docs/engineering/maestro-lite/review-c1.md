@@ -226,3 +226,104 @@ scientific result. No CARLA and no live run is used; every size below is an offl
        they run only from a checkout root, as the regression harness does.
      - **R7. Still to do for the increment.** Thesis §J asks for a full run, DV12 and a CAPA step. None is done
        here.
+
+3. **Independent review of amendment C1 (written at 11:09:26 2026-10-24).** Reviewer: an independent Claude
+   agent that did not write the increment. Scope: `cee23ae5a`, `21b057271`, `bdfc20779` and `27255b07d` on
+   `64ff9d3eb`. **Verdict: PASS WITH NOTES.** No issue blocks the decisive full run.
+   - **What was checked, and the result.**
+     - **Installed wheel.** `sha256sum` of the cache wheel gives `d4db5d740fc1a45404b8612897eec15ad3322d1bb100ac0a318081b907ad52d2`.
+       The installed `xverse/maestro` tree is byte-identical to `src/xverse/maestro` at `27255b07d` (`diff -rq`;
+       `src/` is unchanged since `bdfc20779`). The only difference is `src/xverse/xcom`, which the wheel does not
+       package (`pyproject.toml:36-45`).
+     - **Rerun.** One pytest process on the installed wheel, `test_persistence_config_bound.py` and
+       `test_coverage_producers.py`: **44 passed** in 29.7 s, load 3.6–5.0.
+     - **Compile.** Both builds compile in a scratch copy with `-Wall -Wextra -Werror -Wconversion -Wshadow`, and
+       also with `-Wsign-conversion` added. `role==3?MAX_STORAGE_INPUT:MAX_ROLE_INPUT` is an `int` widened to the
+       `off_t` parameter of `sealed()`, and `role` is compared with a non-negative constant, so no conversion is
+       narrowing or sign-changing.
+     - **Call sites.** `birth()` has one caller (`native/bootstrap.c:338`), so the role-specific seal at
+       `bootstrap.c:231` covers every helper birth in both builds. The remaining `sealed(…,65536,…)` calls are the
+       supervisor's own input (`bootstrap.c:133`) and the AC17 recipe (`run_authority.c:298`). Neither is a role-3
+       input.
+   - **Properties the old bound protected (question 1): all preserved.**
+     - **Native side.** For role 3 it only checks the seals, the regular-file type and the size
+       (`bootstrap.c:61-65`, `231`), then passes the fd number as argv (`bootstrap.c:252`). Only roles 2 (exactly
+       64 B, `bootstrap.c:245`) and 4 (at most 2 688 B, `bootstrap.c:205`) are read natively. The value
+       therefore changes no native allocation, read or loop.
+     - **Worker side.** `_read_input` (`persistence.py:307-316`) checks `st_size <= MAX_CONFIG` (1 MiB) and the
+       seals before one `pread`.
+     - **Transfer.** The memfd is written from exactly `private_bytes` and sealed (`persistence.py:288-304`), so
+       the Python `len()` and the native `st_size` are the same quantity. Both checks are `0 < size <= 262 144`,
+       and I found no Python/native disagreement.
+     - **Channel.** `MAX_PACKET` (`persistence.py:38`), the 128-byte BS packet and the fd count per birth are
+       untouched.
+     - **Other role inputs.** They keep 65 536 or tighter: `launcher.py:261,281`, `catalog_launcher.c:179`,
+       `affa_protocol.py:358`, `run_authority.c:298`, `controller.py:23`, `bootstrap.c:133`.
+     - **Proportional work.** The only work that grows with the input is the worker's strict parse and `_load`,
+       and the parent's re-parse in `PersistenceClient.__init__` (`persistence.py:481`). Both are linear and run
+       on supervisor-authored bytes, so I found no DoS amplification.
+   - **Measurement method (question 3): sound, with one limit (L2).**
+     - **Builder.** The offline builder runs the same admissions the run uses and encodes through the production
+       `encode_configuration`. The stand-in errs long on paths (the `COMPAT` path is longer than the real
+       `/home/jefferson/xverse-compat`) and on per-unit controls.
+     - **Weight of the XDL resources.** The per-part breakdown (`offline-sizes-c1-bdfc20779.json`) shows that the
+       XDL `resources` are 57 % of the configuration at 7 units (52 572 of 91 959 B). WP-12 shape S-A adds about
+       19 inter-unit flows with endpoints, the unbound element instances and their extensions
+       (thesis `design/wp12-xdl-topology.md` §3.2 and the flow table). That content lands in `resources` and can
+       plausibly add tens of KB.
+     - **Choice of bound.** This supports rejecting 128 KiB, which leaves 39 KB at 7 units, and choosing 256 KiB.
+       Rejecting 1 MiB on defence-in-depth grounds is reasonable. The "16 units fit" claim is stated for the
+       stand-in shape only, and should stay that way.
+   - **Issues.**
+     - **M1 (MEDIUM, does not block the decisive full run): the accept side of the Python bound, and the composed
+       role-3 path above 64 KiB, are untested.**
+       - **The accept cases bypass the Python check.** They call `session.birth` directly
+         (`test_persistence_config_bound.py:231-238`), with `b"x"` bytes that never reach the worker. The
+         Python cases test only refusal (`:220-226`, sizes 0 and bound + 1). `test_coverage_producers.py:67,171`
+         passes with any Python limit at or below the bound.
+       - **A surviving mutant.** A mutant that keeps `<= 65536` in `BootstrapSession.persistence`
+         (`bootstrap.py:1120`) while `MAX_PERSISTENCE_INPUT` stays `1 << 18` passes all 11 C1 cases. I did not run
+         it, because the worktree is read-only to me; the conclusion follows from the test structure. The code as
+         written is correct, because I read the line itself.
+       - **What no test exercises.** `BootstrapSession.persistence` → `_spawn_role(3)` → native birth → worker
+         `_read_input`, strict parse, `_load`, hello and Init with a real configuration above 65 536 B. The
+         S1a/C1 evidence never runs the worker on more than 64 KiB.
+       - **Proposed closure.** One composed installed-wheel case that drives `session.persistence()` through Init
+         with a real configuration of about 70–92 KB, and records it as residual R8 until then. This should be
+         done before D-4b or the first run with five or more units, not before the full regression.
+     - **L1 (LOW, does not block): the ADR names the wrong role in its verification list.**
+       - `ADR-ML3-BOOTSTRAP-0001.md:126` says "a role-4 input above 65 536 is still refused natively". The test
+         uses role 5 (`test_persistence_config_bound.py:289-297`), as finding 2 says.
+       - Role 5 is the right choice. A role-4 case would not discriminate, because `authority_input` refuses any
+         size above 2 688 (`bootstrap.c:205`). The ADR line should say role 5.
+     - **L2 (LOW, does not block): the calibration has a single point.** `phase7-calibration-rc1.json` checks the
+       stand-in against the real Phase 7 blueprint at 4 units only. It confirms the total (+2.0 %), not the
+       per-unit slope that the 7- and 16-unit figures extrapolate. The margin absorbs any plausible slope error,
+       and R3 already requires D-4a to re-measure. R3 should name the slope explicitly.
+     - **L3 (LOW, does not block): the size cases hard-code host paths.**
+       - `test_persistence_config_bound.py:65,72-74` hard-codes host-specific absolute paths: `python3.13` under
+         `sys.base_prefix`, the `/media/…/.x-verse-build/cache` path and a developer worktree path. They are used
+         only as byte-length proxies, and no file under them is touched.
+       - The cases also import `tools.bench` (R6). R6 should mention the paths too, or the paths should become
+         fixed synthetic strings of the same length.
+     - **L4 (LOW, does not block): no legacy-build case shows that role 1 stays at 64 KiB.**
+       - Only the `RUN_BOOTSTRAP` build is checked for a non-storage role (role 5). Both builds share the one
+         conditional at `bootstrap.c:231`, so a build-specific divergence would need an `#ifdef` mutant.
+       - The LC09 launcher re-checks 65 536 after exec (`catalog_launcher.c:179`). No action is needed beyond
+         noting it.
+     - **L5 (LOW, does not block, editorial): the record overstates the 5 s bound.**
+       - `review-c1.md` finding 1 ("Time") and `ADR-ML3-BOOTSTRAP-0001.md:119` attribute the worker's parse time
+         to "the Init request deadline (at most 5 s)". The strict parse and the configuration checks run before
+         the hello (`persistence_worker.py:246-270`), and only the caller's startup deadline bounds them
+         (`persistence.py:609`). Only `_load` runs inside the Init request, which is at most 5 s
+         (`persistence_worker.py:302,363-366`).
+       - It still fails closed. Only the wording is imprecise.
+   - **Residuals (question 5).**
+     - **R1 to R7** are honest and correctly scoped. R4 is accurate: admission uses `MAX_CONFIG`, so a
+       configuration between 256 KiB and 1 MiB fails closed at bootstrap.
+     - **Missing:**
+       - **R8.** The composed role-3 path above 64 KiB is untested (M1).
+       - **The calibration slope.** It is unvalidated (L2), and could be folded into R3.
+     - **Tests (question 4).** The native boundary cases discriminate as claimed: at the bound and the bound + 1
+       for role 3 in both builds, and at 65 536 and 65 537 for role 5. The two stated native mutants would each
+       fail at least one case. The Python boundary is discriminating only on the refusal side (M1).
