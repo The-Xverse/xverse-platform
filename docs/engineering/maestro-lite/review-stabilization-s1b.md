@@ -1396,3 +1396,132 @@ decision S-D2, approved on 2026-10-23).
 
       The S1c live re-run should use an H1 value with headroom (LOW-4) and confirm that H3 persists the window
       record (LOW-6).
+27. **DR-17 repairs: M1 (the failure-statement cap), L1, the L5 tests, L6 and the L2/L3 residuals (written at 02:39:56
+    2026-10-24, load about 3.6-4.7).**
+    - **Process.** The ADR note came first: `4f0034079` (ADR-ML3-PROBE-0001, "S1b-1 revision (M1 …; L1, L2, L3, L6)",
+      written at 02:24:57), before any `src/` change. Implementation and tests are in `c6bdfcf01`. The installed
+      wheel is `9aea0c00241a5b44614d4ede58660c265c9012245b19adfca56db3a7e13f7cfc`, built at 02:28 from the working
+      tree that `c6bdfcf01` commits. Every installed `xverse/` file is identical to `src/xverse` (`diff -rq`; the
+      unpackaged `xcom/` is the only difference, as before).
+    - **M1 (`dispatcher.py` `_fence_cap`; the `failure` statement; `_FaultStatements.decision`).**
+      - **Rule.** In the lazy (root-fenced) profile, the readiness-, start- and every other failure-path `failure`
+        statement gets `min(work end, now + per_unit_seconds, L_root − (C + 0.25 s))`.
+        - L_root is `bootstrap._lease`, the lease `service_terminal` must find alive.
+        - C = `NATIVE_CANCEL_CLOSE_SECONDS` (2.0 s) while `RunBroker._cancel_result is None`, and 0 once it exists.
+      - **Fault statements.** The best-effort fault statements of `_cancel_faults` that are sent while the latch is
+        already cancelled get the same cap on their `_end()`.
+      - **Outcome.** A statement still unanswered at the cap ends in `ML-PERSIST-TIMEOUT` at `receive`. `_rpc`
+        records it and calls `_fail()`, which fails closed. The fence then runs. The swallow of the statement's
+        exception and the dispatch diagnostic are unchanged.
+      - **Other paths checked.**
+        - Every failure-branch entry sends its `failure` statement after `owner.cancel`: readiness and start
+          failures, other failures, a fault crash and an external cancel.
+        - The normal-completion path sends nothing between a cancel and the fence.
+        - The statements after the fence run in terminal mode.
+        - Fault statements sent before the dispatcher's own cancel without a prior cancel are not capped
+          (declared in the ADR).
+        - The non-lazy profile is unchanged.
+    - **L1** (`_commit_controller_view`). `view._windows[:0] = self.facade._windows` before the facade swap, so
+      `DispatchResult.readiness_windows` keeps every record across a recovery, including a cleanup-only view.
+    - **L6.** `design-stabilization-s1b.md:187` now names `ML-PROBE-WINDOW-CUT`. The ADR note acknowledges the
+      window record's location: result objects plus the S1c harness's hash-bound `maestro-run.json`.
+      - **Harness imports.** A read-only `git grep` of `CANCEL_CLOSE_RESERVE` over every compat and blueprints
+        worktree, and the two main checkouts, finds no importer. The only hit is a mention in compat
+        `stabilization-s1c2-20261023` `review-s1c.md:1149`, which records the same check.
+    - **L2 and L3** are declared residuals in the ADR note:
+      - W′ = 0 for a marker restart or a generation-limited start (the root may end under the cancel;
+        fail-closed);
+      - the start-budget and health-scan cut sources;
+      - admission does not compare W with the start budget or the cadence.
+    - **Tests** (`test_stabilization_stack_load_failures.py` unless named).
+      - **L5 `failed-set` (all four RB1 cases).** `_fault_in_the_targeted_live` now spies `_fail()`. Each case
+        asserts exactly one `_fail()` inside the targeted call, made before any SIGTERM (`failed == [False]`), and
+        `_term_sent` afterwards. The `failed-set` fault sets only `_failed`, so these assertions are not vacuous.
+        The killed (unreaped) worker also accepts the SIGTERM.
+      - **L5 RA2 skip:** `test_a_generation_limited_marker_start_is_not_renewed_and_its_cut_is_recorded`.
+        - Setup: the renewed test's placement (below the need), with RA2's view of `_generation` lowered so that
+          generation − 2 s = max(leases). The view is a `_GenerationView` proxy for that one decision only; the
+          native generation and all requests and replies are unchanged.
+        - Results: no renewal, `lease_renewals` unchanged, a record with `cut: true` and W′ = max(0, L − R − t0),
+          and `ML-PROBE-WINDOW-CUT` with `deadline-exceeded` in Argus.
+        - The renewed test is the control.
+      - **L5 M2 variant:**
+        `test_a_stalled_failure_statement_after_the_full_native_close_still_leaves_the_fence[fence-cap|control-uncapped]`.
+        - Setup: the M2 placement (RA2 off, cut window, K.CANCEL reply read after 2.0 s). The storage worker is then
+          SIGSTOPped for the `failure` RPC and SIGCONTed after it.
+        - Precondition: the per-unit deadline lies past L_root.
+        - `fence-cap`: the deadline is L_root − 0.25 s, the error is `ML-PERSIST-TIMEOUT`, and the persistence
+          failure is `(ML-PERSIST-TIMEOUT, schedule, receive)`. `service_terminal` finds the root and the authority
+          alive with lease left, and the native cancel is confirmed without `issuer_dead`.
+        - `control-uncapped` (`_fence_cap` patched to the identity): the deadline is past L_root, and the fence does
+          not find the root alive inside its lease. The test therefore discriminates. This replaces finding 26's
+          suggested `op − 0.05 s` delay, which fast fixture storage could not make bind.
+      - **L1** (`test_active_controller_recovery.py`):
+        `test_readiness_window_records_survive_an_active_controller_recovery`.
+        - Scenario: the planned recovery after the third observation.
+        - The stack declares `running` probes only, so the test appends one `ReadinessWindow` per original-facade
+          start. The carrying does not depend on how a record was made.
+        - Asserted: the recovery completed and the view was committed (`driver.facade is
+          driver._controller._view`). The ≥ 2 records are in `DispatchResult.readiness_windows` and the view, in
+          order, with no extra record, and the closure is complete. Without the carry, the result would be empty.
+      - **Regressions.** No existing expectation changed. The RB1 helper's return value grew by one list; its only
+        caller was updated.
+    - **Results** (wheel `9aea0c00…`, one pytest process at a time, 02:30:21-02:39:40, load 3.59-4.68). All passed,
+      none failed or skipped. Before the run, `test_stabilization_stack_load_failures.py` alone passed 22 in 46.9 s,
+      and the new recovery test passed in 6.2 s.
+
+      | Suite | Passed | Time |
+      | --- | --- | --- |
+      | `test_stabilization_*` (all files) | 484 | 136.1 s |
+      | `test_persistence*` | 29 | 29.1 s |
+      | `test_provider.py` | 35 | 19.9 s |
+      | `test_run_broker.py` | 11 | 12.4 s |
+      | `test_affa_*` | 124 | 12.3 s |
+      | `test_runtime_entry.py` | 8 | 9.2 s |
+      | `test_run_teardown.py` | 9 | 10.3 s |
+      | `test_teardown.py` | 27 | 24.8 s |
+      | `test_closure.py` | 31 | 23.2 s |
+      | `test_shared_closure.py` | 10 | 11.6 s |
+      | `test_schedule_plan.py` | 48 | 14.9 s |
+      | `test_dv05_dv06_bounds.py` | 7 | 12.3 s |
+      | `test_dispatcher.py`, `test_dispatch_diagnostics.py`, `test_dispatch_observe.py` | 22 | 33.6 s |
+      | `test_lazy_dispatcher.py` | 13 | 19.8 s |
+      | `test_shared_dispatcher.py` | 3 | 10.7 s |
+      | `test_service_order.py`, `test_load_aware_budgets.py` | 11 | 12.0 s |
+      | `test_run_renewal.py` | 9 | 15.2 s |
+      | `test_leaseguard.py`, `test_releasegate.py` | 68 | 3.7 s |
+      | `test_schedule_worker.py` | 15 | 14.1 s |
+      | `test_recovery.py`, `test_active_controller_recovery.py`, `test_terminal_controller_inventory.py`, `test_controller.py` | 55 | 96.0 s |
+      | `tests/thesis_lite/faults` (fault-statement path) | 55 | 33.3 s |
+
+      Total: 1074.
+    - **Deviations.**
+      - **The fixed 2.0 s term of DR-17 (flagged for the author).** DR-17 writes the cap as
+        `L − (2.0 s + 0.25 s)`.
+        - On the readiness and start paths the native close has already been spent before the `failure` statement:
+          the cancel in `ProcessReadiness.start` and `owner.cancel` are synchronous. RA5 then leaves only
+          `op + 0.25 s`, so a fixed `L − 2.25 s` would be in the past.
+        - The statement would then be refused before the send (F-08) whenever the cancel took longer than about
+          `op` (0.38 s live). The failure event would be lost with no storage stall, contrary to DR-17's
+          "a storage stall then costs the failure record" and to RA5.
+        - The term is therefore 2.0 s only while a close can still be ahead of the fence (no broker cancel result:
+          an external canceller mid-exchange during `_cancel_faults`), and 0 after it.
+        - On the readiness and start paths the cap is `L − 0.25 s`, which is finding 26's option (b) as written.
+          The literal fixed term is a one-line change in `_fence_cap`.
+      - **The cap also covers the post-cancel best-effort fault statements**, the one other reachable path to the
+        fence after a cancel. Fault statements before any cancel are not capped (declared).
+      - **The L1 test uses synthetic records** on a running-only recovery stack (above).
+      - **The L5 M2 variant uses a SIGSTOP stall**, not a fixed RPC delay (above).
+    - **Residuals.**
+      - L2 and L3 as declared.
+      - A cancel that overruns its own bound, so that `L_root − 0.25 s` is already past, makes F-08 refuse the
+        `failure` statement before the send. Nothing is recorded as a persistence failure, and the run-terminal
+        `failed` record follows without the failure event.
+      - The fence's own `service_terminal` deadline is still covered only by the 0.25 s margin.
+      - Uncapped pre-cancel fault statements.
+      - Harness H1 (1.7 s, DR-17) is an S1c item and is not changed here.
+    - **Effect.** Every finding 26 note has an implemented or declared disposition. The stack acceptance still needs:
+      - the author's confirmation of the C-term interpretation;
+      - an independent review of `4f0034079`..`c6bdfcf01`;
+      - the decisive full installed-wheel run and DV12;
+      - the S1c live re-run with H1 = 1.7 s and the H3 window record.
