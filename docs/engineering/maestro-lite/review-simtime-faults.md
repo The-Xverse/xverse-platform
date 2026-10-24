@@ -646,3 +646,62 @@ and admission refuses while it is unknown.
        and in the composed native run where the hub exits.
      - N2: an outstanding `resumed` is recorded at `finish` and at `cancel`, and the run does not fail.
      - The L4 literals are re-verified unchanged (tick mode).
+
+8. **Implementation of note ST-2a and installed-wheel verification (written at 16:08:34 2026-10-24).**
+   - **Commits.**
+     - `e5fc3425f`: finding 7.
+     - `41684db51`: the ADR ST-2 text and note ST-2a.
+     - `691e6f8bb`: an ST-2a addendum, recorded before the code commit (see "Deviation" below).
+     - `0d84b6f9a`: the code and tests. The source diff from `b40acce49` is now 14 files, +949/−12.
+   - **What changed.**
+     - **N1.** In `finish`, any entry not yet final sets `incomplete` before `_end`. This covers an unreached onset
+       and a freeze applied but not cleared, which is thawed and ends `cancelled` (NOT-REACHED).
+     - **Final statements.** `_finalize` only decides the outcome. `_emit_finals`, called from `_end`, emits each
+       entry's one `final` statement in compiled listing order:
+       - `hubClosed` (`simulatorStep`, `hostNs`) goes on the first entry;
+       - `resumedOutstanding` (`phase`, `step`, `ackSeq`) goes on the entry whose hold ack is unconfirmed;
+       - a statement is never re-sent, even when the scheduler ends twice.
+
+       The benign end-of-file no longer writes a statement of its own.
+     - **N2.** An outstanding `resumed` at `finish` or `cancel` is recorded and does not fail the run.
+   - **Deviation (recorded in ADR addendum `691e6f8bb` before the code commit).**
+     - **The failure.** With finals deferred to `finish`, both composed native runs ended
+       `ML-SCHEDULE-COLLECTION-INCOMPLETE`.
+     - **The cause.** A temporary worker trace, reverted and never committed, showed `ML-COLLECTION-EVENT-ACK` in
+       `collection_runtime._record_collect`. Its "previous ordinal + 1" check ignores fault events, so a fault
+       event cannot be the last event before collection. That is a latent constraint of every mode.
+     - **The repair.** The outcome journal keeps `fault_ordinal` (`lifecycle_evidence.py`, set in
+       `schedule_evidence._append_fault`), and `_record_collect` includes it.
+     - **For re-review.** This touches the collection path, which is outside the dispositions row.
+   - **Tests.** `test_simtime.py` has 81 cases, up from 78.
+     - **Changed.**
+       - `test_finish_thaws_a_freeze_whose_clear_step_was_not_reached` now asserts `incomplete` (N1).
+       - The benign end-of-file case asserts that no final statement is emitted at the end-of-file. After `finish`
+         there is exactly one final per entry, both `cleared`, and `hubClosed` only on the first listed entry.
+       - The composed native runs, both parametrizations, assert exactly one `outcome`-phase event per entry, and
+         `hubClosed` (step 40) only in the exit case.
+     - **Added.**
+       - An outstanding `resumed` at `finish`: `cleared`, the run is not failed, and `resumedOutstanding` is
+         recorded.
+       - An outstanding `resumed` at `cancel`: recorded on the frozen entry only.
+       - Exactly one final per entry when `finish` is followed by `cancel`.
+     - **Control.** Without the collection repair, the two composed runs fail, as observed above.
+   - **L4.** The five literals are unchanged. A clean export of `0d84b6f9a` gives values identical to
+     `l4-base-digests-b40acce49.json` (`evidence/simtime/l4-digests-0d84b6f9a.json`), and the five L4 cases pass.
+   - **Installed-wheel run.**
+     - **Wheel.** `02efbb2c154a4ae503a0b8725c03b788baca6e6e72cecccea079419d52fd7d8a`, from `src/` at `0d84b6f9a`.
+     - **Tree check.** `diff -rq` of the installed tree against `git archive 0d84b6f9a src` differs only in the
+       unpackaged `xcom`, plus the `xverse_xdl` data.
+     - **The six suites, in one process** (faults `simtime`, `resolve`, `scheduler` and `maestro_run`; maestro
+       `schedule_plan` and `preparation`): **199 passed**, 0 failed, 0 skipped, in 82 s at load 5.3. The log is
+       `related-suites-st2a-0d84b6f9a.log`.
+     - **Collection, afterwards in a second process.** Because the collection path changed, maestro
+       `collection_runtime` and `lazy_dispatcher` gave **35 passed** in 41 s. The log is
+       `collection-suites-st2a-0d84b6f9a.log`.
+     - **Host load.** Another agent's compat pytest was running on the host during both runs.
+     - **Not run.** The decisive full regression, DV12 and CAPA are left to the coordinator.
+   - **Residuals.**
+     - N1 is closed.
+     - R13 now records an outstanding `resumed` instead of leaving it unchecked.
+     - The adversarial-peer limit stays tied to L1.
+     - The other residuals are unchanged.
