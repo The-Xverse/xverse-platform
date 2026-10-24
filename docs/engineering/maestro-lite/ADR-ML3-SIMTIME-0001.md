@@ -246,3 +246,16 @@ ST-2 text above in place (decision 4 benign end, decision 7 `finish`, R13).
 - **Failing runs.** On a failing run the final statements go out on the dispatcher's best-effort cancel path. A
   final that cannot be sent leaves that chain without its `outcome` event, and the run is already a failure. The
   `apply` and `clear` phases, which `closure_report` reads, are unaffected.
+- **Addendum: collection ordinal continuity (found while implementing, recorded before the code commit).**
+  - **The defect.** Deferring the final statements to `finish` makes a Phase 5 fault event the last Argus event
+    before the lazy dispatcher's output collection. `collection_runtime._record_collect` requires the collect
+    event's ordinal to be the previous known ordinal plus 1. That previous ordinal counts lifecycle events and
+    retained intents only, because fault events are not lifecycle coverage. So every successful composed run ended
+    `ML-SCHEDULE-COLLECTION-INCOMPLETE`. The worker-side cause, captured with a temporary trace, was
+    `ML-COLLECTION-EVENT-ACK`.
+  - **The repair.** The worker's outcome journal keeps the last fault event ordinal (`fault_ordinal`, set by
+    `schedule_evidence._append_fault`), and `_record_collect` includes it in the previous ordinal.
+  - **Scope.** This is a latent constraint of every mode: any fault statement emitted after the last lifecycle
+    event broke collection, including tick mode. With the repair, the check states its intent, that the collect
+    event follows every event written before it. Tick-mode plan bytes and digests are unchanged (L4). The only
+    tick-mode behaviour that changes is that this failure no longer occurs.
