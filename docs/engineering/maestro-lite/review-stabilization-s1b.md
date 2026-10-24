@@ -1892,3 +1892,114 @@ decision S-D2, approved on 2026-10-23).
         when a pre-request sample exists. Given the ~1.6 s live health interval, that is expected whenever the slot
         is healthy.
       - **The `ready` rows** noted at the end of finding 30 remain out of scope.
+
+32. **Independent review of S1a-6 (DR-20), range `311016739..0c81ab0a1` (written at 05:46:57 2026-10-24, load about
+    4.0-4.3). Verdict: PASS WITH NOTES.** Nothing found blocks the decisive full run.
+    - **Scope and provenance.**
+      - The contract commit `33486ad22` (05:28:11) precedes the code commit `59a130f73` (05:40:42).
+      - `src/` is unchanged between `ee91697a4` and `311016739`, so the finding-30 RED reproduction applies to the base.
+      - The wheel `cea5ced404c27715…` unpacks to the `59a130f73` `src/xverse` tree. The only difference is
+        `xverse/xcom`, which is not packaged. The installed `coverage.py` is byte-identical to the committed file.
+    - **1. Discharge rule: exact and fail-closed.**
+      - `health_window` (`coverage.py:800-813`) returns a cut only on its last branch. Every earlier check must pass
+        first: Release observed; Release request ≤ Release ACK, inside the admitted interval; slot start < slot end ≤
+        admitted end; Release ACK ≤ Stop request ≤ Stop ACK ≤ terminal end; and finally the two cases ruled out
+        (`slot end ≤ Stop request` and `slot end > Stop ACK`). That leaves exactly Stop request < slot end ≤ Stop ACK.
+        `_number` (`:50-52`) rejects NaN and infinity.
+      - In `assess` (`:766-771`), the discharge set is the in-window events (`slot start ≤ t ≤ slot end`) with
+        `t ≤ cut`. Because cut < slot end there, that is the closed interval [slot start, Stop request] =
+        [slot start, min(slot end, Stop request)]. It uses the same `source_ok` predicate (observe / observation,
+        `running` or `not-ready`).
+      - If the Stop request precedes the slot start, the interval is empty and the slot fails closed.
+      - **A missing health check cannot be marked satisfied.** The discharge needs `one(...)=='satisfied'`, that is,
+        at least one retained event that is hash- and payload-valid and passes `source_ok`. Otherwise the unchanged
+        overwrite at `:776-777` gives `unverifiable` with the existing diagnostic.
+      - **The change is monotone.** It runs only when the old code produced `applicable None` (hence
+        `unverifiable`), and it can only turn such a row into `True`/`satisfied`. It never sets `False`, so finding 96
+        stands.
+      - **No off-by-one.** Scratch probes, not committed, ran on the installed wheel and all 4 passed:
+        - a sample exactly at the Stop request discharges;
+        - the same sample 1e-9 s after the Stop request does not;
+        - slot end exactly equal to the Stop ACK is the bracket case: it discharges with a pre-request sample and
+          stays `unverifiable` without one.
+      - **The cited evidence is pre-cut.** `ids` comes from the restricted call (`:771`), so a valid post-request
+        sample can never be cited as the evidence.
+      - **Masking.** With `many=True`, `one` already accepts any good sample beside conflicting ones (`:664-669`). The
+        restricted call is a subset, so it cannot hide more than the applicable case already does. Invalid events
+        still feed `self.errors` and the integrity row.
+    - **2. Online/offline agreement and the digest.**
+      - The pre-closure assessor, `terminal_runtime` (`terminal_runtime.py:131-140`) and `verify_closed`
+        (`coverage.py:930-951`) all call the same `_Assessment.assess`.
+      - A scratch probe closed a fixture with the discharge, then ran `verify_closed`. Pre-closure and offline
+        `health.3` were both `satisfied`, the report-artifact row was `satisfied`, overall was `complete`, and
+        `expectedObligationsDigest` was equal.
+      - **Keeping `None` in the expectation entry (`:784`) is correct, so finding 31's correction of finding 30
+        holds.** The entry stays a function of templates and retained bounds only. Adding or deleting samples changes
+        the row and never the digest, and the committed test (`:200-213`) discriminates this: with `applicable` in
+        the entry, the two digests would differ.
+      - **Faults and attackers.**
+        - Deleting samples can only move a row from `satisfied` to `unverifiable`.
+        - Adding a sample discharges only if it passes `source_ok` against a retained M3 observation record of the
+          same execution and plan. A malformed or duplicate sample is caught by `self.errors`, which makes the
+          integrity row `conflicting`.
+        - **Residual trust assumption (not new).** The ordering against the Stop request uses the producer's
+          `observed_at`, retained as the annotation host clock (`lifecycle_evidence.py:219`, `:365-370`; bounded by
+          freshness ≤ 5 s and ≤ now). It is compared with the broker's monotonic `stopRequestedAt`
+          (`run_broker.py:1468-1479`). That is the same assumption the existing in-slot attribution already makes.
+    - **3. `health_window` callers.** There are only two: `coverage.py:764` and
+      `test_stabilization_coverage_health_boundary.py:138`. Both unpack three values. No other caller exists in `src`
+      or `tests`, and `terminal_runtime` consumes only rows.
+    - **4. Tests.**
+      - 19 passed in the target file at 05:43. A related subset also passed (111 tests, 05:44:22-05:45:26):
+        - `test_coverage.py`, `_dv09`, `_native` and `_producers`;
+        - `test_offline_boundary.py`, `test_evidence_scope.py` and `test_terminal_faults.py`.
+      - **The RED test is meaningful.** It reproduces the live geometry: Stop request 0.05 s before the slot end, ACK
+        0.05 s after, and the sample before the request. It asserts the row, the evidence ID, `health.4` and the
+        absence of any `None` row (the `terminal_runtime` blocker).
+      - **Each new control kills a plausible mutant:**
+        - filtering on the slot end instead of the cut fails the after-request control (`:146`);
+        - dropping `source` from the restricted call fails the invalid-sample control (`:169`);
+        - computing the cut before the order checks fails the inconsistent-order controls (`:191`);
+        - storing `True` in the expectations fails the digest test (`:200`).
+    - **5. Residuals.**
+      - **Read-only check of the retained dev7 inputs, without admission replay.** In both failing runs
+        (`T051109-freeze-vcu`, `T051454-nominal`), `health.5` of carla-adapter is the only non-ok row of
+        `lifecycle-coverage.json`.
+        - Its bounds satisfy the bracket conditions.
+        - All three in-slot samples precede the Stop request (the last by 0.381 s and 0.554 s).
+        - The stored row cites exactly one evidence ID, which is `one`'s `good[:1]` on the satisfied path. That ID is
+          the first in-slot sample, 3.668 s and 3.776 s before the request, and `source_ok` is unchanged by this
+          range.
+        - A discharge on replay is therefore strongly indicated, but not demonstrated.
+      - **The `ready` rows.** Finding 31 states the scope correctly. In stored data, the `no-carla` runs (dev6
+        `T050004`, dev7 `T051826`, dev6 `T045227-nominal`) and dev5 `T044245-cancel-paused` stay `unverifiable`
+        through `ready` None plus `outcome` missing. DR-20 does not touch them.
+    - **Issues.**
+      - **LOW-1. Boundary and offline cases are not pinned in the repository.** No committed test covers:
+        - a sample exactly at the Stop request;
+        - slot end exactly equal to the Stop ACK;
+        - a valid post-request sample ordered before a pre-request one (the evidence-ID choice);
+        - `verify_closed` on a discharged slot.
+
+        The behaviour is correct by the scratch probes and by reading the code, and the four probes could be added
+        verbatim. Location: `test_stabilization_coverage_health_boundary.py:146-213`. Does not block.
+      - **LOW-2. Stale line references.** The ADR amendment (`ADR-ML3-EVIDENCE-0001.md:171-172`) and the test module
+        docstring (`test_stabilization_coverage_health_boundary.py:7-8`) cite `coverage.py:805` and `:773-774`. Those
+        are the pre-repair lines, now `:811-813` and `:776-777`. They should say "at `311016739`". Does not block.
+      - **LOW-3. The composition paragraph omits the lower bound.** `affa-coverage-runtime-composition.md:36-37`
+        says "a valid source-checked observation at or before the Stop request". It omits "at or after the slot
+        start", which `coverage-assessment.md` and the ADR state. The code is correct. Does not block.
+      - **LOW-4. Historical re-verification and rule provenance.**
+        - `verify_closed` from this wheel, run on a stored report from before S1a-6 that hit the bracket, recomputes
+          `satisfied` against the stored `unverifiable`. It therefore marks the report artifact `conflicting`
+          (`coverage.py:951`).
+        - That is fail-closed and consistent with "no stored report is rewritten". However, the report schema and
+          digests carry no rule version, so pre- and post-S1a-6 verdicts can be told apart only by the wheel digest.
+        - Record this before anyone re-verifies the dev5–dev7 evidence with the new wheel. Does not block.
+      - **LOW-5 (pre-existing, not introduced).** Slot windows are closed at both ends (`coverage.py:766`), so a
+        sample at exactly a slot boundary counts for two adjacent slots. The discharge inherits this. It is a
+        measure-zero case for live floats. Does not block.
+    - **Decisive full run.** None of these issues blocks it.
+      - The repair is needed for the two observed failure geometries, and it is safe on the evidence above.
+      - The `ready` rows of `no-carla` and `cancel-paused` start-up paths can still leave those runs
+        `unverifiable`. The run's acceptance criteria must state whether that is expected for those scenarios.
