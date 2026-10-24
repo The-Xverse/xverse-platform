@@ -196,3 +196,59 @@ service only for the genuine same RunBroker/session after its original cancellat
 Collection uses short service RPCs between items and caps each original storage end
 at the current root lease, preserving the admitted aggregate end and terminal reserve.
 This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
+
+## Amendment S1a-3: a run cancel waits a bounded time for a busy authority connection (2026-10-23, written at 18:51:27; before implementation)
+
+- **Context.** `RunBroker.cancel` sends K.CANCEL through `connection._exchange`, whose lock is non-blocking
+  (`ML-AFFA-CONFLICT`).
+  - An operator cancel (`entry.stop`) runs on its own thread. The dispatcher thread exchanges on the same
+    connection for health queries, renewals and step effects.
+  - A cancel that meets that exchange is refused, treated as unconfirmable and answered with `revoke()`, which
+    SIGKILLs the authority. The bootstrap root then kills every child, including the storage worker. The run
+    closes without its terminal evidence: S1a review log findings 18–21, about 2 in 10 live cancels, and
+    reproduced deterministically in `test_stabilization_cancel_conflict.py`.
+- **Decision.** For K.CANCEL only, the connection offers an exchange that waits for its lock up to
+  `CANCEL_LOCK_WAIT_SECONDS` = 0.5 s, and never past the cancel's own end.
+  - The frame is built *after* the lock is held, so its sequence follows the exchange that just completed.
+  - The exchange is then the unchanged K.CANCEL exchange.
+  - If the lock is not obtained within the bound, the call raises `ML-AFFA-CONFLICT` exactly as before, and
+    `RunBroker.cancel` revokes as before.
+- **Preserved.**
+  - A stalled or unresponsive authority is still never treated as having acknowledged Cancel. Its in-flight
+    exchange keeps the lock, so the bounded wait expires and the revoke follows.
+  - The client latch is still set before the wait, so no new start authority is gained while waiting.
+  - Every other exchange keeps the non-blocking lock, so two ordinary operations still never interleave.
+  - The cancel's end, the generation − 2 s limit and the revoke deadline are unchanged.
+- **Cost.** The confirmed cancel may come up to 0.5 s later. This stays inside the 1 s cancel end and the
+  admitted cancellation drain of ≤ 2 s.
+- **Verification.**
+  - The busy-connection test passes when the lock is released within the bound: confirmed epoch, storage alive.
+  - A new test holds the lock past the bound: revoke as before.
+  - The existing cancel tests are unchanged.
+  - The live cancel-paused runs (VS-09) follow after acceptance.
+- **Implementation form (written at 18:52:06; still before implementation).** The bounded wait is implemented in
+  `RunBroker.cancel`. That keeps `connection._exchange`, its non-blocking lock, and every other caller and test
+  observer unchanged.
+  - A K.CANCEL attempt that is refused with `ML-AFFA-CONFLICT` is retried every 1 ms until 0.5 s have passed or
+    the cancel's end arrives. That refusal comes before any send, so it has no side effect.
+  - Each attempt builds a fresh frame with the then-current sequence.
+  - Any other error, and the expiry of the bound, lead to the unchanged revoke.
+  - The `RunClosure` cancel fence (`run_closure._fence`) runs on the owner's thread after the dispatcher has
+    finished, so this change leaves it as it is.
+- **Revision after the independent review (S1a review log finding 23; written at 19:06:33, before the repair).**
+  This revision supersedes the Decision bullets above about "an exchange offered by the connection" and "the
+  frame is built after the lock is held". The implementation-form note stands, with these additions:
+  - **Already cancelled.** If the connection's retained epoch history already ends in CANCELLED, from a
+    concurrent cancel or the closure fence, `RunBroker.cancel` returns that retained reply without a further
+    exchange. `run_closure._fence` does the same.
+  - **Stale frame.** A frame is built before the exchange lock is taken. A concurrent winner can advance the
+    sequence or epoch in between, and `_validate` then refuses before any send (`ML-AFFA-REQUEST-SCOPE`). Such
+    a refusal is retried within the same bound when the frame's sequence or epoch no longer matches the
+    connection. Any other refusal still reaches the revoke.
+  - **Reap reserve.** The wait ends at least `CANCEL_REAP_RESERVE_SECONDS` = 0.25 s before a caller's deadline
+    (`teardown._emergency`), so the unchanged revoke keeps time to reap.
+  - **Cost, completed.** The wait of up to 0.5 s also delays `owner.cancel`'s gate and launcher cancels, which
+    follow the broker cancel. It also extends `runtime_entry.stop`'s `_stop_lock` hold, so a concurrent stop
+    in that window is refused with `ML-RUNTIME-ENTRY-CONFLICT`, as any concurrent stop already was.
+  - **`_fence`.** It runs after the dispatcher has finished. It can still meet an operator K.CANCEL in flight;
+    that exposure existed before, and this change does not alter it.

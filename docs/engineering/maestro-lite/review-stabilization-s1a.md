@@ -416,3 +416,280 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       feasibility, and the VS-09 live cancel confirmation (S1-T06a), which runs on the merged revision.
     - **Unchanged.** Not M1, not AEB evidence, not a scientific result. Lane activation, M1 admission and
       factory runs stay closed.
+18. **Post-merge live finding: an intermittent persistence child exit right after a cancel (2026-10-23 17:22;
+    S1a successor; recorded before any analysis or repair).**
+    - **Context.** These are the S1 VS-09 development runs on main `b28a2aacf`, with the blueprint S1c-2a
+      candidate (`xverse-blueprints` `f19ae58`). The runs are on loop10 under
+      `.x-verse-build/runs/lite-stabilization-s1/vs09-20261023/`, and the compat log has them as findings
+      15–20. The non-M1 owned harness (`_OriginalRuntimeRun`) calls `entry.stop` about 6 s into a
+      simulation pause.
+    - **Observed: 1 of 7 cancel runs** (`dev-s1c2a-20261023T172145-cancel-paused`, load 7.3).
+      - `entry.stop` returned at 13.7132 s.
+      - A `schedule` request (sequence 452) started at 13.7136 s, which is 0.4 ms later. It failed in stage
+        `receive` at 13.7162 s with `ML-PERSIST-CHILD`: the worker child had exited. Its deadline was 15.71 s.
+      - The outcome is `ML-SCHEDULE-CANCELLED`, with `cleanupComplete` false and closure
+        `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`.
+      - The closure writer is `rpc-unresolved`, with `abort_attempted` false. `dispatchTerminal` is null, and
+        the native units have no retired or reaped facts.
+      - The Argus root keeps its initial open manifest (0 events), while the stream has 269 lines.
+      - The host was left clean: no residue processes or sockets, and the restore guard succeeded.
+    - **The other 6 cancel runs closed as DR-2 requires**: `170215`, `164544`, and `172613`, `172841`,
+      `173109` and `173336`.
+      - The writer ended `failed` by abort, and `xverse-argus verify` gives only WRITER-STATE.
+      - The 4 native units are retired and reaped.
+    - **What is known.**
+      - The request passed the client's `_live` check after the latch was cancelled. So its kind allows a
+        cancel (`schedule` with a failure, disposition or run-terminal body).
+      - It was then refused because the child had exited (`allow_exit` is false for `schedule`).
+      - The worker's own exit reason is not recorded. Unit and worker stderr are not captured; that is GA-30,
+        the S1b FR-010 stderr capture.
+    - **Not known.**
+      - Whether the worker exited on its own: for example, on a request it refuses after the bootstrap
+        root's cancel.
+      - Whether another path signalled it: `_fail()` on a concurrent request, or the native cancel.
+      - Whether the rate depends on load.
+    - **Effect.** GA-11 is not closed. VS-09 and the S1d P3 criterion will fail intermittently until this is
+      understood. The S1a acceptance evidence is unaffected: that suite has no live cancel race at this timing.
+    - **Plan.**
+      - Diagnose before any repair: reproduce on the owned harness with the worker's stderr captured, which
+        is an S1b prerequisite. Alternatively, use a bench reproduction that sends disposition statements
+        immediately after `entry.stop`.
+      - Record the cause as the next finding, then write the ADR amendment, then the repair. This branch
+        (`candidate/lite-stabilization-s1a2-20261023`) holds the record only, until the author decides how it
+        is sequenced with S1b.
+19. **Code analysis of finding 18 by independent review 7 of S1c-2a (2026-10-23 about 18:00). The mechanism is a
+    hypothesis, not proven; corrections to finding 18 are included.**
+    - **Shown by the code.**
+      - After a cancel, a `schedule` request passes the client check only for the body kinds `failure`,
+        `step-disposition`, `unit-disposition` and `run-terminal` (`persistence.py` `_rpc`). Its `allow_exit`
+        is false.
+      - At stage `receive`, `ML-PERSIST-CHILD` comes only from `_live`: the child exited, or its pidfd or socket
+        identity changed.
+      - `_failed` was false before the send, and `_rpc` holds a non-blocking lock. So no concurrent `_rpc` and
+        no client `_fail()` preceded this request.
+      - The `stop` path (`runtime_entry.stop` → the dispatcher driver's `cancel` → `owner.cancel`) does not call
+        the persistence client.
+      - The first post-cancel statement is `failure`, and its exception is swallowed.
+      - **A kill chain exists.**
+        - `RunBroker.cancel` turns a `ValueError` from the K.CANCEL exchange into `connection.revoke()`
+          (`run_broker.py` about 905–911).
+        - That includes `ML-AFFA-CONFLICT`, raised when another thread holds the authority connection's
+          non-blocking lock (`affa_client.py` about 340).
+        - `revoke` SIGKILLs the authority (about 425–441).
+        - Before its terminal fence, the bootstrap root reacts to the authority's death by calling `cleanup()`.
+          That kills every child, including the persistence worker (`native/bootstrap.c` about 287 and 316).
+      - Health probes use that same lock: `check_health` → `RunUnitIssuer.observe` → `_native(K.QUERY)` →
+        `connection._exchange`.
+    - **Consistent with the hypothesis.**
+      - Only `172145`'s cancel (13.708 s) fell inside a health scan: lite-driver's health was at 13.686 s, and
+        the carla-adapter record never reached the journal.
+      - The 6 good runs cancelled 1.2–1.6 s after a completed scan.
+      - `stop` took 4.81 ms here, against 2.7–3.4 ms elsewhere.
+    - **Not established.**
+      - That the lock was actually held at that instant.
+      - A worker self-exit is not excluded: the root also kills everything if the worker dies first.
+    - **Corrections to finding 18.**
+      - The rate is 1 of 5 on blueprint `f19ae58`, and 1 of 7 pooled over 3 blueprint revisions and 2 observe
+        paths.
+      - For `164544` and `170215` only the manifests' recorded reasons exist (WRITER-STATE only), not
+        `verify` output.
+      - "Host left clean" covers the 4 unit command lines only.
+      - "The S1a acceptance evidence is unaffected" is withdrawn as unsupported.
+      - Finding 18 was written at about 17:35, with runs up to 17:33, not at 17:22.
+    - **Discriminating diagnosis (proposed; no repair before it).**
+      - A bench or unit reproduction that calls `entry.stop` while the authority connection lock is held by a
+        health QUERY.
+      - Record `RunBroker._cancel_result`, confirmed or revoked, in the owned harness's `maestro-run.json`.
+      - Then the ADR amendment and the repair, for example a cancel that waits a bounded time for the lock
+        instead of revoking.
+20. **VS-09 attempt 2 on the merged mains reproduces the cancel race (run 18:46; written at 18:48:08 2026-10-23).**
+    - **Revisions.** Platform main `b28a2aacf`, compat main `bb07492` and blueprints main `6ac7703`, from clean
+      detached worktrees. CARLA instance 14, load 5.1.
+    - **Run.** `runs/lite-stabilization-s1/vs09-merged-20261023/lite-…-cancel-paused`. The S1c-2a harness failed
+      visibly (exit 1).
+      - `ML-SCHEDULE-CANCELLED`, but `persistenceFailure` is `ML-PERSIST-CHILD` (kind `schedule`, stage
+        `receive`).
+      - `cleanupComplete` false. The native units are not attested.
+      - The Maestro root is `open`, with CORRUPT, MUTATED and WRITER-STATE.
+      - The guard destroyed the 3 owned actors, and there is no unit residue.
+      - nominal passed on the same revisions.
+    - **Timing.**
+      - `entry.stop` took 5.36 ms. Clean cancel runs took 2.7–3.4 ms; `172145` took 4.81 ms.
+      - The failing request started 0.93 ms *before* `stop` returned, and failed 6.86 ms after it started.
+      - The cancel came at 13.730 s. The last recorded health events were a complete scan at 12.804–12.855 s; at
+        about 1.6 s spacing the next scan was due at about 14.4 s. No health event follows the cancel.
+    - **Effect on the finding-19 hypothesis.** The cancel did not visibly fall inside a health scan. The
+      health-QUERY form of the hypothesis is weakened. The general form remains open: `RunBroker.cancel` meets a
+      busy authority connection (`ML-AFFA-CONFLICT`), revokes it, and the root then kills the worker. A lease
+      renewal, a tick or a scheduled-step exchange could hold that lock, as well as a health QUERY.
+      - The slow `stop` in both failing runs is consistent with the extra revoke-and-reap work.
+    - **Rate.** 2 of 10 post-S1a cancel runs with the cancel path exercised (blueprint heads `f19ae58`,
+      `588f84a`, `8aa57ca` and `6ac7703`).
+    - **S1a-2 diagnosis (author-sequenced before S1b).**
+      - **(1)** Instrument the owned harness to record `RunBroker._cancel_result`, confirmed or revoked, and the
+        identity of the lock holder at cancel time. This is evidence only, with no behaviour change.
+      - **(2)** Build a deterministic bench or unit reproduction: `entry.stop` while the authority connection
+        lock is held by each candidate operation.
+      - **(3)** Only then the ADR amendment and the repair.
+21. **S1a-2 diagnosis: the mechanism is reproduced deterministically (written at 18:50:49 2026-10-23; before any repair).**
+    - **Test.** `tests/thesis_lite/maestro/test_stabilization_cancel_conflict.py`, on the real `broker_stack`
+      composition: storage, the native AFFA authority and the run bootstrap. It ran with the installed candidate
+      wheel (`.x-verse-build/cache/lite-stabilization-s1a/venv-cand`, whose code equals main `b28a2aacf`), at
+      load 4.1, in 5.6 s.
+    - **Idle connection.** `RunBroker.cancel` gives
+      `RunCancellation(native_epoch_confirmed=True, epoch=1, frozen_units=3, issuer_dead=False, …)`, and the
+      storage worker stays alive. PASS.
+    - **Busy connection.** The test holds `connection._lock` in place of a concurrent dispatcher exchange.
+      `RunBroker.cancel` gives `RunCancellation(native_epoch_confirmed=False, epoch=None, frozen_units=0,
+      issuer_dead=True, issuer_reaped=True, …)`, and the storage worker exits within 2 s. FAIL, as expected.
+    - **Cause, now established.**
+      1. `connection._exchange` refuses with `ML-AFFA-CONFLICT` when its non-blocking lock is held.
+      2. `RunBroker.cancel` treats that `ValueError` as an unconfirmable cancel and calls `revoke()`, which
+         SIGKILLs the authority.
+      3. The bootstrap root then kills every child, including the persistence worker. The run's closure then
+         fails with `ML-PERSIST-CHILD` (findings 18 and 20).
+    - **In the live harness.** The operator's `entry.stop` runs on its own thread, while the dispatcher thread
+      exchanges on the same connection for health queries, renewals and step effects. The race window is the
+      fraction of time the dispatcher holds that lock, about 2 in 10 cancel runs.
+    - **Not a defect of the revoke itself.** Revoking an authority that cannot confirm a cancel is the designed
+      fail-safe. The defect is that a merely *busy* connection is treated as unconfirmable.
+    - **Next.** An ADR amendment (S1a-3) before the repair: a bounded wait for the exchange lock on K.CANCEL only,
+      falling back to the unchanged revoke when the bound expires.
+22. **S1a-2 repair implemented per amendment S1a-3 (written at 18:54:23 2026-10-23).**
+    - **Code.** `run_broker.py`:
+      - `RunBroker._cancel_exchange(end)` retries a K.CANCEL refused with `ML-AFFA-CONFLICT`, which happens
+        before any send. It polls every `CANCEL_LOCK_POLL_SECONDS` = 1 ms, until `CANCEL_LOCK_WAIT_SECONDS` =
+        0.5 s or the cancel's end.
+      - Each attempt builds its frame with the then-current sequence.
+      - Any other error, or the expiry of the bound, reaches the unchanged revoke. `connection._exchange` is
+        unchanged.
+    - **Tests.** `test_stabilization_cancel_conflict.py`:
+
+      | Case | Result | Outcome |
+      | --- | --- | --- |
+      | idle | 0.4 ms | confirmed |
+      | lock held 0.1 s | 0.101 s | confirmed epoch 1, 3 frozen units, storage worker alive |
+      | lock held 0.9 s | 0.501 s | unchanged revoke: `issuer_dead` |
+
+    - **Against the unrepaired main wheel** (`venv-cand`), the 0.1 s case fails: it is revoked at once
+      (0.0005 s). The past-bound case fails only in its timing assertion.
+    - **Wider run** with the S1a-2 wheel (`.x-verse-build/cache/lite-stabilization-s1a2/venv-s1a2`, wheel
+      `6b4f63a7…`; load 3.8): `test_stabilization_cancel_conflict.py`, `test_run_broker.py`,
+      `test_stabilization_cancel.py` and `test_affa_client.py` gave 38 passed in 32 s.
+    - **Next.**
+      1. An independent review.
+      2. The full installed-wheel run, the DV12 gate and CAPA step 10, committing the log before the CAPA build.
+      3. The acceptance package.
+      4. VS-09 on the merged revision.
+23. **Independent review of S1a-2 at `20dc3dcde` (written at 19:06:24 2026-10-23): FAIL, narrow, with no safety
+    violation (every traced path still ends in the unchanged revoke). Recorded before any repair.**
+    - **MEDIUM-1.** The K.CANCEL frame is built before `_exchange` takes the lock (`run_broker.py`
+      `_cancel_exchange`). ADR S1a-3's Decision says "after".
+      - With two concurrent `RunBroker.cancel` calls — the operator's stop, and the dispatcher's own
+        `owner.cancel("dispatcher-failed")`, which every live cancel takes — the winner's CANCELLED reply raises
+        `connection.epoch` just before it releases the lock.
+      - The loser's frame is then stale, and `_validate` raises `ML-AFFA-REQUEST-SCOPE` before any send. That
+        is not retried, so it reaches revoke and the same kill chain.
+      - The window is a few µs under the GIL, but it is on the live path. Finding 20's timing — the dispatcher's
+        request began 0.93 ms before `stop` returned — fits it.
+    - **MEDIUM-2.**
+      - No test exercises two concurrent cancels on `broker_stack`, a stale frame, or a second K.CANCEL after
+        CANCELLED.
+      - The lock-holding tests never change the sequence or epoch.
+      - Finding 20's step (1), recording the live lock holder, was not done.
+    - **LOW-3.** A cancel with a caller deadline (`teardown._emergency`) can wait until that deadline. Revoke is
+      then left with no time to reap: `issuer_reaped` is false, and `ML-TEARDOWN-ISSUER-UNFENCED` follows.
+      SIGKILL is still sent.
+    - **LOW-4.** The ADR:
+      - (a) The superseded Decision bullets are not withdrawn.
+      - (b) The Cost omits that `owner.cancel`'s gate and launcher cancels, and `runtime_entry.stop`'s
+        `_stop_lock` hold, are delayed by up to 0.5 s; a concurrent stop then gets `ML-RUNTIME-ENTRY-CONFLICT`.
+      - (c) The `_fence` rationale ignores the operator thread. That is pre-existing; `_fence` has its own
+        CANCELLED shortcut.
+    - **Confirmed.**
+      - `ML-AFFA-CONFLICT` is raised only before any send, with no state change.
+      - The double-revoke paths are safe.
+      - A repeated K.CANCEL is idempotent natively.
+      - No deadlock is possible, and the worst-case cancel time is unchanged.
+      - The ADR commits preceded the code.
+      - 127 tests passed across 4 runs at load 3.3–4.4.
+    - **Repair plan.** An ADR note comes first. Then `_cancel_exchange`:
+      - returns the retained CANCELLED reply when the connection is already cancelled, as `_fence` does;
+      - retries a pre-send `ML-AFFA-REQUEST-SCOPE` when the frame's sequence or epoch has gone stale;
+      - keeps a 0.25 s reap reserve before a caller's limit.
+
+      The tests add:
+      - a deterministic stale-frame case: another cancel wins between the frame build and the lock;
+      - a real two-thread concurrent cancel;
+      - a second cancel after CANCELLED.
+
+      Recording the live lock holder is carried to the harness, as a `RunBroker._cancel_result` record in
+      S1c-2. Then a fresh wheel and a re-review.
+24. **Finding-23 repairs (written at 19:08:45 2026-10-23), per the ADR revision committed first (`cac6e6135`).**
+    - **Code.** `RunBroker._cancel_exchange(end, limit)`:
+      - returns the retained CANCELLED reply when the connection's epoch history already ends in CANCELLED;
+      - retries a pre-send `ML-AFFA-REQUEST-SCOPE` when the frame's sequence or epoch is stale;
+      - ends its wait `CANCEL_REAP_RESERVE_SECONDS` = 0.25 s before a caller's deadline.
+    - **New tests.**
+
+      | Test | Result |
+      | --- | --- |
+      | stale frame (a winner cancels between the build and the lock) | the refusal is `ML-AFFA-REQUEST-SCOPE`, then a confirmed epoch 1 with 3 frozen units and storage alive |
+      | two concurrent cancels through a barrier | both confirmed, storage alive |
+      | cancel after CANCELLED | the retained reply, with no further exchange |
+
+    - **Run.** Wheel `b253356a…`, installed sources equal to the worktree, load 3.7. The conflict tests (6),
+      `test_run_broker`, `test_affa_client`, `test_stabilization_cancel`, `test_composed_issuer_loss`,
+      `test_runtime_pending_stop`, `test_shared_closure`, `test_runtime_entry` and `test_run_teardown` gave
+      77 passed in 82 s.
+    - **Carried.** Recording the live lock holder and `RunBroker._cancel_result` in the live harness is S1c-2
+      scope.
+25. **Independent re-review of S1a-2 at `fb364bfac` (written at 19:17:25 2026-10-23): PASS, with 1 LOW.**
+    - **Confirmed.**
+      - The CANCELLED shortcut cannot return a reply from an earlier epoch or another run. Only CANCELLED and
+        ADVANCED replies, checked by `_match`, enter the history, and nothing follows a CANCELLED. A new
+        RunBroker refuses a closed connection.
+      - The stale-frame retry is bounded, and never retries a refusal caused by the deadline.
+      - The reserve probe: with a 0.4 s deadline the wait ended at 0.151 s, and the revoke reaped.
+      - The fail-safe is preserved. There is no deadlock or livelock.
+      - The ADR text matches the code, and the commit order is correct.
+    - **Runs.** `test_stabilization_cancel_conflict.py` ran three times, 6 passed each time. The related test
+      files gave 35, 36 and 42 passed, at load 3.0–4.7.
+    - **The two discriminating tests.** These fail on the pre-repair `_cancel_exchange` (probe):
+      - the stale-frame test;
+      - the after-CANCELLED test.
+    - **LOW-1.** `test_two_concurrent_cancels_are_both_confirmed` passes on the pre-repair code too. In 1 of 4
+      traced runs it did not overlap. It is therefore a smoke test of the conflict wait, not a test of the
+      stale-frame interleaving.
+    - **Disposition.** The test's docstring and finding 24 now describe it as a smoke test. This changes the
+      docstring only. The change is made before the full run, so the full run covers it.
+26. **S1a-2: the decisive full installed-wheel run and the DV12 gate (written at 20:16:35 2026-10-23).**
+    - **Run.** `evidence/affa19/stabilization-s1a2/platform-regression-20261023b-1`, head `d8b44719c`, driven by
+      `run-z-quiet-loop.sh`.
+      - Triggered at 18:21:30Z at load 3.52, on the first attempt.
+      - **Clean:** 2423 passed, 1 skipped (`test_runtime_lane_admission`: `MAESTRO_LANE_PROPOSAL` is not set; as in
+        S1a), 24 subtests, in 2511 s.
+      - The maximum sampled load was 8.07.
+    - **DV12 gate.** `scripts/validate_maestro_acceptance_evidence.py --scope code`: `accepted_as_evidence: true`,
+      with no blockers. The run and candidate code are both `33b2d1fd…`; the evidence and the review logs are
+      excluded from the comparison.
+      - The verdict is `dv12-gate-verdict.json`, and `SHA256SUMS` covers the run directory.
+    - **Next.** CAPA step 10 (parent step 9, `34c742da…`) is built after this log is committed.
+27. **CAPA successor step 10 for S1a-2 (written at 20:17:26 2026-10-23), built after finding 26 was committed.**
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1a2-step10/`, built by
+      `build-capa-20261023-stabilization-s1a2-step10.py` over `platform-regression-20261023b-1`.
+    - **Additive over step 9 (`34c742da…`).** No record was opened, changed or closed.
+    - **Register `4b04cb4aee387323fc123395e7ecf58e491f7384b4fbebce8ed668ab747569d0`:** 56 records and 687 bindings.
+      The 6 new bindings cover:
+      - this review log, as committed in `3d66178c4`;
+      - the ADR-ML3-AFFA-0001 S1a-3 amendment;
+      - `run_broker.py`;
+      - `test_stabilization_cancel_conflict.py`;
+      - the run's `SHA256SUMS` and its DV12 verdict.
+    - **Successor verifier** `verify-capa-register-20261023.py`: rc 0, with 56 records and 687 bindings verified
+      (`verification-recheck.json`).
+    - **Parent preservation** (`affa17/check-capa-parent-preservation-20261019.py`): `parent_preserved: true`. All
+      681 parent bindings were checked, none changed or lost, and the policy and schema are unchanged
+      (`parent-preservation.json`).
+    - No cause is verified beyond the deterministic reproduction, and no effectiveness is claimed.
+    - **S1a-2 is ready for the author's acceptance.** VS-09 follows on the merged revision.

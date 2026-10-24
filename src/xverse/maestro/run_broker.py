@@ -17,7 +17,7 @@ from .affa_protocol import (
     AuthorityRecipe,
     AuthorityUnit,
 )
-from .bootstrap import BootstrapSession, BootstrapChild, _sealed, seal_helper_image
+from .bootstrap import BootstrapError, BootstrapSession, BootstrapChild, _sealed, seal_helper_image
 from .launcher import ProcessObservation
 from .owner import (
     _Original,
@@ -35,6 +35,10 @@ from .prbc import BoundaryDescriptor
 from .time import HostDeadline
 
 _CREATE = object()
+# ADR-ML3-AFFA-0001 amendment S1a-3: a run cancel waits this long for a busy authority connection.
+CANCEL_LOCK_WAIT_SECONDS = 0.5
+CANCEL_LOCK_POLL_SECONDS = 0.001
+CANCEL_REAP_RESERVE_SECONDS = 0.25  # the wait ends this long before a caller's deadline (S1a review finding 23)
 
 
 @dataclass(frozen=True, slots=True)
@@ -870,6 +874,38 @@ class RunBroker(_Original):
         finally:
             self._lock.release()
 
+    def _cancel_exchange(self, end, limit):
+        """K.CANCEL; a busy connection is waited for a bounded time (ADR-ML3-AFFA-0001 amendment S1a-3).
+
+        A connection whose retained epoch history already ends in CANCELLED (a concurrent cancel, the closure
+        fence) returns that reply, as ``run_closure._fence`` does. ``ML-AFFA-CONFLICT``, and an
+        ``ML-AFFA-REQUEST-SCOPE`` for a frame whose sequence or epoch a concurrent exchange advanced, are raised
+        before any send, so such an attempt has no effect and is retried with a fresh frame. Any other error, or
+        the expiry of the bound (which keeps a reap reserve before a caller's deadline), propagates to the
+        unchanged revoke."""
+        connection = self.connection
+        wait_until = min(time.monotonic() + CANCEL_LOCK_WAIT_SECONDS, end, limit - CANCEL_REAP_RESERVE_SECONDS)
+        while True:
+            history = connection._epoch_history
+            if history and history[-1].kind is K.CANCELLED:
+                return history[-1]
+            request = AuthorityFrame(
+                K.CANCEL,
+                connection.sequence + 1,
+                int(end * 1e9),
+                connection.config.scope,
+                epoch=connection.epoch,
+            )
+            try:
+                return connection._exchange(request)
+            except BootstrapError as error:
+                code = str(error)
+                stale = code == "ML-AFFA-REQUEST-SCOPE" and (
+                    request.sequence != connection.sequence + 1 or request.epoch != connection.epoch)
+                if not (code == "ML-AFFA-CONFLICT" or stale) or time.monotonic() >= wait_until:
+                    raise
+            time.sleep(CANCEL_LOCK_POLL_SECONDS)
+
     def cancel(self, reason="run-cancel", *, deadline=None):
         self._cleanup_context()
         if self._cancel_result is not None:
@@ -886,14 +922,7 @@ class RunBroker(_Original):
         self.owner.latch.cancel(reason)
         end = min(time.monotonic() + 1, self.session._generation / 1e9 - 2, limit)
         try:
-            request = AuthorityFrame(
-                K.CANCEL,
-                self.connection.sequence + 1,
-                int(end * 1e9),
-                self.connection.config.scope,
-                epoch=self.connection.epoch,
-            )
-            reply = self.connection._exchange(request)
+            reply = self._cancel_exchange(end, limit)
             result = RunCancellation(
                 True,
                 reply.epoch,
