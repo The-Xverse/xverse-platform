@@ -9,6 +9,7 @@ import time
 
 import pytest
 from xverse.argus import EvidenceStore
+from xverse.maestro.bootstrap import MAX_PERSISTENCE_INPUT
 from xverse.maestro.coverage import CoverageAdmission, admit_coverage, assess_preclosure, canonical, digest
 from xverse.maestro.evidence import PublicExport
 from xverse.maestro.persistence import PersistenceClient, PersistenceError
@@ -64,7 +65,7 @@ def test_real_validation_flush_precedes_stage_and_reader_resolves_original_corre
     broker, facade, client, work=stack
     assert json.loads(saved['config'].private_bytes)['version']==4
     assert 'templates' not in json.loads(saved['config'].private_bytes)['coverage']['inputs']
-    assert len(saved['config'].private_bytes)<=65536
+    assert len(saved['config'].private_bytes)<=MAX_PERSISTENCE_INPUT
     from xverse.maestro.coverage import decode_runtime_coverage
     assert decode_runtime_coverage(json.loads(saved['config'].private_bytes)['coverage']).public_bytes==client.coverage.public_bytes
     assert client.coverage is saved['config'].coverage and client._sequence==1
@@ -168,7 +169,7 @@ def test_reserved_run_identity_and_root_event_capacity_reject_purely(request,mon
             **args,schedule=SimpleNamespace(policies=policies,required_events=8192,event_limit=8192))
     sequence=stack[0].session._sequence
     with pytest.raises(ValueError,match='BOOT-PERSISTENCE'):
-        stack[0].session.persistence(replace(config,private_bytes=b'x'*65537),None,deadline(.5))
+        stack[0].session.persistence(replace(config,private_bytes=b'x'*(MAX_PERSISTENCE_INPUT+1)),None,deadline(.5))
     assert stack[0].session._sequence==sequence
 
 

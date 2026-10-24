@@ -12,21 +12,33 @@ broker artifact) and starts no process. Two shapes:
   vector of the CARLA adapter, the longest Phase 7 unit. The run declares two concurrent freezes (CC-1), a
   600-tick horizon and the retained-inputs artifact. The XDL flows, endpoints and sensors that WP-12 adds are
   not modelled (review-c1 finding 1, residual).
+
+The bound cases check the Python refusal, and both native supervisor builds at the bound and one byte above it.
 """
 
 from __future__ import annotations
 
-import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from importlib.resources import files
+import json
+import os
 from pathlib import Path
+import re
+import select
+import socket
 import sys
 import time
 
+import pytest
+
 from xverse.maestro.admission import PermitApproval, PermitBinding, permit_digest
 from xverse.maestro.artifacts import ArtifactDeclaration
+from xverse.maestro.bootstrap import MAX_PERSISTENCE_INPUT, _sealed
 from xverse.maestro.collection_plan import admit_collection
 from xverse.maestro.coverage import ArtifactExpectation, admit_coverage
-from xverse.maestro.persistence import encode_configuration
+from xverse.maestro.persistence import MAX_CONFIG, encode_configuration
+from xverse.maestro.prbc import BoundaryDescriptor
 from xverse.maestro.projection import Limits, ProviderDescriptor, prepare_lifecycle
 from xverse.maestro.providers import ProbePolicy
 from xverse.maestro.public_blobs import admit_broker_artifact
@@ -38,8 +50,16 @@ from xverse_xdl.validate import validate_sources
 
 from tools.bench.persistence_scaling.bench_persistence import _process, build_documents
 from ..faults.support import fault
+from .test_affa_native import authority_binary as authority_binary
+from .test_bootstrap import boot_stack as boot_stack, supervisor_binary as supervisor_binary
 from .test_bootstrap_launcher import pin
+from .test_boundary import environment as environment
+from .test_launcher import binaries as binaries, deadline
 from .test_preparation import SCHEMAS
+from .test_run_bootstrap import run_bootstrap_binary as run_bootstrap_binary, run_stack as run_stack
+
+BOUND = 262144  # amendment C1 of ADR-ML3-BOOTSTRAP-0001 (review-c1 finding 1)
+ROLE_INPUT = 65536  # every other role input, unchanged
 
 RUN_ID = "c1-config-bound"
 PY = Path(sys.base_prefix, "bin", "python3.13").resolve()
@@ -170,3 +190,108 @@ def configuration(tmp_path, count, *, shape="bench", horizon=300, operation=0.2)
                                 journal_path=tmp_path / "m3.jsonl", evidence_root=tmp_path / "argus-maestro",
                                 schedule=schedule, coverage=coverage, collection=collection,
                                 broker_artifact=admit_broker_artifact(coverage, expected_digest=coverage.digest))
+
+
+# --- The bound: one named value, equal on the Python and native sides ---------------------------------------------
+
+def test_bound_is_named_once_and_equal_on_both_sides():
+    assert MAX_PERSISTENCE_INPUT == BOUND and ROLE_INPUT < BOUND < MAX_CONFIG
+    source = files("xverse.maestro").joinpath("native/bootstrap.c").read_text()
+    assert re.findall(r"#define MAX_STORAGE_INPUT (\d+)", source) == [str(BOUND)]
+    assert re.findall(r"#define MAX_ROLE_INPUT (\d+)", source) == [str(ROLE_INPUT)]
+    # one birth seal, role-specific; the supervisor's own input keeps its literal 65536 bound
+    assert re.findall(r"sealed\(fds\[3\],([^,]+),", source) == ["role==3?MAX_STORAGE_INPUT:MAX_ROLE_INPUT"]
+    assert "sealed(input,65536,&size)" in source
+
+
+# --- Offline dry run: the Phase 8 stand-in at 6 and 7 units -------------------------------------------------------
+
+@pytest.mark.parametrize("count", [6, 7])
+def test_phase8_stand_in_fits_the_bound_with_the_declared_margin(tmp_path, count):
+    config = configuration(tmp_path, count, shape="phase8", horizon=600, operation=0.25)
+    size = len(config.private_bytes)
+    assert len(config.prepared.units) == count
+    assert ROLE_INPUT < size  # refused before C1 (ML-BOOT-PERSISTENCE)
+    assert 2 * size <= BOUND  # admitted, with at least the declared margin (2.85 times measured at 7 units)
+
+
+# --- Python refusal: before any native request --------------------------------------------------------------------
+
+@pytest.mark.parametrize("size", [0, BOUND + 1])
+def test_python_refuses_outside_the_bound_without_a_native_request(boot_stack, size):
+    session, manager, latch, config, *_ = boot_stack
+    sequence = session._sequence
+    with pytest.raises(ValueError, match="ML-BOOT-PERSISTENCE"):
+        session.persistence(replace(config, private_bytes=b"x" * size), None, deadline(0.5))
+    assert session._sequence == sequence and not session._issued and not latch.cancelled
+
+
+# --- Native seal: both supervisor builds ----------------------------------------------------------------------------
+
+def _birth(session, manager, role, size, name):
+    helper = BoundaryDescriptor(session.config.admission.run_id, "helper:" + name, 1, name, 0)
+    manager.create_frozen(helper)
+    parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+    parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+    fd = _sealed(b"x" * size, "c1-role-input")
+    try:
+        return session.birth(role, helper, helper, peer, fd, deadline(2)), parent
+    except Exception:
+        parent.close()
+        raise
+    finally:
+        peer.close()
+        os.close(fd)
+
+
+def _accepted(session, manager, role, size):
+    child, channel = _birth(session, manager, role, size, f"c1-accepted-{role}")
+    try:
+        assert child.pid > 0 and len(session._children) == 1
+        session.cancel("c1-accepted-not-activated")
+        assert session.drain(deadline(1)).registered_children_reaped
+        assert channel.recv(1024) == b""  # never activated: the helper read nothing and sent nothing
+    finally:
+        channel.close()
+
+
+def _refused(session, manager, role, size):
+    with pytest.raises(ValueError):
+        _birth(session, manager, role, size, f"c1-refused-{role}")
+    assert not session._children and session.latch.cancelled
+    deadline_ns = time.monotonic_ns() + 1_000_000_000
+    while time.monotonic_ns() < deadline_ns and not select.select([session._pidfd], [], [], 0)[0]:
+        time.sleep(0.005)
+    assert select.select([session._pidfd], [], [], 0)[0]  # the supervisor ended through cleanup()
+
+
+def test_legacy_supervisor_accepts_a_storage_input_of_exactly_the_bound(boot_stack):
+    session, manager, *_ = boot_stack
+    _accepted(session, manager, 3, BOUND)
+
+
+@pytest.mark.parametrize("boot_stack", [{"allow_unacknowledged": True}], indirect=True)
+def test_legacy_supervisor_refuses_a_storage_input_one_byte_above_the_bound(boot_stack):
+    session, manager, *_ = boot_stack
+    _refused(session, manager, 3, BOUND + 1)
+
+
+def test_run_supervisor_accepts_a_storage_input_of_exactly_the_bound(run_stack):
+    session, manager, *_ = run_stack
+    _accepted(session, manager, 3, BOUND)
+
+
+def test_run_supervisor_refuses_a_storage_input_one_byte_above_the_bound(run_stack):
+    session, manager, *_ = run_stack
+    _refused(session, manager, 3, BOUND + 1)
+
+
+def test_run_supervisor_keeps_64_kib_for_other_role_inputs(run_stack):
+    """Role 5 (controller) is not read natively, so its size is the only birth check that differs here."""
+    session, manager, *_ = run_stack
+    _accepted(session, manager, 5, ROLE_INPUT)
+
+
+def test_run_supervisor_refuses_another_role_input_above_64_kib(run_stack):
+    session, manager, *_ = run_stack
+    _refused(session, manager, 5, ROLE_INPUT + 1)
