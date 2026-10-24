@@ -25,6 +25,9 @@ class ReadinessError(OwnerError):
 
 
 READINESS_RESERVE_SECONDS = 0.25  # S1b review LOW-1: the last marker attempt keeps one round trip
+LEASE_MAX_SECONDS = 5.0  # the native maximum of a lease renewal (bootstrap.c)
+NATIVE_CANCEL_CLOSE_SECONDS = 2.0  # the native cancel close bound (run_authority.c close_end)
+CANCEL_FENCE_MARGIN_SECONDS = 0.25  # the cancel's reply and the terminal fence
 
 
 def readiness_offsets(window, attempts):
@@ -34,6 +37,44 @@ def readiness_offsets(window, attempts):
         return (0.0,)
     reserve = min(READINESS_RESERVE_SECONDS, window / attempts)
     return tuple(k * (window - reserve) / (attempts - 1) for k in range(attempts))
+
+
+def cancel_close_reserve(operation_seconds):
+    """ADR-ML3-PROBE-0001 S1b-1 revisions RA1 and RA5: the lease a marker start step leaves after its last attempt,
+    for the native cancel close, the dispatcher's failure statement (a nominal one-RPC allowance; DR-17 caps its deadline) and the
+    cancel's reply and terminal fence."""
+    return NATIVE_CANCEL_CLOSE_SECONDS + operation_seconds + CANCEL_FENCE_MARGIN_SECONDS
+
+
+def readiness_lease_need(window, operation_seconds):
+    """The lease a marker start step needs at dispatch: the nominal pre-release allowance (operation_seconds), the
+    window W and the cancel close reserve. RA2 renews below it; admission requires it to fit a fresh lease."""
+    return operation_seconds + window + cancel_close_reserve(operation_seconds)
+
+
+def readiness_window_bound(operation_seconds):
+    """RA1/RA5 admission bound: the largest marker window W with readiness_lease_need(W) <= LEASE_MAX,
+    LEASE_MAX - cancel_close_reserve(operation_seconds) - operation_seconds."""
+    return LEASE_MAX_SECONDS - cancel_close_reserve(operation_seconds) - operation_seconds
+
+
+def capped_readiness_window(window, began, lease, deadline, reserve):
+    """RA1 run-time cap: the window spent from t0 = ``began`` so that the last attempt ends at least ``reserve``
+    before ``lease`` and never after the step ``deadline`` (monotonic seconds)."""
+    return max(0.0, min(window, lease - reserve - began, deadline - began))
+
+
+@dataclass(frozen=True)
+class ReadinessWindow:
+    """ADR-ML3-PROBE-0001 S1b-1 revision (window record): one marker start step's declared window W, the window
+    spent W', the run's lease end L and t0 (host-monotonic seconds of the run's host session). Public-safe."""
+    unit_id: str
+    generation: int
+    declared_seconds: float
+    window_seconds: float
+    lease_end: float
+    began: float
+    cut: bool
 
 
 def _positive(value):
@@ -223,6 +264,7 @@ class ProcessReadiness(_Original):
         self._suspended, self._terminated = set(), {}  # Phase 5: frozen units; units killed by a fault
         self._sequence, self._guard = 0, None
         self._readying = None  # S1b: the unit whose start() readiness attempts are in progress
+        self._windows = []  # S1b-1 revision: one ReadinessWindow per marker start step, in order
         self._probe_failure = None
         self._lock = threading.Lock()
         self._view_epoch = owner._view_epoch
@@ -263,6 +305,11 @@ class ProcessReadiness(_Original):
     def _probe(self, unit_id):
         """The declared readiness probe identity (the catalog observe condition)."""
         return next(a.condition for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
+
+    def _readiness_window(self, unit_id):
+        """The declared readiness window W = min(policy timeout, observe action timeout)."""
+        observe = next(a for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
+        return min(self._policies[unit_id].timeout_seconds, observe.timeout_seconds)
 
     def _bound(self, unit_id):
         binding = self._bindings.get(unit_id)
@@ -424,8 +471,21 @@ class ProcessReadiness(_Original):
             )
             self._released.add(unit_id)
             policy, probe = self._policies[unit_id], self._probe(unit_id)
-            observe = next(a for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
-            window, began = min(policy.timeout_seconds, observe.timeout_seconds), time.monotonic()
+            window, began = self._readiness_window(unit_id), time.monotonic()
+            record = None
+            if probe != RUNNING:
+                # RA1: a marker unit is bound to a RunUnitIssuer (bind); its run ends at the earlier of the
+                # bootstrap root's and the native authority's leases, neither renewed inside this step.
+                broker = binding.launcher.broker
+                lease = min(broker.session._lease, broker.connection._lease) / 1e9
+                # RA5: the reserve includes the dispatcher's failure statement; no schedule, no dispatcher.
+                plan = self._owner.persistence.schedule
+                reserve = cancel_close_reserve(plan.operation_seconds if plan is not None else 0.0)
+                declared = window
+                window = capped_readiness_window(window, began, lease, deadline.monotonic_seconds, reserve)
+                record = ReadinessWindow(unit_id, binding.launcher.recipe.descriptor.generation, declared,
+                                         window, lease, began, window < declared)
+                self._windows.append(record)
             offsets = readiness_offsets(window, policy.attempts)
             for attempt in range(policy.attempts):
                 if probe != RUNNING and attempt:
@@ -451,7 +511,8 @@ class ProcessReadiness(_Original):
                             0.005, max(0, deadline.monotonic_seconds - time.monotonic())
                         ),
                     )
-            raise ReadinessError("ML-PROBE-NOT-READY")
+            # S1b-1 revision: a window cut below the declared W is not "not ready within W".
+            raise ReadinessError("ML-PROBE-WINDOW-CUT" if record is not None and record.cut else "ML-PROBE-NOT-READY")
         except Exception:
             self.cancel("readiness-start-failed")
             raise
@@ -563,6 +624,11 @@ class ProcessReadiness(_Original):
             if value is not None and self._owner.latch.cancelled
             else value
         )
+
+    @property
+    def readiness_windows(self):
+        self._holder()
+        return tuple(self._windows)
 
     @property
     def observations(self):

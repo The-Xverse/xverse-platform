@@ -252,3 +252,99 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
     in that window is refused with `ML-RUNTIME-ENTRY-CONFLICT`, as any concurrent stop already was.
   - **`_fence`.** It runs after the dispatcher has finished. It can still meet an operator K.CANCEL in flight;
     that exposure existed before, and this change does not alter it.
+
+## Amendment S1a-5: a run cancel is accepted past the open authority's lease (2026-10-23, written at 23:46:02; before implementation)
+
+- **Context.** This is S1b review-log findings 14–15, diagnosed and reproduced deterministically.
+  - A cancel without a caller deadline sends K.CANCEL with `now + 1 s`.
+  - The native frame check accepts a frame on an open authority only if `until <= lease`, and it treats any other
+    frame as invalid: it cleans up and exits (`run_authority.c`, the main loop).
+  - A cancel issued in the last second of the lease therefore makes the authority exit. The client revokes, and the
+    bootstrap root kills every helper, including the storage worker, so the run's closure is lost. This has been
+    present since increment 17.
+  - A nonce-marker start step, which spends its readiness window without a lease renewal, made it likely.
+- **Decision.** The native validity check becomes `(closed || kind == CANCEL || until <= lease)`. The frame
+  checks are otherwise unchanged: scope, sequence, epoch, the reserved zeros, `until > now`, `until − now ≤ 5 s` and
+  `until ≤ generation − 2 s`.
+- **Why this is safe.** CANCEL only advances the epoch irreversibly, revokes unused tickets and freezes the boundaries.
+  It cannot release, arm or extend anything, so accepting it past the lease grants no authority. Every other kind
+  keeps the lease bound.
+- **Not changed (declared).** Once the lease has actually expired, the authority closes itself and fails closed as
+  before. A later CANCEL with the old epoch still ends it, and the closure of such a run is not guaranteed. Lease
+  expiry remains a fail-closed event.
+- **The authority binary digest changes**, so S1c re-pins it after the merge.
+- **Verification.** `test_stabilization_s1b_start_failure.py` (finding 15) must pass at the broker level and in the
+  composed runtime. The existing native, client, cancel and fence suites must stay unchanged.
+
+### Note: S1a-6 (RA4) (2026-10-24, written at 01:13:49; before implementation; thesis DR-15)
+
+- **Context.** S1b review-log finding 22, residual A-iii. `RunBroker.cancel` gave K.CANCEL a client deadline of
+  `now + 1 s`. The native authority may take up to its close bound of 2 s (`run_authority.c` `close_end`) to
+  freeze the boundaries before it replies, for example while a unit is blocked in the kernel. A freeze stalled for
+  1 to 2 s therefore timed out on the client and was answered with a revoke, even with ample lease left.
+- **Decision.** The K.CANCEL deadline becomes
+  `min(now + CANCEL_REQUEST_SECONDS, generation − 2 s, caller deadline)`, with
+  `CANCEL_REQUEST_SECONDS = NATIVE_CANCEL_CLOSE_SECONDS (2 s) + CANCEL_LOCK_WAIT_SECONDS (0.5 s) +
+  CANCEL_REPLY_MARGIN_SECONDS (0.25 s) = 2.75 s`. The frame's deadline is fixed before the S1a-3 wait, so the wait
+  is part of the budget: after a full 0.5 s wait the exchange still has 2.25 s, the close bound plus the margin.
+  This stays inside the native `until − now ≤ 5 s` and `until ≤ generation − 2 s` checks; S1a-5 already admits a
+  CANCEL past the open authority's lease.
+- **Effect on S1a-3.**
+  - **Bounded wait.** `min(now + 0.5 s, end, caller deadline − CANCEL_REAP_RESERVE_SECONDS)` is unchanged. Before
+    this note the end (`now + 1 s`) never bound it either, so the wait is still 0.5 s at most.
+  - **Reap reserve.** Unchanged: the wait still ends at least 0.25 s before a caller's deadline, and the revoke's
+    own deadline (`min(now + 1 s, generation, caller deadline)`) is unchanged.
+  - **Cost.** Without a caller deadline, an unresponsive authority now holds the cancel up to 2.75 s instead of
+    1 s before the unchanged revoke, so `RunBroker.cancel` takes up to about 3.75 s in the worst case. This
+    supersedes S1a-3's cost statement that the confirmed cancel stays inside a 1 s cancel end and a 2 s drain. A
+    responsive authority still replies as soon as its freeze completes. A caller deadline still bounds everything.
+- **Preserved.** A cancel that is not confirmed natively is still never treated as acknowledged; any exchange error
+  still reaches the revoke. A stalled freeze now yields the native CANCELLED reply with its freeze result
+  (`ML-RUN-FREEZE-UNRESOLVED` when the reason is not 5), not a revoke.
+- **Verification.** A unit test pins the frame deadline; the cancel, conflict, start-failure and closure suites must
+  stay unchanged.
+
+### Note: S1a-6 residuals and the outer budgets (L2, L3) (2026-10-24, written at 01:48:16; before implementation; thesis DR-16)
+
+- **Context.** S1b review-log finding 24, LOW-2 and LOW-3; thesis DR-16. No decision of S1a-6 changes.
+- **Residual L2 (declared): RA4 covers only an undeadlined cancel.** A caller deadline still bounds K.CANCEL, so a
+  freeze stalled past that deadline still ends in the unchanged revoke for:
+  - the lazy terminal fence, `dispatcher._cleanup`, `min(work end, now + operation_seconds, lease)` (the
+    readiness-failure path reaches it with the cancel already cached, so it sends nothing there);
+  - the teardown emergency cancel, `teardown.py` `_emergency`, under the phase deadline;
+  - the controller cancels, `controller.py`, under the active or admission deadline.
+
+  A-ii also compounds. A CANCEL read just after the native watchdog's lease close (`run_authority.c:652`) can
+  wait for two freezes, up to 4 s, which is more than 2.75 s, and that also ends in the revoke. All of these remain
+  fail-closed: an unconfirmed cancel is never taken as acknowledged.
+- **L3 check: the ≈ 3.75 s undeadlined cancel against the outer budgets.** The worst case is the 2.75 s frame (it
+  includes the ≤ 0.5 s S1a-3 lock wait) plus the 1 s revoke. A responsive authority replies within the 2 s native
+  close.
+  - **`_work_end`.** The readiness-failure cancel starts inside a start step, so no later than the active end. The
+    runtime admits `terminal ≥ active + terminal_reserve_seconds + collection_seconds + terminal_seconds`, and
+    `_work_end = min(terminal − drain_seconds, generation − 2 s)`. So `_work_end − active end ≥
+    terminal_reserve_seconds + collection_seconds + terminal_seconds − drain_seconds`, and
+    `terminal_reserve_seconds = n·per_unit + (steps + 2n + 2 + fault statements)·operation_seconds + 2 s`.
+    - That reserve has no cancel term. A 3.75 s cancel at the active end is taken from it, so the terminal
+      statements that follow get `min(_work_end, now + per_unit_seconds)` from what remains.
+    - If what remains cannot hold them, the F-08 pre-send check (`ML-SCHEDULE-SERVICE-DEADLINE`) or a terminal
+      deadline ends the run as `ML-SCHEDULE-TERMINAL-INCOMPLETE` or `ML-SCHEDULE-CLEANUP-INCOMPLETE`. That is
+      a documented failure, not silent.
+    - The numbers for the composed fixture are recorded in S1b review-log finding 25.
+  - **The S1c canceller.** `runtime_entry.stop` runs `driver.cancel`, then `owner.cancel`, then
+    `RunBroker.cancel`, synchronously and with no deadline.
+    - That call returns the cached result if the dispatcher's own cancel finished first. A concurrent one waits on
+      the busy connection inside the same 2.75 s frame budget, at most the 0.5 s S1a-3 wait.
+    - So `stop` returns within about 3.75 s plus local work. The gate and launcher cancels that follow are
+      local, and `RunUnitIssuer.cancel` returns the cached result.
+    - The harness joins its canceller with `timeout=5` after `entry.start` returns, and the canceller started
+      before that. The join therefore fits, with at least about 1.25 s of margin (before S1a-6 the bound was about
+      2 s).
+    - Under heavy load the margin is the local work only. A join that times out is reported by the harness. It
+      does not change the run's evidence.
+  - **The closure budget.** The dispatcher's cancel finishes inside `dispatch.run`, before `RunClosure.close`
+    starts with `scope.closure`. The closure's own fence (`run_closure._fence`) sends K.CANCEL with its own end,
+    `min(now + 0.5 s, …)` and the closure deadline, and does not use `RunBroker.cancel`. S1a-6 therefore does
+    not lengthen the closure. The runtime scope still bounds it: `closure ≥ terminal` and at most 90 s.
+  - **Result.** None of the three budgets is exceeded by construction. The cancel's cost is charged to the terminal
+    reserve, where it is recorded and fails closed. No admitted budget changes.

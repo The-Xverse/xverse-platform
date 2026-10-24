@@ -79,3 +79,49 @@ Amended rule:
   still gains no further start authority: ordinary requests are refused, and only the terminal kinds, the
   abort and the closure proceed. Timeouts, protocol errors, identity changes and child loss still close
   starts, revoke native Release and terminate the child.
+
+### Note: S1a-1 revision (RB1) (2026-10-24, written at 01:13:20; before implementation; thesis DR-15)
+
+- **Context.** S1b review-log findings 21–22 (B), reproduced in `test_stabilization_stack_load_failures.py`.
+  `_live` reads the cancel latch more than once. A cancel that lands after its first read was refused by the
+  final check as a plain `PersistenceError("ML-PERSIST-CLOSED")`, or one call earlier by the child check, whose
+  root check refuses a cancelled run (`ML-BOOT-CLOSED`). `_rpc` then recorded an RPC failure at `validation`
+  and called `_fail()`, so no terminal record reached the writer although the native CANCEL was confirmed.
+- **Revised rule.** A cancel observed by `_live` at its child check or at its final check, while storage has not
+  failed, on a call that neither allows a cancel nor is in flight, raises `PersistenceCancelled`
+  (`ML-PERSIST-CLOSED`), as a cancel at the first read already did. It is never a recorded RPC failure and never
+  calls `_fail()`.
+  - **Child check.** If the ordinary (`live=True`) child check is refused while the latch is cancelled and
+    storage has not failed, the child is checked as the terminal kinds check it (`live=False`: the holder and
+    capability checks only). The checks that follow still run.
+  - **The in-flight call.** The same window exists for a request already sent: a cancel that lands between the
+    in-flight read of the latch and the child check is checked the same way and then continues under the
+    unchanged in-flight grace. It does not raise `PersistenceCancelled`, because a cancel refusal is only raised
+    before send.
+- **Unchanged, and checked first.** The order of the failure checks is kept. A real child exit, a pid or socket
+  identity change, a failed holder or capability check, and `_failed` still raise `PersistenceError` and fail
+  closed. A child-check refusal while the latch is not cancelled still fails closed. Grace expiry is unchanged.
+- **Verification.** `test_stabilization_stack_load_failures.py` (B) must pass in every window, with the control
+  unchanged; the persistence, cancel and closure suites must stay unchanged.
+
+### Note: S1a-1 revision (RB1) residual L1 (2026-10-24, written at 01:48:16; before implementation; thesis DR-16)
+
+- **Context.** S1b review-log finding 24, LOW-1 and MEDIUM-3; thesis DR-16. The RB1 rule does not change.
+- **Residual L1 (declared): root-level faults that coincide with a cancel are reported one call late.**
+  - With the latch cancelled, the RB1 re-check (`live=False`) does not consult the bootstrap root. A root lease
+    expiry, a root exit, a closed root and a terminal-mode mismatch are therefore not refused at this call.
+  - A storage worker that the root has just killed may not yet be visible to the pidfd check. The call can then
+    raise `PersistenceCancelled`, and the next terminal call, which checks the child and the root, reports the
+    fault.
+  - This is the same shape as the S1a-1 first read and the terminal kinds. It adds no new class.
+- **Residual L1 (declared): the latch reason is not consulted.** A latch cancelled with `bootstrap-uncertain` or
+  `bootstrap-helper-failed` is taken as a cancel at this call. That is safe: no further start authority is
+  gained, ordinary requests are refused, and the helper or root fault is reported by the root and the closure.
+- **Fail-closed side (MEDIUM-3), now pinned by tests.** With the latch cancelled, each of the following still raises
+  a plain `PersistenceError`, recorded as the RPC failure, followed by `_fail()`:
+  - a killed storage worker (`ML-PERSIST-CHILD`);
+  - `_failed` set (`ML-PERSIST-CLOSED`);
+  - a replaced socket identity (`ML-PERSIST-CHILD`).
+
+  A root refusal without a cancel also still fails closed (the root's code). Tests:
+  `test_stabilization_stack_load_failures.py`.

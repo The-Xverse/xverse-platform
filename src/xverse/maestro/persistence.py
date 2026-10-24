@@ -728,7 +728,15 @@ class PersistenceClient(_Original):
             raise PersistenceCancelled("ML-PERSIST-CLOSED")
         # After a cancel the bootstrap root refuses ordinary use, so a call already in flight checks the
         # child as the terminal kinds do; exit and identity are still checked below.
-        check_child(self._pins[0], live=not (allow_exit or allow_cancel or (in_flight and cancelled)))
+        live = not (allow_exit or allow_cancel or (in_flight and cancelled))
+        try:
+            check_child(self._pins[0], live=live)
+        except Exception:
+            # RB1 (S1a-1 revision): a cancel that landed after the read above is checked as the terminal
+            # kinds check it; a refusal without a cancel, or after a storage failure, still fails closed.
+            if not (live and self._pins[2].cancelled and not self._failed):
+                raise
+            check_child(self._pins[0], live=False)
         channel = self._pins[1]
         info = os.fstat(channel.fileno())
         if (
@@ -742,8 +750,10 @@ class PersistenceClient(_Original):
             exited is not None or select.select([self._pidfd], [], [], 0)[0]
         ):
             raise PersistenceError("ML-PERSIST-CHILD")
-        if self._failed or (self._pins[2].cancelled and not allow_cancel and not in_flight):
+        if self._failed:
             raise PersistenceError("ML-PERSIST-CLOSED")
+        if self._pins[2].cancelled and not allow_cancel and not in_flight:
+            raise PersistenceCancelled("ML-PERSIST-CLOSED")  # RB1: a late cancel is not a storage failure
 
     def _available(self):
         # A fork/copy must never be able to revoke the original parent's authority.

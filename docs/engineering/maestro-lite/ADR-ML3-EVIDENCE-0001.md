@@ -145,3 +145,22 @@ unchanged. No observation cache, permit/issuance shortcut, new deadline, relaxed
 freshness or unguarded Release is introduced. Verify actual parent probe count,
 after-ARM parent death and early identity rejection before repeating the complete
 affected source/installed-wheel scope once.
+
+## Amendment S1a-4: per-element bounded encoding of retained inputs (2026-10-23, written at 22:08:50; before implementation)
+
+- **Context.** `_bounded` encodes the retained-inputs and public-export documents with `JSONEncoder.iterencode`
+  (CPython's pure-Python path) and checks the deadline on every yielded chunk. At the S-D1 long-run size that is
+  166,561 checks and about 1.1 s of a 2 s terminal budget (S1a review log finding 28). It made the live terminal
+  report time out under load.
+- **Decision.** `_bounded` encodes a top-level object as its sorted keys, and a list value element by element.
+  Each element uses the same encoder (`sort_keys=True`, `separators=(',', ':')`, `ensure_ascii=False`,
+  `allow_nan=False`). The cap is enforced on the running byte count after each element, and the checkpoint runs
+  once per element.
+- **The output is byte-identical** to the previous encoding for every input. A differential test proves it.
+- **Unchanged.**
+  - The 8192 limits, the caps and `ML-EVIDENCE-EXPORT-SIZE`.
+  - The checkpoint semantics (deadline and liveness). Only its granularity is now per element rather than per
+    chunk; one element is at most 64 KiB (`retained_intent` bound).
+  - The digests, the files, and every reader.
+- **Not done here.** No incremental cache of the snapshot. That is reconsidered only if the re-measured terminal
+  report still lacks margin at load 10.

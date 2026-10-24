@@ -6,7 +6,8 @@ import json
 import math
 
 from .projection import PreparedLifecycle
-from .providers import ProbePolicy
+from .providers import ProbePolicy, readiness_window_bound
+from .probe_identity import RUNNING
 from .lifecycle_evidence import _parents
 from .service_time import NORMAL_SHARE, STOP_FORCE_RESERVE_SECONDS
 
@@ -132,6 +133,15 @@ def admit_schedule(
     if set(by_unit) != set(units) or len(by_unit) != len(policies):
         raise ScheduleError("ML-SCHEDULE-POLICIES")
     policies = tuple(by_unit[u] for u in units)
+    # ADR-ML3-PROBE-0001 S1b-1 revision (RA1): a marker window that cannot fit a fresh lease is refused.
+    markers = 0
+    for unit in prepared.units:
+        observe = next((a for a in unit.plan.actions if a.phase == "observe"), None)
+        if observe is not None and observe.condition != RUNNING:
+            markers += 1
+            if min(by_unit[unit.unit_id].timeout_seconds, observe.timeout_seconds) > readiness_window_bound(
+                    operation_seconds):
+                raise ScheduleError("ML-SCHEDULE-READINESS-WINDOW")
     if not 1 <= len(ticks) <= MAX_EVENTS:
         raise ScheduleError("ML-SCHEDULE-TICK-LIMIT")
     prior = 0
@@ -197,6 +207,8 @@ def admit_schedule(
     )
     if service_operation_count is not None:
         requests += slots
+    # S1b-1 revision (RA2): at most one renewal (one storage audit) before each marker unit's start step.
+    requests += markers
     events = n + 3 * samples + 4 * n + 3 * len(prepared.steps) + len(ticks) + 2 * n + 4
     # Phase 5: intent, apply, clear and outcome statements per executable fault entry
     # (plus one arbitration note), each one request and one event.

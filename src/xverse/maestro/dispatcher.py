@@ -22,7 +22,9 @@ from .run_broker import RunUnitIssuer
 from .controller import ControllerSession
 from .owner import _Original, OwnerError, GateConnection
 from .persistence import PersistenceError
-from .providers import ProcessReadiness
+from .providers import (CANCEL_FENCE_MARGIN_SECONDS, LEASE_MAX_SECONDS, NATIVE_CANCEL_CLOSE_SECONDS, ProcessReadiness,
+                        readiness_lease_need)
+from .probe_identity import RUNNING
 from .teardown import ReverseTeardown, TeardownResult
 from .service_time import DECISION_MARGIN, NORMAL_SHARE, RPC_MAX_SECONDS, RUN_MAX_SECONDS, SIZING_MARGIN, ServiceTimes, sized
 from .time import HostDeadline
@@ -88,6 +90,8 @@ class DispatchResult:
     lease_renewals: int
     collection: object = field(default=None, repr=False)
     terminal: object = field(default=None, repr=False)
+    # ADR-ML3-PROBE-0001 S1b-1 revision: W, W', L and t0 of each marker start step (public-safe).
+    readiness_windows: tuple = ()
     lifecycle_complete: bool = field(default=False, init=False)
     ready_for_execution: bool = field(default=False, init=False)
 
@@ -786,6 +790,11 @@ class FiniteDispatcher(_Original):
             getattr(current, name).update(getattr(old, name))
         current._known_reaps.update(old._known_reaps)
         self._teardown_history += (old,)
+        # ADR-ML3-PROBE-0001 S1b-1 revision (DR-17, L1): the retired facade's readiness-window records are carried
+        # into the recovery view, in order, so DispatchResult.readiness_windows keeps one record per marker start.
+        # A cleanup-only re-commit of the view already committed carries nothing (finding 28, LOW-1).
+        if view is not self.facade:
+            view._windows[:0] = self.facade._windows
         self.teardown, self.facade, self._controller = current, view, controller
         self._bindings = tuple(view._bindings.items())
         self._pins = (view, self.owner, self.client, self.bootstrap, self.prepared, self.plan)
@@ -1362,10 +1371,40 @@ class FiniteDispatcher(_Original):
         if self._faults.incomplete:
             raise OwnerError("ML-SCHEDULE-FAULT-INCOMPLETE")
 
+    def _renew_before_marker_start(self, unit):
+        """ADR-ML3-PROBE-0001 S1b-1 revision (RA2): renew before a nonce-marker start step whose lease left is
+        below its need (W + cancel close reserve + pre-release allowance), within the native 5 s maximum and
+        generation - 2 s. If the lease cannot be extended the step goes ahead and the run-time cap records the
+        cut; a renewal failure keeps _renew_service's fail-closed handling."""
+        if not self._native or self.facade._probe(unit) == RUNNING:
+            return
+        need = readiness_lease_need(self.facade._readiness_window(unit), self.plan.operation_seconds)
+        now = time.monotonic()
+        leases = [self.bootstrap._lease / 1e9] + [
+            gate.lease_ns / 1e9 for other, gate in self.gates.items() if other not in self.teardown._stopped]
+        if min(leases) - now >= need:
+            return
+        if min(now + LEASE_MAX_SECONDS, self.bootstrap._generation / 1e9 - 2) <= max(leases):
+            return
+        self._renew_service(self._active_end)
+
+    def _fence_cap(self, end):
+        """ADR-ML3-PROBE-0001 S1b-1 revision (DR-17, M1): on the lazy (root-fenced) failure path, a statement sent
+        after a cancel and before the terminal fence ends no later than the bootstrap root lease less the native
+        close still ahead (2.0 s while the run broker has no cancel result, 0 once it has one) and the 0.25 s for
+        the cancel's reply and the fence. A storage stall then costs that statement (a recorded, fail-closed
+        persistence failure), never the fence. ``end`` and the result are host-monotonic seconds."""
+        if not self._lazy:
+            return end
+        close = NATIVE_CANCEL_CLOSE_SECONDS if self._broker._cancel_result is None else 0.0
+        return min(end, self.bootstrap._lease / 1e9 - close - CANCEL_FENCE_MARGIN_SECONDS)
+
     def _effect(self, step):
         self._service()
         unit = step.unit_id
         need = reserve = 0.0
+        if step.phase == "start":
+            self._renew_before_marker_start(unit)
         if step.phase in ("stop", "cleanup"):
             need = self.teardown._need(unit, step.phase)
             if step.duration_ticks == 0:
@@ -1647,12 +1686,14 @@ class FiniteDispatcher(_Original):
                         "failure",
                         HostDeadline(
                             self.owner.session,
-                            min(
+                            # DR-17 (M1): it precedes the terminal fence after the cancel, so it is capped before
+                            # the fence; a stall times out here (ML-PERSIST-TIMEOUT, recorded) and the fence runs.
+                            self._fence_cap(min(
                                 self._work_end,
                                 # Terminal-section statement: per-unit budget like run-terminal,
                                 # capped by the admitted work window (finding 386).
                                 time.monotonic() + self.plan.per_unit_seconds,
-                            ),
+                            )),
                         ),
                         unit=unit,
                         phase=phase,
@@ -1807,6 +1848,7 @@ class FiniteDispatcher(_Original):
                 self.lease_renewals,
                 self._collection_receipt,
                 report_receipt,
+                tuple(self.facade._windows),
             )
             return self._result
         finally:
@@ -1870,7 +1912,11 @@ class _FaultStatements:
     def decision(self, entry, decision):
         dispatcher = self._dispatcher
         try:
-            dispatcher._send("fault", dispatcher._end(), entry=entry.entry_id, fault=entry.fault_id,
+            end = dispatcher._end()
+            if dispatcher._fault_best_effort and dispatcher.owner.latch.cancelled:
+                # DR-17 (M1): a best-effort statement on the failure path after a cancel precedes the fence.
+                end = HostDeadline(dispatcher.owner.session, dispatcher._fence_cap(end.monotonic_seconds))
+            dispatcher._send("fault", end, entry=entry.entry_id, fault=entry.fault_id,
                              faultKind=entry.fault_kind, phase=decision.phase, outcome=decision.outcome,
                              tick=decision.tick, diagnostic=decision.diagnostic, detail=dict(decision.detail))
         except Exception:

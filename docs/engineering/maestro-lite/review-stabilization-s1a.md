@@ -693,3 +693,109 @@ suite (FR-002). The bench virtual environments and run data are on the loop10 im
       (`parent-preservation.json`).
     - No cause is verified beyond the deterministic reproduction, and no effectiveness is claimed.
     - **S1a-2 is ready for the author's acceptance.** VS-09 follows on the merged revision.
+28. **S1a-3 (thesis S-D9, path (a) of FR-002): the long-run terminal report is dominated by the retained-inputs encoder
+    (written at 22:08:50 2026-10-23; before any repair).**
+    - **Branch.** `candidate/lite-stabilization-s1a3-20261023`, stacked on the S1b candidate `0929bd2d5`, because
+      both touch the evidence path.
+    - **Trigger.** S1c finding 32: a live long-run (600 ticks, 4 units, load 8.4) hit the 2 s `terminal-report`
+      deadline (`ML-PERSIST-TIMEOUT`). It took 0.80 s at load 6.3.
+    - **Profile.** The bench is `tools/bench/persistence_scaling` at 600 ticks with 4 units and a 4 MiB retained cap,
+      on the S1b wheel at load 3.7, with a bench-only, measurement-only timer hook in a separate venv
+      (`.x-verse-build/cache/lite-stabilization-s1b/venv-prof`). Run
+      `runs/lite-stabilization-s1/s1a3-profile-20261023/h600-e`:
+      - `WorkerTerminal.publish`: 1303 ms (`terminal-report` client round trip 1313 ms).
+      - `retained_snapshot`: 1090 ms.
+      - `WorkerTerminal.checkpoint`: **166,561 calls**, about 386 ms including the timer overhead.
+      - `assess_preclosure`: 165 ms.
+      - `_json` (11 calls): 36 ms.
+      - `close`: 470 ms, a separate call.
+    - **A cProfile attempt** (`h600-c`) pushed the call to its 1.988 s deadline and was killed. That is a measurement
+      artefact, recorded and not used.
+    - **Cause.** `evidence._bounded` streams the retained-inputs document (about 1.3 MB, about 800 annotations) with
+      `JSONEncoder.iterencode`. That is CPython's pure-Python encoder, which yields very small chunks, and it calls
+      the terminal checkpoint (the worker liveness check plus the deadline) once per chunk. The per-event
+      validation loop in `retained_snapshot` adds one checkpoint per event.
+    - **Repair plan (ADR-ML3-EVIDENCE-0001 amendment S1a-4, before the code).**
+      - Encode the top-level object field by field, and list values element by element, with the same encoder
+        settings. The C encoder is used per element. The size cap is checked after every element; the checkpoint
+        runs once per element and at least every 64 KiB.
+      - The output must be **byte-identical** to today's `_bounded` for every input. A differential test runs over
+        generated and recorded bodies.
+      - Memory stays bounded by one element plus the cap. The 8192-event and cap checks are unchanged.
+      - No incremental cache is introduced unless the re-measurement shows it is still needed.
+29. **The S1a-3 repair, per amendment S1a-4 (written at 22:14:53 2026-10-23).**
+    - **Code.** `evidence._bounded` now emits a top-level object key by key, sorted, and a list value element by
+      element, each through the same `JSONEncoder` (the C path). The size cap is checked after every element and
+      the checkpoint runs once per element. Any other shape keeps the original chunked encoding.
+    - **Differential test** `tests/thesis_lite/maestro/test_stabilization_bounded_encoding.py`: 362 passed. It covers:
+      - byte identity against a verbatim copy of the old implementation, over 300 generated bodies and values
+        (unicode, escapes, `-0.0`, `1e-310`, large integers, nesting);
+      - identical refusal at every cap (60 bodies, four caps each);
+      - NaN and infinity refused as before;
+      - the checkpoint running per element, under a tenth of the previous count, and still able to stop the
+        encoding.
+    - **Re-measurement** on the same bench (600 ticks, 4 units, 4 MiB cap), at load 3.3–3.5:
+
+      | Measure | Before | After (runs `fixed-h600-a/b/c`) |
+      | --- | --- | --- |
+      | `retained_snapshot` | 1090 ms | 46–50 ms |
+      | `publish` | 1303 ms | 269–289 ms |
+      | checkpoint calls | 166,561 | 1810 |
+
+      - `close` takes 491–530 ms: `verify_runtime_closed` (the independent re-read of the closed evidence) 393 ms
+        and `argus.finalize` 90 ms. That is unchanged by design.
+      - Both terminal calls are now about 0.27 s and 0.5 s against their 2 s budget at low load.
+      - The live terminal cost was 1.5–2.5 times the bench cost under load 6–8.4, so the expected live figures are
+        at most about 0.7 s and 1.3 s.
+      - The run succeeded, with cleanup complete.
+30. **Independent review of S1a-3 (`2497b5a4d`; written at 22:22:19 2026-10-23): PASS, LOW only.**
+    - **Confirmed.**
+      - The reviewer's 48-case standalone probe on the venv's Python 3.13.13, with the C encoder active, gave
+        identical bytes or the identical exception type. It covered:
+        - tuples, `OrderedDict`, dict and list subclasses;
+        - int, float and str subclasses, and `IntEnum`;
+        - big ints and the 4300-digit limit;
+        - `-0.0`, `5e-324` and other awkward floats;
+        - nested and top-level non-str keys (the fallback path);
+        - surrogates, NaN, cycles and shared references.
+      - A cap sweep over 300 bodies gave 0 mismatches. Memory is about one element plus the cap.
+      - A 64 KiB element encodes in about 2 ms.
+      - The figures in finding 29 are consistent with finding 28.
+      - The commit order is correct.
+      - 362 differential cases passed.
+    - **LOW findings, dispositioned.** The full run had already started on `2497b5a4d`, so no code or test is changed
+      after it.
+      - **(1)** An element that both crosses the cap and fails to encode raises `ValueError` instead of
+        `ML-EVIDENCE-EXPORT-SIZE`. Callers cannot reach this: every element was already serialized with
+        `allow_nan=False`. Accepted.
+      - **(2)** Nesting deeper than about 1200 levels now encodes where the original raised `RecursionError`. The
+        writer bounds nesting at 128. Accepted.
+      - **(3) Wording correction to amendment S1a-4 and finding 28.** The 64 KiB element bound holds for retained
+        claims (`retained_intent`). Internal events and `publicM3` records are small by construction, and only the
+        writer's `max_event_bytes` bounds them. Even a 1 MiB element encodes in tens of ms.
+      - **(4)** The differential test does not generate tuples, subclasses or top-level non-str keys. A mutant that
+        dropped the non-str-key fallback would pass it.
+        - The disposition rests on the reviewer's probe, which covers those cases and is kept as evidence in the
+          thesis scratch record.
+        - The test generator is to be widened with the next code change in this area.
+        - This is recorded for the author.
+31. **S1a-3: the decisive full installed-wheel run and the DV12 gate (written at 23:03:56 2026-10-23).**
+    - **Run.** `evidence/affa19/stabilization-s1a3/platform-regression-20261023d-1`, head `2497b5a4d`.
+      - Triggered at 21:21:34Z at load 3.22, on the first attempt.
+      - **Clean:** 2886 passed (including the 362 differential cases), 1 skipped (lane admission), 39 subtests, in
+        2438 s.
+      - The maximum sampled load was 5.11.
+    - **DV12 gate** (`--scope code`, candidate `5e81c7b05`): `accepted_as_evidence: true`, with no blockers. The run
+      and candidate code are both `868a21b6…`; the review-log commit after the run is outside the code scope.
+32. **CAPA successor step 12 for S1a-3 (written at 23:05:08 2026-10-23), built after finding 31 was committed (`2d5854876`).**
+    - **Location.** `evidence/affa19/capa-20261023-stabilization-s1a3-step12/`, built by
+      `build-capa-20261023-stabilization-s1a3-step12.py`.
+    - **Additive over step 11 (`3eb39cda…`).** No record was opened, changed or closed.
+    - **Register `d095ac0769944532d6dd4d93d922dc27bb16421b498f7be22c4946747c36ddec`:** 56 records and 718 bindings. The 6
+      new bindings cover this log, the ADR, `evidence.py`, the differential test, and the run's `SHA256SUMS` and DV12
+      verdict.
+    - **Verifier:** rc 0, with 718 bindings verified.
+    - **Parent preservation:** `true`. All 712 parent bindings were checked, and none changed or was lost.
+    - **Process.** The builder's docstring was corrected after the build; the builder is not a bound file. The partial
+      run files committed with finding 30 were superseded by their final versions in `2d5854876`.
+    - **S1a-3 is ready for the author's acceptance**, stacked on S1b, which is stacked on S1a-2.

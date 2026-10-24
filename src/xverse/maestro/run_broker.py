@@ -37,6 +37,7 @@ from .owner import (
 )
 from .persistence import PersistenceClient
 from .prbc import BoundaryDescriptor
+from .providers import NATIVE_CANCEL_CLOSE_SECONDS
 from .time import HostDeadline
 
 _CREATE = object()
@@ -44,6 +45,10 @@ _CREATE = object()
 CANCEL_LOCK_WAIT_SECONDS = 0.5
 CANCEL_LOCK_POLL_SECONDS = 0.001
 CANCEL_REAP_RESERVE_SECONDS = 0.25  # the wait ends this long before a caller's deadline (S1a review finding 23)
+# ADR-ML3-AFFA-0001 S1a-6 (RA4): the K.CANCEL deadline covers the native close bound (run_authority.c close_end)
+# after a full S1a-3 lock wait, plus a reply margin.
+CANCEL_REPLY_MARGIN_SECONDS = 0.25
+CANCEL_REQUEST_SECONDS = NATIVE_CANCEL_CLOSE_SECONDS + CANCEL_LOCK_WAIT_SECONDS + CANCEL_REPLY_MARGIN_SECONDS
 # S1b (design-stabilization-s1b.md): TERM is a short request; the grace is waited out with the exchange lock free.
 TERM_REQUEST_SECONDS = 0.5
 TERM_POLL_SECONDS = 0.01
@@ -1053,7 +1058,7 @@ class RunBroker(_Original):
         limit = deadline.monotonic_seconds if deadline is not None else float("inf")
         self.owner._closed = True
         self.owner.latch.cancel(reason)
-        end = min(time.monotonic() + 1, self.session._generation / 1e9 - 2, limit)
+        end = min(time.monotonic() + CANCEL_REQUEST_SECONDS, self.session._generation / 1e9 - 2, limit)
         try:
             reply = self._cancel_exchange(end, limit)
             result = RunCancellation(
