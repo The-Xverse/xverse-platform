@@ -63,3 +63,17 @@ attribute the death to the fault; while frozen, the unit's health expectations a
 Owned relays prove message and observation faults; live X-COM flows are Phase 6. `freeze` needs
 the cgroup v2 boundary of the native launcher; otherwise `failed-to-apply`. Reproducibility covers
 decision sequences only.
+
+## Amendment ST-1: simulator-time mode (2026-10-24, `maestro-lite/ADR-ML3-SIMTIME-0001.md`)
+
+Recorded before code (`maestro-lite/review-simtime-faults.md` finding 1).
+- **Activation.** A prepared lifecycle with a `SimulationClock` binding resolves its schedule in simulator time
+  through `xverse.faults.simtime`, not through `resolve_schedule`.
+- **Window.** The onset and duration stay in exact ns. The window is `[onsetStep, clearStep]` on the declared
+  step grid, and the horizon is checked against `horizon_ns`.
+- **Kinds.** Message kinds `delay` (`delay-ns`), `loss` and `stale`, and the three assurance kinds, act at the
+  remote relay of the clock-source unit. The assurance kinds are executable there only. `freeze` acts through the
+  step-hold handshake. Every other kind is refused in this mode.
+- **Evidence.** Each decision carries both clocks (`simulatorNs`, `simulatorStep` and `hostNs`) in its detail.
+- **Tick mode is unchanged.** It keeps every rule above. `delay-ns` is refused in tick mode, and `delay-ticks`
+  in simulator-time mode.

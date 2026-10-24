@@ -50,7 +50,11 @@ class RuntimeResult:
 
 class _OriginalRuntimeRun(_Original):
     """Original internal composition, never constructed from public run metadata."""
-    def __init__(self,persistence,launcher,units,*,controller_sessions=1,allow_restarts=False,allow_controller_recovery=False):
+    def __init__(self,persistence,launcher,units,*,controller_sessions=1,allow_restarts=False,allow_controller_recovery=False,
+                 fault_clock_channel=None):
+        from xverse.faults.simtime import HubChannel
+        if fault_clock_channel is not None and type(fault_clock_channel) is not HubChannel:
+            raise OwnerError('ML-RUNTIME-ENTRY-INPUT')
         if (type(persistence) is not PersistenceInput or type(launcher) is not OriginalBootstrapLauncher
             or type(units) is not tuple or any(type(u) is not UnitAdmission for u in units)
             or type(controller_sessions) is not int or not 1<=controller_sessions<=16
@@ -72,6 +76,7 @@ class _OriginalRuntimeRun(_Original):
         for u in units:u.__post_init__()
         self._retain()
         self._persistence,self._launcher,self._units=persistence,launcher,units
+        self._fault_channel=fault_clock_channel  # ADR-ML3-SIMTIME-0001: trusted channel to the clock-source unit
         self._pins=(persistence,launcher,units,persistence.private_bytes,controller_sessions,allow_restarts,allow_controller_recovery)
         self._lock=threading.Lock()
         self._stop_lock=threading.Lock()
@@ -150,7 +155,8 @@ class _OriginalRuntimeRun(_Original):
                 controller=self._broker.admit_controller('runtime-controller',self._startup_end())
                 self._driver=FiniteDispatcher(facade,self._session,
                     gates=tuple((u.unit_id,self._broker.connection) for u in config.prepared.units),controller=controller,
-                    allow_restarts=self._pins[5],allow_controller_recovery=self._pins[6])
+                    allow_restarts=self._pins[5],allow_controller_recovery=self._pins[6],
+                    fault_clock_channel=self._fault_channel)
                 self._runtime_pins=(self._session,self._storage,self._broker,self._driver)
                 dispatch=self._driver.run(scope.active,scope.terminal)
             except BaseException as error:

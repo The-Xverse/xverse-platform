@@ -272,7 +272,8 @@ def _verify_prepared(prepared, result, resources) -> None:
         _deny("ML-PERMIT-PLAN", "exact PreparedLifecycle type required")
     pins = tuple({unit.provider for unit in prepared.units})
     recompiled = prepare_lifecycle(
-        result, resources, provider_descriptors=pins, limits=prepared.limits
+        result, resources, provider_descriptors=pins, limits=prepared.limits,
+        fault_clock=prepared.fault_clock,
     )
     if recompiled != prepared:
         _deny("ML-PERMIT-PLAN", "prepared structure does not reproduce original XDL")

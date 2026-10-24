@@ -55,3 +55,10 @@ Keep all 24 ML-SR and 18 unvalidated/null-mapped REF-002 source parents, all 30
 scenario pairs/90 declared endpoints and nine runtime cases. No factory run,
 canonical-note edit, main merge, legacy execution or scientific parameter/result
 change. Sol/high recommended for this lifecycle/concurrency step.
+
+Note ST-1 (2026-10-24, ADR-ML3-SIMTIME-0001): `FiniteDispatcher` takes an optional trusted
+`fault_clock_channel` (a `HubChannel`). When the prepared lifecycle carries a simulation-clock binding,
+the Phase 5 scheduler slot holds a `SimTimeFaultScheduler`. That scheduler is polled once per tick
+cycle without blocking, under the same `advance`/`cancel`/`finish` contract. A missing channel is
+refused at begin (`ML-SCHEDULE-FAULT-CLOCK`). Host pacing, health, leases and the tick sequence are
+unchanged; simulator time never drives Maestro ticks.

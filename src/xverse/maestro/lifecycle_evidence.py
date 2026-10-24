@@ -68,6 +68,7 @@ class OutcomeJournal:
         self.generation_samples = {}
         self.retained_claims = {}
         self.events = {}
+        self.fault_ordinal = 0  # last Phase 5 fault event ordinal (not lifecycle coverage; ADR-ML3-SIMTIME-0001 ST-2a)
         self.sequence = 0
         self.event_limit = 8192
         self.issued_handles = {}

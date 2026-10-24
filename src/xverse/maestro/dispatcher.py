@@ -440,7 +440,10 @@ def _validate_fault_reply(events, m3, request, dispatcher, client, clock_tick):
 
 class FiniteDispatcher(_Original):
     def __init__(self, facade, bootstrap, *, gates, controller=None, allow_restarts=False,
-                 allow_controller_recovery=False):
+                 allow_controller_recovery=False, fault_clock_channel=None):
+        from xverse.faults.simtime import HubChannel
+        if fault_clock_channel is not None and type(fault_clock_channel) is not HubChannel:
+            raise OwnerError("ML-SCHEDULE-FAULT-CLOCK")
         if (
             type(facade) is not ProcessReadiness
             or type(bootstrap) is not BootstrapSession
@@ -545,6 +548,7 @@ class FiniteDispatcher(_Original):
         self._fault_unit = None  # unit terminated by an applied crash fault
         self._fault_ended_by = None  # entry id of that crash
         self._fault_best_effort = False
+        self._fault_channel = fault_clock_channel  # ADR-ML3-SIMTIME-0001: trusted channel to the clock-source unit
         # One per-run estimator shared with every teardown (ADR-ML3-BUDGET-0001).
         self._times = ServiceTimes()
         self.teardown = ReverseTeardown(
@@ -1291,6 +1295,9 @@ class FiniteDispatcher(_Original):
         faults = getattr(self.prepared, "faults", ())
         if not faults:
             return
+        clock = getattr(self.prepared, "fault_clock", None)
+        if clock is not None:
+            return self._begin_simtime_faults(faults, clock)
         from xverse.faults import FaultError, resolve_schedule
         from xverse.faults.boundary import MessageRelayBoundary, ObservationRelayBoundary, ProcessBoundary
         from xverse.faults.scheduler import FaultScheduler
@@ -1332,6 +1339,47 @@ class FiniteDispatcher(_Original):
         if self._faults.run_failed:
             raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
 
+    def _begin_simtime_faults(self, faults, clock):
+        """ADR-ML3-SIMTIME-0001: resolve in simulator time; freezes go through the step hold, message and
+        assurance entries through the remote relay of the clock-source unit, over the trusted channel."""
+        from xverse.faults import FaultError
+        from xverse.faults.boundary import ProcessBoundary
+        from xverse.faults.simtime import HOLD, HubChannel, SimTimeFaultScheduler, resolve_simtime
+        if type(self._fault_channel) is not HubChannel:
+            raise OwnerError("ML-SCHEDULE-FAULT-CLOCK")
+        plan_view = {"selection": {"system": {"uri": faults[0]["targetRef"]["uri"]}}, "faultSchedule": list(faults)}
+        try:
+            entries = resolve_simtime(plan_view, clock)
+        except FaultError as error:
+            raise OwnerError("ML-SCHEDULE-FAULT-RESOLVE") from error
+        boundaries = {}
+        for entry in entries:
+            if entry.mode == HOLD and (entry.target_collection, entry.target_element) not in boundaries:
+                unit = f"{entry.target_uri}#componentInstances/{entry.target_element}"
+                boundaries[(entry.target_collection, entry.target_element)] = ProcessBoundary(
+                    entry.target_element, _LauncherFaultOperations(self, unit))
+        source = f"{entries[0].target_uri}#componentInstances/{clock.source_unit}"
+
+        def source_live():
+            return source in self.facade._bindings and source not in self.facade._terminated
+
+        self._fault_boundaries = boundaries
+        self._fault_entries = {entry.entry_id: entry for entry in entries}
+        self._faults = SimTimeFaultScheduler(self.client.run_id, entries, clock, self._fault_channel, boundaries,
+                                             source_live=source_live, seed=getattr(self.prepared, "fault_seed", 0),
+                                             listener=_FaultStatements(self))
+        for entry in entries:
+            self._send("fault", self._end(), entry=entry.entry_id, fault=entry.fault_id, faultKind=entry.fault_kind,
+                       phase="intent", outcome="declared", tick=self._tick, diagnostic=None,
+                       detail={"atNs": entry.at_ns, "durationNs": entry.duration_ns, "onsetStep": entry.onset_step,
+                               "clearStep": entry.clear_step, "stepNs": clock.step_ns, "executable": True,
+                               "boundaryClass": entry.boundary_class,
+                               "boundaryMode": "step-hold" if entry.mode == HOLD else "remote-relay",
+                               "parameters": dict(entry.parameters.values)})
+        self._faults.start()
+        if self._faults.run_failed:
+            raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
+
     def _advance_faults(self):
         """Run the scheduler for the current tick; a refused application ends the run as declared.
 
@@ -1342,7 +1390,9 @@ class FiniteDispatcher(_Original):
             return
         decisions = self._faults.advance(self._tick)
         if self._faults.run_failed:
-            raise OwnerError("ML-SCHEDULE-FAULT-APPLY")
+            failure = self._faults.failure_diagnostic or ""
+            raise OwnerError("ML-SCHEDULE-FAULT-CLOCK" if failure.startswith("XVERSE-FAULT-SIMTIME")
+                             else "ML-SCHEDULE-FAULT-APPLY")
         for decision in decisions:
             entry = self._fault_entries.get(decision.entry_id)
             if entry is not None and entry.fault_kind == "crash" and decision.phase == "apply" and decision.outcome == "applied":
@@ -1368,6 +1418,12 @@ class FiniteDispatcher(_Original):
         if self._faults is None:
             return
         self._faults.finish(self._tick)
+        from xverse.faults.simtime import SimTimeFaultScheduler
+        if type(self._faults) is SimTimeFaultScheduler and self._faults.run_failed:
+            # ADR-ML3-SIMTIME-0001 ST-2 (M3): a protocol failure detected at finish, mapped as _advance_faults maps it
+            failure = self._faults.failure_diagnostic or ""
+            raise OwnerError("ML-SCHEDULE-FAULT-CLOCK" if failure.startswith("XVERSE-FAULT-SIMTIME")
+                             else "ML-SCHEDULE-FAULT-APPLY")
         if self._faults.incomplete:
             raise OwnerError("ML-SCHEDULE-FAULT-INCOMPLETE")
 

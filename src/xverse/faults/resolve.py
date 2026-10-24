@@ -124,6 +124,8 @@ def resolve_entry(entry: Mapping[str, Any], system_uri: str, planned_ticks: Sequ
     else:
         raise FaultError("XVERSE-FAULT-TRIGGER", f"fault {fault_id!r} carries no resolvable trigger")
     parameters = validate_parameters(spec, _sequence(entry.get("parameters")), fault_id)
+    if "delay-ns" in parameters.values:  # simulator-time parameter (ADR-ML3-SIMTIME-0001); tick mode keeps delay-ticks
+        raise FaultError("XVERSE-FAULT-PARAMETER", f"fault {fault_id!r} parameter 'delay-ns' needs a simulation-clock binding")
     return ResolvedEntry(
         entry_id=str(entry.get("entryId", f"fault:{fault_id}")),
         fault_id=fault_id,

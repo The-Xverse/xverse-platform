@@ -56,6 +56,22 @@ CONFIG_KEYS = {
 }
 
 
+def _decode_fault_clock(config):
+    """ADR-ML3-SIMTIME-0001 note ST-1: the optional simulation-clock binding, exactly as encoded."""
+    if "fault_clock" not in config:
+        return None
+    from xverse.faults.simtime import SimulationClock
+
+    value = config["fault_clock"]
+    if type(value) is not dict or set(value) != {"domain", "source_unit", "step_ns", "horizon_ns",
+                                                 "max_step_host_s", "handshake_s", "hold_bound_s"}:
+        raise PersistenceError("ML-PERSIST-FAULT-CLOCK")
+    try:
+        return SimulationClock(**value)
+    except (TypeError, ValueError) as error:
+        raise PersistenceError("ML-PERSIST-FAULT-CLOCK") from error
+
+
 def _decode_binding(row):
     row = dict(row)
     permit = dict(row.pop("permit"))
@@ -99,6 +115,7 @@ def _load(config, checkpoint):
             ProviderDescriptor(**d) for d in config["providers"]
         ),
         limits=Limits(**config["limits"]),
+        fault_clock=_decode_fault_clock(config),
     )
     if (
         prepared.experiment_digest != config["experiment_digest"]
@@ -247,7 +264,7 @@ def serve(channel, input_fd):
         config = _strict_json(private)
         if (
             type(config) is not dict
-            or not CONFIG_KEYS <= set(config) <= CONFIG_KEYS | {"schedule", "future_contexts", "public_exports", "coverage", "broker_artifact", "collection"}
+            or not CONFIG_KEYS <= set(config) <= CONFIG_KEYS | {"schedule", "future_contexts", "public_exports", "coverage", "broker_artifact", "collection", "fault_clock"}
             or type(config["version"]) is not int
             or config["version"] != (6 if "collection" in config else 5 if "broker_artifact" in config else 4 if "coverage" in config else 3 if "public_exports" in config else 2 if "future_contexts" in config else 1)
             or "broker_artifact" in config and "coverage" not in config

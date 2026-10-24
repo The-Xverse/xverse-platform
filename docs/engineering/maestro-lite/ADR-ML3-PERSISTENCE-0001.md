@@ -132,3 +132,9 @@ On the bootstrap path, the sealed persistence configuration is now bounded at 26
 (`bootstrap.MAX_PERSISTENCE_INPUT`, native `MAX_STORAGE_INPUT`). It was bounded at 65 536 before, by the generic
 role-input seal. The input form, the 1 MiB outer bound (`MAX_CONFIG`) and this ADR's rules are unchanged
 (`review-c1.md` finding 1).
+
+## Note ST-1: the simulation-clock binding (2026-10-24, ADR-ML3-SIMTIME-0001)
+
+The sealed configuration gains an optional `fault_clock` key, present only when the prepared lifecycle
+declares a `SimulationClock`. The worker passes it to `prepare_lifecycle`, so the rederived lifecycle digest
+includes it. Configurations without it are unchanged.

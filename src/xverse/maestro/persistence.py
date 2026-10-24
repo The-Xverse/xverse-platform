@@ -169,7 +169,8 @@ def encode_configuration(
     )
     descriptors = tuple(dict.fromkeys(u.provider for u in prepared.units))
     check = prepare_lifecycle(
-        result, resources, provider_descriptors=descriptors, limits=prepared.limits
+        result, resources, provider_descriptors=descriptors, limits=prepared.limits,
+        fault_clock=getattr(prepared, "fault_clock", None),
     )
     if check.canonical_bytes != prepared.canonical_bytes:
         raise PersistenceError("ML-PERSIST-PREPARATION")
@@ -215,6 +216,8 @@ def encode_configuration(
         "bindings": [_plain(asdict(b)) for b in bindings],
         "approvals": [_plain(asdict(a)) for a in approvals],
     }
+    if getattr(prepared, "fault_clock", None) is not None:  # ADR-ML3-SIMTIME-0001 note ST-1: optional key
+        data["fault_clock"] = asdict(prepared.fault_clock)
     if futures:
         data["version"] = 2
         data["future_contexts"] = [

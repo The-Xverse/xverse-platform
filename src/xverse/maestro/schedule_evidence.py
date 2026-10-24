@@ -217,6 +217,7 @@ class ScheduleJournal:
         check(deadline)
         self.evidence.writer.flush_buffer()
         fields["ingestionOrdinal"] = ordinal
+        self.evidence.fault_ordinal = max(self.evidence.fault_ordinal, ordinal)  # ST-2a: collection continuity
         if phase == "intent":
             self.fault_intent[body["entry"]] = event_id
         self.fault_last[body["entry"]] = event_id

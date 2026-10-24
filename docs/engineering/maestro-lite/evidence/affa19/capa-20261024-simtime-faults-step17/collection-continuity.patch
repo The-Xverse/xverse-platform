@@ -1,0 +1,38 @@
+diff --git a/src/xverse/maestro/collection_runtime.py b/src/xverse/maestro/collection_runtime.py
+index 1d7e14225..b3233e4c7 100644
+--- a/src/xverse/maestro/collection_runtime.py
++++ b/src/xverse/maestro/collection_runtime.py
+@@ -139,7 +139,8 @@ class WorkerCollection:
+ 
+ def _record_collect(evidence, claims, operation, metadata_digest, complete, deadline, check):
+     from .evidence import retained_intent
+-    previous = max([0] + [e['ingestionOrdinal'] for e in evidence.events.values()]
++    # ST-2a (ADR-ML3-SIMTIME-0001): a Phase 5 fault event may be the last one before collection
++    previous = max([0, getattr(evidence, 'fault_ordinal', 0)] + [e['ingestionOrdinal'] for e in evidence.events.values()]
+                    + [retained_intent(c)['ingestionOrdinal'] for c in evidence._all_claims(claims)])
+     fields = dict(eventId=operation + '-collect', producerId='maestro.collection17', eventKind='annotation',
+         producerSequence=1, correlationId=evidence.permits._run_id, causationId=evidence.permits._run_id,
+diff --git a/src/xverse/maestro/lifecycle_evidence.py b/src/xverse/maestro/lifecycle_evidence.py
+index f25dae478..b7af95fb6 100644
+--- a/src/xverse/maestro/lifecycle_evidence.py
++++ b/src/xverse/maestro/lifecycle_evidence.py
+@@ -68,6 +68,7 @@ class OutcomeJournal:
+         self.generation_samples = {}
+         self.retained_claims = {}
+         self.events = {}
++        self.fault_ordinal = 0  # last Phase 5 fault event ordinal (not lifecycle coverage; ADR-ML3-SIMTIME-0001 ST-2a)
+         self.sequence = 0
+         self.event_limit = 8192
+         self.issued_handles = {}
+diff --git a/src/xverse/maestro/schedule_evidence.py b/src/xverse/maestro/schedule_evidence.py
+index 5cb4a5cc9..430abd5c7 100644
+--- a/src/xverse/maestro/schedule_evidence.py
++++ b/src/xverse/maestro/schedule_evidence.py
+@@ -217,6 +217,7 @@ class ScheduleJournal:
+         check(deadline)
+         self.evidence.writer.flush_buffer()
+         fields["ingestionOrdinal"] = ordinal
++        self.evidence.fault_ordinal = max(self.evidence.fault_ordinal, ordinal)  # ST-2a: collection continuity
+         if phase == "intent":
+             self.fault_intent[body["entry"]] = event_id
+         self.fault_last[body["entry"]] = event_id

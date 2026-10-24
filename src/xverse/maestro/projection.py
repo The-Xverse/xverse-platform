@@ -23,6 +23,7 @@ from xverse_xdl.models import NormalizedResource, ResourceIdentity, freeze
 
 from .time import TickDomain
 from xverse.faults import FaultError, validate_static
+from xverse.faults.simtime import SimulationClock, resolve_simtime
 
 PHASE_RANK = {"prepare": 0, "start": 1, "observe": 2, "stop": 3, "cleanup": 4}
 OPERATIONS = {
@@ -154,6 +155,7 @@ class PreparedLifecycle:
     lifecycle_digest: str
     faults: tuple = ()  # Phase 5: compiled fault-schedule entries (frozen), empty for fault-less plans
     fault_seed: int = 0
+    fault_clock: SimulationClock | None = None  # ADR-ML3-SIMTIME-0001: present only for clock-sourced plans
 
     @property
     def ready_for_execution(self) -> bool:
@@ -238,11 +240,19 @@ def prepare_lifecycle(
     *,
     provider_descriptors: Iterable[ProviderDescriptor] = (),
     limits: Limits | None = None,
+    fault_clock: SimulationClock | None = None,
 ) -> PreparedLifecycle:
-    """Verify, recompile and project the original closed XDL set with zero effects."""
+    """Verify, recompile and project the original closed XDL set with zero effects.
+
+    ``fault_clock`` declares the clock-sourced simulation domain (ADR-ML3-SIMTIME-0001): every fault entry is
+    then resolved in simulator time instead of Maestro ticks."""
     limits = limits if limits is not None else Limits()
     if not isinstance(limits, Limits):
         raise ValueError("limits must be a Limits value")
+    if fault_clock is not None:
+        if type(fault_clock) is not SimulationClock:
+            raise ValueError("fault_clock must be a SimulationClock value")
+        fault_clock.__post_init__()
     if not isinstance(result, ExperimentPlanResult) or not result.is_valid:
         _reject("ML-PLAN", "a valid accepted compiler result is required")
     try:
@@ -454,11 +464,12 @@ def prepare_lifecycle(
         clock,
         limits,
         ranks,
+        fault_clock,
     )
 
 
 def _project(
-    plan, resources, system, scenario, units, steps, clock, limits, ranks
+    plan, resources, system, scenario, units, steps, clock, limits, ranks, fault_clock=None
 ) -> PreparedLifecycle:
     nodes: set[Node] = set()
     edges: list[GraphEdge] = []
@@ -615,13 +626,25 @@ def _project(
             )
     fault_entries = tuple(freeze(_plain_fault(item)) for item in plan["faultSchedule"])
     fault_seed = 0
-    if fault_entries:
+    if fault_clock is not None:
+        # ADR-ML3-SIMTIME-0001: the bound domain is the admitted one (L-1), the source is a deployed unit, and
+        # every entry resolves in simulator time (exact ns on the step grid, simulator horizon).
+        if fault_clock.domain != clock.domain:
+            _reject("ML-TIME", "the simulation clock binds a domain other than the admitted one")
+        if _logical(system.identity, "componentInstances", fault_clock.source_unit) not in {u.unit_id for u in units}:
+            _reject("ML-PROJECTION", "the simulation clock source is not a deployed unit")
+        try:
+            resolve_simtime(plan, fault_clock)
+        except FaultError as error:
+            _reject("ML-UNSUPPORTED", f"fault schedule not admissible: {error.code}")
+    elif fault_entries:
         # Phase 5 (thesis-lite faults): admit only statically resolvable schedules; the planned
         # tick list is unknown here, so effective ticks are resolved again at dispatch.
         try:
             validate_static(plan, clock.horizon_ticks)
         except FaultError as error:
             _reject("ML-UNSUPPORTED", f"fault schedule not admissible: {error.code}")
+    if fault_entries:
         seed_value = (plan.get("seed") or {}).get("value") if isinstance(plan.get("seed"), dict) else None
         fault_seed = int(seed_value) if type(seed_value) is int else 0
     body = {
@@ -651,6 +674,8 @@ def _project(
     if fault_entries:  # fault-less plans keep their Phase 3 canonical bytes and digests
         body["faults"] = [_plain_fault(item) for item in plan["faultSchedule"]]
         body["faultSeed"] = fault_seed
+    if fault_clock is not None:  # plans without a binding keep their bytes and digests
+        body["faultClock"] = asdict(fault_clock)
     encoded = _json(body)
     return PreparedLifecycle(
         plan["digest"]["value"],
@@ -667,6 +692,7 @@ def _project(
         hashlib.sha256(DIGEST_DOMAIN + encoded).hexdigest(),
         fault_entries,
         fault_seed,
+        fault_clock,
     )
 
 
