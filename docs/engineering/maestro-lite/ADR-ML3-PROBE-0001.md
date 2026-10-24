@@ -73,3 +73,102 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
 - **Verification.** The (A) tests of `test_stabilization_stack_load_failures.py` pass by an admission refusal for
   W = 3.5 s and by three attempts within the capped window for an admitted W; unit tests cover the bound and the
   cap.
+
+### Note: S1b-1 revision (RA2, RA5, the window record) (2026-10-24, written at 01:47:51; before implementation; thesis DR-16)
+
+- **Context.** S1b review-log finding 24 (independent review of DR-15), MEDIUM-1, MEDIUM-2 and LOW-5; thesis DR-16
+  is the disposition. MEDIUM-1: the dispatcher renews only at a statement boundary, so a marker start step usually
+  meets `L − t0 < W + reserve` and the RA1 cap spends W' < W silently; in the finding 22 placement W' ≈ 0–0.26 s
+  for any W. MEDIUM-2: the RA1 reserve (2 s close + 0.25 s) does not cover the `failure` statement, a storage RPC
+  that runs after the readiness-failure cancel and before the terminal fence, the first call that extends the root
+  lease (`_cleanup` → `RunBroker.service_terminal`).
+- **Renewal today (unchanged by this note).** `FiniteDispatcher._service`, at each statement boundary, renews when
+  `min(lease ends) − now ≤ renew_margin = service_calls × operation_seconds + operation_seconds` (live: 4 × 0.38 +
+  0.38 = 1.9 s; composed fixture: 4 × 0.5 + 0.5 = 2.5 s), and also before an earlier health scan whose service
+  window would consume that margin. `_renew_service` takes `next_end = min(now + 5 s, generation − 2 s)`: 5 s is
+  the native maximum of every lease, the initial one and each renewal (`bootstrap.c:136,338`), and `generation −
+  2 s` is the native bound `until ≤ generation − 2 s`. It refuses `ML-SCHEDULE-LEASE-EXHAUSTED` when `next_end`
+  is not above the bootstrap lease. On the native path it sends the controller heartbeat first and then
+  `RunBroker.renew`, which, under the owner lock and then the broker lock, runs one storage audit
+  (`revalidate_run`, one request), renews the bootstrap root lease (`session.renew`) and sends K.RENEW to the
+  authority with the same target. The bootstrap lease and the authority lease therefore move together to one
+  target; the broker refuses a target that is not above both or exceeds either generation − 2 s, and an uncertain
+  renewal cancels the run. Nothing renews inside `facade.start`.
+- **RA2 (decision).** In `FiniteDispatcher._effect`, for a `start` step of a unit whose readiness probe is
+  `nonce-marker`, after the step's `_service()` and before its end D is computed, the dispatcher renews through
+  the unchanged `_renew_service` when `min(lease ends) − now < readiness_lease_need(W, operation_seconds) = W +
+  cancel_close_reserve(operation_seconds) + operation_seconds`, where W = min(policy timeout, observe timeout). The
+  need is the admission bound read the other way (`W ≤ 5 − reserve − operation_seconds`), so an admitted W always
+  fits the renewed lease. Its D is then `min(active end, now + start budget, renewed lease, health term)`.
+  - It renews only on the native path (a marker unit is always a `RunUnitIssuer`) and only when
+    `min(now + 5 s, generation − 2 s)` is above both leases. Otherwise, near the generation end, it does not renew;
+    the cap then spends W' < W and the cut is recorded (below). This adds no new failure mode: a renewal that fails
+    keeps `_renew_service`'s existing fail-closed handling.
+  - **Authority lease.** RA2 is an ordinary renewal: same thread, same lock order, same target for both leases. The
+    providers' L = min(root lease, authority lease) read at t0 is still conservative, because both leases only grow
+    and only the dispatcher thread renews them. The S1a-5 admission of a CANCEL past the authority lease is
+    unchanged.
+  - **Request budget.** Each RA2 renewal costs one storage audit. `admit_schedule` adds one request per marker
+    unit to `required_requests`. That changes the schedule bytes only for schedules with marker units, with no
+    version change. Running-only schedules are unchanged.
+  - **Not covered.** A restarted marker unit (`_restart_unit`) is not renewed by RA2; it keeps the run-time cap and
+    the window record. RA3 (renewal between attempts) stays deferred.
+- **RA5 (decision): the reserve covers the failure statement.** `CANCEL_CLOSE_RESERVE` becomes
+  `cancel_close_reserve(operation_seconds) = NATIVE_CANCEL_CLOSE_SECONDS (2 s) + operation_seconds +
+  CANCEL_FENCE_MARGIN_SECONDS (0.25 s)`.
+  - The middle term is the admitted budget of one terminal-section statement, the `failure` statement that runs
+    after the readiness-failure cancel and before the terminal fence. The 0.25 s keeps its earlier meaning: the
+    cancel's reply and the terminal fence.
+  - The path it covers is: `owner.cancel`, up to the 2 s native close for a responsive authority; the `failure`
+    statement; `_close_restarts`, which is local; and `_cleanup`, whose broker cancel returns the cached result
+    before `service_terminal` moves the root into terminal mode.
+  - **Admission bound.** `readiness_window_bound(op) = LEASE_MAX_SECONDS − cancel_close_reserve(op) − op = 2.75 s −
+    2·op`. With the live `operation_seconds` of 0.38 s it is 1.99 s (reserve 2.63 s). With the composed fixture's
+    0.5 s it is 1.75 s (reserve 2.75 s).
+  - **Effect on H1.** DR-15 H1 (W = 2.0 s) is now refused live, by 0.01 s. H1 must be re-derived as W ≤ 1.99 s, for
+    example 1.9 s.
+  - **Run time.** `ProcessReadiness.start` takes `operation_seconds` from the persistence client's admitted
+    schedule. A facade used without a schedule has no dispatcher and so no `failure` statement, and the term is
+    0 there.
+  - **A fence-first terminal service is rejected** (DR-16): it would change the order of the closure records on
+    which S1a and S1b were accepted.
+  - **Residual (declared).** The `failure` statement's own deadline stays `min(work end, now + per_unit_seconds)`,
+    so a storage RPC slower than `operation_seconds` (a stalled device) can still pass L. The fence's own deadline,
+    `now + operation_seconds` capped at the lease, is covered only by the 0.25 s margin. Both remain fail-closed
+    under the owner decision of finding 18 (LOW-2): the root ends at its lease and the closure is incomplete, not
+    silent.
+- **The window record (decision).** At t0, `ProcessReadiness.start` records for each marker start step a frozen
+  `ReadinessWindow(unit_id, generation, declared_seconds = W, window_seconds = W', lease_end = L, began = t0,
+  cut = W' < W)`. L and t0 are host-monotonic seconds of the run's host session, the domain of the evidence
+  `clocks.host`. The records are exposed in order as `ProcessReadiness.readiness_windows` and
+  `DispatchResult.readiness_windows`, which the runtime result carries (`RuntimeResult.dispatch`) to the
+  harness's run record (thesis H3). Every value is public-safe: a unit id, an integer generation, three durations
+  or times in seconds and a boolean. There are no paths, nonces, handles or digests.
+- **The cut is a distinct diagnostic.** When W' < W and no attempt finds the marker, `start` raises
+  `ML-PROBE-WINDOW-CUT` instead of `ML-PROBE-NOT-READY`. That code reaches the dispatch result, the
+  `failure` statement and, through its existing `diagnosticCode` field, the closed Argus evidence. The dispatcher
+  maps a diagnostic containing `WINDOW` to the cause `deadline-exceeded`, which is correct here: the window was
+  cut by the lease or by the step deadline. A cut window whose marker is found still succeeds, and its record says
+  `cut: true`.
+  - **Why a diagnostic and not a field on the not-ready row.** The lifecycle annotation payload v2.0 is closed:
+    the schema sets `additionalProperties: false`, `coverage.PAYLOAD_OPTIONAL` lists the admitted keys, and
+    `validate_receipt` checks the exact key set. A field on the probe row would be an evidence-format change,
+    with a payload version, coverage and receipt changes, and a re-acceptance of S1b's evidence. A diagnostic uses a
+    field that every consumer already reads, so a cut cannot be mistaken for "not ready within W".
+  - **Limit (declared).** W, W', L and t0 are in the result objects, not in the Argus records.
+- **L5 correction (rationale of the S1b-1 RA1 admission).** The `operation_seconds` term does not stand for "one
+  bounded worker round trip". It is a nominal allowance for the whole pre-release work of the start step: the lazy
+  `commit_intent`, `stage` and `bind`; the prerequisite and health QUERYs; ARM; and RELEASE with its
+  revalidations. That is several round trips. The bound stays necessary, not sufficient. RA2 renews with the same
+  allowance. When that work exceeds it, W' < W, and the cut is now recorded and diagnosed rather than silent. This
+  correction changes no safety claim.
+- **Unchanged.** The spacing (`readiness_offsets` over W'), the `at >= deadline` drop, the probe identity, the
+  native QUERY limit of 3 per generation, and readiness only from a verified marker.
+- **Verification.** `test_stabilization_stack_load_failures.py`:
+  - a marker start placed with less than the need of lease left is renewed and keeps W' = W;
+  - a forced cut (RA2 disabled) is recorded and ends `ML-PROBE-WINDOW-CUT`;
+  - a cut window whose cancel takes the full 2.0 s native close still reaches the fence with the root and the
+    authority alive and closes completely.
+
+  Unit tests cover the reserve, the bound and the cap. The dispatcher, lease-renewal, schedule, readiness and
+  closure suites must stay unchanged.

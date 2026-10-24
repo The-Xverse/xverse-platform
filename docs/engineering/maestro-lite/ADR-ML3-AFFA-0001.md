@@ -303,3 +303,48 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
   (`ML-RUN-FREEZE-UNRESOLVED` when the reason is not 5), not a revoke.
 - **Verification.** A unit test pins the frame deadline; the cancel, conflict, start-failure and closure suites must
   stay unchanged.
+
+### Note: S1a-6 residuals and the outer budgets (L2, L3) (2026-10-24, written at 01:48:16; before implementation; thesis DR-16)
+
+- **Context.** S1b review-log finding 24, LOW-2 and LOW-3; thesis DR-16. No decision of S1a-6 changes.
+- **Residual L2 (declared): RA4 covers only an undeadlined cancel.** A caller deadline still bounds K.CANCEL, so a
+  freeze stalled past that deadline still ends in the unchanged revoke for:
+  - the lazy terminal fence, `dispatcher._cleanup`, `min(work end, now + operation_seconds, lease)` (the
+    readiness-failure path reaches it with the cancel already cached, so it sends nothing there);
+  - the teardown emergency cancel, `teardown.py` `_emergency`, under the phase deadline;
+  - the controller cancels, `controller.py`, under the active or admission deadline.
+
+  A-ii also compounds. A CANCEL read just after the native watchdog's lease close (`run_authority.c:652`) can
+  wait for two freezes, up to 4 s, which is more than 2.75 s, and that also ends in the revoke. All of these remain
+  fail-closed: an unconfirmed cancel is never taken as acknowledged.
+- **L3 check: the ≈ 3.75 s undeadlined cancel against the outer budgets.** The worst case is the 2.75 s frame (it
+  includes the ≤ 0.5 s S1a-3 lock wait) plus the 1 s revoke. A responsive authority replies within the 2 s native
+  close.
+  - **`_work_end`.** The readiness-failure cancel starts inside a start step, so no later than the active end. The
+    runtime admits `terminal ≥ active + terminal_reserve_seconds + collection_seconds + terminal_seconds`, and
+    `_work_end = min(terminal − drain_seconds, generation − 2 s)`. So `_work_end − active end ≥
+    terminal_reserve_seconds + collection_seconds + terminal_seconds − drain_seconds`, and
+    `terminal_reserve_seconds = n·per_unit + (steps + 2n + 2 + fault statements)·operation_seconds + 2 s`.
+    - That reserve has no cancel term. A 3.75 s cancel at the active end is taken from it, so the terminal
+      statements that follow get `min(_work_end, now + per_unit_seconds)` from what remains.
+    - If what remains cannot hold them, the F-08 pre-send check (`ML-SCHEDULE-SERVICE-DEADLINE`) or a terminal
+      deadline ends the run as `ML-SCHEDULE-TERMINAL-INCOMPLETE` or `ML-SCHEDULE-CLEANUP-INCOMPLETE`. That is
+      a documented failure, not silent.
+    - The numbers for the composed fixture are recorded in S1b review-log finding 25.
+  - **The S1c canceller.** `runtime_entry.stop` runs `driver.cancel`, then `owner.cancel`, then
+    `RunBroker.cancel`, synchronously and with no deadline.
+    - That call returns the cached result if the dispatcher's own cancel finished first. A concurrent one waits on
+      the busy connection inside the same 2.75 s frame budget, at most the 0.5 s S1a-3 wait.
+    - So `stop` returns within about 3.75 s plus local work. The gate and launcher cancels that follow are
+      local, and `RunUnitIssuer.cancel` returns the cached result.
+    - The harness joins its canceller with `timeout=5` after `entry.start` returns, and the canceller started
+      before that. The join therefore fits, with at least about 1.25 s of margin (before S1a-6 the bound was about
+      2 s).
+    - Under heavy load the margin is the local work only. A join that times out is reported by the harness. It
+      does not change the run's evidence.
+  - **The closure budget.** The dispatcher's cancel finishes inside `dispatch.run`, before `RunClosure.close`
+    starts with `scope.closure`. The closure's own fence (`run_closure._fence`) sends K.CANCEL with its own end,
+    `min(now + 0.5 s, …)` and the closure deadline, and does not use `RunBroker.cancel`. S1a-6 therefore does
+    not lengthen the closure. The runtime scope still bounds it: `closure ≥ terminal` and at most 90 s.
+  - **Result.** None of the three budgets is exceeded by construction. The cancel's cost is charged to the terminal
+    reserve, where it is recorded and fails closed. No admitted budget changes.
