@@ -179,9 +179,9 @@ delegation of 2026-10-24 and are flagged for the author's review. It adds no num
   is accepted.
 - **Decision 4, channel lifetime (M1).**
   - **Benign end.** A hub end-of-file is benign once every entry is final and no hold, report or `resumed` is
-    pending. Maestro records it as `hub-closed` and stops reading. In the evidence, it is one worker `fault`
-    statement with phase `outcome` and outcome `hub-closed`. It sits on the chain of the first entry in listing
-    order, after that entry's final outcome, and its detail carries `event`, `simulatorStep` and `hostNs`.
+    pending. Maestro records it as `hub-closed` and stops reading. In the evidence, it is the key `hubClosed`
+    (`simulatorStep`, `hostNs`) in the detail of the final outcome statement of the first entry in compiled listing
+    order. There is no separate statement, so each entry has exactly one final outcome (ST-2a).
   - **Pending end.** An end-of-file with anything pending stays `XVERSE-FAULT-SIMTIME-PROTOCOL`.
   - **Empty frame.** A zero-length frame cannot be told apart from an end-of-file on `SOCK_SEQPACKET`, so it is
     treated as one, and nothing is read after it.
@@ -200,8 +200,9 @@ delegation of 2026-10-24 and are flagged for the author's review. It adds no num
      and the dispatcher ends the run `ML-SCHEDULE-FAULT-CLOCK`, or `ML-SCHEDULE-FAULT-APPLY` for a refused apply. It
      maps them as `_advance_faults` does.
 
-  A freeze that was applied but whose clear step was not reached is still thawed and ends `cancelled`
-  (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), without `incomplete`. Decision 7's `XVERSE-FAULT-NEVER-DUE` no longer
+  A freeze that was applied but whose clear step was not reached is thawed, ends `cancelled`
+  (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), and sets `incomplete` (ST-2a, N1): a shortened freeze is a different treatment
+  under PAIR-1, as a relay entry applied and not cleared is. Decision 7's `XVERSE-FAULT-NEVER-DUE` no longer
   arises at `finish` in this mode.
 - **Decision 9.** `SIMULATION_TIME_TRIGGERS` stays `True`. Every requirement of option A still holds.
 - **Byte identity (L4).** The lifecycle digests of the fault-less plan and of three tick-mode plans with faults are
@@ -215,7 +216,9 @@ delegation of 2026-10-24 and are flagged for the author's review. It adds no num
 - **R13. Hold verification.**
   - `resumed` shows that a conforming hub read the ack before it went on. It is not proof against an adversarial
     peer: `ackSeq` can be predicted, and the peer is authenticated by uid only (R3, L1).
-  - A `resumed` still outstanding at `finish` or `cancel` is not checked.
+  - A `resumed` still outstanding at `finish` or `cancel` does not fail the run, because failing would race the
+    last tick. It is recorded as `resumedOutstanding` (`phase`, `step`, `ackSeq`) in the final outcome detail of
+    the entry whose ack it confirms (ST-2a, N2).
   - Whether the simulator really stood still during the hold stays a hub-side property (R7).
 - **WP-10 #5 obligations (wiring; not repaired here).**
   - **L1.** Before any live run, give the hub peer a connected socketpair end at spawn, with no listening path, or
@@ -227,3 +230,19 @@ delegation of 2026-10-24 and are flagged for the author's review. It adds no num
   - **R-2.** The platform keeps one time domain per Maestro form. WP-10 #5 maps the blueprints domain
     `carla-simulation` onto the form's `experiment-time` domain, whose clock source is the CARLA-facing unit. The run's
     evidence records that mapping.
+
+## Amendment note ST-2a: final-outcome evidence and the shortened freeze (2026-10-24)
+
+Recorded before code (`review-simtime-faults.md` finding 7), from the thesis `decisions.md` row "WP-10 #3/#4 re-review
+notes", decided under the author's delegation of 2026-10-24 and flagged for the author's review. It amends the
+ST-2 text above in place (decision 4 benign end, decision 7 `finish`, R13).
+
+- **N1.** A freeze applied whose clear step `finish` never reached is thawed, ends `cancelled`
+  (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), and sets `incomplete`.
+- **Final statements.** In simulator-time mode, an entry's final outcome is decided when it happens. Its single
+  `final` statement is emitted when the scheduler ends (`finish` or `cancel`), in compiled listing order, so that
+  its detail can carry `hubClosed` (first entry only) and `resumedOutstanding` (N2). Each entry has exactly one final
+  outcome and at most four statements, inside the admitted five per entry.
+- **Failing runs.** On a failing run the final statements go out on the dispatcher's best-effort cancel path. A
+  final that cannot be sent leaves that chain without its `outcome` event, and the run is already a failure. The
+  `apply` and `clear` phases, which `closure_report` reads, are unaffected.
