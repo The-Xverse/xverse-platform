@@ -147,3 +147,123 @@ and admission refuses while it is unknown.
      - A composed dispatcher run on the native fixture with a fake hub thread: a step-hold freeze and a remote
        relay `loss`, with Argus chains closed and both clocks in the detail.
      - The Phase 5 suites, unchanged.
+
+2. **Implementation and installed-wheel verification of option A (written at 15:29:01 2026-10-24).**
+   - **Commits.**
+     - `5b011644a`: finding 1.
+     - `321df989e`: `ADR-ML3-SIMTIME-0001` and amendments ST-1.
+     - `d7c33172c`: ADR decision 9, the capability contract, added on the coordinator's input before the flag was
+       coded.
+     - `92fc2643b`: the code and tests. The source diff from `b40acce49` is 11 files, +842/−11.
+   - **Capability flag.** `xverse.faults.SIMULATION_TIME_TRIGGERS = True`, the exact name and shape that the
+     blueprints probe (WP-10 #1, `f0ecf6e`). No different name was needed. It is pinned by
+     `test_capability_flag_is_pinned` (identity `is True`, and listed in `__all__`).
+   - **What was built, against the six requirements of `wp10-fault-relay.md` §4.**
+     1. **XDL and compilation.** These are unchanged, because the compiler already keeps exact ns (finding 1).
+        - `prepare_lifecycle(fault_clock=SimulationClock(...))` names the clock-sourced domain and the source
+          unit. `faultClock` enters the canonical bytes only when declared.
+        - `delay-ns` is the simulator-time delay parameter. Tick mode refuses it, and simulator-time mode refuses
+          `delay-ticks`.
+     2. **Resolution and horizon.** `resolve_simtime` keeps `at_ns` and `duration_ns`, places `onset_step` and
+        `clear_step` on the step grid ("at or after"), and checks `clear_step · step_ns ≤ horizon_ns`. It also
+        enforces the admitted kinds, the source-freeze refusal and the overlap refusal.
+     3. **Remote relay boundary.**
+        - `HubChannel` uses an AF_UNIX `SOCK_SEQPACKET` socket, connected or listening. A listening socket admits
+          one peer of the same uid.
+        - Frames are closed, canonical and at most 4 KiB, with a sequence per direction.
+        - The relay entries and the assurance kinds are armed at the hub only after the source unit is bound and
+          live. Their reports are validated to the exact step.
+     4. **Clock source and step hold.** On `hold`, Maestro checks the entry, the phase and the step, applies or
+        clears through the unchanged `ProcessBoundary` and launcher operation, and acknowledges (`applied`,
+        `cleared` or `refused`).
+        - A wrong step, a skipped point, an off-grid clock, a rewind, a sequence gap or an unknown entry ends the
+          run (`XVERSE-FAULT-SIMTIME-PROTOCOL`, dispatcher code `ML-SCHEDULE-FAULT-CLOCK`). Maestro then sends
+          `close`.
+     5. **Evidence.** Each apply and clear detail carries `simulatorNs`, `simulatorStep`, `hostNs` and the mode,
+        beside the Maestro tick. The intent carries the declared ns, the steps, `stepNs` and the boundary mode.
+        The worker's statement schema is unchanged.
+     6. **Single-domain admission.** The binding must name the one admitted domain (L-1).
+        - `admit_schedule` refuses a held freeze while any D-4c value is unknown, and checks the thaw bound
+          (`(clear − onset) · max_step_host_s + 2 · handshake_s ≤ cadence − health_scan_seconds`) and the hold
+          bound.
+        - The binding is rederived in the worker, `encode_configuration` and `_verify_prepared`.
+   - **Tests.** `tests/thesis_lite/faults/test_simtime.py` has 55 cases:
+     - the flag;
+     - the binding's validation (9 cases);
+     - the L-8 reproduction without a binding and admission with one;
+     - unchanged bytes without a binding;
+     - the domain and source checks;
+     - exact ns and grid rounding;
+     - the simulator horizon;
+     - 9 refused entry shapes;
+     - overlap and disjoint windows;
+     - `delay-ns` and the assurance kinds;
+     - `delay-ns` refused in tick mode;
+     - the D-4c refusal (3 partial bindings), the thaw and hold refusals, and the `decode_schedule` round trip;
+     - message-only admission;
+     - the frame codec (8 malformed frames and an oversized encode);
+     - the stream-socket refusal and a sequence gap;
+     - the listening channel's single peer;
+     - the scheduler against a fake hub:
+       - arming waits for the live source;
+       - the full hold, apply, ack, clear and ack sequence, with relay reports and both clocks;
+       - 9 protocol violations;
+       - a report before arming;
+       - a refused freeze;
+       - `finish` thawing a freeze that was not reached;
+       - `finish` marking an uncleared relay incomplete;
+       - `cancel`;
+       - never-due entries;
+     - the worker's decoding of the binding;
+     - the dispatcher's channel type check;
+     - **two composed native runs.** On the real persistence worker, broker, launcher and children (pauses 40),
+       with a fake hub thread:
+       - the step-hold freeze of `sink-instance` (steps 30 and 40) and a remote-relay `loss` (steps 20 and 25)
+         both end `cleared`;
+       - the acks are exactly `[(apply, applied, 30), (clear, cleared, 40)]`, and the hub receives `close`;
+       - the Argus intent modes are `step-hold` and `remote-relay`, and the apply steps are 30 and 20;
+       - the closure report is complete and the unit's health is resumed;
+       - the missing-channel run ends `ML-SCHEDULE-FAULT-CLOCK`.
+
+     The composed freeze run passed 6 of 6 repetitions, at load about 4.5–5.4.
+   - **Mutation controls (run, then reverted; the rebuilt wheel was byte-identical).**
+     - Without the exact-step check, the wrong-step case fails.
+     - With `thaw_check` disabled, both admission cases fail.
+   - **Installed-wheel runs.** The wheel is `d0eabe60a7e4e632c21b9fc200a048a296ff9bff088bebb1d1141daf858eaa7e`, built
+     from the worktree with `src/` equal to `92fc2643b`. One pytest process per batch:
+     - **Batch 1 (19 files): 403 passed**, 0 failed, 0 skipped, in 237 s at load 5.1–6.3. The files are:
+       - faults `simtime` 55, `resolve` 13, `scheduler` 23, `relay_kinds` 4, `process_ops` 4 and `maestro_run` 11
+         (U-ADM-03b equal to main);
+       - maestro `preparation` 23, `preparation_rejections` 21, `projection_discriminating` 2, `schedule_plan` 48,
+         `admission` 73, `persistence` 29, `persistence_config_bound` 12, `dispatcher` 18, `shared_dispatcher` 3,
+         `lazy_dispatcher` 13, `runtime_entry` 8, `runtime_admission` 40 and `permit_release_path` 3.
+     - **Batch 2 (9 files): 234 passed**, 0 failed, 0 skipped, in 231 s at load 6.2–8.5. The files are flows
+       `harness_faults` 15, and maestro `collection_plan` 24, `coverage` 48, `launcher` 22, `schedule_worker` 15,
+       `stabilization_s1b_broker` 26, `stabilization_stack_load_failures` 22, `coverage_producers` 33 and
+       `bootstrap` 29.
+
+     The logs are in `evidence/simtime/`. The full installed-wheel regression, DV12 and CAPA are not run here;
+     the coordinator arranges them with the independent review.
+   - **Residuals (open).**
+     - **R1. No real hub.** The hub side (compat #4) and the harness wiring (blueprints #5) do not exist. The
+       channel contract is exercised only against fake hubs, one in a test thread.
+     - **R2. D-4c is unmeasured.** `max_step_host_s`, `handshake_s` and `hold_bound_s` are unknown, so every
+       schedule with a freeze is refused at admission, as intended. Message-only schedules are admitted.
+     - **R3. Peer authentication.** The channel checks only the peer's uid. Binding the peer to the U2 process or
+       cgroup is open.
+     - **R4. Handshake latency.** Maestro polls the channel once per dispatcher cycle, so the handshake is at least
+       one cycle (at least the 0.05 s poll plus statement time). The simulator is held for that time. D-4c must
+       measure it under load.
+     - **R5. Tick horizon.** The Maestro tick horizon bounds the simulator-time window.
+       - An entry whose step is not reached before the last tick ends `cancelled`: `XVERSE-FAULT-NEVER-DUE`, or
+         `XVERSE-FAULT-SIMTIME-NOT-REACHED` for a freeze, which is then thawed.
+       - The run can still succeed in that case. The harness must check the fault outcomes for PAIR-1.
+     - **R6. A hub that never connects or arms.** Its entries end never-due, and Maestro sets no arming
+       deadline. A deadline (fail-closed) is a candidate for the review.
+     - **R7. Relay semantics are hub-side.** Loss selection, stale replay, delay rounding and `items` are
+       recorded by Maestro but not verified.
+     - **R8. Assurance variants.** The proposal variants are not carried in descriptors (AD-11, AD-27).
+     - **R9. Hub contract constraint.** The hub may not send `time` before every entry is armed.
+     - **R10. Error text.** A `delay` with neither delay parameter now reports "exactly one of", not "lacks
+       required parameter". The code is unchanged (`XVERSE-FAULT-PARAMETER`).
+     - **R11. Still to do.** The independent review, the full run, DV12 and the CAPA step.
