@@ -275,3 +275,31 @@ This is partial U2/U7/U8 engineering, not a full-runtime or stable17 acceptance.
 - **The authority binary digest changes**, so S1c re-pins it after the merge.
 - **Verification.** `test_stabilization_s1b_start_failure.py` (finding 15) must pass at the broker level and in the
   composed runtime. The existing native, client, cancel and fence suites must stay unchanged.
+
+### Note: S1a-6 (RA4) (2026-10-24, written at 01:13:49; before implementation; thesis DR-15)
+
+- **Context.** S1b review-log finding 22, residual A-iii. `RunBroker.cancel` gave K.CANCEL a client deadline of
+  `now + 1 s`. The native authority may take up to its close bound of 2 s (`run_authority.c` `close_end`) to
+  freeze the boundaries before it replies, for example while a unit is blocked in the kernel. A freeze stalled for
+  1 to 2 s therefore timed out on the client and was answered with a revoke, even with ample lease left.
+- **Decision.** The K.CANCEL deadline becomes
+  `min(now + CANCEL_REQUEST_SECONDS, generation − 2 s, caller deadline)`, with
+  `CANCEL_REQUEST_SECONDS = NATIVE_CANCEL_CLOSE_SECONDS (2 s) + CANCEL_LOCK_WAIT_SECONDS (0.5 s) +
+  CANCEL_REPLY_MARGIN_SECONDS (0.25 s) = 2.75 s`. The frame's deadline is fixed before the S1a-3 wait, so the wait
+  is part of the budget: after a full 0.5 s wait the exchange still has 2.25 s, the close bound plus the margin.
+  This stays inside the native `until − now ≤ 5 s` and `until ≤ generation − 2 s` checks; S1a-5 already admits a
+  CANCEL past the open authority's lease.
+- **Effect on S1a-3.**
+  - **Bounded wait.** `min(now + 0.5 s, end, caller deadline − CANCEL_REAP_RESERVE_SECONDS)` is unchanged. Before
+    this note the end (`now + 1 s`) never bound it either, so the wait is still 0.5 s at most.
+  - **Reap reserve.** Unchanged: the wait still ends at least 0.25 s before a caller's deadline, and the revoke's
+    own deadline (`min(now + 1 s, generation, caller deadline)`) is unchanged.
+  - **Cost.** Without a caller deadline, an unresponsive authority now holds the cancel up to 2.75 s instead of
+    1 s before the unchanged revoke, so `RunBroker.cancel` takes up to about 3.75 s in the worst case. This
+    supersedes S1a-3's cost statement that the confirmed cancel stays inside a 1 s cancel end and a 2 s drain. A
+    responsive authority still replies as soon as its freeze completes. A caller deadline still bounds everything.
+- **Preserved.** A cancel that is not confirmed natively is still never treated as acknowledged; any exchange error
+  still reaches the revoke. A stalled freeze now yields the native CANCELLED reply with its freeze result
+  (`ML-RUN-FREEZE-UNRESOLVED` when the reason is not 5), not a revoke.
+- **Verification.** A unit test pins the frame deadline; the cancel, conflict, start-failure and closure suites must
+  stay unchanged.

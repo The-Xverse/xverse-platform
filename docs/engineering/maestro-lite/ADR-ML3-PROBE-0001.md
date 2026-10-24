@@ -36,3 +36,40 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
 - **Unchanged.** Periodic health stays liveness-only. Undeclared and unchangeable units, such as the legacy VCU,
   stay `running`. No shell command, network discovery or log line is ever used.
 - **Recorded identity.** The evidence and coverage `probe`/`ready` rows record the declared probe identity.
+
+### Note: S1b-1 revision (RA1) (2026-10-24, written at 01:13:36; before implementation; thesis DR-15)
+
+- **Context.** S1b review-log findings 21–22 (A), reproduced in `test_stabilization_stack_load_failures.py`.
+  Nothing renews the bootstrap lease inside one dispatcher step, and the start step ends at that lease. A
+  declared window W = 3.5 s therefore lost its third attempt to the lease cap, and the readiness-failure cancel
+  ran with under a second of lease left. The run-bootstrap root then ended at its own lease and killed the
+  authority and the storage worker.
+- **Reserve.** `CANCEL_CLOSE_RESERVE_SECONDS` = 2.25 s: the native cancel close bound of 2 s
+  (`run_authority.c` `close_end`) plus 0.25 s for the cancel's reply and the terminal fence.
+- **Run-time cap.** For a `nonce-marker` unit, `ProcessReadiness.start` reads, at t0 (immediately after the
+  release), the lease that ends the run: L = min(bootstrap root lease, native authority lease), both reachable
+  through the unit's `RunUnitIssuer` broker. The window used is
+  `W' = max(0, min(W, L − CANCEL_CLOSE_RESERVE_SECONDS − t0, D − t0))`, where D is the step deadline (already
+  capped at the lease by the dispatcher). The start step's last attempt then ends at least
+  `CANCEL_CLOSE_RESERVE_SECONDS` before the lease, and never after D.
+- **Spacing.** The declared attempts are spaced over W' with the unchanged `readiness_offsets`, so every declared
+  attempt is made. When W' is 0 the attempts are made back to back at t0. The `at >= deadline` drop stays as a
+  defensive check.
+- **Admission.** `admit_schedule` refuses, with `ML-SCHEDULE-READINESS-WINDOW`, a `nonce-marker` unit whose
+  window W = min(policy timeout, observe action timeout) cannot fit a fresh lease:
+  `W ≤ LEASE_MAX_SECONDS − CANCEL_CLOSE_RESERVE_SECONDS − operation_seconds`.
+  - `LEASE_MAX_SECONDS` = 5 s is the native maximum of a renewal (`bootstrap.c`). `operation_seconds` is one
+    bounded worker round trip for the start statement's work before the release (intent, stage, bind and the
+    release revalidations).
+  - With the live budgets (`operation_seconds` = 0.38 s) the bound is 2.37 s. With the composed test fixture
+    (0.5 s) it is 2.25 s. The live harness's W = 3.5 s is refused; thesis DR-15 H1 lowers it.
+  - The bound is necessary, not sufficient. The run-time cap is what keeps the reserve.
+- **Residual (declared).** The dispatcher renews only at a statement boundary, when at most `renew_margin` is left
+  (1.9 s live). A start step dispatched with between `renew_margin` and about `CANCEL_CLOSE_RESERVE_SECONDS` plus
+  its pre-release work of lease left gets W' = 0 and keeps less than the full reserve. RA2 (renew before a
+  readiness start step) would close this band; it is not part of DR-15.
+- **Unchanged.** `running` probes, the probe identity, the native QUERY limit of 3 per generation, and
+  `ML-PROBE-NOT-READY` when no attempt finds the marker.
+- **Verification.** The (A) tests of `test_stabilization_stack_load_failures.py` pass by an admission refusal for
+  W = 3.5 s and by three attempts within the capped window for an admitted W; unit tests cover the bound and the
+  cap.
