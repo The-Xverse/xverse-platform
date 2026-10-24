@@ -116,14 +116,20 @@ Amended rule:
   - The worker reads it under the 1 MiB outer bound (`MAX_CONFIG`) and checks the seals again.
   - It never crosses a SEQPACKET channel, so the 128-byte BS packets and the 64 KiB persistence frames are
     unchanged.
-  - The Init deadline and the bootstrap lease still bound the worker's parse and revalidation time.
+  - The worker's time is still bounded, and a late worker still fails closed. The caller's start-up deadline
+    bounds the strict parse and the configuration checks, which run before hello. The Init request (at most
+    5 s) bounds `_load`. The bootstrap lease bounds both. (Corrected per `review-c1.md` finding 4, L5.)
   - A refusal on either side still fails closed: the Python refusal leaves the supervisor sequence unchanged, and
     a native refusal ends the supervisor through `cleanup()`.
 - **Verification.** Installed-wheel tests:
   - the 6- and 7-unit stand-ins encode below the bound;
   - the Python check refuses the bound plus one byte without a native request;
   - both native builds accept a role-3 input of exactly the bound and refuse one byte more;
-  - a role-4 input above 65 536 is still refused natively.
+  - a role-5 (controller) input above 65 536 is still refused natively, and one of exactly 65 536 is accepted
+    (corrected from role 4 per `review-c1.md` finding 4, L1: a role-4 case would not discriminate, because
+    `authority_input` refuses inputs above 2 688 B);
+  - a composed case: `BootstrapSession.persistence` starts the real worker through Init with a 7-unit
+    configuration above 65 536 B (finding 4, M1).
 
   The bootstrap, persistence, run-bootstrap and native-boundary suites must pass unchanged, apart from the two
   assertions of `test_coverage_producers.py` that named the old value.

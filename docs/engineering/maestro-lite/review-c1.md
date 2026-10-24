@@ -115,9 +115,13 @@ scientific result. No CARLA and no live run is used; every size below is an offl
      - **Worker memory.** `_read_input` preads `st_size + 1` bytes, bounded by `MAX_CONFIG` (1 MiB), and parses
        them with the strict JSON decoder. The new bound keeps the input at a quarter of that outer bound. The
        parent already holds the encoded bytes, which `encode_configuration` bounds by `MAX_CONFIG`.
-     - **Time.** Parsing and the XDL revalidation in the worker's Init grow with size. The Init request deadline
-       (at most 5 s) and the bootstrap lease still bound them, and a slow Init still fails closed. The bound itself
-       does not change the size of a real run, which is about 92 KB at 7 units.
+     - **Time** (corrected per finding 4, L5). The worker's work grows with size, in two stages:
+       - the strict parse and the configuration checks run before hello (`persistence_worker.py:246-270`), and
+         only the caller's start-up deadline bounds them (`persistence.py:609`);
+       - only `_load` runs inside the Init request, which is bounded at 5 s.
+
+       Both still fail closed when late, within the bootstrap lease. The bound itself does not change the size of a
+       real run, which is about 92 KB at 7 units.
      - **Fd passing and integrity.**
        - The configuration stays a sealed memfd (`F_SEAL_WRITE|GROW|SHRINK|SEAL`), passed as the fourth
          `SCM_RIGHTS` fd of the birth request.
@@ -216,6 +220,11 @@ scientific result. No CARLA and no live run is used; every size below is an offl
      - **R3. The stand-in is not the WP-12 plan.** WP-12 adds flows, endpoints, sensors and the relay. The
        stand-in does not model them, and the 2.85-times margin is sized for them, not measured against them.
        D-4a must re-measure the WP-12 candidate plan.
+       - **Calibration** (extended per finding 4, L2). It has one point: the Phase 7 blueprint at 4 units
+         (`phase7-calibration-rc1.json`). That point confirms the total (+2.0 %), not the per-unit slope that the
+         7- and 16-unit figures extrapolate. D-4a must measure the slope as well.
+       - **Superseded by the WP-12 re-measurement** (finding 5). The real Phase 8 configuration, measured with the
+         platform builder, replaces the stand-in as the sizing basis.
      - **R4. Run admission is still looser.** `runtime_admission.validate_run_admission` still checks the
        persistence input against `MAX_CONFIG` (1 MiB). A configuration between 256 KiB and 1 MiB is therefore
        refused at bootstrap (`ML-BOOT-PERSISTENCE`), not at admission. This is unchanged from rc.1, where the gap
@@ -224,6 +233,13 @@ scientific result. No CARLA and no live run is used; every size below is an offl
        state the new bound. For the Phase 8 shape the cap at rc.1 was really 4 units (finding 1).
      - **R6. Test coupling.** The size cases import the bench builder from `tools/bench/persistence_scaling`, so
        they run only from a checkout root, as the regression harness does.
+       - **Host paths** (extended per finding 4, L3). The stand-in also uses host-specific absolute paths as
+         byte-length proxies, and touches no file under them:
+         - `PY`, the real `python3.13` under `sys.base_prefix`;
+         - `CACHE`, the loop10 `.x-verse-build/cache` path;
+         - `COMPAT` and `RUN_DIR`, synthetic paths.
+
+         On another host the sizes shift by the length differences only.
      - **R7. Still to do for the increment.** Thesis §J asks for a full run, DV12 and a CAPA step. None is done
        here.
 
@@ -346,3 +362,58 @@ scientific result. No CARLA and no live run is used; every size below is an offl
      - only `_load` runs inside the Init request, which is bounded at 5 s.
    - **Then.** Rebuild, run the C1 files and the bootstrap and persistence suites (one process), and record the
      result as finding 5.
+
+5. **Repair of M1, and corrections L1, L2, L3 and L5 (written at 11:15:37 2026-10-24).**
+   - **M1 repaired.** `test_persistence_config_bound.py::test_python_path_starts_the_worker_with_a_7_unit_configuration_above_64_kib`
+     adds the `stand_in_stack` fixture, modelled on `test_bootstrap.boot_stack`: the legacy native supervisor,
+     admitted for the stand-in's lifecycle digest, with a 100 s generation.
+     - `BootstrapSession.persistence()` runs with the 7-unit `phase8` stand-in, 91 959 B (between 65 536 and the
+       bound). It goes through the Python check, `_spawn_role(3)`, native birth and activation, and the real worker's
+       `_read_input`, strict parse, `_load`, hello and Init.
+     - The client is ready and `open`, with no cancel. Its scope is the SHA-256 of the full configuration, and its
+       units are the stand-in's 7.
+     - Teardown aborts and reaps the worker, then the supervisor. Every boundary is released, and stderr is empty.
+   - **Mutant, run and reverted.** I set `bootstrap.py` to `<= 65536` while `MAX_PERSISTENCE_INPUT` stayed
+     `1 << 18`, and rebuilt the wheel. The new case failed with `ML-BOOT-PERSISTENCE`, and the other 11 C1 cases
+     passed, which confirms the reviewer's survival analysis. The source was restored (`git checkout`) and rebuilt.
+   - **Corrections.**
+     - **L1.** The ADR amendment's verification list now names role 5 (65 536 accepted, 65 537 refused) and the
+       composed case.
+     - **L2.** R3 now names the single calibration point and the unvalidated slope.
+     - **L3.** R6 now names the host-path proxies `PY`, `CACHE`, `COMPAT` and `RUN_DIR`.
+     - **L5.** The time wording is corrected in finding 1 and in the ADR: the start-up deadline bounds the parse
+       and checks before hello, and the 5 s Init request bounds only `_load`.
+     - **L4.** Noted. No change.
+   - **Build and run.** The wheel was rebuilt from the worktree with `src/` unchanged since `bdfc20779`:
+     sha256 `d4db5d740fc1a45404b8612897eec15ad3322d1bb100ac0a318081b907ad52d2`, byte-identical to finding 2.
+     - **Run.** One pytest process over the same 17 files as finding 2, at load 4.2–4.8: **312 passed, 0 failed,
+       0 skipped** in 150 s (`evidence/c1/related-suites-finding5.log`). That is the 311 of finding 2 plus the new
+       composed case, so `test_persistence_config_bound` now has 12 cases.
+     - The full installed-wheel regression is not run here.
+   - **WP-12 re-measurement, supplied by the coordinator and checked read-only.**
+     - **Source.** `xverse-blueprints` candidate `58d5726`, `automotive/assured-aeb/docs/review-wp12.md`
+       finding 2 (the admission dry-run table), and `automotive/assured-aeb/docs/evidence/wp12-check-3aed505.json`
+       (blob sha256 `a20fd449…`). I read the figures from the table at that commit.
+     - **Full Maestro form** (every XDL document embedded):
+       - 5 units: 146 458 B at op 0.29 s;
+       - 6 units: 170 503 B at op 0.29 s;
+       - 7 units: 182 302 B at op 0.20 s, or 182 273 B at op 0.25 s.
+     - **Slim alternative:** 65 951, 75 605 and 87 866 B for 5, 6 and 7 units.
+     - **Comparison.** The real full form is about twice the stand-in: 182 302 against 91 959 B at 7 units. Its
+       increment from 6 to 7 units is 11.8 KB, close to the stand-in's 11.6 KB slope. The jump is in the base,
+       through the WP-12 system documents, as R3 anticipated.
+     - **The coordinator's decision, under the delegation:** the full form.
+     - **Margin.** At 7 units, 262 144 B leaves 79 842 B, 1.44 times the full form. **The bound stands.** The
+       2.85-times stand-in margin is superseded. The "16 units fit" figure of finding 1 holds for the stand-in shape
+       only, not for the WP-12 full form.
+   - **Residuals.**
+     - R1, R2, R4, R5 and R7 are unchanged.
+     - R3 is superseded by the WP-12 re-measurement above.
+     - R6 is extended (L3).
+     - **R8 (M1) is closed** by the composed case.
+     - **R9 (new): later growth must be re-measured against the 256 KiB bound.** This applies to growth beyond 7
+       units, or to documents added to the full form, such as more flows, faults or instances.
+       - At the 6→7 increment of about 11.8 KB, the remaining 79 842 B is about 6 more units of WP-12 shape. Any
+         added document consumes the same margin.
+       - Any such change must re-run the platform-builder dry run and compare it with `MAX_PERSISTENCE_INPUT`
+         before a run.

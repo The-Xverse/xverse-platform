@@ -14,6 +14,8 @@ broker artifact) and starts no process. Two shapes:
   not modelled (review-c1 finding 1, residual).
 
 The bound cases check the Python refusal, and both native supervisor builds at the bound and one byte above it.
+The composed case drives ``BootstrapSession.persistence`` through the real worker's Init with the 7-unit stand-in
+(review-c1 findings 3-4, M1).
 """
 
 from __future__ import annotations
@@ -21,12 +23,14 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from importlib.resources import files
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import select
 import socket
+import subprocess
 import sys
 import time
 
@@ -34,7 +38,10 @@ import pytest
 
 from xverse.maestro.admission import PermitApproval, PermitBinding, permit_digest
 from xverse.maestro.artifacts import ArtifactDeclaration
-from xverse.maestro.bootstrap import MAX_PERSISTENCE_INPUT, _sealed
+from xverse.maestro.bootstrap import (
+    MAX_PERSISTENCE_INPUT, BootstrapAdmission, BootstrapSession, _sealed, encode_bootstrap, seal_helper_image,
+    sealed_bootstrap_fd,
+)
 from xverse.maestro.collection_plan import admit_collection
 from xverse.maestro.coverage import ArtifactExpectation, admit_coverage
 from xverse.maestro.persistence import MAX_CONFIG, encode_configuration
@@ -116,7 +123,7 @@ def _phase8(docs, names, work, horizon):
     return docs
 
 
-def configuration(tmp_path, count, *, shape="bench", horizon=300, operation=0.2):
+def configuration(tmp_path, count, *, shape="bench", horizon=300, operation=0.2, generation_deadline=None):
     """The encoded persistence configuration for ``count`` units; an offline dry run (no process starts)."""
 
     phase8 = shape == "phase8"
@@ -186,7 +193,7 @@ def configuration(tmp_path, count, *, shape="bench", horizon=300, operation=0.2)
                                   drain_seconds=2)
     return encode_configuration(prepared, result, resources, run_id=RUN_ID, bindings=bindings, approvals=approvals,
                                 session="host-session",
-                                generation_deadline=HostDeadline("host-session", time.monotonic() + 120),
+                                generation_deadline=generation_deadline or HostDeadline("host-session", time.monotonic() + 120),
                                 journal_path=tmp_path / "m3.jsonl", evidence_root=tmp_path / "argus-maestro",
                                 schedule=schedule, coverage=coverage, collection=collection,
                                 broker_artifact=admit_broker_artifact(coverage, expected_digest=coverage.digest))
@@ -295,3 +302,71 @@ def test_run_supervisor_keeps_64_kib_for_other_role_inputs(run_stack):
 def test_run_supervisor_refuses_another_role_input_above_64_kib(run_stack):
     session, manager, *_ = run_stack
     _refused(session, manager, 5, ROLE_INPUT + 1)
+
+
+# --- Composed: the Python path and the real worker with a real configuration above 64 KiB (finding 3, M1) ----------
+
+@pytest.fixture
+def stand_in_stack(environment, binaries, supervisor_binary, tmp_path):
+    """The legacy native supervisor (as ``test_bootstrap.boot_stack``) admitted for a 7-unit Phase 8 stand-in."""
+    factory, _, _ = environment
+    manager, latch = factory(seconds=100, run_id=RUN_ID)  # the stand-in coverage window is 55 s
+    config = configuration(tmp_path, 7, shape="phase8", horizon=600, operation=0.25,
+                           generation_deadline=manager._admission.teardown_deadline)
+    images = tuple(seal_helper_image(source, digest="sha256:" + hashlib.sha256(source.read_bytes()).hexdigest(), argv0=argv0)
+                   for source, argv0 in ((binaries["launcher"], str(binaries["launcher"])),
+                                         (binaries["bound-gate"], str(binaries["bound-gate"])),
+                                         (Path(sys.executable).resolve(), sys.executable)))
+    data = encode_bootstrap(BootstrapAdmission(
+        RUN_ID, config.prepared.lifecycle_digest, "bootstrap-approval",
+        "sha256:" + hashlib.sha256(b"owned-test-environment").hexdigest(),
+        "sha256:" + hashlib.sha256(supervisor_binary.read_bytes()).hexdigest(),
+        manager._admission.teardown_deadline, deadline(4.9), images))
+    input_fd = sealed_bootstrap_fd(data)
+    parent, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+    parent.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+    process = subprocess.Popen([str(supervisor_binary), str(peer.fileno()), str(input_fd)],
+                               pass_fds=(peer.fileno(), input_fd, *(i.descriptor for i in images)),
+                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    peer.close()
+    os.close(input_fd)
+    session = BootstrapSession(process, parent, data, manager, latch, deadline=deadline(3))
+    clients = []
+    try:
+        yield session, manager, latch, config, clients
+    finally:
+        for client in clients:
+            if not client._failed and not client._aborted:
+                try:
+                    client.abort(deadline(1))
+                except (ValueError, OSError):
+                    client._fail()
+            assert client.drain(deadline(1)).worker_reaped
+        session.cancel("c1-stand-in-teardown")
+        observed = session.drain(deadline(1.8))
+        assert observed.supervisor_reaped and observed.registered_children_reaped
+        for client in clients:
+            client.dispose()
+        session.dispose()
+        for entry in manager._entries.values():
+            if entry.state != "released":
+                cleaned = manager.force_cleanup(entry.descriptor)
+                assert cleaned.boundary_released and cleaned.residual_count == 0
+        process.wait(timeout=1)
+        assert process.stderr.read() == b""
+        process.stderr.close()
+        for image in images:
+            os.close(image.descriptor)
+
+
+def test_python_path_starts_the_worker_with_a_7_unit_configuration_above_64_kib(stand_in_stack):
+    """BootstrapSession.persistence -> native birth -> worker _read_input, strict parse, _load, hello and Init."""
+    session, manager, latch, config, clients = stand_in_stack
+    assert ROLE_INPUT < len(config.private_bytes) <= BOUND
+    helper = BoundaryDescriptor(RUN_ID, "helper:storage", 1, "storage", 0)
+    manager.create_frozen(helper)
+    client = session.persistence(config, helper, deadline(min(3.5, (session._lease - time.monotonic_ns()) / 1e9 - 0.2)))
+    clients.append(client)
+    assert client._ready and client.last_writer_state == "open" and not latch.cancelled
+    assert client._scope == hashlib.sha256(config.private_bytes).hexdigest()
+    assert [u.unit_id for u in client.prepared.units] == [u.unit_id for u in config.prepared.units]
