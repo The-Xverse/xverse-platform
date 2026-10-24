@@ -916,3 +916,159 @@ decision S-D2, approved on 2026-10-23).
     - **Effect.** `test_stabilization_stack_load_failures.py` passes, so finding 21 is repaired at the platform
       level. Stack acceptance still needs an independent review of `3504b06d4`..`399283515`, then the decisive
       full installed-wheel run and DV12, then the S1c live re-run with H1.
+24. **Independent review of DR-15 (`3504b06d4`..`4eb51406d`; written at 01:34:33 2026-10-24, load about 3.0-4.0):
+    PASS WITH NOTES (no HIGH; three MEDIUM, six LOW).** The diff was read in full against the native sources
+    (`bootstrap.c`, `run_authority.c`), `bootstrap.py`, `child.py`, `dispatcher.py` and `run_broker.py`. The
+    installed wheel `4c664da7…` was checked to equal the head for the four changed modules. Rerun, one pytest
+    process at a time: `test_stabilization_stack_load_failures.py` 8 passed (16.9 s);
+    `test_schedule_plan.py`, `test_stabilization_s1b_readiness.py`, `test_stabilization_s1b_start_failure.py` and
+    `test_stabilization_cancel.py` 75 passed (52.9 s). The claim that the old wheel failed `in-flight-child-check`
+    was not re-verified (no rebuild).
+    - **Confirmed.**
+      - **RB1 keeps every real storage failure fail-closed, and checks it before the cancel.** After the re-check,
+        the pidfd, pid and socket identity checks (`persistence.py:740-751`) and `_failed` (`:752-753`) still run
+        before the cancel classification (`:754-756`). Child exit, identity change and a prior failure still
+        raise `PersistenceError`. The re-check (`:733-739`) runs only when `live` is true, the latch is cancelled
+        and `_failed` is false. Otherwise the original error propagates. The `live=False` re-check repeats the
+        holder and capability checks (`child.py:82-92`), so those failures still raise.
+      - **Concurrency.** `_fail()` sets `_failed` before it cancels the latch (`persistence.py:780-782`). The
+        re-check reads the latch first, then `_failed`. A latch cancelled by `_fail()` is therefore never taken
+        as a cancel. If `_fail()` lands after that read, the final `_failed` check still catches it. The only
+        remaining window lies between the final `_failed` read and the final latch read. It has the same shape
+        as the S1a-1 first read and is benign: `_failed` is sticky, and every later call refuses.
+      - **The in-flight variant is sound.** It changes nothing that the S1a-1 in-flight path did not already
+        allow when the cancel was seen at the first read: `live=False`, then the unchanged grace in `_rpc.check`.
+        The grace starts at the next poll. A post-ack cancel no longer fails a request that storage already
+        acknowledged.
+      - **RA1 constants match the native code.**
+        - The 5 s lease maximum applies to the initial lease and to every renewal (`bootstrap.c:136,338`; the
+          terminal renewal is at `:345`).
+        - The 2 s close bound is `run_authority.c:212` `close_end`. CANCEL uses it at `:527-530`.
+      - **RA1 admission.**
+        - The bound applies to every unit whose first observe condition is not `running`
+          (`schedule_plan.py:136-141`). That is the same identity that `ProcessReadiness._probe` uses
+          (`providers.py:279-281`).
+        - It uses W = min(policy timeout, observe timeout), as at run time (`providers.py:444`).
+        - `decode_schedule` re-derives the bound.
+        - `ML-SCHEDULE-READINESS-WINDOW` is unique in `src/`, is documented in the ADR note, and is raised
+          before any run.
+      - **RA1 run time.**
+        - L is read through `RunUnitIssuer.broker`. `bind` guarantees that type for marker units
+          (`providers.py:303-319`).
+        - The units are consistent: ns divided by 1e9 against `time.monotonic()` and `monotonic_seconds`.
+        - Both leases only grow (`bootstrap.py:843`; `run_authority.c:534`), and only the dispatcher thread
+          renews them, at statement boundaries. A stale read is therefore conservative.
+        - The attempt times are at most `D − min(0.25, W'/A)`, so the `at >= deadline` drop
+          (`providers.py:457-459`) cannot fire unless t0 is already at or past D.
+        - When W' = 0, the three QUERYs run back to back at t0, inside the native limit of 3. A marker never
+          seen still ends in `ML-PROBE-NOT-READY`, then `readiness-start-failed`, which fails closed.
+        - The cap never declares a unit ready without a verified marker. It changes only when the attempts
+          are made. Readiness still comes only from the native QUERY reply.
+      - **RA4 timing.**
+        - The deadline `min(now + 2.75, generation − 2, limit)` stays inside the native `until − now ≤ 5 s` and
+          `until ≤ generation − 2 s` checks (`run_authority.c:666`).
+        - The S1a-3 wait `min(now + 0.5, end, limit − 0.25)` and the revoke deadline are unchanged
+          (`run_broker.py:1025`, `:1072-1077`).
+        - After a full 0.5 s wait, 2.25 s remain: the native close bound plus 0.25 s.
+      - **Process and tests.**
+        - The ADR notes come before the code, by commit order and by their written-at times.
+        - The `live-window` branch now asserts the specific refusal code instead of returning on any
+          `ScheduleError`.
+        - The `admitted-window` assertions follow the criterion that finding 22 fixed before the repair:
+          refusal, or every attempt "spaced inside the lease it actually has". They discriminate: without the
+          cap, the last attempt (t0 + 1.75 s, with about 2.6 s left) would fail `lease − last ≥ 2.25`.
+    - **MEDIUM-1 (the declared window is usually cut, and the cut is silent): `providers.py:444-450`.**
+      - Renewal happens only when at most `renew_margin` is left, and to at most 5 s. A start step therefore
+        usually meets L − t0 well below W + 2.25 s, so W' < W is the common case, not only the W' = 0 band
+        that the ADR declares.
+      - **The live timeline of finding 22.** L ∈ [5.44, 5.92] s and t0 = 3.41 s give
+        W' = max(0, L − 2.25 − t0) ≈ 0–0.26 s for any W ≥ 0.26 s, including the DR-15 H1 value W = 2.0 s. The
+        S1c marker writes were measured at 0.24–1.26 s after release; the driver in `…-cancel-paused`
+        announced after 0.467 s. The S1c re-run with H1 is therefore predicted to end the first owned start
+        step in `ML-PROBE-NOT-READY` in that placement.
+      - The fixture shows the same effect: placed at 2.8 s, W = 2.0 s is spent as about 0.3–0.5 s. The test
+        asserts the attempt count, not the window actually spent.
+      - `ML-PROBE-NOT-READY` cannot tell "not ready within the declared W" from "Maestro shortened W to W'".
+        That weakens any attribution of a readiness failure to the unit.
+      - Finding 23 records the cap as silent, but it understates how often it applies.
+      - **Repair.**
+        - Record W, W', L and t0 for each marker start step in the readiness evidence (this overlaps H3).
+          Give a capped window that ends not ready its own diagnostic, or a field on the not-ready row.
+        - Amend the ADR residual to cover the general case.
+        - Before the S1c re-run, put back to the author the choice of RA2+RA1, which finding 22 listed and
+          DR-15 rejected only as "insufficient alone".
+    - **MEDIUM-2 (the 2.25 s reserve does not cover the work between the cancel and the terminal fence):
+      `providers.py:31`, `dispatcher.py:1644-1669`, `persistence.py:1268-1277`.**
+      - The reserve is the close bound plus 0.25 s "for the cancel's reply and the terminal fence". The root
+        lease is extended only by `_service_terminal`, which the first teardown record calls.
+      - Before that record, the readiness-failure path runs:
+        - the undeadlined `owner.cancel` (up to the 2 s native close);
+        - the `failure` statement, a full storage RPC;
+        - `_close_restarts`;
+        - the start of `teardown.run`.
+      - **Effect.**
+        - Under the live mechanism, a unit blocked in `fsync` on loop10, the freeze consumes the full 2 s. The
+          storage worker's own RPC then also writes to the stalled device, with about 0.25–0.5 s of lease left.
+          The root can still end at L and give the finding 21 (A) signature.
+        - RA1 removes the case from finding 22, a cancel that completes 1.5 s after the failure. It does not
+          show the close bound actually used: `CANCEL_COMPLETION_SECONDS = 1.5`
+          (`test_stabilization_stack_load_failures.py:150`), and the assertions only check `cancel_left > 2.0`
+          (`:252`, `:273`).
+        - This stays fail-safe under the owner decision recorded in finding 18 (LOW-2), but it is not the
+          stated invariant.
+      - **Repair** (one of the following, with the ADR note amended first):
+        - service the terminal fence immediately after a confirmed native cancel, before the `failure`
+          statement;
+        - or add the failure statement's and the terminal RPC's budgets to the reserve, and lower the
+          admission bound to match.
+        - In either case, add an (A) case whose cancel completes at the 2.0 s bound, or state this as a
+          declared residual.
+    - **MEDIUM-3 (no test pins the fail-closed side of RB1).** Nothing in `tests/` asserts `ML-PERSIST-CHILD`,
+      or any fail-closed `PersistenceError`, from `_live` when the latch is cancelled. The new branch
+      (`persistence.py:734-739`) is covered only by its positive windows.
+      - **Repair (tests only).** Add the RB1 negatives in the four windows:
+        - cancel plus a storage worker killed before the child wait → `PersistenceError("ML-PERSIST-CHILD")`,
+          recorded, and `_fail()`;
+        - cancel plus `_failed` set → `ML-PERSIST-CLOSED` as `PersistenceError`, not `PersistenceCancelled`;
+        - cancel plus a replaced socket identity → `ML-PERSIST-CHILD`;
+        - a root refusal without a cancel → still fails closed.
+    - **LOW-1 (root-level faults that coincide with a cancel are reported late): `persistence.py:733-739`,
+      `bootstrap.py:578-592`.** With the latch cancelled, root lease expiry, root exit, `_closed` and a terminal
+      mismatch are no longer refused at this call. A storage worker killed by the root may not yet be visible
+      to the pidfd check, so the call can raise `PersistenceCancelled`. The next terminal call then reports the
+      fault. This matches the S1a-1 first read and the terminal kinds, so it adds no new class. Also, the latch
+      reason is never consulted: a latch cancelled by `bootstrap-uncertain` or `bootstrap-helper-failed` is
+      taken as a cancel. **Repair:** state both in the RB1 note.
+    - **LOW-2 (RA4 covers only undeadlined cancels).** A caller deadline still bounds K.CANCEL, so a stalled
+      freeze still ends in a revoke for:
+      - the lazy terminal fence (`dispatcher.py:1405-1407`, `now + operation_seconds`);
+      - teardown emergencies (`teardown.py:465`);
+      - controller cancels.
+
+      A-ii also compounds: if CANCEL is read just after the native watchdog lease close (`run_authority.c:652`),
+      the two freezes can take up to 4 s, which is more than 2.75 s. **Repair:** list both in the S1a-6
+      residuals.
+    - **LOW-3 (the RA4 cost is not checked against the outer budgets).** An undeadlined cancel may now take
+      about 3.75 s. The readiness-failure path runs it before the `failure` statement, whose deadline is
+      `min(_work_end, …)` (`dispatcher.py:1644-1655`). No admitted budget has a cancel term. DV05/DV06 pass,
+      but they use their own deadlines.
+      - The live harness's stop call (`runtime_entry.stop` → `RunUnitIssuer.cancel`, `run_broker.py:1507`) is
+        also synchronous and undeadlined.
+      - **Repair:** one sentence in the S1a-6 note bounding the effect on `_work_end`, the S1c canceller and the
+        closure budget.
+    - **LOW-4 (the RA4 test only restates the constant): `test_stabilization_s1b_start_failure.py:145`.** A
+      behavioural test needs no privileges: delay the K.CANCEL exchange by 1.5 s and assert CANCELLED with no
+      revoke. It would fail at `now + 1 s`. **Repair:** add it with the next change in this area.
+    - **LOW-5 (the admission rationale understates the pre-release work).** "One round trip" stands for
+      `commit_intent`, ARM, RELEASE and the prerequisite and health QUERYs (`providers.py:426-440`). The bound
+      is declared necessary, not sufficient, so this changes no safety claim. **Repair:** reword in the ADR
+      note.
+    - **LOW-6 (records outside this repository).** The thesis record
+      `specs/024-maestro-lite-lifecycle/review/amendment-s1a-3-cancel-busy-connection-20261023.md:23` still
+      says "within the 1 s cancel end", which S1a-6 supersedes. The canonical thesis note does not yet mention
+      DR-15. **Repair:** a traceable amendment and a proposed note update, for the author.
+    - **Effect.** The stack acceptance can proceed to the decisive full installed-wheel run and DV12 once the
+      MEDIUM-3 tests are added and MEDIUM-1 and MEDIUM-2 have recorded dispositions (an ADR amendment, or a
+      declared residual accepted by the author). The S1c live re-run with H1 should wait for the MEDIUM-1
+      disposition, because the current cap is predicted to shorten the H1 window to about 0–0.3 s in the
+      finding 21 placement.
