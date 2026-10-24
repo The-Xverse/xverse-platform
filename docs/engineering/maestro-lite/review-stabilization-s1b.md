@@ -1703,3 +1703,130 @@ decision S-D2, approved on 2026-10-23).
         assertion: 4 records, not 8.
       - The full related list (`dr17-suites.sh`, 21 groups) ran from 02:55:42 to 03:05:03 at load 3.9–5.1: 1075
         passed, none failed or skipped.
+
+30. **Diagnosis: an adapter health slot due inside its Stop bracket is `unverifiable` (S1c live; written at 05:25:19
+    2026-10-24, load about 3.6-4.2, before any repair; no `src/` change).**
+    - **Symptom.** In 2 of the 71 runs that got past start-up, both in the newest run set, execution succeeds but
+      the run ends `ML-SCHEDULE-EVIDENCE-INCOMPLETE`. The Maestro Argus writer is `failed`, and the terminal-report
+      blockers are `normal-records`, `required-coverage` and `uncertain-applicability`
+      (`terminal_runtime.py:136-140`).
+      - Exactly one `lifecycle-coverage.json` row causes this. It is the `normal-record` row `…g1.health.5` of
+        `carla-adapter-instance`, with `applicable: null`, `status: unverifiable` and the diagnostic "Applicability
+        is not established by original retained facts." (`coverage.py:774`).
+      - The row still lists a `-health` event in `evidenceIds`.
+    - **Evidence (read-only).** Under `.x-verse-build/runs/lite-stabilization-s1/s1c2-part2-dev7-20261024/`:
+      - **Failing runs:** `dev-s1c2p1-20261024T051109-freeze-vcu` and `dev-s1c2p1-20261024T051454-nominal`. The
+        files are `maestro-tmp/test_live_closed_loop0/argus-maestro/{lifecycle-coverage.json, broker-projection.json,
+        events.jsonl}`, with these sha256 prefixes:
+        - `T051109`: coverage `0e646507…`, broker `310df44d…`;
+        - `T051454`: coverage `df90dd09…`, broker `fd155871…`.
+      - **Passing comparisons:** `T050838-nominal`, `T051014-freeze-vcu` and `T051653-long-run`, and the sets
+        `s1c2-part2-dev5-20261024` and `s1c2-part2-dev6-20261024`.
+      - **Harness:** blueprints `test_live_closed_loop.py:460-468`. The `ProbePolicy(unit, 5, 5, …)` gives cadence
+        5 s and freshness 5 s, and `admit_coverage` uses `health_policies = (cadence, freshness)`.
+    - **Recorded facts.** These are the adapter's generation-1 broker row and its annotations. All times are relative
+      to its Release-ACK (the anchor), in host seconds.
+
+      | run | Stop request | Stop ACK | Stop duration | slot-5 end − Stop request | latest slot-5 sample | result |
+      |---|---|---|---|---|---|---|
+      | T051109 freeze | 24.924 | 25.024 | 0.101 | +0.076 | 24.542 | `None` → unverifiable |
+      | T051454 nominal | 24.979 | 25.013 | 0.034 | +0.021 | 24.425 | `None` → unverifiable |
+      | T051014 freeze | 25.080 | 25.220 | 0.140 | −0.080 | 24.763 | slot 5 `True`, slot 6 `False` |
+      | T050838 nominal | 24.415 | 24.567 | 0.153 | +0.585 | 23.639 | slot 5 `False` |
+
+      - In both failing runs, slot 5 is [20, 25] s and holds three valid health samples. In T051109 they are at
+        21.255, 22.871 and 24.542 s, all before the Stop request. The Stop outcome annotation is at 25.025 s, at the
+        ACK.
+      - The adapter's Stop request comes 24.4–26.3 s after its Release-ACK in the nominal and freeze runs of
+        dev5–dev7. That is close to the 25 s slot boundary.
+        - In dev5, four of the five nominal and freeze runs place it 0.30–0.51 s before 25 s. The ACK also comes
+          before 25 s, so slot 5 is `False`. The fifth places it at 25.446 s.
+        - In dev7 the placements are 24.415, 24.924, 24.979 and 25.080 s. Two of them land inside the bracket.
+      - A hit needs the slot end to fall in (Stop request, Stop ACK]. The bracket is 0.03–0.21 s wide, against a 5 s
+        cadence, so whether a run hits is decided by start-up and tick jitter.
+      - No other unit's slot end fell inside its bracket in dev5–dev7.
+    - **Mechanism.**
+      - `health_window` (`coverage.py:795-805`) sets slot N to [A + (N−1)c, A + Nc], where A is the Release-ACK and c
+        the cadence. It returns:
+        - `True` if the slot ends at or before the Stop request;
+        - `False` if it ends after the Stop ACK;
+        - otherwise `None` (`:805`).
+      - `assess` first computes the status from the in-window samples (`:770-772`), and gets `satisfied`. That is
+        why `evidenceIds` lists the first sample. It then overwrites the status with `unverifiable` because
+        `applicable is None` (`:773-774`).
+      - `terminal_runtime.py:140` adds `uncertain-applicability` for any `applicable is None` row, whatever its
+        status. `_aggregate` (`coverage.py:830-833`) makes `normalRecordStatus` `unverifiable`, hence
+        `normal-records` and `required-coverage`.
+      - The closure's "normal records complete" and "cleanup complete" are separate harness and closure facts. I did
+        not trace them.
+    - **Classification (confidence high).**
+      - **Not an implementation bug against the contract.** The code implements `coverage-assessment.md:28-34`
+        exactly: "Due before Stop-request is applicable, after Stop-ACK is inactive, and inside an uncertain Stop
+        bracket is unverifiable."
+      - **Not a missing retained fact.** All four bounds are present, ordered, and within the terminal end.
+      - **Not an inclusive/exclusive comparison slip.** The bracket has positive width (34–101 ms), so changing `<=`
+        or `>` cannot remove the case.
+      - **The applicability uncertainty is genuine.** The unit's active end lies somewhere inside the bracket, so
+        whether the full slot was owed is unknown. The rule that bracket uncertainty must not be rounded into an
+        inactive slot (`review-affa17.md` finding 96, `:846`) therefore still holds.
+      - **But it is immaterial when a valid in-slot sample is retained.** If the slot is applicable, the sample
+        satisfies it. If it is not, the row is not-applicable. Both outcomes are accepted by `_aggregate` and by the
+        terminal report.
+      - **Defect.** This is a specification-level gap in the outcome rule (design defect). The contract makes "due
+        inside the Stop bracket" unverifiable even when the evidence discharges the obligation either way. It
+        manifests at a timing boundary. Without an in-slot sample, the case is a true uncertainty (missing vs.
+        inactive) and must stay fail-closed.
+    - **Reproduction.** `tests/thesis_lite/maestro/test_stabilization_coverage_health_boundary.py`, run on the
+      installed wheel `a54844d3…` (= `ee91697a4` `src`): **1 failed, 12 passed**.
+      - **RED (fails by design):** `test_red_slot_due_inside_stop_bracket_with_in_slot_sample_is_satisfied`.
+        - It uses the neutral `Fixture` with unit a, cadence 1 s, Release-ACK 0.2 s and slot 3 = [2.2, 3.2] with a
+          sample at 3.0 s. Its Stop bracket is set to [3.15, 3.25], the live geometry.
+        - Observed: `(None, 'unverifiable', 'Applicability is not established…')` on exactly that one row, with
+          `normalRecordStatus` `unverifiable`.
+        - Expected after the repair: `applicable True`, `satisfied`, the 3.0 s sample as evidence, `health.4`
+          not-applicable, `normalRecordStatus` complete, and no `applicable is None` row.
+      - **Controls (pass now, and must still pass after the repair):**
+        - the same bracket with the in-slot sample deleted stays `None`/`unverifiable`;
+        - a slot due before the Stop request is `True`/`satisfied`;
+        - a slot due after the Stop ACK is `False`/`not-applicable`;
+        - the default Fixture is `True`/`satisfied`;
+        - a missing `stopAcknowledgedAt` with a sample present stays `unverifiable` (CV07);
+        - the recorded live brackets, as constants, give through `health_window` slot 5 `None` for T051109 and
+          T051454, `True` for T051014 and `False` for T050838. This is white-box; the admitted active end is taken
+          to be generous.
+    - **Repair options** (all fail-closed, none needs M1):
+      - **A (recommended): discharge the bracket case by an observation.**
+        - Only when all Release and Stop bounds are present and consistent and Stop request < slot end ≤ Stop ACK,
+          and at least one health event for that unit and generation is valid, passes `source_ok`, and lies in
+          [slot start, min(slot end, Stop request)]: report `applicable True` and `satisfied` with that sample.
+        - Otherwise the row keeps `None`/`unverifiable`.
+        - Change: `coverage.py:795-805` and `:770-774` only. No producer, schema, terminal-report or M1 change.
+          `verify_closed` recomputes with the same code, so pre-closure and offline stay consistent.
+        - `True` is a conservative superset: it holds the slot to the stricter standard, which the sample meets. It
+          never marks a missing check satisfied, and the no-sample and missing-bound cases keep failing closed.
+        - Bounding the sample by the Stop request is stricter than the spec's "in that slot". It costs nothing
+          live: the latest samples precede the request by 0.38 s and 0.55 s.
+        - Trade-offs:
+          - the spec text must change;
+          - `expectedObligationsDigest` and the report core change only for runs that hit the bracket;
+          - the two recorded failing reports would recompute differently, but they stay failed as recorded.
+      - **B: treat the bracket as applicable.** A sample gives `satisfied`; no sample gives `missing`, not
+        `unverifiable`. This is fail-closed and simpler, but it asserts a gap that may not exist and changes the
+        diagnostic class. The no-sample control would change.
+      - **C (rejected): end the obligation at the Stop request** (slot end > request → not-applicable). This rounds
+        the bracket into inactive, against finding 96 and the contract. It would also make a nearly complete slot
+        without a sample not-applicable.
+      - **D (rejected): keep `applicable None` but let `satisfied` pass** (`terminal_runtime.py:140`). This spans two
+        modules and weakens what `uncertain-applicability` means.
+      - **E (workaround only): move the stop or observe ticks** in blueprints so the adapter's stop is far from a
+        multiple of 5 s after Release-ACK. Jitter keeps the probability nonzero, so it is not a repair.
+      - **F (rejected): narrow the Stop bracket at the producer** (`evidence.py:326`, `collection_evidence.py:52-68`).
+        This lowers the probability but cannot remove the case, and the producer verification changes.
+    - **Documents a repair touches.**
+      - `coverage-assessment.md:28-34` (the coverage contract, `README.md:438`) needs a "discharged bracket" clause.
+        CV07 is unchanged.
+      - The health-slot paragraph of `affa-coverage-runtime-composition.md:29-35`.
+      - An amendment section in ADR-ML3-EVIDENCE-0001, which carries the coverage and runtime-scope decisions
+        (`:105-115`). It is the nearest coverage ADR; there is no separate ADR-ML3-COVERAGE.
+    - **Out of scope, noted.** Separate `…g1.ready` rows are `unverifiable` in the no-carla runs of dev6 and dev7
+      (adapter) and in dev5 `T044245-cancel-paused` (lite-driver). These are start-up paths and were not examined.
