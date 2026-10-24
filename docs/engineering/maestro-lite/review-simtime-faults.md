@@ -452,3 +452,92 @@ and admission refuses while it is unknown.
        thawed by Maestro and ends `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`) without `incomplete`: its onset
        happened, and Maestro cleared it itself. A `resumed` still outstanding at `finish` or `cancel` is not
        checked (R13).
+
+5. **Implementation of amendment ST-2 and installed-wheel verification (written at 15:50:47 2026-10-24).**
+   - **Commits.**
+     - `88379942c`: finding 4, the dispositions, before any code.
+     - `ce62b8fbc`: ADR amendment ST-2, before any code.
+     - `c3aadc745`: the code and tests. The source diff from `b40acce49` is now 11 files, +922/−11. ST-2 itself changes
+       `simtime.py`, `faults/__init__.py` (the flag comment only) and `dispatcher.py` (`_finish_faults`).
+   - **What changed.**
+     - **M1.**
+       - `HubChannel.receive` no longer raises on an end-of-file. It sets `peer_closed` and reads nothing after it.
+       - `SimTimeFaultScheduler._hub_eof` decides the end-of-file. When every entry is final and no `resumed` is
+         pending, it records `hub_closed` and one `outcome`/`hub-closed` statement on the first entry in listing
+         order. Otherwise it is a protocol failure ("the hub closed the channel with … pending").
+       - `close` sends nothing after the hub's end-of-file and never raises.
+     - **M2.**
+       - `resumed` is in `HUB_FRAMES`, and `ackSeq` is an integer of at least 1.
+       - Each hold `ack` is sent through `_ack`, which records `(entry, phase, step, seq)`.
+       - The next frame must be the matching `resumed`. Any other frame, or a `resumed` with no ack pending, is a
+         protocol failure.
+     - **M3.**
+       - In `_handle`, a step at or after the onset of an unarmed, non-final entry is a protocol failure. This
+         replaces R9's rule, "every entry armed before any other frame".
+       - In `finish`, an entry never armed, or one not applied although the hub reported its onset step, is a
+         protocol failure. Its remaining entries end `cancelled` (`XVERSE-FAULT-CANCELLED`).
+       - An unreached onset ends `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`) and sets `incomplete`.
+       - `FiniteDispatcher._finish_faults` maps a simulator-time `run_failed` at `finish` to `ML-SCHEDULE-FAULT-CLOCK`
+         (or `-APPLY`), before the `incomplete` check. This is restricted to `SimTimeFaultScheduler`, so tick mode is
+         unchanged.
+     - **R-1.**
+       - `arm` carries `count` and `index`.
+       - `check_arm_batch` (exported) refuses a wrong or unequal count, an index gap or an index that does not start
+         at 1, a duplicate index or entry, and a truncated batch.
+       - Maestro checks its own batch before it sends.
+     - **L4.** `BASE_DIGESTS` pins five plans: the fault-less plan, the fault-less plan with the sensor, stale plus
+       crash, freeze, and `delay-ticks`. For each it pins the lifecycle digest and the sha256 of the canonical bytes.
+       - **Method.** The literals were computed from `git archive b40acce49 src tests xdl` with the cache venv
+         interpreter (`-I`, the export's own sources first on `sys.path`, asserted).
+       - **Result.** An export of the candidate gives identical values.
+       - **Cross-check.** The fault-less plan with the sensor is `952c6b93…`, the value finding 3 reported.
+       - **Records.** The script and its output are in `evidence/simtime/l4-base-digests.py` and
+         `l4-base-digests-b40acce49.json`.
+       - **Not changed.** `U-ADM-03b` still reads the sibling checkout. The literals now pin the fault-less plan
+         independently.
+     - **`SIMULATION_TIME_TRIGGERS`** stays `True`, and only its comment changed. Every requirement of option A
+       still holds.
+   - **Tests.** `test_simtime.py` now has 78 cases, up from 55.
+     - **Added.**
+       - 5 L4 literal cases.
+       - The arm-batch refusals (7 shapes in one case).
+       - Per-entry arming, two cases: a step below the onset is accepted and the onset is refused; a report for an
+         unarmed entry is refused.
+       - The unreached onset, giving `cancelled` NOT-REACHED and `incomplete`.
+       - 4 finish refusals: source never live; never confirmed armed; a reached onset without apply, for a freeze
+         and for a relay.
+       - The reviewer's probes P1 and P2.
+       - 4 `resumed` echo cases (wrong `ackSeq`, `step` or `phase`, and no ack pending) and the `resumed` codec.
+       - Benign end-of-file, including no `close` sent to a closed hub.
+       - 3 pending end-of-file cases: a report, a `resumed`, and a clear hold.
+       - The composed native run, now parametrized. The fake hub arms until `index == count`, answers every ack
+         with `resumed`, and in the new case **exits at its stop step**. That run succeeds with both entries
+         `cleared`, records one `hub-closed` statement at simulator step 40 on the first listed entry, and leaves
+         the closure report complete.
+     - **Replaced.** `test_never_applied_entries_end_cancelled_never_due`, which pinned the old behaviour, and
+       `test_report_before_arming_completes_is_a_protocol_failure`, which pinned R9.
+   - **Mutation controls (run, then reverted; the rebuilt wheel was byte-identical).**
+     - **No `resumed` check:** P1, P2, 3 echo cases, the benign end-of-file, the pending-hold end-of-file and the
+       composed exit run fail. That is 8 cases.
+     - **Every end-of-file a failure:** the benign end-of-file and the composed exit run fail.
+     - **No finish reachability check:** the 4 finish refusals fail.
+   - **Installed-wheel run.**
+     - **Wheel.** `5e91e36c2b7d6a325133dfb9c8eed718c17058cafff9d2e65c072e98f6d16013`, built by `s1a3-venv.sh build`
+       from `src/` at `c3aadc745`.
+     - **Tree check.** `diff -rq` of the installed `xverse` against `git archive c3aadc745 src` differs only in the
+       unpackaged `xcom`. The installed `xverse_xdl` adds only its `profiles` and `schemas` data.
+     - **Result.** One pytest process over faults `simtime`, `resolve`, `scheduler` and `maestro_run`, and maestro
+       `schedule_plan` and `preparation`: **196 passed**, 0 failed, 0 skipped, in 81 s at load 4.6–4.8. The log is
+       `evidence/simtime/related-suites-st2-c3aadc745.log`. Finding 3's rerun of the same files gave 173, and the 23
+       new cases account for the difference. Another agent's compat test process ran on the host at the same time.
+     - **Not run here.** The decisive full regression (`run-z-quiet-loop.sh`), DV12 and CAPA are left to the
+       coordinator, after re-review.
+   - **Residuals.**
+     - R12, R13 and the WP-10 #5 obligations (L1, L2, L3 and R-2) are recorded in ADR ST-2.
+     - R5 and R6 are closed structurally by M3. An unreached entry now makes the run incomplete, and an entry never
+       armed fails it, with no deadline.
+     - R9 is superseded (finding 4).
+     - R1–R4, R7, R8, R10 and R11 stand.
+     - **Hub dependency.** The compat hub relay (WP-10 #4) must implement `resumed`, `count`/`index`,
+       arm-before-onset and the benign close exactly as in ST-2. Until it does, the frame contract is exercised only
+       against fake hubs.
