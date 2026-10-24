@@ -1525,3 +1525,152 @@ decision S-D2, approved on 2026-10-23).
       - an independent review of `4f0034079`..`c6bdfcf01`;
       - the decisive full installed-wheel run and DV12;
       - the S1c live re-run with H1 = 1.7 s and the H3 window record.
+28. **Independent review of `4f0034079`..`49d411c31` (DR-17: M1 fence cap, L1, L5 tests, L6) (written at 02:51:33
+    2026-10-24, load about 3.6-4.1). Verdict: PASS WITH NOTES.**
+    - **Scope and build.** The diff `4f0034079~1..49d411c31` was read in full. That covers `dispatcher.py`, the two
+      test files, the ADR note, the design line and finding 27. The installed wheel is
+      `9aea0c00241a5b44614d4ede58660c265c9012245b19adfca56db3a7e13f7cfc` (02:28:39).
+      - `diff -rq` finds the installed `xverse/` identical to `src/xverse`; only the unpackaged `xcom/` differs.
+      - `git diff c6bdfcf01 49d411c31 -- src` is empty and the worktree is clean, so the wheel is the source of
+        `c6bdfcf01`.
+    - **Tests rerun** (installed wheel, one pytest process at a time):
+      - `test_stabilization_stack_load_failures.py`, the new L1 recovery test, `test_dv05_dv06_bounds.py` and
+        `test_lazy_dispatcher.py`: 43 passed in 83.4 s;
+      - `tests/thesis_lite/faults`, `test_stabilization_s1b_start_failure.py` and `test_run_broker.py`: 73 passed in
+        65.0 s;
+      - a reviewer probe, kept outside the repository (below): passed. None failed or skipped.
+    - **M1, `_fence_cap` (`dispatcher.py:1389-1398`).**
+      - **The C term cannot race unsafely.**
+        - `RunBroker._cancel_result` moves only from None to a value (`run_broker.py:506`, `:1087`). Reading None
+          gives the larger term (C = 2.0 s). Reading a value means the close is spent, whether the K.CANCEL reply
+          came or the revoke did.
+        - If another thread sets the result between the cap and the send, the cap is only 2 s too strict. At worst
+          that costs one best-effort `fault` statement; it never lets a statement run into the fence.
+        - On the `failure` statement C is always 0. `owner.cancel` (`owner.py:761-765`) reaches `RunBroker.cancel`
+          synchronously, and that call writes `_cancel_result` before it returns. This holds even with an
+          external canceller mid-exchange: the dispatcher's own call waits on `ML-AFFA-CONFLICT`, and on its expiry
+          `BootstrapError` (a `ValueError`) takes the revoke path. So C = 2.0 is reachable only for the
+          `fault` statements of `_cancel_faults`, as the ADR says.
+        - Lazy implies native (`dispatcher.py:491-495`), so `self._broker` is never None there.
+        - The cap is an absolute time, so several capped statements in a row cannot together pass
+          `L_root − 0.25 s`.
+      - **Where the cap applies.**
+        - The `failure` statement (`:1684-1694`).
+        - Best-effort `fault` statements while the latch is cancelled (`:1914-1916`).
+        - Nothing after the fence, and nothing in the non-lazy profile.
+        - The statements after the fence (`step-disposition`, `unit-disposition`, `run-terminal`) are uncapped.
+          No required record is newly dropped by design.
+        - The only records that can be lost are the failure event and best-effort fault events, and only in the
+          bands below.
+      - **A cap that has passed** is refused by F-08 before the send. The refusal is swallowed (`:1712`), and the
+        dispatch diagnostic keeps the code.
+        - The schedule evidence does not require a failure event for a failed run (`schedule_evidence.py:683`).
+        - `run-terminal` carries no diagnostic code.
+        - In that band the cause (`ML-PROBE-WINDOW-CUT` or `ML-PROBE-NOT-READY`) is therefore visible only in
+          `DispatchResult.diagnostic` and the window record (result objects, and `maestro-run.json` through the
+          harness), not in Argus. That is fail-closed and diagnosable outside Argus, as finding 27 declares.
+      - **The uncapped pre-cancel fault statements are acceptable.**
+        - Each is bounded by `_end()`: at most `now + op`, and at most the root lease.
+        - A stall costs at most one `op` before `_fail()`. Every later statement then fails fast, or is capped with
+          C = 2.0 because the latch is now cancelled.
+      - **The C-term interpretation is supported.** Under RA5, after the last attempt the lease left is
+        `2 + op + 0.25`. A cancel of duration d then leaves `op + 0.25 − d`. A literal `L − 2.25 s` cap would be
+        `now + op − d`, which is past for every d > op (0.38 s live). The interpretation still needs the author's
+        confirmation, as finding 27 records.
+    - **L1 (`dispatcher.py:795`).** Carrying the records into one fresh view is correct.
+      - Each recovery builds a new `ProcessReadiness` (`recovery.py:436,465`). The prepend keeps the order, and a
+        later recovery chains the records through the facade of the one before.
+      - The prepend comes after every check in `_commit_controller_view`, so a refused commit loses nothing.
+      - The re-commit case of LOW-1 below is the exception.
+    - **Tests.**
+      - **M2 SIGSTOP variant: discriminates.**
+        - The same placement passes with the cap and fails without it, because the identity patch flips the fence
+          outcome.
+        - `deadline == root_lease − 0.25` (1e-6) pins C = 0 on the readiness path.
+        - The `per_unit > root_lease` precondition makes sure the control is meaningful.
+        - The K.CANCEL delay is still only the client's read (finding 26 LOW-5, declared).
+      - **The `_fail` spy: meaningful.**
+        - `failed == [False]` needs exactly one `_fail()` in the targeted call, made before any SIGTERM.
+        - A misclassification as `PersistenceCancelled` makes no `_fail()` call, so it would give `[]`.
+      - **The generation-limited skip: real.**
+        - RA2's own code runs with only `_generation` lowered.
+        - If the skip branch were missing, `_renew_service` would renew through the real session's bound methods
+          and `renewed` would be True.
+        - The float comparison `(x + 2e9)/1e9 − 2 ≤ x/1e9` fails about 1.5e-5 of the time on random `x`, a
+          negligible flake.
+      - **L1 with synthetic records: adequate** for the loss that finding 26 found. It does not cover a re-commit or
+        a second recovery (LOW-1, LOW-4).
+    - **Regressions.**
+      - Untouched by this diff: `persistence.py` (S1a-1 RB1), `run_broker.py` (S1a-3/S1a-6 cancel bounds), the
+        S1b TERM/stop grace and the non-lazy profile.
+      - Run in this review: DV05/DV06 bounds, the lazy dispatcher, the fault path and the S1b start-failure suites.
+      - Finding 27's table (1074; the sum checks) covers the rest. No regression found.
+    - **LOW-1 (the L1 carry duplicates every record when the same view is committed twice):
+      `dispatcher.py:795`, `:846-855`.**
+      - In `_drain_controller_recovery`, `_commit_controller_view(successor, ticket)` can succeed and the
+        request-cost check (`:847`) can then raise `ML-SCHEDULE-RECOVERY-INCOMPLETE`. If so, the `except` cancels and
+        commits `successor._recovery._view` again, cleanup-only (`:855`). That view is now `self.facade`, so
+        `view._windows[:0] = self.facade._windows` is `x[:0] = x`, and it doubles the list.
+      - **Reviewer probe.** The probe is `test_l1_recommit.py` in the reviewer's scratchpad, not committed. It is
+        the L1 test with the post-commit check forced to raise. Its output was `commits [(False, id, 4), (True, id,
+        8)]`: 4 records became 8, with the same view object both times.
+      - This contradicts the ADR sentence "no record is lost or duplicated" (`ADR-ML3-PROBE-0001.md:252`).
+      - The impact is limited:
+        - only `DispatchResult.readiness_windows`, through the harness `readinessWindows`, is affected; Argus is
+          not;
+        - the path is a failed recovery whose ordinary commit succeeded;
+        - the trigger is a request-cost overrun guard.
+      - **Repair (one line):** `if view is not self.facade: view._windows[:0] = self.facade._windows`, with the probe
+        as a regression test.
+      - **Disposition: can be declared** for the decisive run. Fold the repair into the next `src/` change. If it is
+        made now, the wheel must be rebuilt and the decisive run must use the new wheel.
+    - **LOW-2 (a cap shorter than one round trip fails the storage channel with no stall):
+      `dispatcher.py:1069-1071`, `:1689`; ADR `:241-245`.**
+      - F-08 refuses only when `deadline − now < est(kind)`. `failure` is sent once per run, so `est("failure")` is
+        always 0.
+      - A cap that is in the future but shorter than one RPC round trip is therefore sent. It times out
+        (`ML-PERSIST-TIMEOUT`/`-LATE`), and `_fail()` loses every later terminal record, so the closure is
+        incomplete.
+      - This band is about one RTT wide, just before the past-cap band. In it a run with healthy storage, which the
+        uncapped deadline would have recorded completely, becomes a recorded persistence failure. That is
+        fail-closed and recorded, but the ADR residual describes only the past-cap outcome (F-08 refusal, channel
+        kept).
+      - **Repair (optional):** refuse before the send when the cap leaves less than a floor, for example `op`. This
+        trades a stalled-statement timeout for a refusal.
+      - **Disposition: declare.** Add one sentence to the ADR residual.
+    - **LOW-3 (residual and comment wording).**
+      - **ADR `:244` "This band is the cancel exceeding its own bound".** The past-cap band also contains cancels
+        that stay inside their admitted bounds:
+        - the S1a-3 busy-connection wait (`CANCEL_LOCK_WAIT_SECONDS` = 0.5 s);
+        - the K.CANCEL frame (`CANCEL_REQUEST_SECONDS` = 2.75 s, `run_broker.py:45-51`);
+        - the revoke fallback (1 s).
+
+        The band is "the cancel exceeding the 2.0 s native close the reserve assumes", not its own bound.
+      - **ADR `:236-239` (not capped).**
+        - The fence exposure is not specific to pre-cancel fault statements. On every non-marker lazy failure path,
+          `_service` keeps only `renew_margin = (service_calls + 1)·op` (1.52-1.9 s live, `dispatcher.py:1185-1211`)
+          of lease. That is less than `C + 0.25 s`, so a full 2.0 s close can outlive the root whatever the fault
+          statements do. The pre-cancel fault statements add at most `op` to this existing exposure.
+        - Its outcome is the root lease ending before the fence (the finding 21 (A) signature: closure incomplete,
+          fail-closed). "An unconfirmed cancel is revoked" does not describe that outcome.
+      - **ADR `:219`.** "At least the 0.25 s margin left" is the margin less the time of `_fail()` (SIGTERM,
+        shutdown) and `_close_restarts`.
+      - **ADR `:138-141`.** The S1b-1 RA5 residual "the `failure` statement's own deadline stays `min(work end, now +
+        per_unit_seconds)` … can still pass L" is superseded by M1 but has no correction mark, unlike `:122-124`.
+      - **`providers.py:44`.** The `cancel_close_reserve` docstring still says "one admitted statement budget", the
+        wording that DR-17 corrected. It is in `src/`, so changing it changes the wheel.
+      - **Disposition: declare, then correct.** Correct the ADR lines now; they are docs and do not affect the wheel.
+        Correct the docstring with the next `src/` change.
+    - **LOW-4 (test reach): `dispatcher.py:1394`, `:1914-1916`.**
+      - No test makes the cap bind on a `fault` statement, and no test reaches the C = 2.0 branch (an external
+        canceller still inside K.CANCEL during `_cancel_faults`). The only reference to `_fence_cap` in the tests
+        is the M2 control's identity patch.
+      - The L1 test covers neither the re-commit of LOW-1 nor a second recovery.
+      - **Disposition: declare.** Add the tests with the next change in this area.
+    - **Effect.** No issue blocks the decisive full installed-wheel run and DV12 on `c6bdfcf01` (wheel
+      `9aea0c00…`).
+      - Stack acceptance still needs the author's confirmation of the C-term interpretation (finding 27, deviation
+        1).
+      - LOW-1 to LOW-4 must be declared or repaired. If LOW-1 is repaired before the run, the wheel and the
+        decisive run move to the new commit.
+      - The S1c live re-run items (H1 = 1.7 s, the H3 window record) are unchanged.
