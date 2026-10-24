@@ -267,3 +267,130 @@ and admission refuses while it is unknown.
      - **R10. Error text.** A `delay` with neither delay parameter now reports "exactly one of", not "lacks
        required parameter". The code is unchanged (`XVERSE-FAULT-PARAMETER`).
      - **R11. Still to do.** The independent review, the full run, DV12 and the CAPA step.
+
+3. **Independent review of findings 1 and 2 (written at 15:36:30 2026-10-24).** Reviewer: an independent Claude
+   agent that did not write the increment. Scope: `5b011644a`, `321df989e`, `d7c33172c`, `92fc2643b` and `920f7e6e6`
+   on `b40acce49`. **Verdict: PASS WITH NOTES.**
+   - **Nothing blocks the decisive full run.** With no hub and with the D-4c values unknown, no live fault run is
+     possible, and the tick mode is byte-identical.
+   - **M1, M2 and M3 must be repaired, or explicitly accepted by the author, before the first live run with
+     simulator-timed faults** (the compat #4 and blueprints #5 integration). Message-only schedules are admissible
+     today, so M1 and M3 apply as soon as a hub exists.
+   - **What was checked, and the result.**
+     - **Installed wheel.** `sha256sum` of the cache wheel gives
+       `d0eabe60a7e4e632c21b9fc200a048a296ff9bff088bebb1d1141daf858eaa7e`. The installed `xverse` tree equals `src/`
+       at `920f7e6e6` (`diff -rq`). `src/` is unchanged since `92fc2643b`, and the only difference is the unpackaged
+       `xcom`.
+     - **Rerun.** One pytest process on the installed wheel, over faults `simtime`, `resolve`, `scheduler` and
+       `maestro_run`, and maestro `schedule_plan` and `preparation`: **173 passed** in 81 s, load 6.0–6.8.
+     - **Root cause (question 1). Confirmed.** The compiler keeps exact ns. `resolve.py` gains only the `delay-ns`
+       refusal, and XDL and the compiler are unchanged in the diff. The L-8 reproduction test passes.
+     - **Byte identity without a binding (question 1). Confirmed independently, and wider than the suite shows.**
+       - **Method.** I exported `b40acce49` and `920f7e6e6` (`src`, `tests`, `xdl`) and prepared four plans under
+         each, with the installed interpreter and each tree's own sources.
+       - **Result.** The lifecycle digest and the canonical-byte hash are **identical** for a fault-less plan
+         (`952c6b93…`) and for **three tick-mode plans with faults**: stale plus crash, freeze, and `delay-ticks`.
+       - **The suite tests less than this.** `test_plans_without_binding_keep_their_bytes`
+         (`test_simtime.py:87-92`) checks only that `faultClock` is absent. `U-ADM-03b` (`test_maestro_run.py:170-188`)
+         compares only a fault-less plan, and against a sibling checkout at whatever revision that checkout is (L4).
+     - **Resolution (question 2).**
+       - `onset = ceil(at/step)` and `clear = onset + ceil(duration/step)`, and `clear·step_ns ≤ horizon_ns`
+         (`simtime.py:180-183`).
+       - The kind and collection pairs are closed, and a freeze of `source_unit` is refused.
+       - Arbitration and `delay-ticks` are refused, and so are repeated ids.
+       - Overlap is refused per target, including windows that only touch (`second.onset ≤ first.clear`). That is
+         conservative and acceptable, and the ADR could say so.
+       - A zero-duration freeze works, with two handshakes at one step (probe P5).
+     - **Channel (question 3).**
+       - The frame types and key sets are closed, and the JSON must be canonical, at most 4 096 B, with no NaN.
+       - The sequence must rise by exactly 1, starting at 1.
+       - `simNs == step·step_ns`, and the step never goes back. A report must come at the exact pending step.
+       - Arming waits for `source_live()` and a connected peer, and no report is accepted before every entry is
+         armed.
+       - Every violation sets `run_failed` with an `XVERSE-FAULT-SIMTIME-*` diagnostic, which the dispatcher maps to
+         `ML-SCHEDULE-FAULT-CLOCK` (`dispatcher.py` `_advance_faults`).
+     - **Admission (question 5).**
+       - A held freeze is refused while any D-4c value is `None`.
+       - The checks are `handshake_s > hold_bound_s` → HOLD, and
+         `held_steps·max_step_host_s + 2·handshake_s ≤ min(cadence) − n·operation_seconds` → THAW
+         (`schedule_plan.py:172-183`).
+       - Message-only schedules need no D-4c value. This matches the "WP-10 fault relay" row's inequality.
+     - **Evidence (question 6).** Apply and clear decisions carry `simulatorNs`, `simulatorStep`, `hostNs` and the
+       mode, and relay decisions also carry `items`. The intent carries `atNs`, `durationNs`, `onsetStep`,
+       `clearStep`, `stepNs` and `boundaryMode`. The worker statement schema is unchanged.
+     - **Capability flag (question 7).** It is a static `True`, pinned by a test. The name and shape match the
+       blueprints probe at `18201fe` (`admission.py:121`, `getattr(platform, "SIMULATION_TIME_TRIGGERS", False) is
+       True`). It honestly claims only that the code exists.
+     - **Mutation claims (question 8).** I did not rerun them, because the worktree is read-only to me. They are
+       plausible from the tests. The test gaps are given under M1 to M3.
+   - **Issues.**
+     - **M1 (MEDIUM; does not block the decisive full run; repair before the first live fault run): the channel's
+       EOF fails the run even after every entry is final.**
+       - **The cause.** `receive` turns an empty read into `XVERSE-FAULT-SIMTIME-CHANNEL` (`simtime.py:370`).
+         `advance` keeps reading on every tick (`:619`), and so does `finish` (`:671`), whatever the entry state.
+       - **Probe.** A relay `loss` is applied and cleared, so every entry is `cleared`. The hub then closes its
+         socket, as U2 does when its stop step ends the process inside the tick loop. The next `advance` sets
+         `run_failed` (`XVERSE-FAULT-SIMTIME-PROTOCOL: XVERSE-FAULT-SIMTIME-CHANNEL`), and the dispatcher would end a
+         successful run with `ML-SCHEDULE-FAULT-CLOCK`.
+       - **Why the tests miss it.** The composed test's hub thread keeps its socket open until Maestro sends `close`
+         (`test_simtime.py:542`). A real Maestro unit cannot.
+       - **Effect.** It fails closed, but every live fault run would fail at teardown.
+       - **Repair.**
+         - Define the channel's lifetime in the ADR: EOF is benign once every entry is final, or once the source
+           unit's stop step has begun. EOF with an entry still pending stays a failure.
+         - Stop reading once every entry is final.
+         - Add a test in which the hub exits after its last report.
+     - **M2 (MEDIUM; not reachable until D-4c is measured; repair or accept before the first live freeze): Maestro
+       cannot see whether the hub actually held the step (PAIR-1).**
+       - **The gap.** ADR decision 5 says "the hub resumes only on `ack`", but Maestro accepts frames the hub sent
+         before it could have received the ack.
+       - **Probe P1.** `hold(apply, 30)`, then `time(31)` and `time(35)`, all queued at once. Maestro freezes, acks,
+         and accepts both `time` frames.
+       - **Probe P2.** `hold(apply, 30)` then `hold(clear, 40)`, back to back. Maestro freezes, thaws, and records
+         `cleared`. A hub that never held, or that runs ahead, therefore passes undetected. Under it, the freeze
+         onset is no longer equal across the paired runs in simulator time.
+       - **Repair.** Any of these would detect it:
+         - refuse every hub frame that was already queued when the ack was sent: everything read after a `hold` in
+           the same `receive` batch, and any further frame read before the ack's send completes;
+         - or require a `resumed` frame, or an `ackSeq` echo, before any frame with a later step.
+
+         Add tests for P1 and P2.
+     - **M3 (MEDIUM; R5 and R6; repair or accept before the first live fault run, message-only included): a
+       declared fault that never happens leaves a successful run.**
+       - **Probes.** In P3 the hub connects and never arms, and in P4 it arms but never reaches a step. In both,
+         `finish` gives `cancelled` for every entry, with `run_failed=False` and `incomplete=False`.
+       - **The weak behaviour is pinned.** `test_never_applied_entries_end_cancelled_never_due`
+         (`test_simtime.py:422-425`) asserts `not incomplete`.
+       - **Why this is weaker than tick mode.** Tick mode refuses unreachable entries statically (horizon). In
+         simulator time, reachability depends on the hub and on the Maestro tick horizon (R5), and R6 sets no
+         arming deadline.
+       - **Effect.** A paired fault run whose faults never fired, because a hub was missing, disconnected or slow,
+         is indistinguishable from a successful one at the platform level. It relies on the harness reading every
+         outcome.
+       - **Repair.** Make an armed or declared entry that is unreached at `finish` (`_end`, `simtime.py:629-650`)
+         mark the run incomplete, or a declared invalid-run code. Add an arming deadline in Maestro ticks or host
+         time, past which the run fails closed. If the author prefers the harness to own this, record that as a
+         decision, and pin the harness check in blueprints #5.
+     - **L1 (LOW; R3).** Peer authentication is by uid only, and every Maestro unit runs under that uid. **Before a
+       live run:** prefer the connected form, a socketpair whose peer end is passed only to U2 at spawn, so there is
+       no listening path. Otherwise check the peer's `SO_PEERCRED` pid against the source unit's cgroup, which
+       Maestro holds. An accidental extra peer already fails closed (single-peer rule).
+     - **L2 (LOW): `horizon_ns` is only as good as the caller's value.** It is supplied by the caller. Nothing
+       derives it from the scenario (wp10 §4 asks for the scenario horizon, AD-25) or checks it against the Maestro
+       tick horizon (R5). Record that blueprints #5 must derive it from the frozen scenario, and consider refusing a
+       binding whose `horizon_ns` exceeds what the Maestro plan's active ticks can cover.
+     - **L3 (LOW): two thaw bounds that could disagree.** The blueprints admission (`18201fe`) checks the
+       inequality against a declared `FreezeBound.thaw_bound_s`. The platform uses `min(cadence) − n·operation_seconds`.
+       Both must pass, so this is fail-closed, but the two bounds can disagree. Align the definitions in #5, or
+       record which one governs.
+     - **L4 (LOW): the byte-identity tests are weaker than the claim.** Pin the lifecycle digest of at least one
+       **tick-mode plan with faults** as a literal from base `b40acce49`. Make `U-ADM-03b` pin its reference
+       revision rather than read a sibling checkout's current HEAD.
+   - **Residuals R1 to R11 (question 9).**
+     - **R1, R2, R4 and R7 to R11** are honest.
+     - **R3** stands, with the wiring constraint in L1.
+     - **R5 and R6** are understated as residuals. They are M3, and need a fail-closed rule or an explicit author
+       decision.
+     - **Proposed additions:**
+       - **R12.** Channel lifetime at teardown (M1).
+       - **R13.** Hold verification (M2).
