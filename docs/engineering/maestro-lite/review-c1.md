@@ -327,3 +327,22 @@ scientific result. No CARLA and no live run is used; every size below is an offl
      - **Tests (question 4).** The native boundary cases discriminate as claimed: at the bound and the bound + 1
        for role 3 in both builds, and at 65 536 and 65 537 for role 5. The two stated native mutants would each
        fail at least one case. The Python boundary is discriminating only on the refusal side (M1).
+
+4. **Coordinator disposition of finding 3 (written at 11:10:53 2026-10-24), recorded before any change.** It was made
+   under the author's delegation of 2026-10-24, and it accepts nothing.
+   - **M1: repair now.** Add a composed installed-wheel case. It drives `BootstrapSession.persistence()` through
+     the native birth and the real worker's `_read_input`, strict parse, `_load` and Init, with a real 6- or
+     7-unit stand-in configuration above 65 536 B. A mutant that keeps `<= 65536` in
+     `BootstrapSession.persistence` must fail it. The mutant is run and then reverted.
+   - **L1.** `ADR-ML3-BOOTSTRAP-0001.md` amendment C1 should name role 5, not role 4, in its verification list.
+   - **L2.** R3 is extended: the calibration has one point, at 4 units. It confirms the total, not the per-unit
+     slope.
+   - **L3.** R6 is extended with the host-specific paths used as byte-length proxies
+     (`test_persistence_config_bound.py` `PY`, `CACHE`, `COMPAT` and `RUN_DIR`).
+   - **L4.** It is noted. No change.
+   - **L5.** The time wording in finding 1 and in the ADR amendment is corrected:
+     - the caller's start-up deadline bounds the worker's strict parse and configuration checks, which run
+       before hello;
+     - only `_load` runs inside the Init request, which is bounded at 5 s.
+   - **Then.** Rebuild, run the C1 files and the bootstrap and persistence suites (one process), and record the
+     result as finding 5.
