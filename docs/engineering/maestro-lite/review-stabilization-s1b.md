@@ -1072,3 +1072,139 @@ decision S-D2, approved on 2026-10-23).
       declared residual accepted by the author). The S1c live re-run with H1 should wait for the MEDIUM-1
       disposition, because the current cap is predicted to shorten the H1 window to about 0–0.3 s in the
       finding 21 placement.
+25. **DR-16 repairs: RA2, RA5, the window record, the RB1 negatives and the LOW dispositions (written at 02:02:52
+    2026-10-24, load about 3.7-4.7).**
+    - **Commits.**
+      - ADR notes first: `4840afccb`, written at 01:47:51-01:48:16. They are ADR-ML3-PROBE-0001 "S1b-1
+        revision (RA2, RA5, the window record)", ADR-ML3-AFFA-0001 "S1a-6 residuals and the outer budgets (L2,
+        L3)" and ADR-ML3-PERSISTENCE-0001 "S1a-1 revision (RB1) residual L1".
+      - Implementation and tests: `e593bd5c2`.
+      - Installed wheel: `36894fab…`, built at 01:52 from the working tree that `e593bd5c2` commits.
+    - **RA2** (`dispatcher.py` `_renew_before_marker_start`, called from `_effect` for a `start` step after
+      `_service()` and before `_end`).
+      - **When it renews.** For a `nonce-marker` unit on the native path, it renews through the unchanged
+        `_renew_service(active end)` when `min(lease ends) − now < readiness_lease_need(W, op) = op + W +
+        cancel_close_reserve(op)`.
+      - **When it does not.** If `min(now + 5 s, generation − 2 s)` is not above both leases, it does not renew,
+        and the cap records the cut.
+      - **Leases.** The renewal moves both leases together: the root lease (`session.renew`) and the authority
+        lease (K.RENEW), to one target, after one storage audit.
+      - **Requests.** `admit_schedule` adds one request per marker unit to `required_requests`. That changes the
+        schedule bytes only for schedules with marker units. The version is unchanged.
+    - **RA5** (`providers.py`).
+      - `cancel_close_reserve(op) = NATIVE_CANCEL_CLOSE_SECONDS (2) + op + CANCEL_FENCE_MARGIN_SECONDS (0.25)`.
+        It replaces the constant `CANCEL_CLOSE_RESERVE_SECONDS`.
+      - `readiness_window_bound(op) = 5 − cancel_close_reserve(op) − op = 2.75 − 2·op`.
+      - Run time takes `op` from the persistence client's schedule; it is 0 with no schedule, where there is no
+        dispatcher and no failure statement.
+    - **The final live admission bound for W is 1.99 s.**
+      - Derivation: 5 s (native lease maximum) − (2 s close + 0.38 s failure statement + 0.25 s reply and fence)
+        − 0.38 s (pre-release allowance).
+      - The fixture bound (op 0.5 s) is 1.75 s.
+      - **Harness H1** must be re-derived to W ≤ 1.99 s, for example 1.9 s. The DR-15 H1 value of 2.0 s is now
+        refused with `ML-SCHEDULE-READINESS-WINDOW`.
+    - **The window record** (`providers.ReadinessWindow`: `unit_id`, `generation`, `declared_seconds` (W),
+      `window_seconds` (W'), `lease_end` (L), `began` (t0), `cut`).
+      - One record is appended per marker start step, including a restart's, at t0.
+      - It is exposed as `ProcessReadiness.readiness_windows` and `DispatchResult.readiness_windows`, and so
+        reaches `RuntimeResult.dispatch`.
+    - **The cut diagnostic.** A cut window (W' < W) that ends not ready raises **`ML-PROBE-WINDOW-CUT`**.
+      - It appears in `DispatchResult.diagnostic` and in the Argus `failure` event's `diagnosticCode`, with
+        `cause: deadline-exceeded`, through the dispatcher's existing `WINDOW` mapping.
+      - A field on the probe row was not used because the v2.0 payload is closed. The ADR note gives the
+        reasons.
+    - **Tests added or changed** (`test_stabilization_stack_load_failures.py` unless named).
+      - **M3:** `test_rb1_a_real_storage_fault_with_or_without_a_cancel_still_fails_closed`, four cases:
+        - `child-killed`: `ML-PERSIST-CHILD`;
+        - `failed-set`, in the final-check window: `ML-PERSIST-CLOSED`;
+        - `socket-replaced`: the channel fd `dup2`'d to another socket, `ML-PERSIST-CHILD`;
+        - `root-refusal-without-cancel`: `ML-BOOT-CLOSED`.
+
+        In each, `_live` raised exactly that class, `PersistenceError` (`BootstrapError` for the root case),
+        never `PersistenceCancelled`. Each was recorded as the RPC failure `(code, schedule, validation)`, with
+        `_failed` set. The first three run with the latch cancelled from another thread inside the RB1 windows.
+      - **M1:**
+        - `test_a_declared_readiness_window_is_not_silently_cut_by_the_lease` (admitted W = 1.5 s, placed at
+          2.8 s, which is below the 4.75 s need): RA2 renews, the record shows W' = W and not cut, and L − t0 ≥
+          W + 2.75 s. There are 3 attempts spanning W − 0.25 s, the last at least 2.75 s before L, and the Argus
+          failure event reads `ML-PROBE-NOT-READY`.
+        - `test_a_forced_cut_window_is_recorded_and_diagnosed` (RA2 disabled): no renewal, the record is cut
+          with W' = max(0, L − 2.75 − t0), there are 3 attempts, and the result is `ML-PROBE-WINDOW-CUT` with
+          `deadline-exceeded` in Argus.
+      - **M2:** `test_a_cut_window_cancel_that_takes_the_full_native_close_still_reaches_the_fence`.
+        - Setup: RA2 disabled and placed at 3.6 s, so 0 < W' < W and the reserve binds. The client reads the
+          K.CANCEL reply 2.0 s after the send.
+        - At the first `service_terminal`, the root and the authority were both unexited, with lease left.
+        - Results: native confirmation, no revoke, no exchange error, no persistence failure, cleanup complete,
+          and the writer closed.
+        - The renewed-path test, `…takes_longer_than_the_lease_left_still_closes`, now delays its cancel by the
+          full 2.0 s (it was 1.5 s).
+      - **L4** (`test_stabilization_s1b_start_failure.py`):
+        `test_ra4_a_cancel_whose_native_reply_takes_1_5_s_is_confirmed_not_revoked`. The K.CANCEL reply is read
+        1.5 s late: with RA4 the cancel is confirmed with no errors. The control restores `now + 1 s` and gets
+        `ML-AFFA-TIMEOUT` and an unconfirmed cancel, so the test discriminates.
+      - **Unit tests.** `test_schedule_plan.py`: the RA1 test is moved to 1.99 and 1.75 s, and DR-15 H1's 2.0 s
+        is refused. A new test checks one extra request per marker unit, with the event count unchanged.
+        `test_stabilization_s1b_readiness.py`: the cap test now uses the reserve function.
+      - **Regression adjustment** (`test_stabilization_s1b_start_failure.py`
+        `test_a_never_ready_marker_unit_at_start_up_closes_its_evidence`, both cases).
+        - The composed fixture has no action timeouts, so its start step ends at `now + operation_seconds`
+          (0.5 s). That 0.5 s also holds the pre-release work, so W = 0.5 s is always cut by the step deadline D.
+          The record now shows the cut, and the diagnostic is `ML-PROBE-WINDOW-CUT`.
+        - Before this change the cut was silent and was reported as `ML-PROBE-NOT-READY`. This is MEDIUM-1 seen
+          in an existing fixture.
+        - The closure assertions are unchanged and pass.
+      - Admitted fixture window: `ADMITTED_WINDOW_SECONDS` 2.0 → 1.5 s (bound 1.75 s).
+    - **Results** (wheel `36894fab…`, one pytest process at a time, 01:54:57-02:01:54, load 3.78-4.73). All
+      passed, none failed or skipped:
+
+      | Suite | Passed | Time |
+      | --- | --- | --- |
+      | `test_stabilization_*` (all 9 files) | 478 | 121.8 s |
+      | `test_persistence*` | 29 | 28.3 s |
+      | `test_provider.py` | 35 | 20.8 s |
+      | `test_run_broker.py` | 11 | 12.7 s |
+      | `test_affa_*` | 124 | 12.4 s |
+      | `test_runtime_entry.py` | 8 | 9.1 s |
+      | `test_run_teardown.py` | 9 | 10.1 s |
+      | `test_teardown.py` | 27 | 25.1 s |
+      | `test_closure.py` | 31 | 23.4 s |
+      | `test_shared_closure.py` | 10 | 11.8 s |
+      | `test_schedule_plan.py` | 48 | 14.6 s |
+      | `test_dv05_dv06_bounds.py` | 7 | 12.2 s |
+      | `test_dispatcher.py`, `test_dispatch_diagnostics.py`, `test_dispatch_observe.py` | 22 | 34.0 s |
+      | `test_lazy_dispatcher.py` | 13 | 19.7 s |
+      | `test_shared_dispatcher.py` | 3 | 10.5 s |
+      | `test_service_order.py`, `test_load_aware_budgets.py` | 11 | 12.6 s |
+      | `test_run_renewal.py` | 9 | 15.3 s |
+      | `test_leaseguard.py`, `test_releasegate.py` | 68 | 3.7 s |
+      | `test_schedule_worker.py` | 15 | 14.4 s |
+
+      Total: 958. The reproduction file alone (16 tests) passed in 33.9 s at load 3.6-4.0, on the first run.
+    - **L3 numbers.** For the 2-unit, 2-step lifecycle with `per_unit_seconds` = 1, `terminal_reserve_seconds` is
+      8.0 s at op 0.5 and 7.04 s at op 0.38. After a worst-case 3.75 s undeadlined cancel at the active end,
+      4.25 s and 3.29 s remain, plus collection and terminal time minus the drain. The S1c join margin is about
+      1.25 s or more. The closure window is unaffected. The reasoning is in the S1a-6 note.
+    - **Deviations.**
+      - **Window record location.** It is in the result objects, not on the Argus probe row: the lifecycle payload
+        v2.0 is closed. The cut does reach Argus, as the `ML-PROBE-WINDOW-CUT` diagnostic. W, W', L and t0 do not.
+      - **RA2 adds request accounting** (+1 per marker unit). DR-16 does not name this, but without it a renewal
+        could exceed an admitted request limit. It changes the schedule bytes for marker schedules only.
+      - **`CANCEL_CLOSE_RESERVE_SECONDS` is removed** in favour of `cancel_close_reserve(op)`, so that no stale
+        constant remains.
+      - **M2's discrimination is limited.** With fast fixture storage the failure statement takes milliseconds, so
+        the M2 case would also pass with the old 2.25 s reserve. It shows the invariant at the full 2.0 s close.
+        It does not show that the `op` term is necessary, which a stalled storage device would.
+      - **L6 is not done here.** The thesis record `amendment-s1a-3-…` and the canonical note are outside this
+        repository and this task's scope.
+    - **Residuals.**
+      - RA2 is not applied to restarts (`_restart_unit`); a restart keeps the cap and the record.
+      - The `failure` statement's own deadline is still `per_unit_seconds`, so a storage stall longer than op
+        can pass L. The fence's `now + op` deadline is covered only by the 0.25 s margin. Both fail closed.
+      - A cut by the step deadline D (not only by the lease) is now visible, but admission does not relate W to the
+        start budget. With `use_action_timeouts` off, the start step's budget is op, which cuts any W ≥ op.
+      - L1 and L2 are declared in the ADR notes.
+    - **Effect.** Every finding 24 MEDIUM now has an implemented disposition, and the LOWs have recorded
+      dispositions (except L6, which is the author's). The stack acceptance still needs an independent review of
+      `4840afccb`..`e593bd5c2`, then the decisive full installed-wheel run and DV12, then the S1c live re-run
+      with H1 at W ≤ 1.99 s.
