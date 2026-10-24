@@ -1,8 +1,37 @@
 # Maestro Lite lifecycle component candidates
 
-Status: **increments 17 and 18 accepted (findings 392, 411) and merged into main (e65965a95, record merge 557619e0c) and published to origin (findings 412-413); canonical-note paragraph applied; increment17 accepted (finding 392); U1/U6 plus partial U2/U3/U4/U5/U7/U8; not merged; no runtime admission, lane activation or M1**.
+Status: **main `a9db0ac39` carries increments 17–19 (Phase 3), Phases 5 and 6, and the Lite stabilization increments S1a, S1a-2, S1b, S1a-3, S1a-5, the stack load repairs and S1a-6, all pushed; X-Verse Lite 1.0 rc.1, see [the release record](../../releases/xverse-lite-1.0.md); no runtime admission, lane activation or M1**. The entries below are in reverse order; entries from 2026-10-20 and earlier keep the status they had when written.
 Owning baseline: `c2997c0f810d117cf45b2e34a4011b3ba7219494`.
 Authoritative feature: `/home/jefferson/distributed_safety_critical_thesis/specs/024-maestro-lite-lifecycle/`.
+
+## Lite stabilization S1 merged into main (2026-10-23 to 2026-10-24)
+
+Thesis successor increment S1 (`specs/029-lite-stabilization` in the thesis repository). Each step was merged
+`--no-ff` into main and pushed. Decisive runs are under `evidence/affa19/`; every DV12 verdict
+(`scripts/validate_maestro_acceptance_evidence.py --scope code`) is `accepted_as_evidence: true` with no blockers,
+and the one skip is the lane-admission test.
+
+| Step | Merge | Review log | Decisive run (passed / skipped) | DV12 code | CAPA step |
+| --- | --- | --- | --- | --- | --- |
+| S1a: verified-prefix persistence, cancel closure (ADR-ML3-PERSISTENCE-0001 S1a-1, ADR-ML3-OUTCOMES-0001 S1a-2) | `b28a2aacf` | `review-stabilization-s1a.md` 1–17 | `stabilization-s1a/platform-regression-20261023a-1` (2417 / 1) | `2a337467…` | 9 `34c742da…` |
+| S1a-2: K.CANCEL on a busy connection (ADR-ML3-AFFA-0001 S1a-3) | `5aadd358c` | `review-stabilization-s1a.md` 18–27 | `stabilization-s1a2/platform-regression-20261023b-1` (2423 / 1) | `33b2d1fd…` | 10 `4b04cb4a…` |
+| S1b: graceful stop, private stderr, nonce-marker readiness (S1b-1 amendments of TEARDOWN, LAUNCHER, PROBE) | `a6cc0c9f8` | `review-stabilization-s1b.md` 1–13 | `stabilization-s1b/platform-regression-20261023c-1` (2524 / 1) | `2d17c186…` | 11 `3eb39cda…` |
+| S1a-3: bounded terminal encoding (ADR-ML3-EVIDENCE-0001 S1a-4) | `ee91697a4` | `review-stabilization-s1a.md` 28–32 | `stabilization-s1a3/platform-regression-20261023d-1` (2886 / 1) | `868a21b6…` | 12 `d095ac07…` |
+| S1a-5: K.CANCEL past the open lease (ADR-ML3-AFFA-0001 S1a-5) | `ee91697a4` | `review-stabilization-s1b.md` 14–20 | `stabilization-s1a3/platform-regression-20261024e-1` (2890 / 1) | `a970c8d5…` | 13 `cdbb1506…` |
+| Stack load repairs RB1, RA1, RA2, RA4, RA5 (ADR notes in PERSISTENCE, AFFA, PROBE) | `ee91697a4` | `review-stabilization-s1b.md` 21–29 | `stabilization-s1a3/platform-regression-20261024f-1` (2920 / 1) | `998b51af…` | 14 `fb5eb459…` |
+| S1a-6: health slot due inside the Stop bracket (ADR-ML3-EVIDENCE-0001 S1a-6) | `a9db0ac39` | `review-stabilization-s1b.md` 30–33 | `stabilization-s1a3/platform-regression-20261024g-1` (2945 / 1) | `69118482…` | 15 `6be1a184…` |
+
+S1a-3, S1a-5 and the stack load repairs were merged together from `candidate/lite-stabilization-s1a3-20261023`.
+CAPA steps 9–15 are additive (56 records; 749 bindings at step 15) and opened no record; no cause is verified and
+no effectiveness is claimed. The declared residuals are in the ADR notes named above. The live verification of
+these increments is recorded in the `xverse-compat` log `docs/engineering/thesis-lite-stabilization/review-s1c.md`.
+
+## Increment 19, Phase 5 and Phase 6 merged into main (2026-10-22)
+
+Increment 19 was merged as `63f5cb8c7`, followed by the documentation-only merges `0a498bb7e` and `744b66f9c`
+(`review-affa19.md`; decisive run `evidence/affa19/platform-regression-20261022a-1`, 2250 passed, 1 skipped). Thesis
+Lite Phase 5 (deterministic fault injection) was merged as `2d556ff24` (`review-faults-lite.md`, findings 1–19), and
+Phase 6 (communication integration) as `8b3d8c8e8` (`review-flows-lite.md`, findings 1–15).
 
 ## Main published and canonical note applied (2026-10-20, finding 413)
 
