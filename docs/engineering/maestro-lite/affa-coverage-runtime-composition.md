@@ -32,7 +32,11 @@ brackets/terminal facts, not the last arrived health record. Missing closing bou
 conservatively retain admitted bounds rather than shorten the interval. Never
 subtract replacement-controller readings from original session readings; readiness
 must cite actual generation-qualified acknowledged probes. Each exact slot remains
-visible even when simulation ticks pause or a slot's normal record is deleted.
+visible even when simulation ticks pause or a slot's normal record is deleted. A slot
+due inside a complete, consistent original Stop bracket stays unverifiable unless a
+valid source-checked observation at or before the Stop request discharges it as
+applicable and satisfied (coverage-assessment.md, S1a-6/DR-20; written at 05:27:51
+2026-10-24); the bracket is never rounded into an inactive slot.
 
 The pure assessor consumes only original templates and retained public inputs. It
 must not import a provider, launch helper, scenario, metric or oracle. Verify whole

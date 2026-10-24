@@ -164,3 +164,42 @@ affected source/installed-wheel scope once.
   - The digests, the files, and every reader.
 - **Not done here.** No incremental cache of the snapshot. That is reconsidered only if the re-measured terminal
   report still lacks margin at load 10.
+
+## Amendment S1a-6: a health slot due inside the Stop bracket (thesis DR-20; 2026-10-24, written at 05:27:51; before implementation)
+
+- **Context.** S1b review finding 30: in two live runs the carla-adapter health slot 5 ended 0.076 s and 0.021 s
+  after the Stop request and before the Stop ACK. `health_window` (`coverage.py:805`) returned applicability
+  unknown, and `assess` (`coverage.py:773-774`) replaced the `satisfied` status, already backed by three valid
+  in-slot samples taken before the Stop request, with `unverifiable`. The run then ended
+  `ML-SCHEDULE-EVIDENCE-INCOMPLETE`. The uncertainty about the unit's active end is genuine, but it does not change
+  the outcome once a valid sample exists: an applicable slot is satisfied and an inactive one is not-applicable.
+- **Decision.** The bracket case applies only when every bound is present and consistent:
+  - Release observed;
+  - Release request ≤ Release ACK, inside the admitted interval;
+  - slot start < slot end ≤ admitted end;
+  - Release ACK ≤ Stop request ≤ Stop ACK ≤ terminal end;
+  - Stop request < slot end ≤ Stop ACK.
+
+  In that case only, the slot is discharged by a valid health sample in [slot start, min(slot end, Stop request)]
+  (= [slot start, Stop request]). The sample must be accepted by the existing validity and `source_ok` checks
+  (`observe` / `observation`, status `running` or `not-ready`). The row is then applicable and `satisfied`, with
+  that sample as its evidence.
+- **Fail-closed rest.** Every other bracket case stays `unverifiable` with the existing diagnostic:
+  - no sample in [slot start, Stop request], including a sample only after the Stop request;
+  - a sample that fails validity or `source_ok`;
+  - a missing bound;
+  - an inconsistent bound order.
+
+  A missing health check is never reported `satisfied`.
+- **Finding 96 stands.** Review-affa17 finding 96 ("original bracket uncertainty must not be rounded into an
+  inactive health slot") stands. A bracket is never inferred as inactive or not-applicable.
+- **Expectations.** The expected-obligation entry keeps the fact-derived unknown applicability. The discharge
+  changes only the row, so `expectedObligationsDigest` never depends on which samples arrived, and deleting the
+  sample changes the row, not the expectations.
+- **Consistency.** The pre-closure assessor, the runtime terminal report and the offline `verify_closed`
+  recomputation all run the same `_Assessment.assess`. They stay consistent, and no stored report is rewritten.
+- **Unchanged.**
+  - The slot arithmetic, the applicable and inactive rules outside the bracket, and CV07 (missing bounds).
+  - `terminal_runtime.py`'s `uncertain-applicability` blocker.
+  - The report schema, the broker projection and its producers.
+  - M1.
