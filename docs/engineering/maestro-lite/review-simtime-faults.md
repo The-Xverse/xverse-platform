@@ -541,3 +541,74 @@ and admission refuses while it is unknown.
      - **Hub dependency.** The compat hub relay (WP-10 #4) must implement `resumed`, `count`/`index`,
        arm-before-onset and the benign close exactly as in ST-2. Until it does, the frame contract is exercised only
        against fake hubs.
+
+6. **Focused re-review of amendment ST-2 (written at 15:55:52 2026-10-24).** Reviewer: the same independent Claude agent
+   as finding 3. Scope: `88379942c..00bd41ba2` (`88379942c`, `ce62b8fbc`, `c3aadc745` and `00bd41ba2`).
+   **Verdict: PASS WITH NOTES.**
+   - **Nothing blocks the decisive full run.**
+   - **N1 should be decided by the author before the first live freeze run**: repaired, or accepted as recorded.
+     That run cannot happen while D-4c is unknown.
+   - **Installed wheel.** `sha256sum` of the cache wheel gives
+     `5e91e36c2b7d6a325133dfb9c8eed718c17058cafff9d2e65c072e98f6d16013`. The installed tree equals `src/` at
+     `00bd41ba2` (`diff -rq`; only `xcom` differs).
+   - **Rerun.** One process, faults `simtime`, `scheduler` and `maestro_run`: **112 passed** in 64 s, at load about
+     8. An unrelated project's pytest was running at the same time.
+   - **The finding 3 probes, re-run on the installed ST-2 wheel.**
+
+     | Probe | Before ST-2 (finding 3) | Now |
+     | --- | --- | --- |
+     | P1: `hold(apply,30)` then `time(31)`, queued before the ack | accepted | **protocol failure**: "hub sent time before resumed for ack 2" |
+     | P2: `hold(apply)` then `hold(clear)`, back to back | accepted, ended `cleared` | **protocol failure**: "hub sent hold before resumed" |
+     | M1: hub EOF after every entry is `cleared` | run failed (CHANNEL) | **benign**: `run_failed=False`, `hub_closed` recorded, `finish` cleared and not incomplete |
+     | EOF while an entry is still pending | — | protocol failure ("closed the channel with entry … pending") |
+     | P3: connected, never armed | cancelled, run succeeded | **protocol failure**: "fault:f-frz was never armed" |
+     | P4: armed, onset never reached | cancelled, run succeeded | `cancelled`, **`incomplete=True`** |
+
+     M1, M2 and M3 of finding 3 are repaired as the "WP-10 #3 review dispositions" row specifies. Arming now carries
+     `count` and `index` (`check_arm_batch`), as in the "WP-10 #4 relay alignment" row R-1.
+   - **The implementer's judgment calls.**
+     - **(a) R9 replaced by the per-entry M3 rule.**
+       - **What it guarantees.** Each frame with a step is checked: no step at or after an unarmed entry's onset
+         (`simtime.py:589-592`). An entry never armed by `finish` fails the run.
+       - **What is lost.** Only that the platform no longer insists that the whole batch is armed before any frame.
+         The batch-level rules (CC-1, one seed) are hub-side re-checks in any case, and the compat relay is
+         stricter: it sends every `armed` before its first tick.
+       - **Conclusion.** Nothing needed for safety or PAIR-1 is lost, and the compat relay is compatible with the
+         rule.
+     - **(b) `hub-closed` on the first entry's chain.** **LOW, documented** (ADR ST-2, decision 4).
+       - **Probe.** The first entry's chain is `[apply applied, clear cleared, final cleared, outcome hub-closed]`.
+         The worker maps `final` to phase `outcome`, so that entry carries **two** `outcome` events, and the last
+         one is `hub-closed`.
+       - **Who is affected.** `closure_report` and `Chain.status` are unaffected, because they read the apply and
+         clear phases, and `scheduler.outcomes` is right. A reader that takes the last `outcome` event per entry
+         as final (a blueprints oracle or a PAIR-1 checker) would misreport entry 1 in **every** benign run.
+       - **Fix.** Either carry the event as the final outcome's detail, or give readers a stated rule: an entry's
+         final outcome is the first `outcome` whose value is in `FINAL_OUTCOMES`. If the rule is chosen, add it
+         to the WP-10 #5 obligations and test it.
+     - **(c) The `_finish_faults` mapping in simulator-time mode only. Confirmed.**
+       - The new branch is guarded by `type(self._faults) is SimTimeFaultScheduler` (`dispatcher.py:1421-1426`),
+         so the tick-mode finish path is unchanged.
+       - **Plans.** A clean export of `00bd41ba2` gives the same lifecycle digests and canonical-byte hashes as
+         base `b40acce49` for my four plans (fault-less, stale+crash, freeze, delay-ticks; the values are in
+         finding 3). The pinned L4 literal for stale+crash, `3e2bd8af…`, equals the value I computed independently.
+     - **(d) Ends at `finish`.**
+       - **N1 (MEDIUM; not reachable before D-4c; decide before the first live freeze): a freeze cut short leaves a
+         successful run.**
+         - **Probe d1.** A freeze is applied at step 30 and its clear step (40) is never reached. `finish` thaws it,
+           ends it `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), and sets **no** `incomplete`. ST-2 states
+           this.
+         - **Why it matters.** The treatment then lasted less than declared, so PAIR-1 needs equal freeze windows
+           and this run is not one of them. It is also asymmetric with a relay entry applied and not cleared, which
+           is `incomplete-clearing`.
+         - **Recommendation.** Set `incomplete` for a freeze applied but not cleared at `finish`. Otherwise the
+           author should record why a truncated freeze is an acceptable treatment.
+       - **N2 (LOW; R13, documented).** A `resumed` still outstanding at `finish` is unchecked.
+         - **Probe d2.** The clear hold is acked, the hub never sends `resumed`, and `finish` gives `cleared` and
+           a successful run.
+         - Failing on it would race the last tick, so do not fail. Record a `resumed-outstanding` detail on the
+           entry's final statement so that the evidence shows the unconfirmed handshake.
+   - **Residuals.**
+     - R12 and R13 are honest.
+     - R13's "not proof against an adversarial peer" is correct, and stays tied to L1 (the connected socketpair or
+       the cgroup check) in WP-10 #5.
+     - The L1–L3 obligations are recorded for WP-10 #5 as the dispositions row requires.
