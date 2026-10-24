@@ -1830,3 +1830,65 @@ decision S-D2, approved on 2026-10-23).
         (`:105-115`). It is the nearest coverage ADR; there is no separate ADR-ML3-COVERAGE.
     - **Out of scope, noted.** Separate `…g1.ready` rows are `unverifiable` in the no-carla runs of dev6 and dev7
       (adapter) and in dev5 `T044245-cancel-paused` (lite-driver). These are start-up paths and were not examined.
+
+31. **S1a-6 repair of finding 30 per thesis DR-20, option A (written at 05:40:42 2026-10-24, load about 4.4-4.7).**
+    - **Contract first.** `33486ad22` (written at 05:27:51) was committed before any `src/` change. It updates:
+      - `coverage-assessment.md`, the health-slot paragraph: a "discharged bracket" clause;
+      - `affa-coverage-runtime-composition.md`, the health-slot paragraph;
+      - ADR-ML3-EVIDENCE-0001, with a new "Amendment S1a-6" section.
+    - **Code (`59a130f73`, `src/xverse/maestro/coverage.py` only).**
+      - `health_window` now returns (applicability, window, cut). The cut is the Stop request, and it is set only on
+        the final bracket branch. That branch is reached only after every existing check has passed:
+        - Release observed and ordered within the admitted interval;
+        - a non-empty slot inside the admitted end;
+        - Release ACK ≤ Stop request ≤ Stop ACK ≤ terminal end;
+        - Stop request < slot end ≤ Stop ACK.
+
+        Every other return carries no cut, and the classification is unchanged.
+      - In `assess`, the health branch runs only when applicability is `None` and a cut is set. It reruns the
+        existing `one(..., many=True, source=source_ok observe/observation running|not-ready)` on the in-window
+        events whose host time is ≤ the cut. Only a `satisfied` result sets applicability `True` and the status
+        `satisfied`, with that evidence. Otherwise the row falls through to the unchanged `unverifiable` overwrite.
+      - The expected-obligation entry keeps the fact-derived `None` for a discharged slot. `expectedObligationsDigest`
+        is therefore unchanged by the repair for every run, and it does not depend on arrived samples.
+        - **This corrects finding 30**, which expected the digest to change for runs that hit the bracket.
+      - Not changed:
+        - `terminal_runtime.py`, including the `uncertain-applicability` blocker;
+        - the schema, the broker projection and its producers, and the slot arithmetic;
+        - CV07, and M1.
+      - The offline `verify_closed` recomputes through the same `_Assessment.assess`.
+    - **Tests (`test_stabilization_coverage_health_boundary.py`, 19 tests).**
+      - The finding-30 RED test is now green, and its 12 controls still pass.
+      - New fail-closed controls, all passing:
+        - a sample after the Stop request but before the slot end (Stop [2.95, 3.25], sample at 3.0 s) stays
+          `unverifiable`, while slot 2 stays `satisfied`;
+        - a hash-valid sample re-pointed at the start-outcome M3 record fails `source_ok`. It is not `satisfied` in
+          an applicable geometry, and it stays `unverifiable` in the bracket;
+        - three inconsistent bound orders stay `unverifiable`: ACK before request, ACK beyond the terminal end, and
+          Stop request before Release ACK;
+        - deleting the discharging sample turns the row `unverifiable` and leaves `expectedObligationsDigest`
+          unchanged.
+      - The recorded-bracket control now also asserts that the cut is exposed only for the `None` slots.
+    - **Wheel and suites.**
+      - The wheel was rebuilt from the working tree that `59a130f73` commits: `cea5ced404c27715…`
+        (`cea5ced404c277157df9496086fd4a0a8f011c58e01c8e7d659fc2fb5b53cddf`).
+      - The related suites ran one pytest process at a time on that installed wheel, from 05:29:42 to 05:40:31 at
+        load 3.3–5.0, in 14 groups and 54 files:
+        - every `tests/thesis_lite/maestro` file that imports `xverse.maestro.coverage`, `terminal_runtime` or
+          `verify_closed`;
+        - `test_stabilization_*`, `test_closure.py`, `test_shared_closure.py`, `test_dv05_dv06_bounds.py` and
+          `test_affa_*`.
+      - **Result: 1083 passed, none failed, skipped or errored.** The log is in the session scratchpad,
+        `f30/dr20-suites.log`.
+    - **Residuals.**
+      - **Not replayed on the live retained inputs.** The two failing dev7 runs were not reassessed with the new
+        code. Their admission is not retained beside the run in a form this session could reuse without the
+        harness.
+        - Their recorded samples precede the Stop request by 0.38 s and 0.55 s, so a discharge is expected.
+        - Confirming it needs a live S1c run or an admission-capable offline replay, and neither is authorized here.
+      - **The rule is stricter than "in that slot".** A slot whose only samples come between the Stop request and
+        the slot end still fails closed. That is by design (DR-20).
+      - **No change to the rate.** About 1–4 % of runs per unit can still hit the bracket. Those runs now pass only
+        when a pre-request sample exists. Given the ~1.6 s live health interval, that is expected whenever the slot
+        is healthy.
+      - **The `ready` rows** noted at the end of finding 30 remain out of scope.
