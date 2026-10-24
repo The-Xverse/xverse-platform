@@ -34,7 +34,8 @@ subtract replacement-controller readings from original session readings; readine
 must cite actual generation-qualified acknowledged probes. Each exact slot remains
 visible even when simulation ticks pause or a slot's normal record is deleted. A slot
 due inside a complete, consistent original Stop bracket stays unverifiable unless a
-valid source-checked observation at or before the Stop request discharges it as
+valid source-checked observation at or after the slot start and at or before the
+Stop request discharges it as
 applicable and satisfied (coverage-assessment.md, S1a-6/DR-20; written at 05:27:51
 2026-10-24); the bracket is never rounded into an inactive slot.
 

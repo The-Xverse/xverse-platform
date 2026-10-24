@@ -168,8 +168,9 @@ affected source/installed-wheel scope once.
 ## Amendment S1a-6: a health slot due inside the Stop bracket (thesis DR-20; 2026-10-24, written at 05:27:51; before implementation)
 
 - **Context.** S1b review finding 30: in two live runs the carla-adapter health slot 5 ended 0.076 s and 0.021 s
-  after the Stop request and before the Stop ACK. `health_window` (`coverage.py:805`) returned applicability
-  unknown, and `assess` (`coverage.py:773-774`) replaced the `satisfied` status, already backed by three valid
+  after the Stop request and before the Stop ACK. `health_window` (`coverage.py:805` at `311016739`; the
+  classification is now `:811-813`) returned applicability unknown, and `assess` (`coverage.py:773-774` at
+  `311016739`; the unchanged overwrite is now `:778-779`) replaced the `satisfied` status, already backed by three valid
   in-slot samples taken before the Stop request, with `unverifiable`. The run then ended
   `ML-SCHEDULE-EVIDENCE-INCOMPLETE`. The uncertainty about the unit's active end is genuine, but it does not change
   the outcome once a valid sample exists: an applicable slot is satisfied and an inactive one is not-applicable.

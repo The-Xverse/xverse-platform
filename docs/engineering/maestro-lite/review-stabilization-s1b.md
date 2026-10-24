@@ -2003,3 +2003,55 @@ decision S-D2, approved on 2026-10-23).
       - The repair is needed for the two observed failure geometries, and it is safe on the evidence above.
       - The `ready` rows of `no-carla` and `cancel-paused` start-up paths can still leave those runs
         `unverifiable`. The run's acceptance criteria must state whether that is expected for those scenarios.
+
+33. **Dispositions of finding 32 (written at 05:49:35 2026-10-24, load about 3.6-4.2, before the changes; thesis
+    DR-20, delegated).**
+    - **LOW-1, to be repaired with committed tests** in `test_stabilization_coverage_health_boundary.py`:
+      - a sample exactly at the Stop request discharges the slot;
+      - the same sample 1e-9 s after the Stop request does not;
+      - a slot ending exactly at the Stop ACK is the bracket case: it discharges with a pre-request sample and stays
+        `unverifiable` without one;
+      - `verify_closed` agrees with the online pre-closure assessment on a discharged slot;
+      - the cited evidence is the in-interval sample when a valid post-request sample precedes it in annotation
+        order.
+    - **LOW-2, to be repaired (wording only).** The ADR amendment and the test module docstring will cite the
+      pre-repair lines as "at `311016739`" (`coverage.py:805` and `:773-774`) and the current lines at the repair
+      commit.
+      - **Line-number deviation from the finding.** At `59a130f73` the classification is `coverage.py:811-813`, as
+        the finding says. The unchanged `unverifiable` overwrite is at `:778-779`, not `:776-777`, which are the
+        emergency-row lines. The text will cite `:778-779`.
+    - **LOW-3, to be repaired.** `affa-coverage-runtime-composition.md` will state the lower bound: a sample "at or
+      after the slot start and at or before the Stop request".
+    - **LOW-4, declared.**
+      - `verify_closed` from a wheel at or after S1a-6 recomputes a stored pre-S1a-6 report that hit the bracket as
+        `satisfied`, against the stored `unverifiable`. It therefore marks that report artifact `conflicting`
+        (`coverage.py:951`).
+      - That is fail-closed, and no stored report is rewritten.
+      - The report schema and digests carry no rule version. Pre- and post-S1a-6 verdicts can be told apart only by
+        the wheel digest that produced or verified them.
+      - Anyone re-verifying the dev5–dev7 evidence must use the wheel recorded with that evidence, or expect this
+        conflict on the two bracket runs.
+    - **LOW-5, declared (pre-existing).** Slot windows are closed at both ends (`coverage.py:766`). A sample exactly
+      at a slot boundary therefore counts for both adjacent slots, and the discharge inherits this. It predates
+      S1a-6, and it is a measure-zero case for live floats.
+    - **The `ready`-row residual, declared as expected.** The `ready` rows stay `unverifiable` (applicability
+      `None`, with `outcome` missing) in the no-carla runs and in start-up failures:
+      - dev6 `T045227-nominal` and `T050004-no-carla`;
+      - dev7 `T051826-no-carla`;
+      - dev5 `T044245-cancel-paused`.
+
+      Those runs fail closed at start-up anyway, so this does not mask anything, and DR-20 does not touch it.
+      Acceptance criteria for those scenarios must expect a non-`complete` coverage verdict.
+    - **Result (06:02:30).**
+      - **LOW-1 to LOW-3 are applied.**
+        - Six new tests, five cases. The citation case re-times the 2.0 s sample to 3.1 s, after a Stop request at
+          3.05 s and ahead of the 3.0 s sample in annotation order, so a mutant citing the unrestricted slot set
+          would cite it.
+        - The `verify_closed` case closes a real writer. Its offline `health.3` row equals the pre-closure row,
+          the `expectedObligationsDigest` values are equal, and overall is `complete`.
+      - **The `src/` tree is unchanged.** The rebuilt wheel is `cea5ced404c27715…`
+        (`cea5ced404c277157df9496086fd4a0a8f011c58e01c8e7d659fc2fb5b53cddf`), identical to finding 31's.
+      - **The boundary file has 25 passed.**
+      - **The related list** (the same 54 files in 14 groups as finding 31, one pytest process at a time) ran from
+        05:50:39 to 06:02:15 at load 3.7–6.3. **Result: 1089 passed, none failed, skipped or errored.** The 6 extra
+        tests are the new ones. The log is in the session scratchpad, `f30/dr20-low-suites.log`.

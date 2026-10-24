@@ -4,8 +4,8 @@ Diagnostic reproduction written before any repair. Live symptom (run set
 s1c2-part2-dev7-20261024, runs ...T051109-freeze-vcu and ...T051454-nominal): the
 carla-adapter-instance health slot 5 ends at Release-ACK + 5*5 s, which lies inside
 the retained [stopRequestedAt, stopAcknowledgedAt] bracket. ``health_window``
-(src/xverse/maestro/coverage.py:805) therefore returns ``applicable=None`` and
-``assess`` (coverage.py:773-774) overwrites the already-satisfied status with
+(src/xverse/maestro/coverage.py:805 at 311016739; now :811-813) therefore returns
+``applicable=None`` and ``assess`` (coverage.py:773-774 at 311016739; now :778-779) overwrites the already-satisfied status with
 ``unverifiable``, although valid health observations were retained inside the slot
 and before the Stop request. The terminal report then lists ``normal-records``,
 ``required-coverage`` and ``uncertain-applicability`` (terminal_runtime.py:138-140).
@@ -24,7 +24,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from xverse.maestro.coverage import _Assessment,assess_preclosure
+from xverse.maestro.coverage import _Assessment,assess_preclosure,verify_closed
 from .test_coverage import Fixture,row
 
 # Unit ``a`` in the neutral Fixture: cadence 1 s, Release-ACK 0.2 s, health samples at
@@ -211,3 +211,65 @@ def test_discharge_keeps_expectations_digest_independent_of_samples(tmp_path):
         assert full['expectedObligationsDigest']==reduced['expectedObligationsDigest']
     finally:
         f.writer.abort(reason='Synthetic S1a-6 control')
+
+
+# Finding 32 LOW-1: boundary, citation and offline cases pinned in the repository.
+
+def _slot3_end(f):
+    """Slot 3 end computed with the assessor's own arithmetic (Release-ACK + 3 * cadence 1)."""
+    return f.broker['generations'][0]['releaseAcknowledgedAt']+3*1
+
+
+@pytest.mark.parametrize('offset,discharged',[(0.0,True),(1e-9,False)])
+def test_sample_exactly_at_stop_request_discharges_and_just_after_does_not(tmp_path,offset,discharged):
+    """The 3.0 s sample is at the Stop request (offset 0) or 1e-9 s after it."""
+    f=Fixture(tmp_path)
+    try:
+        health=row(_assess(f,(3.0-offset,SLOT3_END+0.05)),'health.3',f.a,1)
+        assert (health['applicable'],health['status'])==((True,'satisfied') if discharged else (None,'unverifiable'))
+        if discharged:assert health['evidenceIds']==[_health3_sample(f)]
+    finally:
+        f.writer.abort(reason='Synthetic finding 32 boundary')
+
+
+@pytest.mark.parametrize('with_sample',[True,False])
+def test_slot_end_exactly_at_stop_ack_is_the_bracket_case(tmp_path,with_sample):
+    f=Fixture(tmp_path)
+    try:
+        end=_slot3_end(f)
+        f.broker['generations'][0].update(stopRequestedAt=end-0.05,stopAcknowledgedAt=end)
+        args=f.arguments()
+        if not with_sample:args['annotations']=[e for e in args['annotations'] if e['eventId']!=_health3_sample(f)]
+        health=row(assess_preclosure(f.admission,**args).report(),'health.3',f.a,1)
+        assert (health['applicable'],health['status'])==((True,'satisfied') if with_sample else (None,'unverifiable'))
+    finally:
+        f.writer.abort(reason='Synthetic finding 32 boundary')
+
+
+def test_citation_is_the_in_interval_sample_not_an_earlier_listed_post_request_one(tmp_path):
+    """The 2.0 s sample is re-timed to 3.1 s, after the Stop request (3.05 s) but inside slot 3,
+    and it precedes the 3.0 s sample in annotation order. Only the 3.0 s sample may be cited."""
+    f=Fixture(tmp_path)
+    try:
+        late=next(e for e in f.events if e['extensions']['xverse.maestro']['action']=='health'
+                  and e['extensions']['xverse.maestro']['unitId']==f.a and e['clocks']['host']['value']==2.0)
+        late['clocks']['host']['value']=3.1;late['clocks']['utc']['value']=1700000000+3.1
+        order=[e['eventId'] for e in f.events];assert order.index(late['eventId'])<order.index(_health3_sample(f))
+        health=row(_assess(f,(3.05,SLOT3_END+0.05)),'health.3',f.a,1)
+        assert health['applicable'] is True and health['status']=='satisfied'
+        assert health['evidenceIds']==[_health3_sample(f)]
+    finally:
+        f.writer.abort(reason='Synthetic finding 32 citation')
+
+
+def test_verify_closed_agrees_with_preclosure_on_a_discharged_slot(tmp_path):
+    f=Fixture(tmp_path)
+    f.broker['generations'][0].update(stopRequestedAt=SLOT3_END-0.05,stopAcknowledgedAt=SLOT3_END+0.05)
+    online=f.close().report()
+    result=verify_closed(f.admission,f.root,expected_admission_digest=f.admission.digest)
+    offline=result.coverage.report()
+    assert result.writer_state=='closed' and result.accepted_reader_executed and not result.reader_diagnostics
+    assert row(online,'health.3',f.a,1)==row(offline,'health.3',f.a,1)
+    assert row(offline,'health.3',f.a,1)['status']=='satisfied' and row(offline,'health.3',f.a,1)['applicable'] is True
+    assert offline['expectedObligationsDigest']==online['expectedObligationsDigest']
+    assert offline['overallStatus']=='complete' and offline['normalRecordStatus']=='complete'
