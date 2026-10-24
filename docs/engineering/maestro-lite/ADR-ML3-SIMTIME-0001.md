@@ -120,6 +120,20 @@ finding 1).
 8. **Persistence.** The binding travels as an optional `fault_clock` configuration key, present only when
    declared. Every rederivation passes it: the worker, `encode_configuration` and `admission._verify_prepared`.
 
+9. **Public capability contract.**
+   - `xverse.faults.SIMULATION_TIME_TRIGGERS` is a module-level `bool`. It is `True` only when every requirement
+     of option A is implemented in this package:
+     - onset and duration in exact simulator ns (decisions 1 and 2);
+     - the horizon check against `horizon_ns` (decision 2);
+     - the remote relay boundary at the clock-source unit (decisions 4 and 5);
+     - the step-hold freeze handshake (decision 5).
+   - It is absent at rc.1. The blueprints admission path (WP-10 #1, candidate `f0ecf6e`,
+     `automotive/assured-aeb/admission.py`) probes `getattr(xverse.faults, "SIMULATION_TIME_TRIGGERS", False) is
+     True`, and refuses every fault schedule while the probe fails.
+   - The flag states only that the code exists. It does not state that the D-4c values are measured, that the hub
+     (compat #4) exists, or that any run is admitted. Admission still refuses while those are missing (decision 3).
+   - A test pins the name, the type and the value.
+
 ## Unchanged
 
 - The tick mode: `FaultScheduler`, the in-process relays, Phase 6 amendment A1, and the tick-mode rules for
