@@ -119,6 +119,9 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
   - The middle term is the admitted budget of one terminal-section statement, the `failure` statement that runs
     after the readiness-failure cancel and before the terminal fence. The 0.25 s keeps its earlier meaning: the
     cancel's reply and the terminal fence.
+    *[Corrected by the DR-17 note below: the middle term is a nominal one-RPC allowance (`operation_seconds`), not
+    the statement's admitted bound (`per_unit_seconds`). The statement is held inside the reserve by the run-time
+    cap M1, not by this term.]*
   - The path it covers is: `owner.cancel`, up to the 2 s native close for a responsive authority; the `failure`
     statement; `_close_restarts`, which is local; and `_cleanup`, whose broker cancel returns the cached result
     before `service_terminal` moves the root into terminal mode.
@@ -172,3 +175,122 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
 
   Unit tests cover the reserve, the bound and the cap. The dispatcher, lease-renewal, schedule, readiness and
   closure suites must stay unchanged.
+
+### Note: S1b-1 revision (M1, the failure-statement cap; L1, L2, L3, L6) (2026-10-24, written at 02:24:57; before implementation; thesis DR-17)
+
+- **Context.** S1b review-log finding 26 (independent review of DR-16), MEDIUM-1 and LOW-1, LOW-2, LOW-3, LOW-5
+  and LOW-6; thesis DR-17 is the disposition (M1 → option (b)). MEDIUM-1: the RA5 reserve
+  `2 s + operation_seconds + 0.25 s` holds only a nominal allowance for the `failure` statement, whose own deadline
+  is `min(work end, now + per_unit_seconds)` (1 s in the fixture, up to 5 s by admission). A storage RPC that
+  stalls (a unit frozen in `fsync` on loop10, then the storage worker's own write to the same device) can therefore
+  still run past L, and the root then ends at its lease before the terminal fence: the finding 21 (A) signature,
+  fail-closed.
+- **Wording correction (DR-17).** The S1b-1 RA5 sentence "the admitted budget of one terminal-section statement" is
+  wrong. The reserve's middle term is a **nominal one-RPC allowance** (`operation_seconds`) for the `failure`
+  statement. What bounds that statement inside the reserve is the cap below (M1). The admission bound
+  `2.75 − 2·op` and the run-time cap of the window are unchanged.
+- **M1 (decision): the statements on the failure path that precede the terminal fence are capped before the
+  fence.** In the lazy (native, root-fenced) profile, the dispatcher's `failure` statement is sent with the deadline
+  `min(work end, now + per_unit_seconds, L_root − (C + CANCEL_FENCE_MARGIN_SECONDS))`, where L_root is the
+  bootstrap root lease (`bootstrap._lease`, the lease that `service_terminal` must find alive) and
+  `CANCEL_FENCE_MARGIN_SECONDS` = 0.25 s.
+  - **C, the native close term.** C = `NATIVE_CANCEL_CLOSE_SECONDS` (2.0 s) while the native cancel close may still
+    be ahead of the fence, that is, while the run broker has no cancel result yet (`RunBroker._cancel_result is
+    None`), and C = 0 once that result exists.
+    - On the readiness-failure and start-failure paths the cancel has always completed before the `failure`
+      statement. `ProcessReadiness.start` cancels inside its own `except`, and `owner.cancel` reaches
+      `RunBroker.cancel` synchronously, so the native close has already been spent. Only the reply and the fence
+      remain, and the cap is `L_root − 0.25 s`. That is review option (b) as written in finding 26.
+    - **Interpretation of DR-17 (flagged for the author).** DR-17 states the cap as `L − (2.0 s + 0.25 s)` and says
+      that "a storage stall then costs the failure record ..., never the native fence". Applied after a cancel
+      that has already used its close, a fixed 2.0 s term would be counted twice. RA5 leaves only
+      `operation_seconds + 0.25 s` after a full close, so `L − 2.25 s` would already be in the past. The `failure`
+      statement would then be refused before the send (F-08, `ML-SCHEDULE-SERVICE-DEADLINE`) whenever the cancel
+      took longer than about `operation_seconds` (0.38 s live; finding 22 measured at least 0.39 s). That would
+      cost the failure record (`ML-PROBE-NOT-READY` / `ML-PROBE-WINDOW-CUT` in Argus) with no storage stall at
+      all. So the 2.0 s term is kept exactly where a close can still be ahead, and is 0 after it.
+    - Switching to the literal fixed term changes one line (`_fence_cap`). The literal reading would satisfy
+      the formula but not the stated consequence.
+  - **Outcome under a stall.** A `failure` statement still unanswered at the cap ends in `ML-PERSIST-TIMEOUT`
+    (stage `receive`). `PersistenceClient._rpc` records it as the run's persistence failure and calls `_fail()`:
+    the latch is cancelled with `persistence-uncertain` and the storage worker is sent SIGTERM. That fails closed.
+    The later terminal statements and teardown records cannot reach the writer, and the closure is incomplete,
+    not silent. The dispatcher then proceeds to `_close_restarts` and `_cleanup`. The fence (the cached broker
+    cancel, then `service_terminal`) runs with the root lease still alive and at least the 0.25 s margin left. The
+    failure statement's refusal or timeout is swallowed exactly as before, and the dispatch diagnostic keeps the
+    original code.
+  - **Other paths to the fence after a cancel (checked).**
+    - Every entry into the dispatcher's failure branch sends the same single `failure` statement after
+      `owner.cancel`. That covers readiness and start failures, other step or statement failures, a fault crash
+      and an external cancel (`_cancel_requested`). The cap therefore applies to all of them.
+    - On the same branch, `_cancel_faults` sends best-effort `fault` statements before `owner.cancel`. When the
+      latch is already cancelled at the send (a readiness or start failure, or an external cancel), they precede
+      the fence after a cancel. They get the same cap, applied to their ordinary `_end()` deadline.
+      - With an external canceller still inside its K.CANCEL exchange, the broker has no result yet, so C = 2.0 s.
+        This is the reachable case of DR-17's full term.
+      - A skipped fault statement is the existing best-effort outcome: the chain stays open in Argus, and the run
+        is already a failure.
+    - The normal-completion path sends no statement between a cancel and the fence (there is no cancel before
+      `_cleanup`). The statements after the fence (`step-disposition`, `unit-disposition`, `run-terminal`) run with
+      the root in terminal mode, renewed by every terminal record, so they are not capped.
+    - **Not capped (declared).**
+      - Fault statements sent while the latch is not yet cancelled, before the dispatcher's own `owner.cancel`
+        (for example after a fault crash), keep `_end()`. The cancel close that follows can then start with less
+        than 2 s of lease left. That outcome is fail-closed: an unconfirmed cancel is revoked.
+      - The non-lazy profile has no root terminal fence in `_cleanup` and is unchanged.
+  - **Residual (declared).** If the cancel itself overran the reserve, so that `L_root − 0.25 s` is already past
+    when the `failure` statement would be sent, F-08 refuses the statement before the send. It is then not
+    recorded as a persistence failure: the channel stays usable, and the run-terminal `failed` record follows
+    without the failure event. This band is the cancel exceeding its own bound, not a storage stall. The fence's
+    own `service_terminal` deadline (`now + operation_seconds`, capped at the lease) is still covered only by the
+    0.25 s margin.
+- **L1 (decision): the window records survive a controller recovery.** `_commit_controller_view` replaces the
+  dispatcher's facade with the recovery's new `ProcessReadiness` view, whose `_windows` list is empty. Before the
+  swap, the dispatcher now carries the retired facade's records into the view, in order and ahead of any record
+  the view makes. `DispatchResult.readiness_windows` therefore keeps one record per marker start step across a
+  recovery, including a cleanup-only view. The records are immutable `ReadinessWindow` values. The retired view
+  makes no further start, so no record is lost or duplicated.
+- **L2 (declared residual): W' = 0 for restarts and for a generation-limited start.** The cap guarantees the
+  reserve R only from `t0 + W'`. When `L − t0 < R`, `max(0, …)` gives W' = 0. The three QUERYs then run back to
+  back with less than R left, and the readiness-failure cancel can outlive the root lease.
+  - RA2 removes this band for ordinary start steps.
+  - It remains for a marker **restart** (`_restart_unit`). RA2 is not applied there. `_service` renews only below
+    `renew_margin` (1.9 s live), which is less than R = 2.63 s live.
+  - It also remains for a start step that the **generation end** prevents from renewing
+    (`min(now + 5 s, generation − 2 s)` not above the leases).
+  - In both cases the window record shows `cut: true`, the failure is `ML-PROBE-WINDOW-CUT`, and the root may end
+    at its lease under the cancel, with an incomplete closure that fails closed (the finding 21 (A) signature).
+- **L3 (declared residual): cut sources that admission does not check.** The start step's D is
+  `min(active end, now + start budget, lease, next health − health_scan_seconds)`.
+  - **Start budget.** With `use_action_timeouts` off, the start budget is `operation_seconds`, and that budget
+    also holds the pre-release work, so any W ≥ op is cut. With action timeouts it is the start action timeout.
+  - **Health term (newly declared).** A marker unit whose start step follows another unit's first observation has
+    `D ≤ observed_at + cadence − health_scan_seconds`. A cadence shorter than about W plus the pre-release work
+    therefore cuts W on every such start.
+  - **Admission does not compare W with the start budget or the cadence.** It accepts schedules that can never
+    spend W. Every such cut is recorded (`cut: true`) and diagnosed (`ML-PROBE-WINDOW-CUT`, `deadline-exceeded`),
+    never silent. A refusal at admission would also refuse the composed never-ready fixture, so it is not added.
+- **L6 (acknowledgement, DR-17).** The window record (W, W', L, t0, cut) lives in the result objects
+  (`ProcessReadiness.readiness_windows`, `DispatchResult.readiness_windows`, `RuntimeResult.dispatch`). It also
+  lives in the S1c harness's hash-bound run record `maestro-run.json` (`readinessWindows`, S1c finding 46). It is
+  not in the Argus records, and it is not covered by the writer's integrity chain.
+  - This is acknowledged under delegation in place of Argus fields, because the lifecycle payload v2.0 probe row
+    is closed.
+  - The cut itself reaches Argus as the diagnostic.
+  - The thesis S1a-3 record correction was made on the thesis side (2026-10-24).
+  - `design-stabilization-s1b.md` is corrected to name both outcomes.
+  - The removed `CANCEL_CLOSE_RESERVE_SECONDS` has no importer in the S1c-2 harness worktrees: a read-only
+    `git grep` over the compat and blueprints worktrees finds only a review-log mention.
+- **Unchanged.** The RA1 cap and spacing, RA2, the RA5 reserve and admission bound (1.99 s live, 1.75 s fixture),
+  the window record's fields, `ML-PROBE-WINDOW-CUT`, the order of the closure records, and the fence itself.
+- **Verification.**
+  - `test_stabilization_stack_load_failures.py`:
+    - M2 variant: a cut window whose cancel takes the full 2.0 s close, with the storage worker stalled
+      (SIGSTOP) during the `failure` statement. The statement times out at the cap, `ML-PERSIST-TIMEOUT` is
+      recorded at `receive`, and the fence runs with the root and the authority alive and lease left. It fails
+      without the cap: the 1 s per-unit deadline passes L.
+    - RA2's generation-limited skip ends in a recorded cut.
+    - The RB1 cases assert that `_fail()` ran inside the targeted call (a spy) and sent the storage worker
+      SIGTERM (`_term_sent`). The `failed-set` fault itself creates neither.
+  - A controller-recovery test keeps the window records.
+  - The dispatcher, renewal, readiness, schedule, recovery, fault and closure suites must stay unchanged.
