@@ -25,6 +25,10 @@
 #define SEALS (F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL)
 #define PACKET 128
 #define MAX_IMAGE (32U*1024U*1024U)
+/* Amendment C1 of ADR-ML3-BOOTSTRAP-0001: the role-3 persistence configuration is bounded at 256 KiB (equal to
+   bootstrap.MAX_PERSISTENCE_INPUT); every other role input stays at 64 KiB. The role-3 input is never read here. */
+#define MAX_ROLE_INPUT 65536
+#define MAX_STORAGE_INPUT 262144
 #ifdef RUN_BOOTSTRAP
 #define CONFIG_MAGIC "BC17"
 #define WIRE_MAGIC "BS17"
@@ -224,7 +228,7 @@ static int birth(struct supervisor *s,struct child *c,unsigned role,int *fds) {
 #endif
     if(c->pid||role<1||role>MAX_ROLE||!enabled(s)||cgroup(fds[0],1)||cgroup(fds[1],0)||((role>=3)!=same(fds[0],fds[1])))return -1;
     int type;socklen_t n=sizeof(type);off_t input_size;
-    if(getsockopt(fds[2],SOL_SOCKET,SO_TYPE,&type,&n)||type!=SOCK_SEQPACKET||sealed(fds[3],65536,&input_size))return -1;
+    if(getsockopt(fds[2],SOL_SOCKET,SO_TYPE,&type,&n)||type!=SOCK_SEQPACKET||sealed(fds[3],role==3?MAX_STORAGE_INPUT:MAX_ROLE_INPUT,&input_size))return -1;
 #ifdef RUN_BOOTSTRAP
     if(role==4){
         if(authority_input(s,fds[3],input_size))return -1;

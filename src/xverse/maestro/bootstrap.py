@@ -30,6 +30,10 @@ WIRE = struct.Struct("!4sIQQ32sQQ32sQQQ")
 HEADER = struct.Struct("!4sIQQ32s")
 ZERO = bytes(32)
 _CREATE = object()
+# The sealed persistence configuration (role 3) is bounded at 256 KiB; every other role input stays at 64 KiB.
+# The native supervisor checks the same value (native/bootstrap.c MAX_STORAGE_INPUT). Amendment C1 of
+# ADR-ML3-BOOTSTRAP-0001; derivation in review-c1 finding 1.
+MAX_PERSISTENCE_INPUT = 1 << 18
 
 
 class BootstrapError(OwnerError):
@@ -1113,7 +1117,7 @@ class BootstrapSession(_Original):
             type(config) is not PersistenceInput
             or config.run_id != self.config.admission.run_id
             or type(config.private_bytes) is not bytes
-            or not 0 < len(config.private_bytes) <= 65536
+            or not 0 < len(config.private_bytes) <= MAX_PERSISTENCE_INPUT
         ):
             raise BootstrapError("ML-BOOT-PERSISTENCE")
         self._context(config.prepared.lifecycle_digest)

@@ -86,3 +86,53 @@ Successor v4 also routes typed persistence failure/escalation signals through th
 original BootstrapChild capability. Client-visible descriptor aliases are inputs
 for validation, never signal targets. A substituted sentinel cannot acquire helper
 cleanup authority. Legacy genuine-Popen behavior remains unchanged.
+
+## Amendment C1: the sealed persistence-configuration bound (2026-10-24, thesis 002 WP-11 option C1, decisions §J)
+
+Recorded before implementation (`review-c1.md` finding 1), under the author's delegation of 2026-10-24 and
+flagged for the author's review. Before this amendment, one native size check (`birth()`, 65 536 bytes) applied to
+the sealed input of every helper role. The Python persistence constructor mirrored it. For the persistence
+configuration (role 3), that check was the effective bound on the bootstrap path. It was never sized for a unit
+count, and it is 16 times tighter than the persistence contract's own 1 MiB cap
+(`unit-specification-persistence8.md`). At rc.1, a run of the Phase 8 shape fits at most 4 units under it
+(offline dry run, finding 1).
+
+Amended rule:
+- **Role 3 (the persistence configuration).** The sealed input must be `0 < size <= 262 144` bytes (256 KiB,
+  `1 << 18`). The bound is named once on each side, and the two values must be equal:
+  - Python: `bootstrap.MAX_PERSISTENCE_INPUT`, checked by `BootstrapSession.persistence` (`ML-BOOT-PERSISTENCE`),
+    before `_context` and before any native request;
+  - native: `MAX_STORAGE_INPUT` in `native/bootstrap.c`, checked by `birth()` for role 3 in both builds.
+- **Every other role input is unchanged at 65 536** (`MAX_ROLE_INPUT`): the LC09 recipe (role 1), the gate input
+  (role 2, exactly 64 bytes), the AC17 authority input (role 4) and the controller input (role 5). The
+  supervisor's own BC10/BC17 input stays at 65 536 (`initialize`; `encode_bootstrap`).
+- **Derivation.** The bound must hold at least 7 units of the Phase 8 shape plus a margin. Measured offline, the
+  conservative stand-in needs 91 959 B at 7 units and 200 635 B at 16 units, the platform's structural unit
+  maximum (controller and AC17 inputs). 256 KiB is the smallest power of two above the 16-unit figure. At 7
+  units it leaves a margin of 2.85 times, for the WP-12 XDL content that is not designed yet.
+- **Unchanged.**
+  - The configuration is a sealed memfd (`F_SEAL_WRITE|GROW|SHRINK|SEAL`), passed as the fourth birth fd.
+  - The native side checks only its seals, type and size, and never reads, maps or allocates it.
+  - The worker reads it under the 1 MiB outer bound (`MAX_CONFIG`) and checks the seals again.
+  - It never crosses a SEQPACKET channel, so the 128-byte BS packets and the 64 KiB persistence frames are
+    unchanged.
+  - The worker's time is still bounded, and a late worker still fails closed. The caller's start-up deadline
+    bounds the strict parse and the configuration checks, which run before hello. The Init request (at most
+    5 s) bounds `_load`. The bootstrap lease bounds both. (Corrected per `review-c1.md` finding 4, L5.)
+  - A refusal on either side still fails closed: the Python refusal leaves the supervisor sequence unchanged, and
+    a native refusal ends the supervisor through `cleanup()`.
+- **Verification.** Installed-wheel tests:
+  - the 6- and 7-unit stand-ins encode below the bound;
+  - the Python check refuses the bound plus one byte without a native request;
+  - both native builds accept a role-3 input of exactly the bound and refuse one byte more;
+  - a role-5 (controller) input above 65 536 is still refused natively, and one of exactly 65 536 is accepted
+    (corrected from role 4 per `review-c1.md` finding 4, L1: a role-4 case would not discriminate, because
+    `authority_input` refuses inputs above 2 688 B);
+  - a composed case: `BootstrapSession.persistence` starts the real worker through Init with a 7-unit
+    configuration above 65 536 B (finding 4, M1).
+
+  The bootstrap, persistence, run-bootstrap and native-boundary suites must pass unchanged, apart from the two
+  assertions of `test_coverage_producers.py` that named the old value.
+- **Not claimed.** This does not measure whether a 6- or 7-unit run fits the other bounds: B1, the 8 192
+  request and event limits, the 90 s closure, the worker Init time and the per-run frames that grow with the unit
+  count. Those belong to the D-4a and D-4b dry run and benchmark, and to the first run with that many units.
