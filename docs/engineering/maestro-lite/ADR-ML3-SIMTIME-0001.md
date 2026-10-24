@@ -62,7 +62,8 @@ finding 1).
      of the same admission.
    - **Message-only schedules** need no D-4c value, because no step is held.
    - **Rederivation.** The schedule bytes are unchanged; `decode_schedule` re-runs the same checks.
-4. **The channel (`HubChannel`, supplied by the trusted caller).**
+4. **The channel (`HubChannel`, supplied by the trusted caller).** Amended by ST-2 (lifetime, `resumed`, `count`
+   and `index`, arming per entry).
    - **Socket.** AF_UNIX `SOCK_SEQPACKET`, either connected or listening. A listening socket accepts exactly one
      peer, and that peer's `SO_PEERCRED` uid must equal Maestro's. A second peer is refused.
    - **Frames.** Canonical UTF-8 JSON (sorted keys, no whitespace), at most 4 096 bytes, with
@@ -88,7 +89,7 @@ finding 1).
      - a phase out of order;
      - a hold or report at a step other than the entry's `onsetStep` or `clearStep`;
      - any hub frame at a step beyond a pending hold or report point.
-5. **The step-hold handshake: Maestro decides.**
+5. **The step-hold handshake: Maestro decides.** Amended by ST-2 (`resumed`).
    - **Apply.** At `onsetStep` the hub holds the simulator and sends `hold(apply)`. Maestro checks the entry and
      the step. It applies the freeze through the unchanged `ProcessBoundary` and the owned launcher `freeze`, then
      sends `ack`, with `outcome: refused` if the apply failed. The hub resumes only on `ack`.
@@ -103,7 +104,7 @@ finding 1).
      tick.
    - The intent carries `atNs`, `durationNs`, `onsetStep`, `clearStep`, `stepNs` and the boundary mode
      (`remote-relay` or `step-hold`).
-7. **Run time.**
+7. **Run time.** Amended by ST-2 (`finish`).
    - **Keyword.** `FiniteDispatcher(..., fault_clock_channel=None)`, and `_OriginalRuntimeRun(...,
      fault_clock_channel=None)` passes it through.
    - **Missing channel.** A binding with simulator-timed faults and no `HubChannel` is refused at begin
@@ -156,3 +157,73 @@ finding 1).
 - A composed native dispatcher run with a fake hub thread: a step-hold freeze and a relay `loss`.
 - The Phase 5 fault suites, unchanged.
 - The full installed-wheel run, DV12 and a CAPA step.
+
+## Amendment ST-2: channel lifetime, hold verification, structural reachability and arming completeness (2026-10-24)
+
+Recorded before code (`review-simtime-faults.md` finding 4). It is based on the thesis `decisions.md` rows "WP-10 #3
+review dispositions" (M1–M3, L1–L4) and "WP-10 #4 relay alignment" (R-1, R-2). Both were decided under the author's
+delegation of 2026-10-24 and are flagged for the author's review. It adds no numeric bound and no D-4c value.
+
+- **Decision 4, `arm` (R-1).** The `arm` frame gains two closed keys:
+  - `count`: the number of entries in the arming batch, equal in every `arm` frame of the batch;
+  - `index`: 1-based, rising by 1 from the first `arm` frame to the last, which carries `index == count`.
+
+  Maestro checks its own batch before it sends any frame. A wrong count, an index gap or a duplicate entry or index
+  is refused (`XVERSE-FAULT-SIMTIME-PROTOCOL`). The hub learns from `count` and `index` that arming is complete. The
+  harness's expected-entry list stays a cross-check.
+- **Decision 4, hub to Maestro (M2).** A new frame `resumed`, with the closed keys `entry`, `phase`, `step` and
+  `ackSeq`.
+- **Decision 4, arming per entry (M3).** The hub must send `armed` for an entry before it reports any step at or
+  after that entry's `onsetStep`. Otherwise it is a protocol failure. This replaces the earlier rule that every
+  entry be armed before any other hub frame (finding 2, R9). A `time` frame below the onset of every unarmed entry
+  is accepted.
+- **Decision 4, channel lifetime (M1).**
+  - **Benign end.** A hub end-of-file is benign once every entry is final and no hold, report or `resumed` is
+    pending. Maestro records it as `hub-closed` and stops reading. In the evidence, it is one worker `fault`
+    statement with phase `outcome` and outcome `hub-closed`. It sits on the chain of the first entry in listing
+    order, after that entry's final outcome, and its detail carries `event`, `simulatorStep` and `hostNs`.
+  - **Pending end.** An end-of-file with anything pending stays `XVERSE-FAULT-SIMTIME-PROTOCOL`.
+  - **Empty frame.** A zero-length frame cannot be told apart from an end-of-file on `SOCK_SEQPACKET`, so it is
+    treated as one, and nothing is read after it.
+  - **`close`.** Maestro does not send `close` after the hub's end-of-file. A failed `close` send never fails the run.
+- **Decision 5, hold verification (M2).** After every hold `ack` that Maestro sends, with any outcome, the next hub
+  frame must be `resumed`. It must carry the same `entry`, `phase` and `step`, and `ackSeq` equal to that ack's
+  `seq`. Any other frame first is a protocol failure, and so is a `resumed` with no ack pending. SEQPACKET keeps
+  the order, so a conforming hub has read the ack before it goes on.
+- **Decision 7, `finish` (M3).** The order is:
+  1. The waiting frames are read as before.
+  2. An entry that is not final and was never armed is a protocol failure, and so is an entry not applied although
+     the hub reported a step at or after its onset.
+  3. An entry whose onset step the hub never reached ends `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), and
+     `incomplete` is set. The dispatcher then ends the run `ML-SCHEDULE-FAULT-INCOMPLETE`.
+  4. On a protocol failure detected at `finish`, the remaining entries end `cancelled` (`XVERSE-FAULT-CANCELLED`),
+     and the dispatcher ends the run `ML-SCHEDULE-FAULT-CLOCK`, or `ML-SCHEDULE-FAULT-APPLY` for a refused apply. It
+     maps them as `_advance_faults` does.
+
+  A freeze that was applied but whose clear step was not reached is still thawed and ends `cancelled`
+  (`XVERSE-FAULT-SIMTIME-NOT-REACHED`), without `incomplete`. Decision 7's `XVERSE-FAULT-NEVER-DUE` no longer
+  arises at `finish` in this mode.
+- **Decision 9.** `SIMULATION_TIME_TRIGGERS` stays `True`. Every requirement of option A still holds.
+- **Byte identity (L4).** The lifecycle digests of the fault-less plan and of three tick-mode plans with faults are
+  pinned as literals computed from base `b40acce49`.
+
+### Residuals and obligations added by ST-2
+
+- **R12. Channel lifetime.** The end-of-file rule assumes that the hub reports every entry before its stop step.
+  `horizon_ns` makes that possible but does not enforce it (L2). An entry that the hub cannot reach before it exits
+  fails the run at the end-of-file, not as `incomplete`.
+- **R13. Hold verification.**
+  - `resumed` shows that a conforming hub read the ack before it went on. It is not proof against an adversarial
+    peer: `ackSeq` can be predicted, and the peer is authenticated by uid only (R3, L1).
+  - A `resumed` still outstanding at `finish` or `cancel` is not checked.
+  - Whether the simulator really stood still during the hold stays a hub-side property (R7).
+- **WP-10 #5 obligations (wiring; not repaired here).**
+  - **L1.** Before any live run, give the hub peer a connected socketpair end at spawn, with no listening path, or
+    check the peer's `SO_PEERCRED` pid against the source unit's cgroup.
+  - **L2.** The caller derives `horizon_ns` from the frozen scenario's duration and checks it against what the
+    Maestro tick horizon covers.
+  - **L3.** The blueprints admission computes the thaw bound by the platform definition (decision 3), so that the
+    two bounds cannot disagree.
+  - **R-2.** The platform keeps one time domain per Maestro form. WP-10 #5 maps the blueprints domain
+    `carla-simulation` onto the form's `experiment-time` domain, whose clock source is the CARLA-facing unit. The run's
+    evidence records that mapping.
