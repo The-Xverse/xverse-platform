@@ -85,8 +85,30 @@
           "uniqueItems": true,
           "items": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}
         },
-        "inheritedHandles": {"const": "closed"},
-        "implicitShell": {"const": false}
+        "inheritedHandles": {
+          "const": "closed",
+          "description": "No control descriptor is inherited. Descriptors 0 and 1 are /dev/null; descriptor 2 is /dev/null or the declared private stderr file (S1b)."
+        },
+        "implicitShell": {"const": false},
+        "stop": {
+          "type": "object",
+          "description": "Optional bounded graceful stop (S1b): SIGTERM to the leader through its pidfd, then the unchanged forced stop after at most graceSeconds.",
+          "required": ["graceSeconds"],
+          "properties": {
+            "graceSeconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 4}
+          },
+          "additionalProperties": false
+        },
+        "stderr": {
+          "type": "object",
+          "description": "Optional private, run-scoped, size-capped stderr file (S1b); it is never collected or exported.",
+          "required": ["capture", "maximumBytes"],
+          "properties": {
+            "capture": {"const": "run-scoped-private"},
+            "maximumBytes": {"type": "integer", "minimum": 1, "maximum": 1048576}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     }

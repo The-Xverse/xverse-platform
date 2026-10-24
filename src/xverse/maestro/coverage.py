@@ -6,6 +6,8 @@ import json
 import math
 import re
 
+from .probe_identity import READINESS_PROBES
+
 MAX_ROWS = 8192
 MAX_BYTES = 16 << 20
 WRITER_KINDS = ['run-opened', 'run-closed', 'run-failed']
@@ -173,12 +175,15 @@ def admit_coverage(prepared,result,resources,*,run_id,host_session,contexts,heal
         policy=health_policies[u.unit_id]
         if (type(policy) not in (tuple,list) or len(policy)!=2 or not all(_number(v) for v in policy)
             or not 0<policy[0]<=policy[1]<=5):raise CoverageError('ML-COVERAGE-POLICIES')
-        if next(a.condition for a in u.plan.actions if a.phase=='observe')!='running':raise CoverageError('ML-COVERAGE-PROBE')
+        probe=next(a.condition for a in u.plan.actions if a.phase=='observe')
+        if probe not in READINESS_PROBES:raise CoverageError('ML-COVERAGE-PROBE')
         units.append(dict(unitId=u.unit_id,planDigest=u.plan.digest,catalogIdentity=u.plan.catalog_identity,
             environmentIdentity=u.plan.environment_identity,providerId=u.plan.provider_id,providerKind=u.plan.provider_kind,
             artifactDigests=list(u.plan.artifact_digests),actions={a.phase:a.action_id for a in u.plan.actions},
             parents=parents[u.unit_id],hasDependent=any(u.unit_id in p for p in parents.values()),
-            cadence=policy[0],freshness=policy[1]))
+            cadence=policy[0],freshness=policy[1],
+            # S1b: present only for a non-running probe, so existing admission bytes and digests are unchanged.
+            **({'readinessProbe':probe} if probe!='running' else {})))
     scopes=[]
     for row in _list(contexts,128):
         if (type(row) is not list or len(row)!=3 or row[0] not in uidset or type(row[1]) is not int
@@ -296,7 +301,8 @@ def _validate_admission(body):
     unit_fields={'unitId','planDigest','catalogIdentity','environmentIdentity','providerId','providerKind','artifactDigests','actions','parents','hasDependent','cadence','freshness'}
     ids=[]
     for u in body['units']:
-        if (type(u) is not dict or set(u)!=unit_fields or not _identifier(u['unitId'])
+        if (type(u) is not dict or set(u)-{'readinessProbe'}!=unit_fields
+            or u.get('readinessProbe','nonce-marker') not in READINESS_PROBES[1:] or not _identifier(u['unitId'])
             or not _number(u['cadence']) or not _number(u['freshness']) or not 0<u['cadence']<=u['freshness']<=5
             or type(u['actions']) is not dict or not {'start','observe','stop','cleanup'}<=set(u['actions'])
             or any(not _identifier(v,512) for v in u['actions'].values()) or type(u['parents']) is not list
@@ -360,6 +366,14 @@ def _terminal_annotation(event,payload,ad):
             and payload['outcome'] in ('failed','cancelled','unknown','unresolved','skipped'))
 
 
+def _probe_identity(ad,payload):
+    """S1b: unit probe and ready annotations carry the declared probe; health and step probes stay running."""
+    if payload['action'] in ('probe','ready') and payload['scope']=='unit':
+        unit=next((u for u in ad['units'] if u['unitId']==payload['unitId']),{})
+        return unit.get('readinessProbe','running')
+    return 'running'
+
+
 def _payload(event,ad,*,terminal_end=None):
     payload=event.get('extensions',{}).get('xverse.maestro')
     if (type(payload) is not dict or not PAYLOAD_FIELDS<=set(payload) or set(payload)-PAYLOAD_FIELDS-PAYLOAD_OPTIONAL
@@ -380,7 +394,7 @@ def _payload(event,ad,*,terminal_end=None):
     if payload['action']=='disposition' and DISPOSITIONS.get(payload.get('disposition'))!=payload['outcome']:return None
     if payload['action']=='run-terminal' and (payload['scope']!='run' or payload['outcome'] not in ('succeeded','failed','cancelled','unresolved')):return None
     if payload['action'] in ('probe','ready','health','health-loss') and not _identifier(payload.get('probeId')):return None
-    if payload['action'] in ('probe','ready','health','health-loss') and payload.get('probeId')!='running':return None
+    if payload['action'] in ('probe','ready','health','health-loss') and payload.get('probeId')!=_probe_identity(ad,payload):return None
     if 'cause' in payload and payload['cause'] not in {'normal','journal-failure','argus-failure','cancellation','readiness-failure','issuer-loss','deadline-exceeded','external'}:return None
     if 'handleRef' in payload and not _identifier(payload['handleRef']):return None
     if type(payload['sourceRefs']) is not list or not 1<=len(payload['sourceRefs'])<=16:return None

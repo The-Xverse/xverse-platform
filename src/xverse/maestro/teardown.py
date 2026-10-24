@@ -13,7 +13,9 @@ from .run_broker import RunUnitIssuer
 from .lifecycle_evidence import _parents
 from .providers import ProcessReadiness
 from .time import HostDeadline
-from .service_time import NORMAL_SHARE, RPC_MAX_SECONDS, SIZING_MARGIN, ServiceTimes, sized
+from .service_time import (
+    NORMAL_SHARE, RPC_MAX_SECONDS, SIZING_MARGIN, STOP_FORCE_RESERVE_SECONDS, ServiceTimes, sized,
+)
 
 
 class TeardownError(OwnerError):
@@ -241,7 +243,10 @@ class ReverseTeardown(_Original):
         self._record(unit, "stop", "intent", descriptor, handle, deadline)
         native = type(launcher) is RunUnitIssuer
         if native:
-            observed = launcher.stop_owned(handle, deadline)
+            # S1b: a declared grace ends early enough to keep the forced stop and the outcome record.
+            grace_until = (deadline.monotonic_seconds - STOP_FORCE_RESERVE_SECONDS
+                           - SIZING_MARGIN * self._record_seen) if launcher.stop_grace_seconds else None
+            observed = launcher.stop_owned(handle, deadline, grace_until=grace_until)
             self._known_reaps.add(unit)
         boundary = self.manager.terminate(descriptor, deadline=deadline)
         empty = (
@@ -337,7 +342,13 @@ class ReverseTeardown(_Original):
     def _need(self, unit, phase):
         """Sizing need of the remaining normal work of `unit` through `phase`."""
         phases = ("stop",) * (unit not in self._stopped) + ("cleanup",) * (phase == "cleanup")
-        return SIZING_MARGIN * sum(self._times.est("phase:" + p) for p in phases)
+        need = SIZING_MARGIN * sum(self._times.est("phase:" + p) for p in phases)
+        launcher = self._registry.get(unit)
+        grace = launcher.stop_grace_seconds if type(launcher) is RunUnitIssuer else 0
+        if grace and "stop" in phases:  # S1b: the admitted grace and its forced-stop reserve are needed in full
+            rest = SIZING_MARGIN * sum(self._times.est("phase:" + p) for p in phases if p != "stop")
+            need = max(need, grace + STOP_FORCE_RESERVE_SECONDS + rest)
+        return need
 
     def _split(self, began, end0, cap, need, site, unit):
         """(normal end, end): today's 0.6/0.4 split of the window began..end0 whenever `need` fits

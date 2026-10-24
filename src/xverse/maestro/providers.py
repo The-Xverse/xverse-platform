@@ -1,7 +1,8 @@
 """Current-generation process probes and dependent Release (partial U4/U5).
 
-Only the catalog's explicit ``running`` condition is admitted. This is sampled
-process existence after exec, never application readiness or full run admission.
+The catalog's ``running`` condition is sampled process existence after exec. S1b also admits
+``nonce-marker`` on the AF17 path: readiness then additionally requires the native marker latch.
+Periodic health stays liveness-only (``running``). Neither is full run admission.
 """
 
 from dataclasses import dataclass, field, replace, asdict
@@ -15,11 +16,24 @@ from xverse_xdl.lifecycle import OwnedResourceHandle
 from .launcher import CatalogLauncher, ProcessObservation
 from .owner import _Original, _hash, OwnerError, ReleaseOwner
 from .prbc import BoundaryDescriptor
+from .probe_identity import HEALTH_PROBE, READINESS_PROBES, RUNNING
 from .time import HostDeadline
 
 
 class ReadinessError(OwnerError):
     pass
+
+
+READINESS_RESERVE_SECONDS = 0.25  # S1b review LOW-1: the last marker attempt keeps one round trip
+
+
+def readiness_offsets(window, attempts):
+    """S1b marker attempt offsets from t0: the first at 0 and the last at the end of the window less a
+    round-trip reserve, min(0.25, W/A); a single attempt is made at t0."""
+    if attempts == 1:
+        return (0.0,)
+    reserve = min(READINESS_RESERVE_SECONDS, window / attempts)
+    return tuple(k * (window - reserve) / (attempts - 1) for k in range(attempts))
 
 
 def _positive(value):
@@ -172,7 +186,7 @@ class ProcessReadiness(_Original):
             if (
                 unit.provider.kind != "process"
                 or len(actions) != 1
-                or actions[0].condition != "running"
+                or actions[0].condition not in READINESS_PROBES
             ):
                 raise ReadinessError("ML-PROBE-UNSUPPORTED")
         self._retain()
@@ -208,6 +222,7 @@ class ProcessReadiness(_Original):
         self._state_pins = self._released, self._attempted
         self._suspended, self._terminated = set(), {}  # Phase 5: frozen units; units killed by a fault
         self._sequence, self._guard = 0, None
+        self._readying = None  # S1b: the unit whose start() readiness attempts are in progress
         self._probe_failure = None
         self._lock = threading.Lock()
         self._view_epoch = owner._view_epoch
@@ -245,6 +260,10 @@ class ProcessReadiness(_Original):
             raise ReadinessError('ML-PROBE-CLEANUP-ONLY')
         return self._owner._check(deadline)
 
+    def _probe(self, unit_id):
+        """The declared readiness probe identity (the catalog observe condition)."""
+        return next(a.condition for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
+
     def _bound(self, unit_id):
         binding = self._bindings.get(unit_id)
         if (
@@ -280,7 +299,7 @@ class ProcessReadiness(_Original):
                 or unit not in self._policies
                 or unit in self._bindings
                 or type(launcher) is CatalogLauncher
-                and launcher.recipe.descriptor.generation != 1
+                and (launcher.recipe.descriptor.generation != 1 or self._probe(unit) != RUNNING)
             ):
                 raise ReadinessError("ML-PROBE-BINDING")
             self._bindings[unit] = _Binding(launcher, handle)
@@ -328,16 +347,18 @@ class ProcessReadiness(_Original):
         ):
             raise ReadinessError("ML-PROBE-OBSERVATION")
         self._sequence += 1
+        # S1b: a readiness sample uses the declared probe; health stays liveness-only.
+        probe = self._probe(unit_id) if unit_id == self._readying else HEALTH_PROBE
         value = ReadinessObservation(
             unit_id,
             binding.launcher.recipe.descriptor.generation,
             _hash(asdict(binding.handle)).hex(),
-            "running",
+            probe,
             action.action_id,
             self._pins[2],
             observed.observed_at,
             self._sequence,
-            bool(observed.running),
+            bool(observed.running) and (probe == RUNNING or observed.marker_ready is True),
         )
         self._observations[unit_id] = value
         self._owner.persistence.record_probe(self, value, deadline)
@@ -402,11 +423,25 @@ class ProcessReadiness(_Original):
                 unit_id, descriptor, gate, deadline, readiness_guard=self._guard
             )
             self._released.add(unit_id)
-            for attempt in range(self._policies[unit_id].attempts):
-                value = self._query(unit_id, deadline)
+            policy, probe = self._policies[unit_id], self._probe(unit_id)
+            observe = next(a for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
+            window, began = min(policy.timeout_seconds, observe.timeout_seconds), time.monotonic()
+            offsets = readiness_offsets(window, policy.attempts)
+            for attempt in range(policy.attempts):
+                if probe != RUNNING and attempt:
+                    # S1b: marker attempts span the readiness window; the last one probes its end (LOW-1).
+                    at = began + offsets[attempt]
+                    if at >= deadline.monotonic_seconds:
+                        break
+                    select.select([], [], [], max(0, at - time.monotonic()))
+                self._readying = unit_id
+                try:
+                    value = self._query(unit_id, deadline)
+                finally:
+                    self._readying = None
                 if value.ready:
                     return self._fresh(unit_id)
-                if attempt + 1 < self._policies[unit_id].attempts:
+                if probe == RUNNING and attempt + 1 < policy.attempts:
                     # Finite local yield; no sleep extends the original deadline.
                     select.select(
                         [],

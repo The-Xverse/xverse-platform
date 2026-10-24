@@ -1,6 +1,8 @@
 /* AF17/AC17v2: original run-wide epoch/child registry. Not operator admission.
  * Exact original broker validates M3/Argus/C1 facts; this private native authority
- * owns frozen Stage, one-use Release, cancellation and original child waits. */
+ * owns frozen Stage, one-use Release, cancellation and original child waits.
+ * S1b (design-stabilization-s1b.md): an AR17 v2 recipe may declare a TERM grace, a private capped
+ * stderr file and the nonce-marker readiness probe; an AR17 v1 unit behaves exactly as before. */
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -33,19 +35,29 @@ enum { REGISTER=1, INTENT=2, STAGE=3, ARM=4, RELEASE=5, QUERY=6, STOP=7,
  FAULT_KILL=13, FAULT_FREEZE=14, FAULT_THAW=15,
  READY=16, REGISTERED=17, INTENT_RECORDED=18, STAGED=19, ARMED=20,
  RELEASED=21, OBSERVED=22, STOPPED=23, RETIRED=24, RENEWED=25,
- CANCELLED=26, REJECTED=27, ADVANCED=28, FAULTED=29, FAULT_REFUSED=30 };
+ CANCELLED=26, REJECTED=27, ADVANCED=28, FAULTED=29, FAULT_REFUSED=30,
+ TERM=31, TERM_SENT=32 };
+/* S1b state bits: term-sent, exited-on-term (requires term-sent), marker-ready (latched), stderr-truncated. */
+#define TERM_BIT UINT64_C(512)
+#define EXITED_BIT UINT64_C(1024)
+#define MARKER_BIT UINT64_C(2048)
+#define TRUNCATED_BIT UINT64_C(4096)
+#define READY_DIR ".xverse-ready"
 /* Phase 5 (thesis-lite faults): FAULTED answers a performed operation, FAULT_REFUSED a refused one. */
 enum { NONE=0, LEASE=1, OWNER=2, CONTROL=3, PROTOCOL=4, CANCEL_REASON=5, FREEZE_FAILED=6, EXPIRED=7 };
 struct generation {
- int cg,pidfd,errorfd; pid_t pid;
+ int cg,pidfd,errorfd,stderr_fd,probe; pid_t pid;
  uint64_t number,device,inode,epoch,ticket_end,cached,stop_state,retire_state;
  unsigned intent,attempted,staged,ticket_state,released,reaped,exec_closed,exec_error,retired,removed,stop_saved,retire_saved;
+ unsigned term_sent,exited_on_term,marker_ready,truncated,checks;
  unsigned char proof[144],boundary[32],token[32],ticket[32];
+ char nonce[64];
 };
 struct unit {
  unsigned registered,used;
- int image,cwd,parent; char *recipe; char *argv[33],*env[65];
- uint64_t base,maximum,cwd_device,cwd_inode;
+ int image,cwd,parent,stderr_dir; char *recipe; char *argv[33],*env[65];
+ uint64_t base,maximum,cwd_device,cwd_inode,stderr_device,stderr_inode;
+ unsigned grace_ms,stderr_max,probe; /* AR17 v2 controls; all zero for a v1 recipe */
  unsigned char binding[32],image_hash[32],recipe_hash[32];
  struct generation history[128];
 };
@@ -97,6 +109,11 @@ static int same(int a,int b) { struct stat x,y;return !fstat(a,&x)&&!fstat(b,&y)
 static int write_freeze(int fd,char value) {
     int control=openat(fd,"cgroup.freeze",O_WRONLY|O_CLOEXEC|O_NOFOLLOW);if(control<0)return (errno==ENOENT||errno==ENODEV)?1:-1;
     ssize_t n=write(control,&value,1);close(control);return n==1?0:-1;
+}
+/* S1b: every new descriptor is O_CLOEXEC and >= 3 (an input fd < 3 is moved up, then closed). */
+static int high(int fd) {
+    if(fd<0||fd>=3)return fd;
+    int moved=fcntl(fd,F_DUPFD_CLOEXEC,3);close(fd);return moved;
 }
 static int zero(const unsigned char *p,size_t n) {
     for(size_t i=0;i<n;++i)if(p[i])return 0;
@@ -154,6 +171,10 @@ static uint64_t state(struct generation *e) {
        !field(e->cg,"cgroup.stat","nr_descendants",&descendants)&&!descendants)value|=64;
     if(e->retired)value|=128;
     if(removed(e))value|=256;
+    if(e->term_sent)value|=TERM_BIT;
+    if(e->exited_on_term)value|=EXITED_BIT;
+    if(e->marker_ready)value|=MARKER_BIT;
+    if(e->truncated)value|=TRUNCATED_BIT;
     return value;
 }
 static uint64_t freeze_all(struct authority *g,uint64_t end) {
@@ -277,9 +298,17 @@ static int recipe(struct unit *u,int fd) {
     off_t size;if(sealed(fd,65536,&size)||size<16||digest_fd(fd,(size_t)size,u->recipe_hash))return -1;
     u->recipe=malloc((size_t)size);if(!u->recipe||pread(fd,u->recipe,(size_t)size,0)!=size)return -1;
     unsigned char *p=(unsigned char*)u->recipe;
-    unsigned argc=get32(p+8),envc=get32(p+12);
-    if(memcmp(p,"AR17",4)||get32(p+4)!=1||!argc||argc>32||envc>64)return -1;
+    unsigned argc=get32(p+8),envc=get32(p+12),version=get32(p+4);
+    if(memcmp(p,"AR17",4)||(version!=1&&version!=2)||!argc||argc>32||envc>64)return -1;
     size_t offset=16;
+    if(version==2){ /* S1b: a v2 recipe exists only when at least one control is declared */
+        if(size<48)return -1;
+        u->grace_ms=get32(p+16);u->stderr_max=get32(p+20);u->probe=get32(p+24);
+        u->stderr_device=get64(p+32);u->stderr_inode=get64(p+40);offset=48;
+        if(get32(p+28)||u->grace_ms>4000||u->stderr_max>1048576U||u->probe>1||
+           (!u->grace_ms&&!u->stderr_max&&!u->probe)||
+           (!u->stderr_max)!=(!u->stderr_device)||(!u->stderr_max)!=(!u->stderr_inode))return -1;
+    }
     for(unsigned i=0;i<argc+envc;++i){
         if(offset>(size_t)size||(size_t)size-offset<4)return -1;
         uint32_t length=get32(p+offset);offset+=4;
@@ -333,7 +362,7 @@ static int initialize(struct authority *g,int argc,char **argv) {
     return g->parent>=0&&alive(g->parent)&&getppid()==g->peer.pid&&!prctl(PR_SET_DUMPABLE,0,0,0,0)&&
         !prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0)?0:-1;
 }
-static int register_unit(struct authority *g,struct unit *u,const unsigned char *p,int *fds) {
+static int register_unit(struct authority *g,struct unit *u,const unsigned char *p,int *fds,unsigned count) {
     struct generation *e=&u->history[0];struct stat image;
     off_t image_size;
     if(u->registered||!enabled(g)||get64(p+72)!=e->number||!zero(p+80,16)||
@@ -342,8 +371,13 @@ static int register_unit(struct authority *g,struct unit *u,const unsigned char 
        !identity(fds[2],u->cwd_device,u->cwd_inode)||sealed(fds[1],MAX_IMAGE,&image_size)||image_size<64||
        fstat(fds[1],&image)||(image.st_mode&(S_ISUID|S_ISGID))||digest_fd(fds[1],(size_t)image_size,u->image_hash))return -1;
     unsigned char elf[4];if(pread(fds[1],elf,4,0)!=4||memcmp(elf,"\177ELF",4)||recipe(u,fds[3])||!enabled(g))return -1;
+    /* S1b: the fifth fd is the private stderr directory, exactly when the sealed recipe declares stderr. */
+    if(count!=(u->stderr_max?5U:4U))return -1;
+    if(u->stderr_max){struct stat d;
+        if(!identity(fds[4],u->stderr_device,u->stderr_inode)||fstat(fds[4],&d)||d.st_uid!=getuid()||(d.st_mode&077))return -1;
+        u->stderr_dir=fcntl(fds[4],F_DUPFD_CLOEXEC,3);if(u->stderr_dir<0)return -1;}
     e->cg=fcntl(fds[0],F_DUPFD_CLOEXEC,3);u->image=fcntl(fds[1],F_DUPFD_CLOEXEC,3);u->cwd=fcntl(fds[2],F_DUPFD_CLOEXEC,3);
-    u->parent=openat(fds[0],"..",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+    u->parent=high(openat(fds[0],"..",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
     if(e->cg<0||u->image<0||u->cwd<0||u->parent<0)return -1;
     memcpy(e->boundary,p+192,32);u->registered=1;++g->registered;
     return unit_reply(g,p,REGISTERED,e,-1);
@@ -356,41 +390,108 @@ static int fresh(struct authority *g,const unsigned char *p) {
     }
     return !zero(p+80,16)&&!zero(p+96,32)&&!zero(p+128,32)&&!zero(p+160,32)&&!zero(p+192,32);
 }
-static void child_exec(struct unit *u,int errorfd) {
+static void child_exec(struct unit *u,struct generation *e,int errorfd) {
     int error;
     if(syscall(SYS_close_range,3U,UINT_MAX,4U)||setsid()<0||fchdir(u->cwd))goto fail;
     int null=open("/dev/null",O_RDWR|O_CLOEXEC);if(null<0)goto fail;
-    for(int fd=0;fd<3;++fd)if(dup2(null,fd)<0)goto fail;
+    /* S1b: fds 0 and 1 stay /dev/null; fd 2 is /dev/null or the declared private stderr file. */
+    for(int fd=0;fd<3;++fd)if(dup2(fd==2&&e->stderr_fd>=0?e->stderr_fd:null,fd)<0)goto fail;
+    if(u->grace_ms){ /* S1b: a declared grace makes SIGTERM deliverable with its default action */
+        struct sigaction action;memset(&action,0,sizeof(action));action.sa_handler=SIG_DFL;sigset_t term;
+        if(sigemptyset(&action.sa_mask)||sigaction(SIGTERM,&action,NULL)||sigemptyset(&term)||
+           sigaddset(&term,SIGTERM)||sigprocmask(SIG_UNBLOCK,&term,NULL))goto fail;
+    }
     syscall(SYS_execveat,u->image,"",u->argv,u->env,AT_EMPTY_PATH);
 fail:
     error=errno;ssize_t ignored=write(errorfd,&error,sizeof(error));(void)ignored;_exit(127);
 }
+/* S1b (FR-010): STAGE creates stderr-g<N> exclusively, without following links, in the sealed directory. */
+static int stage_stderr(struct unit *u,struct generation *e) {
+    if(!u->stderr_max)return 0;
+    char name[32];if(!identity(u->stderr_dir,u->stderr_device,u->stderr_inode)||
+       snprintf(name,sizeof(name),"stderr-g%llu",(unsigned long long)e->number)>=(int)sizeof(name))return -1;
+    e->stderr_fd=high(openat(u->stderr_dir,name,O_WRONLY|O_APPEND|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));
+    return e->stderr_fd<0?-1:0;
+}
+/* S1b (FR-011): the per-generation challenge, created before clone3 while no unit process can act. */
+static int stage_probe(struct unit *u,struct generation *e) {
+    if(!u->probe)return 0;
+    if(e->number>u->base){char aside[48];
+        if(snprintf(aside,sizeof(aside),READY_DIR ".g%llu",(unsigned long long)(e->number-1))>=(int)sizeof(aside)||
+           (syscall(SYS_renameat2,u->cwd,READY_DIR,u->cwd,aside,RENAME_NOREPLACE)&&errno!=ENOENT))return -1;
+    }
+    struct stat s;unsigned char random[32];static const char hex[]="0123456789abcdef";
+    if(mkdirat(u->cwd,READY_DIR,0700))return -1;
+    e->probe=high(openat(u->cwd,READY_DIR,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
+    if(e->probe<0||fstat(e->probe,&s)||!S_ISDIR(s.st_mode)||s.st_uid!=getuid()||(s.st_mode&07777)!=0700||
+       getrandom(random,32,GRND_NONBLOCK)!=32)return -1;
+    for(unsigned i=0;i<32;++i){e->nonce[2*i]=hex[random[i]>>4];e->nonce[2*i+1]=hex[random[i]&15];}
+    OPENSSL_cleanse(random,32);
+    int fd=high(openat(e->probe,"challenge",O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0400));if(fd<0)return -1;
+    ssize_t n=write(fd,e->nonce,64);return close(fd)||n!=64?-1:0;
+}
+/* S1b: a bounded marker check on QUERY; a FIFO, a symlink or a wrong-sized file never blocks or matches. */
+static void check_marker(struct authority *g,struct unit *u,struct generation *e) {
+    if(!u->probe||e->probe<0||e->marker_ready||e->checks>=3||!enabled(g)||!e->released||e->retired||
+       e!=&u->history[u->used-1])return;
+    ++e->checks;
+    int fd=openat(e->probe,"ready",O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC);if(fd<0)return;
+    struct stat s;char data[65];
+    if(!fstat(fd,&s)&&S_ISREG(s.st_mode)&&s.st_size==64&&pread(fd,data,sizeof(data),0)==64&&
+       !CRYPTO_memcmp(data,e->nonce,64))e->marker_ready=1;
+    close(fd);
+}
+/* S1b: with no writer left, a declared stderr file is cut to its cap (bit 4096 records a cut). */
+static int cap_stderr(struct unit *u,struct generation *e) {
+    if(e->stderr_fd<0)return 0;
+    struct stat s;if(fstat(e->stderr_fd,&s)||!S_ISREG(s.st_mode))return -1;
+    if(s.st_size>(off_t)u->stderr_max){if(ftruncate(e->stderr_fd,(off_t)u->stderr_max))return -1;e->truncated=1;}
+    close(e->stderr_fd);e->stderr_fd=-1;return 0;
+}
 static int stage_child(struct authority *g,struct unit *u,struct generation *e) {
     if(e->attempted||!enabled(g)||e->epoch!=g->epoch||!identity(e->cg,e->device,e->inode)||cgroup(e->cg,1)||
        !identity(u->cwd,u->cwd_device,u->cwd_inode)||getrandom(e->token,32,GRND_NONBLOCK)!=32||zero(e->token,32))return -1;
-    int errors[2];if(pipe2(errors,O_CLOEXEC|O_NONBLOCK))return -1;
     e->attempted=1;
+    if(stage_stderr(u,e)||stage_probe(u,e))return -1;
+    int errors[2];if(pipe2(errors,O_CLOEXEC|O_NONBLOCK))return -1;
     struct clone_args args={0};args.flags=CLONE_INTO_CGROUP|CLONE_PIDFD;args.cgroup=(__u64)(unsigned)e->cg;
     args.pidfd=(uint64_t)(uintptr_t)&e->pidfd;args.exit_signal=SIGCHLD;
     if(!enabled(g)){close(errors[0]);close(errors[1]);return -1;}
     long child=syscall(SYS_clone3,&args,sizeof(args));
-    if(child==0){close(errors[0]);child_exec(u,errors[1]);}
+    if(child==0){close(errors[0]);child_exec(u,e,errors[1]);}
     close(errors[1]);e->errorfd=errors[0];
     if(child<0)return -1;
     e->pid=(pid_t)child;e->staged=1;
     return enabled(g)&&!cgroup(e->cg,0)&&alive(e->pidfd)?0:-1;
 }
-static int stop_child(struct authority *g,struct generation *e) {
+static int stop_child(struct authority *g,struct unit *u,struct generation *e) {
     if(e->retired)return 0;
-    if(!e->staged||now_ns()>=g->deadline||!identity(e->cg,e->device,e->inode)||write_freeze(e->cg,'1'))return -1;
+    if(!e->staged||now_ns()>=g->deadline||!identity(e->cg,e->device,e->inode))return -1;
+    if(e->term_sent&&!e->exited_on_term){ /* S1b: exited on TERM only if reaped and empty before the freeze */
+        uint64_t flags=state(e);if(flags==UINT64_MAX)return -1;
+        if((flags&(8|64))==(8|64))e->exited_on_term=1;
+    }
+    if(write_freeze(e->cg,'1'))return -1;
     int fd=openat(e->cg,"cgroup.kill",O_WRONLY|O_CLOEXEC|O_NOFOLLOW);if(fd<0)return -1;
     ssize_t count=write(fd,"1",1);close(fd);if(count!=1)return -1;
     while(now_ns()<g->deadline){
         uint64_t flags=state(e);if(flags==UINT64_MAX)return -1;
-        if((flags&(8|32|64))==(8|32|64))return 0;
+        if((flags&(8|32|64))==(8|32|64)){
+            if(cap_stderr(u,e))return -1;
+            if(e->probe>=0){close(e->probe);e->probe=-1;}
+            return 0;
+        }
         struct pollfd wait={.fd=e->pidfd,.events=POLLIN};poll(&wait,1,1);
     }
     return -1;
+}
+/* S1b (FR-009): SIGTERM through the pidfd to the leader only; idempotent; a refusal changes nothing. */
+static int term_child(struct authority *g,struct generation *e) {
+    if(e->term_sent)return 0;
+    uint64_t flags=state(e);if(flags==UINT64_MAX)return -1;
+    if(!enabled(g)||!e->released||e->retired||e->stop_saved||e->pid<=0||e->reaped||!(flags&4)||(flags&32))return 0;
+    if(!syscall(SYS_pidfd_send_signal,e->pidfd,SIGTERM,NULL,0))e->term_sent=1;
+    return 0;
 }
 /* F-02 (finding 403): ADVANCE carries the supervisor's WATCH token for its boundary in the ticket field. */
 static int watched(struct authority *g,const struct stat *st,const unsigned char *token) {
@@ -435,7 +536,7 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
     }
     if(!slot||slot>g->count||get64(p+304))return -1;
     struct unit *u=&g->units[slot-1];
-    if(kind==REGISTER)return !g->closed&&count==4?register_unit(g,u,p,fds):-1;
+    if(kind==REGISTER)return !g->closed&&(count==4||count==5)?register_unit(g,u,p,fds,count):-1;
     if(!u->registered||g->registered!=g->count)return -1;
     if(kind==ADVANCE)return count==1?advance_unit(g,u,p,fds[0]):-1;
     if(count)return -1;
@@ -478,7 +579,11 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
         return -1;
     }
     if(!zero(p+224,32))return -1;
-    if(kind==QUERY)return unit_reply(g,p,OBSERVED,e,-1);
+    if(kind==QUERY){check_marker(g,u,e);return unit_reply(g,p,OBSERVED,e,-1);}
+    if(kind==TERM){ /* undeclared grace or a superseded generation is a protocol error */
+        if(!u->grace_ms||e!=&u->history[u->used-1]||term_child(g,e))return -1;
+        return unit_reply(g,p,TERM_SENT,e,-1);
+    }
     if(kind==FAULT_KILL||kind==FAULT_FREEZE||kind==FAULT_THAW){
         /* Only a released, unretired latest generation of an open authority may be faulted. */
         if(!enabled(g)||g->closed||!e->released||e->retired||e!=&u->history[u->used-1])return unit_reply(g,p,FAULT_REFUSED,e,-1);
@@ -487,7 +592,7 @@ static int command(struct authority *g,const unsigned char *p,int *fds,unsigned 
     }
     if(kind==STOP){
         if(!e->stop_saved){
-            if(stop_child(g,e))return -1;
+            if(stop_child(g,u,e))return -1;
             e->stop_state=state(e);if(e->stop_state==UINT64_MAX)return -1;
             e->stop_saved=1;
         }
@@ -525,6 +630,10 @@ static int cleanup(struct authority *g) {
                 struct pollfd wait={.fd=e->pidfd,.events=POLLIN};if(!e->reaped)poll(&wait,1,1);
             }
             if(e->staged&&!e->reaped)unresolved=1;
+            /* S1b: best-effort cap once the leader is reaped and the boundary holds no writer. */
+            uint64_t populated=1,descendants=1;
+            if(e->stderr_fd>=0&&e->reaped&&(e->cg<0||removed(e)||(!field(e->cg,"cgroup.events","populated",&populated)&&
+               !populated&&!field(e->cg,"cgroup.stat","nr_descendants",&descendants)&&!descendants)))(void)cap_stderr(u,e);
         }
     }
     return unresolved?70:0;
@@ -534,8 +643,8 @@ int main(int argc,char **argv) {
     if(prctl(PR_SET_DUMPABLE,0,0,0,0))return 64;
     struct authority *g=calloc(1,sizeof(*g));if(!g)return 64;
     g->channel=g->parent=-1;
-    for(unsigned i=0;i<16;++i){g->units[i].image=g->units[i].cwd=g->units[i].parent=-1;
-        for(unsigned j=0;j<128;++j)g->units[i].history[j].cg=g->units[i].history[j].pidfd=g->units[i].history[j].errorfd=-1;}
+    for(unsigned i=0;i<16;++i){g->units[i].image=g->units[i].cwd=g->units[i].parent=g->units[i].stderr_dir=-1;
+        for(unsigned j=0;j<128;++j){struct generation *e=&g->units[i].history[j];e->cg=e->pidfd=e->errorfd=e->stderr_fd=e->probe=-1;}}
     if(initialize(g,argc,argv))return 64;
     if(run_reply(g,READY,0,0))return cleanup(g);
     for(;;){
@@ -551,7 +660,7 @@ int main(int argc,char **argv) {
         int received=receive(g,p,fds,&count);
         if(received==1)continue;
         now=now_ns();unsigned kind=received?0:get32(p+4);uint64_t until=received?0:get64(p+16);
-        int valid=!received&&!memcmp(p,"AF17",4)&&kind>=1&&kind<=15&&
+        int valid=!received&&!memcmp(p,"AF17",4)&&((kind>=1&&kind<=15)||kind==TERM)&&
             !memcmp(p+24,g->scope,32)&&get64(p+8)==g->sequence+1&&g->sequence<8192&&
             get64(p+64)==g->epoch&&zero(p+288,16)&&zero(p+312,8)&&
             until>now&&until-now<=5*NS&&until<=g->generation-2*NS&&(g->closed||until<=g->lease);

@@ -222,7 +222,9 @@ class OutcomeJournal:
         unit = next(u for u in self.permits._prepared.units if u.unit_id == unit_id)
         start = next(a for a in unit.plan.actions if a.phase == "start")
         observe = next(a for a in unit.plan.actions if a.phase == "observe")
-        if observe.condition != "running" or unit.provider.kind != "process":
+        from .probe_identity import HEALTH_PROBE, READINESS_PROBES
+
+        if observe.condition not in READINESS_PROBES or unit.provider.kind != "process":
             raise PersistenceError("ML-EVIDENCE-PROVIDER")
         try:
             handle = OwnedResourceHandle(**body["handle"])
@@ -352,7 +354,7 @@ class OutcomeJournal:
                 + _digest([self.permits._run_id, asdict(handle)])[7:],
             }
             if probe:
-                payload["probeId"] = "running"
+                payload["probeId"] = probe
             fields = {
                 "eventId": event_id,
                 "producerId": "maestro.outcomes12",
@@ -410,13 +412,15 @@ class OutcomeJournal:
             "running" if body["ready"] else "not-ready",
         )
         action = "health" if prior and prior["started"] else "probe"
+        # S1b: probe and ready carry the declared identity; health and health-loss stay liveness-only.
         probe_event = mirror(
-            action, "succeeded" if body["ready"] else "failed", source, cause, True
+            action, "succeeded" if body["ready"] else "failed", source, cause,
+            observe.condition if action == "probe" else HEALTH_PROBE,
         )
         if body["ready"] and not (prior and prior["started"]):
-            mirror("ready", "succeeded", source, probe_event, True)
+            mirror("ready", "succeeded", source, probe_event, observe.condition)
         elif not body["ready"] and prior and prior["started"]:
-            mirror("health-loss", "failed", source, probe_event, True)
+            mirror("health-loss", "failed", source, probe_event, HEALTH_PROBE)
         self._mirrors(claims)
         check(deadline)
         self.samples[unit_id] = {
@@ -552,7 +556,9 @@ def validate_receipt(body, facade, observed, claim, operation, prior):
             "dependencies": dependencies,
             "handleRef": "handle-" + _digest([client.run_id, asdict(handle)])[7:],
         }
-        if action in ("probe", "ready", "health", "health-loss"):
+        if action in ("probe", "ready"):
+            expected["probeId"] = facade._probe(unit)
+        elif action in ("health", "health-loss"):
             expected["probeId"] = "running"
         if (
             type(payload) is not dict

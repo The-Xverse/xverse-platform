@@ -137,3 +137,49 @@ def test_epoch_capacity_covers_every_admitted_advance_and_final_cancel():
         replace(config(), epoch=2**64 - 2)
     valid = replace(config(), epoch=2**64 - 3)
     assert AuthorityConfig.decode(valid.encode()) == valid
+
+
+# ---- S1b: AR17 version 2 (design-stabilization-s1b.md) ----------------------------------------------
+
+def test_recipe_version_2_layout_is_emitted_only_for_declared_controls():
+    plain = AuthorityRecipe(("/fixture",), ("MODE=test",))
+    assert plain.version == 1 and plain.encode()[:16] == b"AR17" + struct.pack("!III", 1, 1, 1)
+    recipe = AuthorityRecipe(("/fixture",), ("MODE=test",), grace_ms=1500, stderr_max=4096, probe=1,
+                             stderr_device=29, stderr_inode=300)
+    words = (b"/fixture", b"MODE=test")
+    expected = b"AR17" + struct.pack("!III", 2, 1, 1) + struct.pack("!IIIIQQ", 1500, 4096, 1, 0, 29, 300)
+    expected += b"".join(struct.pack("!I", len(w)) + w + b"\0" for w in words)
+    assert len(expected[:48]) == 48 and recipe.encode() == expected
+    assert AuthorityRecipe.decode(expected) == recipe
+    for controls in (dict(grace_ms=1), dict(probe=1), dict(stderr_max=1, stderr_device=1, stderr_inode=1)):
+        one = AuthorityRecipe(("/fixture",), (), **controls)
+        assert one.version == 2 and AuthorityRecipe.decode(one.encode()) == one
+
+
+@pytest.mark.parametrize("controls", [
+    dict(grace_ms=4001), dict(grace_ms=-1), dict(grace_ms=True), dict(stderr_max=1048577, stderr_device=1, stderr_inode=1),
+    dict(probe=2), dict(stderr_max=10), dict(stderr_max=10, stderr_device=1), dict(stderr_device=1, stderr_inode=1),
+    dict(grace_ms=10, stderr_inode=1),
+])
+def test_recipe_version_2_controls_are_bounded(controls):
+    with pytest.raises(ProtocolError):
+        AuthorityRecipe(("/fixture",), (), **controls)
+
+
+@pytest.mark.parametrize("mode", ["all-zero", "reserved", "short-header", "version-3", "identity", "suffix"])
+def test_untrusted_version_2_recipe_bytes_are_rejected(mode):
+    packet = bytearray(AuthorityRecipe(("/fixture",), (), grace_ms=100).encode())
+    if mode == "all-zero":
+        packet[16:20] = bytes(4)
+    elif mode == "reserved":
+        packet[28:32] = struct.pack("!I", 1)
+    elif mode == "short-header":
+        packet = packet[:40]
+    elif mode == "version-3":
+        packet[4:8] = struct.pack("!I", 3)
+    elif mode == "identity":
+        packet[32:40] = struct.pack("!Q", 7)
+    else:
+        packet.append(0)
+    with pytest.raises(ProtocolError):
+        AuthorityRecipe.decode(bytes(packet))

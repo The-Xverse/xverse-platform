@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field, asdict, replace
 import hashlib
+import math
 import os
 from pathlib import Path
 import select
@@ -16,6 +17,10 @@ from .affa_protocol import (
     AuthorityKind as K,
     AuthorityRecipe,
     AuthorityUnit,
+    STATE_EXITED_ON_TERM,
+    STATE_MARKER_READY,
+    STATE_STDERR_TRUNCATED,
+    STATE_TERM_SENT,
 )
 from .bootstrap import BootstrapError, BootstrapSession, BootstrapChild, _sealed, seal_helper_image
 from .launcher import ProcessObservation
@@ -39,6 +44,12 @@ _CREATE = object()
 CANCEL_LOCK_WAIT_SECONDS = 0.5
 CANCEL_LOCK_POLL_SECONDS = 0.001
 CANCEL_REAP_RESERVE_SECONDS = 0.25  # the wait ends this long before a caller's deadline (S1a review finding 23)
+# S1b (design-stabilization-s1b.md): TERM is a short request; the grace is waited out with the exchange lock free.
+TERM_REQUEST_SECONDS = 0.5
+TERM_POLL_SECONDS = 0.01
+STDERR_BUDGET_BYTES = 16 << 20  # with every public coverage artifact maximum (024 detailed design line 120)
+READY_DIRECTORY = ".xverse-ready"
+_WALK_LIMIT = 256
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +57,8 @@ class UnitAdmission:
     descriptor: BoundaryDescriptor
     environment: tuple[tuple[str, str], ...] = field(repr=False)
     maximum_generation: int
+    # S1b: a private run-scoped directory from the trusted caller; never from the catalog or a public blob.
+    stderr_directory: str | None = field(default=None, repr=False)
 
     def __post_init__(self):
         if (
@@ -67,6 +80,12 @@ class UnitAdmission:
             raise OwnerError("ML-RUN-ENVIRONMENT")
         if len(dict(self.environment)) != len(self.environment):
             raise OwnerError("ML-RUN-ENVIRONMENT")
+        path = self.stderr_directory
+        if path is not None and (
+            type(path) is not str or not path.startswith("/") or "\0" in path
+            or len(path.encode()) > 4096 or any(p in (".", "..") for p in path.split("/"))
+        ):
+            raise OwnerError("ML-RUN-STDERR-DIRECTORY")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +98,13 @@ class _Image:
     native: AuthorityUnit = field(repr=False)
     action: bytes = field(repr=False)
     c1: bytes = field(repr=False)
+    stderr_fd: int | None = field(default=None, repr=False)  # S1b: the sealed private stderr directory
+    controls: tuple[int, int, int] = (0, 0, 0)  # S1b: AR17 v2 grace_ms, stderr_max, probe
+
+    @property
+    def fds(self):
+        return (self.image_fd, self.cwd_fd, self.recipe_fd) + (
+            (self.stderr_fd,) if self.stderr_fd is not None else ())
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +144,7 @@ class NativeGenerationClosure:
     issued: bool | None
     direct_child_reaped: bool | None
     native_retired: bool | None
+    stop_mode: str | None = None  # S1b: "exited-on-term" or "forced" once a STOPPED ack is held
 
 
 @dataclass(frozen=True)
@@ -156,6 +183,87 @@ class PreparedGeneration(_Original):
     @property
     def ready_for_execution(self):
         return False
+
+
+def _directory_identity(fd):
+    info = os.fstat(fd)
+    return info.st_dev, info.st_ino
+
+
+def _within(fd, identity):
+    """Whether the directory `fd`, or an ancestor reached by `..` without following links, has `identity`."""
+    current = os.open(".", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC, dir_fd=fd)
+    try:
+        for _ in range(_WALK_LIMIT):
+            here = _directory_identity(current)
+            if here == identity:
+                return True
+            parent = os.open("..", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=current)
+            if _directory_identity(parent) == here:
+                os.close(parent)
+                return False
+            os.close(current)
+            current = parent
+        raise OwnerError("ML-RUN-DIRECTORY-DEPTH")
+    finally:
+        os.close(current)
+
+
+def _private_directory(path):
+    """S1b: open a private stderr directory component by component, never following a link."""
+    fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for part in path.split("/")[1:]:
+            if part:
+                following = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
+                os.close(fd)
+                fd = following
+        info = os.fstat(fd)
+        if info.st_uid != os.getuid() or info.st_mode & 0o077 or os.listdir(fd):
+            raise OwnerError("ML-RUN-STDERR-DIRECTORY")
+        return fd
+    except OSError:
+        os.close(fd)
+        raise OwnerError("ML-RUN-STDERR-DIRECTORY") from None
+    except Exception:
+        os.close(fd)
+        raise
+
+
+def _controls(storage, unit, setup, cwd):
+    """S1b admission of the declared controls; returns (grace_ms, stderr_max, probe, stderr fd or None)."""
+    declared = unit.plan.process_controls
+    grace = declared.stop_grace_seconds if declared is not None else None
+    stderr_max = (declared.stderr_maximum_bytes if declared is not None else None) or 0
+    grace_ms = 0 if grace is None else max(1, round(grace * 1000))
+    condition = next(a.condition for a in unit.plan.actions if a.phase == "observe")
+    from .probe_identity import READINESS_PROBES
+
+    if condition not in READINESS_PROBES:
+        raise OwnerError("ML-RUN-PROBE-UNSUPPORTED")
+    probe = int(condition == "nonce-marker")
+    if bool(stderr_max) != (setup.stderr_directory is not None):
+        raise OwnerError("ML-RUN-STDERR-ADMISSION")
+    collection = storage.collection
+    if probe:
+        # S1b review LOW-3: any .xverse-ready or .xverse-ready.g* entry (a link is never followed) is stale.
+        with os.scandir(cwd) as entries:
+            if any(e.name == READY_DIRECTORY or e.name.startswith(READY_DIRECTORY + ".g") for e in entries):
+                raise OwnerError("ML-RUN-PROBE-STALE")
+        if collection is None or not _within(cwd, tuple(collection.source_identity)):
+            raise OwnerError("ML-RUN-PROBE-ROOT")
+    if not stderr_max:
+        return grace_ms, 0, probe, None
+    fd = _private_directory(setup.stderr_directory)
+    try:
+        if _directory_identity(fd) == _directory_identity(cwd):
+            raise OwnerError("ML-RUN-STDERR-SHARED")
+        if collection is not None and _within(fd, tuple(collection.source_identity)):
+            raise OwnerError("ML-RUN-STDERR-ROOT")
+    except Exception:
+        os.close(fd)
+        raise
+    return grace_ms, stderr_max, probe, fd
 
 
 def _admit_image(session, storage, setup):
@@ -219,7 +327,7 @@ def _admit_image(session, storage, setup):
         or manager.record(descriptor).state != "frozen"
     ):
         raise OwnerError("ML-RUN-C1-NOT-EMPTY")
-    image = cwd = recipe_fd = None
+    image = cwd = recipe_fd = stderr_fd = None
     try:
         image = seal_helper_image(
             action.executable, digest=candidates[0]["digest"], argv0=action.executable
@@ -228,9 +336,16 @@ def _admit_image(session, storage, setup):
             action.working_directory,
             os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW,
         )
+        grace_ms, stderr_max, probe, stderr_fd = _controls(storage, unit, setup, cwd)
+        stderr_identity = _directory_identity(stderr_fd) if stderr_fd is not None else (0, 0)
         recipe = AuthorityRecipe(
             (action.executable, *action.arguments),
             tuple(k + "=" + environment[k] for k in sorted(environment)),
+            grace_ms=grace_ms,
+            stderr_max=stderr_max,
+            probe=probe,
+            stderr_device=stderr_identity[0],
+            stderr_inode=stderr_identity[1],
         ).encode()
         recipe_fd = _sealed(recipe, "maestro-original-run-recipe")
         info, work = os.fstat(entry.fd), os.fstat(cwd)
@@ -275,13 +390,31 @@ def _admit_image(session, storage, setup):
             ]
         )
         return _Image(
-            setup, entry.fd, image.descriptor, cwd, recipe_fd, native, action_pin, c1
+            setup, entry.fd, image.descriptor, cwd, recipe_fd, native, action_pin, c1,
+            stderr_fd, (grace_ms, stderr_max, probe),
         )
     except Exception:
-        for fd in (image.descriptor if image else None, cwd, recipe_fd):
+        for fd in (image.descriptor if image else None, cwd, recipe_fd, stderr_fd):
             if fd is not None:
                 os.close(fd)
         raise
+
+
+def _admit_distinct(storage, images):
+    """S1b: stderr directories and marker cwds are never shared; stderr stays inside its byte budget."""
+    cwds = [_directory_identity(i.cwd_fd) for i in images]
+    errors = [_directory_identity(i.stderr_fd) for i in images if i.stderr_fd is not None]
+    if len(set(errors)) != len(errors) or set(errors) & set(cwds):
+        raise OwnerError("ML-RUN-STDERR-SHARED")
+    if any(i.controls[2] and cwds.count(cwds[n]) != 1 for n, i in enumerate(images)):
+        raise OwnerError("ML-RUN-PROBE-CWD")
+    stderr = sum(i.controls[1] * (i.admission.maximum_generation - i.admission.descriptor.generation + 1)
+                 for i in images)
+    if stderr:
+        public = (sum(row["maximumBytes"] for row in storage.coverage.data(storage.coverage_digest)["artifacts"])
+                  if storage.coverage is not None else 0)
+        if public + stderr > STDERR_BUDGET_BYTES:
+            raise OwnerError("ML-RUN-STDERR-BUDGET")
 
 
 class RunBroker(_Original):
@@ -332,6 +465,7 @@ class RunBroker(_Original):
         try:
             for unit in storage.prepared.units:
                 images.append(_admit_image(session, storage, by_unit[unit.unit_id]))
+            _admit_distinct(storage, images)
             for image in images:
                 session.watch(image.admission.descriptor, deadline)
             config = AuthorityConfig(
@@ -360,8 +494,7 @@ class RunBroker(_Original):
             value._disposal = value._disposal_pin = (
                 value._pins,
                 threading.Lock(),
-                [fd for image in images
-                 for fd in (image.image_fd, image.cwd_fd, image.recipe_fd)],
+                [fd for image in images for fd in image.fds],
                 [],
             )
             value._lock = threading.Lock()
@@ -409,7 +542,7 @@ class RunBroker(_Original):
                         image.image_fd,
                         image.cwd_fd,
                         image.recipe_fd,
-                    ),
+                    ) + ((image.stderr_fd,) if image.stderr_fd is not None else ()),
                 )
             return value
         except Exception:
@@ -421,7 +554,7 @@ class RunBroker(_Original):
                     )
                 )
             for image in images:
-                for fd in (image.image_fd, image.cwd_fd, image.recipe_fd):
+                for fd in image.fds:
                     os.close(fd)
             raise
 
@@ -990,6 +1123,7 @@ class RunUnitIssuer(_Original):
         self.recipe = self._handle = self._proof = None
         self._attempted = False
         self._stop_ack = self._stop_ack_pin = None
+        self._term_ack = self._term_ack_pin = None  # S1b: the retained TERM_SENT ack
         self._stop_bracket = self._stop_bracket_pin = None
         self._retire_ack = self._retire_ack_pin = None
         self._issued_pin = None
@@ -1018,6 +1152,7 @@ class RunUnitIssuer(_Original):
             or self.unit_id != unit
             or self.process is not process
             or self._stop_ack is not self._stop_ack_pin
+            or self._term_ack is not self._term_ack_pin
             or self._stop_bracket is not self._stop_bracket_pin
             or self._retire_ack is not self._retire_ack_pin
             or self._release_ack is not self._release_ack_pin
@@ -1063,9 +1198,21 @@ class RunUnitIssuer(_Original):
             return bool(frame is not None and frame.kind is kind
                 and frame.slot == slot and frame.generation == generation
                 and frame.handle == token and frame.state & flag)
+        stopped_actual = actual(stopped, K.STOPPED, 8)
         return NativeGenerationClosure(unit, generation, True,
-            True if actual(stopped, K.STOPPED, 8) else None,
-            True if actual(retired, K.RETIRED, 128) else None)
+            True if stopped_actual else None,
+            True if actual(retired, K.RETIRED, 128) else None,
+            ("exited-on-term" if stopped.state & STATE_EXITED_ON_TERM else "forced") if stopped_actual else None)
+
+    @property
+    def stop_grace_seconds(self):
+        """S1b: the admitted TERM grace of this unit, 0 when none is declared."""
+        return self._image.controls[0] / 1000
+
+    @property
+    def readiness_probe(self):
+        """S1b: the admitted readiness probe identity of this unit."""
+        return "nonce-marker" if self._image.controls[2] else "running"
 
     def _boundary(self, *, empty=False):
         self._holder()
@@ -1102,7 +1249,17 @@ class RunUnitIssuer(_Original):
             else bytes(32),
             ticket=ticket,
         )
-        return self.broker.connection._exchange(request)
+        return self._declared(self.broker.connection._exchange(request))
+
+    def _declared(self, reply):
+        """S1b review LOW-4: a reply never carries a state bit of a control this unit did not declare."""
+        grace, stderr, probe = self._image.controls
+        state = reply.state
+        if (state & (STATE_TERM_SENT | STATE_EXITED_ON_TERM) and not grace
+                or state & STATE_MARKER_READY and not probe
+                or state & STATE_STDERR_TRUNCATED and not stderr):
+            raise OwnerError("ML-RUN-STATE-UNDECLARED")
+        return reply
 
     def stage(self, deadline):
         self._holder()
@@ -1130,7 +1287,7 @@ class RunUnitIssuer(_Original):
                 self._image.c1,
             )
             if self._advance_receipt is None:
-                self.broker.connection._exchange(self._proof)
+                self._declared(self.broker.connection._exchange(self._proof))
             else:
                 self._generation_origin._holder()
                 connection, request, reply, descriptor = self._advance_receipt._holder()
@@ -1255,6 +1412,7 @@ class RunUnitIssuer(_Original):
             bool(flags & 8),
             bool(flags & 16),
             None,
+            bool(flags & STATE_MARKER_READY),
         )
 
     FAULT_KINDS = {"kill": K.FAULT_KILL, "freeze": K.FAULT_FREEZE, "thaw": K.FAULT_THAW}
@@ -1275,13 +1433,41 @@ class RunUnitIssuer(_Original):
         refused = reply.kind is K.FAULT_REFUSED
         return (not refused, 6 if refused else 0)
 
-    def stop_owned(self, handle, deadline):
+    def _closed(self):
+        return self.broker.connection._starts_closed or self.owner.latch.cancelled
+
+    def _term(self, deadline, grace_until):
+        """S1b two-step stop, step 1: TERM, then the grace waited out on the pidfd with the exchange lock free."""
+        connection = self.broker.connection
+        end = min(deadline.monotonic_seconds, time.monotonic() + TERM_REQUEST_SECONDS,
+                  connection._lease / 1e9 - 1e-6, self.broker.session._generation / 1e9 - 2 - 1e-6)
+        if end <= time.monotonic():
+            return
+        ack = self._native(K.TERM, HostDeadline(self.owner.session, end))
+        self._term_ack = self._term_ack_pin = ack
+        if not ack.state & STATE_TERM_SENT:
+            return
+        sent = time.monotonic()
+        until = min(sent + self.stop_grace_seconds, grace_until)
+        capability = connection._handles[(self.slot, self.recipe.descriptor.generation)][1]
+        while not self._closed():
+            remaining = until - time.monotonic()
+            if remaining <= 0 or select.select([capability.fileno()], [], [], min(TERM_POLL_SECONDS, remaining))[0]:
+                return
+
+    def stop_owned(self, handle, deadline, *, grace_until=None):
         self.revalidate_issued(handle)
+        if grace_until is not None and (type(grace_until) not in (int, float) or not math.isfinite(grace_until)):
+            raise OwnerError("ML-RUN-STOP-GRACE")
         if self._stop_ack is None:
             if self._stop_bracket is None:
                 self._stop_bracket = self._stop_bracket_pin = (time.monotonic(), None)
+            if (self._image.controls[0] and grace_until is not None and self._term_ack is None
+                    and not self._closed()):
+                self._term(deadline, grace_until)
             reply = self._native(K.STOP, deadline, cleanup=True)
-            if not reply.state & 8 or reply.state & 4:
+            if (not reply.state & 8 or reply.state & 4
+                    or reply.state & STATE_EXITED_ON_TERM and not reply.state & STATE_TERM_SENT):
                 raise OwnerError("ML-RUN-STOP-ACK")
             self._stop_ack = self._stop_ack_pin = reply
             self._stop_bracket = self._stop_bracket_pin = (

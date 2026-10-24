@@ -618,5 +618,98 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(controller.observe("warming", provider).status, "not-ready")
 
 
+
+# ---- S1b process controls and the nonce-marker probe (design-stabilization-s1b.md) -------------------
+
+# Computed with the pre-S1b catalog (platform fd3579932) for the graph below: an undeclared plan keeps it.
+UNDECLARED_PROCESS_PLAN_DIGEST = "sha256:dfdeb5fafb0fa827c20411e9c550ed9e58213d851662f5bc19977436d04742d2"
+
+
+def v02_graph(*, provider: str = "process", condition: str = "running", **process) -> dict[str, dict]:
+    resources = graph(provider=provider)
+    resources["RuntimeProfile"]["metadata"]["version"] = "0.2.0"
+    resources["RuntimeProfile"]["spec"]["schemaRef"] = (
+        "https://xverse.io/profiles/runtime-compatibility/v0.2/schema.json"
+    )
+    payload = resources["Deployment"]["spec"]["bindings"][0]["extensions"][RUNTIME_PROFILE_NAMESPACE]
+    payload["schemaVersion"] = "0.2.0"
+    payload["actions"][2]["condition"] = condition
+    if provider == "process":
+        payload["process"]["executable"] = "/usr/bin/true"
+        payload["process"].update(process)
+    return resources
+
+
+def v02_validate(resources):
+    return validate_mappings(tuple(resources.values()), profile_schema_paths=(PROFILE_SCHEMA, RUNTIME_SCHEMA_V02))
+
+
+def v02_plan(**options):
+    validation = v02_validate(v02_graph(**options))
+    if not validation.is_valid:
+        raise AssertionError(validation.diagnostics)
+    catalog = derive_catalog(validation.resources)
+    if not catalog.is_valid:
+        raise AssertionError(catalog.diagnostics)
+    return build_lifecycle_plan(catalog.entries[0])
+
+
+class S1bProcessControlTests(unittest.TestCase):
+    def test_undeclared_process_plan_keeps_its_golden_digest(self):
+        from xverse_xdl.catalog import ProcessControls
+
+        plan = v02_plan()
+        self.assertEqual(plan.digest, UNDECLARED_PROCESS_PLAN_DIGEST)
+        self.assertEqual(plan.process_controls, ProcessControls())
+        self.assertFalse(plan.process_controls.declared)
+
+    def test_declared_controls_enter_the_plan_and_its_digest(self):
+        stop = {"graceSeconds": 1.5}
+        stderr = {"capture": "run-scoped-private", "maximumBytes": 65536}
+        plans = {
+            "stop": v02_plan(stop=stop), "stderr": v02_plan(stderr=stderr),
+            "both": v02_plan(stop=stop, stderr=stderr), "marker": v02_plan(condition="nonce-marker"),
+        }
+        digests = {plan.digest for plan in plans.values()} | {UNDECLARED_PROCESS_PLAN_DIGEST}
+        self.assertEqual(len(digests), 5)
+        self.assertEqual(plans["both"].process_controls.stop_grace_seconds, 1.5)
+        self.assertEqual(plans["both"].process_controls.stderr_maximum_bytes, 65536)
+        self.assertIsNone(plans["stop"].process_controls.stderr_maximum_bytes)
+        self.assertEqual(next(a.condition for a in plans["marker"].actions if a.phase == "observe"), "nonce-marker")
+        self.assertFalse(plans["marker"].process_controls.declared)
+
+    def test_schema_bounds_the_declared_controls(self):
+        cases = [
+            dict(stop={"graceSeconds": 0}), dict(stop={"graceSeconds": 4.5}), dict(stop={}),
+            dict(stop={"graceSeconds": 1, "signal": "SIGINT"}),
+            dict(stderr={"capture": "run-scoped-private", "maximumBytes": 0}),
+            dict(stderr={"capture": "run-scoped-private", "maximumBytes": 1048577}),
+            dict(stderr={"capture": "collected", "maximumBytes": 10}),
+            dict(stderr={"capture": "run-scoped-private"}),
+            dict(stderr={"capture": "run-scoped-private", "maximumBytes": 10, "path": "/tmp/x"}),
+        ]
+        for case in cases:
+            with self.subTest(case=case):
+                result = v02_validate(v02_graph(**case))
+                self.assertFalse(result.is_valid)
+                self.assertIn("XDL-SEMANTIC-EXTENSION-SCHEMA", {d.code for d in result.diagnostics})
+        self.assertTrue(v02_validate(v02_graph(stop={"graceSeconds": 4})).is_valid)
+
+    def test_nonce_marker_probe_is_refused_for_a_non_process_provider(self):
+        validation = v02_validate(v02_graph(provider="fixture", condition="nonce-marker"))
+        self.assertTrue(validation.is_valid, validation.diagnostics)
+        catalog = derive_catalog(validation.resources)
+        self.assertEqual(catalog.entries, ())
+        self.assertIn("XVERSE-CATALOG-READINESS-PROBE", {d.code for d in catalog.diagnostics})
+
+    def test_process_controls_reject_out_of_bound_values_directly(self):
+        from xverse_xdl.catalog import ProcessControls
+
+        for values in ((0.0, None), (4.01, None), (1, None), (None, 0), (None, True), (None, 1048577)):
+            with self.subTest(values=values):
+                with self.assertRaises(ValueError):
+                    ProcessControls(*values)
+
+
 if __name__ == "__main__":
     unittest.main()
