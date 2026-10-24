@@ -125,3 +125,10 @@ Amended rule:
 
   A root refusal without a cancel also still fails closed (the root's code). Tests:
   `test_stabilization_stack_load_failures.py`.
+
+## Note: amendment C1 of ADR-ML3-BOOTSTRAP-0001 (2026-10-24)
+
+On the bootstrap path, the sealed persistence configuration is now bounded at 262 144 bytes
+(`bootstrap.MAX_PERSISTENCE_INPUT`, native `MAX_STORAGE_INPUT`). It was bounded at 65 536 before, by the generic
+role-input seal. The input form, the 1 MiB outer bound (`MAX_CONFIG`) and this ADR's rules are unchanged
+(`review-c1.md` finding 1).
