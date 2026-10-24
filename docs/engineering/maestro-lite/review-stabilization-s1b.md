@@ -678,3 +678,162 @@ decision S-D2, approved on 2026-10-23).
         `_failed` at the cancel is unknown. Earlier cancel runs on this stack closed cleanly.
     - **Next.** Diagnosis with deterministic reproductions where possible, then ADR notes, then repairs. The stack
       acceptance is blocked again until both are understood.
+22. **Diagnosis of finding 21 (written at 01:06:17 2026-10-24, load about 3.5-3.8; before any repair; no `src/` change).**
+    Times are relative to each record's `monotonicStartNs`. Reproductions:
+    `tests/thesis_lite/maestro/test_stabilization_stack_load_failures.py`, on the installed wheel `2efbd893…`, built
+    from `c769a2692`. Every test asserts the correct behaviour. **Last result: 4 failed, 1 passed (the control), in
+    16.89 s.**
+    - **(B) Cause (high confidence): a check-then-act race in `PersistenceClient._live`, a residual of S1a-1.**
+      - `_live` reads the cancel latch twice. The first read (`persistence.py:726-728`) raises the healthy
+        `PersistenceCancelled`. The final check (`persistence.py:745-746`) re-reads the latch. When that read
+        sees a cancel and the kind does not allow one, it raises a plain `PersistenceError("ML-PERSIST-CLOSED")`.
+        Finding 21 assumed this path needs `_failed` already set. It does not: the second operand is the race.
+      - A cancel landing between the two reads is therefore reported as a storage failure. `_rpc`'s generic
+        handler records it as `rpc_failure`, at stage `validation`, and calls `_fail()` (`persistence.py:851-871`).
+        `_fail()` sets `_failed`, shuts the socket and SIGTERMs the storage worker. Every later terminal record,
+        including `close_incomplete`, is then refused. Teardown cannot record, so no TERM runs. The issuers'
+        `direct_child_reaped` stays unknown. Results: `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`, writer `rpc-unresolved`
+        and `open`, and no terminal events. This happens although the native CANCEL was confirmed.
+      - **A second window in the same function.** `check_child(..., live=True)` (`persistence.py:731`) runs with
+        the stale snapshot, and its root check `_live` refuses a cancelled run with `ML-BOOT-CLOSED`
+        (`bootstrap.py:583`). That error takes the same failing path.
+      - **Not the dispatcher's cancel handling, `_available`, S1b's TERM or stop path, or the readiness
+        probes.** The live call was the dispatcher's ordinary `schedule` statement. The cancel came from the
+        harness's canceller thread through `entry.stop`, which cancels the latch first (`runtime_entry.py:191`).
+        `_available` already re-raises `PersistenceCancelled`. It is not involved here.
+      - **Evidence (`…-004728-cancel-paused`).**
+        - The RPC started at 15.48391 s, 0.17 ms before `cancelRequestedMonotonicNs` (15.48408 s). It failed at
+          15.48439 s, 0.31 ms after. So the first latch read saw a live run, and the final check saw the cancel.
+        - The record shows `sequence: null` and `operation: null`, so nothing was sent. `brokerCancelResult` shows
+          `native_epoch_confirmed: true` and `issuer_dead: false`.
+        - The diagnostic code rules out the other `ML-PERSIST-CLOSED` source: a `PersistenceCancelled` at
+          `validation` is re-raised unrecorded (`persistence.py:847-850`).
+      - **Reproduction (deterministic), `test_a_cancel_between_the_live_checks_is_not_a_storage_failure`.** It
+        uses the composed runtime and targets the second `tick-complete` statement. `entry.stop` is called from
+        another thread inside the `validation` `_live`, at one of two points: after the first latch read, or
+        before the child check.
+        - **`control-before-live` (the S1a pre-send case): passes.**
+        - **`before-final-check`: fails.** It gives the live signature exactly: `('ML-PERSIST-CLOSED', 'schedule',
+          'validation')`, storage `_failed`, writer `open`, `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN` and cleanup
+          incomplete.
+        - **`before-child-check`: fails** in the same way, with `('ML-BOOT-CLOSED', 'schedule', 'validation')`.
+      - **Proposed repair** (an amendment to the S1a-1 note of ADR-ML3-PERSISTENCE-0001 first):
+        - **RB1 (recommended).** In `_live`, a cancel observed with `not self._failed`, on a kind that does not
+          allow cancel and is not in flight, always raises `PersistenceCancelled`, wherever it is observed. That
+          means re-checking the latch after `check_child` and in the final check, and mapping a root
+          `ML-BOOT-CLOSED` to `PersistenceCancelled` when the latch is cancelled and the child is still alive.
+          Child exit and identity failures stay `PersistenceError`. Regression: this file.
+        - **RB2 (narrower).** Take one latch snapshot at entry, use it for every decision, and recheck it once at
+          the end. A late change becomes `PersistenceCancelled`. This only works if `check_child` receives
+          `live=False` when the snapshot differs, so it is equivalent to RB1 in effect.
+        - **RB3 (alternative).** In `_rpc`, while the stage is `validation`, classify any `PersistenceError`
+          raised while the latch is cancelled and `_failed` is false as a cancel (no record, no `_fail()`). This
+          is broader: it would also mask a genuine child failure that coincides with a cancel. Not recommended.
+    - **(A) Cause (medium-high confidence; the lease value is not in the record): the start step outlives the
+      unrenewed bootstrap lease, and the run-bootstrap root's own lease expiry kills the authority and the storage
+      worker during the readiness-failure cancel.** This is the S1a-5 LOW-2 residual, but not by the
+      native-epoch path assumed in finding 21.
+      1. **The lease.** The harness creates it at `now + 4.8 s`. The same value is the bootstrap root lease and the
+         native authority lease (`AuthorityConfig(session._generation, session._lease, …)`,
+         `run_broker.py:471-473`). Renewal happens only at a statement boundary (`_service`,
+         `dispatcher.py:1204-1205`), and only when at most `renew_margin` = 4 × 0.38 + 0.38 = 1.9 s remains. It
+         renews to at most `now + 5 s`, which is the native maximum (`bootstrap.c:136,338`). Nothing renews inside
+         `facade.start`. The schedule admission never compares W with the lease (`schedule_plan.py:79-130`).
+      2. **The outer deadline was the bootstrap lease.** The start step's end is
+         `min(active_end, now + start timeout 5, bootstrap._lease)` (`dispatcher.py:1084-1088`). Health was `None`
+         before the first release. The start timeout end was about 8.1 s and the active window was larger. The
+         candidates in finding 21 resolve as follows:
+         - the start action timeout: not binding (8.1 s);
+         - the health deadline (`_end` health term): absent;
+         - the owner's start deadline: it is this same `until`;
+         - the lease: binding.
+      3. **Why 2 of 3 attempts.** `readiness_offsets(3.5, 3)` = 0, 1.625 and 3.25 s. With t0 = 3.41 s, the
+         attempts were at 3.41 s and 5.04 s. The third, due at 6.66 s, was dropped because `at >= deadline`
+         (`providers.py:434-435`). So L < 6.66 s. The plan was written at 0.644 s, before the lease was created,
+         so L ≥ 5.44 s. No renewal ran: L − 3.1 s was more than 1.9 s at both step dispatches. The readiness
+         failure and its cancel came at about 5.05 s (the last event write was at 5.047 s), with L − t between
+         0.40 and 0.87 s.
+      4. **Why the cancel revoked.** The run-bootstrap root ends at its own lease (`bootstrap.c:314`:
+         `now>=s.lease` → `cleanup`). That cleanup SIGKILLs every helper, including the authority and the storage
+         worker. Nothing extends the root lease until the terminal fence puts the root into terminal mode. The
+         CANCEL was sent at about 5.05 s, and its exchange failed only at L or later, 0.39 s or more after it was
+         sent. The authority was killed under it (EOF, then the revoke), giving `issuer_dead: true` and
+         `issuer_reaped: true`. The storage worker died with it, so the dispatcher's next call (the `schedule`
+         failure statement, which allows cancel, at 5.919 s) found the child gone: `ML-PERSIST-CHILD` at
+         `validation`. That bounds L ≤ 5.92 s.
+         - A client-side revoke after a CANCEL timeout would come at the CANCEL deadline, about 6.05 s, after the
+           storage loss. A conflict cannot explain it: nothing else holds the connection in the start step.
+           The root's lease is the earliest event that fits.
+      5. **Why the cancel ran so long, and why the driver did not announce (medium confidence; inferred from file
+         state).**
+         - `stderr-g1` is empty, so the driver had no exception or traceback. It was not slow to import: by
+           3.762 s, 0.42 s after release, it had opened its link and its zenoh session and started its Argus
+           flow run.
+         - `driver/argus-flows/manifest.json.tmp-1` (1150 bytes of valid JSON, mtime 3.762 s) was never replaced
+           by `manifest.json`, and `events.jsonl` is empty. The driver was therefore still inside the manifest
+           publication (`writer.py:1113-1118`: write, `fsync`, `os.replace`) when it was killed. That was 1.7 s or
+           more later. It never reached `announce_ready()` (`driver.py:118`).
+         - The run directory is on `/dev/loop10`, an ext4 image on an external drive that is 97% full. A task
+           blocked in `fsync` (uninterruptible) cannot be frozen by cgroup v2. So the native CANCEL's
+           `freeze_all` (`run_authority.c:180-201`) waits up to `close_end` (2 s) before it replies, which
+           explains a CANCEL still open at L. The host has 32 CPUs, so load 8.4 alone is unlikely to delay a
+           CANCEL by 0.39 s.
+         - In `…-cancel-paused`, the same driver announced after 0.467 s.
+      6. **Latent and related residuals (not reproduced).**
+         - **A-ii:** the expired-lease epoch path of finding 15 is still reachable if a CANCEL is first read after
+           a native lease close (`run_authority.c:652`).
+         - **A-iii:** the client's CANCEL deadline is `now + 1 s` (`run_broker.py:1056`), shorter than the native
+           close bound (`now + 2 s`, `run_authority.c:212`). A freeze stalled for 1 to 2 s therefore times out on
+           the client and revokes even with ample lease left.
+      - **Reproductions** (the `long_window_runtime` fixture: composed runtime, sink `nonce-marker` in
+        `marker-never` mode, W = 3.5 s, the live action timeouts with `use_action_timeouts`). The sink's start step
+        is placed at 2.8 s of lease left. That is above this fixture's 2.5 s renewal margin, so there is no renewal
+        (0 renewals recorded), and below W. This placement is a wait only.
+        - **`test_a_declared_readiness_window_is_not_silently_cut_by_the_lease`: fails** (deterministic). The
+          queries were at +0 and +1.626 s; the third was dropped; the cancel came with 1.09 s of lease left. It
+          passes if the schedule is refused at admission or all 3 attempts are made.
+        - **`test_a_readiness_failure_cancel_that_takes_longer_than_the_lease_left_still_closes`: fails** in both
+          runs. The readiness-failure cancel completes 1.5 s after the failure, which is below the native 2 s close
+          bound (a wait before the cancel, so A-iii is not exercised). The result is the live signature:
+          - `('ML-PERSIST-CHILD', 'schedule', 'validation')`;
+          - `issuer_dead: true`;
+          - CANCEL exchange errors `Broken pipe`, then `ML-AFFA-CLOSED`;
+          - `ML-CLOSURE-WORKLOAD-WAIT-UNKNOWN`, writer `open`;
+          - the bootstrap root's own exit `si_code=1, si_status=0`: it ended by itself at its lease, not by a
+            SIGKILL.
+        - **Limit.** The live CANCEL was sent before L and stalled natively. The test issues it after L, so the
+          first error is `Broken pipe` instead of EOF. Both reach the same root-lease teardown. A native freeze
+          stall (a unit in uninterruptible sleep) is not reproducible without privileges and is not attempted.
+      - **Proposed repairs** (an ADR-ML3-AFFA-0001 or ADR-ML3-PROBE-0001 note first). The invariant: a readiness
+        start step must leave, after its last attempt, the cancel close bound (2 s) plus the terminal fence
+        reserve inside the bootstrap lease. With a 5 s maximum lease and no renewal inside a step, that requires
+        W + release + 2 s + reserve ≤ 5 s.
+        - **RA1 (recommended): Maestro computes the readiness window against the lease.** In
+          `ProcessReadiness.start`, space the attempts over `min(W, D − t0 − close bound − reserve)`, where D is
+          the step end (already capped at the lease). The last attempt is then always made, and the cancel always
+          has its close bound. Add an admission check in `admit_schedule` that refuses a W that cannot fit even a
+          fresh 5 s lease (`ML-SCHEDULE-READINESS-WINDOW`; W ≤ about 2.5 s with the live budgets).
+          - Regression: the two (A) tests. The first passes by refusal or by 3 attempts. The second passes once
+            the cancel has 1.5 s or more left.
+        - **RA2: R3, renew immediately before a readiness start step** when L − now < W + 2 s + reserve. This
+          is necessary but not sufficient for W = 3.5 s: after a fresh 5 s renewal, the third attempt at
+          t0 + 3.25 s leaves about 1.6 s, which is less than the 2 s close bound. It must be combined with RA1's
+          cap, or with RA3.
+        - **RA3: renew between marker attempts inside `facade.start`.** This keeps W unchanged. It needs the
+          dispatcher's renewal service in the facade thread, under the same lock order (owner, then broker). This
+          is the largest change.
+        - **RA4 (for A-iii): give K.CANCEL a client deadline of at least the native close bound.** For example
+          `min(now + 2 + reply margin, generation − 2, limit)` in `RunBroker.cancel`, or make the native freeze
+          wait no longer than the request deadline. Either way, a stalled freeze yields a CANCELLED reply with
+          `FREEZE_FAILED`, not a revoke.
+        - **Harness-side options (S1c; these do not repair the platform):**
+          - **H1:** reduce `OWNED_READINESS_TIMEOUT_S` so that it fits the lease: W ≤ 2.0-2.5 s. Earlier S1c runs
+            measured marker writes 0.24-1.26 s after release at load 6.3-8.5, and W = 2.0 puts the last attempt at
+            1.75 s.
+          - **H2:** place the run directory, or at least the driver's `argus-flows` root, on tmpfs (`/dev/shm`) and
+            copy it afterwards, so that no unit blocks in `fsync` on loop10 before it announces readiness.
+          - **H3:** record `bootstrap._lease`, `connection._lease` at each step and at cancel, and the root's and
+            each helper's `waitid` result in `maestro-run.json`, as finding 15 proposed. The root's exit (0 means
+            its lease expired; −9 means revoked) would have decided (A) directly.
+    - **Effect.** Both causes are understood and reproduced. The stack acceptance stays blocked until RB1 and one of
+      RA1, RA2+RA1 or RA3 are decided and pass this file. RA4 and H1-H3 are recommended alongside.
