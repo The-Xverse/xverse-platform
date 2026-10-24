@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "policy": "Curated public narrative plus explicit source-derived references; no recursive engineering or evidence import.",
+  "narrativeSources": {
+    "docs/index": ["README.md", "docs/releases/xverse-lite-1.0.md"],
+    "docs/status": ["docs/releases/xverse-lite-1.0.md"],
+    "docs/concepts/architecture": ["docs/architecture/PLATFORM_SUBSYSTEMS.md", "docs/adr/ADR-0016-platform-subsystem-names.md", "docs/adr/ADR-0019-xcom-validation-and-observation-boundaries.md"],
+    "docs/concepts/identity": ["docs/architecture/METAMODEL.md", "xdl/specification/RESOURCE_MODEL.md"],
+    "docs/concepts/resources": ["xdl/specification/RESOURCE_MODEL.md", "xdl/specification/XDL_CORE_V0_1.md"],
+    "docs/concepts/time-and-evidence": ["xdl/specification/RESOURCE_MODEL.md", "src/xverse/argus/__init__.py"],
+    "docs/guides/xdl": ["xdl/specification/RESOURCE_MODEL.md"],
+    "docs/guides/validation": ["src/xverse_xdl/validate.py", "src/xverse_xdl/cli.py"],
+    "docs/guides/experiments": ["src/xverse_xdl/experiment_plan.py", "xdl/profiles/experiment-lite-v0.1.schema.json"],
+    "docs/guides/maestro": ["src/xverse/maestro/__init__.py", "docs/releases/xverse-lite-1.0.md"],
+    "docs/guides/xcom": ["README.md", "src/xverse/xcom/include/xverse/xcom"],
+    "docs/guides/argus": ["src/xverse/argus/__init__.py", "src/xverse/argus/cli.py"],
+    "docs/guides/faults": ["src/xverse/faults/__init__.py", "src/xverse/faults/resolve.py"],
+    "docs/guides/flows": ["src/xverse/flows/__init__.py", "src/xverse/flows/binding.py"],
+    "docs/development/contributing": ["AGENTS.md", "LICENSE"],
+    "docs/development/documentation": ["website/scripts/generate.py", ".github/workflows/website.yml"],
+    "docs/development/compatibility": ["xdl/specification/VERSIONING.md", "pyproject.toml"]
+  },
+  "generatedSources": {
+    "python": ["xverse_xdl.__all__", "xverse.argus.__all__", "xverse.maestro.__all__", "xverse.faults.__all__", "xverse.flows.__all__"],
+    "cpp": ["src/xverse/xcom/include/xverse/xcom/*.hpp"],
+    "schemas": ["xdl/schemas/v1alpha1/*.schema.json"],
+    "profiles": ["experiment-lite-v0.1", "runtime-compatibility-v0.1", "runtime-compatibility-v0.2", "xcom-v0.1"],
+    "examples": ["xdl/examples/v1alpha1/*.xdl.yaml", "tests/thesis_lite/xdl/fixtures/*.xdl.yaml"],
+    "cli": ["xverse_xdl.cli._parser", "xverse.argus.cli usage-only invocation"]
+  },
+  "excluded": ["engineering evidence trees", "private research material", "runtime worker APIs", "implementation source browsing", "production configuration", "legacy repository source"]
+}
