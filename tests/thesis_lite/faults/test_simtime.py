@@ -1,4 +1,4 @@
-"""Simulator-time fault triggers (ADR-ML3-SIMTIME-0001; review-simtime-faults findings 1-2).
+"""Simulator-time fault triggers (ADR-ML3-SIMTIME-0001 with amendment ST-2; review-simtime-faults findings 1-5).
 
 Pure cases: the capability flag, the binding, resolution and horizon, tick-mode compatibility, schedule admission
 (the D-4c refusal and the thaw check), the channel codec, and the scheduler against a fake hub over a socketpair.
@@ -19,7 +19,7 @@ import pytest
 import xverse.faults as faults_package
 from xverse.faults import FaultError, HubChannel, SimTimeFaultScheduler, SimulationClock, resolve_simtime, resolve_schedule
 from xverse.faults.boundary import BoundaryOutcome, ProcessBoundary
-from xverse.faults.simtime import FRAME_MAX, HOLD, RELAY, decode_hub_frame, encode_frame
+from xverse.faults.simtime import FRAME_MAX, HOLD, RELAY, check_arm_batch, decode_hub_frame, encode_frame
 from xverse.maestro import PreparationError, prepare
 from xverse.maestro.providers import ProbePolicy
 from xverse.maestro.schedule_plan import ScheduleError, admit_schedule, decode_schedule
@@ -90,6 +90,41 @@ def test_plans_without_binding_keep_their_bytes():
     assert plain.fault_clock is None and b"faultClock" not in plain.canonical_bytes
     bound = prepare(result, resources, provider_descriptors=(PIN,), fault_clock=clock())
     assert bound.lifecycle_digest != plain.lifecycle_digest and bound.faults == ()
+
+
+# ST-2 (L4): literals computed from a clean export of base b40acce49 (review-simtime-faults finding 5), not from
+# this candidate: (lifecycle digest, sha256 of the canonical bytes).
+BASE_DIGESTS = {
+    "fault-less": ("f570fa42244c1550be6bc6aeb8665050826b7c45227db0b9faf1ab3cbccb4b7a",
+                   "65ade2a522f8217ac23f8824219f9506307af35fe9be215eb17fc42cf6dafdac"),
+    "fault-less-sensor": ("952c6b9308d82abf170a8c34e7465eb232cb606eb1d411b688df930aed123836",
+                          "45b88e72ea7a2136a981f7b4a420dabfeca63923e258c9b64fb62006212a540f"),
+    "stale+crash": ("3e2bd8afc9d2f010dc729c6c8c896406f5abbc40334d2cc213225bdd3a0b70c1",
+                    "afbd56ad18689ff6d167e611a9befc1895ad6ba37573a03906e3759ffcdb4a94"),
+    "freeze": ("dc962b8b122a094fc574878a0f60aa3bedbae453b3a8e78c3c18b4b3df456ce6",
+               "f56cf29d8e5884839905cfe06ce5866cb87407ec5dea64d8e1bc99f015c3a577"),
+    "delay-ticks": ("f147b3f36ce13c7f0331b42610f10d06844822e730c9aae8f27b6c873a4a590f",
+                    "10478f962a6650bed21f97a0435aa67be9125a1b0b7cd72df47a23efb2d27a52"),
+}
+TICK_PLANS = {
+    "fault-less": None,
+    "fault-less-sensor": [],
+    "stale+crash": [fault("f-s", "stale", "sample-flow", at=1, duration=1),
+                    fault("f-c", "crash", "source-instance", at=2, duration=0, recovery="manual")],
+    "freeze": [fault("f-frz", "freeze", "sink-instance", at=1, duration=1)],
+    "delay-ticks": [fault("f-dl", "delay", "sample-flow", at=1, duration=1, parameters=[parameter("delay-ticks", 1)])],
+}
+
+
+@pytest.mark.parametrize("name", sorted(TICK_PLANS))
+def test_tick_mode_plans_keep_the_base_digests(name):
+    import hashlib
+
+    items = TICK_PLANS[name]
+    result, resources = compiled() if items is None else compiled(docs_with(items))
+    prepared = prepare(result, resources, provider_descriptors=(PIN,))
+    assert prepared.fault_clock is None and len(prepared.faults) == len(items or ())
+    assert (prepared.lifecycle_digest, hashlib.sha256(prepared.canonical_bytes).hexdigest()) == BASE_DIGESTS[name]
 
 
 def test_binding_must_name_the_admitted_domain_and_a_deployed_source():
@@ -301,6 +336,10 @@ def stack(items, *, live=True, refuse=()):
     return scheduler, hub, ops, listener, state
 
 
+def resume(hub, ack):
+    hub.send("resumed", entry=ack["entry"], phase=ack["phase"], step=ack["step"], ackSeq=ack["seq"])
+
+
 def arm(scheduler, hub, tick=0):
     scheduler.advance(tick)
     sent = hub.frames()
@@ -320,7 +359,30 @@ def test_arming_waits_for_the_live_source_and_sends_minimum_descriptors():
     assert by_entry["fault:f-frz"]["mode"] == "hold" and by_entry["fault:f-frz"]["onsetStep"] == 30
     assert by_entry["fault:f-loss"]["parameters"] == {"every": 2} and by_entry["fault:f-loss"]["seed"] == 7
     assert set(by_entry["fault:f-loss"]) == {"v", "kind", "seq", "entry", "fault", "faultKind", "mode", "collection", "element",
-                                            "atNs", "durationNs", "onsetStep", "clearStep", "parameters", "seed", "stepNs"}
+                                            "atNs", "durationNs", "onsetStep", "clearStep", "parameters", "seed", "stepNs",
+                                            "count", "index"}
+    assert [(f["count"], f["index"]) for f in sent] == [(2, 1), (2, 2)]
+    check_arm_batch(sent)
+
+
+def test_arm_batch_check_refuses_a_wrong_count_an_index_gap_and_a_duplicate():
+    scheduler, hub, *_ = stack([FREEZE, LOSS, simfault("f-st", "stale", "sample-flow", 3, 1)])
+    scheduler.advance(0)
+    sent = hub.frames()
+    check_arm_batch(sent)
+    assert [f["index"] for f in sent] == [1, 2, 3] and {f["count"] for f in sent} == {3}
+    wrong_count = [dict(f, count=4) for f in sent]
+    one_count_differs = [sent[0], dict(sent[1], count=2), sent[2]]
+    gap = [sent[0], dict(sent[1], index=3), dict(sent[2], index=4)]
+    starts_at_zero = [dict(f, index=f["index"] - 1) for f in sent]
+    duplicate_index = [sent[0], sent[1], dict(sent[2], index=2)]
+    duplicate_entry = [sent[0], sent[1], dict(sent[2], entry=sent[0]["entry"])]
+    truncated = sent[:2]
+    for bad, reason in ((wrong_count, "count"), (one_count_differs, "count"), (gap, "index"), (starts_at_zero, "index"),
+                        (duplicate_index, "index"), (duplicate_entry, "repeated"), (truncated, "count")):
+        with pytest.raises(FaultError, match=reason) as caught:
+            check_arm_batch(bad)
+        assert caught.value.code == "XVERSE-FAULT-SIMTIME-PROTOCOL"
 
 
 def test_step_hold_and_relay_sequence_with_both_clocks():
@@ -332,11 +394,15 @@ def test_step_hold_and_relay_sequence_with_both_clocks():
     hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
     scheduler.advance(3)
     assert ops.calls == ["freeze"]
-    assert [(f["kind"], f["phase"], f["outcome"], f["step"]) for f in hub.frames()] == [("ack", "apply", "applied", 30)]
+    acks = hub.frames()
+    assert [(f["kind"], f["phase"], f["outcome"], f["step"]) for f in acks] == [("ack", "apply", "applied", 30)]
+    resume(hub, acks[0])
     hub.send("hold", entry="fault:f-frz", phase="clear", step=40, simNs=40 * STEP)
     scheduler.advance(4)
     assert ops.calls == ["freeze", "thaw"]
-    assert hub.frames()[0]["outcome"] == "cleared"
+    ack = hub.frames()[0]
+    assert ack["outcome"] == "cleared"
+    resume(hub, ack)
     assert scheduler.outcomes == {"fault:f-frz": "cleared", "fault:f-loss": "cleared"}
     applies = [d for d in listener.seen if d[1] == "apply"]
     assert {d[0]: (d[4]["simulatorNs"], d[4]["simulatorStep"], d[4]["mode"]) for d in applies} == {
@@ -367,13 +433,30 @@ def test_protocol_violations_end_the_run(items, frames, reason):
     assert hub.frames()[-1]["kind"] == "close"
 
 
-def test_report_before_arming_completes_is_a_protocol_failure():
-    scheduler, hub, ops, listener, _ = stack([FREEZE])
+def test_armed_must_precede_the_onset_step_of_its_entry():
+    """ST-2 (M3), replacing finding 2's R9 rule: a step below every unarmed onset is accepted, the onset is not."""
+    scheduler, hub, ops, listener, _ = stack([FREEZE, LOSS])
     scheduler.advance(0)
     hub.frames()
     hub.send("time", step=1, simNs=STEP)
+    hub.send("armed", entry="fault:f-loss")
+    hub.send("time", step=19, simNs=19 * STEP)
     scheduler.advance(1)
-    assert scheduler.run_failed and "before every entry was armed" in scheduler.failure_diagnostic
+    assert not scheduler.run_failed
+    hub.send("applied", entry="fault:f-loss", step=20, simNs=20 * STEP, items=0)
+    hub.send("time", step=30, simNs=30 * STEP)
+    scheduler.advance(2)
+    assert scheduler.run_failed and "hub reached step 30 of unarmed fault:f-frz" in scheduler.failure_diagnostic
+    assert ops.calls == [] and scheduler.channel.closed
+
+
+def test_a_report_for_an_unarmed_entry_at_its_onset_is_a_protocol_failure():
+    scheduler, hub, ops, listener, _ = stack([LOSS])
+    scheduler.advance(0)
+    hub.frames()
+    hub.send("applied", entry="fault:f-loss", step=20, simNs=20 * STEP, items=0)
+    scheduler.advance(1)
+    assert scheduler.run_failed and "unarmed fault:f-loss" in scheduler.failure_diagnostic
 
 
 def test_refused_freeze_is_acknowledged_as_refused_and_fails_the_run():
@@ -390,8 +473,8 @@ def test_finish_thaws_a_freeze_whose_clear_step_was_not_reached():
     arm(scheduler, hub)
     hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
     scheduler.advance(1)
-    hub.frames()
-    assert scheduler.finish(2) == {"fault:f-frz": "cancelled"} and not scheduler.incomplete
+    resume(hub, hub.frames()[0])
+    assert scheduler.finish(2) == {"fault:f-frz": "cancelled"} and not scheduler.incomplete and not scheduler.run_failed
     assert ops.calls == ["freeze", "thaw"]
     finals = {d[0]: d[3] for d in listener.seen if d[1] == "final"}
     assert finals == {"fault:f-frz": "XVERSE-FAULT-SIMTIME-NOT-REACHED"}
@@ -419,10 +502,140 @@ def test_cancel_thaws_and_closes():
     assert scheduler.channel.closed
 
 
-def test_never_applied_entries_end_cancelled_never_due():
+def test_an_unreached_onset_ends_cancelled_not_reached_and_the_run_incomplete():
+    """ST-2 (M3), replacing the pin of the old behaviour (never-due, run complete)."""
+    scheduler, hub, ops, listener, _ = stack([FREEZE, LOSS])
+    arm(scheduler, hub)
+    hub.send("time", step=10, simNs=10 * STEP)
+    scheduler.advance(1)
+    assert scheduler.finish(2) == {"fault:f-frz": "cancelled", "fault:f-loss": "cancelled"}
+    assert scheduler.incomplete and not scheduler.run_failed and ops.calls == []
+    finals = {d[0]: d[3] for d in listener.seen if d[1] == "final"}
+    assert finals == {"fault:f-frz": "XVERSE-FAULT-SIMTIME-NOT-REACHED", "fault:f-loss": "XVERSE-FAULT-SIMTIME-NOT-REACHED"}
+
+
+@pytest.mark.parametrize("items, steps, reason", [
+    ([FREEZE], None, "never armed"),  # the source never went live: nothing was armed
+    ([FREEZE], (), "never armed"),  # armed frames sent by Maestro, never confirmed by the hub
+    ([FREEZE], (30,), "fault:f-frz not applied although the hub reported step 30"),
+    ([LOSS], (20,), "fault:f-loss not applied although the hub reported step 20"),
+])
+def test_finish_refuses_an_unarmed_entry_or_a_reached_onset_without_apply(items, steps, reason):
+    scheduler, hub, ops, listener, state = stack(items, live=steps is not None)
+    if steps is None:
+        scheduler.advance(0)
+        assert hub.frames() == []
+    elif steps == ():
+        scheduler.advance(0)
+        hub.frames()
+    else:
+        arm(scheduler, hub)
+        for step in steps:
+            hub.send("time", step=step, simNs=step * STEP)
+        scheduler.advance(1)
+        assert not scheduler.run_failed
+    outcomes = scheduler.finish(2)
+    assert scheduler.run_failed and reason in scheduler.failure_diagnostic and "SIMTIME-PROTOCOL" in scheduler.failure_diagnostic
+    assert set(outcomes.values()) == {"cancelled"}
+    assert {d[3] for d in listener.seen if d[1] == "final"} == {"XVERSE-FAULT-CANCELLED"}
+    assert scheduler.channel.closed and ops.calls == []
+
+
+# --- ST-2 (M2): hold verification by ``resumed`` -------------------------------------------------------------------
+
+def test_p1_steps_queued_behind_a_hold_without_resumed_are_refused():
     scheduler, hub, ops, listener, _ = stack([FREEZE])
     arm(scheduler, hub)
-    assert scheduler.finish(1) == {"fault:f-frz": "cancelled"} and not scheduler.incomplete
+    hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+    hub.send("time", step=31, simNs=31 * STEP)
+    hub.send("time", step=35, simNs=35 * STEP)
+    scheduler.advance(1)
+    assert scheduler.run_failed and "hub sent time before resumed" in scheduler.failure_diagnostic
+    assert ops.calls == ["freeze"] and scheduler.channel.closed
+    scheduler.cancel(2, "run-failed")
+    assert ops.calls == ["freeze", "thaw"] and scheduler.outcomes == {"fault:f-frz": "cancelled"}
+
+
+def test_p2_back_to_back_holds_without_resumed_are_refused():
+    scheduler, hub, ops, listener, _ = stack([FREEZE])
+    arm(scheduler, hub)
+    hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+    hub.send("hold", entry="fault:f-frz", phase="clear", step=40, simNs=40 * STEP)
+    scheduler.advance(1)
+    assert scheduler.run_failed and "hub sent hold before resumed" in scheduler.failure_diagnostic
+    assert ops.calls == ["freeze"] and scheduler.outcomes == {"fault:f-frz": None}
+
+
+@pytest.mark.parametrize("change, reason", [
+    (dict(ackSeq=99), "before resumed"), (dict(step=31), "before resumed"), (dict(phase="clear"), "before resumed"),
+    (None, "no hold ack pending"),
+])
+def test_resumed_must_echo_the_pending_ack(change, reason):
+    scheduler, hub, ops, listener, _ = stack([FREEZE])
+    arm(scheduler, hub)
+    if change is None:
+        hub.send("resumed", entry="fault:f-frz", phase="apply", step=30, ackSeq=1)
+    else:
+        hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+        scheduler.advance(1)
+        ack = hub.frames()[0]
+        hub.send("resumed", **(dict(entry=ack["entry"], phase=ack["phase"], step=ack["step"], ackSeq=ack["seq"]) | change))
+    scheduler.advance(2)
+    assert scheduler.run_failed and reason in scheduler.failure_diagnostic
+
+
+def test_resumed_frame_codec():
+    data = hub_frame(3, "resumed", entry="fault:f-frz", phase="apply", step=30, ackSeq=2)
+    assert decode_hub_frame(data)["ackSeq"] == 2
+    for bad in (hub_frame(3, "resumed", entry="fault:f-frz", phase="apply", step=30, ackSeq=0),
+                hub_frame(3, "resumed", entry="fault:f-frz", phase="apply", step=30, ackSeq=2, simNs=30 * STEP),
+                hub_frame(3, "resumed", entry="fault:f-frz", phase="apply", step=30)):
+        with pytest.raises(FaultError):
+            decode_hub_frame(bad)
+
+
+# --- ST-2 (M1): channel lifetime ---------------------------------------------------------------------------------
+
+def test_hub_end_of_file_after_every_entry_is_final_is_benign_and_recorded():
+    scheduler, hub, ops, listener, _ = stack([FREEZE, LOSS])
+    arm(scheduler, hub)
+    hub.send("applied", entry="fault:f-loss", step=20, simNs=20 * STEP, items=0)
+    hub.send("cleared", entry="fault:f-loss", step=25, simNs=25 * STEP, items=2)
+    hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+    scheduler.advance(1)
+    resume(hub, hub.frames()[0])
+    hub.send("hold", entry="fault:f-frz", phase="clear", step=40, simNs=40 * STEP)
+    scheduler.advance(2)
+    resume(hub, hub.frames()[0])
+    hub.sock.close()  # the hub exits at its stop step
+    scheduler.advance(3)
+    assert not scheduler.run_failed and scheduler.hub_closed["event"] == "hub-closed"
+    assert scheduler.hub_closed["simulatorStep"] == 40
+    notes = [d for d in listener.seen if d[2] == "hub-closed"]
+    first = next(iter(scheduler.outcomes))  # the first entry in compiled listing order
+    assert first == "fault:f-loss"
+    assert [(d[0], d[1], d[3], d[4]["event"]) for d in notes] == [(first, "outcome", None, "hub-closed")]
+    scheduler.advance(4)  # nothing is read after the end-of-file
+    assert scheduler.finish(5) == {"fault:f-frz": "cleared", "fault:f-loss": "cleared"}
+    assert not scheduler.run_failed and not scheduler.incomplete and scheduler.channel.closed  # no close to a closed hub
+
+
+@pytest.mark.parametrize("pending", ["report", "resumed", "hold"])
+def test_hub_end_of_file_with_anything_pending_is_a_protocol_failure(pending):
+    scheduler, hub, ops, listener, _ = stack([FREEZE] if pending != "report" else [LOSS])
+    arm(scheduler, hub)
+    if pending == "report":
+        hub.send("applied", entry="fault:f-loss", step=20, simNs=20 * STEP, items=0)
+    else:
+        hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+        scheduler.advance(1)
+        ack = hub.frames()[0]
+        if pending == "hold":  # resumed was sent; the clear point is still pending
+            resume(hub, ack)
+    hub.sock.close()
+    scheduler.advance(2)
+    assert scheduler.run_failed and "the hub closed the channel with" in scheduler.failure_diagnostic
+    assert "SIMTIME-PROTOCOL" in scheduler.failure_diagnostic and scheduler.hub_closed is None
 
 
 # --- persistence (decision 8) -------------------------------------------------------------------------------------
@@ -451,11 +664,14 @@ from ..maestro.test_launcher import binaries as binaries  # noqa: E402,F401
 
 
 class HubThread(threading.Thread):
-    """A fake clock-source hub: arms, then steps the simulator, holding at each freeze point until Maestro acks."""
+    """A fake clock-source hub: arms (until ``index == count``), then steps the simulator, holding at each freeze
+    point until Maestro acks and confirming each ack with ``resumed``. With ``exit_at_stop`` it closes its end after
+    its last report, as U2 does when its stop step ends the process (ST-2, M1)."""
 
-    def __init__(self, sock, *, delay_s=0.6, host_step_s=0.005, max_steps=200):
+    def __init__(self, sock, *, delay_s=0.6, host_step_s=0.005, max_steps=200, exit_at_stop=False):
         super().__init__(daemon=True)
         self.sock, self.delay_s, self.host_step_s, self.max_steps = sock, delay_s, host_step_s, max_steps
+        self.exit_at_stop = exit_at_stop
         self.seq, self.received, self.error = 0, [], None
 
     def send(self, kind, **fields):
@@ -471,15 +687,9 @@ class HubThread(threading.Thread):
     def run(self):
         try:
             entries = []
-            first = self.recv(20)
-            entries.append(first)
-            self.send("armed", entry=first["entry"])
-            self.sock.settimeout(0.3)
-            while True:
-                try:
-                    frame = self.recv(0.3)
-                except socket.timeout:
-                    break
+            while not entries or entries[-1]["index"] < entries[-1]["count"]:
+                frame = self.recv(20)
+                assert frame["kind"] == "arm" and frame["index"] == len(entries) + 1, frame
                 entries.append(frame)
                 self.send("armed", entry=frame["entry"])
             time.sleep(self.delay_s)
@@ -496,17 +706,21 @@ class HubThread(threading.Thread):
                             self.send("hold", entry=e["entry"], phase=phase, step=step, simNs=sim)
                             ack = self.recv(5)
                             assert ack["kind"] == "ack" and ack["entry"] == e["entry"] and ack["phase"] == phase, ack
+                            self.send("resumed", entry=ack["entry"], phase=phase, step=step, ackSeq=ack["seq"])
                         else:
                             self.send("applied" if phase == "apply" else "cleared", entry=e["entry"], step=step, simNs=sim,
                                       items=0)
                 if len(done) == 2 * len(entries):
                     break
                 time.sleep(self.host_step_s)
+            if self.exit_at_stop:
+                self.sock.close()
         except Exception as error:  # recorded for the test, never raised in the thread
             self.error = error
 
 
-def test_composed_native_run_step_hold_freeze_and_relay_loss(request, monkeypatch):
+@pytest.mark.parametrize("exit_at_stop", [False, True], ids=["hub-waits-for-close", "hub-exits-at-stop-step"])
+def test_composed_native_run_step_hold_freeze_and_relay_loss(request, monkeypatch, exit_at_stop):
     from xverse.argus import EvidenceStore
     from xverse.faults.evidence import closure_report, reconstruct
 
@@ -528,27 +742,36 @@ def test_composed_native_run_step_hold_freeze_and_relay_loss(request, monkeypatc
     shared = test_shared_dispatcher.scheduled
     monkeypatch.setattr(test_shared_dispatcher, "scheduled", lambda request, monkeypatch, **kw: shared(request, monkeypatch, pauses=40, **kw))
     stack_, _, driver = test_lazy_dispatcher.scheduled(request, monkeypatch)
-    hub = HubThread(theirs)
+    hub = HubThread(theirs, exit_at_stop=exit_at_stop)
     hub.start()
     try:
         result = test_lazy_dispatcher.run(driver)
     finally:
         hub.join(timeout=10)
-        theirs.setblocking(False)
-        try:
-            remaining = theirs.recv(FRAME_MAX)
-        except BlockingIOError:
-            remaining = b"{}"
+        remaining = b"{}"
+        if not exit_at_stop:
+            theirs.setblocking(False)
+            try:
+                remaining = theirs.recv(FRAME_MAX)
+            except BlockingIOError:
+                pass
         theirs.close()
     assert hub.error is None, hub.error
     assert result.execution_succeeded and result.diagnostic is None, result.diagnostic
     assert driver._faults.outcomes == {"fault:f-frz": "cleared", "fault:f-loss": "cleared"}
     acks = [(f["entry"], f["phase"], f["outcome"], f["step"]) for f in hub.received if f["kind"] == "ack"]
     assert acks == [("fault:f-frz", "apply", "applied", 30), ("fault:f-frz", "clear", "cleared", 40)]
-    assert json.loads(remaining)["kind"] == "close"
     events = EvidenceStore.read_run(stack_[3].parent / "argus").records()
     payloads = [(r.get("extensions") or {}).get("io.xverse.faults") for r in events]
     payloads = [p for p in payloads if p]
+    closed = [p for p in payloads if p["outcome"] == "hub-closed"]
+    if exit_at_stop:  # ST-2 (M1): a benign end-of-file, recorded on the first entry's chain after its outcome
+        assert driver._faults.hub_closed is not None and json.loads(remaining) == {}
+        first = next(iter(driver._fault_entries.values())).fault_id  # the first entry in compiled listing order
+        assert [(p["faultId"], p["phase"], p["detail"]["event"], p["detail"]["simulatorStep"]) for p in closed] == [
+            (first, "outcome", "hub-closed", 40)]
+    else:
+        assert driver._faults.hub_closed is None and closed == [] and json.loads(remaining)["kind"] == "close"
     modes = {p["faultId"]: p["detail"]["boundaryMode"] for p in payloads if p["phase"] == "intent"}
     assert modes == {"f-frz": "step-hold", "f-loss": "remote-relay"}
     applied = {p["faultId"]: p["detail"]["simulatorStep"] for p in payloads if p["phase"] == "apply"}

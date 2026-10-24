@@ -1418,6 +1418,12 @@ class FiniteDispatcher(_Original):
         if self._faults is None:
             return
         self._faults.finish(self._tick)
+        from xverse.faults.simtime import SimTimeFaultScheduler
+        if type(self._faults) is SimTimeFaultScheduler and self._faults.run_failed:
+            # ADR-ML3-SIMTIME-0001 ST-2 (M3): a protocol failure detected at finish, mapped as _advance_faults maps it
+            failure = self._faults.failure_diagnostic or ""
+            raise OwnerError("ML-SCHEDULE-FAULT-CLOCK" if failure.startswith("XVERSE-FAULT-SIMTIME")
+                             else "ML-SCHEDULE-FAULT-APPLY")
         if self._faults.incomplete:
             raise OwnerError("ML-SCHEDULE-FAULT-INCOMPLETE")
 

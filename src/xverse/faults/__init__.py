@@ -23,7 +23,8 @@ from .vocabulary import (
 
 #: Public capability contract (ADR-ML3-SIMTIME-0001 decision 9): True only because every option A requirement is
 #: implemented here: exact simulator-ns onset and duration, the simulator-time horizon check, the remote relay
-#: boundary at the clock-source unit and the step-hold freeze handshake. It claims no measurement and no run.
+#: boundary at the clock-source unit and the step-hold freeze handshake (with ST-2: the channel lifetime, the
+#: ``resumed`` hold verification, per-entry arming and the arm ``count``/``index``). It claims no measurement and no run.
 SIMULATION_TIME_TRIGGERS = True
 
 __all__ = [

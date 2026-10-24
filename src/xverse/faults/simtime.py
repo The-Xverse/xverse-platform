@@ -230,10 +230,11 @@ HUB_FRAMES = {
     "applied": {"entry", "step", "simNs", "items"},
     "cleared": {"entry", "step", "simNs", "items"},
     "failed": {"entry", "phase", "step", "simNs", "reason"},
+    "resumed": {"entry", "phase", "step", "ackSeq"},  # ST-2 (M2): the next hub frame after every hold ack
 }
 MAESTRO_FRAMES = {
     "arm": {"entry", "fault", "faultKind", "mode", "collection", "element", "atNs", "durationNs", "onsetStep",
-            "clearStep", "parameters", "seed", "stepNs"},
+            "clearStep", "parameters", "seed", "stepNs", "count", "index"},
     "ack": {"entry", "phase", "step", "outcome"},
     "close": {"reason"},
 }
@@ -277,16 +278,35 @@ def decode_hub_frame(data: bytes) -> dict[str, Any]:
     for name in ("step", "simNs", "items"):
         if name in body and not _int(body[name]):
             raise FaultError(PROTOCOL, f"frame {name}")
+    if kind == "resumed" and not _int(body["ackSeq"], 1):
+        raise FaultError(PROTOCOL, "frame ackSeq")
     if kind == "failed" and (type(body["reason"]) is not str or not _REASON.fullmatch(body["reason"])):
         raise FaultError(PROTOCOL, "frame reason")
     return body
+
+
+def check_arm_batch(frames: Sequence[Mapping[str, Any]]) -> None:
+    """Check one arming batch (ST-2, R-1): equal ``count`` = batch size, ``index`` 1..count rising by 1, distinct
+    entries. Maestro checks its own batch before sending; a hub may run the same check on what it receives."""
+
+    entries: set[Any] = set()
+    for position, frame in enumerate(frames, start=1):
+        if frame.get("kind") != "arm" or not _int(frame.get("count"), 1) or frame["count"] != len(frames):
+            raise FaultError(PROTOCOL, "arm count")
+        if not _int(frame.get("index"), 1) or frame["index"] != position:
+            raise FaultError(PROTOCOL, "arm index")
+        if frame.get("entry") in entries:
+            raise FaultError(PROTOCOL, "arm entry repeated")
+        entries.add(frame.get("entry"))
 
 
 class HubChannel:
     """The owned control channel to the clock-source unit, over a socket supplied by the trusted caller.
 
     The socket is AF_UNIX ``SOCK_SEQPACKET``, connected or listening. A listening socket accepts exactly one peer
-    whose ``SO_PEERCRED`` uid equals this process's uid. Every operation is non-blocking.
+    whose ``SO_PEERCRED`` uid equals this process's uid. Every operation is non-blocking. An end-of-file from the
+    peer (or a zero-length frame, which SEQPACKET cannot tell apart) sets ``peer_closed``; nothing is read after it,
+    and the scheduler decides whether it is benign (ST-2, M1).
     """
 
     def __init__(self, sock: socket.socket) -> None:
@@ -302,6 +322,7 @@ class HubChannel:
         self._send_seq = 0
         self._recv_seq = 0
         self.closed = False
+        self.peer_closed = False
         if self._peer is not None:
             self._check_peer(self._peer)
 
@@ -341,7 +362,7 @@ class HubChannel:
     def send(self, kind: str, **fields: Any) -> int:
         """Send one Maestro frame; return its sequence number."""
 
-        if self.closed or self._peer is None:
+        if self.closed or self._peer is None or self.peer_closed:
             raise FaultError("XVERSE-FAULT-SIMTIME-CHANNEL", "the hub channel is not connected")
         if kind not in MAESTRO_FRAMES or set(fields) != MAESTRO_FRAMES[kind]:
             raise FaultError(PROTOCOL, f"Maestro frame {kind!r} outside the contract")
@@ -358,7 +379,7 @@ class HubChannel:
         """Return up to ``limit`` waiting hub frames, decoded and sequence-checked; never block."""
 
         frames: list[dict[str, Any]] = []
-        if self.closed or self._peer is None:
+        if self.closed or self._peer is None or self.peer_closed:
             return frames
         while len(frames) < limit:
             try:
@@ -367,8 +388,9 @@ class HubChannel:
                 break
             except OSError as error:
                 raise FaultError("XVERSE-FAULT-SIMTIME-CHANNEL", "the hub channel failed") from error
-            if not data:
-                raise FaultError("XVERSE-FAULT-SIMTIME-CHANNEL", "the hub closed the channel")
+            if not data:  # end-of-file: the scheduler decides whether it is benign (ST-2, M1)
+                self.peer_closed = True
+                break
             frame = decode_hub_frame(data)
             if frame["seq"] != self._recv_seq + 1:
                 raise FaultError(PROTOCOL, "hub sequence gap")
@@ -377,12 +399,12 @@ class HubChannel:
         return frames
 
     def close(self, reason: str = "run-ended") -> None:
-        """Send ``close`` (best effort) and release the sockets."""
+        """Send ``close`` (best effort, not after the hub's end-of-file) and release the sockets; never raises."""
 
         if self.closed:
             return
         try:
-            if self._peer is not None:
+            if self._peer is not None and not self.peer_closed:
                 self.send("close", reason=reason)
         except FaultError:
             pass
@@ -411,7 +433,7 @@ class _State:
 
 
 class SimTimeFaultScheduler:
-    """Apply and clear simulator-timed entries from the clock-source unit's reports (decisions 4–7).
+    """Apply and clear simulator-timed entries from the clock-source unit's reports (decisions 4–7, amendment ST-2).
 
     The interface matches ``FaultScheduler``: ``start``, ``advance(tick)``, ``cancel``, ``finish``,
     ``outcomes``, ``decisions``, ``run_failed``, ``incomplete`` and ``failure_diagnostic``.
@@ -450,6 +472,8 @@ class SimTimeFaultScheduler:
         self._arm_sent = False
         self._step = -1
         self._tick = 0
+        self._resume: tuple[str, str, int, int] | None = None  # (entry, phase, step, ack seq) awaiting ``resumed``
+        self.hub_closed: dict[str, Any] | None = None  # the benign end-of-file, once recorded (ST-2, M1)
 
     # -- helpers ---------------------------------------------------------------------------------------------
 
@@ -504,15 +528,45 @@ class SimTimeFaultScheduler:
             state.handle = issued
 
     def _arm(self) -> None:
-        for state in self._ordered():
-            if state.final is not None:
-                continue
-            e = state.entry
-            self.channel.send("arm", entry=e.entry_id, fault=e.fault_id, faultKind=e.fault_kind, mode=e.mode,
-                              collection=e.target_collection, element=e.target_element, atNs=e.at_ns,
-                              durationNs=e.duration_ns, onsetStep=e.onset_step, clearStep=e.clear_step,
-                              parameters=dict(e.parameters.values), seed=self.seed, stepNs=self.clock.step_ns)
+        batch = [state.entry for state in self._ordered() if state.final is None]
+        frames = [dict(kind="arm", entry=e.entry_id, fault=e.fault_id, faultKind=e.fault_kind, mode=e.mode,
+                       collection=e.target_collection, element=e.target_element, atNs=e.at_ns,
+                       durationNs=e.duration_ns, onsetStep=e.onset_step, clearStep=e.clear_step,
+                       parameters=dict(e.parameters.values), seed=self.seed, stepNs=self.clock.step_ns,
+                       count=len(batch), index=index) for index, e in enumerate(batch, start=1)]
+        check_arm_batch(frames)  # ST-2 (R-1): the hub learns from count and index that arming is complete
+        for frame in frames:
+            self.channel.send(**frame)
         self._arm_sent = True
+
+    def _ack(self, entry: SimEntry, phase: str, step: int, outcome: str) -> None:
+        """Send a hold ``ack``; the next hub frame must be the matching ``resumed`` (ST-2, M2)."""
+
+        seq = self.channel.send("ack", entry=entry.entry_id, phase=phase, step=step, outcome=outcome)
+        self._resume = (entry.entry_id, phase, step, seq)
+
+    def _hub_eof(self) -> None:
+        """The hub closed its end: benign once every entry is final and nothing is pending (ST-2, M1)."""
+
+        if self.hub_closed is not None or self.run_failed:
+            return
+        pending = [s.entry.entry_id for s in self._ordered() if s.final is None]
+        if pending or self._resume is not None:
+            what = f"entry {pending[0]}" if pending else f"resumed for ack {self._resume[3]}"
+            return self._protocol(f"the hub closed the channel with {what} pending")
+        self.hub_closed = {"event": "hub-closed", "simulatorStep": self._step, "hostNs": self._host_ns()}
+        first = next(iter(self._states.values()), None)  # the first entry in listing order
+        if first is not None:
+            self._record(first, "outcome", "hub-closed", **self.hub_closed)
+        return None
+
+    def _poll(self) -> None:
+        for frame in self.channel.receive():
+            self._handle(frame)
+            if self.run_failed:
+                return
+        if self.channel.peer_closed:
+            self._hub_eof()
 
     def _pending_point(self, state: _State) -> int | None:
         """Return the next step at which the hub must report for ``state``, or ``None``."""
@@ -527,10 +581,21 @@ class SimTimeFaultScheduler:
 
     def _handle(self, frame: dict[str, Any]) -> None:
         kind = frame["kind"]
+        if self._resume is not None:  # ST-2 (M2): the hub must confirm it read the ack before going on
+            if kind != "resumed" or (frame["entry"], frame["phase"], frame["step"], frame["ackSeq"]) != self._resume:
+                return self._protocol(f"hub sent {kind} before resumed for ack {self._resume[3]}")
+            self._resume = None
+            return None
+        if kind == "resumed":
+            return self._protocol("resumed with no hold ack pending")
         if "step" in frame:
             if frame["simNs"] != frame["step"] * self.clock.step_ns or frame["step"] < self._step:
                 return self._protocol("hub clock is off the step grid or went back")
             self._step = frame["step"]
+            # ST-2 (M3): ``armed`` precedes any step at or after the entry's onset (replaces finding 2's R9 rule)
+            for other in self._ordered():
+                if not other.armed and other.final is None and self._step >= other.entry.onset_step:
+                    return self._protocol(f"hub reached step {other.entry.onset_step} of unarmed {other.entry.entry_id}")
         state = self._states.get(frame.get("entry")) if "entry" in frame else None
         if "entry" in frame and state is None:
             return self._protocol("unknown entry")
@@ -539,8 +604,6 @@ class SimTimeFaultScheduler:
                 return self._protocol("armed out of order")
             state.armed = True
             return None
-        if not all(s.armed or s.final is not None for s in self._states.values()):
-            return self._protocol("hub report before every entry was armed")
         # every other report: the hub may not pass a pending point of another entry
         for other in self._states.values():
             point = self._pending_point(other)
@@ -562,10 +625,10 @@ class SimTimeFaultScheduler:
                 if outcome.ok:
                     state.applied = True
                     self._record(state, "apply", APPLIED, **self._clock(frame), mode="step-hold")
-                    self.channel.send("ack", entry=entry.entry_id, phase="apply", step=frame["step"], outcome="applied")
+                    self._ack(entry, "apply", frame["step"], "applied")
                 else:
                     self._record(state, "apply", "apply-failed", outcome.diagnostic, **self._clock(frame))
-                    self.channel.send("ack", entry=entry.entry_id, phase="apply", step=frame["step"], outcome="refused")
+                    self._ack(entry, "apply", frame["step"], "refused")
                     self._finalize(state, FAILED_TO_APPLY, outcome.diagnostic)
                     self._fail(state, f"fault {entry.fault_id} failed to apply")
             else:
@@ -573,11 +636,11 @@ class SimTimeFaultScheduler:
                 if outcome.ok:
                     state.cleared = True
                     self._record(state, "clear", CLEARED, **self._clock(frame), mode="step-hold")
-                    self.channel.send("ack", entry=entry.entry_id, phase="clear", step=frame["step"], outcome="cleared")
+                    self._ack(entry, "clear", frame["step"], "cleared")
                     self._finalize(state, CLEARED)
                 else:
                     self._record(state, "clear", "clear-failed", outcome.diagnostic, **self._clock(frame))
-                    self.channel.send("ack", entry=entry.entry_id, phase="clear", step=frame["step"], outcome="refused")
+                    self._ack(entry, "clear", frame["step"], "refused")
                     self.blocked_targets.add((entry.target_collection, entry.target_element))
                     self.incomplete = True
                     self._finalize(state, INCOMPLETE_CLEARING, outcome.diagnostic)
@@ -616,10 +679,7 @@ class SimTimeFaultScheduler:
                 if not self._source_live() or not self.channel.connected:
                     return self.decisions[before:]
                 self._arm()
-            for frame in self.channel.receive():
-                self._handle(frame)
-                if self.run_failed:
-                    break
+            self._poll()
         except FaultError as error:
             self._protocol(error.code if error.code != PROTOCOL else str(error))
         if self.run_failed:
@@ -637,7 +697,7 @@ class SimTimeFaultScheduler:
                     if outcome.ok:
                         state.cleared = True
                         self._record(state, "clear", CLEARED, reason=reason)
-                        diagnostic = "XVERSE-FAULT-SIMTIME-NOT-REACHED" if never == "XVERSE-FAULT-NEVER-DUE" else never
+                        diagnostic = "XVERSE-FAULT-SIMTIME-NOT-REACHED" if never != "XVERSE-FAULT-CANCELLED" else never
                         self._finalize(state, CANCELLED, diagnostic, reason=reason)
                     else:
                         self._record(state, "clear", "clear-failed", outcome.diagnostic, reason=reason)
@@ -668,11 +728,24 @@ class SimTimeFaultScheduler:
         self._tick = int(tick)
         if not self.run_failed and not self.channel.closed and self._arm_sent:
             try:
-                for frame in self.channel.receive():
-                    self._handle(frame)
+                self._poll()
             except FaultError as error:
-                self._protocol(error.code)
-        self._end("run-finished", never="XVERSE-FAULT-NEVER-DUE")
+                self._protocol(error.code if error.code != PROTOCOL else str(error))
+        if not self.run_failed:  # ST-2 (M3): structural reachability, no numeric bound
+            for state in self._ordered():
+                if state.final is not None:
+                    continue
+                if not state.armed:
+                    self._protocol(f"{state.entry.entry_id} was never armed")
+                elif not state.applied and self._step >= state.entry.onset_step:
+                    self._protocol(f"{state.entry.entry_id} not applied although the hub reported step {self._step}")
+        if self.run_failed:
+            self._end("run-failed", never="XVERSE-FAULT-CANCELLED")
+        else:
+            unreached = [s for s in self._states.values() if s.final is None and not s.applied]
+            self._end("run-finished", never="XVERSE-FAULT-SIMTIME-NOT-REACHED")
+            if unreached:  # the treatment never happened: the run is incomplete
+                self.incomplete = True
         if any(state.final not in FINAL_OUTCOMES for state in self._states.values()):
             self.incomplete = True
         return {entry_id: state.final or CANCELLED for entry_id, state in self._states.items()}
@@ -683,6 +756,6 @@ class SimTimeFaultScheduler:
 
 
 __all__ = [
-    "HOLD", "RELAY", "HubChannel", "SimEntry", "SimTimeFaultScheduler", "SimulationClock", "decode_hub_frame",
-    "encode_frame", "resolve_simtime", "thaw_check",
+    "HOLD", "RELAY", "HubChannel", "SimEntry", "SimTimeFaultScheduler", "SimulationClock", "check_arm_batch",
+    "decode_hub_frame", "encode_frame", "resolve_simtime", "thaw_check",
 ]
