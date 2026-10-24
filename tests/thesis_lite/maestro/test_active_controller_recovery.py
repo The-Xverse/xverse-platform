@@ -249,3 +249,51 @@ def test_original_active_replacement_retains_owner_writer_and_productive_access(
                     diagnostic=result.diagnostic if result else None,terminal=result.terminal.public_data() if result and result.terminal else None,
                     closure={**asdict(closure),'terminal_reports':[r.public_data() for r in closure.terminal_reports]} if closure else None,
                     source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),full_increment17_complete=False),f,indent=2);f.write('\n')
+
+
+def test_readiness_window_records_survive_an_active_controller_recovery(request, monkeypatch):
+    """S1b review finding 26 LOW-1 (thesis DR-17, ADR-ML3-PROBE-0001 S1b-1 revision L1): ``_commit_controller_view``
+    replaces the dispatcher's facade with the recovery's new ProcessReadiness view, whose window list starts empty.
+    The records made before the recovery must still be in ``DispatchResult.readiness_windows``, in order, and in the
+    committed view. This stack declares ``running`` probes only, so each start of the original facade adds one
+    ``ReadinessWindow`` of the shape a marker start records (the carrying under test does not depend on how a
+    record was made); the recovery is the 'planned' one of the test above (after the third observation)."""
+    from xverse.maestro.providers import ReadinessWindow
+    stack, old, driver = scheduled(request, monkeypatch, restarts=True, transitive=True, controller_recovery=True)
+    broker, facade, client, work = stack
+    made, tickets = [], []
+    original_start = ProcessReadiness.start
+
+    def start(self, unit_id, descriptor, gate, deadline):
+        value = original_start(self, unit_id, descriptor, gate, deadline)
+        if self is facade:
+            record = ReadinessWindow(unit_id, descriptor.generation, 1.5, 1.5 - .25 * len(made),
+                                     broker.session._lease / 1e9, time.monotonic(), bool(made))
+            self._windows.append(record)
+            made.append(record)
+        return value
+
+    monkeypatch.setattr(ProcessReadiness, 'start', start)
+    statement = driver._statement
+
+    def after_statement(kind, step, **kw):
+        reply = statement(kind, step, **kw)
+        observed = sum(s.phase == 'observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+        if kind == 'step-complete' and step.phase == 'observe' and observed == 3 and not tickets:
+            tickets.append(driver.replace_controller(client.run_id, session_id='window-successor',
+                                                     deadline=HostDeadline(client.session, driver._active_end)))
+        return reply
+
+    monkeypatch.setattr(driver, '_statement', after_statement)
+    result = run(driver)
+    assert len(tickets) == 1, result.diagnostic
+    outcome = driver.controller_recovery_result(tickets[0])
+    assert outcome is not None and outcome.disposition == 'completed' and outcome.ordinary_reconciled, outcome
+    assert result.execution_succeeded and result.terminal_recorded, result.diagnostic
+    assert driver.facade is not facade and driver.facade is driver._controller._view  # the view was committed
+    assert len(made) >= 2, made  # records made by the original facade before the recovery
+    assert result.readiness_windows[:len(made)] == tuple(made), (result.readiness_windows, made)
+    assert tuple(driver.facade._windows[:len(made)]) == tuple(made)
+    assert len(result.readiness_windows) == len(made)  # running-only view: no record added after the recovery
+    closure = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
+    assert closure.root_reaped and closure.cleanup_complete

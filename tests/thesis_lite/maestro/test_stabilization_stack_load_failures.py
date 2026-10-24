@@ -7,7 +7,10 @@ live W = 3.5 s at admission and caps an admitted window at run time, and RA4 (AD
 Extended per thesis DR-16 (S1b review finding 25): RA2 renews before a marker start step, RA5 adds the failure
 statement to the reserve (admission bound 2.75 - 2 x operation_seconds: 1.75 s in this fixture), each marker start
 records W, W', L and t0 (``ReadinessWindow``) and a cut window ends ``ML-PROBE-WINDOW-CUT``; the RB1 fail-closed
-side (finding 24 MEDIUM-3) is pinned in (B).
+side (finding 24 MEDIUM-3) is pinned in (B). Extended per thesis DR-17 (S1b review finding 27): the RB1 negatives
+assert that ``_fail()`` ran in the targeted call; RA2's generation-limited skip ends in a recorded cut; and a
+storage stall in the ``failure`` statement after a full native close times out at the fence cap (M1), so the
+fence still finds the root and the authority alive.
 
 (A) ``…-004408-freeze-vcu``: the start step of a ``nonce-marker`` unit is capped at the bootstrap lease
 (``dispatcher.py`` ``_end``: ``min(end, bootstrap._lease)``). Nothing renews that lease inside one step: the
@@ -144,10 +147,10 @@ def test_a_cancel_between_the_live_checks_is_not_a_storage_failure(runtime, monk
 def _fault_in_the_targeted_live(entry, monkeypatch, name, fault, *, cancel=True):
     """In the targeted call's ``validation`` ``_live`` (as above), at ``name`` (``check_child``: before the child
     check; ``wait_child``: before the final check), optionally cancel from another thread and then apply
-    ``fault(storage)``. Returns what ``_live`` raised in the targeted call and whether the latch was cancelled
-    at the fault."""
-    seen, armed, targeted, placed, raised = [], threading.local(), threading.local(), [], []
-    original_rpc, original_live = PersistenceClient._rpc, PersistenceClient._live
+    ``fault(storage)``. Returns what ``_live`` raised in the targeted call, whether the latch was cancelled
+    at the fault, and one entry per ``_fail()`` call made inside the targeted call (finding 26 LOW-5)."""
+    seen, armed, targeted, placed, raised, failed = [], threading.local(), threading.local(), [], [], []
+    original_rpc, original_live, original_fail = PersistenceClient._rpc, PersistenceClient._live, PersistenceClient._fail
 
     def rpc(self, kind, body, end, **kw):
         if kind == "schedule" and isinstance(body, dict) and body.get("kind") == "tick-complete":
@@ -165,6 +168,11 @@ def _fault_in_the_targeted_live(entry, monkeypatch, name, fault, *, cancel=True)
             if getattr(targeted, "value", False):
                 raised.append(error)
             raise
+
+    def fail(self):
+        if getattr(targeted, "value", False):
+            failed.append(self._term_sent)  # SIGTERM not yet sent when the targeted _fail() starts
+        return original_fail(self)
 
     original_hook = getattr(persistence_module, name)
 
@@ -184,8 +192,9 @@ def _fault_in_the_targeted_live(entry, monkeypatch, name, fault, *, cancel=True)
 
     monkeypatch.setattr(PersistenceClient, "_rpc", rpc)
     monkeypatch.setattr(PersistenceClient, "_live", live)
+    monkeypatch.setattr(PersistenceClient, "_fail", fail)
     monkeypatch.setattr(persistence_module, name, hook)
-    return raised, placed
+    return raised, placed, failed
 
 
 def _kill_the_storage_worker(storage):
@@ -222,9 +231,10 @@ def test_rb1_a_real_storage_fault_with_or_without_a_cancel_still_fails_closed(ru
     windows, a killed storage worker, ``_failed`` and a replaced socket identity are still a plain
     ``PersistenceError``, recorded as the RPC failure at ``validation``, with ``_fail()``; never
     ``PersistenceCancelled``. A root refusal without a cancel also still fails closed (the RB1 re-check needs the
-    cancel)."""
+    cancel). Finding 27 (DR-17, LOW-5): ``_fail()`` ran inside the targeted call and sent SIGTERM, which none of the
+    faults creates (``failed-set`` sets ``_failed`` alone, so ``_failed`` by itself would prove nothing)."""
     entry, scope, work = runtime
-    raised, placed = _fault_in_the_targeted_live(entry, monkeypatch, name, fault, cancel=cancel)
+    raised, placed, failed = _fault_in_the_targeted_live(entry, monkeypatch, name, fault, cancel=cancel)
     result = entry.start(scope)
     assert placed == [cancel], "the targeted call was never reached"
     code, kind = expected
@@ -232,7 +242,8 @@ def test_rb1_a_real_storage_fault_with_or_without_a_cancel_still_fails_closed(ru
     assert len(raised) == 1 and type(raised[0]) is kind and str(raised[0]) == code, raised
     assert not isinstance(raised[0], PersistenceCancelled)
     assert failure is not None and (failure.diagnostic, failure.kind, failure.stage) == (code, "schedule", "validation")
-    assert entry._storage._failed
+    assert failed == [False], failed  # exactly one _fail() in the targeted call, before any SIGTERM
+    assert entry._storage._failed and entry._storage._term_sent  # the SIGTERM (an unreaped killed worker takes it too)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -485,3 +496,138 @@ def test_a_readiness_failure_cancel_that_takes_longer_than_the_lease_left_still_
     assert observed == dict(native_epoch_confirmed=True, issuer_dead=False, exchange_errors=[], persistence_failure=None,
                             cleanup_complete=True, workload_wait_unknown=False, writer_failed_or_closed=True), (
         facts, entry._storage.last_writer_state, result.closure.diagnostics, entry._session._root_result)
+
+
+class _GenerationView:
+    """The run bootstrap as RA2 reads it, with ``_generation`` lowered so that ``generation - 2 s`` equals the
+    current ``max(leases)``: the generation term of ``min(now + 5 s, generation - 2 s)`` binds and the renewal is
+    skipped. Every other attribute is the real session's."""
+
+    def __init__(self, session, generation_ns):
+        self._session, self._generation = session, generation_ns
+
+    def __getattr__(self, name):
+        return getattr(self._session, name)
+
+
+def test_a_generation_limited_marker_start_is_not_renewed_and_its_cut_is_recorded(long_window_runtime, monkeypatch):
+    """Finding 26 LOW-5 (DR-17): RA2's skip branch. The sink's start step is placed as in the renewed test (below its
+    need), but RA2 sees ``generation - 2 s`` at ``max(leases)``, as a start step near the generation end would: no
+    renewal is possible, so RA2 renews nothing and the run-time cap spends W' < W. Correct: no renewal, a record
+    with ``cut: true`` and W' = max(0, L - reserve - t0), and ML-PROBE-WINDOW-CUT (deadline-exceeded) in the dispatch
+    result and in Argus. The dispatcher's view is changed only for RA2's decision; no request or reply is altered,
+    and the native generation is unchanged. The renewed test is the control (same placement, RA2 renews)."""
+    if _refused(long_window_runtime):
+        return
+    entry, scope, work = long_window_runtime
+    facts = _instrument(entry, monkeypatch)
+    original = FiniteDispatcher._renew_before_marker_start
+    decisions = []
+
+    def generation_limited(self, unit):
+        if "sink" not in unit or decisions:
+            return original(self, unit)
+        leases = [self.bootstrap._lease] + [gate.lease_ns for other, gate in self.gates.items()
+                                            if other not in self.teardown._stopped]
+        real, before = self.bootstrap, self.lease_renewals
+        self.bootstrap = _GenerationView(real, max(leases) + 2_000_000_000)
+        try:
+            original(self, unit)
+        finally:
+            self.bootstrap = real
+        decisions.append(dict(renewed=self.lease_renewals != before, left=min(leases) / 1e9 - time.monotonic()))
+
+    monkeypatch.setattr(FiniteDispatcher, "_renew_before_marker_start", generation_limited)
+    result = entry.start(scope)
+    assert facts["placed"] is not None and 2.0 < facts["placed"] <= PLACED_LEASE_SECONDS + 0.05, facts
+    assert decisions and not decisions[0]["renewed"], decisions
+    assert decisions[0]["left"] < ADMITTED_WINDOW_SECONDS + RESERVE_SECONDS + OPERATION_SECONDS, decisions  # needed
+    assert result.dispatch.lease_renewals == facts["renewals_before_start"], facts
+    window = _sink_window(entry, result)
+    assert window.cut and window.window_seconds < window.declared_seconds == ADMITTED_WINDOW_SECONDS, window
+    assert window.window_seconds == pytest.approx(
+        max(0.0, window.lease_end - RESERVE_SECONDS - window.began), abs=1e-9), window
+    assert result.dispatch.diagnostic == "ML-PROBE-WINDOW-CUT", result
+    assert [(e["diagnosticCode"], e["cause"]) for e in _failure_events(work)] == [
+        ("ML-PROBE-WINDOW-CUT", "deadline-exceeded")]
+
+
+@pytest.mark.parametrize("capped", [True, False], ids=["fence-cap", "control-uncapped"])
+def test_a_stalled_failure_statement_after_the_full_native_close_still_leaves_the_fence(long_window_runtime,
+                                                                                       monkeypatch, capped):
+    """Finding 26 MEDIUM-1, DR-17 option (b) (M1): the M2 placement (RA2 disabled, cut window, the K.CANCEL reply
+    read after the full 2.0 s native close), and then a storage stall during the dispatcher's ``failure``
+    statement: the storage worker is stopped (SIGSTOP) for that RPC, as a worker blocked on a stalled device would
+    be, and continued after it. Correct (``fence-cap``): the statement's deadline is the fence cap, root lease
+    - 0.25 s (the close is already spent), below its per-unit deadline, which lies past the lease; it times out
+    there as ``ML-PERSIST-TIMEOUT`` at ``receive``, recorded as the run's persistence failure (fail-closed), and the
+    terminal fence then finds the root and the authority alive with lease left. ``control-uncapped`` removes the
+    cap: the statement then waits for its per-unit deadline past the root lease, and the fence does not find the
+    root alive inside its lease (the finding 21 (A) signature), so the test discriminates."""
+    if _refused(long_window_runtime):
+        return
+    entry, scope, work = long_window_runtime
+    _record_exchanges(monkeypatch)
+    delays = _delay_cancel_reply(monkeypatch, NATIVE_CANCEL_CLOSE_SECONDS)
+    facts = _instrument(entry, monkeypatch, placed=PLACED_CUT_LEASE_SECONDS, renew=False)
+    if not capped:
+        monkeypatch.setattr(FiniteDispatcher, "_fence_cap", lambda self, end: end)
+    stalled, fence = [], []
+    original_rpc = PersistenceClient._rpc
+
+    def rpc(self, kind, body, end, **kw):
+        if not (kind == "schedule" and isinstance(body, dict) and body.get("kind") == "failure") or stalled:
+            return original_rpc(self, kind, body, end, **kw)
+        now, root = time.monotonic(), entry._broker.session._lease / 1e9
+        record = dict(sent=now, deadline=end.monotonic_seconds, root_lease=root,
+                      per_unit=now + entry._driver.plan.per_unit_seconds, error=None)
+        stalled.append(record)
+        signal.pidfd_send_signal(self._pidfd, signal.SIGSTOP)
+        try:
+            return original_rpc(self, kind, body, end, **kw)
+        except Exception as error:
+            record["error"] = str(error)
+            raise
+        finally:
+            try:
+                signal.pidfd_send_signal(self._pidfd, signal.SIGCONT)
+            except ProcessLookupError:
+                pass
+
+    original_terminal = RunBroker.service_terminal
+
+    def service_terminal(self, deadline):
+        if not fence:
+            root, authority = self.session, self.connection.child
+            fence.append(dict(
+                lease_left=root._lease / 1e9 - time.monotonic(),
+                root_alive=root._root_result is None and not select.select(
+                    [root._pidfd_capability.fileno()], [], [], 0)[0],
+                authority_alive=authority._result is None and not select.select(
+                    [authority._capability.fileno()], [], [], 0)[0]))
+        return original_terminal(self, deadline)
+
+    monkeypatch.setattr(PersistenceClient, "_rpc", rpc)
+    monkeypatch.setattr(RunBroker, "service_terminal", service_terminal)
+    result = entry.start(scope)
+    window = _sink_window(entry, result)
+    assert window.cut and 0 < window.window_seconds < ADMITTED_WINDOW_SECONDS, window
+    assert len(delays) == 1 and delays[0] >= NATIVE_CANCEL_CLOSE_SECONDS, delays
+    assert len(stalled) == 1, stalled
+    statement = stalled[0]
+    assert statement["per_unit"] > statement["root_lease"], statement  # uncapped, the statement outlives the root
+    assert result.dispatch.diagnostic == "ML-PROBE-WINDOW-CUT", result
+    cancelled = entry._broker._cancel_result
+    assert cancelled.native_epoch_confirmed and not cancelled.issuer_dead, cancelled
+    if capped:
+        assert statement["deadline"] == pytest.approx(statement["root_lease"] - 0.25, abs=1e-6), statement
+        assert statement["error"] == "ML-PERSIST-TIMEOUT", statement
+        failure = result.persistence_failure
+        assert failure is not None and (failure.diagnostic, failure.kind, failure.stage) == (
+            "ML-PERSIST-TIMEOUT", "schedule", "receive"), failure
+        assert entry._storage._failed
+        assert fence and fence[0]["root_alive"] and fence[0]["authority_alive"] and fence[0]["lease_left"] > 0, (
+            fence, statement, window)
+    else:
+        assert statement["deadline"] > statement["root_lease"], statement
+        assert not (fence and fence[0]["root_alive"] and fence[0]["lease_left"] > 0), (fence, statement)

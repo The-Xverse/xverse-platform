@@ -184,7 +184,8 @@ The directory fd is pinned. FIFOs, symlinks and oversized files are rejected wit
 - `ProcessObservation.marker_ready` comes from `flags & 2048`.
 - `start()` queries with `readiness=True`: ready means running and, for `nonce-marker`, the marker is ready.
 - Attempts are spaced at `t0 + k·W/A` within `W = min(policy, observe timeout)`.
-- Otherwise the result is `ML-PROBE-NOT-READY`.
+- Otherwise the result is `ML-PROBE-NOT-READY`, or `ML-PROBE-WINDOW-CUT` when the window spent was cut below the
+  declared W (ADR-ML3-PROBE-0001 S1b-1 revisions RA1 and DR-16; the attempts are then spaced over W').
 - Health stays liveness-only (`probe_id = "running"`).
 
 **Evidence and coverage.**
