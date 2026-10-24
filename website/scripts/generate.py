@@ -150,6 +150,15 @@ def input_hashes(paths: set[Path], root: Path) -> dict[str, str]:
     return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(paths)}
 
 
+def normalize_cpp_language(text: str) -> str:
+    """Use the site's English index across Doxygen versions (en-US vs no lang)."""
+    def opening_tag(match: re.Match) -> str:
+        attributes = re.sub(r'''\s+lang=(["'])[^"']*\1''', "", match.group(1), flags=re.IGNORECASE)
+        return f'<html{attributes} lang="en">'
+
+    return re.sub(r"<html\b([^>]*)>", opening_tag, text, count=1, flags=re.IGNORECASE)
+
+
 def command(args: list[str], *, expected: int = 0, env: dict | None = None) -> str:
     completed = subprocess.run(args, cwd=ROOT, env=env, capture_output=True, text=True, check=False)
     output = completed.stdout + completed.stderr
@@ -286,8 +295,7 @@ def generate() -> None:
         source(path)
     for page in (PUBLIC / "reference/cpp").glob("*.html"):
         text = page.read_text(encoding="utf-8")
-        if not re.search(r'<html[^>]+\blang=', text):
-            text = re.sub(r'<html(?=\s|>)', '<html lang="en"', text, count=1)
+        text = normalize_cpp_language(text)
         # Doxygen 1.9.x can emit a Classes navigation link for hidden nested types.
         if 'id="nested-classes"' not in text and 'name="nested-classes"' not in text:
             text = text.replace('<a href="#nested-classes">Classes</a> &#124;', '')

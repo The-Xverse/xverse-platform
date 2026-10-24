@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 import subprocess
 import sys
+import json
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
@@ -110,6 +111,23 @@ class ReferenceContracts(unittest.TestCase):
             self.assertIn("Updated description", html)
             self.assertIn("new_parameter", html)
             self.assertNotIn("Original description", html)
+
+    def test_doxygen_language_variants_share_english_index(self):
+        for language in ["", ' lang="en-US"', " lang='en-US'", ' lang="en"']:
+            with self.subTest(language=language):
+                source = f'<html xmlns="http://www.w3.org/1999/xhtml"{language}><body>Reference</body></html>'
+                normalized = generate.normalize_cpp_language(source)
+                self.assertIn('xmlns="http://www.w3.org/1999/xhtml"', normalized)
+                self.assertEqual(normalized.count('lang="en"'), 1)
+                self.assertNotIn("en-US", normalized)
+
+    def test_split_language_search_index_fails_publication(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "pagefind").mkdir()
+            (root / "pagefind/pagefind-entry.json").write_text(json.dumps({"languages": {"en": {}, "en-us": {}}}))
+            with self.assertRaisesRegex(ValueError, "Shared search must contain one English index"):
+                checker.check(root, "/")
 
 
 if __name__ == "__main__":

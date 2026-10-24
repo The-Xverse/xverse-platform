@@ -38,6 +38,11 @@ def check(dist: Path, base: str) -> dict:
     for path in dist.rglob('*'):
         if path.name in {'.doctrees', '.buildinfo', '__pycache__', '.venv'} or path.suffix in {'.pickle', '.doctree', '.pyc'}:
             errors.append(f"Build cache in publication: {path.relative_to(dist)}")
+    search_entry = dist / "pagefind/pagefind-entry.json"
+    if search_entry.is_file():
+        languages = set(json.loads(search_entry.read_text(encoding="utf-8")).get("languages", {}))
+        if languages != {"en"}:
+            errors.append(f"Shared search must contain one English index; found: {sorted(languages)}")
     for page in sorted(dist.rglob("*.html")):
         text = page.read_text(encoding="utf-8")
         if re.search(r"/home/[A-Za-z0-9_-]+/|/media/[A-Za-z0-9_-]+/|distributed_safety_critical_thesis", text):
@@ -68,7 +73,7 @@ def check(dist: Path, base: str) -> dict:
                 if target_document and unquote(parts.fragment) not in target_document.ids:
                     errors.append(f"{relative}: missing anchor: {link}")
             checked += 1
-    required = ["index.html", "docs/index.html", "docs/getting-started/first-system/index.html", "reference/python/index.html", "reference/cpp/index.html", "publication-manifest.json", "pagefind/pagefind.js"]
+    required = ["index.html", "docs/index.html", "docs/getting-started/first-system/index.html", "reference/python/index.html", "reference/cpp/index.html", "publication-manifest.json", "pagefind/pagefind.js", "pagefind/pagefind-entry.json"]
     for filename in required:
         if not (dist / filename).is_file():
             errors.append(f"Missing required output: {filename}")
