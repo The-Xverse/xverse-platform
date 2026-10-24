@@ -148,3 +148,81 @@ scientific result. No CARLA and no live run is used; every size below is an offl
        - the Python refusal at the bound plus one byte;
        - both native builds accepting a role-3 input of exactly the bound and refusing one byte more;
        - a non-storage role input still refused above 65 536.
+
+2. **Implementation and installed-wheel verification of amendment C1 (written at 11:04:11 2026-10-24).**
+   - **Commits.**
+     - `cee23ae5a`: finding 1 and the offline builder.
+     - `21b057271`: the ADR amendment, committed before `src/` was touched.
+     - `bdfc20779`: the code and tests.
+   - **Change (10 source lines).**
+     - `bootstrap.py`: `MAX_PERSISTENCE_INPUT = 1 << 18`, which `BootstrapSession.persistence` now uses in
+       place of `65536`.
+     - `native/bootstrap.c`: `MAX_ROLE_INPUT 65536` and `MAX_STORAGE_INPUT 262144`. `birth()` seals
+       `fds[3]` at `role==3 ? MAX_STORAGE_INPUT : MAX_ROLE_INPUT`.
+     - Unchanged: the supervisor's own input (`initialize`, literal 65 536), `encode_bootstrap`, the launcher,
+       authority and controller bounds, `MAX_CONFIG`, `MAX_PACKET` and `runtime_admission`.
+     - Both native builds compile with `-Wall -Wextra -Werror -Wconversion -Wshadow`.
+   - **Tests.** `test_persistence_config_bound.py`, 11 cases:
+     - the named bound is equal on both sides, and the native file has one role-specific birth seal;
+     - the 6- and 7-unit Phase 8 stand-ins (h600, op 0.25 s) are each above 65 536 and within half the bound;
+     - the Python check refuses sizes 0 and bound + 1 with `ML-BOOT-PERSISTENCE`, with the sequence unchanged,
+       no slot issued and no cancel;
+     - the legacy and `RUN_BOOTSTRAP` supervisors each accept a role-3 input of exactly 262 144 B (born, not
+       activated, reaped by drain, and the helper sent nothing);
+     - each supervisor refuses 262 145 B: no child, cancelled, and the supervisor ends;
+     - role 5 is accepted at 65 536 and refused at 65 537.
+
+     `test_coverage_producers.py` now names the bound (lines 67 and 171).
+   - **Mutation controls (not committed).**
+     - With the native seal reverted to `MAX_ROLE_INPUT` for every role, both accept cases fail, and the legacy
+       fixture's teardown reports the unacknowledged birth.
+     - With `MAX_STORAGE_INPUT` for every role, the role-5 refusal case fails.
+     - The source was restored, and the rebuilt wheel is byte-identical (`d4db5d74…`).
+   - **Installed-wheel run.** One pytest process, wheel `d4db5d740fc1a45404b8612897eec15ad3322d1bb100ac0a318081b907ad52d2`
+     built from `bdfc20779`, load 5.1–5.6. **311 passed, 0 failed, 0 skipped** in 145 s
+     (`evidence/c1/related-suites-bdfc20779.log`).
+
+     | File | Passed |
+     | --- | --- |
+     | `test_persistence_config_bound` | 11 |
+     | `test_bootstrap` | 29 |
+     | `test_bootstrap_late_birth` | 4 |
+     | `test_bootstrap_launcher` | 19 |
+     | `test_bootstrap_launch_unknown` | 3 |
+     | `test_bootstrap_startup_ownership` | 5 |
+     | `test_persistence` | 29 |
+     | `test_composed_persistence_termination` | 6 |
+     | `test_native_storage_faults` | 6 |
+     | `test_run_bootstrap` | 9 |
+     | `test_run_bootstrap_values` | 10 |
+     | `test_boundary` | 52 |
+     | `test_offline_boundary` | 4 |
+     | `test_affa_native` | 17 |
+     | `test_stabilization_s1b_native` | 34 |
+     | `test_coverage_producers` | 33 |
+     | `test_runtime_admission` | 40 |
+
+     The full installed-wheel regression was not run here; the coordinator runs it.
+   - **Sizes on the candidate.** `evidence/c1/offline-sizes-c1-bdfc20779.json` gives the same figures as at rc.1,
+     within ±2 B of timestamp encoding. For `phase8` at h600: 57 257, 68 751, 80 280 and 91 959 B for 4 to 7
+     units. The encoding is unchanged, so only the bound moved. 7 units now fit with 170 185 B to spare.
+   - **Residuals (open, for the coordinator and the author).**
+     - **R1. Live evidence.** No run with 6 or 7 units has been made. Whether such a run fits B1, the 8 192 request
+       and event limits, the 90 s closure and the persistence frames that grow with the unit count (the 64 KiB
+       `MAX_PACKET` replies and inventories) is untested. It belongs to D-4a, D-4b and the first such run.
+     - **R2. Worker Init time.** The worker's Init (strict parse and XDL revalidation) at about 80–92 KB is
+       unmeasured. The whole offline encode took 0.8–1.0 s at 6–7 units, at load about 4.8. This is an
+       indicator, not the worker's time.
+     - **R3. The stand-in is not the WP-12 plan.** WP-12 adds flows, endpoints, sensors and the relay. The
+       stand-in does not model them, and the 2.85-times margin is sized for them, not measured against them.
+       D-4a must re-measure the WP-12 candidate plan.
+     - **R4. Run admission is still looser.** `runtime_admission.validate_run_admission` still checks the
+       persistence input against `MAX_CONFIG` (1 MiB). A configuration between 256 KiB and 1 MiB is therefore
+       refused at bootstrap (`ML-BOOT-PERSISTENCE`), not at admission. This is unchanged from rc.1, where the gap
+       began at 64 KiB, and it fails closed.
+     - **R5. Release record.** The rc.1 release record still states a 5-unit cap. The next release record must
+       state the new bound. For the Phase 8 shape the cap at rc.1 was really 4 units (finding 1).
+     - **R6. Test coupling.** The size cases import the bench builder from `tools/bench/persistence_scaling`, so
+       they run only from a checkout root, as the regression harness does.
+     - **R7. Still to do for the increment.** Thesis §J asks for a full run, DV12 and a CAPA step. None is done
+       here.
