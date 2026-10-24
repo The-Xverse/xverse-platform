@@ -837,3 +837,82 @@ decision S-D2, approved on 2026-10-23).
             its lease expired; −9 means revoked) would have decided (A) directly.
     - **Effect.** Both causes are understood and reproduced. The stack acceptance stays blocked until RB1 and one of
       RA1, RA2+RA1 or RA3 are decided and pass this file. RA4 and H1-H3 are recommended alongside.
+23. **DR-15 repairs RB1, RA1 and RA4 (written at 01:25:05 2026-10-24, load about 4.0-4.5).** ADR notes first
+    (`3504b06d4`, written at 01:13:21-01:13:50): ADR-ML3-PERSISTENCE-0001 "S1a-1 revision (RB1)",
+    ADR-ML3-PROBE-0001 "S1b-1 revision (RA1)" and ADR-ML3-AFFA-0001 "S1a-6 (RA4)". Implementation and tests
+    `399283515`. Installed wheel `4c664da7…` (built from the implementation; the earlier wheel `2efbd893…`
+    from `c769a2692` reproduced the 4 failures again at 01:12, load 4.0-4.5).
+    - **RB1** (`persistence.py` `_live`). The order of the failure checks is kept. If the ordinary
+      (`live=True`) child check is refused while the latch is cancelled and storage has not failed, the child
+      is re-checked with `live=False` (holder and capability only) and the checks continue. The final check
+      raises `PersistenceError` for `_failed` first, and `PersistenceCancelled` for a cancel on a kind that
+      neither allows one nor is in flight. Exit, pid/socket identity, holder failures and a refusal without a
+      cancel still fail closed.
+    - **RA1** (`providers.py`, `schedule_plan.py`).
+      - `CANCEL_CLOSE_RESERVE_SECONDS` = `NATIVE_CANCEL_CLOSE_SECONDS` (2 s) + 0.25 s = 2.25 s.
+      - Run time: for a marker unit (always a `RunUnitIssuer`, by `bind`), `start` reads at t0 L = min(bootstrap
+        root lease, authority lease) through the issuer's broker, and spaces the attempts over
+        `W' = max(0, min(W, L − 2.25 − t0, D − t0))` (`capped_readiness_window`).
+      - Admission: `ML-SCHEDULE-READINESS-WINDOW` when a marker unit's min(policy timeout, observe timeout)
+        exceeds `readiness_window_bound(operation_seconds)` = `LEASE_MAX_SECONDS` (5 s, native renewal maximum)
+        − 2.25 s − `operation_seconds` (one round trip for the pre-release work after a fresh lease). Live
+        (0.38 s): 2.37 s. Fixture (0.5 s): 2.25 s. No schedule version or digest change. `decode_schedule`
+        re-derives it.
+    - **RA4** (`run_broker.py`). `CANCEL_REQUEST_SECONDS` = 2 + `CANCEL_LOCK_WAIT_SECONDS` (0.5) +
+      `CANCEL_REPLY_MARGIN_SECONDS` (0.25) = 2.75 s, in `min(now + 2.75, generation − 2, limit)`. The S1a-3
+      wait and its 0.25 s reap reserve are unchanged. Cost: an unresponsive authority now holds an undeadlined
+      cancel up to 2.75 s instead of 1 s before the revoke.
+    - **Adjusted test expectations** (`test_stabilization_stack_load_failures.py`; the assertions on behaviour
+      are unchanged otherwise).
+      - The (A) fixture is now parametrized, `live-window` (W = 3.5 s) and `admitted-window` (W = 2.0 s, the
+        DR-15 H1 value, under the fixture bound of 2.25 s).
+      - `live-window`: both (A) tests now assert the admission refusal `ML-SCHEDULE-READINESS-WINDOW` instead of
+        returning silently on any `ScheduleError`.
+      - `admitted-window`: the start step is still placed at 2.8 s of lease left, without renewal. The tests
+        assert 3 queries, the last one at least 2.25 s before the lease, and more than 2 s of lease at the
+        readiness-failure cancel. The second test keeps its 1.5 s cancel delay and its full closure assertions.
+      - (B) gains `in-flight-child-check`: the same window in the first in-flight `_live` of the targeted call.
+        It failed without RB1 (checked on a wheel with the old `persistence.py`: 3 failed, the control passed),
+        so RB1 covers it. Same expected outcome as the other windows.
+    - **Unit tests added.**
+      - `test_schedule_plan.py::test_ra1_a_marker_window_that_cannot_fit_a_fresh_lease_is_refused`: the bound
+        values, refusal above it, the observe timeout bounding W, and running units unaffected.
+      - `test_stabilization_s1b_readiness.py::test_ra1_the_marker_window_is_capped_…`: the cap (lease-bound,
+        deadline-bound, never negative) and the last offset inside the reserve.
+      - `test_stabilization_s1b_start_failure.py::test_ra4_the_cancel_deadline_covers_…`: the K.CANCEL frame
+        deadline on a real broker stack.
+    - **Results** (installed wheel `4c664da7…`, one pytest process at a time, 01:19:40-01:24:23, load 3.97-4.51).
+      All passed, none failed or skipped:
+
+      | Suite | Passed | Time |
+      | --- | --- | --- |
+      | `test_stabilization_*` (all 9 files) | 468 | 101.0 s |
+      | `test_persistence*` | 29 | 28.1 s |
+      | `test_provider.py` | 35 | 20.6 s |
+      | `test_run_broker.py` | 11 | 12.5 s |
+      | `test_affa_*` | 124 | 12.4 s |
+      | `test_runtime_entry.py` | 8 | 8.6 s |
+      | `test_run_teardown.py` | 9 | 10.9 s |
+      | `test_teardown.py` | 27 | 24.8 s |
+      | `test_closure.py` | 31 | 23.5 s |
+      | `test_shared_closure.py` | 10 | 11.4 s |
+      | `test_schedule_plan.py` | 47 | 14.1 s |
+      | `test_dv05_dv06_bounds.py` | 7 | 12.0 s |
+
+      Total: 806. The reproduction file alone: 8 passed in 17.10 s at load 3.4-4.0.
+    - **Deviations and residuals.**
+      - **RB1 includes the in-flight variant** of the child-check window. It is not named in finding 22, but it is
+        the same race and the same fail-closed signature. It does not raise `PersistenceCancelled`, because the
+        request was already sent. It continues under the S1a-1 grace.
+      - **RA4 uses 2.75 s, not 2 s + margin alone.** The frame deadline is fixed before the S1a-3 lock wait, so the
+        0.5 s wait is part of the budget. This supersedes S1a-3's "inside the 1 s cancel end" cost statement.
+      - **The RA1 residual band (declared in the ADR note).** Renewal happens only at a statement boundary with at
+        most `renew_margin` left (1.9 s live). A marker start step dispatched with between that margin and about
+        2.25 s plus its pre-release work of lease left gets W' = 0: the attempts are back to back at t0, and less
+        than the full reserve is kept. RA2 would close the band. It is not in DR-15.
+      - **The cap is silent in the evidence.** W' is not recorded, which overlaps H3.
+      - **The live S1c harness's W = 3.5 s is now refused at admission.** DR-15 H1 (W ≤ 2.37 s live) must land
+        before the next live run. H1-H3 are harness-side and not touched here.
+    - **Effect.** `test_stabilization_stack_load_failures.py` passes, so finding 21 is repaired at the platform
+      level. Stack acceptance still needs an independent review of `3504b06d4`..`399283515`, then the decisive
+      full installed-wheel run and DV12, then the S1c live re-run with H1.
