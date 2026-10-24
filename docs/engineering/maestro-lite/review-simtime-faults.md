@@ -394,3 +394,61 @@ and admission refuses while it is unknown.
      - **Proposed additions:**
        - **R12.** Channel lifetime at teardown (M1).
        - **R13.** Hold verification (M2).
+
+4. **Dispositions of finding 3, recorded before any repair (written at 15:43:13 2026-10-24).**
+   - **Basis.** Thesis `specs/002-assured-aeb/decisions.md`, rows "WP-10 #3 review dispositions" (15:38) and
+     "WP-10 #4 relay alignment" (15:42, R-1 and R-2). Both were decided by the coordinator under the author's
+     delegation of 2026-10-24 and are flagged for the author's review. This finding records them; it accepts no
+     run and no evidence.
+   - **Order.** This finding, then ADR amendment ST-2 (decisions 4, 5 and 7, residuals R12 and R13), then code,
+     then finding 5 (implementation and installed-wheel verification).
+   - **Repaired in this increment.**
+     - **M1, channel lifetime.** A hub end-of-file once every entry is final and no hold, report or `resumed` is
+       pending is a benign `hub-closed` event, recorded in the run's fault evidence. It is not a protocol failure.
+       An end-of-file with anything pending stays `XVERSE-FAULT-SIMTIME-PROTOCOL`. Sending `close` to a hub that
+       has already closed must not fail the run. A composed native test has the fake hub exit at its stop step, the
+       case the review reproduced at `simtime.py:370`, `:619` and `:671`.
+     - **M2, hold verification.** A new hub-to-Maestro frame `resumed`, with the closed keys `entry`, `phase`,
+       `step` and `ackSeq` (beside `v`, `kind` and `seq`). After every hold `ack` that Maestro sends, the next hub
+       frame must be `resumed`, echoing that ack's `seq` and the same entry, phase and step. Any other frame first
+       is a protocol failure. The reviewer's probes become tests: P1, `hold(apply, 30)` then `time(31)` and
+       `time(35)` with no `resumed`, is refused; P2, `hold(apply)` then `hold(clear)` back to back, is refused.
+     - **M3, structural reachability (no new numeric bound).**
+       - The hub must send `armed` for an entry before it reports any step at or after that entry's `onsetStep`,
+         else a protocol failure.
+       - At `finish`, an entry never armed, or not applied although the hub reported its onset step, is a protocol
+         failure.
+       - An entry whose onset step the hub never reached ends `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`) and
+         sets `incomplete=True`: the treatment never happened.
+       - `test_never_applied_entries_end_cancelled_never_due` (`test_simtime.py:422-425`), which pins the old
+         behaviour, is replaced.
+     - **R-1 (WP-10 #4), arming completeness.** The Maestro-to-hub `arm` frame gains two closed keys: `count`, the
+       number of entries in the arming batch (equal in every `arm` frame), and `index`, 1-based and rising by 1.
+       Tests cover a wrong count, an index gap and a duplicate.
+     - **L4, byte identity.** The lifecycle digests of tick-mode plans with faults, and of the fault-less plan, are
+       pinned as literals computed from base `b40acce49` (a clean export of the base, not the candidate).
+   - **Not repaired here; residuals and obligations of WP-10 #5 (wiring), recorded in the ADR.**
+     - **L1.** Before any live run, the peer is given a connected socketpair end at spawn, or its cgroup is
+       checked.
+     - **L2.** The caller derives `horizon_ns` from the scenario duration and checks it against the tick horizon.
+     - **L3.** The blueprints admission computes the thaw bound by the platform definition (decision 3).
+     - **R-2 (WP-10 #4).** The platform keeps one time domain per Maestro form. WP-10 #5 maps the blueprints
+       domain `carla-simulation` onto `experiment-time`.
+   - **Residuals adopted.** R12 (channel lifetime) and R13 (hold verification), as the review proposed.
+   - **Implementation reading, stated before code so that review can check it.**
+     - **R9 is superseded by M3.** Finding 2 required every entry to be armed before any other hub frame (R9). M3
+       states the rule per entry: `armed` must precede any step at or after that entry's `onsetStep`. Keeping R9
+       would make that rule vacuous, and would refuse a conforming hub that sends `time` frames while it arms. So
+       a `time` frame below every unarmed entry's onset is accepted. The hub now learns that arming is complete
+       from `count` and `index` (R-1).
+     - **`hub-closed` evidence.** It is one worker `fault` statement, phase `outcome`, outcome `hub-closed`, on the
+       chain of the first entry in listing order, after that entry's final outcome. The worker statement schema is
+       unchanged. In simulator-time mode an entry takes at most four statements (arbitration is refused there), so
+       the admitted budget of five per entry still covers this one extra statement.
+     - **Finish with a protocol failure.** If `finish` detects a protocol failure (M3), the remaining entries end
+       `cancelled` (`XVERSE-FAULT-CANCELLED`), and the dispatcher ends the run `ML-SCHEDULE-FAULT-CLOCK`, mapped
+       as `_advance_faults` maps it. Before this, `_finish_faults` checked only `incomplete`.
+     - **Unchanged.** A freeze that was applied, but whose clear step was not reached before `finish`, is still
+       thawed by Maestro and ends `cancelled` (`XVERSE-FAULT-SIMTIME-NOT-REACHED`) without `incomplete`: its onset
+       happened, and Maestro cleared it itself. A `resumed` still outstanding at `finish` or `cancel` is not
+       checked (R13).
