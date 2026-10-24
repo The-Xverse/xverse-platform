@@ -694,7 +694,7 @@ class _Assessment:
         rows=[];expectations=[]
         for t in self.ad['templates']:
             uid=t['unit'];gen=t['generation'];suffix=t['suffix'];key=(uid,gen)
-            applicable=True;status='missing';ids=[];diagnostic=None;window=None
+            applicable=True;status='missing';ids=[];diagnostic=None;window=None;discharged=False
             row=self.brows.get(key,{})
             if suffix=='integrity':
                 status='conflicting' if self.errors else 'satisfied' if self.events or self.broker_ok else 'unverifiable'
@@ -761,9 +761,14 @@ class _Assessment:
                     applicable=issued;events=self.events_for(suffix,*key)
                     status,ids=self.one(events,source=lambda e:self.source_ok(e,suffix,'outcome',{'stopped' if suffix=='stop' else 'cleaned'}))
                 elif suffix=='health':
-                    applicable,window=self.health_window(t,row,inactive)
+                    applicable,window,cut=self.health_window(t,row,inactive)
+                    sampled=lambda e:self.source_ok(e,'observe','observation',{'running','not-ready'})
                     events=[e for e in self.events_for('health',*key) if window and window[0]<=e['clocks']['host']['value']<=window[1]]
-                    status,ids=self.one(events,many=True,source=lambda e:self.source_ok(e,'observe','observation',{'running','not-ready'}))
+                    status,ids=self.one(events,many=True,source=sampled)
+                    if applicable is None and cut is not None:
+                        # S1a-6 (DR-20): only a valid in-slot sample at or before the Stop request discharges the bracket.
+                        early=self.one([e for e in events if e['clocks']['host']['value']<=cut],many=True,source=sampled)
+                        if early[0]=='satisfied':applicable=True;discharged=True;status,ids=early
                 elif suffix=='emergency':
                     dispositions=self.events_for('disposition',uid,scope='unit')
                     applicable=False if inactive is True or issued is False else True if any(self.payloads[e['eventId']].get('cause') in ('issuer-loss','journal-failure','argus-failure') for e in dispositions) else False if self.terminal_proven(uid) else None
@@ -776,7 +781,7 @@ class _Assessment:
             output=dict(obligationId=t['id'],obligationClass=t['kind'],unitId=uid,generation=gen,operationId=t['id'],
                         required=required,applicable=applicable,status=status,evidenceIds=ids,diagnostic=diagnostic)
             rows.append(output)
-            expectations.append(dict(template=t,applicable=applicable,window=window))
+            expectations.append(dict(template=t,applicable=None if discharged else applicable,window=window))
         normal=[r for r in rows if r['obligationClass']!='emergency-fact' and r['required']]
         # Artifact status is separate from mandatory normal records.
         normal=[r for r in normal if r['obligationClass']!='artifact']
@@ -793,16 +798,19 @@ class _Assessment:
         return CoverageResult(data)
 
     def health_window(self,t,row,inactive):
-        if inactive is True or row.get('releaseObserved') is False:return False,None
-        if row.get('releaseObserved') is not True:return None,None
+        """Return (applicability, slot window, Stop-request cut); the cut is set only for the consistent bracket case."""
+        if inactive is True or row.get('releaseObserved') is False:return False,None,None
+        if row.get('releaseObserved') is not True:return None,None,None
         anchor=row.get('releaseAcknowledgedAt');begin=row.get('releaseRequestedAt')
-        if not _number(anchor) or not _number(begin) or not self.ad['start']<=begin<=anchor<=self.ad['end']:return None,None
+        if not _number(anchor) or not _number(begin) or not self.ad['start']<=begin<=anchor<=self.ad['end']:return None,None,None
         c=self.units[t['unit']]['cadence'];window=[anchor+(t['slot']-1)*c,anchor+t['slot']*c]
-        if window[0]>=window[1]:return None,window
-        if window[1]>self.ad['end']:return False,window
+        if window[0]>=window[1]:return None,window,None
+        if window[1]>self.ad['end']:return False,window,None
         stop_begin=row.get('stopRequestedAt');stop_end=row.get('stopAcknowledgedAt')
-        if not _number(stop_begin) or not _number(stop_end) or not anchor<=stop_begin<=stop_end<=self.terminal_end:return None,window
-        return (True if window[1]<=stop_begin else False if window[1]>stop_end else None),window
+        if not _number(stop_begin) or not _number(stop_end) or not anchor<=stop_begin<=stop_end<=self.terminal_end:return None,window,None
+        if window[1]<=stop_begin:return True,window,None
+        if window[1]>stop_end:return False,window,None
+        return None,window,stop_begin
 
     def artifact(self,path):
         expected=next(e for e in self.ad['artifacts'] if e['path']==path)

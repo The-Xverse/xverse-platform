@@ -30,7 +30,14 @@ instantiated in the original broker host domain from acknowledged Release and St
 call brackets. Slot N ends at Release-ACK + N*cadence. A valid health observation in
 that slot documents sampling, including a negative observation; it never promises
 continuous health. Due before Stop-request is applicable, after Stop-ACK is inactive,
-and inside an uncertain Stop bracket is unverifiable. Missing Release/Stop bounds
+and inside an uncertain Stop bracket is unverifiable. Discharged bracket (S1a-6, DR-20;
+written at 05:27:51 2026-10-24, before code): when every Release/Stop bound is present
+and consistent and Stop-request < slot end <= Stop-ACK, a valid source-checked health
+observation in [slot start, Stop-request] discharges the slot; it is then applicable
+and satisfied. Every other bracket case stays unverifiable (no such observation, a
+missing bound, an inconsistent bound); a bracket is never inferred as inactive. The
+expected-obligation entry keeps the fact-derived unknown applicability, so the
+expectations digest stays independent of arrived samples. Missing Release/Stop bounds
 cannot shorten the universe. Tick pauses and deleted samples never change slot count.
 The initial coverage-v5 broker lacks Stop brackets; the later runtime producer
 successor retains original Stop bounds and is verified separately. A false local closure/revocation flag is not a native
