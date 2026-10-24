@@ -212,7 +212,7 @@ def test_recovery_bound_rejects_invalid_or_unusable_caps(cap):
     with pytest.raises(ValueError):admitted(recovery_operation_seconds=cap)
 
 
-def _marker_prepared(observe_timeout):
+def _marker_prepared(observe_timeout, condition="nonce-marker"):
     """The fixture lifecycle as owned process units (as ``test_launcher.configured``, inert paths: admission is
     pure), with the sink's observe action declaring ``nonce-marker`` (v0.2 catalog payload)."""
     from xverse.maestro import ProviderDescriptor
@@ -233,7 +233,7 @@ def _marker_prepared(observe_timeout):
                               "inheritedHandles": "closed", "implicitShell": False}
         if binding["id"] == "sink-binding":
             observe = next(a for a in payload["actions"] if a["phase"] == "observe")
-            observe["condition"], observe["timeoutSeconds"] = "nonce-marker", observe_timeout
+            observe["condition"], observe["timeoutSeconds"] = condition, observe_timeout
     pin = ProviderDescriptor("maestro-process-v1", "process", "sha256:" + "0" * 64, "isolated-fixture")
     return prepared(docs, provider_descriptors=(pin,))
 
@@ -246,23 +246,30 @@ def _marker_admission(value, window, operation_seconds):
 
 
 def test_ra1_a_marker_window_that_cannot_fit_a_fresh_lease_is_refused():
-    """ADR-ML3-PROBE-0001 S1b-1 revision (RA1): W = min(policy timeout, observe timeout) must satisfy
-    W <= 5 - 2.25 - operation_seconds; 2.37 s with the live operation_seconds 0.38 s."""
+    """ADR-ML3-PROBE-0001 S1b-1 revisions RA1 and RA5: W = min(policy timeout, observe timeout) must satisfy
+    W <= 5 - (2 + operation_seconds + 0.25) - operation_seconds = 2.75 - 2 operation_seconds; 1.99 s with the live
+    operation_seconds 0.38 s, 1.75 s with the composed fixture's 0.5 s."""
     from xverse.maestro.providers import readiness_window_bound
     from xverse.maestro.schedule_plan import ScheduleError
 
-    assert readiness_window_bound(0.38) == pytest.approx(2.37)
-    assert readiness_window_bound(0.5) == pytest.approx(2.25)
+    assert readiness_window_bound(0.38) == pytest.approx(1.99)
+    assert readiness_window_bound(0.5) == pytest.approx(1.75)
     value = _marker_prepared(4)
-    assert _marker_admission(value, 2.36, 0.38).policies  # inside the bound
-    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
-        _marker_admission(value, 2.38, 0.38)
-    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
-        _marker_admission(value, 3.5, 0.38)  # the live harness's window
-    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
-        _marker_admission(value, 2.25, 0.5 + 1e-3)
+    assert _marker_admission(value, 1.98, 0.38).policies  # inside the bound
+    for window, operation in ((2.0, 0.38), (3.5, 0.38), (1.75, 0.5 + 1e-3)):  # DR-15 H1 2.0 s; the live 3.5 s
+        with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
+            _marker_admission(value, window, operation)
     # the observe action's timeout also bounds W, so a long policy timeout under a short observe one is admitted
-    assert _marker_admission(_marker_prepared(2.0), 5, 0.38).policies
+    assert _marker_admission(_marker_prepared(1.5), 5, 0.38).policies
     # running units keep their admission: the same 3.5 s policy timeout is accepted without a marker
     plain = prepared()
     assert _marker_admission(plain, 3.5, 0.38).policies
+
+
+def test_ra2_each_marker_unit_reserves_one_renewal_request():
+    """S1b-1 revision (RA2): one storage audit per marker start step's renewal is counted at admission; running-only
+    schedules are unchanged."""
+    marker = _marker_admission(_marker_prepared(1.5), 1.5, 0.38)
+    plain = _marker_admission(_marker_prepared(1.5, "running"), 1.5, 0.38)
+    assert marker.required_requests == plain.required_requests + 1  # the sink is the only marker unit
+    assert marker.required_events == plain.required_events

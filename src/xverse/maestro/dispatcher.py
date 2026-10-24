@@ -22,7 +22,8 @@ from .run_broker import RunUnitIssuer
 from .controller import ControllerSession
 from .owner import _Original, OwnerError, GateConnection
 from .persistence import PersistenceError
-from .providers import ProcessReadiness
+from .providers import LEASE_MAX_SECONDS, ProcessReadiness, readiness_lease_need
+from .probe_identity import RUNNING
 from .teardown import ReverseTeardown, TeardownResult
 from .service_time import DECISION_MARGIN, NORMAL_SHARE, RPC_MAX_SECONDS, RUN_MAX_SECONDS, SIZING_MARGIN, ServiceTimes, sized
 from .time import HostDeadline
@@ -88,6 +89,8 @@ class DispatchResult:
     lease_renewals: int
     collection: object = field(default=None, repr=False)
     terminal: object = field(default=None, repr=False)
+    # ADR-ML3-PROBE-0001 S1b-1 revision: W, W', L and t0 of each marker start step (public-safe).
+    readiness_windows: tuple = ()
     lifecycle_complete: bool = field(default=False, init=False)
     ready_for_execution: bool = field(default=False, init=False)
 
@@ -1362,10 +1365,29 @@ class FiniteDispatcher(_Original):
         if self._faults.incomplete:
             raise OwnerError("ML-SCHEDULE-FAULT-INCOMPLETE")
 
+    def _renew_before_marker_start(self, unit):
+        """ADR-ML3-PROBE-0001 S1b-1 revision (RA2): renew before a nonce-marker start step whose lease left is
+        below its need (W + cancel close reserve + pre-release allowance), within the native 5 s maximum and
+        generation - 2 s. If the lease cannot be extended the step goes ahead and the run-time cap records the
+        cut; a renewal failure keeps _renew_service's fail-closed handling."""
+        if not self._native or self.facade._probe(unit) == RUNNING:
+            return
+        need = readiness_lease_need(self.facade._readiness_window(unit), self.plan.operation_seconds)
+        now = time.monotonic()
+        leases = [self.bootstrap._lease / 1e9] + [
+            gate.lease_ns / 1e9 for other, gate in self.gates.items() if other not in self.teardown._stopped]
+        if min(leases) - now >= need:
+            return
+        if min(now + LEASE_MAX_SECONDS, self.bootstrap._generation / 1e9 - 2) <= max(leases):
+            return
+        self._renew_service(self._active_end)
+
     def _effect(self, step):
         self._service()
         unit = step.unit_id
         need = reserve = 0.0
+        if step.phase == "start":
+            self._renew_before_marker_start(unit)
         if step.phase in ("stop", "cleanup"):
             need = self.teardown._need(unit, step.phase)
             if step.duration_ticks == 0:
@@ -1807,6 +1829,7 @@ class FiniteDispatcher(_Original):
                 self.lease_renewals,
                 self._collection_receipt,
                 report_receipt,
+                tuple(self.facade._windows),
             )
             return self._result
         finally:

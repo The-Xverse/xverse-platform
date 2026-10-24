@@ -105,19 +105,24 @@ def test_attempt_offsets_reach_the_end_of_the_window_less_a_reserve():
 
 
 def test_ra1_the_marker_window_is_capped_to_keep_the_cancel_close_reserve_before_the_lease():
-    """ADR-ML3-PROBE-0001 S1b-1 revision (RA1): W' = max(0, min(W, L - 2.25 - t0, D - t0))."""
-    from xverse.maestro.providers import (CANCEL_CLOSE_RESERVE_SECONDS, NATIVE_CANCEL_CLOSE_SECONDS,
-                                          capped_readiness_window, readiness_offsets)
+    """ADR-ML3-PROBE-0001 S1b-1 revisions RA1 and RA5: W' = max(0, min(W, L - R - t0, D - t0)) with the reserve
+    R = 2 s native close + operation_seconds (the failure statement) + 0.25 s (reply and fence)."""
+    from xverse.maestro.providers import (NATIVE_CANCEL_CLOSE_SECONDS, cancel_close_reserve, capped_readiness_window,
+                                          readiness_lease_need, readiness_offsets)
 
-    assert NATIVE_CANCEL_CLOSE_SECONDS == 2.0 and CANCEL_CLOSE_RESERVE_SECONDS == 2.25
-    assert capped_readiness_window(1.5, 100.0, 105.0, 105.0) == 1.5  # a fresh lease leaves W unchanged
-    assert capped_readiness_window(3.5, 100.0, 105.0, 105.0) == pytest.approx(2.75)  # the lease binds
-    assert capped_readiness_window(3.5, 100.0, 102.6, 102.6) == pytest.approx(0.35)  # finding 22 (A) placement
-    assert capped_readiness_window(2.0, 100.0, 105.0, 101.0) == 1.0  # the step deadline binds
-    assert capped_readiness_window(2.0, 100.0, 102.0, 102.0) == 0.0  # no room: never negative
+    assert NATIVE_CANCEL_CLOSE_SECONDS == 2.0
+    assert cancel_close_reserve(0.0) == 2.25  # a facade used without a schedule has no failure statement
+    assert cancel_close_reserve(0.38) == pytest.approx(2.63) and cancel_close_reserve(0.5) == pytest.approx(2.75)
+    assert readiness_lease_need(1.99, 0.38) == pytest.approx(5.0)  # RA2's threshold is the admission bound
+    reserve = cancel_close_reserve(0.5)
+    assert capped_readiness_window(1.5, 100.0, 105.0, 105.0, reserve) == 1.5  # a fresh lease leaves W unchanged
+    assert capped_readiness_window(3.5, 100.0, 105.0, 105.0, reserve) == pytest.approx(2.25)  # the lease binds
+    assert capped_readiness_window(3.5, 100.0, 103.1, 103.1, reserve) == pytest.approx(0.35)
+    assert capped_readiness_window(2.0, 100.0, 105.0, 101.0, reserve) == 1.0  # the step deadline binds
+    assert capped_readiness_window(2.0, 100.0, 102.0, 102.0, reserve) == 0.0  # no room: never negative
     assert readiness_offsets(0.0, 3) == (0.0, 0.0, 0.0)  # every declared attempt is still made, at t0
-    capped = capped_readiness_window(3.5, 100.0, 102.6, 102.6)
-    assert 100.0 + readiness_offsets(capped, 3)[-1] <= 102.6 - CANCEL_CLOSE_RESERVE_SECONDS
+    capped = capped_readiness_window(3.5, 100.0, 103.1, 103.1, reserve)
+    assert 100.0 + readiness_offsets(capped, 3)[-1] <= 103.1 - reserve
 
 
 def test_marker_written_after_the_old_last_attempt_is_found_at_the_end_of_the_window(request, monkeypatch):

@@ -18,6 +18,7 @@ The tests place the cancel in the last second of the authority lease by waiting 
 alter a request or a reply.
 """
 
+import threading
 import time
 
 import pytest
@@ -59,6 +60,33 @@ def _record_exchanges(monkeypatch):
 
     monkeypatch.setattr(AuthorityConnection, "_exchange", exchange)
     return errors
+
+
+def _delay_cancel_reply(monkeypatch, seconds):
+    """Let the client read the K.CANCEL reply ``seconds`` after the send, as when the native close (its freeze)
+    takes that long; no request or reply is altered. Returns the measured delays."""
+    from xverse.maestro.affa_protocol import AuthorityKind as K
+
+    delays, state = [], threading.local()
+    original_exchange, original_receive = AuthorityConnection._exchange, AuthorityConnection._receive
+
+    def exchange(self, request, *, fds=()):
+        state.cancel = request.kind is K.CANCEL
+        try:
+            return original_exchange(self, request, fds=fds)
+        finally:
+            state.cancel = False
+
+    def receive(self, until):
+        if getattr(state, "cancel", False) and not delays:
+            began = time.monotonic()
+            time.sleep(seconds)
+            delays.append(time.monotonic() - began)
+        return original_receive(self, until)
+
+    monkeypatch.setattr(AuthorityConnection, "_exchange", exchange)
+    monkeypatch.setattr(AuthorityConnection, "_receive", receive)
+    return delays
 
 
 @pytest.mark.parametrize("remaining", [2.0, LEASE_REMAINING_SECONDS])
@@ -107,7 +135,12 @@ def test_a_never_ready_marker_unit_at_start_up_closes_its_evidence(marker_never_
     monkeypatch.setattr(ProcessReadiness, "cancel", cancel)
     result = entry.start(scope)
     cancelled = entry._broker._cancel_result
-    assert bool(placed) is placed_in_last_second and result.dispatch is not None and result.dispatch.diagnostic == "ML-PROBE-NOT-READY", result
+    # S1b review finding 25: this fixture has no action timeouts, so the start step ends at now + operation_seconds
+    # (0.5 s), which also holds the pre-release work; W = 0.5 s is then cut by the step deadline, which the window
+    # record now shows and the diagnostic names (it was silent before).
+    window = [w for w in result.dispatch.readiness_windows if "sink" in w.unit_id]
+    assert len(window) == 1 and window[0].cut and window[0].window_seconds < window[0].declared_seconds == 0.5, window
+    assert bool(placed) is placed_in_last_second and result.dispatch.diagnostic == "ML-PROBE-WINDOW-CUT", result
     failure = result.persistence_failure
     observed = dict(
         native_epoch_confirmed=cancelled.native_epoch_confirmed, issuer_dead=cancelled.issuer_dead,
@@ -143,3 +176,30 @@ def test_ra4_the_cancel_deadline_covers_the_native_close_bound_after_the_lock_wa
     assert result.native_epoch_confirmed and len(sent) == 1, (result, sent)
     cap = broker.session._generation - 2_000_000_000
     assert min(before + 2_750_000_000, cap) - 1_000 <= sent[0] <= min(after + 2_750_000_000, cap), (sent, before, cap)
+
+
+@pytest.mark.parametrize("request_seconds", [None, 1.0], ids=["ra4", "control-pre-ra4-deadline"])
+def test_ra4_a_cancel_whose_native_reply_takes_1_5_s_is_confirmed_not_revoked(broker_stack, monkeypatch,
+                                                                              request_seconds):
+    """Finding 24 LOW-4 (ADR-ML3-AFFA-0001 S1a-6, RA4), behavioural: the client reads the K.CANCEL reply 1.5 s after
+    the send, as when the native freeze takes that long (no privileges, no request or reply altered). With the
+    RA4 deadline (now + 2.75 s) the cancel is confirmed natively, with no exchange error and no revoke. The
+    control restores the pre-RA4 deadline (now + 1 s) and shows the test discriminates: the read times out and
+    the cancel is revoked."""
+    from xverse.maestro import run_broker
+
+    if request_seconds is not None:
+        monkeypatch.setattr(run_broker, "CANCEL_REQUEST_SECONDS", request_seconds)
+    broker, facade, _, _ = broker_stack
+    stage_all(broker_stack)
+    errors = _record_exchanges(monkeypatch)
+    delays = _delay_cancel_reply(monkeypatch, 1.5)
+    result = broker.cancel("ra4-delayed-reply")
+    assert len(delays) == 1 and delays[0] >= 1.5, delays
+    observed = dict(native_epoch_confirmed=result.native_epoch_confirmed, issuer_dead=result.issuer_dead,
+                    exchange_errors=[e[:2] for e in errors])
+    if request_seconds is None:
+        assert observed == dict(native_epoch_confirmed=True, issuer_dead=False, exchange_errors=[]), observed
+    else:
+        assert observed["native_epoch_confirmed"] is False and observed["exchange_errors"] == [
+            ("CANCEL", "ML-AFFA-TIMEOUT")], observed
