@@ -297,3 +297,51 @@ def test_readiness_window_records_survive_an_active_controller_recovery(request,
     assert len(result.readiness_windows) == len(made)  # running-only view: no record added after the recovery
     closure = RunClosure(broker.session, dispatcher=driver).close(deadline(6))
     assert closure.root_reaped and closure.cleanup_complete
+
+
+def test_readiness_window_records_are_not_duplicated_by_a_cleanup_only_recommit(request, monkeypatch):
+    """S1b review finding 28 LOW-1 (finding 29): a recovery whose ordinary commit succeeds but which then fails (the
+    post-commit ML-SCHEDULE-RECOVERY-INCOMPLETE check) re-commits the same view cleanup-only. The L1 carry must not
+    prepend the records a second time: one record per start of the original facade (reviewer probe of finding 28)."""
+    from xverse.maestro.dispatcher import FiniteDispatcher
+    from xverse.maestro.owner import OwnerError
+    from xverse.maestro.providers import ReadinessWindow
+    stack, old, driver = scheduled(request, monkeypatch, restarts=True, transitive=True, controller_recovery=True)
+    broker, facade, client, work = stack
+    made, tickets, commits = [], [], []
+    original_start = ProcessReadiness.start
+
+    def start(self, unit_id, descriptor, gate, deadline):
+        value = original_start(self, unit_id, descriptor, gate, deadline)
+        if self is facade:
+            record = ReadinessWindow(unit_id, descriptor.generation, 1.5, 1.5, broker.session._lease / 1e9,
+                                     time.monotonic(), False)
+            self._windows.append(record)
+            made.append(record)
+        return value
+
+    monkeypatch.setattr(ProcessReadiness, 'start', start)
+    original_commit = FiniteDispatcher._commit_controller_view
+
+    def commit(self, controller, ticket, *, cleanup_only=False):
+        original_commit(self, controller, ticket, cleanup_only=cleanup_only)
+        commits.append((cleanup_only, id(self.facade)))
+        if not cleanup_only:  # stands in for the post-commit ML-SCHEDULE-RECOVERY-INCOMPLETE check
+            raise OwnerError("ML-SCHEDULE-RECOVERY-INCOMPLETE")
+
+    monkeypatch.setattr(FiniteDispatcher, '_commit_controller_view', commit)
+    statement = driver._statement
+
+    def after_statement(kind, step, **kw):
+        reply = statement(kind, step, **kw)
+        observed = sum(s.phase == 'observe' and s.step_id in driver._outcomes for s in driver.prepared.steps)
+        if kind == 'step-complete' and step.phase == 'observe' and observed == 3 and not tickets:
+            tickets.append(driver.replace_controller(client.run_id, session_id='window-successor',
+                                                     deadline=HostDeadline(client.session, driver._active_end)))
+        return reply
+
+    monkeypatch.setattr(driver, '_statement', after_statement)
+    result = run(driver)
+    assert len(tickets) == 1 and len(made) >= 2, (tickets, made)
+    assert [c[0] for c in commits] == [False, True] and commits[0][1] == commits[1][1], commits  # same view twice
+    assert result.readiness_windows == tuple(made), (len(result.readiness_windows), len(made))

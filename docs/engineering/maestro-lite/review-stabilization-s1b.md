@@ -1697,3 +1697,9 @@ decision S-D2, approved on 2026-10-23).
     - **LOW-4, declared.** No test makes the cap bind on a fault statement or reaches the C = 2.0 branch, and the
       L1 test does not cover a second recovery. These are recorded as test-reach residuals.
     - **The decisive full run** is moved to the repair commit.
+    - **Result (03:05:13).**
+      - Wheel `a54844d3f07c5b3a…`.
+      - The new regression test passes. The reviewer's probe, which asserts the old doubled count, now fails on that
+        assertion: 4 records, not 8.
+      - The full related list (`dr17-suites.sh`, 21 groups) ran from 02:55:42 to 03:05:03 at load 3.9–5.1: 1075
+        passed, none failed or skipped.

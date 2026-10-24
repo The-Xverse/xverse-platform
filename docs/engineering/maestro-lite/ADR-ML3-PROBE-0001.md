@@ -135,7 +135,7 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
     0 there.
   - **A fence-first terminal service is rejected** (DR-16): it would change the order of the closure records on
     which S1a and S1b were accepted.
-  - **Residual (declared).** The `failure` statement's own deadline stays `min(work end, now + per_unit_seconds)`,
+  - **Residual (declared; superseded by the DR-17 M1 cap below, finding 27).** The `failure` statement's own deadline stays `min(work end, now + per_unit_seconds)`,
     so a storage RPC slower than `operation_seconds` (a stalled device) can still pass L. The fence's own deadline,
     `now + operation_seconds` capped at the lease, is covered only by the 0.25 s margin. Both remain fail-closed
     under the owner decision of finding 18 (LOW-2): the root ends at its lease and the closure is incomplete, not
@@ -216,7 +216,8 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
     the latch is cancelled with `persistence-uncertain` and the storage worker is sent SIGTERM. That fails closed.
     The later terminal statements and teardown records cannot reach the writer, and the closure is incomplete,
     not silent. The dispatcher then proceeds to `_close_restarts` and `_cleanup`. The fence (the cached broker
-    cancel, then `service_terminal`) runs with the root lease still alive and at least the 0.25 s margin left. The
+    cancel, then `service_terminal`) runs with the root lease still alive and up to the 0.25 s margin left, less the
+    time spent in `_fail()` and `_close_restarts` (finding 28, LOW-3). The
     failure statement's refusal or timeout is swallowed exactly as before, and the dispatch diagnostic keeps the
     original code.
   - **Other paths to the fence after a cancel (checked).**
@@ -236,12 +237,19 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
     - **Not capped (declared).**
       - Fault statements sent while the latch is not yet cancelled, before the dispatcher's own `owner.cancel`
         (for example after a fault crash), keep `_end()`. The cancel close that follows can then start with less
-        than 2 s of lease left. That outcome is fail-closed: an unconfirmed cancel is revoked.
+        than 2 s of lease left. This is not specific to these statements: on every non-readiness failure path,
+        `_service` keeps only `renew_margin` of lease (1.52–1.9 s live), less than 2.25 s. The outcome is the root
+        lease ending before the fence: fail-closed, the closure incomplete and not silent (finding 28, LOW-3).
+      - A cap still in the future but shorter than one round trip is still sent: F-08 has no estimate for the
+        once-per-run `failure` statement. It then times out and `_fail()` loses the later terminal records without
+        any storage stall. This is fail-closed and declared (finding 28, LOW-2).
       - The non-lazy profile has no root terminal fence in `_cleanup` and is unchanged.
   - **Residual (declared).** If the cancel itself overran the reserve, so that `L_root − 0.25 s` is already past
     when the `failure` statement would be sent, F-08 refuses the statement before the send. It is then not
     recorded as a persistence failure: the channel stays usable, and the run-terminal `failed` record follows
-    without the failure event. This band is the cancel exceeding its own bound, not a storage stall. The fence's
+    without the failure event. This band is a cancel longer than the 2.0 s close the reserve assumes, which includes
+    cancels within their own bounds (the 0.5 s busy wait, the 2.75 s request, the 1 s revoke), not a storage stall
+    (finding 28, LOW-3). The fence's
     own `service_terminal` deadline (`now + operation_seconds`, capped at the lease) is still covered only by the
     0.25 s margin.
 - **L1 (decision): the window records survive a controller recovery.** `_commit_controller_view` replaces the
@@ -249,7 +257,8 @@ be refined to the source-derived ordering/failure contract, not merely relaxed.
   swap, the dispatcher now carries the retired facade's records into the view, in order and ahead of any record
   the view makes. `DispatchResult.readiness_windows` therefore keeps one record per marker start step across a
   recovery, including a cleanup-only view. The records are immutable `ReadinessWindow` values. The retired view
-  makes no further start, so no record is lost or duplicated.
+  makes no further start, and a cleanup-only re-commit of the view already committed carries nothing (finding 28,
+  LOW-1), so no record is lost or duplicated.
 - **L2 (declared residual): W' = 0 for restarts and for a generation-limited start.** The cap guarantees the
   reserve R only from `t0 + W'`. When `L − t0 < R`, `max(0, …)` gives W' = 0. The three QUERYs then run back to
   back with less than R left, and the readiness-failure cancel can outlive the root lease.

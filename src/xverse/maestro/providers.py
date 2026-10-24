@@ -41,7 +41,7 @@ def readiness_offsets(window, attempts):
 
 def cancel_close_reserve(operation_seconds):
     """ADR-ML3-PROBE-0001 S1b-1 revisions RA1 and RA5: the lease a marker start step leaves after its last attempt,
-    for the native cancel close, the dispatcher's failure statement (one admitted statement budget) and the
+    for the native cancel close, the dispatcher's failure statement (a nominal one-RPC allowance; DR-17 caps its deadline) and the
     cancel's reply and terminal fence."""
     return NATIVE_CANCEL_CLOSE_SECONDS + operation_seconds + CANCEL_FENCE_MARGIN_SECONDS
 

@@ -792,7 +792,9 @@ class FiniteDispatcher(_Original):
         self._teardown_history += (old,)
         # ADR-ML3-PROBE-0001 S1b-1 revision (DR-17, L1): the retired facade's readiness-window records are carried
         # into the recovery view, in order, so DispatchResult.readiness_windows keeps one record per marker start.
-        view._windows[:0] = self.facade._windows
+        # A cleanup-only re-commit of the view already committed carries nothing (finding 28, LOW-1).
+        if view is not self.facade:
+            view._windows[:0] = self.facade._windows
         self.teardown, self.facade, self._controller = current, view, controller
         self._bindings = tuple(view._bindings.items())
         self._pins = (view, self.owner, self.client, self.bootstrap, self.prepared, self.plan)
