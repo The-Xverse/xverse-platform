@@ -474,7 +474,8 @@ def test_finish_thaws_a_freeze_whose_clear_step_was_not_reached():
     hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
     scheduler.advance(1)
     resume(hub, hub.frames()[0])
-    assert scheduler.finish(2) == {"fault:f-frz": "cancelled"} and not scheduler.incomplete and not scheduler.run_failed
+    # ST-2a (N1): a freeze cut short is a different treatment under PAIR-1, so the run is incomplete
+    assert scheduler.finish(2) == {"fault:f-frz": "cancelled"} and scheduler.incomplete and not scheduler.run_failed
     assert ops.calls == ["freeze", "thaw"]
     finals = {d[0]: d[3] for d in listener.seen if d[1] == "final"}
     assert finals == {"fault:f-frz": "XVERSE-FAULT-SIMTIME-NOT-REACHED"}
@@ -611,13 +612,60 @@ def test_hub_end_of_file_after_every_entry_is_final_is_benign_and_recorded():
     scheduler.advance(3)
     assert not scheduler.run_failed and scheduler.hub_closed["event"] == "hub-closed"
     assert scheduler.hub_closed["simulatorStep"] == 40
-    notes = [d for d in listener.seen if d[2] == "hub-closed"]
-    first = next(iter(scheduler.outcomes))  # the first entry in compiled listing order
-    assert first == "fault:f-loss"
-    assert [(d[0], d[1], d[3], d[4]["event"]) for d in notes] == [(first, "outcome", None, "hub-closed")]
+    assert not [d for d in listener.seen if d[1] in ("final", "outcome")]  # finals are emitted when the scheduler ends
     scheduler.advance(4)  # nothing is read after the end-of-file
     assert scheduler.finish(5) == {"fault:f-frz": "cleared", "fault:f-loss": "cleared"}
     assert not scheduler.run_failed and not scheduler.incomplete and scheduler.channel.closed  # no close to a closed hub
+    # ST-2a: hubClosed sits in the first listed entry's final detail; exactly one final per entry, no other outcome
+    first = next(iter(scheduler.outcomes))
+    assert first == "fault:f-loss"
+    finals = [(d[0], d[2], d[4].get("hubClosed")) for d in listener.seen if d[1] in ("final", "outcome")]
+    assert sorted(f[0] for f in finals) == ["fault:f-frz", "fault:f-loss"]
+    assert {f[0]: f[2] for f in finals} == {first: {"simulatorStep": 40, "hostNs": scheduler.hub_closed["hostNs"]},
+                                            "fault:f-frz": None}
+    assert all(f[1] == "cleared" for f in finals)
+
+
+def test_outstanding_resumed_at_finish_is_recorded_not_failed():
+    """ST-2a (N2): the clear hold is acked and the hub never confirms it; the run is not failed (R13)."""
+    scheduler, hub, ops, listener, _ = stack([FREEZE])
+    arm(scheduler, hub)
+    hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+    scheduler.advance(1)
+    resume(hub, hub.frames()[0])
+    hub.send("hold", entry="fault:f-frz", phase="clear", step=40, simNs=40 * STEP)
+    scheduler.advance(2)
+    ack = hub.frames()[0]
+    assert scheduler.finish(3) == {"fault:f-frz": "cleared"}
+    assert not scheduler.run_failed and not scheduler.incomplete
+    finals = [d for d in listener.seen if d[1] == "final"]
+    assert len(finals) == 1 and finals[0][4]["resumedOutstanding"] == {"phase": "clear", "step": 40, "ackSeq": ack["seq"]}
+
+
+def test_outstanding_resumed_at_cancel_is_recorded():
+    scheduler, hub, ops, listener, _ = stack([FREEZE, LOSS])
+    arm(scheduler, hub)
+    hub.send("applied", entry="fault:f-loss", step=20, simNs=20 * STEP, items=0)
+    hub.send("cleared", entry="fault:f-loss", step=25, simNs=25 * STEP, items=1)
+    hub.send("hold", entry="fault:f-frz", phase="apply", step=30, simNs=30 * STEP)
+    scheduler.advance(1)
+    ack = hub.frames()[0]
+    scheduler.cancel(2, "run-failed")
+    assert ops.calls == ["freeze", "thaw"] and scheduler.outcomes == {"fault:f-frz": "cancelled", "fault:f-loss": "cleared"}
+    finals = {d[0]: d[4] for d in listener.seen if d[1] == "final"}
+    assert finals["fault:f-frz"]["resumedOutstanding"] == {"phase": "apply", "step": 30, "ackSeq": ack["seq"]}
+    assert "resumedOutstanding" not in finals["fault:f-loss"] and len(finals) == 2
+
+
+def test_each_entry_has_exactly_one_final_even_when_the_scheduler_ends_twice():
+    scheduler, hub, ops, listener, _ = stack([FREEZE, LOSS])
+    arm(scheduler, hub)
+    hub.send("time", step=10, simNs=10 * STEP)
+    scheduler.advance(1)
+    scheduler.finish(2)
+    scheduler.cancel(3, "run-failed")  # the dispatcher cancels after an incomplete finish
+    finals = [d[0] for d in listener.seen if d[1] in ("final", "outcome")]
+    assert sorted(finals) == ["fault:f-frz", "fault:f-loss"]
 
 
 @pytest.mark.parametrize("pending", ["report", "resumed", "hold"])
@@ -764,14 +812,16 @@ def test_composed_native_run_step_hold_freeze_and_relay_loss(request, monkeypatc
     events = EvidenceStore.read_run(stack_[3].parent / "argus").records()
     payloads = [(r.get("extensions") or {}).get("io.xverse.faults") for r in events]
     payloads = [p for p in payloads if p]
-    closed = [p for p in payloads if p["outcome"] == "hub-closed"]
-    if exit_at_stop:  # ST-2 (M1): a benign end-of-file, recorded on the first entry's chain after its outcome
+    outcomes = [p for p in payloads if p["phase"] == "outcome"]
+    assert sorted(p["faultId"] for p in outcomes) == ["f-frz", "f-loss"]  # exactly one final outcome per entry (ST-2a)
+    assert {p["outcome"] for p in outcomes} == {"cleared"}
+    closed = {p["faultId"]: p["detail"]["hubClosed"] for p in outcomes if "hubClosed" in p["detail"]}
+    if exit_at_stop:  # ST-2 (M1), ST-2a: a benign end-of-file, in the first listed entry's final outcome detail
         assert driver._faults.hub_closed is not None and json.loads(remaining) == {}
         first = next(iter(driver._fault_entries.values())).fault_id  # the first entry in compiled listing order
-        assert [(p["faultId"], p["phase"], p["detail"]["event"], p["detail"]["simulatorStep"]) for p in closed] == [
-            (first, "outcome", "hub-closed", 40)]
+        assert list(closed) == [first] and closed[first]["simulatorStep"] == 40
     else:
-        assert driver._faults.hub_closed is None and closed == [] and json.loads(remaining)["kind"] == "close"
+        assert driver._faults.hub_closed is None and closed == {} and json.loads(remaining)["kind"] == "close"
     modes = {p["faultId"]: p["detail"]["boundaryMode"] for p in payloads if p["phase"] == "intent"}
     assert modes == {"f-frz": "step-hold", "f-loss": "remote-relay"}
     applied = {p["faultId"]: p["detail"]["simulatorStep"] for p in payloads if p["phase"] == "apply"}

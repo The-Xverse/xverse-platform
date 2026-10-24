@@ -139,7 +139,8 @@ class WorkerCollection:
 
 def _record_collect(evidence, claims, operation, metadata_digest, complete, deadline, check):
     from .evidence import retained_intent
-    previous = max([0] + [e['ingestionOrdinal'] for e in evidence.events.values()]
+    # ST-2a (ADR-ML3-SIMTIME-0001): a Phase 5 fault event may be the last one before collection
+    previous = max([0, getattr(evidence, 'fault_ordinal', 0)] + [e['ingestionOrdinal'] for e in evidence.events.values()]
                    + [retained_intent(c)['ingestionOrdinal'] for c in evidence._all_claims(claims)])
     fields = dict(eventId=operation + '-collect', producerId='maestro.collection17', eventKind='annotation',
         producerSequence=1, correlationId=evidence.permits._run_id, causationId=evidence.permits._run_id,

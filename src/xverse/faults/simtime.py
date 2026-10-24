@@ -430,6 +430,8 @@ class _State:
     armed: bool = False
     applied: bool = False
     cleared: bool = False
+    final_record: tuple[str | None, dict[str, Any]] | None = None  # (diagnostic, detail) of the deferred final
+    final_emitted: bool = False
 
 
 class SimTimeFaultScheduler:
@@ -489,9 +491,29 @@ class SimTimeFaultScheduler:
         return decision
 
     def _finalize(self, state: _State, outcome: str, diagnostic: str | None = None, **detail: Any) -> None:
+        """Decide the final outcome now; its one ``final`` statement is emitted when the scheduler ends (ST-2a)."""
+
         if state.final is None:
             state.final = outcome
-            self._record(state, "final", outcome, diagnostic, **detail)
+            state.final_record = (diagnostic, dict(detail))
+
+    def _emit_finals(self) -> None:
+        """Emit each decided final once, in compiled listing order, with ``hubClosed`` on the first entry and
+        ``resumedOutstanding`` on the entry whose hold ack is unconfirmed (ST-2a; a failed send is not retried)."""
+
+        first = next(iter(self._states.values()), None)
+        for state in self._states.values():
+            if state.final is None or state.final_emitted:
+                continue
+            diagnostic, detail = state.final_record or (None, {})
+            detail = dict(detail)
+            if state is first and self.hub_closed is not None:
+                detail["hubClosed"] = {"simulatorStep": self.hub_closed["simulatorStep"], "hostNs": self.hub_closed["hostNs"]}
+            if self._resume is not None and self._resume[0] == state.entry.entry_id:
+                _, phase, step, ack = self._resume
+                detail["resumedOutstanding"] = {"phase": phase, "step": step, "ackSeq": ack}
+            state.final_emitted = True
+            self._record(state, "final", state.final, diagnostic, **detail)
 
     def _fail(self, state: _State | None, diagnostic: str) -> None:
         if state is None or state.entry.parameters.on_apply_failure != "continue":
@@ -554,10 +576,8 @@ class SimTimeFaultScheduler:
         if pending or self._resume is not None:
             what = f"entry {pending[0]}" if pending else f"resumed for ack {self._resume[3]}"
             return self._protocol(f"the hub closed the channel with {what} pending")
+        # recorded in the first entry's final outcome detail when the scheduler ends (ST-2a)
         self.hub_closed = {"event": "hub-closed", "simulatorStep": self._step, "hostNs": self._host_ns()}
-        first = next(iter(self._states.values()), None)  # the first entry in listing order
-        if first is not None:
-            self._record(first, "outcome", "hub-closed", **self.hub_closed)
         return None
 
     def _poll(self) -> None:
@@ -708,11 +728,14 @@ class SimTimeFaultScheduler:
                     self._finalize(state, INCOMPLETE_CLEARING, "XVERSE-FAULT-SIMTIME-NOT-CLEARED", reason=reason)
             else:
                 self._finalize(state, CANCELLED, never, reason=reason)
-        for state in self._states.values():
-            boundary = self._boundaries.get((state.entry.target_collection, state.entry.target_element))
-            if boundary is not None and state.handle is not None:
-                boundary.release(state.handle)
-        self.channel.close(reason)
+        try:
+            self._emit_finals()
+        finally:
+            for state in self._states.values():
+                boundary = self._boundaries.get((state.entry.target_collection, state.entry.target_element))
+                if boundary is not None and state.handle is not None:
+                    boundary.release(state.handle)
+            self.channel.close(reason)
 
     def cancel(self, tick: int, reason: str = "cancelled", *, ended_by: str | None = None) -> list[Decision]:
         """Thaw active freezes, finalize every entry as cancelled, and close the channel."""
@@ -742,10 +765,10 @@ class SimTimeFaultScheduler:
         if self.run_failed:
             self._end("run-failed", never="XVERSE-FAULT-CANCELLED")
         else:
-            unreached = [s for s in self._states.values() if s.final is None and not s.applied]
-            self._end("run-finished", never="XVERSE-FAULT-SIMTIME-NOT-REACHED")
-            if unreached:  # the treatment never happened: the run is incomplete
+            # an unreached onset (no treatment) or a freeze cut short (a different treatment, N1): incomplete
+            if any(s.final is None for s in self._states.values()):
                 self.incomplete = True
+            self._end("run-finished", never="XVERSE-FAULT-SIMTIME-NOT-REACHED")
         if any(state.final not in FINAL_OUTCOMES for state in self._states.values()):
             self.incomplete = True
         return {entry_id: state.final or CANCELLED for entry_id, state in self._states.items()}
