@@ -46,15 +46,16 @@ def _health3_sample(f):
 
 
 def test_red_slot_due_inside_stop_bracket_with_in_slot_sample_is_satisfied(tmp_path):
-    """FAILS on ee91697a4 by design (finding 30). Live geometry: Stop requested 0.076 s
-    before the slot end and acknowledged 0.025 s after it; samples precede the request."""
+    """Failed on ee91697a4 by design (finding 30); passes after S1a-6 (DR-20). Live geometry:
+    Stop requested 0.076 s before the slot end and acknowledged 0.025 s after it; samples
+    precede the request."""
     f=Fixture(tmp_path)
     try:
         report=_assess(f,(SLOT3_END-0.05,SLOT3_END+0.05))
         health=row(report,'health.3',f.a,1)
-        # Current behaviour, recorded for the diagnosis: applicable None -> unverifiable.
+        # Before S1a-6 this was (None, 'unverifiable', 'Applicability is not established ...').
         observed=(health['applicable'],health['status'],health['diagnostic'])
-        # Expected after repair.
+        # Expected after the S1a-6 repair.
         assert health['applicable'] is True and health['status']=='satisfied',observed
         assert health['evidenceIds']==[_health3_sample(f)] and health['diagnostic'] is None
         assert row(report,'health.4',f.a,1)['status']=='not-applicable'
@@ -134,5 +135,79 @@ def test_control_recorded_live_brackets_classify_as_observed(name,slot,expected)
     r=dict(LIVE[name],releaseObserved=True);unit='u'
     stub=SimpleNamespace(units={unit:dict(cadence=5)},terminal_end=r['releaseAcknowledgedAt']+60,
         ad=dict(start=r['releaseRequestedAt']-10,end=r['releaseAcknowledgedAt']+60))
-    applicable,window=_Assessment.health_window(stub,dict(unit=unit,slot=slot),r,None)
+    applicable,window,cut=_Assessment.health_window(stub,dict(unit=unit,slot=slot),r,None)
     assert applicable is expected,(window,r['stopRequestedAt'],r['stopAcknowledgedAt'])
+    # S1a-6: the Stop-request cut is exposed only for the consistent bracket case.
+    assert cut==(r['stopRequestedAt'] if expected is None else None)
+
+
+# S1a-6 (DR-20) fail-closed controls added with the repair.
+
+def test_control_sample_after_stop_request_does_not_discharge(tmp_path):
+    """Stop request 2.95 s, ACK 3.25 s: slot 3 [2.2, 3.2] ends inside the bracket, and its
+    only sample (3.0 s) comes after the Stop request, so it stays unverifiable."""
+    f=Fixture(tmp_path)
+    try:
+        report=_assess(f,(2.95,3.25))
+        health=row(report,'health.3',f.a,1)
+        assert health['applicable'] is None and health['status']=='unverifiable'
+        assert row(report,'health.2',f.a,1)['status']=='satisfied'
+    finally:
+        f.writer.abort(reason='Synthetic S1a-6 control')
+
+
+def _invalidate_health3(f):
+    """Point the 3.0 s health sample at the unit's start-outcome M3 record: hash-valid, but
+    not an observe/observation source, so source_ok rejects it."""
+    sample=_health3_sample(f)
+    started=next(e for e in f.events if e['extensions']['xverse.maestro']['action']=='started'
+                 and e['extensions']['xverse.maestro']['unitId']==f.a)
+    event=next(e for e in f.events if e['eventId']==sample)
+    event['extensions']['xverse.maestro']['sourceRefs']=[dict(r) for r in started['extensions']['xverse.maestro']['sourceRefs']]
+
+
+def test_control_invalid_sample_does_not_discharge(tmp_path):
+    reference=Fixture(tmp_path/'reference')
+    try:
+        _invalidate_health3(reference)
+        # In an applicable geometry the same sample is not accepted as evidence.
+        assert row(reference.provisional().report(),'health.3',reference.a,1)['status']!='satisfied'
+    finally:
+        reference.writer.abort(reason='Synthetic S1a-6 control')
+    f=Fixture(tmp_path/'bracket')
+    try:
+        _invalidate_health3(f)
+        health=row(_assess(f,(SLOT3_END-0.05,SLOT3_END+0.05)),'health.3',f.a,1)
+        assert health['applicable'] is None and health['status']=='unverifiable'
+    finally:
+        f.writer.abort(reason='Synthetic S1a-6 control')
+
+
+@pytest.mark.parametrize('stop',[
+    (SLOT3_END+0.05,SLOT3_END-0.05),   # Stop ACK before Stop request
+    (SLOT3_END-0.05,99.0),             # Stop ACK beyond the terminal end
+    (0.1,SLOT3_END+0.05),              # Stop request before Release ACK (0.2)
+])
+def test_control_inconsistent_bound_order_stays_unverifiable(tmp_path,stop):
+    f=Fixture(tmp_path)
+    try:
+        health=row(_assess(f,stop),'health.3',f.a,1)
+        assert health['applicable'] is None and health['status']=='unverifiable'
+    finally:
+        f.writer.abort(reason='Synthetic S1a-6 control')
+
+
+def test_discharge_keeps_expectations_digest_independent_of_samples(tmp_path):
+    """Deleting the discharging sample changes the row, never expectedObligationsDigest."""
+    f=Fixture(tmp_path)
+    try:
+        f.broker['generations'][0].update(stopRequestedAt=SLOT3_END-0.05,stopAcknowledgedAt=SLOT3_END+0.05)
+        args=f.arguments();full=assess_preclosure(f.admission,**args).report()
+        sample=_health3_sample(f)
+        args['annotations']=[e for e in args['annotations'] if e['eventId']!=sample]
+        reduced=assess_preclosure(f.admission,**args).report()
+        assert row(full,'health.3',f.a,1)['status']=='satisfied'
+        assert row(reduced,'health.3',f.a,1)['status']=='unverifiable'
+        assert full['expectedObligationsDigest']==reduced['expectedObligationsDigest']
+    finally:
+        f.writer.abort(reason='Synthetic S1a-6 control')
