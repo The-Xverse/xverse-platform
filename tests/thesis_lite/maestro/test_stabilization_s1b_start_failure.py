@@ -117,3 +117,29 @@ def test_a_never_ready_marker_unit_at_start_up_closes_its_evidence(marker_never_
     assert observed == dict(native_epoch_confirmed=True, issuer_dead=False, exchange_errors=[], persistence_failure=None,
                             cleanup_complete=True, workload_wait_unknown=False, writer_failed_or_closed=True), (
         placed, entry._storage.last_writer_state, result.closure.diagnostics)
+
+
+def test_ra4_the_cancel_deadline_covers_the_native_close_bound_after_the_lock_wait(broker_stack, monkeypatch):
+    """ADR-ML3-AFFA-0001 S1a-6 (RA4): K.CANCEL is sent with min(now + 2 + 0.5 + 0.25 s, generation - 2 s, caller
+    deadline), so the native close bound of 2 s still fits after a full S1a-3 lock wait; it was now + 1 s."""
+    from xverse.maestro import run_broker
+    from xverse.maestro.affa_protocol import AuthorityKind as K
+
+    assert run_broker.CANCEL_REQUEST_SECONDS == pytest.approx(2.75)
+    assert run_broker.CANCEL_REQUEST_SECONDS - run_broker.CANCEL_LOCK_WAIT_SECONDS > 2.0
+    broker, facade, _, _ = broker_stack
+    stage_all(broker_stack)
+    sent, original = [], AuthorityConnection._exchange
+
+    def exchange(self, request, *, fds=()):
+        if request.kind is K.CANCEL:
+            sent.append(request.deadline_ns)
+        return original(self, request, fds=fds)
+
+    monkeypatch.setattr(AuthorityConnection, "_exchange", exchange)
+    before = time.monotonic_ns()
+    result = broker.cancel("ra4-deadline")
+    after = time.monotonic_ns()
+    assert result.native_epoch_confirmed and len(sent) == 1, (result, sent)
+    cap = broker.session._generation - 2_000_000_000
+    assert min(before + 2_750_000_000, cap) - 1_000 <= sent[0] <= min(after + 2_750_000_000, cap), (sent, before, cap)

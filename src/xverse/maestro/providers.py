@@ -25,6 +25,10 @@ class ReadinessError(OwnerError):
 
 
 READINESS_RESERVE_SECONDS = 0.25  # S1b review LOW-1: the last marker attempt keeps one round trip
+LEASE_MAX_SECONDS = 5.0  # the native maximum of a lease renewal (bootstrap.c)
+NATIVE_CANCEL_CLOSE_SECONDS = 2.0  # the native cancel close bound (run_authority.c close_end)
+# ADR-ML3-PROBE-0001 S1b-1 revision (RA1): a marker start step ends this long before the lease.
+CANCEL_CLOSE_RESERVE_SECONDS = NATIVE_CANCEL_CLOSE_SECONDS + 0.25
 
 
 def readiness_offsets(window, attempts):
@@ -34,6 +38,18 @@ def readiness_offsets(window, attempts):
         return (0.0,)
     reserve = min(READINESS_RESERVE_SECONDS, window / attempts)
     return tuple(k * (window - reserve) / (attempts - 1) for k in range(attempts))
+
+
+def readiness_window_bound(operation_seconds):
+    """RA1 admission bound: the largest marker window W that fits a fresh lease after one pre-release round
+    trip and the cancel close reserve, LEASE_MAX - CANCEL_CLOSE_RESERVE - operation_seconds."""
+    return LEASE_MAX_SECONDS - CANCEL_CLOSE_RESERVE_SECONDS - operation_seconds
+
+
+def capped_readiness_window(window, began, lease, deadline):
+    """RA1 run-time cap: the window spent from t0 = ``began`` so that the last attempt ends at least
+    CANCEL_CLOSE_RESERVE before ``lease`` and never after the step ``deadline`` (monotonic seconds)."""
+    return max(0.0, min(window, lease - CANCEL_CLOSE_RESERVE_SECONDS - began, deadline - began))
 
 
 def _positive(value):
@@ -426,6 +442,12 @@ class ProcessReadiness(_Original):
             policy, probe = self._policies[unit_id], self._probe(unit_id)
             observe = next(a for a in self._owner._unit(unit_id).plan.actions if a.phase == "observe")
             window, began = min(policy.timeout_seconds, observe.timeout_seconds), time.monotonic()
+            if probe != RUNNING:
+                # RA1: a marker unit is bound to a RunUnitIssuer (bind); its run ends at the earlier of the
+                # bootstrap root's and the native authority's leases, neither renewed inside this step.
+                broker = binding.launcher.broker
+                lease = min(broker.session._lease, broker.connection._lease) / 1e9
+                window = capped_readiness_window(window, began, lease, deadline.monotonic_seconds)
             offsets = readiness_offsets(window, policy.attempts)
             for attempt in range(policy.attempts):
                 if probe != RUNNING and attempt:

@@ -1,7 +1,9 @@
 """S1b review findings 21 and 22: the two failures of the stack ``b049585bf`` under load 8.4-8.7 (S1c finding 45).
 
 Reproduction before repair. Each test asserts the CORRECT behaviour, so it fails while the defect is present.
-The tests never alter a request or a reply.
+The tests never alter a request or a reply. Repaired per thesis DR-15 (S1b review finding 23): (B) by RB1
+(ADR-ML3-PERSISTENCE-0001, S1a-1 revision); (A) by RA1 (ADR-ML3-PROBE-0001, S1b-1 revision), which refuses the
+live W = 3.5 s at admission and caps an admitted window at run time, and RA4 (ADR-ML3-AFFA-0001, S1a-6).
 
 (A) ``…-004408-freeze-vcu``: the start step of a ``nonce-marker`` unit is capped at the bootstrap lease
 (``dispatcher.py`` ``_end``: ``min(end, bootstrap._lease)``). Nothing renews that lease inside one step: the
@@ -32,7 +34,8 @@ from xverse.argus import EvidenceStore
 from xverse.maestro import persistence as persistence_module
 from xverse.maestro.dispatcher import FiniteDispatcher
 from xverse.maestro.persistence import PersistenceClient
-from xverse.maestro.providers import ProbePolicy, ProcessReadiness
+from xverse.maestro.providers import (CANCEL_CLOSE_RESERVE_SECONDS, NATIVE_CANCEL_CLOSE_SECONDS, ProbePolicy,
+                                      ProcessReadiness, readiness_window_bound)
 from xverse.maestro.schedule_plan import ScheduleError
 
 from .test_stabilization_s1b_broker import NS, declare
@@ -50,7 +53,8 @@ from .test_runtime_entry import runtime as runtime
 TARGET = 2  # the second ordinary tick-complete statement, as in test_stabilization_cancel.py
 
 
-@pytest.mark.parametrize("window", ["control-before-live", "before-final-check", "before-child-check"])
+@pytest.mark.parametrize("window", ["control-before-live", "before-final-check", "before-child-check",
+                                    "in-flight-child-check"])
 def test_a_cancel_between_the_live_checks_is_not_a_storage_failure(runtime, monkeypatch, window):
     """The cancel is issued from another thread (as the live harness's canceller does) while the dispatcher's
     ordinary ``schedule`` call is inside its ``validation`` stage, after ``_live`` has read the latch as not
@@ -59,7 +63,9 @@ def test_a_cancel_between_the_live_checks_is_not_a_storage_failure(runtime, monk
     root check then refuses the cancelled run. Correct: the refusal is the healthy ``PersistenceCancelled``, so
     the storage owner stays usable, the terminal records and the writer close, and cleanup completes.
     ``control-before-live``: the cancel lands before ``_live`` (the S1a pre-send case); it passes today, so the
-    expected outcome is reachable on this stack."""
+    expected outcome is reachable on this stack. ``in-flight-child-check`` (added with the RB1 repair, finding
+    23): the same window in the first in-flight ``_live`` of that call, after the request is sent; the reply is
+    then still accepted within the S1a-1 grace."""
     entry, scope, work = runtime
     stopped = threading.Event()
     seen, armed, placed = [], threading.local(), []
@@ -89,11 +95,14 @@ def test_a_cancel_between_the_live_checks_is_not_a_storage_failure(runtime, monk
         finally:
             armed.value = False
 
-    name = "check_child" if window == "before-child-check" else "wait_child"
+    name = "wait_child" if window in ("control-before-live", "before-final-check") else "check_child"
     original_hook = getattr(persistence_module, name)
+    calls = []
 
     def hook(*args, **kwargs):
         if getattr(armed, "value", False):
+            calls.append(True)  # in-flight-child-check: the 1st call is _live at validation, the 2nd in flight
+        if getattr(armed, "value", False) and (window != "in-flight-child-check" or len(calls) == 2):
             armed.value = False
             assert not entry._storage.latch.cancelled  # the first latch read in _live saw a live run
             placed.append(time.monotonic())
@@ -127,6 +136,9 @@ def test_a_cancel_between_the_live_checks_is_not_a_storage_failure(runtime, monk
 # ---------------------------------------------------------------------------------------------------------------
 
 WINDOW_SECONDS = 3.5  # the live harness's OWNED_READINESS_TIMEOUT_S
+# RA1 (finding 23): W = 3.5 s cannot fit a fresh lease and is refused at admission; the run-time cap is exercised
+# with an admitted window below the fixture's bound 5 - 2.25 - 0.5 = 2.25 s (2.0 s, the value of thesis DR-15 H1).
+ADMITTED_WINDOW_SECONDS = 2.0
 ACTION_TIMEOUTS = {"prepare": 2, "start": 5, "observe": 4, "stop": 5, "cleanup": 5}  # the live harness's budgets
 # The start step is dispatched with this much bootstrap lease left: above the dispatcher's renewal margin
 # (service_operation_count 4 x operation 0.5 s + 0.5 s = 2.5 s in this fixture, 1.9 s live), so it is not
@@ -138,11 +150,12 @@ PLACED_LEASE_SECONDS = 2.8
 CANCEL_COMPLETION_SECONDS = 1.5
 
 
-@pytest.fixture
+@pytest.fixture(params=[WINDOW_SECONDS, ADMITTED_WINDOW_SECONDS], ids=["live-window", "admitted-window"])
 def long_window_runtime(request, monkeypatch):
-    """The composed runtime with the sink declaring ``nonce-marker`` (``marker-never``), the live readiness
-    window W = 3.5 s (policy timeout 3.5, observe timeout 4) and the live action timeouts
-    (``use_action_timeouts``). Returns the ScheduleError when the schedule is refused at admission."""
+    """The composed runtime with the sink declaring ``nonce-marker`` (``marker-never``), a readiness window
+    W (policy timeout W, observe timeout 4) and the live action timeouts (``use_action_timeouts``). W is the live
+    3.5 s or the admitted 2.0 s. Returns the ScheduleError when the schedule is refused at admission."""
+    window = request.param
     from . import test_launcher, test_runtime_entry
 
     declare(monkeypatch, {"sink-binding": dict(condition="nonce-marker", cwd="sink", mode="marker-never",
@@ -159,7 +172,7 @@ def long_window_runtime(request, monkeypatch):
     admit = test_runtime_entry.admit_schedule
 
     def admit_schedule(prepared, *, policies, **kw):
-        policies = tuple(ProbePolicy(p.unit_id, p.freshness_seconds, p.cadence_seconds, WINDOW_SECONDS, p.attempts)
+        policies = tuple(ProbePolicy(p.unit_id, p.freshness_seconds, p.cadence_seconds, window, p.attempts)
                          for p in policies)
         kw.update(use_action_timeouts=True, active_seconds=20)
         return admit(prepared, policies=policies, **kw)
@@ -175,7 +188,7 @@ def _instrument(entry, monkeypatch, *, cancel_completion=0.0):
     """Place the sink's start step at PLACED_LEASE_SECONDS of bootstrap lease left (a wait, never a change of
     any request), record each sink readiness query and the lease left at the readiness-failure cancel, and
     optionally let that cancel complete CANCEL_COMPLETION_SECONDS after the failure."""
-    facts = dict(placed=None, queries=[], cancel_left=None, renewals_before_start=None)
+    facts = dict(placed=None, queries=[], cancel_left=None, renewals_before_start=None, lease=None)
     original_effect = FiniteDispatcher._effect
 
     def effect(self, step):
@@ -185,6 +198,7 @@ def _instrument(entry, monkeypatch, *, cancel_completion=0.0):
                 time.sleep(gap)
             facts["placed"] = self.bootstrap._lease / 1e9 - time.monotonic()
             facts["renewals_before_start"] = self.lease_renewals
+            facts["lease"] = min(self.bootstrap._lease, entry._broker.connection._lease) / 1e9
         return original_effect(self, step)
 
     original_query = ProcessReadiness._query
@@ -209,35 +223,54 @@ def _instrument(entry, monkeypatch, *, cancel_completion=0.0):
     return facts
 
 
-def test_a_declared_readiness_window_is_not_silently_cut_by_the_lease(long_window_runtime, monkeypatch):
+def _refused(runtime):
+    """RA1: the live window is refused at admission; an admitted window must not be."""
+    if isinstance(runtime, ScheduleError):
+        assert str(runtime) == "ML-SCHEDULE-READINESS-WINDOW", runtime
+        assert WINDOW_SECONDS > readiness_window_bound(0.5)  # the fixture's operation_seconds
+        return True
+    return False
+
+
+def test_a_declared_readiness_window_is_not_silently_cut_by_the_lease(long_window_runtime, monkeypatch, request):
     """Live (A): 2 of 3 attempts, the third dropped by the start step's lease cap. Correct: either the schedule
     is refused at admission (W cannot fit the lease), or every declared attempt is made before
-    ML-PROBE-NOT-READY (Maestro renews, or spaces the attempts inside the lease it actually has)."""
-    if isinstance(long_window_runtime, ScheduleError):
+    ML-PROBE-NOT-READY (Maestro renews, or spaces the attempts inside the lease it actually has).
+    Finding 23 (RA1): the live window is refused at admission; the admitted window makes its 3 attempts within the
+    capped window, the last one at least CANCEL_CLOSE_RESERVE before the lease."""
+    if _refused(long_window_runtime):
+        assert request.node.callspec.id == "live-window"
         return
+    assert request.node.callspec.id == "admitted-window"
     entry, scope, work = long_window_runtime
     facts = _instrument(entry, monkeypatch)
     result = entry.start(scope)
     assert facts["placed"] is not None and 2.0 < facts["placed"] <= PLACED_LEASE_SECONDS + 0.05, facts
     assert result.dispatch is not None and result.dispatch.diagnostic == "ML-PROBE-NOT-READY", result
     assert len(facts["queries"]) == 3, facts
+    assert facts["lease"] - facts["queries"][-1] >= CANCEL_CLOSE_RESERVE_SECONDS, facts
+    assert facts["cancel_left"] > NATIVE_CANCEL_CLOSE_SECONDS, facts
 
 
 def test_a_readiness_failure_cancel_that_takes_longer_than_the_lease_left_still_closes(long_window_runtime,
-                                                                                       monkeypatch):
+                                                                                       monkeypatch, request):
     """Live (A): the readiness cancel was issued with under a second of unrenewed lease left and did not finish
     before the lease end; the bootstrap root then killed the authority and the storage worker. Here the
     readiness-failure cancel completes CANCEL_COMPLETION_SECONDS after the failure (below the native close
     bound of 2 s). Correct: the cancel is confirmed natively, there is no persistence failure, cleanup is
-    complete and the writer is failed or closed."""
-    if isinstance(long_window_runtime, ScheduleError):
+    complete and the writer is failed or closed. Finding 23 (RA1): refused at admission for the live window; for
+    the admitted window the cancel starts with more than the native close bound of lease left."""
+    if _refused(long_window_runtime):
+        assert request.node.callspec.id == "live-window"
         return
+    assert request.node.callspec.id == "admitted-window"
     entry, scope, work = long_window_runtime
     errors = _record_exchanges(monkeypatch)
     facts = _instrument(entry, monkeypatch, cancel_completion=CANCEL_COMPLETION_SECONDS)
     result = entry.start(scope)
     assert facts["placed"] is not None and 2.0 < facts["placed"] <= PLACED_LEASE_SECONDS + 0.05, facts
     assert result.dispatch is not None and result.dispatch.diagnostic == "ML-PROBE-NOT-READY", result
+    assert len(facts["queries"]) == 3 and facts["cancel_left"] > NATIVE_CANCEL_CLOSE_SECONDS, facts
     cancelled = entry._broker._cancel_result
     failure = result.persistence_failure
     observed = dict(

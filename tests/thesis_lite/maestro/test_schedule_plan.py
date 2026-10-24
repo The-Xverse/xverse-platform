@@ -210,3 +210,59 @@ def test_recovery_bound_is_sealed_and_old_action_admission_remains_version4():
 @pytest.mark.parametrize('cap',[True,0,5.1,float('nan'),float('inf')])
 def test_recovery_bound_rejects_invalid_or_unusable_caps(cap):
     with pytest.raises(ValueError):admitted(recovery_operation_seconds=cap)
+
+
+def _marker_prepared(observe_timeout):
+    """The fixture lifecycle as owned process units (as ``test_launcher.configured``, inert paths: admission is
+    pure), with the sink's observe action declaring ``nonce-marker`` (v0.2 catalog payload)."""
+    from xverse.maestro import ProviderDescriptor
+    from .test_preparation import documents
+    from .test_stabilization_s1b_broker import NS
+
+    docs = documents()
+    profile = docs["runtime-profile.json"]
+    profile["metadata"]["version"] = "0.2.0"
+    profile["spec"]["schemaRef"] = "https://xverse.io/profiles/runtime-compatibility/v0.2/schema.json"
+    docs["deployment.json"]["spec"]["artifacts"][0]["artifactKind"] = "executable"
+    for binding in docs["deployment.json"]["spec"]["bindings"]:
+        payload = binding["extensions"][NS]
+        payload["schemaVersion"] = "0.2.0"
+        payload["provider"] = {"id": "maestro-process-v1", "kind": "process"}
+        payload["process"] = {"executable": "/nonexistent/declared-image", "arguments": [binding["id"], "single"],
+                              "workingDirectory": "/nonexistent/work", "environmentNames": [],
+                              "inheritedHandles": "closed", "implicitShell": False}
+        if binding["id"] == "sink-binding":
+            observe = next(a for a in payload["actions"] if a["phase"] == "observe")
+            observe["condition"], observe["timeoutSeconds"] = "nonce-marker", observe_timeout
+    pin = ProviderDescriptor("maestro-process-v1", "process", "sha256:" + "0" * 64, "isolated-fixture")
+    return prepared(docs, provider_descriptors=(pin,))
+
+
+def _marker_admission(value, window, operation_seconds):
+    return admit_schedule(
+        value, policies=tuple(ProbePolicy(u.unit_id, 5, 5, window) for u in value.units),
+        ticks=(0, value.clock.horizon_ticks), active_seconds=20, operation_seconds=operation_seconds,
+        request_limit=1024)
+
+
+def test_ra1_a_marker_window_that_cannot_fit_a_fresh_lease_is_refused():
+    """ADR-ML3-PROBE-0001 S1b-1 revision (RA1): W = min(policy timeout, observe timeout) must satisfy
+    W <= 5 - 2.25 - operation_seconds; 2.37 s with the live operation_seconds 0.38 s."""
+    from xverse.maestro.providers import readiness_window_bound
+    from xverse.maestro.schedule_plan import ScheduleError
+
+    assert readiness_window_bound(0.38) == pytest.approx(2.37)
+    assert readiness_window_bound(0.5) == pytest.approx(2.25)
+    value = _marker_prepared(4)
+    assert _marker_admission(value, 2.36, 0.38).policies  # inside the bound
+    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
+        _marker_admission(value, 2.38, 0.38)
+    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
+        _marker_admission(value, 3.5, 0.38)  # the live harness's window
+    with pytest.raises(ScheduleError, match="^ML-SCHEDULE-READINESS-WINDOW$"):
+        _marker_admission(value, 2.25, 0.5 + 1e-3)
+    # the observe action's timeout also bounds W, so a long policy timeout under a short observe one is admitted
+    assert _marker_admission(_marker_prepared(2.0), 5, 0.38).policies
+    # running units keep their admission: the same 3.5 s policy timeout is accepted without a marker
+    plain = prepared()
+    assert _marker_admission(plain, 3.5, 0.38).policies
