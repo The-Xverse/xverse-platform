@@ -766,3 +766,30 @@ and admission refuses while it is unknown.
       using the original installed-wheel venv (product unchanged), no `PYTHONPATH` and plugin autoload disabled.
       This was run by the coordinator, not the independent reviewer. It resolves the focused long-path reproduction;
       the complete successor regression and downstream gates remain pending.
+
+
+12. **Decisive successor evidence and delegated acceptance (Codex, 2026-10-24; flagged for author review).**
+    - Actual installed-wheel attemptj at4bedba9:3038passed,1 dedicated-lane skip,39subtests in3086.69s,
+      3039collected,exit0,no outer timeout/unknown descendant cleanup. Installed/frozen source equality and source
+      archive binding are recorded. Maximum sampled load11.99 is retained explicitly; this passing functional
+      regression is not a new timing-performance guarantee beyond the existing declared load envelope. Failed
+      attempti at6.15 and its nested socket-path failure remain retained, not relabelled or discarded.
+    - Official code-scope DV12 genuinely executed and accepted this exact run/candidate with no blockers, unchanged
+      six input hashes, matching run/candidate code identity45a5960c8b30c4655be4e4a526c1b41ec5da48573817e0c334da1daac53d5268,
+      actual exit0 and clean owned completion. GateSHA9705d8471ea415b01b1d06c98dbc69a3d63ea544126b194a007f740a4ba33c6c.
+      Capture/builder source defects were independently found and repaired before their genuine execution;
+      originals, designs/reviews, exact tools and actual execution receipts are retained under affa19.
+    - CAPA17 actual registerSHA0d6f40f28635ccb1c801fa00552f0fe8e0b3f04008c91c65338d5324b1da3b07 has57records/784bindings,
+      exact parentbf39b087 (56records/757bindings). Official schema/evidence verification and parent preservation
+      both exit0. Independent actual source/JSON review PASS verifies all prior rows/plans/bindings unchanged and
+      all27additions/exact tested-source association. New collection-continuity observation stays TRIAGED/HYPOTHESIS;
+      no cause verification, reproducer/effectiveness window or sustained effectiveness is invented. Historical
+      approvals remain historical; generated child root accepted/merged flags stayfalse.
+    - **Accept implementation under the standing author's delegation of2026-10-24, flagged for author review.**
+      Acceptance is only WP10#3/ST2a plus the independently reviewed test-only socket repair. Evidence and actual
+      CAPA review are in affa19/codex-capa17-execution-20261024, with delegated-acceptance.json. Final delivery still
+      requires isolated main assembly, whole-tree/test-scope equivalence check and merge/push; this finding alone
+      is not a delivered-main claim.
+    - L1 UID-only peer authentication, L2/L3 derivation and D4c/live wiring remain successor gates. No new source-
+      process identity, adversarial hold, M1/principal/scientific/live result is claimed. No rc.1 soak input/tag
+      changes, protocol value, CAPA promotion or automatic canonical-note update is authorized by this acceptance.
