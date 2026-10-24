@@ -723,3 +723,21 @@ and admission refuses while it is unknown.
      other finding 8 residuals, the declared load envelope and CAPA limits remain unchanged.
    - Run scheduling must preserve the rc.1 soak at 00:00 on 2026-10-25: one heavy test process at a time and no new
      full-run admission too late to accommodate the driver's existing outer and preparation deadlines before 23:00.
+
+10. **Independent full-regression finding and successor test design (Codex, 2026-10-24).**
+    - Candidate `12dfb21e1b6bfdd8533b2b2058ddba184fa88c8b` failed the installed-wheel full run:
+      3037 passed, 1 failed, 1 skipped, 39 subtests passed in 2791.75 s. Maximum sampled load was 6.15;
+      this is a decisive failure, not a load-discarded attempt. Receipt and full nested traceback are retained in
+      `evidence/affa19/stabilization-s1a3/platform-regression-20261024i-codex-1/`. No DV12/CAPA/acceptance follows.
+    - The sole outer failure is the existing Argus assembled-regression test. Its child suite fails
+      `test_listening_channel_accepts_exactly_one_peer` before exercising the channel: `listener.bind(path)`
+      raises `OSError: AF_UNIX path too long`. The child's inherited pytest temp hierarchy makes the pathname
+      exceed the platform socket limit. The child otherwise reports 2742 passed, 1 skipped, 39 subtests passed.
+    - Repair design, recorded before code: only this listener test will use an explicitly short, unique
+      `tempfile.TemporaryDirectory` under `/tmp` for its socket. Keep the genuine pathname-bound Unix
+      SOCK_SEQPACKET listener, both real peers and all existing assertions. Use context/finally cleanup for
+      sockets/channel and directory. Remove the unused tmp_path fixture dependency. No product or protocol change.
+    - Verification: independently review the successor diff; repeat the focused case with a deliberately long
+      pytest base directory, then repeat the complete installed-wheel regression. Preserve the failed run and
+      the existing DV12/CAPA step-17 gates. The lane-admission skip is the dedicated-driver gate, not evidence
+      of lane admission. No acceptance or merge is claimed.
