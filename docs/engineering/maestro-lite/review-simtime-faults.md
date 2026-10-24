@@ -741,3 +741,28 @@ and admission refuses while it is unknown.
       pytest base directory, then repeat the complete installed-wheel regression. Preserve the failed run and
       the existing DV12/CAPA step-17 gates. The lane-admission skip is the dedicated-driver gate, not evidence
       of lane admission. No acceptance or merge is claimed.
+
+11. **Independent Codex read-only review of short-path test repair (2026-10-24), PASS for repeated verification.**
+    - Reviewed exact test-only candidate `088046f40c49d721a814d2bfbbbd493fdb970b86`, its design checkpoint
+      `e2d3dafd1be5757c9e6f9d3b522b66ed9d11f6d2`, finding 10 and the exercised `HubChannel.connected/close` paths.
+      The reviewer did not author the repair and made no product or test modification.
+    - The test now creates a unique short directory explicitly below `/tmp`, independently of pytest's inherited
+      base directory or `TMPDIR`. It retains a genuine pathname-bound `AF_UNIX/SOCK_SEQPACKET` listener, both real
+      peer connections, the initial disconnected/first-connected assertions and the second-peer `FaultError`
+      assertion. No production path constraint or channel behavior is weakened to make the test pass.
+    - Directory and listener contexts, nested peer contexts and `finally: channel.close()` preserve cleanup after
+      success or assertion failure. Re-closing the listener is harmless; after the peer contexts close, the channel's
+      best-effort close handles the refused send and releases its accepted socket/listener. The unused `tmp_path`
+      fixture is removed. No protocol, source package or installed wheel content changes in this repair.
+    - Performed only source/diff inspection, an in-memory syntax check and AST checks for the removed fixture
+      dependency and explicit short temporary-directory parent; `git diff --check` passes. No pytest, socket
+      exchange, wheel build or framework import was run by this reviewer. The coordinator's deliberately long-base
+      focused execution and complete installed-wheel regression remain required on this successor; the failed
+      3037-pass run cannot support acceptance. DV12, CAPA step 17, delegated acceptance and rc.1 soak scheduling
+      gates remain as recorded in findings 9–10. No merge or acceptance is claimed.
+    - **Coordinator-run evidence, reported after this source review:** the exact repaired listener test passed
+      **1 passed in 0.67 s** with base directory
+      `/dev/shm/codex-deliberately-long-nested-pytest-base-20261024/one-more-directory-for-the-parent-and-child-hierarchy`,
+      using the original installed-wheel venv (product unchanged), no `PYTHONPATH` and plugin autoload disabled.
+      This was run by the coordinator, not the independent reviewer. It resolves the focused long-path reproduction;
+      the complete successor regression and downstream gates remain pending.
