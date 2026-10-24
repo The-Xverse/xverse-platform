@@ -1208,3 +1208,191 @@ decision S-D2, approved on 2026-10-23).
       dispositions (except L6, which is the author's). The stack acceptance still needs an independent review of
       `4840afccb`..`e593bd5c2`, then the decisive full installed-wheel run and DV12, then the S1c live re-run
       with H1 at W ≤ 1.99 s.
+26. **Independent review of DR-16 (`4840afccb`..`a134fd47b`; written at 02:14:21 2026-10-24, load about 4.0-4.2):
+    PASS WITH NOTES (no HIGH; one MEDIUM, six LOW).** The diff `4840afccb~1..a134fd47b -- src tests` was read in
+    full, together with the ADR notes in `4840afccb`, the thesis DR-16 entry, and the code paths it touches:
+    `_service`, `_renew_service`, `_end`, `_effect`, `_cleanup`, the failure path, `_restart_unit` and
+    `_commit_controller_view` (`dispatcher.py`); `RunBroker.renew`, `RunBroker.cancel` and `service_terminal`;
+    `owner._check`, `persistence._available` and `_live`; `recovery.py:436`; `run_closure._fence`; and the
+    native RENEW, CANCEL and lease checks (`run_authority.c:125,525-535,640-672`; `bootstrap.c:136,314,338`).
+    - **Wheel.** `36894fab145ff790…` is the only wheel in the cache (built at 01:52). All 85 `xverse/` files in it
+      are byte-identical to `e593bd5c2:src/`, and `e593bd5c2..a134fd47b` changes no file under `src/`.
+    - **Rerun** (installed wheel, one pytest process at a time, no CARLA, zenohd or live runs):
+      - `test_stabilization_stack_load_failures.py`: 16 passed (33.5 s).
+      - `test_schedule_plan.py`, `test_stabilization_s1b_readiness.py`, `test_stabilization_s1b_start_failure.py`
+        and `test_provider.py`: 110 passed (71.8 s).
+      - The other suites in finding 25's table were not rerun.
+    - **Confirmed.**
+      - **RA2 bounds.** The renewal goes through the unchanged `_renew_service`. Its target is
+        `next_end = min(now + 5, generation − 2)`, fixed before the heartbeat. So it is within the native
+        `end − now ≤ 5 s` and `end ≤ generation − 2 s` checks (`run_authority.c:533-534`; `bootstrap.c:338`) when they
+        are evaluated later.
+      - **One target for both leases.** `RunBroker.renew` moves the root lease (`session.renew`) and the
+        authority lease (K.RENEW) to the same target after one audit. On the native path, `gates` is
+        `broker.connection` (`runtime_entry.py:152`). RA2's lease view, `bootstrap._lease` plus `gate.lease_ns`
+        (`dispatcher.py:1377-1378`), is therefore the providers' L = min(root, authority).
+      - **The skip test agrees with the broker's refusal.** RA2 does not renew when the target is not above
+        `max(leases)` (`dispatcher.py:1381`). The broker refuses exactly that case (`target <= max(...)`), so the
+        skip adds no `ML-SCHEDULE-LEASE-EXHAUSTED` path. When the lease is short and cannot be extended, the cap
+        gives W' < W and `cut: true`. A cut window that is not ready raises `ML-PROBE-WINDOW-CUT`. The cut is
+        recorded, never silent.
+      - **No renewal for a cancelled run.** RA2 cannot extend the lease of a cancelled run:
+        - `_service()` raises `ML-SCHEDULE-CANCELLED` first;
+        - `RunBroker.renew` calls `owner._check`, and therefore `persistence._available` (`ML-PERSIST-NOT-OPEN`
+          on a cancelled latch), before and after it takes the locks;
+        - the audit is refused under a cancel;
+        - natively, RENEW needs `enabled(g)`, which is `!closed` (`run_authority.c:125-127`). A RENEW after a
+          CANCEL is rejected and fails closed through `run-renew-uncertain`.
+
+        The only window is between the post-lock audit and `session.renew`, the same as every `_service`
+        renewal. It grants no start authority. Stopped units' gates are excluded, as in `_service`.
+      - **Request accounting.** A renewal costs one storage request (`revalidate_run`). The heartbeat and the
+        root and authority renewals are not storage requests. `+1` per marker unit is a conservative upper bound,
+        because RA2 runs at most once per start step and restarts do not use it. `persistence_worker.py:112` and
+        `persistence.py:232,486` re-derive the value through the same `admit_schedule`.
+      - **No pinned schedule bytes.** No test, DV12 allowlist (`scripts/validate_maestro_acceptance_evidence.py`
+        allowlists `-ra` skip and xfail lines only) or golden digest pins the bytes of a marker schedule or its
+        `required_requests`. Only `test_schedule_plan.py:29,172,183`, which are running-only and unchanged, pin
+        values.
+      - **RA5 arithmetic.** `readiness_window_bound(0.38)` = 1.9900000000000002, so a live W of 1.99 s is
+        admitted and 2.0 s is refused. The fixture bound is 1.75. `readiness_lease_need(bound, op)` = 5.0, so an
+        admitted W always fits a fresh lease. The bound and the cap now share `cancel_close_reserve`; no use of
+        the old constant remains in `src/` or `tests/`. Run time takes `op` from `owner.persistence.schedule`,
+        the same object as the dispatcher's `self.plan` (`dispatcher.py:457`).
+      - **The diagnostic.**
+        - `ML-PROBE-WINDOW-CUT` is raised inside the same `try`, so it takes the same
+          `cancel("readiness-start-failed")` path as `ML-PROBE-NOT-READY`.
+        - It maps to `deadline-exceeded` through the existing `WINDOW` test (`dispatcher.py:1686`), the same as
+          `ML-SCHEDULE-WINDOW-MISSED`.
+        - It matches the `diagnosticCode` pattern `^ML-[A-Z-]+$` in both payload schemas, and no allowlist of
+          codes exists.
+        - It is documented in the ADR note.
+        - A cut window whose marker is found still succeeds.
+      - **The record.** `ReadinessWindow` is public-safe: a catalog unit id, the descriptor's integer generation,
+        two durations, two host-monotonic times and a boolean. It reaches `RuntimeResult.dispatch` through the
+        single `DispatchResult` construction (`dispatcher.py:1820-1833`), in field order.
+      - **Tests.**
+        - **M3.** The four cases raise the stated class and code from the targeted `_live`, never
+          `PersistenceCancelled`, and record `(code, schedule, validation)`. The latch is cancelled from another
+          thread inside the hooked call, after `_live`'s first read.
+        - **M1.** The renewed test and the forced-cut test discriminate each other: same placement, with and
+          without RA2.
+        - **L4.** The control (`CANCEL_REQUEST_SECONDS = 1.0`) gets `ML-AFFA-TIMEOUT` and an unconfirmed cancel,
+          so the RA4 case is behavioural.
+        - **The regression adjustment** to `test_a_never_ready_marker_unit_at_start_up_closes_its_evidence` is
+          justified. With no action timeouts, the start step's D is `now + op` = 0.5 s, and that 0.5 s also
+          holds the pre-release work, so D − t0 < W = 0.5 s holds by construction. The new expectation,
+          `cut: true` and `ML-PROBE-WINDOW-CUT`, is the M1 fix made visible. The closure assertions are
+          unchanged.
+        - **M2's limited reach** is declared honestly in finding 25.
+      - **L3 numbers.** The 2-unit, 2-step fixture (`prepared()`: 2 units, 2 start steps) gives
+        `terminal_reserve_seconds` = 2·1 + (2 + 4 + 2)·op + 2 = 8.0 s at op 0.5 and 7.04 s at op 0.38. After the
+        3.75 s worst case (the 2.75 s frame plus the 1 s revoke), 4.25 s and 3.29 s remain.
+        - The lazy fence's broker cancel returns the cached result.
+        - `run_closure._fence` skips K.CANCEL when the last epoch is CANCELLED (`run_closure.py:183`).
+        - `stop` is local up to `RunBroker.cancel`.
+
+        The S1c join margin of at least about 1.25 s and the unchanged closure window follow.
+    - **MEDIUM-1 (RA5 reserves the nominal `operation_seconds`, not the failure statement's bound, and the ADR
+      calls it "the admitted budget"): `providers.py:42-46`, `dispatcher.py:1667-1676`.**
+      - The `failure` statement on the readiness-failure path is sent with
+        `min(_work_end, now + per_unit_seconds)`. The code comment says "Terminal-section statement: per-unit
+        budget like run-terminal". That is its admitted bound: 1 s in the fixture, up to 5 s by admission
+        (`schedule_plan.py:105`).
+      - The ADR S1b-1 revision note says that the reserve's middle term is "the admitted budget of one
+        terminal-section statement". That is not what the code does. `cancel_close_reserve` uses
+        `operation_seconds` (0.38 s live) as a nominal allowance.
+      - DR-16 asks that the reserve "include the bounded budget of the failure-statement RPC". The
+        implementation covers only the nominal case.
+      - **The case that motivated finding 24 M2 is still open:** a unit frozen in `fsync` on loop10, and then
+        the storage worker's own `failure` write to the same stalled device. That write may take up to
+        `per_unit_seconds`, and in that time the root still ends at L. It is the finding 21 (A) signature,
+        fail-closed.
+      - The fence's own `now + op` deadline is also not in R; only the 0.25 s margin covers it.
+      - Finding 25 declares both points as a residual. The residual contradicts the decision text, and the ADR
+        wording misdescribes the term.
+      - **Repair** (the author chooses; amend the ADR note first):
+        - (a) Accept op as a nominal allowance, as a declared deviation from DR-16. Correct the ADR sentence to
+          "a nominal one-RPC allowance, not the statement's bound".
+        - (b) Bound the readiness-failure `failure` statement to `min(_work_end, now + per_unit_seconds,
+          bootstrap lease − CANCEL_FENCE_MARGIN_SECONDS)`. A stalled statement then fails, is recorded, and
+          leaves the fence reachable. This changes evidence completeness under a stall, so the closure tests must
+          show the outcome.
+        - (c) Reserve `per_unit_seconds`. The live bound becomes `2.75 − op − per_unit`, which is about 1.37 s
+          at per_unit 1 and infeasible for larger values, so (c) is probably not workable.
+    - **LOW-1 (records lost across a controller recovery): `dispatcher.py:792`, `recovery.py:436`.**
+      `_commit_controller_view` replaces `self.facade` with the recovery view, a new `ProcessReadiness` whose
+      `_windows` is empty. `DispatchResult.readiness_windows` (`dispatcher.py:1832`) then drops every record
+      made before the recovery. The claim "one record per marker start step, in order" fails without any sign.
+      Argus is unaffected (the cut is a diagnostic). **Repair:** carry the records into the view in
+      `_commit_controller_view`, or keep them in the dispatcher. Add a recovery-case assertion.
+    - **LOW-2 (the reserve is not kept when W' is clamped to 0, so restarts still carry the (A) signature):
+      `providers.py:38`, `dispatcher.py:897-924`.**
+      - The cap guarantees R only from `t0 + W'`. The last QUERY keeps `min(0.25, W'/A)`, so for W' < 0.75 s
+        part of the last round trip is charged to R.
+      - When `L − t0 < R`, `max(0, …)` gives W' = 0. All three QUERYs then run back to back with less than R
+        left, and the cancel can outlive L.
+      - RA2 removes this for normal start steps. It remains for restarts (no RA2; `_service` renews only below
+        `renew_margin` = 1.9 s live, which is less than R = 2.63 s) and for a start step that the generation end
+        prevents from renewing.
+      - Finding 25 says only "a restart keeps the cap and the record".
+      - **Repair:** state in the ADR residual that a marker restart, or a generation-limited start, can still end
+        with the root's lease expiring under the cancel, with an incomplete closure that fails closed. Or apply
+        `_renew_before_marker_start` in `_restart_unit` before `_restart_end`, with one extra request counted per
+        admitted restart.
+    - **LOW-3 (cut sources that admission does not check): `dispatcher.py:1081-1098`.** D is
+      `min(active end, now + start budget, lease, next health − scan)`.
+      - Finding 25 declares the start-budget source. Without action timeouts, any W ≥ op is cut.
+      - The health term is not declared. A marker unit whose start step follows another unit's first observation
+        has D ≤ `observed_at + cadence − health_scan_seconds`. A cadence shorter than about W plus the
+        pre-release work therefore cuts W on every such start.
+      - Both outcomes are now diagnosed, not silent, but admission accepts schedules that can never spend W.
+      - **Repair:** declare the health term. Optionally refuse at admission when
+        `W + op > start budget` (op without action timeouts, otherwise the start action timeout), or when
+        `W + op > cadence − scan` for a non-first marker unit. Such a refusal would also refuse the composed
+        never-ready fixture, so it is an author choice.
+    - **LOW-4 (the H1 headroom is thin): `dispatcher.py:1229-1245`.**
+      - After RA2, `L − t0 = 5 − (the renewal time after next_end is fixed) − (the pre-release work)`. W' = W
+        needs that sum to be at most `5 − R − W`.
+      - At the suggested H1 value W = 1.9 s, that is op + (1.99 − 1.9) = 0.47 s.
+      - Finding 22 measured about 0.31 s of pre-release work at load 8.4 (dispatch about 3.1 s, t0 = 3.41 s),
+        before the RA2 heartbeat, audit, root renewal and K.RENEW were added.
+      - A cut in the S1c re-run is therefore plausible. It would now be visible as `ML-PROBE-WINDOW-CUT`, but the
+        declared W would not be delivered.
+      - **Repair (harness, S1c):** choose H1 with measured headroom (for example W ≤ 1.5-1.7 s), and report
+        `cut` from the H3 record of every run.
+    - **LOW-5 (test reach).**
+      - `failed-set`: `assert entry._storage._failed` (`test_stabilization_stack_load_failures.py:235`) is
+        vacuous, because the fault itself sets `_failed` (`:196-197`). That case shows the classification, not
+        that `_fail()` ran.
+      - The generation-limited skip branch of `_renew_before_marker_start` (`dispatcher.py:1381-1382`) has no
+        test. The forced-cut test replaces the whole method.
+      - `_delay_cancel_reply` (`test_stabilization_s1b_start_failure.py:65-89`) delays only the client's read.
+        The native authority has already frozen and closed, so M2 shows the root-lease timing, not a slow native
+        close.
+      - M2 does not discriminate the `op` term (declared).
+      - **Repair** (with the next change in this area):
+        - assert that `_fail()` ran, for example by its SIGTERM or a spy;
+        - add a skip-branch case near `generation − 2 s`;
+        - add an M2 variant that delays the `failure` statement's RPC by about `op − 0.05 s`. It would fail
+          with the old 2.25 s reserve.
+    - **LOW-6 (open records).**
+      - DR-16's L6 (a dated correction to the thesis `amendment-s1a-3-…` record) is not done. DR-16 assigns it,
+        so it stays open on the thesis side.
+      - DR-16 says "records … in its evidence", but W, W', L and t0 reach only the result objects. The reason is
+        sound: the payload v2.0 is closed, with `additionalProperties: false`, the key set checked by
+        `validate_receipt`, and re-acceptance needed for a change. The result-only record is acceptable as an
+        interim measure only if the S1c harness (H3) persists it in a hash-bound run record. It is not covered by
+        the writer's integrity chain.
+      - `design-stabilization-s1b.md:187` still gives `ML-PROBE-NOT-READY` as the only outcome.
+      - `CANCEL_CLOSE_RESERVE_SECONDS` was removed without a shim. Any harness import of it, outside this
+        repository and not checked here, would break.
+      - **Repair:** the author acknowledges the evidence-location deviation. The thesis-side L6 correction is
+        made. One line is added to the design note. The harness imports are checked before the S1c re-run.
+    - **Effect.** No `src/` or `tests/` change is required to start the decisive full installed-wheel run and DV12
+      on `a134fd47b` (wheel `36894fab…`). Stack acceptance needs two things:
+      - an author disposition of MEDIUM-1, (a) or (b), with the ADR sentence corrected in either case;
+      - LOW-1 and LOW-2, repaired or declared.
+
+      The S1c live re-run should use an H1 value with headroom (LOW-4) and confirm that H3 persists the window
+      record (LOW-6).
