@@ -1674,3 +1674,26 @@ decision S-D2, approved on 2026-10-23).
       - LOW-1 to LOW-4 must be declared or repaired. If LOW-1 is repaired before the run, the wheel and the
         decisive run move to the new commit.
       - The S1c live re-run items (H1 = 1.7 s, the H3 window record) are unchanged.
+
+29. **Dispositions of finding 28 (written at 02:53:08 2026-10-24, before the repair; thesis DR-17, delegated).**
+    - **LOW-1, repaired.** The L1 carry in `_commit_controller_view` is guarded: `if view is not self.facade`.
+      The cleanup-only re-commit of the same view then carries nothing, and the records are not duplicated. The
+      reviewer's probe becomes a regression test in `test_active_controller_recovery.py`, which asserts exactly
+      one record per marker start after a failed recovery is re-committed cleanup-only.
+    - **LOW-3, repaired (wording only).**
+      - The `providers.py` `cancel_close_reserve` docstring now says "a nominal one-RPC allowance".
+      - ADR-ML3-PROBE-0001:
+        - The DR-16 residual (`:138-141`) gets a mark that it is superseded by the DR-17 cap.
+        - The stall outcome (`:219`) no longer guarantees "at least 0.25 s": it names the time spent in `_fail()`
+          and `_close_restarts`.
+        - The "not capped" bullet (`:236-239`) states that every non-readiness failure path keeps only
+          `renew_margin` (1.52–1.9 s live), and that the outcome is the root lease ending before the fence,
+          fail-closed.
+        - The expired-cap residual (`:244`) now reads "a cancel longer than the 2.0 s close the reserve assumes",
+          which includes cancels that stay within their own bounds.
+    - **LOW-2, declared.** A cap that is still in the future but shorter than one round trip is still sent, because
+      F-08 has no estimate for the once-per-run `failure` statement. The statement then times out and `_fail()`
+      loses the later terminal records, without any storage stall. This is fail-closed, and it is recorded in the ADR.
+    - **LOW-4, declared.** No test makes the cap bind on a fault statement or reaches the C = 2.0 branch, and the
+      L1 test does not cover a second recovery. These are recorded as test-reach residuals.
+    - **The decisive full run** is moved to the repair commit.
