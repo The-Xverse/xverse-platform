@@ -2,7 +2,7 @@
 
 **Source candidate:** `febfa8d5113ea29228597f2b7b6f9dad021c99f2` on `021-documentation-website`.
 **Base platform revision:** `64ff9d3eb3c7f8c74e745dbcaf25b91bcfca1aae`.
-**Status:** locally implemented and reviewed; user acceptance, main integration, hosted workflow execution, and publication pending.
+**Candidate preparation status:** locally implemented and reviewed; acceptance and publication were pending when this exact-candidate record was created. The subsequent accepted integration and verified public deployment are recorded in [delivery.md](delivery.md).
 
 ## Delivered scope
 

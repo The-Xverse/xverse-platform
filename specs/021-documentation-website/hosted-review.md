@@ -15,3 +15,7 @@ Required repair: canonicalize the English Doxygen page language to `en` (the Dox
 A separate read-only review found no issues in the repair. Native `<html>` attributes are preserved apart from the intentionally normalized language. Missing/split Pagefind indexes fail publication. Eleven contract tests and both hosting-path builds passed; the local index contains only `en`. Source identities and command records are in `evidence/search-repair/`.
 
 The repair stays within the accepted documentation/publication scope and changes no runtime behavior. Final closure requires the successor hosted workflow and production C++ search check; this is not inferred from the local checks.
+
+## Hosted closure
+
+W-DOC-007 is closed for published source `db4ad46584b070c167e3e0afff43eee2f2220883`. Workflow `40083648493` passed build and deployment. The public Pagefind entry contains only `en`; the production browser acceptance script returns Python and C++ reference results and completes all interactions without errors. The public manifest matches the published revision and its input hashes match repository source. Final evidence is in `evidence/integration/publication.json`, `public-http-final.json`, and `public-browser-final.json`.
