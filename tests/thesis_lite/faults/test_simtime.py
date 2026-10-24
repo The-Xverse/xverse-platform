@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 import json
 import socket
+import tempfile
 import threading
 import time
 
@@ -258,23 +259,26 @@ def test_channel_refuses_a_stream_socket_and_a_sequence_gap():
     hub.close()
 
 
-def test_listening_channel_accepts_exactly_one_peer(tmp_path):
-    path = str(tmp_path / "hub.sock")
-    listener = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-    listener.bind(path)
-    listener.listen(2)
-    channel = HubChannel(listener)
-    assert not channel.connected
-    first = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-    first.connect(path)
-    assert channel.connected
-    second = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-    second.connect(path)
-    with pytest.raises(FaultError, match="second hub peer"):
-        channel.connected
-    channel.close()
-    first.close()
-    second.close()
+def test_listening_channel_accepts_exactly_one_peer():
+    # Nested whole-suite runs inherit a long pytest temp root; AF_UNIX paths are bounded.
+    with tempfile.TemporaryDirectory(prefix="xv-hub-", dir="/tmp") as directory:
+        path = directory + "/hub.sock"
+        with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as listener:
+            listener.bind(path)
+            listener.listen(2)
+            channel = HubChannel(listener)
+            try:
+                assert not channel.connected
+                with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as first:
+                    first.connect(path)
+                    assert channel.connected
+                    with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as second:
+                        second.connect(path)
+                        with pytest.raises(FaultError, match="second hub peer"):
+                            channel.connected
+            finally:
+                channel.close()
+
 
 
 # --- scheduler against a fake hub (decisions 4-7) ---------------------------------------------------------------------
