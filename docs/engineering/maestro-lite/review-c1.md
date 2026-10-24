@@ -417,3 +417,17 @@ scientific result. No CARLA and no live run is used; every size below is an offl
          added document consumes the same margin.
        - Any such change must re-run the platform-builder dry run and compare it with `MAX_PERSISTENCE_INPUT`
          before a run.
+
+## 6. Acceptance (written at 12:08:20 2026-10-24)
+
+- **Accepted** under the author's delegation of 2026-10-24 (thesis `specs/029-lite-stabilization/review/author-decisions-20261023.md`
+  "Author delegation of decisions"; thesis `specs/002-assured-aeb/decisions.md` §J and the K-14 and WP-12 sizing rows).
+  It is flagged for the author's review.
+- **Basis:** finding 3 (independent review, PASS WITH NOTES), repaired in findings 4–5 (the composed Init test above
+  64 KiB, which the mutation check showed catches the old bound).
+- **Decisive full run:** `platform-regression-20261024h-1` on `c6eea7d23` gave 2957 passed and 1 skipped (the
+  lane-admission skip); DV12 accepted (code `41b904cc`); CAPA step 16 `bf39b087` (56 records, 757 bindings, parent
+  step 15 preserved).
+- **Residuals** R1, R2, R4 to R7 and R9 stay open as recorded.
+- **Merged** into platform main, on top of the documentation-website commits made there by another session, and
+  pushed (see the merge commit).
