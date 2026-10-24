@@ -6,6 +6,8 @@ import json
 import math
 
 from .projection import PreparedLifecycle
+from xverse.faults import FaultError
+from xverse.faults.simtime import resolve_simtime, thaw_check
 from .providers import ProbePolicy, readiness_window_bound
 from .probe_identity import RUNNING
 from .lifecycle_evidence import _parents
@@ -167,6 +169,18 @@ def admit_schedule(
     period = cadence - scan - (service_calls + 1) * operation_seconds
     if period <= scan or poll_seconds > period:
         raise ScheduleError("ML-SCHEDULE-HEALTH-CAPACITY")
+    fault_clock = getattr(prepared, "fault_clock", None)
+    if fault_clock is not None and getattr(prepared, "faults", ()):
+        # ADR-ML3-SIMTIME-0001 decision 3: a held freeze must fit the thaw bound of this admission, and is
+        # refused while the D-4c handshake values are unknown.
+        try:
+            entries = resolve_simtime({"selection": {"system": {"uri": prepared.faults[0]["targetRef"]["uri"]}},
+                                       "faultSchedule": list(prepared.faults)}, fault_clock)
+        except FaultError as error:
+            raise ScheduleError("ML-SCHEDULE-FAULT-RESOLVE") from error
+        refusal = thaw_check(entries, fault_clock, cadence - scan)
+        if refusal is not None:
+            raise ScheduleError(refusal)
     if restart_operation_seconds is not None:
         _seconds(restart_operation_seconds, min(5, active_seconds, period), "RESTART-OPERATION")
     if recovery_operation_seconds is not None:

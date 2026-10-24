@@ -44,6 +44,15 @@ def _positive_int(value: Any) -> bool:
     return type(value) is int and 1 <= value <= MAX_INTEGER_PARAMETER
 
 
+MAX_DELAY_NS = 60_000_000_000
+
+
+def _delay_ns(value: Any) -> bool:
+    """Return whether ``value`` is an integer (not bool) delay in [1, MAX_DELAY_NS] ns (simulator-time mode)."""
+
+    return type(value) is int and 1 <= value <= MAX_DELAY_NS
+
+
 def _unit_ratio(value: Any) -> bool:
     """Return whether ``value`` is a finite number in (0, 1]."""
 
@@ -63,7 +72,9 @@ class KindSpec:
 
 
 VOCABULARY: Mapping[str, KindSpec] = {
-    "delay": KindSpec("delay", MESSAGE, True, {"delay-ticks": _positive_int}, required=("delay-ticks",)),
+    # ADR-ML3-SIMTIME-0001: ``delay-ns`` is the simulator-time form; each mode refuses the other's parameter.
+    "delay": KindSpec("delay", MESSAGE, True, {"delay-ticks": _positive_int, "delay-ns": _delay_ns},
+                      exactly_one_of=("delay-ticks", "delay-ns")),
     "loss": KindSpec("loss", MESSAGE, True, {"loss-ratio": _unit_ratio, "every": _positive_int}, exactly_one_of=("loss-ratio", "every")),
     "stale": KindSpec("stale", MESSAGE, True, {}),
     "crash": KindSpec("crash", PROCESS, True, {}),
