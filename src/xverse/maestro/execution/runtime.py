@@ -648,6 +648,8 @@ class PublicExecutionService:
             raise ExecutionInputError('MRX-REGISTRATION-BUSY')
         try:
             self._claim_path(run_id)
+            if not self._recovery_bindings:
+                return {'runId':run_id,'retirement':'unavailable','reason':'MRX-BINDING-REQUIRED'}
             try:
                 valid = verified(self, run_id)
                 return {'runId':run_id,'retirement':'verified' if valid else 'absent'}

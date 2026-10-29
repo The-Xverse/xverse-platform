@@ -21,6 +21,7 @@ from xverse.maestro.execution import (
 from test_inspection import inputs  # noqa: F401
 from test_runtime import runtime, start  # noqa: F401, F811
 from test_planning import permit_for
+from test_native_exchange import native, collect  # noqa: F401
 
 
 def hashes(service, rid):
@@ -342,6 +343,9 @@ def rewrite_lifecycle(service, prepared, change):
         "duplicate-phase",
         "reordered-cleanup",
         "false-stopped",
+        "unknown-extension",
+        "false-failure",
+        "missing-readiness",
     ],
 )
 def test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation(
@@ -387,6 +391,21 @@ def test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation(
             rows[i], rows[j] = rows[j], rows[i]
         elif mutation == "false-stopped":
             rows.remove(selected("run-running")[0])
+        elif mutation == "unknown-extension":
+            selected("phase-intent")[0]["extensions"]["io.xverse.maestro.execution"][
+                "unknownExecutableSemantics"
+            ] = True
+        elif mutation == "false-failure":
+            selected("run-terminal")[0]["extensions"]["io.xverse.maestro.execution"][
+                "outcome"
+            ] = "failed"
+        elif mutation == "missing-readiness":
+            next(
+                r
+                for r in selected("phase-outcome")
+                if r["extensions"]["io.xverse.maestro.execution"]["operation"]
+                == "ready"
+            )["extensions"]["io.xverse.maestro.execution"]["readinessKind"] = None
         return rows
 
     rewrite_lifecycle(service, prepared, change)
@@ -516,3 +535,169 @@ def test_declared_installation_change_does_not_reuse_existing_receipt(released):
             permit_for(new, service.host, graph, service),
             idempotency_key="pin-mismatch",
         )
+
+
+def test_failed_root_fsync_retry_repeats_durability_step(released, monkeypatch):
+    import xverse.maestro.execution.recovery as recovery
+
+    service, prepared, _ = released
+    inspection = service.inspect_recovery(prepared.submission.run_id)
+    original = recovery.os.fsync
+
+    def failed(fd):
+        if fd == service._root_fd:
+            raise OSError("interrupted root synchronization")
+        return original(fd)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(recovery.os, "fsync", failed)
+        with pytest.raises(ExecutionInputError, match="WRITE-FAILED"):
+            service.retire_released(inspection, grant(service, inspection))
+    assert len(list(service.root.glob("*.retired.json"))) == 1
+    calls = []
+
+    def synced(fd):
+        calls.append(fd)
+        return original(fd)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(recovery.os, "fsync", synced)
+        receipt = service.retire_released(inspection, grant(service, inspection))
+    assert service._root_fd in calls
+    assert receipt.to_data()["authorization"]["scope"] == "owned-simulation-recovery"
+
+
+def test_altered_persisted_grant_is_rejected_even_with_recomputed_receipt_digest(
+    released,
+):
+    from xverse.maestro.execution.inspection import canonical, sha256
+
+    service, prepared, _ = released
+    inspection = service.inspect_recovery(prepared.submission.run_id)
+    service.retire_released(inspection, grant(service, inspection))
+    path = next(service.root.glob("*.retired.json"))
+    value = json.loads(path.read_bytes())
+    value["authorization"]["inspection_digest"] = "sha256:" + "f" * 64
+    value["receiptDigest"] = sha256(
+        canonical({k: v for k, v in value.items() if k != "receiptDigest"})
+    )
+    path.write_bytes(canonical(value))
+    assert (
+        service.recovery_status(prepared.submission.run_id)["retirement"]
+        == "unverified"
+    )
+
+
+def test_unknown_claim_fields_do_not_become_recovery_authority(released):
+    service, prepared, _ = released
+    path = service.root / (prepared.submission.run_id + ".claim.json")
+    value = json.loads(path.read_bytes())
+    value["unknownOwnershipSemantics"] = True
+    path.write_text(json.dumps(value))
+    assert (
+        service.inspect_recovery(prepared.submission.run_id).to_data()["eligible"]
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "native",
+    [{"native-observer-capacity": 1, "native-observer-deferred": True}],
+    indirect=True,
+)
+def test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence(native):
+    old, prepared, provider, started = native
+    collected = collect(native)
+    terminal = old.stop(started["runId"], expected_version=collected["stateVersion"])
+    assert terminal["cleanup"] == "released"
+    old.close()
+    service = successor(old, provider)
+    try:
+        inspection = service.inspect_recovery(started["runId"])
+        data = inspection.to_data()
+        assert data["eligible"], data
+        assert (
+            data["recordedEvidenceStatus"]
+            == data["assessedEvidenceStatus"]
+            == "incomplete"
+        )
+        assert data["diagnostics"]
+        service.retire_released(inspection, grant(service, inspection))
+        assert service.read(started["runId"])["state"] == "unknown"
+    finally:
+        service.close()
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"scope": "physical"},
+        {"permit_id": "../escape"},
+        {"approval_reference": ""},
+        {"not_before": float("nan")},
+        {"expires_at": float("inf")},
+    ],
+)
+def test_invalid_host_grants_cannot_create_a_retirement(released, changes):
+    service, prepared, _ = released
+    inspection = service.inspect_recovery(prepared.submission.run_id)
+    with pytest.raises(ExecutionInputError, match="PERMIT-INVALID"):
+        grant(service, inspection, **changes)
+    assert not list(service.root.glob("*.retired.json"))
+
+
+@pytest.mark.parametrize("fault", ["truncated-stream", "open-writer"])
+def test_corrupt_or_open_original_source_is_not_eligible(released, fault):
+    service, prepared, _ = released
+    root = service.root / (prepared.submission.run_id + ".argus")
+    if fault == "truncated-stream":
+        path = root / "events.jsonl"
+        path.write_bytes(path.read_bytes()[:-7])
+    else:
+        path = root / "manifest.json"
+        value = json.loads(path.read_bytes())
+        value["writerState"] = "open"
+        path.write_text(json.dumps(value))
+    inspection = service.inspect_recovery(prepared.submission.run_id)
+    assert inspection.to_data()["eligible"] is False
+    with pytest.raises(ExecutionInputError):
+        service.retire_released(inspection, grant(service, inspection))
+    assert not list(service.root.glob("*.retired.json"))
+
+
+def test_source_change_during_publication_is_not_accepted(released, monkeypatch):
+    import xverse.maestro.execution.recovery as recovery
+
+    service, prepared, _ = released
+    rid = prepared.submission.run_id
+    inspection = service.inspect_recovery(rid)
+    original = recovery.inspect
+    count = [0]
+
+    def changed(*args):
+        count[0] += 1
+        if count[0] == 2:
+            path = service.root / (rid + ".claim.json")
+            path.write_bytes(path.read_bytes() + b" ")
+        return original(*args)
+
+    monkeypatch.setattr(recovery, "inspect", changed)
+    with pytest.raises(ExecutionInputError, match="SOURCE-CHANGED"):
+        service.retire_released(inspection, grant(service, inspection))
+    assert not list(service.root.glob("*.retired.json"))
+    assert not list(service.root.glob(".recovery-*.tmp"))
+
+
+def test_reader_budget_is_enforced_before_public_reader(released, monkeypatch):
+    import xverse.maestro.execution.recovery as recovery
+
+    service, prepared, _ = released
+    monkeypatch.setattr(recovery, "MAX_SOURCE", 1)
+    monkeypatch.setattr(
+        recovery.EvidenceStore,
+        "read_run",
+        lambda *args, **kwargs: pytest.fail("Oversized source reached reader"),
+    )
+    assert service.inspect_recovery(prepared.submission.run_id).to_data()[
+        "reasons"
+    ] == ["MRX-SOURCE-LIMIT"]

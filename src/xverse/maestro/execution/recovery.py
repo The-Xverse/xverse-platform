@@ -258,7 +258,29 @@ def _lifecycle(records, claim):
     for index, (record, event) in enumerate(events, 1):
         kind = event.get("kind")
         if (
-            record.get("producerSequence") != index
+            type(record.get("producerSequence")) is not int
+            or record.get("producerSequence") != index
+            or record.get("eventKind") != "annotation"
+            or record.get("schemaVersion") != "1.0"
+            or set(event)
+            != {
+                "schemaVersion",
+                "kind",
+                "operationId",
+                "runId",
+                "planDigest",
+                "inputSemanticDigest",
+                "preparationDigest",
+                "sourceDigests",
+                "phaseId",
+                "logicalId",
+                "providerId",
+                "operation",
+                "outcome",
+                "readinessKind",
+                "resources",
+                "observation",
+            }
             or event.get("schemaVersion") != "1.0"
             or kind not in _KINDS
             or any(
@@ -349,6 +371,15 @@ def _lifecycle(records, claim):
                     ]
                 ):
                     _error("LIFECYCLE-OUTCOME")
+                if (
+                    intent["operation"] == "ready"
+                    and event.get("readinessKind")
+                    not in ("liveness", "interface", "functional")
+                ) or (
+                    intent["operation"] != "ready"
+                    and event.get("readinessKind") is not None
+                ):
+                    _error("LIFECYCLE-SHAPE")
                 outcomes[phase] = record["eventId"]
             elif kind == "cleanup-intent":
                 if (
@@ -382,6 +413,21 @@ def _lifecycle(records, claim):
                 or observation.get("cleanup") != "released"
             ):
                 _error("CLEANUP-UNVERIFIED")
+            if (
+                set(observation)
+                != {"failureCode", "cleanup", "observationTransportGaps"}
+                or type(observation["observationTransportGaps"]) is not int
+                or observation["observationTransportGaps"] < 0
+                or (
+                    observation["failureCode"] is not None
+                    and (
+                        type(observation["failureCode"]) is not str
+                        or not _ID.fullmatch(observation["failureCode"])
+                    )
+                )
+                or (event["outcome"] == "failed" and observation["failureCode"] is None)
+            ):
+                _error("LIFECYCLE-SHAPE")
             terminals.append(record["eventId"])
             terminal_event = event
     missing = [p for p in phases if p not in outcomes]
@@ -421,6 +467,15 @@ def inspect(service, run_id):
         _error("OWNER-PRESENT")
     claim_raw = _read(service._root_fd, run_id + ".claim.json", 8192)
     claim = service._read_claim(run_id)
+    if claim is not None and set(claim) != {
+        "runId",
+        "requestDigest",
+        "operationId",
+        "correlationId",
+        "planDigest",
+        "inputSemanticDigest",
+    }:
+        _error("CLAIM-INVALID")
     if claim is None or canonical(json.loads(claim_raw)) != canonical(claim):
         _error("SOURCE-CHANGED")
     fd = None
@@ -540,6 +595,18 @@ def _load_receipt(service, run_id):
         value = json.loads(raw)
         if (
             type(value) is not dict
+            or set(value)
+            != {
+                "contractVersion",
+                "runId",
+                "inspectionDigest",
+                "inspection",
+                "permitDigest",
+                "authorization",
+                "recoveryBindingDigest",
+                "retiredAt",
+                "receiptDigest",
+            }
             or value.get("contractVersion") != "1.0"
             or value.get("runId") != run_id
             or canonical(value) != raw
@@ -551,6 +618,14 @@ def _load_receipt(service, run_id):
             )
         ):
             raise ValueError()
+        authorization = HostRecoveryPermit(**value["authorization"])
+        if authorization.digest != value["permitDigest"]:
+            raise ValueError()
+        authorization.validate(
+            RecoveryInspection(canonical(value["inspection"])),
+            service,
+            now=value["retiredAt"],
+        )
     except (ValueError, KeyError, TypeError):
         _error("RETIREMENT-INVALID")
     return value
@@ -598,6 +673,10 @@ def retire(service, inspection, permit):
             or old.get("inspection") != current.to_data()
         ):
             _error("RETIREMENT-CONFLICT")
+        try:
+            os.fsync(service._root_fd)
+        except OSError:
+            _error("RETIREMENT-WRITE-FAILED")
         return RecoveryRetirement(canonical(old))
     root_claims(service)
     with os.scandir(service._root_fd) as entries_iterator:
@@ -613,6 +692,7 @@ def retire(service, inspection, permit):
         "inspectionDigest": current.inspection_digest,
         "inspection": current.to_data(),
         "permitDigest": permit.digest,
+        "authorization": dict(permit.__dict__),
         "recoveryBindingDigest": binding_digest(service),
         "retiredAt": time.time(),
     }
