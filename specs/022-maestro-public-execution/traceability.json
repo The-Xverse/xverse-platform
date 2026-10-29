@@ -1,0 +1,1354 @@
+{
+  "feature": "022-maestro-public-execution",
+  "status": "implementation_authorized_not_accepted",
+  "baseline": "7fab6a290c3731533c2b88517158055c768b9d4e",
+  "authorization": {
+    "date": "2026-10-29",
+    "source": "User explicitly selected Authorize scoped platform work in response to the ADR-0034 execution-interface scope",
+    "implementation": true,
+    "user_acceptance": false,
+    "publication": false,
+    "legacy_source_changes": false
+  },
+  "tasks": [
+    {
+      "id": "MPX-T01",
+      "description": "specification, contract, baseline and initial consistency review",
+      "depends_on": [],
+      "requirements": [
+        "MPX-FR-001",
+        "MPX-FR-002",
+        "MPX-FR-011",
+        "MPX-FR-012"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "MPX-T02",
+      "description": "bounded public submission and effective-input inspection",
+      "depends_on": [
+        "MPX-T01"
+      ],
+      "requirements": [
+        "MPX-FR-001",
+        "MPX-FR-002",
+        "MPX-FR-003"
+      ],
+      "status": "in_progress",
+      "note": "Static inspection and provider-reported effective-source equality implemented;18 installed-package checks pass. Actual runtime consumption still unverified."
+    },
+    {
+      "id": "MPX-T03",
+      "description": "host/provider bindings, permissions and executable-source isolation",
+      "depends_on": [
+        "MPX-T02"
+      ],
+      "requirements": [
+        "MPX-FR-004",
+        "MPX-FR-007"
+      ],
+      "status": "in_progress",
+      "note": "Host provider identity/registry/configuration bounds implemented; runtime permission and execution isolation still unfinished."
+    },
+    {
+      "id": "MPX-T04",
+      "description": "actual lifecycle scheduling, readiness, idempotency and stop",
+      "depends_on": [
+        "MPX-T03"
+      ],
+      "requirements": [
+        "MPX-FR-005",
+        "MPX-FR-006",
+        "MPX-FR-007"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T05",
+      "description": "actual Argus lifecycle evidence and source identity bindings",
+      "depends_on": [
+        "MPX-T04"
+      ],
+      "requirements": [
+        "MPX-FR-008",
+        "MPX-FR-009"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T06",
+      "description": "native X-COM provider/observation integration and gap semantics",
+      "depends_on": [
+        "MPX-T05"
+      ],
+      "requirements": [
+        "MPX-FR-008",
+        "MPX-FR-009",
+        "MPX-FR-010"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T07",
+      "description": "Studio three-view shared-run live demonstration",
+      "depends_on": [
+        "MPX-T06"
+      ],
+      "requirements": [
+        "MPX-FR-001",
+        "MPX-FR-008",
+        "MPX-FR-010"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T08",
+      "description": "failure/security/compatibility verification and exact-candidate package",
+      "depends_on": [
+        "MPX-T07"
+      ],
+      "requirements": [
+        "MPX-FR-003",
+        "MPX-FR-004",
+        "MPX-FR-006",
+        "MPX-FR-007",
+        "MPX-FR-009",
+        "MPX-FR-011",
+        "MPX-FR-012"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T09",
+      "description": "separate review, repairs and affected repeated verification",
+      "depends_on": [
+        "MPX-T08"
+      ],
+      "requirements": [
+        "MPX-FR-012"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "MPX-T10",
+      "description": "explicit user acceptance, exact main integration and assembled verification",
+      "depends_on": [
+        "MPX-T09"
+      ],
+      "requirements": [
+        "MPX-FR-012"
+      ],
+      "status": "pending"
+    }
+  ],
+  "sads": [
+    {
+      "id": "XVE-SYS-0056",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0057",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0058",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0059",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0060",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0061",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0062",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0063",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0064",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0065",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0066",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0067",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0068",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0069",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0070",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0071",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0072",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0073",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0074",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0075",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0076",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0077",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0078",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0079",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0080",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0081",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0082",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0083",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0084",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0085",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0086",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0087",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0088",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0089",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0090",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0091",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0092",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0093",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0094",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0095",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0096",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0097",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0098",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0099",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0100",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0101",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0102",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0103",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0106",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0107",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0108",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0109",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0110",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0111",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0112",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0113",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0114",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0115",
+      "source": "REF-002",
+      "section": "Orchestration and resource management",
+      "owner": "Maestro / Runtime / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0116",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0117",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0118",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0119",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0120",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0121",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0122",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0123",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0124",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0125",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0126",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0127",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0128",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0129",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0130",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0131",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0132",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0133",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0134",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0135",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0136",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0137",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0138",
+      "source": "REF-002",
+      "section": "Runtime environment",
+      "owner": "Runtime / Argus / Time / Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0179",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0180",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0181",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0182",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0183",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0184",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0185",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0186",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0187",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0188",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0189",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0190",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0191",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0192",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0193",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0194",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0195",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0196",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0197",
+      "source": "REF-002",
+      "section": "Monitoring, logging, and observability",
+      "owner": "Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0216",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0217",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0218",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0219",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0220",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0221",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0222",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0223",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0224",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0225",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0226",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0227",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0228",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0229",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0230",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0231",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0232",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0233",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0234",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0235",
+      "source": "REF-002",
+      "section": "Security and compliance",
+      "owner": "Security",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0251",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0252",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0253",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0254",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0255",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0256",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0257",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0258",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0259",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0260",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0261",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0262",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0263",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0264",
+      "source": "REF-002",
+      "section": "Time synchronization and determinism",
+      "owner": "Time / Maestro / X-COM",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0265",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0266",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0267",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0268",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0269",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0270",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0271",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0272",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0273",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0274",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0275",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0276",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0277",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0278",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    },
+    {
+      "id": "XVE-SYS-0279",
+      "source": "REF-002",
+      "section": "Fault tolerance and recovery",
+      "owner": "Faults / Runtime / Maestro / Argus",
+      "disposition": "allocated",
+      "scope": "Relevant architectural allocation; detailed normative satisfaction unclaimed. User-derived capability requirements govern current work."
+    }
+  ],
+  "acceptance": {
+    "AC-01": "not_run",
+    "AC-02": "not_run",
+    "AC-03": "not_run",
+    "AC-04": "not_run",
+    "AC-05": "not_run",
+    "AC-06": "not_run",
+    "AC-07": "not_run",
+    "AC-08": "not_run",
+    "AC-09": "not_run",
+    "AC-10": "not_run"
+  },
+  "verification": {
+    "inspection": "docs/engineering/maestro-public/evidence/inspection/verification.json",
+    "scope": "public static inspection and provider-reported effective-input equality; no lifecycle execution or platform acceptance"
+  }
+}
