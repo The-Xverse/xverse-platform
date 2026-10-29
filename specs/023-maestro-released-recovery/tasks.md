@@ -5,7 +5,7 @@
 - [x] MRX-T03: host permits, durable retirement and Start fences. Depends on: MRX-T02.
 - [x] MRX-T04: actual owned-process and adverse verification. Depends on: MRX-T03.
 - [x] MRX-T05: separate review, repair and exact repeated checks. Depends on: MRX-T04.
-- [ ] MRX-T06: explicit user acceptance, exact main and assembled verification. Depends on: MRX-T05.
+- [x] MRX-T06: explicit user acceptance, exact main and assembled verification. Depends on: MRX-T05.
 - [ ] MRX-T07: Studio admitted dependency and original-root complete live workflow. Depends on: MRX-T06.
 
 T02–T05 are under successor verification after recorded reviews. Acceptance/main
@@ -18,3 +18,7 @@ live acceptance remain pending. Evidence: docs/engineering/maestro-recovery/evid
 
 The user accepted exact8c2307fa9 on2026-10-29. T06 isolated main integration/assembled
 verification is in progress; T07 full Studio live acceptance remains open.
+
+T06 accepted candidate merged in isolated main and assembled236/46/3 checks pass.
+Evidence: docs/engineering/maestro-recovery/evidence/assembled-main.json.
+T07 Studio admission and full live workflow remain open.
