@@ -290,6 +290,32 @@ def _lifecycle(records, claim):
             or record.get("runId") != claim["runId"]
         ):
             _error("LIFECYCLE-IDENTITY")
+        phase_kind = kind in (
+            "phase-intent",
+            "phase-outcome",
+            "cleanup-intent",
+            "cleanup-outcome",
+        )
+        resources = event.get("resources")
+        if (
+            type(resources) is not list
+            or len(resources) > 32
+            or any(type(r) is not str or not _ID.fullmatch(r) for r in resources)
+            or (kind != "phase-outcome" and resources)
+            or (
+                event.get("observation") is not None
+                and type(event["observation"]) is not dict
+            )
+            or (kind != "phase-outcome" and event.get("readinessKind") is not None)
+            or (
+                not phase_kind
+                and any(
+                    event.get(k) is not None
+                    for k in ("phaseId", "logicalId", "providerId", "operation")
+                )
+            )
+        ):
+            _error("LIFECYCLE-SHAPE")
         if index == 1:
             preparation = event.get("preparationDigest")
             sources = event.get("sourceDigests")
@@ -626,7 +652,7 @@ def _load_receipt(service, run_id):
             service,
             now=value["retiredAt"],
         )
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, RecursionError):
         _error("RETIREMENT-INVALID")
     return value
 

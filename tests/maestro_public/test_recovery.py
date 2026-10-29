@@ -346,6 +346,8 @@ def rewrite_lifecycle(service, prepared, change):
         "unknown-extension",
         "false-failure",
         "missing-readiness",
+        "bad-resources",
+        "unexpected-global-phase",
     ],
 )
 def test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation(
@@ -399,6 +401,14 @@ def test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation(
             selected("run-terminal")[0]["extensions"]["io.xverse.maestro.execution"][
                 "outcome"
             ] = "failed"
+        elif mutation == "bad-resources":
+            selected("phase-outcome")[0]["extensions"]["io.xverse.maestro.execution"][
+                "resources"
+            ] = {"uninterpreted": "resource"}
+        elif mutation == "unexpected-global-phase":
+            selected("run-start-requested")[0]["extensions"][
+                "io.xverse.maestro.execution"
+            ]["phaseId"] = "uninterpreted-phase"
         elif mutation == "missing-readiness":
             next(
                 r
@@ -701,3 +711,16 @@ def test_reader_budget_is_enforced_before_public_reader(released, monkeypatch):
     assert service.inspect_recovery(prepared.submission.run_id).to_data()[
         "reasons"
     ] == ["MRX-SOURCE-LIMIT"]
+
+
+def test_deeply_corrupt_receipt_has_a_stable_refusal(released):
+    service, prepared, _ = released
+    inspection = service.inspect_recovery(prepared.submission.run_id)
+    service.retire_released(inspection, grant(service, inspection))
+    path = next(service.root.glob("*.retired.json"))
+    path.write_bytes(b"[" * 1200 + b"0" + b"]" * 1200)
+    status = service.recovery_status(prepared.submission.run_id)
+    assert (
+        status["retirement"] == "unverified"
+        and status["reason"] == "MRX-RETIREMENT-INVALID"
+    )
