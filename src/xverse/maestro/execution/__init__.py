@@ -27,3 +27,6 @@ from .runtime import PhaseReceipt, PublicExecutionService, RuntimeContext, Runti
 from .process import FixedProcessInstallation, InstallationFile, OwnedChild, ProcessOwnershipError
 __all__ += ['PhaseReceipt', 'PublicExecutionService', 'RuntimeContext', 'RuntimeProvider',
             'FixedProcessInstallation', 'InstallationFile', 'OwnedChild', 'ProcessOwnershipError']
+
+from .observations import NativeObservationBatch
+__all__ += ['NativeObservationBatch']

@@ -190,6 +190,8 @@ def test_actual_child_consumes_frozen_edited_inputs_and_argus_retains_identity(r
     assert provider.child.observe() == 'released'
     assert provider.calls[-2:] == ['cleanup-launch', 'cleanup-prepare']
     assert service.stop(result['runId'], expected_version=terminal['stateVersion']) == terminal
+    assert service.stop(result['runId'], expected_version=result['stateVersion']) == terminal
+    assert terminal['stopOperationId'] and terminal['stopOperationId'] != terminal['operationId']
     reader = EvidenceStore.read_run(service.root / (result['runId'] + '.argus'))
     assert reader.recorded_evidence_status == reader.assessed_evidence_status == 'complete'
     records = [r for r in reader.records() if r.get('producerId') == 'maestro-public-execution']
@@ -207,6 +209,8 @@ def test_actual_child_consumes_frozen_edited_inputs_and_argus_retains_identity(r
     assert str(provider.root) not in json.dumps(terminal)
     measured = next(r for r in records if r['extensions']['io.xverse.maestro.execution']['readinessKind'])
     assert measured['extensions']['io.xverse.maestro.execution']['observation']['value'] == 34.5
+    stopped = next(r for r in records if r['extensions']['io.xverse.maestro.execution']['kind'] == 'run-terminal')
+    assert stopped['extensions']['io.xverse.maestro.execution']['operationId'] == terminal['stopOperationId']
 
 
 @pytest.mark.parametrize('failure', ['fail_ready', 'fail_after_launch'])

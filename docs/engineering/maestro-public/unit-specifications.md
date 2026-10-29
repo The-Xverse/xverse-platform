@@ -17,9 +17,11 @@ Capability: specs/022-maestro-public-execution. This is not acceptance or certif
 | MPX-U09 LifecycleEvidence | Actual public Argus open/append/flush/finalize/abort; original input versus plan identity; correlation names original request event; persistent writer failures independent of cleanup; root pinned through owned directory FD | actual writer/reader interop, fsync/open failure and root-replacement tests |
 | MPX-U10 FixedProcessInstallation/OwnedChild | Fixed pinned host command/environment; no imported executable strings; bounded stdin after handle retention; original Popen/pidfd/birth witness; no unknown/group signals | actual child, changed installation/birth, kernel-handle failure, runtime exit and timed stop tests |
 | MPX-U11 RuntimeProvider | Trusted installed pure mapping/admission and bounded effect/observation/cleanup contract; real installations separately admitted | owned test providers verify mechanics only; Autoverse/native provider admission unfinished |
+| MPX-U12 NativeObservationBatch/collection | Host-provider-only pull,64KiB/32records,8snapshots,32input facts; actual source/run/plan/installation and compiled route agreement; inert duplicate, sequence conflict/gap; no caller records | test_native_exchange.py over an actual C++ exchange and explicit fault injection |
+| MPX-U13 native exchange test artifact | Public C++ contracts/endpoints/provider/FIFO submit+receive, original ObservationHub records/final snapshot, elapsed-clock origin and actual input event identities; bounded stdin/output; no legacy/network workload | real byte equality, actual observer saturation leaves FIFO delivery intact, original Argus incomplete verdict |
 
 Sources: src/xverse/maestro/execution/{inspection,admission,planning,permissions,
-runtime,evidence,process}.py and public __init__.py. Tests: tests/maestro_public/.
+runtime,evidence,process,observations}.py and public __init__.py. Tests: tests/maestro_public/.
 Prototype fixtures cannot satisfy the full user's native-X-COM/Autoverse/Studio
 goal. Provider callbacks are cooperative trusted code, not a hostile-code sandbox;
 resource-tree containment, Windows and physical effects are unsupported.

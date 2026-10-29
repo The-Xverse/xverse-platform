@@ -2,7 +2,8 @@
 
 Feature branch: `feat/022-maestro-public-execution`
 Created: 2026-10-29
-Status: authorized implementation; not accepted.
+Status: bounded public platform boundary accepted by the user on2026-10-29;
+actual Studio/Autoverse integration remains open. See acceptance-decision.json.
 
 The user authorized the concrete public execution-interface scope proposed in
 Studio ADR-0034: specification, digest-bound inspection, start/stop, tests and

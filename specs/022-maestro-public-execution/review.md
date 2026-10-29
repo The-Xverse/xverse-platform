@@ -213,3 +213,105 @@ real native exchange bound to this public runtime, then concrete provider and St
 integration. No platform acceptance, main integration, native Windows/physical
 support, hostile-code/process-tree containment or overall goal completion is
 claimed. The existing closed runtime's approvals were not changed.
+
+## Native ingestion review, pass11 (before clock repair)
+
+The actual native helper builds with the repository C++20/warning policy. Its
+first composed run exchanges two real payloads through submit/receive and imports
+the original native records.8 negative checks pass;1positive fails because Argus
+recorded complete but independently assessed incomplete with CLOCK-UNRESOLVED.
+The source domain was absent from the opening declaration. Preserve that result.
+
+- MPX-NR01 MAJOR: declare native clock domains before Argus opens through a pure
+  provider declaration. Use an explicit per-process elapsed-clock origin, not an
+  invented source reading or an inferred Python/C++ clock mapping. Reject an
+  undeclared native clock before import; retain actual original timestamps.
+- MPX-NR02 workflow observation: during implementation the evidenceWriter snapshot
+  was changed to expose the actual public writer_state after abort, replacing its
+  former generic closed label. This repair was not recorded as a persisted finding
+  beforehand; do not describe it as a prior separate review. Require affected
+  verification and this separate review before accepting the successor.
+- Native completeness still requires original source declarations, drain/closure
+  and gap behavior. The neutral helper remains a fixed owned contract test, never
+  proof of the full Autoverse/Studio integration or network fidelity.
+
+- MPX-NR03 MAJOR (original-counter review, before repair): record counters are
+  stamped when each observation is retained. Drops after the last retained record
+  can therefore be absent from every record. Preserve/import the actual final
+  native ObservationSnapshot and its quiesced interval, and verify observer pressure
+  leaves actual FIFO payload delivery intact while Argus evidence remains incomplete.
+  Do not rewrite an earlier record's original native counters to imply later loss.
+
+## Native causal-source allocation, before implementation
+
+18 composed native checks now pass, including actual observer saturation: both
+payloads deliver, one native record drops, the original final snapshot declares it,
+and actual Argus recorded/assessed statuses remain incomplete. No native counter
+was rewritten. The positive no-loss run remains complete after clock declaration.
+
+- MPX-NR04 integration obligation: the future external bridge needs its actual
+  provider-recorded input/ingress fact before native forwarding, because the core
+  requires causation identity. Add bounded original input facts to the host-only
+  batch contract and persist their original IDs/clocks before observations. An
+  unknown upstream cause remains absent; run correlation is not a substitute for
+  per-message causation. A configured native test input has an actual launch cause.
+
+- MPX-NR05 MAJOR (retry review before repair): Stop currently rejects a retry with
+  the original expected_version after successful cleanup, although it accepts a
+  second call after rereading the terminal version. Retain the original stop
+  request/version and operation ID so an identical lost-response retry is inert;
+  unrelated stale versions must still conflict. Persist the stop operation and
+  bounded terminal failure code in actual Argus records for cross-view navigation.
+
+## Scope and concrete-provider review, before final repairs
+
+187 focused checks pass on the composed successor, including the original-version
+Stop retry and persisted Stop operation identity. The following concrete boundaries
+still need repair/verification before presenting an acceptance candidate:
+
+- MPX-NR06 MAJOR: owned-simulation grants check realizationClass but should also
+  reject targetClass physical/remote, matching the written prototype exclusions.
+  Verify against actual compiled physical/remote declarations with zero effects.
+- MPX-NR07 MAJOR: the native test provider's dispatch override omits its base
+  provider's ProcessOwnershipError retention. Repair it and exercise actual native
+  child acquisition failure; unknown cleanup must not become released because
+  assignment of the returned handle was interrupted by the constructor exception.
+
+Selected-baseline qualification for NR06: the attempted physical fixture first
+failed semantic validation without its asset reference, then the authoritative
+compiler rejected targetClass physical even with virtual realization. The final
+negative case preserves that compiler rejection and asserts zero effects; no
+physical compiled plan is fabricated. Remote/virtual does compile and is denied
+by the host simulation grant. Failed test reports remain in private scope-* XML;
+they describe test assumptions, not failed live hardware operations.
+
+Failure-retention limitation: original native-initial.xml and subsequent reports
+are retained, but the first temporary failing run's raw native/Argus directories
+were not copied before normal pytest retention. The original CLOCK-UNRESOLVED
+diagnosis was inspected through the actual reader and retained as a tool observation
+and this review, not as a preserved raw original directory. Do not claim otherwise.
+The final candidate will use a unique private basetemp and retain its actual data.
+
+## Frozen platform candidate review and acceptance
+
+Accepted source fingerprint0f1c5bd2040c1a8e1a0b6997269ec27ab5edcf32c0924a2a9fa2388595069045.
+Final source/test bytes remain unchanged through190passing checks,0failures/errors/
+skips,84.59seconds;3existing native build/consumer/observation CTest checks also pass.
+All9 installed implementation modules match source. The unique private final-native
+basetemp retains the actual source projections and Argus evidence. Source/header
+baseline, binary, report, log and build-policy hashes are in evidence/native/verification.json.
+
+Separate self-review confirms repaired NR01–NR07 and the earlier recorded runtime
+findings within the bounded Linux prototype. Physical declarations are rejected by
+the actual selected compiler; remote targets are denied before effects. Partial
+native acquisition retains unknown authority, identical Stop retries are inert,
+actual input/native/snapshot records preserve source identity and original clocks,
+and real observer pressure cannot hide final loss or alter FIFO delivery in this
+witness. No independent third-party software review is asserted.
+
+The user explicitly said I accept; recorded2026-10-29 16:16:03UTC. Acceptance applies
+to this frozen public platform boundary. Subsequent edits record documentation and
+evidence only, with no source/test changes. Existing private-runtime/lane/physical
+approvals remain closed; there is no publication approval. T10 proceeds through an
+isolated exact-artifact main merge and assembled verification. T07 actual Studio/
+Autoverse and the full goal remain required. No live user preview was changed.

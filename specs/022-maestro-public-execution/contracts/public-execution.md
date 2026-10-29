@@ -75,3 +75,34 @@ OwnedChild; ProcessOwnershipError also retains a partially acquired child. No
 process groups, descendant inference or reconstructed PID signals are supported.
 Provider interpretation of scenario/profile semantics and installation reservation
 is required and verified for each admitted provider, not granted by a generic enum.
+
+## Host-bound native observation collection
+
+collect_native_observations(run_id, expected_version=...) pulls only from registered
+host providers implementing read_observation_batch. Requests carry no projection,
+binary, path or native record. NativeObservationBatch is host-only frozen data,
+bounded to64KiB/32records, with an original per-source batch sequence. The projection
+envelope must retain matching run, compiled-plan, input-semantic, provider and
+installation identities in io.xverse.maestro.execution extensions. The actual
+public Argus importer validates the complete native-record schema. Duplicate batches
+are inert; conflicting or stale sequences reject. Missing source batches remain an
+explicit observation gap, never a fabricated native counter or cross-message cause.
+
+An optional pure observation_clock_declarations(configuration, run_id, operation_id)
+declares source clock domains before Argus opens. A future per-process elapsed clock
+may declare its origin0; this is a definition, not an observed native reading or a
+host-clock mapping. Original records and interval clocks must use declared domains.
+
+The additive projection namespaces io.xverse.native.inputs (at most32 original
+facts) and io.xverse.native.snapshots (at most8 original tap snapshots) preserve
+source facts and final/interval loss. Input facts retain schemaVersion1.0, original
+eventId/producerId, sourceClock, origin configured-input or transport-ingress,
+canonical route/endpoint IDs, correlation and optional upstreamCausationId. Missing
+upstream cause stays absent; no request, timestamp or run ID is substituted. Actual
+Argus input annotations precede native observation import; snapshots are imported
+through its public import_snapshot. Snapshot/native counters are never rewritten.
+
+Source snapshots expose original Argus ordinals separately for observations,
+inputs and snapshots. They are references to actual stored records, not invented
+event IDs. Identical original Stop requests retain stopOperationId and return the
+same result even when the first response was lost; unrelated stale versions conflict.

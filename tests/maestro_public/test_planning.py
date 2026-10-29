@@ -81,3 +81,49 @@ def test_permission_is_not_physical_or_private_runtime_authority(prepared):
     permit = permit_for(result, host, graph)
     with pytest.raises(ExecutionInputError, match='MPX-PERMIT-INVALID'):
         replace(permit, scope='physical')
+
+
+@pytest.mark.parametrize('target_class,realization', [('physical', 'virtual'), ('remote', 'virtual')])
+def test_nonlocal_or_physical_declarations_cannot_use_simulation_grant(inputs, target_class, realization, monkeypatch):
+    import json, subprocess
+    from xverse.argus import EvidenceStore
+    from xverse.maestro.execution import CanonicalSubmission
+    from xverse_xdl import SourceInput, compile_experiment_sources
+    request, host = inputs
+    def forbidden(*_args, **_kwargs):
+        pytest.fail('A rejected target caused a process or writer effect')
+    monkeypatch.setattr(subprocess, 'Popen', forbidden)
+    monkeypatch.setattr(EvidenceStore, 'open_run', forbidden)
+    documents = []
+    for name, raw in request.documents:
+        value = json.loads(raw)
+        if value['kind'] == 'Deployment':
+            value['spec']['targets'][0]['targetClass'] = target_class
+            if target_class == 'physical':
+                value['spec']['targets'][0]['externalAssetRef'] = 'urn:xverse:test:physical-declaration-not-authorized'
+            value['spec']['bindings'][0]['realizationClass'] = realization
+        documents.append((name, json.dumps(value).encode()))
+    documents = tuple(documents)
+    compiled = compile_experiment_sources([SourceInput(n, b) for n, b in documents],
+        profile_schema_paths=[s.path for s in host.schemas])
+    if target_class == 'physical':
+        # Selected compiler rejects physical targets before any executable plan
+        # exists. Preserve that authoritative boundary; never forge a plan to
+        # claim the prototype ran or admitted this physical declaration.
+        assert not compiled.is_valid
+        assert 'XDL1-PLAN-REALIZATION-UNSUPPORTED' in {d.code for d in compiled.diagnostics}
+        return
+    assert compiled.is_valid, compiled.diagnostics
+    host = replace(host, targets=(replace(host.targets[0],
+        realization_classes=(realization,), target_classes=(target_class,)),))
+    submission = CanonicalSubmission(request.run_id, documents,
+        'sha256:' + compiled.plan['digest']['value'],
+        'sha256:' + compiled.plan['provenance']['inputSemanticDigest']['value'], request.selection)
+    prepared = prepare_execution(submission, host, (Provider(),))
+    logical = prepared.inspection.to_data()['units'][0]['logicalId']
+    phases = (LifecyclePhase('prepare', logical, Provider.provider_id, 'prepare'),
+        LifecyclePhase('start', logical, Provider.provider_id, 'start', ('prepare',)),
+        LifecyclePhase('ready', logical, Provider.provider_id, 'ready', ('start',)))
+    graph = plan_lifecycle(prepared, phases)
+    with pytest.raises(ExecutionInputError, match='MPX-PERMIT-SCOPE'):
+        permit_for(prepared, host, graph).validate(prepared, host, graph)

@@ -1,8 +1,8 @@
 # Public execution detailed design
 
-Status: prototype static/effective inspection, host-bound dispatch, Linux child
-ownership and real Argus lifecycle persistence implemented. Native integration,
-full acceptance and platform-main delivery remain unfinished.
+Status: bounded Linux public boundary accepted: static/effective inspection,
+host-bound lifecycle, original child ownership, actual native exchange and Argus.
+Actual Studio/Autoverse integration and whole-goal acceptance remain unfinished.
 
 ## Existing boundaries and reuse
 
@@ -146,3 +146,23 @@ copied modules. Verification covers zero effects before admission, edited-input
 behavior, real per-element process/container ownership, actual native exchange,
 Argus verification, gap/pressure/writer failures and GUI cross-view navigation.
 Separate review and user acceptance precede exact platform-main integration.
+
+## Native observation ingestion stage
+
+NativeObservationBatch is returned only by an installed RuntimeProvider's optional
+read_observation_batch method. Public collection accepts run/version only, never
+caller-supplied native records. Bound batch bytes, record count and source sequence;
+compare original run/plan/input/installation witnesses against the frozen execution.
+Record source envelope provenance before calling actual Argus import_observation
+and flush_buffer; retain original record IDs, clocks, counters, payload policy and
+explicit correlation/causation without replacing them. Same sequence/body is a
+duplicate, changed body conflicts, and source sequence gaps remain visible. A known
+transport observation gap prevents final complete evidence without changing the
+original native drop counters or claiming data-plane delivery loss.
+
+The actual native contract requires nonempty causation identity. The neutral test
+can refer to its real Maestro launch intent. A later external bridge must record
+its actual ingress fact before forwarding and reference that fact; unknown upstream
+causation remains unknown. No placeholder or timestamp-derived cause is permitted.
+The neutral actual C++ exchange verifies the domain-neutral platform boundary; it
+does not replace the actual Studio/Autoverse experiment after platform admission.

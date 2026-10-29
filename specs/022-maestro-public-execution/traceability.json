@@ -1,12 +1,12 @@
 {
   "feature": "022-maestro-public-execution",
-  "status": "implementation_authorized_not_accepted",
+  "status": "platform_boundary_accepted_studio_goal_open",
   "baseline": "7fab6a290c3731533c2b88517158055c768b9d4e",
   "authorization": {
     "date": "2026-10-29",
     "source": "User explicitly selected Authorize scoped platform work in response to the ADR-0034 execution-interface scope",
     "implementation": true,
-    "user_acceptance": false,
+    "user_acceptance": true,
     "publication": false,
     "legacy_source_changes": false
   },
@@ -34,11 +34,12 @@
         "MPX-FR-002",
         "MPX-FR-003"
       ],
-      "status": "in_progress",
-      "note": "Public/effective input and separate installation identities implemented; actual edited-input consumption verified. Full native/target integration remains open.",
+      "status": "completed",
+      "note": "Completed bounded Linux prototype implementation, reviewed with167checks; concrete native/Autoverse provider admission remains T06/T07. No platform acceptance inferred.",
       "evidence": [
         "docs/engineering/maestro-public/evidence/runtime/verification.json"
-      ]
+      ],
+      "completed_candidate": "c58c889bf"
     },
     {
       "id": "MPX-T03",
@@ -50,11 +51,12 @@
         "MPX-FR-004",
         "MPX-FR-007"
       ],
-      "status": "in_progress",
-      "note": "Host grant now pins installation, runtime root/environment and limits; fixed owned Linux children verified. Concrete native/Autoverse provider admission remains open.",
+      "status": "completed",
+      "note": "Completed bounded Linux prototype implementation, reviewed with167checks; concrete native/Autoverse provider admission remains T06/T07. No platform acceptance inferred.",
       "evidence": [
         "docs/engineering/maestro-public/evidence/runtime/verification.json"
-      ]
+      ],
+      "completed_candidate": "c58c889bf"
     },
     {
       "id": "MPX-T04",
@@ -67,11 +69,12 @@
         "MPX-FR-006",
         "MPX-FR-007"
       ],
-      "status": "in_progress",
-      "note": "Prototype scheduling, two-element readiness, idempotency, versioned stop, cancellation, actual child ownership and bounded cleanup verified; full live integration remains open.",
+      "status": "completed",
+      "note": "Completed bounded Linux prototype implementation, reviewed with167checks; concrete native/Autoverse provider admission remains T06/T07. No platform acceptance inferred.",
       "evidence": [
         "docs/engineering/maestro-public/evidence/runtime/verification.json"
-      ]
+      ],
+      "completed_candidate": "c58c889bf"
     },
     {
       "id": "MPX-T05",
@@ -83,11 +86,12 @@
         "MPX-FR-008",
         "MPX-FR-009"
       ],
-      "status": "in_progress",
-      "note": "Original lifecycle receipts persist via actual Argus and verify with shared identities; real native X-COM ingestion into the same run remains open.",
+      "status": "completed",
+      "note": "Completed bounded Linux prototype implementation, reviewed with167checks; concrete native/Autoverse provider admission remains T06/T07. No platform acceptance inferred.",
       "evidence": [
         "docs/engineering/maestro-public/evidence/runtime/verification.json"
-      ]
+      ],
+      "completed_candidate": "c58c889bf"
     },
     {
       "id": "MPX-T06",
@@ -100,13 +104,18 @@
         "MPX-FR-009",
         "MPX-FR-010"
       ],
-      "status": "pending"
+      "status": "completed",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/native/verification.json",
+        "specs/022-maestro-public-execution/review.md"
+      ],
+      "note": "Bounded public platform boundary verified with190checks and3CTest checks; actual Studio/Autoverse T07 remains mandatory."
     },
     {
       "id": "MPX-T07",
       "description": "Studio three-view shared-run live demonstration",
       "depends_on": [
-        "MPX-T06"
+        "MPX-T10"
       ],
       "requirements": [
         "MPX-FR-001",
@@ -119,7 +128,7 @@
       "id": "MPX-T08",
       "description": "failure/security/compatibility verification and exact-candidate package",
       "depends_on": [
-        "MPX-T07"
+        "MPX-T06"
       ],
       "requirements": [
         "MPX-FR-003",
@@ -130,7 +139,12 @@
         "MPX-FR-011",
         "MPX-FR-012"
       ],
-      "status": "pending"
+      "status": "completed",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/native/verification.json",
+        "specs/022-maestro-public-execution/review.md"
+      ],
+      "note": "Bounded public platform boundary verified with190checks and3CTest checks; actual Studio/Autoverse T07 remains mandatory."
     },
     {
       "id": "MPX-T09",
@@ -141,7 +155,12 @@
       "requirements": [
         "MPX-FR-012"
       ],
-      "status": "pending"
+      "status": "completed",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/native/verification.json",
+        "specs/022-maestro-public-execution/review.md"
+      ],
+      "note": "Bounded public platform boundary verified with190checks and3CTest checks; actual Studio/Autoverse T07 remains mandatory."
     },
     {
       "id": "MPX-T10",
@@ -152,7 +171,8 @@
       "requirements": [
         "MPX-FR-012"
       ],
-      "status": "pending"
+      "status": "in_progress",
+      "note": "User explicitly accepted frozen source; isolated main integration and assembled verification in progress."
     }
   ],
   "sads": [
@@ -1371,5 +1391,25 @@
     "nativeBaselineChecksPassed": 2,
     "liveGoalCompleted": false,
     "acceptance": false
+  },
+  "sequencing_amendment": {
+    "date": "2026-10-29",
+    "adr": "docs/adr/ADR-MPX-0001-public-maestro-execution.md",
+    "rationale": "platform-first admission precedes actual Studio/Autoverse adapter; all IDs and full goal preserved",
+    "platform_order": [
+      "MPX-T06",
+      "MPX-T08",
+      "MPX-T09",
+      "MPX-T10"
+    ],
+    "then_required": "MPX-T07",
+    "automatic_acceptance": false
+  },
+  "accepted_platform_boundary": {
+    "sourceFingerprint": "0f1c5bd2040c1a8e1a0b6997269ec27ab5edcf32c0924a2a9fa2388595069045",
+    "evidence": "docs/engineering/maestro-public/evidence/native/verification.json",
+    "decision": "specs/022-maestro-public-execution/acceptance-decision.json",
+    "studioGoalComplete": false,
+    "mainIntegrationComplete": false
   }
 }

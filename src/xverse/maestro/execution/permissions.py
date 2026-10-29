@@ -67,5 +67,6 @@ class HostExecutionPermit:
         if plan_lifecycle(prepared, graph.phases) != graph:
             raise ExecutionInputError('MPX-PHASE-GRAPH-INVALID')
         if any(b['realizationClass'] not in ('simulated', 'virtual')
+               or b['targetClass'] in ('physical', 'remote')
                for b in prepared.inspection.to_data()['plan']['bindings']):
             raise ExecutionInputError('MPX-PERMIT-SCOPE')

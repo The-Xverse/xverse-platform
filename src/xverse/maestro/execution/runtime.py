@@ -20,6 +20,7 @@ from .evidence import LifecycleEvidence
 from .inspection import ExecutionInputError, InspectionHost, _DIGEST, _ID, canonical, sha256
 from .permissions import HostExecutionPermit
 from .planning import LifecycleGraph, LifecyclePhase, plan_lifecycle
+from .observations import NativeObservationBatch
 
 
 def _failure_code(error, fallback):
@@ -106,6 +107,10 @@ class _Run:
     failure_code: str | None = None
     deadline: float = 0
     timer: object = field(default=None, repr=False)
+    native_sources: dict = field(default_factory=dict)
+    native_gap_count: int = 0
+    stop_request_version: int | None = None
+    stop_operation_id: str | None = None
     cancel: threading.Event = field(default_factory=threading.Event, repr=False)
 
 
@@ -255,9 +260,12 @@ class PublicExecutionService:
             'inputSemanticDigest': run.prepared.submission.expected_input_semantic_digest,
             'preparationDigest': run.prepared.digest, 'lifecycleDigest': run.graph.digest,
             'operationId': run.operation_id, 'correlationId': run.correlation_id,
+            'stopOperationId': run.stop_operation_id,
             'state': run.state, 'stateVersion': run.version,
             'cleanup': run.cleanup_state, 'evidenceWriter': run.evidence_state,
             'failureCode': run.failure_code,
+            'nativeSources': json.loads(canonical(run.native_sources)),
+            'observationTransportGaps': run.native_gap_count,
             'observations': json.loads(canonical(run.observations))}
 
     def read(self, run_id):
@@ -277,9 +285,10 @@ class PublicExecutionService:
                 'diagnostic': 'MPX-ORIGINAL-OWNERSHIP-UNAVAILABLE'}
 
     def _record(self, run, *, kind, phase=None, outcome=None,
-                causation_id=None, readiness_kind=None, resources=(), observation=None):
+                causation_id=None, readiness_kind=None, resources=(), observation=None,
+                operation_id=None):
         try:
-            event, clock = run.evidence.append(operation_id=run.operation_id,
+            event, clock = run.evidence.append(operation_id=operation_id or run.operation_id,
                 correlation_id=run.correlation_id, kind=kind, phase=phase, outcome=outcome,
                 causation_id=causation_id, readiness_kind=readiness_kind, resources=resources,
                 observation=observation)
@@ -291,6 +300,7 @@ class PublicExecutionService:
                 'phaseId': phase.phase_id if phase else None,
                 'logicalId': phase.logical_id if phase else None,
                 'outcome': outcome, 'causationId': causation_id,
+                'operationId': operation_id or run.operation_id,
                 'readinessKind': readiness_kind, 'hostClock': clock})
             run.version += 1
         return event
@@ -347,8 +357,23 @@ class PublicExecutionService:
             with self._state:
                 self._runs[run_id] = run
             try:
+                source_clocks = {}
+                for binding in prepared.providers:
+                    declaration = getattr(self._providers[binding.provider_id], 'observation_clock_declarations', None)
+                    if not callable(declaration):
+                        continue
+                    declared = declaration(binding.configuration, run_id, run.operation_id)
+                    if type(declared) is not dict or len(declared) > 32:
+                        raise ExecutionInputError('MPX-NATIVE-CLOCK-DECLARATION-INVALID')
+                    for key, value in declared.items():
+                        name = binding.provider_id + '.' + key if type(key) is str and _ID.fullmatch(key) else None
+                        if name is None or name in source_clocks or name == 'host':
+                            raise ExecutionInputError('MPX-NATIVE-CLOCK-DECLARATION-INVALID')
+                        source_clocks[name] = value
+                    if len(source_clocks) > 32:
+                        raise ExecutionInputError('MPX-NATIVE-CLOCK-DECLARATION-INVALID')
                 run.evidence = LifecycleEvidence(self._writer_root / (run_id + '.argus'), prepared,
-                    clock_domain=self._clock_domain)
+                    clock_domain=self._clock_domain, source_clocks=source_clocks)
                 run.evidence_state = 'open'
                 self._record(run, kind='run-start-requested')
                 duration = min(self.max_runtime_seconds, max(0, permit.expires_at - time.time()))
@@ -399,6 +424,7 @@ class PublicExecutionService:
         with self._operations:
             if run.state not in ('stopped', 'failed', 'unknown'):
                 run.failure_code = 'MPX-RUN-DEADLINE'
+                run.stop_operation_id = run.stop_operation_id or 'stop-' + uuid.uuid4().hex
                 self._cleanup(run, failed=True)
 
     def observe(self, run_id, *, expected_version: int):
@@ -441,13 +467,20 @@ class PublicExecutionService:
             run.version += 1
         uncertain = False
         cleanup_deadline = time.monotonic() + self.cleanup_budget_seconds
+        operation_id = run.stop_operation_id or run.operation_id
+        try:
+            self._record(run, kind='run-stop-requested' if run.stop_operation_id else 'run-cleanup-requested',
+                operation_id=operation_id,
+                observation={'failureCode': run.failure_code, 'expectedVersion': run.stop_request_version})
+        except Exception:
+            run.evidence_state = 'failed'
         for phase, configuration, original in reversed(run.attempted):
             intent = None
             try:
-                intent = self._record(run, kind='cleanup-intent', phase=phase)
+                intent = self._record(run, kind='cleanup-intent', phase=phase, operation_id=operation_id)
             except Exception:
                 run.evidence_state = 'failed'
-            context = RuntimeContext(original.run_id, run.operation_id, run.correlation_id,
+            context = RuntimeContext(original.run_id, operation_id, run.correlation_id,
                 intent or original.intent_event_id,
                 min(cleanup_deadline, time.monotonic() + phase.timeout_seconds))
             try:
@@ -460,7 +493,7 @@ class PublicExecutionService:
             uncertain |= outcome != 'released'
             try:
                 self._record(run, kind='cleanup-outcome', phase=phase,
-                    outcome=outcome, causation_id=intent)
+                    outcome=outcome, causation_id=intent, operation_id=operation_id)
             except Exception:
                 run.evidence_state = 'failed'
         with self._state:
@@ -468,24 +501,104 @@ class PublicExecutionService:
             run.state = 'unknown' if uncertain else ('failed' if failed else 'stopped')
             run.version += 1
         try:
-            self._record(run, kind='run-terminal', outcome=run.state)
-            run.evidence.close(failed=failed or uncertain or run.evidence_state == 'failed')
+            self._record(run, kind='run-terminal', outcome=run.state, operation_id=operation_id,
+                observation={'failureCode': run.failure_code, 'cleanup': run.cleanup_state,
+                    'observationTransportGaps': run.native_gap_count})
+            run.evidence.close(failed=failed or uncertain or run.evidence_state == 'failed'
+                or run.native_gap_count > 0,
+                reason='Known native observation transport gap; evidence is incomplete'
+                    if run.native_gap_count else None)
             if run.evidence_state != 'failed':
-                run.evidence_state = 'closed'
+                run.evidence_state = run.evidence.writer.writer_state
         except Exception:
             run.evidence_state = 'failed'
+
+    def collect_native_observations(self, run_id, *, expected_version: int):
+        """Pull original batches from installed providers; callers supply no data.
+
+        This observes only. No missing interface or host-supplied enum proves a
+        native source: concrete native providers require actual verification.
+        """
+        with self._operations:
+            snapshot = self.read(run_id)
+            if type(expected_version) is not int or snapshot['stateVersion'] != expected_version:
+                raise ExecutionInputError('MPX-STATE-VERSION-CONFLICT')
+            run = self._runs.get(run_id)
+            if run is None or run.state != 'running':
+                return snapshot
+            try:
+                for binding in run.prepared.providers:
+                    provider = self._providers[binding.provider_id]
+                    pull = getattr(provider, 'read_observation_batch', None)
+                    if not callable(pull):
+                        with self._state:
+                            if binding.provider_id not in run.native_sources:
+                                run.native_sources[binding.provider_id] = {'state': 'unsupported'}
+                                run.version += 1
+                        continue
+                    self._verify_installation(binding)
+                    context = RuntimeContext(run_id, run.operation_id, run.correlation_id,
+                        run.correlation_id, time.monotonic() + 3)
+                    batch = pull(binding.configuration, context)
+                    if time.monotonic() > context.deadline:
+                        raise ExecutionInputError('MPX-NATIVE-SOURCE-TIMEOUT')
+                    if batch is None:
+                        continue
+                    if type(batch) is not NativeObservationBatch:
+                        raise ExecutionInputError('MPX-NATIVE-BATCH-INVALID')
+                    projection = batch.validate_identity(run.prepared, binding)
+                    previous = run.native_sources.get(binding.provider_id, {})
+                    prior_sequence = previous.get('batchSequence', 0)
+                    if batch.sequence <= prior_sequence:
+                        if batch.sequence == prior_sequence and batch.digest == previous['batchDigest']:
+                            continue
+                        raise ExecutionInputError('MPX-NATIVE-SEQUENCE-CONFLICT')
+                    gap = batch.sequence - prior_sequence - 1
+                    metadata = {k: v for k, v in projection.items() if k != 'records'}
+                    intent = self._record(run, kind='native-batch-import-intent',
+                        observation={'providerId': binding.provider_id, 'batchSequence': batch.sequence,
+                            'batchDigest': batch.digest, 'originalEnvelope': metadata,
+                            'missingSourceBatches': gap})
+                    try:
+                        ordinals, snapshot_ordinals, input_ordinals = run.evidence.import_observations(projection)
+                    except Exception as error:
+                        run.evidence_state = 'failed'
+                        raise ExecutionInputError(_failure_code(error, 'MPX-NATIVE-EVIDENCE-IMPORT-FAILED')) from None
+                    with self._state:
+                        run.native_gap_count += gap
+                        run.native_sources[binding.provider_id] = {'state': 'available',
+                            'batchSequence': batch.sequence, 'batchDigest': batch.digest,
+                            'missingSourceBatches': previous.get('missingSourceBatches', 0) + gap,
+                            'lastArgusOrdinals': list(ordinals),
+                            'lastSnapshotArgusOrdinals': list(snapshot_ordinals),
+                            'lastInputArgusOrdinals': list(input_ordinals),
+                            'importedRecords': previous.get('importedRecords', 0) + len(ordinals)}
+                        run.version += 1
+                    self._record(run, kind='native-batch-imported',
+                        outcome='partial' if gap else 'accepted', causation_id=intent,
+                        observation={'providerId': binding.provider_id,
+                            'argusOrdinals': list(ordinals), 'missingSourceBatches': gap})
+            except Exception as error:
+                run.failure_code = _failure_code(error, 'MPX-NATIVE-SOURCE-FAILED')
+                self._cleanup(run, failed=True)
+            return self.read(run_id)
 
     def stop(self, run_id, *, expected_version: int):
         """Request cancellation then bounded reverse cleanup, without replay."""
         with self._state:
             snapshot = self.read(run_id)
-            if type(expected_version) is not int or snapshot['stateVersion'] != expected_version:
-                raise ExecutionInputError('MPX-STATE-VERSION-CONFLICT')
             run = self._runs.get(run_id)
+            repeated = run is not None and run.stop_request_version == expected_version
+            if type(expected_version) is not int or not repeated and snapshot['stateVersion'] != expected_version:
+                raise ExecutionInputError('MPX-STATE-VERSION-CONFLICT')
             if run is None:
                 return snapshot
             if run.state in ('stopped', 'failed', 'unknown'):
                 return snapshot
+            if not repeated:
+                run.stop_request_version = expected_version
+                run.stop_operation_id = 'stop-' + uuid.uuid4().hex
+                run.version += 1
             run.cancel.set()
         with self._operations:
             if run.state not in ('stopped', 'failed', 'unknown'):

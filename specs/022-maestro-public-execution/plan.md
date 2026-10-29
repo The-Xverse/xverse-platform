@@ -46,3 +46,9 @@ have exact-candidate evidence; user acceptance is still required.
 7. After explicit user acceptance, integrate accepted artifacts into main and verify
    assembled platform. Studio must consume that admitted candidate before full-goal
    acceptance; intermediate synthetic tests never complete the overall objective.
+
+Sequencing clarification (ADR-MPX-0001,2026-10-29): staged delivery1–5 verifies the
+domain-neutral public platform boundary, including actual native exchange. T08/T09
+then produce the platform review candidate, and T10 requires user acceptance/main
+integration. T07 actual Studio/Autoverse integration follows that admitted baseline;
+it remains mandatory for the full goal and does not disappear at platform acceptance.

@@ -1,7 +1,8 @@
 # Public execution prototype maintenance
 
-Capability022 remains unaccepted. The original closed runtime service and public
-preparation path are unchanged. This module does not confer their readiness,
+Capability022's bounded public platform boundary is user-accepted; concrete
+Studio/Autoverse integration remains open. The original closed runtime service and
+public preparation path are unchanged. This module does not confer their readiness,
 containment, physical-device or legacy-environment approvals.
 
 Use only trusted installed providers. They must interpret supported authored
@@ -22,6 +23,15 @@ explicit observe operation for actual resource checks. Do not compare unrelated
 clock domains or treat startup readiness as continuing functional fitness. A host
 timer owns the whole-run budget independently of browser sessions. Keep evidence
 capacity finite; explicit observation consumes Argus's bounded event capacity.
+
+Native providers expose optional pure observation_clock_declarations and bounded
+read_observation_batch. Register clock origins before opening Argus; do not infer a
+host/native mapping. Collection accepts no browser-supplied records. Preserve original
+input events, observations and snapshots, and retain source sequence gaps separately
+from native drop/coalesce counters. Native retention-time counters do not include
+later loss; final quiesced native snapshots are required to establish interval closure.
+Unknown upstream causation stays unset, while forwarding can cite the actual source
+input event. Repeated source batches and lost-response Stop retries must be inert.
 
 On partial start or writer failure, cleanup must proceed for all attempted acquiring
 phases. Unknown ownership never permits a signal. ProcessOwnershipError retains a
