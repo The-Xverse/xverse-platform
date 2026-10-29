@@ -124,7 +124,8 @@ class PublicExecutionService:
     """
     def __init__(self, root: Path, host: InspectionHost,
                  providers: tuple[RuntimeProvider, ...], *, max_runtime_seconds: float = 600,
-                 cleanup_budget_seconds: float = 30):
+                 cleanup_budget_seconds: float = 30, recovery_bindings: tuple = ()):
+        from .recovery import validate_bindings
         if sys.platform != 'linux':
             raise ExecutionInputError('MPX-RUNTIME-OS-UNSUPPORTED')
         import fcntl
@@ -149,6 +150,7 @@ class PublicExecutionService:
                          'dispatch', 'cleanup', 'observe_runtime'))):
                 raise ExecutionInputError('MPX-PROVIDER-REGISTRY-INVALID')
             actual[identity] = provider
+        self._recovery_bindings = validate_bindings(recovery_bindings, actual)
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         if (self.root.is_symlink() or self.root.absolute() != self.root.resolve()
@@ -329,7 +331,13 @@ class PublicExecutionService:
             # A predecessor process's claim does not carry its original resource
             # handles. Do not grant new activation while any such run is unknown.
             known_claims = {self._claim_path(key) for key in self._runs}
-            if any(path not in known_claims for path in self.root.glob('*.claim.json')):
+            from .recovery import root_claims, verified
+            foreign = [key for key in root_claims(self) if self._claim_path(key) not in known_claims]
+            if foreign and self._recovery_bindings:
+                pins = {b.provider_id:b.installation_digest for b in self._recovery_bindings}
+                if any(p.configuration.installation_digest != pins[p.provider_id] for p in prepared.providers):
+                    raise ExecutionInputError('MRX-CURRENT-INSTALLATION-MISMATCH')
+            if any(not verified(self, key) for key in foreign):
                 raise ExecutionInputError('MPX-ORIGINAL-OWNERSHIP-UNAVAILABLE')
             fresh = prepare_execution(prepared.submission, self.host, self.providers)
             if fresh != prepared:
@@ -604,6 +612,49 @@ class PublicExecutionService:
             if run.state not in ('stopped', 'failed', 'unknown'):
                 self._cleanup(run, failed=False)
             return self.read(run_id)
+
+    def inspect_recovery(self, run_id):
+        """Read-only eligibility; no provider calls or restored resource handles."""
+        from .recovery import RecoveryInspection, binding_digest, inspect
+        if not self._operations.acquire(blocking=False):
+            raise ExecutionInputError('MRX-REGISTRATION-BUSY')
+        try:
+            self._claim_path(run_id)
+            binding = binding_digest(self)
+            try:
+                return inspect(self, run_id)
+            except ExecutionInputError as error:
+                return RecoveryInspection(canonical({'contractVersion':'1.0','runId':run_id,
+                    'eligible':False,'reasons':[error.code], 'sourceWitness':None,
+                    'hostBindingDigest':self.host.identity(),
+                    'runtimeBindingDigest':self.runtime_binding_digest,'recoveryBindingDigest':binding}))
+        finally:
+            self._operations.release()
+
+    def retire_released(self, inspection, permit):
+        """Publish a separate host-permitted retirement; original bytes stay intact."""
+        from .recovery import retire
+        if not self._operations.acquire(blocking=False):
+            raise ExecutionInputError('MRX-REGISTRATION-BUSY')
+        try:
+            return retire(self, inspection, permit)
+        finally:
+            self._operations.release()
+
+    def recovery_status(self, run_id):
+        """Separate retirement status; never change read(run_id)'s ownership state."""
+        from .recovery import verified
+        if not self._operations.acquire(blocking=False):
+            raise ExecutionInputError('MRX-REGISTRATION-BUSY')
+        try:
+            self._claim_path(run_id)
+            try:
+                valid = verified(self, run_id)
+                return {'runId':run_id,'retirement':'verified' if valid else 'absent'}
+            except ExecutionInputError as error:
+                return {'runId':run_id,'retirement':'unverified','reason':error.code}
+        finally:
+            self._operations.release()
 
     def close(self):
         """Release the host-root lock only after every known run is terminal."""
