@@ -1,6 +1,6 @@
 {
   "feature": "023-maestro-released-recovery",
-  "status": "authorized_under_implementation",
+  "status": "verified_awaiting_user_acceptance",
   "baseline": "ce2d5558cd36de5b29ab1e3c622303c7a77c61eb",
   "authorization": {
     "source": "user I approve after ADR-0035 scope request",
@@ -68,9 +68,10 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_wrong_or_expired_permit_has_zero_effects",
+        "test_declared_installation_change_does_not_reuse_existing_receipt",
         "test_forged_inspection_and_changed_source_fail_before_receipt",
-        "test_declared_installation_change_does_not_reuse_existing_receipt"
+        "test_source_change_during_publication_is_not_accepted",
+        "test_wrong_or_expired_permit_has_zero_effects"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -101,10 +102,10 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run",
-        "test_actual_failed_start_and_failed_writer_are_eligible_only_after_compensation",
         "test_actual_cancel_during_acquisition_keeps_failed_writer_and_explicit_release",
-        "test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence"
+        "test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence",
+        "test_actual_failed_start_and_failed_writer_are_eligible_only_after_compensation",
+        "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -135,11 +136,13 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_unknown_cleanup_cannot_be_retired",
+        "test_corrupt_or_open_original_source_is_not_eligible",
+        "test_deeply_corrupt_receipt_has_a_stable_refusal",
+        "test_receipt_corruption_cannot_authorize_new_start",
+        "test_source_change_during_publication_is_not_accepted",
         "test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation",
         "test_unknown_claim_fields_do_not_become_recovery_authority",
-        "test_corrupt_or_open_original_source_is_not_eligible",
-        "test_deeply_corrupt_receipt_has_a_stable_refusal"
+        "test_unknown_cleanup_cannot_be_retired"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -170,9 +173,9 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_wrong_or_expired_permit_has_zero_effects",
         "test_altered_persisted_grant_is_rejected_even_with_recomputed_receipt_digest",
-        "test_invalid_host_grants_cannot_create_a_retirement"
+        "test_invalid_host_grants_cannot_create_a_retirement",
+        "test_wrong_or_expired_permit_has_zero_effects"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -204,8 +207,10 @@
       ],
       "test_cases": [
         "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run",
+        "test_failed_root_fsync_retry_repeats_durability_step",
         "test_interrupted_publication_leaves_no_receipt_and_retry_is_safe",
-        "test_failed_root_fsync_retry_repeats_durability_step"
+        "test_receipt_corruption_cannot_authorize_new_start",
+        "test_source_change_during_publication_is_not_accepted"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -238,8 +243,9 @@
       "test_cases": [
         "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run",
         "test_changed_evidence_invalidates_retirement_and_start",
-        "test_unconfigured_recovery_does_not_weaken_default_fence",
-        "test_declared_installation_change_does_not_reuse_existing_receipt"
+        "test_declared_installation_change_does_not_reuse_existing_receipt",
+        "test_receipt_corruption_cannot_authorize_new_start",
+        "test_unconfigured_recovery_does_not_weaken_default_fence"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -270,8 +276,8 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_live_owner_and_busy_operations_do_not_produce_retirement",
         "test_actual_concurrent_root_owner_cannot_be_opened",
+        "test_live_owner_and_busy_operations_do_not_produce_retirement",
         "test_reader_budget_is_enforced_before_public_reader"
       ],
       "architecture": "plan.md",
@@ -304,8 +310,9 @@
       ],
       "test_cases": [
         "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run",
-        "test_wrong_or_expired_permit_has_zero_effects",
-        "test_interrupted_publication_leaves_no_receipt_and_retry_is_safe"
+        "test_interrupted_publication_leaves_no_receipt_and_retry_is_safe",
+        "test_source_change_during_publication_is_not_accepted",
+        "test_wrong_or_expired_permit_has_zero_effects"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -336,8 +343,8 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_unconfigured_recovery_does_not_weaken_default_fence",
-        "test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence"
+        "test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence",
+        "test_unconfigured_recovery_does_not_weaken_default_fence"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -368,8 +375,8 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_failed_root_fsync_retry_repeats_durability_step",
-        "test_altered_persisted_grant_is_rejected_even_with_recomputed_receipt_digest"
+        "test_altered_persisted_grant_is_rejected_even_with_recomputed_receipt_digest",
+        "test_failed_root_fsync_retry_repeats_durability_step"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -400,9 +407,9 @@
         "MRX-AC-06"
       ],
       "test_cases": [
-        "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run",
+        "test_actual_cancel_during_acquisition_keeps_failed_writer_and_explicit_release",
         "test_actual_failed_start_and_failed_writer_are_eligible_only_after_compensation",
-        "test_actual_cancel_during_acquisition_keeps_failed_writer_and_explicit_release"
+        "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run"
       ],
       "architecture": "plan.md",
       "unit_specification": "docs/engineering/maestro-recovery/unit-specifications.md"
@@ -421,7 +428,7 @@
       "depends_on": [
         "MRX-T01"
       ],
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "MRX-T03",
@@ -429,7 +436,7 @@
       "depends_on": [
         "MRX-T02"
       ],
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "MRX-T04",
@@ -437,7 +444,7 @@
       "depends_on": [
         "MRX-T03"
       ],
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "MRX-T05",
@@ -445,7 +452,7 @@
       "depends_on": [
         "MRX-T04"
       ],
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "MRX-T06",
@@ -1676,7 +1683,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "verified_in_prototype_scope"
     },
     {
       "id": "MRX-AC-02",
@@ -1695,7 +1702,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "verified_in_prototype_scope"
     },
     {
       "id": "MRX-AC-03",
@@ -1714,7 +1721,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "verified_in_prototype_scope"
     },
     {
       "id": "MRX-AC-04",
@@ -1733,7 +1740,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "verified_in_prototype_scope"
     },
     {
       "id": "MRX-AC-05",
@@ -1752,7 +1759,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "verified_in_prototype_scope"
     },
     {
       "id": "MRX-AC-06",
@@ -1771,7 +1778,7 @@
         "MRX-FR-011",
         "MRX-FR-012"
       ],
-      "status": "unverified"
+      "status": "regressions_review_verified_acceptance_integration_pending"
     }
   ],
   "review_candidates": [
@@ -1783,5 +1790,100 @@
       "candidate": "b8422d853d4d40008e7ef88a60382699d9f34557",
       "findings": "docs/engineering/maestro-recovery/software-review-02.md"
     }
-  ]
+  ],
+  "verification": "docs/engineering/maestro-recovery/evidence/verification.json",
+  "software_review": "docs/engineering/maestro-recovery/software-review-03.md",
+  "source_candidate": "99dc5994c16c475077d30dae9c6fa69b93432754",
+  "test_requirement_index": {
+    "test_actual_released_predecessor_retirement_preserves_source_and_allows_distinct_new_run": [
+      "MRX-FR-001",
+      "MRX-FR-003",
+      "MRX-FR-006",
+      "MRX-FR-007",
+      "MRX-FR-009",
+      "MRX-FR-012"
+    ],
+    "test_unconfigured_recovery_does_not_weaken_default_fence": [
+      "MRX-FR-001",
+      "MRX-FR-007",
+      "MRX-FR-010"
+    ],
+    "test_declared_installation_change_does_not_reuse_existing_receipt": [
+      "MRX-FR-002",
+      "MRX-FR-007"
+    ],
+    "test_forged_inspection_and_changed_source_fail_before_receipt": [
+      "MRX-FR-002"
+    ],
+    "test_source_change_during_publication_is_not_accepted": [
+      "MRX-FR-002",
+      "MRX-FR-004",
+      "MRX-FR-006",
+      "MRX-FR-009"
+    ],
+    "test_wrong_or_expired_permit_has_zero_effects": [
+      "MRX-FR-002",
+      "MRX-FR-005",
+      "MRX-FR-009"
+    ],
+    "test_actual_cancel_during_acquisition_keeps_failed_writer_and_explicit_release": [
+      "MRX-FR-003",
+      "MRX-FR-012"
+    ],
+    "test_actual_cpp_observer_loss_does_not_replace_released_lifecycle_evidence": [
+      "MRX-FR-003",
+      "MRX-FR-010"
+    ],
+    "test_actual_failed_start_and_failed_writer_are_eligible_only_after_compensation": [
+      "MRX-FR-003",
+      "MRX-FR-012"
+    ],
+    "test_corrupt_or_open_original_source_is_not_eligible": [
+      "MRX-FR-004"
+    ],
+    "test_deeply_corrupt_receipt_has_a_stable_refusal": [
+      "MRX-FR-004"
+    ],
+    "test_receipt_corruption_cannot_authorize_new_start": [
+      "MRX-FR-004",
+      "MRX-FR-006",
+      "MRX-FR-007"
+    ],
+    "test_structurally_valid_argus_cannot_hide_bad_lifecycle_compensation": [
+      "MRX-FR-004"
+    ],
+    "test_unknown_claim_fields_do_not_become_recovery_authority": [
+      "MRX-FR-004"
+    ],
+    "test_unknown_cleanup_cannot_be_retired": [
+      "MRX-FR-004"
+    ],
+    "test_altered_persisted_grant_is_rejected_even_with_recomputed_receipt_digest": [
+      "MRX-FR-005",
+      "MRX-FR-011"
+    ],
+    "test_invalid_host_grants_cannot_create_a_retirement": [
+      "MRX-FR-005"
+    ],
+    "test_failed_root_fsync_retry_repeats_durability_step": [
+      "MRX-FR-006",
+      "MRX-FR-011"
+    ],
+    "test_interrupted_publication_leaves_no_receipt_and_retry_is_safe": [
+      "MRX-FR-006",
+      "MRX-FR-009"
+    ],
+    "test_changed_evidence_invalidates_retirement_and_start": [
+      "MRX-FR-007"
+    ],
+    "test_actual_concurrent_root_owner_cannot_be_opened": [
+      "MRX-FR-008"
+    ],
+    "test_live_owner_and_busy_operations_do_not_produce_retirement": [
+      "MRX-FR-008"
+    ],
+    "test_reader_budget_is_enforced_before_public_reader": [
+      "MRX-FR-008"
+    ]
+  }
 }

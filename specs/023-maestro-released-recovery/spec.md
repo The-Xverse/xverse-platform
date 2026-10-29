@@ -1,6 +1,6 @@
 # Capability 023: released Maestro registration recovery
 
-Status: authorized specification/implementation/review in progress; not accepted.
+Status: verified prototype candidate awaiting explicit user acceptance; not integrated.
 Baseline: ce2d5558cd36de5b29ab1e3c622303c7a77c61eb.
 User approval: “I approve”, 2026-10-29, in response to Studio ADR-0035 scoped proposal.
 This adds a public recovery boundary; accepted capability022 and its open Studio
