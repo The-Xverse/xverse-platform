@@ -15,3 +15,6 @@ Final candidate99dc5994c passes236 source/46 installed recovery checks and3selec
 native CTests. All recorded review findings repaired; final read-only review has no
 blocking findings. T06 explicit user acceptance/main assembly and T07 full Studio
 live acceptance remain pending. Evidence: docs/engineering/maestro-recovery/evidence/verification.json.
+
+The user accepted exact8c2307fa9 on2026-10-29. T06 isolated main integration/assembled
+verification is in progress; T07 full Studio live acceptance remains open.
