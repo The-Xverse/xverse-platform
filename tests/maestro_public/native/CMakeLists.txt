@@ -1,0 +1,8 @@
+add_executable(xverse_maestro_public_native_exchange exchange.cpp)
+target_link_libraries(xverse_maestro_public_native_exchange PRIVATE
+  xverse::xcom_provider_loopback nlohmann_json::nlohmann_json)
+target_compile_features(xverse_maestro_public_native_exchange PRIVATE cxx_std_20)
+xverse_xcom_runtime_sanitizers()
+xverse_xcom_apply_runtime_rules(xverse_maestro_public_native_exchange)
+set_target_properties(xverse_maestro_public_native_exchange PROPERTIES
+  CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)

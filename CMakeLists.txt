@@ -164,3 +164,6 @@ file(
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/xverse/xcom/CMakeLists.txt")
   add_subdirectory(src/xverse/xcom)
 endif()
+
+# Capability022 owned public-boundary verification, never a legacy workload.
+add_subdirectory(tests/maestro_public/native)
