@@ -11,7 +11,7 @@ Existing platform/Studio task IDs remain unchanged; these IDs belong only to cap
 - [ ] MPX-T07: Studio three-view shared-run live demonstration. Depends on: MPX-T10.
 - [x] MPX-T08: failure/security/compatibility verification and exact-candidate package. Depends on: MPX-T06.
 - [x] MPX-T09: separate review, repairs and affected repeated verification. Depends on: MPX-T08.
-- [ ] MPX-T10: explicit user acceptance, exact main integration and assembled verification. Depends on: MPX-T09.
+- [x] MPX-T10: explicit user acceptance, exact main integration and assembled verification. Depends on: MPX-T09.
 
 
 2026-10-29 runtime checkpoint: MPX-T02–T05 remain in_progress. The public
@@ -35,3 +35,11 @@ checks and3CTest checks, final retained actual-data evidence and separate self-r
 The user explicitly accepted the frozen source; T10 main integration/assembled
 verification is in_progress. T07 actual Studio/Autoverse remains pending after T10.
 Decision: acceptance-decision.json. Evidence: docs/engineering/maestro-public/evidence/native/verification.json.
+
+
+T10 complete: user-accepted exact platform boundary is on local main at
+f0e57c844bf9a23b18836c86ca6ca11b4f4b1282. Isolated rebuilt/installed verification passes190checks
+and3CTest, with the same9SDKmodules, source/test fingerprint and native artifact.
+All5 unrelated original local entries remain unchanged. This records integration,
+not publication. T07 actual Studio/Autoverse remains open; the full goal is active.
+Evidence: docs/engineering/maestro-public/evidence/main/verification.json.
