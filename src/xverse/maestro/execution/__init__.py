@@ -30,3 +30,8 @@ __all__ += ['PhaseReceipt', 'PublicExecutionService', 'RuntimeContext', 'Runtime
 
 from .observations import NativeObservationBatch
 __all__ += ['NativeObservationBatch']
+
+
+# Capability023: prototype recovery; separate acceptance/admission is required.
+from .recovery import RecoveryProviderBinding, RecoveryInspection, HostRecoveryPermit, RecoveryRetirement
+__all__ += ['RecoveryProviderBinding','RecoveryInspection','HostRecoveryPermit','RecoveryRetirement']

@@ -154,10 +154,11 @@ def native(runtime, request):
     finally:
         if provider.child:
             provider.child.stop(deadline=time.monotonic() + 2)
-        current = service.read(request.run_id)
-        if current['state'] not in ('stopped', 'failed', 'unknown'):
-            service.stop(request.run_id, expected_version=current['stateVersion'])
-        service.close()
+        if not service._closed:
+            current = service.read(request.run_id)
+            if current['state'] not in ('stopped', 'failed', 'unknown'):
+                service.stop(request.run_id, expected_version=current['stateVersion'])
+            service.close()
 
 
 def collect(native):
