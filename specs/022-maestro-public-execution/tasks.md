@@ -12,3 +12,13 @@ Existing platform/Studio task IDs remain unchanged; these IDs belong only to cap
 - [ ] MPX-T08: failure/security/compatibility verification and exact-candidate package. Depends on: MPX-T07.
 - [ ] MPX-T09: separate review, repairs and affected repeated verification. Depends on: MPX-T08.
 - [ ] MPX-T10: explicit user acceptance, exact main integration and assembled verification. Depends on: MPX-T09.
+
+
+2026-10-29 runtime checkpoint: MPX-T02–T05 remain in_progress. The public
+prototype passes167checks (59new +108baseline) on the exact recorded source;
+real edited inputs, two actual child bindings, original Argus receipts, ownership
+loss, runtime/root/install grants, cancellation and failure cleanup are verified.
+Two existing native C++ baseline tests pass separately; they are not a correlated
+Maestro/native-X-COM run. Native integration, Autoverse, Studio views, final review,
+user acceptance and main integration remain open. Evidence:
+docs/engineering/maestro-public/evidence/runtime/verification.json.

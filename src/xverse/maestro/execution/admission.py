@@ -11,7 +11,7 @@ from typing import Protocol
 
 from .inspection import (
     CanonicalSubmission, EffectiveInspection, ExecutionInputError, InspectionHost,
-    canonical, inspect_submission, sha256,
+    _DIGEST, canonical, inspect_submission, sha256,
 )
 
 
@@ -24,9 +24,12 @@ class EffectiveConfiguration:
     """
     documents: tuple[tuple[str,bytes], ...] = field(repr=False)
     private_config: bytes = field(repr=False)
+    installation_digest: str | None = None
 
     def __post_init__(self):
-        if type(self.private_config) is not bytes or len(self.private_config)>1024*1024:
+        if (type(self.private_config) is not bytes or len(self.private_config)>1024*1024
+                or self.installation_digest is not None and
+                (type(self.installation_digest) is not str or not _DIGEST.fullmatch(self.installation_digest))):
             raise ExecutionInputError('MPX-PROVIDER-CONFIG-INVALID')
 
 
@@ -69,6 +72,7 @@ class PreparedExecution:
             'runtimeAdmission':'not_checked','providers':[
                 {'providerId':p.provider_id,'implementationDigest':p.implementation_digest,
                  'configurationDigest':p.configuration_digest,
+                 'installationDigest':p.configuration.installation_digest,
                  'effectiveSourceDigests':{name:sha256(raw) for name,raw in p.configuration.documents}} for p in self.providers]}
 
 
@@ -97,7 +101,12 @@ def prepare_execution(submission: CanonicalSubmission, host: InspectionHost,
     prepared=[]
     for identity in sorted(selected):
         provider=actual[identity]
-        configuration=provider.prepare_effective_configuration(submission,inspection)
+        try:
+            configuration=provider.prepare_effective_configuration(submission,inspection)
+        except ExecutionInputError:
+            raise
+        except Exception:
+            raise ExecutionInputError('MPX-PROVIDER-PREPARATION-FAILED') from None
         if type(configuration) is not EffectiveConfiguration:
             raise ExecutionInputError('MPX-PROVIDER-CONFIG-INVALID')
         # Constructing a new public submission also reapplies all source bounds.
@@ -115,6 +124,7 @@ def prepare_execution(submission: CanonicalSubmission, host: InspectionHost,
             raise ExecutionInputError('MPX-PROVIDER-IDENTITY-MISMATCH')
         configuration_digest=sha256(canonical({'provider':identity,
             'implementationDigest':expected[identity],'effectiveSourceDigests':right['sourceDigests'],
+            'installationDigest':configuration.installation_digest,
             'privateConfigurationDigest':sha256(configuration.private_config)}))
         prepared.append(PreparedProvider(identity,expected[identity],configuration,configuration_digest))
     fingerprint=sha256(b'xverse.maestro.prepared-execution.v1\0'+canonical({

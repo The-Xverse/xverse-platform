@@ -1,6 +1,8 @@
 # Public execution detailed design
 
-Status: proposed runtime design; static inspection alone is implemented so far.
+Status: prototype static/effective inspection, host-bound dispatch, Linux child
+ownership and real Argus lifecycle persistence implemented. Native integration,
+full acceptance and platform-main delivery remain unfinished.
 
 ## Existing boundaries and reuse
 
@@ -75,6 +77,67 @@ Argus plan.semanticDigest binds the compiled plan, not the distinct input-semant
 digest. Reader recorded/assessed outcomes and incompleteness remain separate.
 Browser payload/log filtering and live snapshot pagination must be implemented
 before exposing the internal original-record reader online.
+
+## Public host lifecycle service design
+
+LifecyclePhase realizes one compiled logical binding under its registered provider.
+The graph must cover prepare/start/ready for every binding, validate cross-provider
+references and cycles, and make every acquiring phase an ancestor of an actual
+readiness phase. Topological tie-breaking does not create causal dependencies.
+Provider interpretation of scenario steps, time domains, faults and other semantics
+remains mandatory; graph validation alone cannot claim those features are supported.
+
+HostExecutionPermit is a trusted in-process host input, never deserialized from
+browser/project content. It binds the exact host, preparation and lifecycle graph,
+environment, external authorization reference and at most one hour of validity.
+It permits owned simulated/virtual resources only. The application registers this
+authority separately from imported documents; no legacy lane/physical/containment
+approval is minted here. Expiry prevents new acquisitions, never owned cleanup.
+
+The service persists an exclusive start claim before effects; retries compare
+the whole request identity. An existing claim without its original in-memory
+handles is unknown, never permission to replay. Argus opens before provider launch
+and records each intent before dispatch; failures after effects still require
+cleanup of every attempted mutating phase, including a phase that raised before
+returning a handle. Providers must retain their own exact ownership receipts and
+implement bounded cleanup for partially completed calls. No PID/group/name lookup
+can recover signal authority after a lost opaque handle.
+
+Provider methods are installed trusted code with cooperative finite deadlines;
+they are not a hostile-plugin sandbox. A provider that fails to honor its bound
+must remain an explicit unknown/failed result. Native Linux ownership verification
+uses original child handles and kernel pidfds where supported. It does not
+reuse the older process-group stop implementation or infer descendant ownership.
+
+EffectiveConfiguration now separately freezes installation_digest. A runtime
+provider reports its actual current installation identity, and admission compares
+it before every dispatch. FixedProcessInstallation hashes the fixed executable,
+argv, cwd, explicit environment and content pins; verify independently checks file
+contents. Static providers may omit this identity but cannot execute. Runtime host
+grants also bind the actual root inode/device/path, kernel, user, host identity and
+host-owned time limits. No paths/environment strings enter public summaries.
+
+One service admits at most one unresolved active experiment and at most128 durable
+run claims. A previous service's unreconciled claims bar new activation. Restarted
+runs remain unknown even if a previous in-memory observation was terminal: this
+prototype does not reconstruct resource authority from files. Host operators must
+reconcile affected installations separately; a new directory is not a new resource
+permission. The installed provider must enforce its installation-wide reservation.
+
+Default total run budget is600seconds, capped at3600 and at permit expiry; a host
+timer requests cancellation and cleanup independently of the browser. Cooperative
+provider deadlines remain required. Cleanup has an aggregate30second budget capped
+at60seconds; exhausted operations remain unknown. Reads are inert historical
+snapshots. Explicit observe checks actual provider resources, records its original
+clock and initiates cleanup on exit/uncertainty. It does not assert functional fitness.
+
+The original service directory is retained through an owned Linux directory FD.
+Argus uses its public API beneath /proc/self/fd/<fd>, so lexical root replacement
+blocks new dispatch without redirecting cleanup evidence into a replacement root.
+The actual public writer/reader probe and runtime root-replacement test verify this
+behavior. Argus append is followed by its public flush_buffer durability operation.
+Run correlation names the original start-request event, matching Argus's reference
+contract; no unresolved generated placeholder is substituted for a predecessor.
 
 ## Verification and delivery
 

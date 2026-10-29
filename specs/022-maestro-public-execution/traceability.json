@@ -35,7 +35,10 @@
         "MPX-FR-003"
       ],
       "status": "in_progress",
-      "note": "Static inspection and provider-reported effective-source equality implemented;18 installed-package checks pass. Actual runtime consumption still unverified."
+      "note": "Public/effective input and separate installation identities implemented; actual edited-input consumption verified. Full native/target integration remains open.",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/runtime/verification.json"
+      ]
     },
     {
       "id": "MPX-T03",
@@ -48,7 +51,10 @@
         "MPX-FR-007"
       ],
       "status": "in_progress",
-      "note": "Host provider identity/registry/configuration bounds implemented; runtime permission and execution isolation still unfinished."
+      "note": "Host grant now pins installation, runtime root/environment and limits; fixed owned Linux children verified. Concrete native/Autoverse provider admission remains open.",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/runtime/verification.json"
+      ]
     },
     {
       "id": "MPX-T04",
@@ -61,7 +67,11 @@
         "MPX-FR-006",
         "MPX-FR-007"
       ],
-      "status": "pending"
+      "status": "in_progress",
+      "note": "Prototype scheduling, two-element readiness, idempotency, versioned stop, cancellation, actual child ownership and bounded cleanup verified; full live integration remains open.",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/runtime/verification.json"
+      ]
     },
     {
       "id": "MPX-T05",
@@ -73,7 +83,11 @@
         "MPX-FR-008",
         "MPX-FR-009"
       ],
-      "status": "pending"
+      "status": "in_progress",
+      "note": "Original lifecycle receipts persist via actual Argus and verify with shared identities; real native X-COM ingestion into the same run remains open.",
+      "evidence": [
+        "docs/engineering/maestro-public/evidence/runtime/verification.json"
+      ]
     },
     {
       "id": "MPX-T06",
@@ -1350,5 +1364,12 @@
   "verification": {
     "inspection": "docs/engineering/maestro-public/evidence/inspection/verification.json",
     "scope": "public static inspection and provider-reported effective-input equality; no lifecycle execution or platform acceptance"
+  },
+  "runtime_checkpoint": {
+    "evidence": "docs/engineering/maestro-public/evidence/runtime/verification.json",
+    "checksPassed": 167,
+    "nativeBaselineChecksPassed": 2,
+    "liveGoalCompleted": false,
+    "acceptance": false
   }
 }

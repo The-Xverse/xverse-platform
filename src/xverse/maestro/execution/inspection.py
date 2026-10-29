@@ -30,7 +30,11 @@ def sha256(raw):
 
 
 class ExecutionInputError(ValueError):
-    """Stable public input/binding failure; no process or evidence writer starts."""
+    """Stable public boundary code; not itself proof that no effect occurred.
+
+    Static inspection never dispatches. Runtime failures must additionally report
+    their durable run observations and actual cleanup outcome.
+    """
     def __init__(self, code, diagnostics=()):
         self.code = code
         self.diagnostics = tuple(diagnostics)

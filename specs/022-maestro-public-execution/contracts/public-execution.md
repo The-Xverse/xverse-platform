@@ -47,3 +47,31 @@ The new capability is limited to the host/provider/environment permissions it
 actually verifies. It grants no old private-runtime lane approval, physical-device
 permit or automatic native containment authority. Existing closed services remain
 closed. Public inspection success does not imply execution permission or readiness.
+
+## Current public Python prototype
+
+Imports come from xverse.maestro.execution. CanonicalSubmission,
+ExperimentSelection, InspectionHost and prepare_execution produce an immutable
+PreparedExecution. Pure provider lifecycle expansion is validated by plan_lifecycle
+into LifecycleGraph. HostExecutionPermit binds the exact preparation/graph plus
+PublicExecutionService.runtime_binding_digest, environment and external approval
+reference. Provider installation_digest must match the separately frozen effective
+configuration. A static receipt or a permit without runtime binding cannot run.
+
+PublicExecutionService.start(prepared, graph, permit, idempotency_key=...) rechecks
+all inputs before the durable claim. read(run_id) is inert; observe(run_id,
+expected_version=...) performs bounded resource observation. stop(run_id,
+expected_version=...) cancels and cleans up; close refuses active experiments.
+Original snapshots retain stateVersion, run/plan/input/preparation/lifecycle IDs,
+operation/correlation IDs, bounded original event references and host clocks,
+cleanup state, writer state and a bounded failure code. Original Argus reader
+recorded/assessed verdicts remain a separate contract, not inferred from writer state.
+
+Native Linux prototype only; one unresolved active experiment per service. Whole-run
+and aggregate cleanup bounds are host inputs. Restarted claims without original
+handles are unknown and cannot dispatch again or signal. FixedProcessInstallation
+passes at most4096 bytes of frozen data via stdin after the provider retains its
+OwnedChild; ProcessOwnershipError also retains a partially acquired child. No
+process groups, descendant inference or reconstructed PID signals are supported.
+Provider interpretation of scenario/profile semantics and installation reservation
+is required and verified for each admitted provider, not granted by a generic enum.
