@@ -7,15 +7,15 @@ This is a prototype-only build and dependency-admission environment for capabili
 The caller must set these two authoritative locations to absolute paths:
 
 - `XVERSE_XCOM_TOOLCHAIN`: the isolated, already-provisioned dependency prefix.
-- `XVERSE_XCOM_PACKAGE_MANIFEST`: the twelve-entry JSON manifest. The twelve retained package files must be siblings of this manifest outside Git.
+- `XVERSE_XCOM_PACKAGE_MANIFEST`: the thirteen-entry JSON manifest. The thirteen retained package files must be siblings of this manifest outside Git.
 
-The host must provide Python `python3` 3.11 or newer, CMake 3.22 or newer, Ninja 1.10 or newer, a C++20 compiler available as `c++`, and `dpkg-deb`. The compiler must accept `-Wall -Wextra -Wpedantic -Werror`; CMake rejects non-Ninja generators, disabled testing, and unsupported warning policies. These host tools are build-envelope prerequisites, not members of the twelve-package dependency lock. In particular, Ubuntu Jammy's default Python is not assumed to satisfy the Python 3.11 minimum.
+The host must provide Python `python3` 3.11 or newer, CMake 3.22 or newer, Ninja 1.10 or newer, a C++20 compiler available as `c++`, and `dpkg-deb`. The compiler must accept `-Wall -Wextra -Wpedantic -Werror`; CMake rejects non-Ninja generators, disabled testing, and unsupported warning policies. These host tools are build-envelope prerequisites, not members of the thirteen-package dependency lock. In particular, Ubuntu Jammy's default Python is not assumed to satisfy the Python 3.11 minimum.
 
 The isolated prefix must provide nlohmann/json 3.10.5, Protocol Buffers 3.12.4, gRPC 1.30.2, clang-tidy 14.0.0, `protoc`, and `grpc_cpp_plugin`, with the headers, libraries, pkg-config metadata, and generated-code provenance described in [dependency-lock.md](dependency-lock.md).
 
 ## Deterministic offline prefix reconstruction
 
-Retrieval is deliberately separate from admission. In a controlled online staging process, obtain the twelve public objects listed in [dependency-lock.md](dependency-lock.md), retain them under the exact manifest filenames, verify their recorded sizes and SHA-256 values, and then transfer the manifest and archives into the offline environment. Do not run these steps until all thirteen files are already local.
+Retrieval is deliberately separate from admission. In a controlled online staging process, obtain the thirteen public objects listed in [dependency-lock.md](dependency-lock.md), retain them under the exact manifest filenames, verify their recorded sizes and SHA-256 values, and then transfer the manifest and archives into the offline environment. Do not run these steps until all thirteen package archives and the JSON manifest are already local.
 
 The following provisions a new prefix by extraction only. It does not invoke APT, resolve dependencies, contact a network endpoint, install a system package, or execute package maintainer scripts. `XVERSE_XCOM_TOOLCHAIN` must name a new path so stale or untracked payloads cannot survive reconstruction.
 
@@ -43,8 +43,8 @@ import sys
 
 manifest_path = pathlib.Path(sys.argv[1])
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-if not isinstance(manifest, list) or len(manifest) != 12:
-    raise SystemExit("manifest must contain exactly twelve records")
+if not isinstance(manifest, list) or len(manifest) != 13:
+    raise SystemExit("manifest must contain exactly thirteen records")
 if any(not isinstance(record, dict) for record in manifest):
     raise SystemExit("every manifest record must be an object")
 for record in manifest:
@@ -104,21 +104,27 @@ export CMAKE_PREFIX_PATH="$XVERSE_XCOM_TOOLCHAIN/usr"
 
 Do not append ambient library or pkg-config directories and then describe the result as hermetic. The checker resolves its admitted executables, headers, libraries, and metadata directly beneath `XVERSE_XCOM_TOOLCHAIN`; CMake uses explicit imported targets after preflight. `PATH` still supplies the host prerequisites `python3`, `cmake`, `ninja`, `c++`, and `dpkg-deb`, whose selected identities are probed.
 
-The twelve-package set does not lock all shared-library dependencies of its executables or gRPC's base-system transitive libraries, including the C/C++ runtime, LLVM/Clang runtime, OpenSSL, zlib, c-ares, Abseil, and the Protocol Buffers runtime package. Consequently, this envelope is limited to Linux x86-64 with an ABI-compatible Ubuntu Jammy-derived host matching the admitted packages. `LD_LIBRARY_PATH` selects admitted shared objects when present, but it does not make absent transitive objects part of the lock. The compile-only imported targets are controlled top-level locators, not proof of a hermetic runtime link. A later authorized slice must admit transitive artifacts or define and verify a pinned base-system ABI before compiling or executing runtime targets.
+The thirteen-package set does not lock all shared-library dependencies of its executables or gRPC's base-system transitive libraries, including the C/C++ runtime, LLVM/Clang runtime, OpenSSL, zlib, Abseil, and the Protocol Buffers runtime package. Consequently, this envelope is limited to Linux x86-64 with an ABI-compatible Ubuntu Jammy-derived host matching the admitted packages. `LD_LIBRARY_PATH` selects admitted shared objects when present, but it does not make absent transitive objects part of the lock. The compile-only imported targets are controlled top-level locators, not proof of a hermetic runtime link. A later authorized slice must admit transitive artifacts or define and verify a pinned base-system ABI before compiling or executing runtime targets.
 
 ## Offline admission and build-policy validation
 
-From the repository root, first prove the host Python requirement, then run the repository-owned
-preflight with network access absent:
+For a full platform checkout, first prepare and verify the separate
+[T025 GTest/GMock prefix](t025/test-dependency-admission.md). Export
+`XVERSE_XCOM_T025_TEST_TOOLCHAIN` before the admission commands: the disposable
+policy probe configures the full checkout with required `BUILD_TESTING=ON`.
+This test-only prefix is separate from the thirteen-package dependency prefix.
+From the repository root, prove the host Python requirement, then run the
+repository-owned preflight with network access absent:
 
 ```sh
+export XVERSE_XCOM_T025_TEST_TOOLCHAIN=/absolute/path/to/admitted-gtest-prefix
 python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
 python3 scripts/xcom_dependency_preflight.py --self-test
 python3 scripts/xcom_dependency_preflight.py --verify-toolchain
 python3 scripts/xcom_dependency_preflight.py --all
 ```
 
-`--self-test` exercises controlled positive and negative fixtures. Both admission modes verify the manifest, all twelve sibling package archives, Debian metadata, extracted-payload binding, prefix tools/headers/libraries/pkg-config metadata, host build tools, documentation, and a disposable CMake/Ninja compile-only policy probe. The checker uses local file reads, SHA-256, bounded local subprocesses, and temporary directories only. It contains no resolver or network client, installs nothing, and does not modify either explicit input.
+`--self-test` exercises controlled positive and negative fixtures. Both admission modes verify the manifest, all thirteen sibling package archives, Debian metadata, extracted-payload binding, prefix tools/headers/libraries/pkg-config metadata, host build tools, documentation, and a disposable CMake/Ninja compile-only policy probe. The checker uses local file reads, SHA-256, bounded local subprocesses, and temporary directories only. It contains no resolver or network client, installs nothing, and does not modify either explicit input.
 
 ### Repository-owned host verification evidence
 
@@ -142,7 +148,8 @@ defines the evidence contract only: admission or acceptance requires fresh passi
 reviewed candidate and the separate required review; missing, stale, mismatched, skipped, or failed
 evidence cannot support either claim.
 
-After admission, the repository can be configured without a fetch step:
+After admission, retain the same T025 test-prefix setting and configure without
+a fetch step. `BUILD_TESTING=ON` is required:
 
 ```sh
 cmake -S . -B build -G Ninja -DBUILD_TESTING=ON

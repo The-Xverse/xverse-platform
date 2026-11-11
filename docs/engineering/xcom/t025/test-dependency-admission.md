@@ -1,6 +1,6 @@
 # T025 offline test dependency admission
 
-The T025 GTest targets use a separate, extraction-only prefix. The existing twelve-package X-COM
+The T025 GTest targets use a separate, extraction-only prefix. The existing thirteen-package X-COM
 dependency lock and its prefix remain unchanged; adding files to that prefix fails its payload check.
 The test-only prefix contains exactly these Ubuntu Jammy packages, retained outside Git:
 
